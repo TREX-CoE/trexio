@@ -2,7 +2,19 @@
 
 * File prefixes                                                     :noxport:
 
-  #+begin_src c :tangle trio.h
+  #+NAME:header
+  #+begin_src c 
+/* This file was generated from the trio.org org-mode file.
+   To generate it, open trio.org in Emacs and execute
+   M-x org-babel-tangle
+*/
+
+
+
+  #+end_src
+
+  #+begin_src c :tangle trio.h :noweb yes
+<<header>>
 #ifndef _TRIO_H
 #define _TRIO_H
 
@@ -10,7 +22,8 @@
 
   #+end_src
   
-  #+begin_src c :tangle trio.c
+  #+begin_src c :tangle trio.c :noweb yes
+<<header>>
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -28,7 +41,8 @@
   #+end_src
 
 
-  #+begin_src c :tangle trio_s.h
+  #+begin_src c :tangle trio_s.h :noweb yes
+<<header>>
 #ifndef _TRIO_S_H
 #define _TRIO_S_H
 
@@ -37,7 +51,8 @@
 #include <assert.h>
   #+end_src
 
-  #+begin_src c :tangle trio_text.h
+  #+begin_src c :tangle trio_text.h :noweb yes
+<<header>>
 #ifndef _TRIO_TEXT_H
 #define _TRIO_TEXT_H
 
@@ -48,10 +63,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/stat.h>
 
   #+end_src
   
-  #+begin_src c :tangle trio_text.c
+  #+begin_src c :tangle trio_text.c :noweb yes
+<<header>>
 #include "trio_text.h"
   #+end_src
 
@@ -192,7 +209,8 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
   strcpy(result->file_name, file_name);
   result->back_end    = back_end;
   result->mode        = 'w';  /* Upon creation, mode=write */
-  pthread_mutex_init ( &(result->thread_lock), NULL);
+  int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
+  assert (irc == 0);
 
   trio_exit_code rc = TRIO_FAILURE;
   
@@ -219,10 +237,58 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
 }
    #+end_src
    
+   
+** File closing
+   
+   #+begin_src c :tangle trio.h
+trio_exit_code trio_close(trio_t* file);
+   #+end_src
+
+   #+begin_src c :tangle trio.c
+trio_exit_code trio_close(trio_t* file) {
+
+  assert (file != NULL);
+  
+  trio_exit_code rc;
+  
+  switch (file->back_end) {
+
+  case TRIO_TEXT:
+    rc = trio_text_finalize(file);
+    break;
+/*
+  case TRIO_HDF5:
+    rc = trio_hdf5_finalize(file);
+    break;
+
+  case TRIO_JSON:
+    rc = trio_json_finalize(file);
+    break;
+,*/      
+  default:
+    assert (1 == 0);  /* Impossible case */
+  }
+
+  if (rc != TRIO_SUCCESS) {
+    return TRIO_FAILURE;
+  }
+  
+  free(file->file_name);
+  file->file_name = NULL;
+  
+  int irc = pthread_mutex_destroy( &(file->thread_lock) );
+  assert (irc == 0);
+
+  free(file);
+  
+  return TRIO_SUCCESS;
+}
+   #+end_src
 ** Reading/writing data
 
    #+begin_src c :tangle trio.h
 trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num);
+trio_exit_code trio_write_nucleus_num(trio_t* file, int64_t num);
    #+end_src
    
    #+begin_src c :tangle trio.c
@@ -247,11 +313,34 @@ trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num) {
     return TRIO_FAILURE;  /* Impossible case */
   }
 }
+
+trio_exit_code trio_write_nucleus_num(trio_t* file, int64_t num) {
+  if (file == NULL) return TRIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TRIO_TEXT:
+    return trio_text_write_nucleus_num(file, num);
+    break;
+/*
+  case TRIO_HDF5:
+    return trio_hdf5_write_nucleus_num(file, num);
+    break;
+
+  case TRIO_JSON:
+    return trio_json_write_nucleus_num(file, num);
+    break;
+*/      
+  default:
+    return TRIO_FAILURE;  /* Impossible case */
+  }
+}
    #+end_src
 
 
    #+begin_src c :tangle trio.h
 trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord);
+trio_exit_code trio_write_nucleus_coord(trio_t* file, double* coord);
    #+end_src
    
    #+begin_src c :tangle trio.c
@@ -271,7 +360,29 @@ trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord) {
   case TRIO_JSON:
     return trio_json_read_nucleus_coord(file, coord);
     break;
-*/
+,*/
+  default:
+    return TRIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trio_exit_code trio_write_nucleus_coord(trio_t* file, double* coord) {
+  if (file == NULL) return TRIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TRIO_TEXT:
+    return trio_text_write_nucleus_coord(file, coord);
+    break;
+/*
+  case TRIO_HDF5:
+    return trio_hdf5_write_nucleus_coord(file, coord);
+    break;
+
+  case TRIO_JSON:
+    return trio_json_write_nucleus_coord(file, coord);
+    break;
+,*/
   default:
     return TRIO_FAILURE;  /* Impossible case */
   }
@@ -281,6 +392,7 @@ trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord) {
 
    #+begin_src c :tangle trio.h
 trio_exit_code trio_read_nucleus_charge(trio_t* file, double* charge);
+trio_exit_code trio_write_nucleus_charge(trio_t* file, double* charge);
    #+end_src
    
    #+begin_src c :tangle trio.c
@@ -301,6 +413,28 @@ trio_exit_code trio_read_nucleus_charge(trio_t* file, double* charge) {
     return trio_json_read_nucleus_charge(file, charge);
     break;
 */
+  default:
+    return TRIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trio_exit_code trio_write_nucleus_charge(trio_t* file, double* charge) {
+  if (file == NULL) return TRIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TRIO_TEXT:
+    return trio_text_write_nucleus_charge(file, charge);
+    break;
+/*
+  case TRIO_HDF5:
+    return trio_hdf5_write_nucleus_charge(file, charge);
+    break;
+
+  case TRIO_JSON:
+    return trio_json_write_nucleus_charge(file, charge);
+    break;
+,*/
   default:
     return TRIO_FAILURE;  /* Impossible case */
   }
@@ -347,20 +481,34 @@ trio_exit_code trio_text_init(trio_t* file) {
 
   trio_text_t* f = (trio_text_t*) file;
 
+  /* If directory doesn't exist, create it */
+  struct stat st;
+  
+  if (stat(file->file_name, &st) == 0 && S_ISDIR(st.st_mode)) {
+    /* Do nothing */
+  } else {
+    if (mkdir(file->file_name, 0777) != 0) {
+      return TRIO_FAILURE;
+    }
+  }  
+
+  /* Create name of files in the directory */
   const char* nucleus_file_name = "/nucleus.txt";
   f->nucleus_file_name = (char*)
     calloc( strlen(file->file_name) + strlen(nucleus_file_name) + 1,
             sizeof(char));
   assert (f->nucleus_file_name != NULL);
+  strcpy (f->nucleus_file_name, file->file_name);
   strcat (f->nucleus_file_name, nucleus_file_name);
 
 
   const char* electron_file_name = "/electron.txt";
-  f->nucleus_file_name = (char*)
+  f->electron_file_name = (char*)
     calloc( strlen(file->file_name) + strlen(electron_file_name) + 1,
             sizeof(char));
-  assert (f->nucleus_file_name != NULL);
-  strcat (f->nucleus_file_name, electron_file_name);
+  assert (f->electron_file_name != NULL);
+  strcpy (f->electron_file_name, file->file_name);
+  strcat (f->electron_file_name, electron_file_name);
 
   return TRIO_SUCCESS;
 }
