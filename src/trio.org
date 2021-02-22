@@ -287,12 +287,12 @@ trio_exit_code trio_close(trio_t* file) {
 ** Reading/writing data
 
    #+begin_src c :tangle trio.h
-trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num);
-trio_exit_code trio_write_nucleus_num(trio_t* file, int64_t num);
+trio_exit_code trio_read_nucleus_num(trio_t* file, uint64_t* num);
+trio_exit_code trio_write_nucleus_num(trio_t* file, uint64_t num);
    #+end_src
    
    #+begin_src c :tangle trio.c
-trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num) {
+trio_exit_code trio_read_nucleus_num(trio_t* file, uint64_t* num) {
   if (file == NULL) return TRIO_FAILURE;
 
   switch (file->back_end) {
@@ -314,7 +314,7 @@ trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num) {
   }
 }
 
-trio_exit_code trio_write_nucleus_num(trio_t* file, int64_t num) {
+trio_exit_code trio_write_nucleus_num(trio_t* file, uint64_t num) {
   if (file == NULL) return TRIO_FAILURE;
 
   switch (file->back_end) {
@@ -455,12 +455,12 @@ trio_exit_code trio_write_nucleus_charge(trio_t* file, double* charge) {
 typedef struct nucleus_s {
   double*  coord;
   double*  charge;
-  int64_t  num;
+  uint64_t  num;
 } nucleus_t;
 
 typedef struct electron_s {
-  int64_t  alpha_num;
-  int64_t  beta_num;
+  uint64_t  alpha_num;
+  uint64_t  beta_num;
 } electron_t;
 
 typedef struct trio_text_s {
@@ -650,12 +650,12 @@ trio_exit_code trio_text_free_nucleus(nucleus_t* nucleus) {
 *** Read/Write the num attribute
 
    #+begin_src c :tangle trio_text.h
-trio_exit_code trio_text_read_nucleus_num(const trio_t* file, int64_t* num);
-trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const int64_t num);
+trio_exit_code trio_text_read_nucleus_num(const trio_t* file, uint64_t* num);
+trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t num);
   #+end_src
 
    #+begin_src c :tangle trio_text.c
-trio_exit_code trio_text_read_nucleus_num(const trio_t* file, int64_t* num) {
+trio_exit_code trio_text_read_nucleus_num(const trio_t* file, uint64_t* num) {
 
   assert (file != NULL);
   assert (num  != NULL);
@@ -673,7 +673,7 @@ trio_exit_code trio_text_read_nucleus_num(const trio_t* file, int64_t* num) {
 }
 
  
-trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const int64_t num) {
+trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t num) {
 
   assert (num > 0L);
   assert (file != NULL);
@@ -830,3 +830,5 @@ trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* 
 * TODO Things to be done                                           :noexport:
   - [ ] Thread safety
   - [ ] Error handling with errno
+  - [ ] HDF5 back-end
+  - [ ] JSON back-end
