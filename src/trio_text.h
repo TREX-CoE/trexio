@@ -20,12 +20,12 @@
 typedef struct nucleus_s {
   double*  coord;
   double*  charge;
-  int64_t  num;
+  uint64_t  num;
 } nucleus_t;
 
 typedef struct electron_s {
-  int64_t  alpha_num;
-  int64_t  beta_num;
+  uint64_t  alpha_num;
+  uint64_t  beta_num;
 } electron_t;
 
 typedef struct trio_text_s {
@@ -38,8 +38,8 @@ trio_exit_code trio_text_init(trio_t* file);
 
 trio_exit_code trio_text_finalize(trio_t* file);
 
-trio_exit_code trio_text_read_nucleus_num(const trio_t* file, int64_t* num);
-trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const int64_t num);
+trio_exit_code trio_text_read_nucleus_num(const trio_t* file, uint64_t* num);
+trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t num);
 
 trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord);
 trio_exit_code trio_text_write_nucleus_coord(const trio_t* file, const double* coord);
