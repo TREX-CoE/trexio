@@ -1,4 +1,4 @@
-#+TITLE: TREX Input/Ouput library (TRIO)
+#+Title: TREX Input/Ouput library (TRIO)
 
 * File prefixes                                                     :noxport:
 
@@ -33,8 +33,8 @@
 #include "trio.h"
 #include "trio_s.h"
 #include "trio_text.h"
-/*
 #include "trio_hdf5.h"
+/*
 #include "trio_json.h"
 ,*/
 
@@ -71,6 +71,30 @@
 <<header>>
 #include "trio_text.h"
   #+end_src
+
+  #+begin_src c :tangle trio_hdf5.h :noweb yes
+<<header>>
+#ifndef _TRIO_HDF5_H
+#define _TRIO_HDF5_H
+
+#include "trio.h"
+#include "trio_s.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <sys/stat.h>
+
+#include "hdf5.h"
+#include "hdf5_hl.h" // needed for high-level APIs like H5LT, requires additional linking in Makefile
+  #+end_src
+  
+  #+begin_src c :tangle trio_hdf5.c :noweb yes
+<<header>>
+#include "trio_hdf5.h"
+  #+end_src
+
 
 * Coding conventions
 
@@ -189,11 +213,11 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
   case TRIO_TEXT:
     result = (trio_t*) malloc (sizeof(trio_text_t));
     break;
-/*
+
   case TRIO_HDF5:
     result = (trio_t*) malloc (sizeof(trio_hdf5_t));
     break;
-
+/*
   case TRIO_JSON:
     result = (trio_t*) malloc (sizeof(trio_json_t));
     break;
@@ -219,11 +243,11 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
   case TRIO_TEXT:
     rc = trio_text_init(result);
     break;
-/*
+
   case TRIO_HDF5:
     rc = trio_hdf5_init(result);
     break;
-
+/*
   case TRIO_JSON:
     rc = trio_json_init(result);
     break;
@@ -256,11 +280,11 @@ trio_exit_code trio_close(trio_t* file) {
   case TRIO_TEXT:
     rc = trio_text_finalize(file);
     break;
-/*
+
   case TRIO_HDF5:
     rc = trio_hdf5_finalize(file);
     break;
-
+/*
   case TRIO_JSON:
     rc = trio_json_finalize(file);
     break;
@@ -352,11 +376,11 @@ trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord) {
   case TRIO_TEXT:
     return trio_text_read_nucleus_coord(file, coord);
     break;
-/*
+
   case TRIO_HDF5:
     return trio_hdf5_read_nucleus_coord(file, coord);
     break;
-
+/*
   case TRIO_JSON:
     return trio_json_read_nucleus_coord(file, coord);
     break;
@@ -566,7 +590,7 @@ nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
   fscanf(f, "%s", buffer);
   assert (strcmp(buffer, "num") == 0);
 
-  fscanf(f, "%ld", &(nucleus->num));
+  fscanf(f, "%lu", &(nucleus->num));
   assert (nucleus->num > 0);
 
   /* Allocate arrays */
@@ -580,14 +604,14 @@ nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
   fscanf(f, "%s", buffer);
   assert (strcmp(buffer, "charge") == 0);
 
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     fscanf(f, "%lf", &(nucleus->charge[i]));
   }
   
   fscanf(f, "%s", buffer);
   assert (strcmp(buffer, "coord") == 0);
 
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
       fscanf(f, "%lf", &(nucleus->coord[i]));
   }
   free(buffer);
@@ -607,12 +631,12 @@ trio_exit_code trio_text_write_nucleus(const trio_text_t* file, nucleus_t* nucle
 
   /* Write arrays */
   fprintf(f, "charge\n");
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     fprintf(f, "%lf\n", nucleus->charge[i]);
   }
 
   fprintf(f, "coord\n");
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
       fprintf(f, "%lf\n", nucleus->coord[i]);
   }
 
@@ -733,7 +757,7 @@ trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord) {
 
   assert (coord != NULL);
   
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
     coord[i] = nucleus->coord[i];
   }
 
@@ -750,7 +774,7 @@ trio_exit_code trio_text_write_nucleus_coord(const trio_t* file, const double* c
   nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
   assert (nucleus != NULL);
   
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
     nucleus->coord[i] = coord[i];
   }
   
@@ -784,7 +808,7 @@ trio_exit_code trio_text_read_nucleus_charge(const trio_t* file, double* charge)
 
   assert (charge != NULL);
   
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     charge[i] = nucleus->charge[i];
   }
 
@@ -801,7 +825,7 @@ trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* 
   nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*)file);
   assert (nucleus != NULL);
   
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     nucleus->charge[i] = charge[i];
   }
   
@@ -814,12 +838,308 @@ trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* 
 }
     #+end_src
 ** HDF5 Back end
+
+*** HDF5 structures
+
+  #+begin_src c :tangle trio_hdf5.h
+
+typedef struct slab_s {
+  uint64_t a;
+  uint64_t b;
+  uint64_t c;
+  uint64_t d;
+} slab_t;
+
+typedef struct dset_s {
+  hid_t dset_id;
+  hid_t dspace_id;
+  hid_t dtype_id;
+  uint64_t* dims;
+  uint32_t rank;
+  const char* dset_name;
+} dset_t;
+
+typedef struct h5nucleus_s {
+  uint64_t   num;
+  double    *coord;
+  double    *charge;
+  dset_t*    h5_coord;
+  dset_t*    h5_charge;
+} h5nucleus_t;
+
+typedef struct h5electron_s {
+  uint64_t  alpha_num;
+  uint64_t  beta_num;
+} h5electron_t;
+
+typedef struct trio_hdf5_s {
+  trio_t     parent ;
+  hid_t      file_id;
+  hid_t      nucleus_group;
+  hid_t      electron_group;
+  //... other groups' id
+  const char* file_name;
+} trio_hdf5_t;
+
+  #+end_src
+
+*** HDF5 basic functions
+
+
+  #+begin_src c :tangle trio_hdf5.h
+trio_exit_code trio_hdf5_init(trio_t* file);
+  #+end_src
+
+
+  #+begin_src c :tangle trio_hdf5.c
+trio_exit_code trio_hdf5_init(trio_t* file) {
+
+  trio_hdf5_t* f = (trio_hdf5_t*) file;
+
+  /* If file doesn't exist, create it */
+  int f_ishere = 0;
+  struct stat st;
+  
+  if (stat(file->file_name, &st) == 0) {
+    printf("%s \n","HDF5 file already exists");
+   // RDWR OR RDONLY ???
+    f->file_id = H5Fopen(file->file_name, H5F_ACC_RDWR, H5P_DEFAULT);
+    f_ishere = 1;
+  } else {
+    f->file_id = H5Fcreate(file->file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    f_ishere = 0;
+  }  
+
+  /* Create groups in the hdf5 file */
+  const char* nucleus_group_name = "nucleus";
+  //const char* electron_group_name = "electron";
+ 
+  if (f_ishere == 0){
+    f->nucleus_group = H5Gcreate(f->file_id, nucleus_group_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    //f->electron_group = H5Gcreate(f->file_id, electron_group_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  } else { 
+    f->nucleus_group = H5Gopen(f->file_id, nucleus_group_name, H5P_DEFAULT);
+    //f->electron_group = H5Gopen(f->file_id, electron_group_name, H5P_DEFAULT);   
+  }
+  /* not sure if assert statement here makes sence 
+     H5Gcreate will raise its own H5 error if somethings is wrong*/
+  assert (f->nucleus_group > 0L);
+  //assert (f->electron_group > 0L);
+
+  return TRIO_SUCCESS;
+}
+
+  #+end_src
+
+    
+  #+begin_src c :tangle trio_hdf5.h
+trio_exit_code trio_hdf5_finalize(trio_t* file);
+  #+end_src
+
+  #+begin_src c :tangle trio_hdf5.c
+trio_exit_code trio_hdf5_finalize(trio_t* file) {
+
+  trio_hdf5_t* f = (trio_hdf5_t*) file;
+
+  H5Gclose(f->nucleus_group);
+  f->nucleus_group = 0;
+
+/*
+  H5Gclose(f->electron_group);
+  f->electron_group = 0; 
+*/
+  return TRIO_SUCCESS;
+}
+  #+end_src
+
+  
+  
+*** Read/write the nucleus struct
+
+   #+begin_src c :tangle trio_hdf5.c
+h5nucleus_t* trio_hdf5_read_nucleus(const trio_hdf5_t* file) {
+  
+  /* Allocate the data structure */
+  h5nucleus_t* nucleus = (h5nucleus_t*) malloc(sizeof(h5nucleus_t));
+  assert (nucleus != NULL);
+
+  nucleus->num    = 0;
+  nucleus->coord  = NULL;
+  nucleus->charge = NULL;
+  nucleus->h5_coord  = NULL;
+  nucleus->h5_charge = NULL;
+
+  /* Try to open the file. If HDF5 cannot open, return */ 
+  if (file->file_id < 0) return nucleus;
+
+  herr_t status;  
+  /* Read the nucleus_num attribute of nucleus group */
+  const char *num_name = "nucleus_num";
+  hid_t num_id;
+  num_id = H5Aopen(file->nucleus_group, num_name, H5P_DEFAULT);
+  assert (num_id > 0);
+
+  status = H5Aread(num_id, H5T_NATIVE_ULLONG, &(nucleus->num));
+  assert (status >= 0);
+
+  /* Allocate and read nucleus_charge array */
+  nucleus->charge = (double*) calloc(nucleus->num, sizeof(double));
+  assert (nucleus->charge != NULL);
+
+  /*
+   * High-level H5LT API. No need to deal with dataspaces and datatypes
+   */
+  /*  
+  status = H5LTread_dataset_double(file->nucleus_group, 
+                                "nucleus_charge", 
+				nucleus->charge)
+  */
+  /*
+   * Low-level implementation. Involves dealing with all HDF5 handles and dimensions
+   */
+  nucleus->h5_charge = (dset_t*) malloc(sizeof(dset_t));
+  assert (nucleus->h5_charge != NULL);
+
+  nucleus->h5_charge->dset_id = H5Dopen(file->nucleus_group, 
+                                        "nucleus_charge", 
+                                        H5P_DEFAULT);
+  assert (nucleus->h5_charge->dset_id > 0);
+  /*
+   * Get dataspace, datatype and dimensions
+   * dspace and dtype handles created below have to be closed when not used
+   */    
+  nucleus->h5_charge->dspace_id = H5Dget_space(nucleus->h5_charge->dset_id);
+  assert (nucleus->h5_charge->dspace_id > 0);
+  
+  nucleus->h5_charge->dtype_id = H5Dget_type(nucleus->h5_charge->dset_id);
+  assert (nucleus->h5_charge->dtype_id > 0);
+  
+  int rrank;
+  const int rank = 1;
+  hsize_t dims[1] = {0};
+  rrank = H5Sget_simple_extent_dims(nucleus->h5_charge->dspace_id, 
+                                    dims, NULL);
+  assert (rrank == rank);
+  for (int i=0; i<rank; i++){
+    assert (dims[i] > 0);
+  }
+
+  status = H5Dread(nucleus->h5_charge->dset_id, nucleus->h5_charge->dtype_id,
+               H5S_ALL, H5S_ALL, H5P_DEFAULT,
+	       nucleus->charge);
+  assert (status >= 0);
+
+  /* Allocate and read nucleus_coord array */
+  nucleus->coord = (double*) calloc(3 * nucleus->num, sizeof(double));
+  assert (nucleus->coord != NULL);
+
+  status = H5LTread_dataset_double(file->nucleus_group, 
+                                    "nucleus_coord", 
+				    nucleus->coord);
+  assert (status >= 0);
+  /* Print arrays */
+  /*
+  for (size_t i=0 ; i<nucleus->num ; i++) {
+    printf("%lf \n", nucleus->charge[i]);
+  }
+  
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
+      printf("%lf \n", nucleus->coord[i]);
+  }
+   */
+  H5Aclose(num_id);
+  H5Sclose(nucleus->h5_charge->dspace_id);
+  H5Tclose(nucleus->h5_charge->dtype_id);
+  H5Dclose(nucleus->h5_charge->dset_id);
+  H5Fclose(file->file_id);
+
+  return nucleus;
+}
+
+
+trio_exit_code trio_hdf5_write_nucleus(const trio_hdf5_t* file, h5nucleus_t* nucleus) {
+  assert (nucleus != NULL);
+
+  assert (file != NULL);
+
+  // TODO
+  return TRIO_FAILURE;
+}
+  #+end_src
+
+*** Free memory
+
+    Memory is allocated when reading. The followig function frees memory.
+    
+   #+begin_src c :tangle trio_hdf5.c
+trio_exit_code trio_hdf5_free_nucleus(h5nucleus_t* nucleus) {
+  
+  if (nucleus == NULL) return TRIO_FAILURE;
+  
+  if (nucleus->coord != NULL) free (nucleus->coord);
+  nucleus->coord = NULL;
+  
+  if (nucleus->charge != NULL) free (nucleus->charge);
+  nucleus->charge = NULL;
+  
+  if (nucleus->h5_coord != NULL) free (nucleus->h5_coord);
+  nucleus->h5_coord = NULL;
+  
+  if (nucleus->h5_charge != NULL) free (nucleus->h5_charge);
+  nucleus->h5_charge = NULL;
+
+  free (nucleus);
+
+  return TRIO_SUCCESS;
+}
+   #+end_src
+
+*** TODO Read/Write the num attribute
+
+*** Read/Write the coord attribute
+
+    The ~coord~ array is assumed allocated with the appropriate size.
+    
+   #+begin_src c :tangle trio_hdf5.h
+trio_exit_code trio_hdf5_read_nucleus_coord(const trio_t* file, double* coord);
+// TODO
+//trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* coord);
+  #+end_src
+
+   #+begin_src c :tangle trio_hdf5.c
+trio_exit_code trio_hdf5_read_nucleus_coord(const trio_t* file, double* coord) {
+
+  assert (file != NULL);
+  h5nucleus_t* nucleus = trio_hdf5_read_nucleus((trio_hdf5_t*) file);
+  
+  if (nucleus == NULL) return TRIO_FAILURE;
+
+  assert (coord != NULL);
+  
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
+    coord[i] = nucleus->coord[i];
+  }
+
+  trio_hdf5_free_nucleus(nucleus);
+  return TRIO_SUCCESS;
+}
+
+ 
+trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* coord) {
+  assert (file != NULL);
+  assert (coord != NULL);
+  // TODO
+  return TRIO_FAILURE;
+}
+    #+end_src
+*** TODO Read/Write the charge attribute
+
 * File suffixes                                                     :noxport:
 
   #+begin_src c :tangle trio.h
 #endif
   #+end_src
-
+  
   #+begin_src c :tangle trio_s.h
 #endif
   #+end_src
@@ -827,6 +1147,11 @@ trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* 
   #+begin_src c :tangle trio_text.h
 #endif
   #+end_src
+
+  #+begin_src c :tangle trio_hdf5.h
+#endif
+  #+end_src
+
 * TODO Things to be done                                           :noexport:
   - [ ] Thread safety
   - [ ] Error handling with errno

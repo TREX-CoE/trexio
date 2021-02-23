@@ -28,8 +28,8 @@ trio_t* trio_create(const char* file_name, back_end_t back_end);
 
 trio_exit_code trio_close(trio_t* file);
 
-trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num);
-trio_exit_code trio_write_nucleus_num(trio_t* file, int64_t num);
+trio_exit_code trio_read_nucleus_num(trio_t* file, uint64_t* num);
+trio_exit_code trio_write_nucleus_num(trio_t* file, uint64_t num);
 
 trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord);
 trio_exit_code trio_write_nucleus_coord(trio_t* file, double* coord);
