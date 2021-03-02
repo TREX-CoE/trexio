@@ -29,8 +29,6 @@ int test_h5write() {
 
   uint64_t num = 12;
 
-  //double charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
-
   double coord[36] = {
   0.00000000 ,  1.39250319 ,  0.00000000 ,
  -1.20594314 ,  0.69625160 ,  0.00000000 ,
@@ -50,15 +48,14 @@ int test_h5write() {
 
   // works: try writing info in an empty file
   rc = trio_write_nucleus_num(file,num);
-//  rc = trio_write_nucleus_charge(file,charge);
   rc = trio_write_nucleus_coord(file,coord);
 
   // should not work: try to rewrite the nucleus_num
   rc = trio_write_nucleus_num(file,25);
 
   // works: try to rewrite the nucleus_coord 
- // coord[0] = 666.0;
- // rc = trio_write_nucleus_coord(file,coord);
+  coord[0] = 666.666;
+  rc = trio_write_nucleus_coord(file,coord);
 
 
   if (rc == TRIO_SUCCESS) {
@@ -73,25 +70,18 @@ int test_h5write() {
 }
 
 int test_h5read() {
-  const char* file_name = "test.h5";
+  const char* file_name = "test_write.h5";
 
   trio_t* file = NULL;
   trio_exit_code rc;
 
   uint64_t num;
-  //double* charge;
   double* coord;
 
   file = trio_create(file_name, TRIO_HDF5);
 
   rc = trio_read_nucleus_num(file,&num);
-  assert (num == 4);
-
-  /*
-  charge = (double*) calloc(num, sizeof(double));
-  rc = trio_read_nucleus_charge(file,charge);
-  assert(charge[] == 1.);
-  */
+  assert (num == 12);
 
   coord = (double*) calloc(3*num, sizeof(double));
   rc = trio_read_nucleus_coord(file,coord);
@@ -100,7 +90,7 @@ int test_h5read() {
 	  printf("%lf \n", coord[i]);
   }*/
 
-  double x = coord[0] - 1.2;
+  double x = coord[30] - 2.14171677;
   assert( x*x < 1.e-12);
 
   if (rc == TRIO_SUCCESS) {
