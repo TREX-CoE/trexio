@@ -6,7 +6,7 @@ ifeq ($(COMPILER),GNU)
 CC=gcc -g
 CFLAGS=-fPIC -fexceptions -Wall -Werror -Wpedantic -Wextra
 
-LIBS= -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl #-lgfortran 
+LIBS= -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl #-lgfortran
 INCLUDE     = -I/usr/include/hdf5/serial
 endif
 
@@ -17,7 +17,7 @@ CFLAGS=-fPIC -g -O2
 FC=ifort -xHost
 FFLAGS=-fPIC -g -O2
 
-LIBS= #-lm 
+LIBS= #-lm
 endif
 
 #TODO
@@ -32,21 +32,21 @@ LIBS=-lm
 endif
 
 
-OBJECT_FILES= trio.o trio_text.o trio_hdf5.o
-HEADER_FILES= trio.h trio_text.h trio_hdf5.h trio_s.h 
+OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
+HEADER_FILES= trexio.h trexio_text.h trexio_hdf5.h trexio_s.h
 
 export CC CFLAGS LIBS
 
 .PHONY: clean
 
-libtrio.so: $(OBJECT_FILES) $(HEADER_FILES)
-	$(CC) -shared $(OBJECT_FILES) -o libtrio.so
+libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES)
+	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
 
-test: libtrio.so test.c
-	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrio $(LIBS) -o test
+test: libtrexio.so test.c
+	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test
 
 clean:
-	rm -f *.o libtrio.so test test_write.h5
+	rm -f *.o libtrexio.so test test_write.h5
 
 %.o: %.c $(HEADER_FILES)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $*.c -o $*.o

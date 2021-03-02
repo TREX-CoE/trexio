@@ -1,15 +1,15 @@
-/* This file was generated from the trio.org org-mode file.
-   To generate it, open trio.org in Emacs and execute
+/* This file was generated from the trexio.org org-mode file.
+   To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
 */
 
 
 
-#include "trio_text.h"
+#include "trexio_text.h"
 
-trio_exit_code trio_text_init(trio_t* file) {
+trexio_exit_code trexio_text_init(trexio_t* file) {
 
-  trio_text_t* f = (trio_text_t*) file;
+  trexio_text_t* f = (trexio_text_t*) file;
 
   /* If directory doesn't exist, create it */
   struct stat st;
@@ -18,7 +18,7 @@ trio_exit_code trio_text_init(trio_t* file) {
     /* Do nothing */
   } else {
     if (mkdir(file->file_name, 0777) != 0) {
-      return TRIO_FAILURE;
+      return TREXIO_FAILURE;
     }
   }  
 
@@ -40,12 +40,12 @@ trio_exit_code trio_text_init(trio_t* file) {
   strcpy (f->electron_file_name, file->file_name);
   strcat (f->electron_file_name, electron_file_name);
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
-trio_exit_code trio_text_finalize(trio_t* file) {
+trexio_exit_code trexio_text_finalize(trexio_t* file) {
 
-  trio_text_t* f = (trio_text_t*) file;
+  trexio_text_t* f = (trexio_text_t*) file;
 
   free (f->nucleus_file_name);
   f->nucleus_file_name = NULL;
@@ -53,10 +53,10 @@ trio_exit_code trio_text_finalize(trio_t* file) {
   free (f->electron_file_name);
   f->electron_file_name = NULL;
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
-nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
+nucleus_t* trexio_text_read_nucleus(const trexio_text_t* file) {
 
   /* Allocate the data structure */
   nucleus_t* nucleus = (nucleus_t*) malloc(sizeof(nucleus_t));
@@ -112,7 +112,7 @@ nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
 }
 
 
-trio_exit_code trio_text_write_nucleus(const trio_text_t* file, nucleus_t* nucleus) {
+trexio_exit_code trexio_text_write_nucleus(const trexio_text_t* file, nucleus_t* nucleus) {
   assert (nucleus != NULL);
 
   FILE* f = fopen(file->nucleus_file_name,"w");
@@ -133,13 +133,13 @@ trio_exit_code trio_text_write_nucleus(const trio_text_t* file, nucleus_t* nucle
   }
 
   fclose(f);
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
-trio_exit_code trio_text_free_nucleus(nucleus_t* nucleus) {
+trexio_exit_code trexio_text_free_nucleus(nucleus_t* nucleus) {
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
   
   if (nucleus->coord != NULL) {
@@ -153,33 +153,33 @@ trio_exit_code trio_text_free_nucleus(nucleus_t* nucleus) {
   nucleus->charge = NULL;
   
   free (nucleus);
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
-trio_exit_code trio_text_read_nucleus_num(const trio_t* file, uint64_t* num) {
+trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num) {
 
   assert (file != NULL);
   assert (num  != NULL);
 
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
 
   /**/ *num = nucleus->num;
 
-  trio_text_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_text_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t num) {
+trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint64_t num) {
 
   assert (num > 0L);
   assert (file != NULL);
   
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
 
   assert (nucleus != NULL);
   
@@ -203,22 +203,22 @@ trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t nu
     nucleus->num = num;
   }
   
-  trio_exit_code rc = trio_text_write_nucleus((trio_text_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_text_free_nucleus(nucleus);
+  trexio_text_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
-trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord) {
+trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord) {
 
   assert (file != NULL);
   assert (file != NULL);
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
 
   assert (coord != NULL);
@@ -227,39 +227,39 @@ trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord) {
     coord[i] = nucleus->coord[i];
   }
 
-  trio_text_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_text_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_text_write_nucleus_coord(const trio_t* file, const double* coord) {
+trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord) {
 
   assert (coord != NULL);
   assert (file != NULL);
   
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
   assert (nucleus != NULL);
   
   for (size_t i=0 ; i<3*nucleus->num ; i++) {
     nucleus->coord[i] = coord[i];
   }
   
-  trio_exit_code rc = trio_text_write_nucleus((trio_text_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_text_free_nucleus(nucleus);
+  trexio_text_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
-trio_exit_code trio_text_read_nucleus_charge(const trio_t* file, double* charge) {
+trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge) {
 
   assert (file != NULL);
   assert (file != NULL);
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*)file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*)file);
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
 
   assert (charge != NULL);
@@ -268,27 +268,27 @@ trio_exit_code trio_text_read_nucleus_charge(const trio_t* file, double* charge)
     charge[i] = nucleus->charge[i];
   }
 
-  trio_text_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_text_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* charge) {
+trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* charge) {
 
   assert (charge != NULL);
   assert (file != NULL);
   
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*)file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*)file);
   assert (nucleus != NULL);
   
   for (size_t i=0 ; i<nucleus->num ; i++) {
     nucleus->charge[i] = charge[i];
   }
   
-  trio_exit_code rc = trio_text_write_nucleus((trio_text_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_text_free_nucleus(nucleus);
+  trexio_text_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }

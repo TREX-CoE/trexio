@@ -1,11 +1,11 @@
-#+Title: TREX Input/Ouput library (TRIO)
+#+Title: TREX Input/Ouput library (TREXIO)
 
 * File prefixes                                                     :noxport:
 
   #+NAME:header
   #+begin_src c 
-/* This file was generated from the trio.org org-mode file.
-   To generate it, open trio.org in Emacs and execute
+/* This file was generated from the trexio.org org-mode file.
+   To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
 */
 
@@ -13,16 +13,16 @@
 
   #+end_src
 
-  #+begin_src c :tangle trio.h :noweb yes
+  #+begin_src c :tangle trexio.h :noweb yes
 <<header>>
-#ifndef _TRIO_H
-#define _TRIO_H
+#ifndef _TREXIO_H
+#define _TREXIO_H
 
 #include <stdint.h>
 
   #+end_src
   
-  #+begin_src c :tangle trio.c :noweb yes
+  #+begin_src c :tangle trexio.c :noweb yes
 <<header>>
 #include <pthread.h>
 #include <assert.h>
@@ -30,34 +30,34 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "trio.h"
-#include "trio_s.h"
-#include "trio_text.h"
-#include "trio_hdf5.h"
+#include "trexio.h"
+#include "trexio_s.h"
+#include "trexio_text.h"
+#include "trexio_hdf5.h"
 /*
-#include "trio_json.h"
+#include "trexio_json.h"
 ,*/
 
   #+end_src
 
 
-  #+begin_src c :tangle trio_s.h :noweb yes
+  #+begin_src c :tangle trexio_s.h :noweb yes
 <<header>>
-#ifndef _TRIO_S_H
-#define _TRIO_S_H
+#ifndef _TREXIO_S_H
+#define _TREXIO_S_H
 
-#include "trio.h"
+#include "trexio.h"
 #include <pthread.h>
 #include <assert.h>
   #+end_src
 
-  #+begin_src c :tangle trio_text.h :noweb yes
+  #+begin_src c :tangle trexio_text.h :noweb yes
 <<header>>
-#ifndef _TRIO_TEXT_H
-#define _TRIO_TEXT_H
+#ifndef _TREXIO_TEXT_H
+#define _TREXIO_TEXT_H
 
-#include "trio.h"
-#include "trio_s.h"
+#include "trexio.h"
+#include "trexio_s.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,18 +67,18 @@
 
   #+end_src
   
-  #+begin_src c :tangle trio_text.c :noweb yes
+  #+begin_src c :tangle trexio_text.c :noweb yes
 <<header>>
-#include "trio_text.h"
+#include "trexio_text.h"
   #+end_src
 
-  #+begin_src c :tangle trio_hdf5.h :noweb yes
+  #+begin_src c :tangle trexio_hdf5.h :noweb yes
 <<header>>
-#ifndef _TRIO_HDF5_H
-#define _TRIO_HDF5_H
+#ifndef _TREXIO_HDF5_H
+#define _TREXIO_HDF5_H
 
-#include "trio.h"
-#include "trio_s.h"
+#include "trexio.h"
+#include "trexio_s.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,9 +90,9 @@
 #include "hdf5_hl.h" // needed for high-level APIs like H5LT, requires additional linking in Makefile
   #+end_src
   
-  #+begin_src c :tangle trio_hdf5.c :noweb yes
+  #+begin_src c :tangle trexio_hdf5.c :noweb yes
 <<header>>
-#include "trio_hdf5.h"
+#include "trexio_hdf5.h"
   #+end_src
 
 
@@ -109,26 +109,26 @@
 
 * Front end
 
- All calls to TRIO are thread-safe.
+ All calls to TREXIO are thread-safe.
 
 ** Error handling
-   #+begin_src c :tangle trio.h
-typedef int32_t trio_exit_code;
+   #+begin_src c :tangle trexio.h
+typedef int32_t trexio_exit_code;
 
-#define TRIO_SUCCESS ( (trio_exit_code) 0 )
-#define TRIO_FAILURE ( (trio_exit_code) 1 )
+#define TREXIO_SUCCESS ( (trexio_exit_code) 0 )
+#define TREXIO_FAILURE ( (trexio_exit_code) 1 )
    #+end_src
    
    
 ** Back ends
 
-   #+begin_src c :tangle trio.h
+   #+begin_src c :tangle trexio.h
 typedef uint32_t back_end_t;
 
-#define TRIO_HDF5             ( (back_end_t) 0 )
-#define TRIO_TEXT             ( (back_end_t) 1 ) 
-#define TRIO_JSON             ( (back_end_t) 2 ) 
-#define TRIO_INVALID_BACK_END ( (back_end_t) 3 )
+#define TREXIO_HDF5             ( (back_end_t) 0 )
+#define TREXIO_TEXT             ( (back_end_t) 1 ) 
+#define TREXIO_JSON             ( (back_end_t) 2 ) 
+#define TREXIO_INVALID_BACK_END ( (back_end_t) 3 )
    #+end_src
 
 ** Read/write behavior
@@ -137,36 +137,36 @@ typedef uint32_t back_end_t;
    disk. If data needs to be cached, this is left to the user of the
    library.
  
-   Writing to TRIO files is done with transactions (all-or-nothing
+   Writing to TREXIO files is done with transactions (all-or-nothing
    effect) in a per-group fashion.  File writes are attempted by
-   calling explicitly the flush function, or when the TRIO file is
+   calling explicitly the flush function, or when the TREXIO file is
    closed. If writing is impossible because the data is not valid, no
    data is written.
 
    The order in which the data is written is not necessarily consistent
    with the order in which the function calls were made.
 
-   The TRIO files are supposed to be opened by only one program at a
-   time: if the same TRIO file is modified simultaneously by multiple
+   The TREXIO files are supposed to be opened by only one program at a
+   time: if the same TREXIO file is modified simultaneously by multiple
    concurrent programs, the behavior is not specified.
  
-** TRIO file type
+** TREXIO file type
    
-   ~trio_s~ is the the main type for TRIO files, visible to the users
+   ~trexio_s~ is the the main type for TREXIO files, visible to the users
    of the library. This type is kept opaque, and all modifications to
    the files will be necessarily done through the use of functions,
    taking such a type as argument.
   
-   File creation and opening functions will return /TRIO file handles/,
-   namely pointers to ~trio_s~ types. All functions accessing to the
-   TRIO files will have as a first argument the TRIO file handle.
+   File creation and opening functions will return /TREXIO file handles/,
+   namely pointers to ~trexio_s~ types. All functions accessing to the
+   TREXIO files will have as a first argument the TREXIO file handle.
 
-   #+begin_src c :tangle trio.h
-typedef struct trio_s trio_t;
+   #+begin_src c :tangle trexio.h
+typedef struct trexio_s trexio_t;
    #+end_src
    
-   #+begin_src c :tangle trio_s.h
-struct trio_s {
+   #+begin_src c :tangle trexio_s.h
+struct trexio_s {
   char*             file_name;
   pthread_mutex_t   thread_lock;
   back_end_t        back_end;
@@ -177,49 +177,49 @@ struct trio_s {
 
 ** Polymorphism of the file handle
    
-   Polymorphism of the ~trio_t~ type is handled by ensuring that the
+   Polymorphism of the ~trexio_t~ type is handled by ensuring that the
    corresponding types for all back ends can be safely casted to
-   ~trio_t~. This is done by making the back end structs start with
-   ~struct trio_s~:
+   ~trexio_t~. This is done by making the back end structs start with
+   ~struct trexio_s~:
 
    #+begin_src c 
-struct trio_back_end_s {
-  trio_t     parent ;
+struct trexio_back_end_s {
+  trexio_t     parent ;
   /* add below specific back end data */
 } 
    #+end_src
    
 ** File creation and opening
    
-   #+begin_src c :tangle trio.h
-trio_t* trio_create(const char* file_name, back_end_t back_end);
+   #+begin_src c :tangle trexio.h
+trexio_t* trexio_create(const char* file_name, back_end_t back_end);
    #+end_src
 
    
-   #+begin_src c :tangle trio.c
-trio_t* trio_create(const char* file_name, back_end_t back_end) {
+   #+begin_src c :tangle trexio.c
+trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
   
   /* Check that file name is not NULL or empty */
   assert (file_name != NULL);
   assert (file_name[0] != '\0');
   
   /* Check that back_end is valid */
-  assert (back_end < TRIO_INVALID_BACK_END);
+  assert (back_end < TREXIO_INVALID_BACK_END);
   
-  trio_t* result = NULL;
+  trexio_t* result = NULL;
   
   switch (back_end) {
 
-  case TRIO_TEXT:
-    result = (trio_t*) malloc (sizeof(trio_text_t));
+  case TREXIO_TEXT:
+    result = (trexio_t*) malloc (sizeof(trexio_text_t));
     break;
 
-  case TRIO_HDF5:
-    result = (trio_t*) malloc (sizeof(trio_hdf5_t));
+  case TREXIO_HDF5:
+    result = (trexio_t*) malloc (sizeof(trexio_hdf5_t));
     break;
 /*
-  case TRIO_JSON:
-    result = (trio_t*) malloc (sizeof(trio_json_t));
+  case TREXIO_JSON:
+    result = (trexio_t*) malloc (sizeof(trexio_json_t));
     break;
 ,*/      
   default:
@@ -236,26 +236,26 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
   assert (irc == 0);
 
-  trio_exit_code rc = TRIO_FAILURE;
+  trexio_exit_code rc = TREXIO_FAILURE;
   
   switch (back_end) {
 
-  case TRIO_TEXT:
-    rc = trio_text_init(result);
+  case TREXIO_TEXT:
+    rc = trexio_text_init(result);
     break;
 
-  case TRIO_HDF5:
-    rc = trio_hdf5_init(result);
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_init(result);
     break;
 /*
-  case TRIO_JSON:
-    rc = trio_json_init(result);
+  case TREXIO_JSON:
+    rc = trexio_json_init(result);
     break;
 ,*/      
   default:
     assert (1 == 0);  /* Impossible case */
   }
-  assert (rc == TRIO_SUCCESS);
+  assert (rc == TREXIO_SUCCESS);
   
   return result;
 }
@@ -264,37 +264,37 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
    
 ** File closing
    
-   #+begin_src c :tangle trio.h
-trio_exit_code trio_close(trio_t* file);
+   #+begin_src c :tangle trexio.h
+trexio_exit_code trexio_close(trexio_t* file);
    #+end_src
 
-   #+begin_src c :tangle trio.c
-trio_exit_code trio_close(trio_t* file) {
+   #+begin_src c :tangle trexio.c
+trexio_exit_code trexio_close(trexio_t* file) {
 
   assert (file != NULL);
   
-  trio_exit_code rc;
+  trexio_exit_code rc;
   
   switch (file->back_end) {
 
-  case TRIO_TEXT:
-    rc = trio_text_finalize(file);
+  case TREXIO_TEXT:
+    rc = trexio_text_finalize(file);
     break;
 
-  case TRIO_HDF5:
-    rc = trio_hdf5_finalize(file);
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_finalize(file);
     break;
 /*
-  case TRIO_JSON:
-    rc = trio_json_finalize(file);
+  case TREXIO_JSON:
+    rc = trexio_json_finalize(file);
     break;
 ,*/      
   default:
     assert (1 == 0);  /* Impossible case */
   }
 
-  if (rc != TRIO_SUCCESS) {
-    return TRIO_FAILURE;
+  if (rc != TREXIO_SUCCESS) {
+    return TREXIO_FAILURE;
   }
   
   free(file->file_name);
@@ -305,169 +305,169 @@ trio_exit_code trio_close(trio_t* file) {
 
   free(file);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
    #+end_src
 ** Reading/writing data
 
-   #+begin_src c :tangle trio.h
-trio_exit_code trio_read_nucleus_num(trio_t* file, uint64_t* num);
-trio_exit_code trio_write_nucleus_num(trio_t* file, uint64_t num);
+   #+begin_src c :tangle trexio.h
+trexio_exit_code trexio_read_nucleus_num(trexio_t* file, uint64_t* num);
+trexio_exit_code trexio_write_nucleus_num(trexio_t* file, uint64_t num);
    #+end_src
    
-   #+begin_src c :tangle trio.c
-trio_exit_code trio_read_nucleus_num(trio_t* file, uint64_t* num) {
-  if (file == NULL) return TRIO_FAILURE;
+   #+begin_src c :tangle trexio.c
+trexio_exit_code trexio_read_nucleus_num(trexio_t* file, uint64_t* num) {
+  if (file == NULL) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
-  case TRIO_TEXT:
-    return trio_text_read_nucleus_num(file, num);
+  case TREXIO_TEXT:
+    return trexio_text_read_nucleus_num(file, num);
     break;
 
-  case TRIO_HDF5:
-    return trio_hdf5_read_nucleus_num(file, num);
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_nucleus_num(file, num);
     break;
 /*
-  case TRIO_JSON:
-    return trio_json_read_nucleus_num(file, num);
+  case TREXIO_JSON:
+    return trexio_json_read_nucleus_num(file, num);
     break;
 */      
   default:
-    return TRIO_FAILURE;  /* Impossible case */
+    return TREXIO_FAILURE;  /* Impossible case */
   }
 }
 
-trio_exit_code trio_write_nucleus_num(trio_t* file, uint64_t num) {
-  if (file == NULL) return TRIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_num(trexio_t* file, uint64_t num) {
+  if (file == NULL) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
-  case TRIO_TEXT:
-    return trio_text_write_nucleus_num(file, num);
+  case TREXIO_TEXT:
+    return trexio_text_write_nucleus_num(file, num);
     break;
 
-  case TRIO_HDF5:
-    return trio_hdf5_write_nucleus_num(file, num);
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_nucleus_num(file, num);
     break;
 /*
-  case TRIO_JSON:
-    return trio_json_write_nucleus_num(file, num);
+  case TREXIO_JSON:
+    return trexio_json_write_nucleus_num(file, num);
     break;
 */      
   default:
-    return TRIO_FAILURE;  /* Impossible case */
+    return TREXIO_FAILURE;  /* Impossible case */
   }
 }
    #+end_src
 
 
-   #+begin_src c :tangle trio.h
-trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord);
-trio_exit_code trio_write_nucleus_coord(trio_t* file, double* coord);
+   #+begin_src c :tangle trexio.h
+trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord);
+trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, double* coord);
    #+end_src
    
-   #+begin_src c :tangle trio.c
-trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord) {
-  if (file == NULL) return TRIO_FAILURE;
+   #+begin_src c :tangle trexio.c
+trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
+  if (file == NULL) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
-  case TRIO_TEXT:
-    return trio_text_read_nucleus_coord(file, coord);
+  case TREXIO_TEXT:
+    return trexio_text_read_nucleus_coord(file, coord);
     break;
 
-  case TRIO_HDF5:
-    return trio_hdf5_read_nucleus_coord(file, coord);
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_nucleus_coord(file, coord);
     break;
 /*
-  case TRIO_JSON:
-    return trio_json_read_nucleus_coord(file, coord);
+  case TREXIO_JSON:
+    return trexio_json_read_nucleus_coord(file, coord);
     break;
 ,*/
   default:
-    return TRIO_FAILURE;  /* Impossible case */
+    return TREXIO_FAILURE;  /* Impossible case */
   }
 }
 
-trio_exit_code trio_write_nucleus_coord(trio_t* file, double* coord) {
-  if (file == NULL) return TRIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, double* coord) {
+  if (file == NULL) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
-  case TRIO_TEXT:
-    return trio_text_write_nucleus_coord(file, coord);
+  case TREXIO_TEXT:
+    return trexio_text_write_nucleus_coord(file, coord);
     break;
 
-  case TRIO_HDF5:
-    return trio_hdf5_write_nucleus_coord(file, coord);
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_nucleus_coord(file, coord);
     break;
 /*
-  case TRIO_JSON:
-    return trio_json_write_nucleus_coord(file, coord);
+  case TREXIO_JSON:
+    return trexio_json_write_nucleus_coord(file, coord);
     break;
 ,*/
   default:
-    return TRIO_FAILURE;  /* Impossible case */
+    return TREXIO_FAILURE;  /* Impossible case */
   }
 }
    #+end_src
 
 
-   #+begin_src c :tangle trio.h
-trio_exit_code trio_read_nucleus_charge(trio_t* file, double* charge);
-trio_exit_code trio_write_nucleus_charge(trio_t* file, double* charge);
+   #+begin_src c :tangle trexio.h
+trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge);
+trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge);
    #+end_src
    
-   #+begin_src c :tangle trio.c
-trio_exit_code trio_read_nucleus_charge(trio_t* file, double* charge) {
-  if (file == NULL) return TRIO_FAILURE;
+   #+begin_src c :tangle trexio.c
+trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge) {
+  if (file == NULL) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
-  case TRIO_TEXT:
-    return trio_text_read_nucleus_charge(file, charge);
+  case TREXIO_TEXT:
+    return trexio_text_read_nucleus_charge(file, charge);
     break;
 /*
-  case TRIO_HDF5:
-    return trio_hdf5_read_nucleus_charge(file, charge);
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_nucleus_charge(file, charge);
     break;
 
-  case TRIO_JSON:
-    return trio_json_read_nucleus_charge(file, charge);
+  case TREXIO_JSON:
+    return trexio_json_read_nucleus_charge(file, charge);
     break;
 */
   default:
-    return TRIO_FAILURE;  /* Impossible case */
+    return TREXIO_FAILURE;  /* Impossible case */
   }
 }
 
-trio_exit_code trio_write_nucleus_charge(trio_t* file, double* charge) {
-  if (file == NULL) return TRIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge) {
+  if (file == NULL) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
-  case TRIO_TEXT:
-    return trio_text_write_nucleus_charge(file, charge);
+  case TREXIO_TEXT:
+    return trexio_text_write_nucleus_charge(file, charge);
     break;
 /*
-  case TRIO_HDF5:
-    return trio_hdf5_write_nucleus_charge(file, charge);
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_nucleus_charge(file, charge);
     break;
 
-  case TRIO_JSON:
-    return trio_json_write_nucleus_charge(file, charge);
+  case TREXIO_JSON:
+    return trexio_json_write_nucleus_charge(file, charge);
     break;
 ,*/
   default:
-    return TRIO_FAILURE;  /* Impossible case */
+    return TREXIO_FAILURE;  /* Impossible case */
   }
 }
    #+end_src
    
 * Back ends
   
-   TRIO has multiple possible back ends:
+   TREXIO has multiple possible back ends:
 
    - HDF5: The most efficient back-end, by default
    - Text files: not to be used for production, but useful for debugging
@@ -475,7 +475,7 @@ trio_exit_code trio_write_nucleus_charge(trio_t* file, double* charge) {
      
 ** TEXT Back end
 
-  #+begin_src c :tangle trio_text.h
+  #+begin_src c :tangle trexio_text.h
 typedef struct nucleus_s {
   double*  coord;
   double*  charge;
@@ -487,23 +487,23 @@ typedef struct electron_s {
   uint64_t  beta_num;
 } electron_t;
 
-typedef struct trio_text_s {
-  trio_t     parent ;
+typedef struct trexio_text_s {
+  trexio_t     parent ;
   char*      nucleus_file_name;
   char*      electron_file_name;
-} trio_text_t;
+} trexio_text_t;
 
   #+end_src
 
 
-  #+begin_src c :tangle trio_text.h
-trio_exit_code trio_text_init(trio_t* file);
+  #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_init(trexio_t* file);
   #+end_src
   
-  #+begin_src c :tangle trio_text.c
-trio_exit_code trio_text_init(trio_t* file) {
+  #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_init(trexio_t* file) {
 
-  trio_text_t* f = (trio_text_t*) file;
+  trexio_text_t* f = (trexio_text_t*) file;
 
   /* If directory doesn't exist, create it */
   struct stat st;
@@ -512,7 +512,7 @@ trio_exit_code trio_text_init(trio_t* file) {
     /* Do nothing */
   } else {
     if (mkdir(file->file_name, 0777) != 0) {
-      return TRIO_FAILURE;
+      return TREXIO_FAILURE;
     }
   }  
 
@@ -534,20 +534,20 @@ trio_exit_code trio_text_init(trio_t* file) {
   strcpy (f->electron_file_name, file->file_name);
   strcat (f->electron_file_name, electron_file_name);
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
   #+end_src
 
     
-  #+begin_src c :tangle trio_text.h
-trio_exit_code trio_text_finalize(trio_t* file);
+  #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_finalize(trexio_t* file);
   #+end_src
 
-  #+begin_src c :tangle trio_text.c
-trio_exit_code trio_text_finalize(trio_t* file) {
+  #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_finalize(trexio_t* file) {
 
-  trio_text_t* f = (trio_text_t*) file;
+  trexio_text_t* f = (trexio_text_t*) file;
 
   free (f->nucleus_file_name);
   f->nucleus_file_name = NULL;
@@ -555,7 +555,7 @@ trio_exit_code trio_text_finalize(trio_t* file) {
   free (f->electron_file_name);
   f->electron_file_name = NULL;
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
   #+end_src
 
@@ -563,8 +563,8 @@ trio_exit_code trio_text_finalize(trio_t* file) {
   
 *** Read/write the nucleus struct
 
-   #+begin_src c :tangle trio_text.c
-nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
+   #+begin_src c :tangle trexio_text.c
+nucleus_t* trexio_text_read_nucleus(const trexio_text_t* file) {
 
   /* Allocate the data structure */
   nucleus_t* nucleus = (nucleus_t*) malloc(sizeof(nucleus_t));
@@ -620,7 +620,7 @@ nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
 }
 
 
-trio_exit_code trio_text_write_nucleus(const trio_text_t* file, nucleus_t* nucleus) {
+trexio_exit_code trexio_text_write_nucleus(const trexio_text_t* file, nucleus_t* nucleus) {
   assert (nucleus != NULL);
 
   FILE* f = fopen(file->nucleus_file_name,"w");
@@ -641,7 +641,7 @@ trio_exit_code trio_text_write_nucleus(const trio_text_t* file, nucleus_t* nucle
   }
 
   fclose(f);
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
   #+end_src
 
@@ -649,11 +649,11 @@ trio_exit_code trio_text_write_nucleus(const trio_text_t* file, nucleus_t* nucle
 
     Memory is allocated when reading. The followig function frees memory.
     
-   #+begin_src c :tangle trio_text.c
-trio_exit_code trio_text_free_nucleus(nucleus_t* nucleus) {
+   #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_free_nucleus(nucleus_t* nucleus) {
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
   
   if (nucleus->coord != NULL) {
@@ -667,42 +667,42 @@ trio_exit_code trio_text_free_nucleus(nucleus_t* nucleus) {
   nucleus->charge = NULL;
   
   free (nucleus);
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
    #+end_src
 
 *** Read/Write the num attribute
 
-   #+begin_src c :tangle trio_text.h
-trio_exit_code trio_text_read_nucleus_num(const trio_t* file, uint64_t* num);
-trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t num);
+   #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num);
+trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint64_t num);
   #+end_src
 
-   #+begin_src c :tangle trio_text.c
-trio_exit_code trio_text_read_nucleus_num(const trio_t* file, uint64_t* num) {
+   #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num) {
 
   assert (file != NULL);
   assert (num  != NULL);
 
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
 
   /**/ *num = nucleus->num;
 
-  trio_text_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_text_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t num) {
+trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint64_t num) {
 
   assert (num > 0L);
   assert (file != NULL);
   
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
 
   assert (nucleus != NULL);
   
@@ -726,12 +726,12 @@ trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t nu
     nucleus->num = num;
   }
   
-  trio_exit_code rc = trio_text_write_nucleus((trio_text_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_text_free_nucleus(nucleus);
+  trexio_text_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
     #+end_src
 
@@ -739,20 +739,20 @@ trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t nu
 
     The ~coord~ array is assumed allocated with the appropriate size.
     
-   #+begin_src c :tangle trio_text.h
-trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord);
-trio_exit_code trio_text_write_nucleus_coord(const trio_t* file, const double* coord);
+   #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord);
+trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord);
   #+end_src
 
-   #+begin_src c :tangle trio_text.c
-trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord) {
+   #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord) {
 
   assert (file != NULL);
   assert (file != NULL);
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
 
   assert (coord != NULL);
@@ -761,49 +761,49 @@ trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord) {
     coord[i] = nucleus->coord[i];
   }
 
-  trio_text_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_text_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_text_write_nucleus_coord(const trio_t* file, const double* coord) {
+trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord) {
 
   assert (coord != NULL);
   assert (file != NULL);
   
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
   assert (nucleus != NULL);
   
   for (size_t i=0 ; i<3*nucleus->num ; i++) {
     nucleus->coord[i] = coord[i];
   }
   
-  trio_exit_code rc = trio_text_write_nucleus((trio_text_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_text_free_nucleus(nucleus);
+  trexio_text_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
     #+end_src
 *** Read/Write the charge attribute
 
     The ~charge~ array is assumed allocated with the appropriate size.
     
-   #+begin_src c :tangle trio_text.h
-trio_exit_code trio_text_read_nucleus_charge(const trio_t* file, double* coord);
-trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* coord);
+   #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* coord);
+trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* coord);
   #+end_src
 
-   #+begin_src c :tangle trio_text.c
-trio_exit_code trio_text_read_nucleus_charge(const trio_t* file, double* charge) {
+   #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge) {
 
   assert (file != NULL);
   assert (file != NULL);
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*)file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*)file);
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
 
   assert (charge != NULL);
@@ -812,36 +812,36 @@ trio_exit_code trio_text_read_nucleus_charge(const trio_t* file, double* charge)
     charge[i] = nucleus->charge[i];
   }
 
-  trio_text_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_text_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* charge) {
+trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* charge) {
 
   assert (charge != NULL);
   assert (file != NULL);
   
-  nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*)file);
+  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*)file);
   assert (nucleus != NULL);
   
   for (size_t i=0 ; i<nucleus->num ; i++) {
     nucleus->charge[i] = charge[i];
   }
   
-  trio_exit_code rc = trio_text_write_nucleus((trio_text_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_text_free_nucleus(nucleus);
+  trexio_text_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
     #+end_src
 ** HDF5 Back end
 
 *** HDF5 definitions
 
-#+begin_src c :tangle trio_hdf5.c
+#+begin_src c :tangle trexio_hdf5.c
   #define NUCLEUS_GROUP_NAME  "nucleus"
   #define NUCLEUS_NUM_NAME    "nucleus_num"
   #define NUCLEUS_CHARGE_NAME "nucleus_charge"
@@ -851,7 +851,7 @@ trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* 
 
 *** HDF5 structures
 
-  #+begin_src c :tangle trio_hdf5.h
+  #+begin_src c :tangle trexio_hdf5.h
 
 typedef struct slab_s {
   uint64_t a;
@@ -882,32 +882,32 @@ typedef struct h5electron_s {
   uint64_t  beta_num;
 } h5electron_t;
 
-typedef struct trio_hdf5_s {
-  trio_t     parent ;
+typedef struct trexio_hdf5_s {
+  trexio_t     parent ;
   hid_t      file_id;
   hid_t      nucleus_group;
   hid_t      electron_group;
   //... other groups' id
   const char* file_name;
-} trio_hdf5_t;
+} trexio_hdf5_t;
 
   #+end_src
 
 *** HDF5 basic functions
 
 
-  #+begin_src c :tangle trio_hdf5.h
-trio_exit_code trio_hdf5_init(trio_t* file);
+  #+begin_src c :tangle trexio_hdf5.h
+trexio_exit_code trexio_hdf5_init(trexio_t* file);
   #+end_src
 
 
-  #+begin_src c :tangle trio_hdf5.c
+  #+begin_src c :tangle trexio_hdf5.c
 
 /* 
  * Currently H5LTread_dataset_ is used instead of this function 
  * but keep it for later if we decide to get rid of the H5LT API 
  */
-dset_t* trio_hdf5_read_dset_low(const trio_hdf5_t* file, const char *dset_name, void *buf) {
+dset_t* trexio_hdf5_read_dset_low(const trexio_hdf5_t* file, const char *dset_name, void *buf) {
 
   assert (file != NULL);
   assert (dset_name != NULL);
@@ -954,9 +954,9 @@ dset_t* trio_hdf5_read_dset_low(const trio_hdf5_t* file, const char *dset_name, 
 
 }
 
-trio_exit_code trio_hdf5_init(trio_t* file) {
+trexio_exit_code trexio_hdf5_init(trexio_t* file) {
 
-  trio_hdf5_t* f = (trio_hdf5_t*) file;
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   /* If file doesn't exist, create it */
   int f_ishere = 0;
@@ -983,20 +983,20 @@ trio_exit_code trio_hdf5_init(trio_t* file) {
   assert (f->nucleus_group > 0L);
   //assert (f->electron_group > 0L);
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
   #+end_src
 
     
-  #+begin_src c :tangle trio_hdf5.h
-trio_exit_code trio_hdf5_finalize(trio_t* file);
+  #+begin_src c :tangle trexio_hdf5.h
+trexio_exit_code trexio_hdf5_finalize(trexio_t* file);
   #+end_src
 
-  #+begin_src c :tangle trio_hdf5.c
-trio_exit_code trio_hdf5_finalize(trio_t* file) {
+  #+begin_src c :tangle trexio_hdf5.c
+trexio_exit_code trexio_hdf5_finalize(trexio_t* file) {
 
-  trio_hdf5_t* f = (trio_hdf5_t*) file;
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   H5Gclose(f->nucleus_group);
   f->nucleus_group = 0;
@@ -1009,7 +1009,7 @@ trio_exit_code trio_hdf5_finalize(trio_t* file) {
   H5Fclose(f->file_id);
   f->file_id = 0;
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
   #+end_src
 
@@ -1017,8 +1017,8 @@ trio_exit_code trio_hdf5_finalize(trio_t* file) {
   
 *** Read/write the nucleus struct
 
-   #+begin_src c :tangle trio_hdf5.c
-h5nucleus_t* trio_hdf5_read_nucleus(const trio_hdf5_t* file) {
+   #+begin_src c :tangle trexio_hdf5.c
+h5nucleus_t* trexio_hdf5_read_nucleus(const trexio_hdf5_t* file) {
   
   /* Allocate the data structure */
   h5nucleus_t* nucleus = (h5nucleus_t*) malloc(sizeof(h5nucleus_t));
@@ -1068,7 +1068,7 @@ h5nucleus_t* trio_hdf5_read_nucleus(const trio_hdf5_t* file) {
    *  when not used anymore, see below. Note how this function is similar to H5LTread_dataset_double
    */
   /*
-  nucleus->h5_coord = trio_hdf5_read_dset_low(file, NUCLEUS_COORD_NAME, 
+  nucleus->h5_coord = trexio_hdf5_read_dset_low(file, NUCLEUS_COORD_NAME, 
   		  		nucleus->coord); 
 
   H5Sclose(nucleus->h5_coord->dspace_id);
@@ -1082,7 +1082,7 @@ h5nucleus_t* trio_hdf5_read_nucleus(const trio_hdf5_t* file) {
 }
 
 
-trio_exit_code trio_hdf5_write_nucleus(const trio_hdf5_t* file, h5nucleus_t* nucleus) {
+trexio_exit_code trexio_hdf5_write_nucleus(const trexio_hdf5_t* file, h5nucleus_t* nucleus) {
 
   assert (file != NULL);
   assert (nucleus != NULL);
@@ -1192,7 +1192,7 @@ trio_exit_code trio_hdf5_write_nucleus(const trio_hdf5_t* file, h5nucleus_t* nuc
 
   }
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
   #+end_src
@@ -1201,10 +1201,10 @@ trio_exit_code trio_hdf5_write_nucleus(const trio_hdf5_t* file, h5nucleus_t* nuc
 
     Memory is allocated when reading. The followig function frees memory.
     
-   #+begin_src c :tangle trio_hdf5.c
-trio_exit_code trio_hdf5_free_nucleus(h5nucleus_t* nucleus) {
+   #+begin_src c :tangle trexio_hdf5.c
+trexio_exit_code trexio_hdf5_free_nucleus(h5nucleus_t* nucleus) {
   
-  if (nucleus == NULL) return TRIO_FAILURE;
+  if (nucleus == NULL) return TREXIO_FAILURE;
   
   if (nucleus->coord != NULL) free (nucleus->coord);
   nucleus->coord = NULL;
@@ -1220,42 +1220,42 @@ trio_exit_code trio_hdf5_free_nucleus(h5nucleus_t* nucleus) {
 
   free (nucleus);
 
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
    #+end_src
 
 *** Read/Write the num attribute
 
-   #+begin_src c :tangle trio_hdf5.h
-trio_exit_code trio_hdf5_read_nucleus_num(const trio_t* file, uint64_t* num);
-trio_exit_code trio_hdf5_write_nucleus_num(const trio_t* file, const uint64_t num);
+   #+begin_src c :tangle trexio_hdf5.h
+trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* num);
+trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint64_t num);
   #+end_src
 
-   #+begin_src c :tangle trio_hdf5.c
-trio_exit_code trio_hdf5_read_nucleus_num(const trio_t* file, uint64_t* num) {
+   #+begin_src c :tangle trexio_hdf5.c
+trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* num) {
 
   assert (file != NULL);
   assert (num  != NULL);
 
-  h5nucleus_t* nucleus = trio_hdf5_read_nucleus((trio_hdf5_t*) file);
+  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
   
   if (nucleus == NULL) {
-    return TRIO_FAILURE;
+    return TREXIO_FAILURE;
   }
 
   /**/ *num = nucleus->num;
 
-  trio_hdf5_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_hdf5_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_hdf5_write_nucleus_num(const trio_t* file, const uint64_t num) {
+trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint64_t num) {
 
   assert (file != NULL);
   assert (num > 0L);
   
-  h5nucleus_t* nucleus = trio_hdf5_read_nucleus((trio_hdf5_t*) file);
+  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
 
   assert (nucleus != NULL);
   
@@ -1264,8 +1264,8 @@ trio_exit_code trio_hdf5_write_nucleus_num(const trio_t* file, const uint64_t nu
     if (nucleus->num != 0) {
 	printf("%ld -> %ld %s \n", num, nucleus->num, 
 	       "This variable alreasy exists. Overwriting it is not supported");
-        trio_hdf5_free_nucleus(nucleus);
-    	return TRIO_FAILURE;
+        trexio_hdf5_free_nucleus(nucleus);
+    	return TREXIO_FAILURE;
     }
 
     nucleus->num = num;
@@ -1286,12 +1286,12 @@ trio_exit_code trio_hdf5_write_nucleus_num(const trio_t* file, const uint64_t nu
     nucleus->num = num;
   }
   
-  trio_exit_code rc = trio_hdf5_write_nucleus((trio_hdf5_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_hdf5_write_nucleus((trexio_hdf5_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_hdf5_free_nucleus(nucleus);
+  trexio_hdf5_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
     #+end_src
 
@@ -1300,51 +1300,51 @@ trio_exit_code trio_hdf5_write_nucleus_num(const trio_t* file, const uint64_t nu
 
     The ~coord~ array is assumed allocated with the appropriate size.
     
-   #+begin_src c :tangle trio_hdf5.h
-trio_exit_code trio_hdf5_read_nucleus_coord(const trio_t* file, double* coord);
-trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* coord);
+   #+begin_src c :tangle trexio_hdf5.h
+trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord);
+trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const double* coord);
   #+end_src
 
-   #+begin_src c :tangle trio_hdf5.c
-trio_exit_code trio_hdf5_read_nucleus_coord(const trio_t* file, double* coord) {
+   #+begin_src c :tangle trexio_hdf5.c
+trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord) {
 
   assert (file != NULL);
   assert (coord != NULL);
 
-  h5nucleus_t* nucleus = trio_hdf5_read_nucleus((trio_hdf5_t*) file);
+  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
 
-  if (nucleus == NULL) return TRIO_FAILURE;
+  if (nucleus == NULL) return TREXIO_FAILURE;
   assert (nucleus->coord != NULL);
   
   for (size_t i=0 ; i<3*nucleus->num ; i++) {
     coord[i] = nucleus->coord[i];
   }
 
-  trio_hdf5_free_nucleus(nucleus);
-  return TRIO_SUCCESS;
+  trexio_hdf5_free_nucleus(nucleus);
+  return TREXIO_SUCCESS;
 }
 
  
-trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* coord) {
+trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const double* coord) {
 
   assert (file != NULL);
   assert (coord != NULL);
   
-  h5nucleus_t* nucleus = trio_hdf5_read_nucleus((trio_hdf5_t*) file);
+  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
 
-  if (nucleus == NULL) return TRIO_FAILURE;
+  if (nucleus == NULL) return TREXIO_FAILURE;
   assert (nucleus->coord != NULL); 
  
   for (size_t i=0 ; i<3*nucleus->num ; i++) {
     nucleus->coord[i] = coord[i];
   }
   
-  trio_exit_code rc = trio_hdf5_write_nucleus((trio_hdf5_t*) file, nucleus);
-  assert (rc == TRIO_SUCCESS);
+  trexio_exit_code rc = trexio_hdf5_write_nucleus((trexio_hdf5_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);
 
-  trio_hdf5_free_nucleus(nucleus);
+  trexio_hdf5_free_nucleus(nucleus);
   
-  return TRIO_SUCCESS;
+  return TREXIO_SUCCESS;
 }
 
     #+end_src
@@ -1352,19 +1352,19 @@ trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* c
 
 * File suffixes                                                     :noxport:
 
-  #+begin_src c :tangle trio.h
+  #+begin_src c :tangle trexio.h
 #endif
   #+end_src
   
-  #+begin_src c :tangle trio_s.h
+  #+begin_src c :tangle trexio_s.h
 #endif
   #+end_src
 
-  #+begin_src c :tangle trio_text.h
+  #+begin_src c :tangle trexio_text.h
 #endif
   #+end_src
 
-  #+begin_src c :tangle trio_hdf5.h
+  #+begin_src c :tangle trexio_hdf5.h
 #endif
   #+end_src
 

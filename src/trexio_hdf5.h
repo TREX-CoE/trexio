@@ -1,15 +1,15 @@
-/* This file was generated from the trio.org org-mode file.
-   To generate it, open trio.org in Emacs and execute
+/* This file was generated from the trexio.org org-mode file.
+   To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
 */
 
 
 
-#ifndef _TRIO_HDF5_H
-#define _TRIO_HDF5_H
+#ifndef _TREXIO_HDF5_H
+#define _TREXIO_HDF5_H
 
-#include "trio.h"
-#include "trio_s.h"
+#include "trexio.h"
+#include "trexio_s.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,23 +49,23 @@ typedef struct h5electron_s {
   uint64_t  beta_num;
 } h5electron_t;
 
-typedef struct trio_hdf5_s {
-  trio_t     parent ;
+typedef struct trexio_hdf5_s {
+  trexio_t     parent ;
   hid_t      file_id;
   hid_t      nucleus_group;
   hid_t      electron_group;
   //... other groups' id
   const char* file_name;
-} trio_hdf5_t;
+} trexio_hdf5_t;
 
-trio_exit_code trio_hdf5_init(trio_t* file);
+trexio_exit_code trexio_hdf5_init(trexio_t* file);
 
-trio_exit_code trio_hdf5_finalize(trio_t* file);
+trexio_exit_code trexio_hdf5_finalize(trexio_t* file);
 
-trio_exit_code trio_hdf5_read_nucleus_num(const trio_t* file, uint64_t* num);
-trio_exit_code trio_hdf5_write_nucleus_num(const trio_t* file, const uint64_t num);
+trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* num);
+trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint64_t num);
 
-trio_exit_code trio_hdf5_read_nucleus_coord(const trio_t* file, double* coord);
-trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* coord);
+trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord);
+trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const double* coord);
 
 #endif
