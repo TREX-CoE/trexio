@@ -1,2 +1,2 @@
-# trio
+# TREXIO
 TREX I/O library
