@@ -62,8 +62,10 @@ trio_exit_code trio_hdf5_init(trio_t* file);
 
 trio_exit_code trio_hdf5_finalize(trio_t* file);
 
+trio_exit_code trio_hdf5_read_nucleus_num(const trio_t* file, uint64_t* num);
+trio_exit_code trio_hdf5_write_nucleus_num(const trio_t* file, const uint64_t num);
+
 trio_exit_code trio_hdf5_read_nucleus_coord(const trio_t* file, double* coord);
-// TODO
-//trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* coord);
+trio_exit_code trio_hdf5_write_nucleus_coord(const trio_t* file, const double* coord);
 
 #endif
