@@ -7,13 +7,57 @@
 int test_read();
 int test_write();
 
-
+int test_h5read();
 
 int main() {
+  test_h5read();
   test_write();
   test_read();
   return 0 ;
 }
+
+
+int test_h5read() {
+  const char* file_name = "test.h5";
+
+  trio_t* file = NULL;
+  trio_exit_code rc;
+
+  uint64_t num;
+  //double* charge;
+  double* coord;
+
+  file = trio_create(file_name, TRIO_HDF5);
+
+  /*rc = trio_read_nucleus_num(file,&num);
+  assert (num == 12);
+
+  charge = (double*) calloc(num, sizeof(double));
+  rc = trio_read_nucleus_charge(file,charge);
+  assert(charge[10] == 1.);*/
+  num = 4;
+
+  coord = (double*) calloc(3*num, sizeof(double));
+  rc = trio_read_nucleus_coord(file,coord);
+  
+  for (size_t i=0; i<3*num; i++){
+	  printf("%lf \n", coord[i]);
+  }
+
+  double x = coord[0] - 2.14171677;
+  assert( x*x < 1000.);
+
+  if (rc == TRIO_SUCCESS) {
+    printf("SUCCESS\n");
+  } else {
+    printf("FAILURE\n");
+  }
+
+  trio_close(file);
+
+  return 0;
+}
+
 
 int test_write() {
   const char* file_name = "trio_test";
@@ -22,7 +66,7 @@ int test_write() {
   trio_exit_code rc;
 
 
-  int64_t num = 12;
+  uint64_t num = 12;
 
   double charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
 
@@ -64,7 +108,7 @@ int test_read() {
   trio_t* file = NULL;
   trio_exit_code rc;
 
-  int64_t num;
+  uint64_t num;
   double* charge;
   double* coord;
 

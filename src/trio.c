@@ -14,13 +14,13 @@
 #include "trio.h"
 #include "trio_s.h"
 #include "trio_text.h"
-/*
 #include "trio_hdf5.h"
+/*
 #include "trio_json.h"
 */
 
 trio_t* trio_create(const char* file_name, back_end_t back_end) {
-
+  
   /* Check that file name is not NULL or empty */
   assert (file_name != NULL);
   assert (file_name[0] != '\0');
@@ -35,11 +35,11 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
   case TRIO_TEXT:
     result = (trio_t*) malloc (sizeof(trio_text_t));
     break;
-/*
+
   case TRIO_HDF5:
     result = (trio_t*) malloc (sizeof(trio_hdf5_t));
     break;
-
+/*
   case TRIO_JSON:
     result = (trio_t*) malloc (sizeof(trio_json_t));
     break;
@@ -65,11 +65,11 @@ trio_t* trio_create(const char* file_name, back_end_t back_end) {
   case TRIO_TEXT:
     rc = trio_text_init(result);
     break;
-/*
+
   case TRIO_HDF5:
     rc = trio_hdf5_init(result);
     break;
-
+/*
   case TRIO_JSON:
     rc = trio_json_init(result);
     break;
@@ -93,11 +93,11 @@ trio_exit_code trio_close(trio_t* file) {
   case TRIO_TEXT:
     rc = trio_text_finalize(file);
     break;
-/*
+
   case TRIO_HDF5:
     rc = trio_hdf5_finalize(file);
     break;
-
+/*
   case TRIO_JSON:
     rc = trio_json_finalize(file);
     break;
@@ -121,7 +121,7 @@ trio_exit_code trio_close(trio_t* file) {
   return TRIO_SUCCESS;
 }
 
-trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num) {
+trio_exit_code trio_read_nucleus_num(trio_t* file, uint64_t* num) {
   if (file == NULL) return TRIO_FAILURE;
 
   switch (file->back_end) {
@@ -129,11 +129,11 @@ trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num) {
   case TRIO_TEXT:
     return trio_text_read_nucleus_num(file, num);
     break;
-/*
+
   case TRIO_HDF5:
     return trio_hdf5_read_nucleus_num(file, num);
     break;
-
+/*
   case TRIO_JSON:
     return trio_json_read_nucleus_num(file, num);
     break;
@@ -143,7 +143,7 @@ trio_exit_code trio_read_nucleus_num(trio_t* file, int64_t* num) {
   }
 }
 
-trio_exit_code trio_write_nucleus_num(trio_t* file, int64_t num) {
+trio_exit_code trio_write_nucleus_num(trio_t* file, uint64_t num) {
   if (file == NULL) return TRIO_FAILURE;
 
   switch (file->back_end) {
@@ -151,11 +151,11 @@ trio_exit_code trio_write_nucleus_num(trio_t* file, int64_t num) {
   case TRIO_TEXT:
     return trio_text_write_nucleus_num(file, num);
     break;
-/*
+
   case TRIO_HDF5:
     return trio_hdf5_write_nucleus_num(file, num);
     break;
-
+/*
   case TRIO_JSON:
     return trio_json_write_nucleus_num(file, num);
     break;
@@ -173,11 +173,11 @@ trio_exit_code trio_read_nucleus_coord(trio_t* file, double* coord) {
   case TRIO_TEXT:
     return trio_text_read_nucleus_coord(file, coord);
     break;
-/*
+
   case TRIO_HDF5:
     return trio_hdf5_read_nucleus_coord(file, coord);
     break;
-
+/*
   case TRIO_JSON:
     return trio_json_read_nucleus_coord(file, coord);
     break;
@@ -195,11 +195,11 @@ trio_exit_code trio_write_nucleus_coord(trio_t* file, double* coord) {
   case TRIO_TEXT:
     return trio_text_write_nucleus_coord(file, coord);
     break;
-/*
+
   case TRIO_HDF5:
     return trio_hdf5_write_nucleus_coord(file, coord);
     break;
-
+/*
   case TRIO_JSON:
     return trio_json_write_nucleus_coord(file, coord);
     break;

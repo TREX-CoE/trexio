@@ -82,7 +82,7 @@ nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
   fscanf(f, "%s", buffer);
   assert (strcmp(buffer, "num") == 0);
 
-  fscanf(f, "%ld", &(nucleus->num));
+  fscanf(f, "%lu", &(nucleus->num));
   assert (nucleus->num > 0);
 
   /* Allocate arrays */
@@ -96,14 +96,14 @@ nucleus_t* trio_text_read_nucleus(const trio_text_t* file) {
   fscanf(f, "%s", buffer);
   assert (strcmp(buffer, "charge") == 0);
 
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     fscanf(f, "%lf", &(nucleus->charge[i]));
   }
   
   fscanf(f, "%s", buffer);
   assert (strcmp(buffer, "coord") == 0);
 
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
       fscanf(f, "%lf", &(nucleus->coord[i]));
   }
   free(buffer);
@@ -123,12 +123,12 @@ trio_exit_code trio_text_write_nucleus(const trio_text_t* file, nucleus_t* nucle
 
   /* Write arrays */
   fprintf(f, "charge\n");
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     fprintf(f, "%lf\n", nucleus->charge[i]);
   }
 
   fprintf(f, "coord\n");
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
       fprintf(f, "%lf\n", nucleus->coord[i]);
   }
 
@@ -156,7 +156,7 @@ trio_exit_code trio_text_free_nucleus(nucleus_t* nucleus) {
   return TRIO_SUCCESS;
 }
 
-trio_exit_code trio_text_read_nucleus_num(const trio_t* file, int64_t* num) {
+trio_exit_code trio_text_read_nucleus_num(const trio_t* file, uint64_t* num) {
 
   assert (file != NULL);
   assert (num  != NULL);
@@ -174,7 +174,7 @@ trio_exit_code trio_text_read_nucleus_num(const trio_t* file, int64_t* num) {
 }
 
  
-trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const int64_t num) {
+trio_exit_code trio_text_write_nucleus_num(const trio_t* file, const uint64_t num) {
 
   assert (num > 0L);
   assert (file != NULL);
@@ -223,7 +223,7 @@ trio_exit_code trio_text_read_nucleus_coord(const trio_t* file, double* coord) {
 
   assert (coord != NULL);
   
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
     coord[i] = nucleus->coord[i];
   }
 
@@ -240,7 +240,7 @@ trio_exit_code trio_text_write_nucleus_coord(const trio_t* file, const double* c
   nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*) file);
   assert (nucleus != NULL);
   
-  for (int i=0 ; i<3*nucleus->num ; i++) {
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
     nucleus->coord[i] = coord[i];
   }
   
@@ -264,7 +264,7 @@ trio_exit_code trio_text_read_nucleus_charge(const trio_t* file, double* charge)
 
   assert (charge != NULL);
   
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     charge[i] = nucleus->charge[i];
   }
 
@@ -281,7 +281,7 @@ trio_exit_code trio_text_write_nucleus_charge(const trio_t* file, const double* 
   nucleus_t* nucleus = trio_text_read_nucleus((trio_text_t*)file);
   assert (nucleus != NULL);
   
-  for (int i=0 ; i<nucleus->num ; i++) {
+  for (size_t i=0 ; i<nucleus->num ; i++) {
     nucleus->charge[i] = charge[i];
   }
   
