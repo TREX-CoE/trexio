@@ -44,9 +44,10 @@ libtrio.so: $(OBJECT_FILES) $(HEADER_FILES)
 
 test: libtrio.so test.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrio $(LIBS) -o test
+	rm test_write.h5
 
 clean:
-	rm -f *.o libtrio.so
+	rm -f *.o libtrio.so test test_write.h5
 
 %.o: %.c $(HEADER_FILES)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $*.c -o $*.o
