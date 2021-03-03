@@ -411,10 +411,28 @@ trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* co
   assert (file != NULL);
   assert (coord != NULL);
 
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
-
+  /*h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
   if (nucleus == NULL) return TREXIO_FAILURE;
+  assert (nucleus->coord != NULL);*/
+
+  /* Allocate and read nucleus_coord array */
+  h5nucleus_t* nucleus = (h5nucleus_t*) malloc(sizeof(h5nucleus_t));
+  assert (nucleus != NULL);
+
+  trexio_exit_code rc = trexio_hdf5_read_nucleus_num(file, &(nucleus->num));
+  assert (rc == TREXIO_SUCCESS);
+  assert (nucleus->num > 0L);
+
+  nucleus->coord = (double*) calloc(3 * nucleus->num, sizeof(double));
   assert (nucleus->coord != NULL);
+ 
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file; 
+  herr_t status;
+  /* High-level H5LT API. No need to deal with dataspaces and datatypes */
+  status = H5LTread_dataset_double(f->nucleus_group, 
+                                    NUCLEUS_COORD_NAME, 
+				    nucleus->coord);
+  assert (status >= 0);
   
   for (size_t i=0 ; i<3*nucleus->num ; i++) {
     coord[i] = nucleus->coord[i];
@@ -430,17 +448,69 @@ trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const dou
   assert (file != NULL);
   assert (coord != NULL);
   
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
-
+  /*h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
   if (nucleus == NULL) return TREXIO_FAILURE;
-  assert (nucleus->coord != NULL); 
+  assert (nucleus->coord != NULL);
  
   for (size_t i=0 ; i<3*nucleus->num ; i++) {
     nucleus->coord[i] = coord[i];
   }
   
   trexio_exit_code rc = trexio_hdf5_write_nucleus((trexio_hdf5_t*) file, nucleus);
+  assert (rc == TREXIO_SUCCESS);*/
+  
+  h5nucleus_t* nucleus = (h5nucleus_t*) malloc(sizeof(h5nucleus_t));
+  assert (nucleus != NULL);
+
+  trexio_exit_code rc = trexio_hdf5_read_nucleus_num(file, &(nucleus->num));
   assert (rc == TREXIO_SUCCESS);
+  assert (nucleus->num > 0L);
+
+  nucleus->coord = (double*) calloc(3 * nucleus->num, sizeof(double));
+  assert (nucleus->coord != NULL);
+
+  for (size_t i=0 ; i<3*nucleus->num ; i++) {
+    nucleus->coord[i] = coord[i];
+  }
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file; 
+
+  hid_t dset_id, dspace, dtype;
+  herr_t status;
+  int coord_rank = 2;
+  const hsize_t coord_dims[2] = {nucleus->num, 3};
+  if ( H5LTfind_dataset(f->nucleus_group, NUCLEUS_COORD_NAME) != 1) { 
+    
+    status = H5LTmake_dataset_double (f->nucleus_group, NUCLEUS_COORD_NAME, 
+                                    coord_rank, coord_dims, nucleus->coord);
+    assert (status >= 0);
+
+  } else {   
+
+    dset_id = H5Dopen(f->nucleus_group, NUCLEUS_COORD_NAME, H5P_DEFAULT);
+    assert (dset_id > 0);
+    dspace = H5Dget_space(dset_id);
+    assert (dspace > 0);
+    dtype = H5Dget_type(dset_id);
+    assert (dtype > 0);
+    
+    int rrank;
+    hsize_t dims[2] = {0, 0};
+    rrank = H5Sget_simple_extent_dims(dspace,
+                                    dims, NULL);
+    assert (rrank == coord_rank);
+    for (int i=0; i<rrank; i++){
+      assert (dims[i] == coord_dims[i]);
+    }
+
+    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, nucleus->coord);
+    assert (status >= 0);
+
+    H5Sclose(dspace);
+    H5Tclose(dtype);
+    H5Dclose(dset_id);
+
+  }
 
   trexio_hdf5_free_nucleus(nucleus);
   
