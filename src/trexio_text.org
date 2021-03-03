@@ -136,7 +136,25 @@ trexio_exit_code trexio_text_init(trexio_t* file) {
   assert (f->lock_file > 0);
   free(file_name);
 
-  /* Lock the directory for the current process */
+  f->nucleus = NULL;
+  f->electron= NULL;
+  f->rdm     = NULL;
+  
+  return TREXIO_SUCCESS;
+}
+
+    #+end_src
+
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_lock(trexio_t* file);
+    #+end_src
+  
+    #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_lock(trexio_t* file) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_text_t* f = (trexio_text_t*) file;
+
   struct flock fl;
   
   fl.l_type   = F_WRLCK;
@@ -148,12 +166,6 @@ trexio_exit_code trexio_text_init(trexio_t* file) {
   int rc = fcntl(f->lock_file, F_SETLKW, &fl);
   if (rc == -1) return TREXIO_FAILURE;
 
-  trexio_text_t* f_child = (trexio_text_t*) file;
-
-  f_child->nucleus = NULL;
-  f_child->electron= NULL;
-  f_child->rdm     = NULL;
-  
   return TREXIO_SUCCESS;
 }
 
@@ -168,8 +180,6 @@ trexio_exit_code trexio_text_finalize(trexio_t* file);
 trexio_exit_code trexio_text_finalize(trexio_t* file) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
 
-  trexio_text_t* f = (trexio_text_t*) file;
-
   trexio_exit_code rc;
   rc = trexio_text_free_nucleus( (trexio_text_t*) file);
   assert (rc == TREXIO_SUCCESS);
@@ -177,7 +187,20 @@ trexio_exit_code trexio_text_finalize(trexio_t* file) {
   rc = trexio_text_free_rdm( (trexio_text_t*) file);
   assert (rc == TREXIO_SUCCESS);
   
-  /* Release lock */
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_unlock(trexio_t* file);
+    #+end_src
+    
+    #+begin_src c :tangle trexio_text.c
+trexio_exit_code trexio_text_unlock(trexio_t* file) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_text_t* f = (trexio_text_t*) file;
+
   struct flock fl;
 
   fl.l_type   = F_WRLCK;
