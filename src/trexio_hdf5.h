@@ -62,6 +62,32 @@ trexio_exit_code trexio_hdf5_init(trexio_t* file);
 
 trexio_exit_code trexio_hdf5_finalize(trexio_t* file);
 
+typedef struct one_index_s {
+  double value;
+  int64_t i;
+} one_index_t;
+
+typedef struct two_index_s {
+  double value;
+  int64_t i;
+  int64_t j;
+} two_index_t;
+
+typedef struct three_index_s {
+  double value;
+  int64_t i;
+  int64_t j;
+  int64_t k;
+} three_index_t;
+
+typedef struct four_index_s {
+  double value;
+  int64_t i;
+  int64_t j;
+  int64_t k;
+  int64_t l;
+} four_index_t;
+
 trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* num);
 trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint64_t num);
 

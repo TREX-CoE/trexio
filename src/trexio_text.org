@@ -1,3 +1,9 @@
+#+Title: TEXT back end of the TREX Input/Ouput library (TREXIO)
+
+* File prefixes                                                     :noxport:
+
+  #+NAME:header
+  #+begin_src c 
 /* This file was generated from the trexio.org org-mode file.
    To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
@@ -5,8 +11,100 @@
 
 
 
-#include "trexio_text.h"
+  #+end_src
 
+  #+begin_src c :tangle trexio_text.h :noweb yes
+<<header>>
+#ifndef _TREXIO_TEXT_H
+#define _TREXIO_TEXT_H
+
+#include "trexio.h"
+#include "trexio_s.h"
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+  #+end_src
+  
+  #+begin_src c :tangle trexio_text.c :noweb yes
+<<header>>
+#include "trexio_text.h"
+  #+end_src
+
+* TEXT Back end
+
+  The "file" produced by the text back end is a directory with one
+  file per group.
+  
+  When the file is open, it is locked by the current process. No other
+  process can read/write the same file. This guarantees that the
+  representation in memory is consistent with the file and avoid
+  re-reading the file before writing.
+  To lock the file, we lock the =.lock= file which is present in the
+  directory. 
+  
+  The file is written when closed, or when the flush function is called.
+  
+*** Structs for blocks
+    #+begin_src c :tangle trexio_text.h
+typedef struct nucleus_s {
+  FILE*    file;
+  uint64_t dim_coord;
+  uint64_t dim_charge;
+  double*  coord;
+  double*  charge;
+  uint64_t num;
+  int      to_flush;
+} nucleus_t;
+
+typedef struct electron_s {
+  FILE*    file;
+  uint64_t  alpha_num;
+  uint64_t  beta_num;
+  int       to_flush;
+} electron_t;
+
+typedef struct rdm_s {
+  FILE*    file;
+  uint64_t dim_one_e;
+  double*  one_e;
+  char*    two_e_file_name;
+  int      to_flush;
+} rdm_t;
+    #+end_src
+
+    
+*** TO DO
+    - to_flush = 1 in write
+    - to_flush = 0 when flushed
+    - name 
+
+*** Structs for the text back end
+    
+    #+begin_src c :tangle trexio_text.h
+typedef struct trexio_text_s {
+  trexio_t   parent ;
+  int        lock_file;
+
+  nucleus_t*  nucleus;
+  electron_t* electron;
+  rdm_t*      rdm;
+} trexio_text_t;
+
+    #+end_src
+
+
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_init(trexio_t* file);
+    #+end_src
+  
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_init(trexio_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -59,6 +157,14 @@ trexio_exit_code trexio_text_init(trexio_t* file) {
   return TREXIO_SUCCESS;
 }
 
+    #+end_src
+
+    
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_finalize(trexio_t* file);
+    #+end_src
+    
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_finalize(trexio_t* file) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -85,7 +191,17 @@ trexio_exit_code trexio_text_finalize(trexio_t* file) {
   close(f->lock_file);
   return TREXIO_SUCCESS;
 }
+    #+end_src
 
+*** Nucleus struct
+
+**** Read the struct
+
+    #+begin_src c :tangle trexio_text.h
+nucleus_t* trexio_text_read_nucleus(trexio_text_t* file);
+    #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
   if (file == NULL) return NULL;
 
@@ -181,7 +297,15 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
   file->nucleus = nucleus;
   return nucleus;
 }
+   #+end_src
 
+**** Flush the struct
+
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file);
+    #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -216,7 +340,17 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   file->nucleus->to_flush = 0;
   return TREXIO_SUCCESS;
 }
+   #+end_src
 
+**** Free memory
+
+     Memory is allocated when reading. The following function frees memory.
+    
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file);
+    #+end_src
+    
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   
@@ -249,7 +383,16 @@ trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
   file->nucleus = NULL;
   return TREXIO_SUCCESS;
 }
+    #+end_src
 
+**** Read/Write the num attribute
+
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num);
+trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint64_t num);
+   #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -278,7 +421,18 @@ trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint6
   
   return TREXIO_SUCCESS;
 }
+     #+end_src
 
+**** Read/Write the coord attribute
+
+     The ~coord~ array is assumed allocated with the appropriate size.
+    
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord, const uint64_t dim_coord);
+trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord, const uint64_t dim_coord);
+   #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord, const uint64_t dim_coord) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -321,7 +475,17 @@ trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const dou
   nucleus->to_flush = 1;
   return TREXIO_SUCCESS;
 }
+     #+end_src
+**** Read/Write the charge attribute
 
+     The ~charge~ array is assumed allocated with the appropriate size.
+    
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge, const uint64_t dim_charge);
+trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* charge, const uint64_t dim_charge);
+   #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge, const uint64_t dim_charge) {
 
   if (file   == NULL) return TREXIO_INVALID_ARG_1;
@@ -364,7 +528,16 @@ trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const do
   nucleus->to_flush = 1;
   return TREXIO_SUCCESS;
 }
+     #+end_src
 
+*** RDM struct
+**** Read the complete struct
+
+    #+begin_src c :tangle trexio_text.h
+rdm_t* trexio_text_read_rdm(trexio_text_t* file);
+    #+end_src
+    
+    #+begin_src c :tangle trexio_text.c
 rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
   if (file  == NULL) return NULL;
 
@@ -444,7 +617,15 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
   file->rdm = rdm ;
   return rdm;
 }
+   #+end_src
 
+**** Flush the complete struct
+
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file);
+    #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -475,7 +656,17 @@ trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
   file->rdm->to_flush = 0;
   return TREXIO_SUCCESS;
 }
+   #+end_src
 
+**** Free memory
+
+     Memory is allocated when reading. The followig function frees memory.
+    
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_free_rdm(trexio_text_t* file);
+    #+end_src
+    
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_free_rdm(trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   
@@ -507,7 +698,18 @@ trexio_exit_code trexio_text_free_rdm(trexio_text_t* file) {
   file->rdm = NULL;
   return TREXIO_SUCCESS;
 }
+    #+end_src
 
+**** Read/Write the one_e attribute
+
+     The ~one_e~ array is assumed allocated with the appropriate size.
+    
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_read_rdm_one_e(const trexio_t* file, double* one_e, const uint64_t dim_one_e);
+trexio_exit_code trexio_text_write_rdm_one_e(const trexio_t* file, const double* one_e, const uint64_t dim_one_e);
+   #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_read_rdm_one_e(const trexio_t* file, double* one_e, const uint64_t dim_one_e) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -542,7 +744,22 @@ trexio_exit_code trexio_text_write_rdm_one_e(const trexio_t* file, const double*
   rdm->to_flush = 1;
   return TREXIO_SUCCESS;
 }
+     #+end_src
 
+**** Read/Write the two_e attribute
+
+     ~two_e~ is a sparse data structure, which can be too large to fit
+     in memory. So we provide functions to read and write it by
+     chunks.
+     In the text back end, the easiest way to do it is to create a
+     file for each sparse float structure.
+    
+    #+begin_src c :tangle trexio_text.h
+trexio_exit_code trexio_text_buffered_read_rdm_two_e(const trexio_t* file, const uint64_t offset, const uint64_t size, int64_t* index, double* value);
+trexio_exit_code trexio_text_buffered_write_rdm_two_e(const trexio_t* file, const uint64_t offset, const uint64_t size, const int64_t* index, const double* value);
+   #+end_src
+
+    #+begin_src c :tangle trexio_text.c
 trexio_exit_code trexio_text_buffered_read_rdm_two_e(const trexio_t* file, const uint64_t offset, const uint64_t size, int64_t* index, double* value) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -607,3 +824,11 @@ trexio_exit_code trexio_text_buffered_write_rdm_two_e(const trexio_t* file, cons
 
   return TREXIO_SUCCESS;
 }
+     #+end_src
+
+* File suffixes                                                     :noxport:
+
+  #+begin_src c :tangle trexio_text.h
+#endif
+  #+end_src
+
