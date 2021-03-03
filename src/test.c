@@ -59,6 +59,18 @@ int test_h5write() {
   rc = trexio_write_nucleus_num(file,25);
   assert (rc != TREXIO_SUCCESS);
 
+  // close current session
+  rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+
+  file = trexio_open(file_name, 'a', TREXIO_HDF5);
+  assert (file != NULL);
+  
+  // works: try to read the nucleus_num from existing file
+  rc = trexio_read_nucleus_num(file,&num);
+  assert (rc == TREXIO_SUCCESS);
+  assert (num == 12);
+
   // works: try to rewrite the nucleus_coord
   coord[0] = 666.666;
   rc = trexio_write_nucleus_coord(file,coord);
@@ -79,6 +91,7 @@ int test_h5read() {
   int64_t num;
   double* coord;
 
+  // test reading existing file [created by test_h5write()], should work
   file = trexio_open(file_name, 'r', TREXIO_HDF5);
   assert (file != NULL);
 
@@ -98,6 +111,23 @@ int test_h5read() {
   assert( x*x < 1.e-12);
 
   rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+
+  // test reading non-existing file, should fail and return NULL
+  const char* file_name2 = "test_nonexisting.h5";
+  trexio_t* file2 = NULL;
+
+  file2 = trexio_open(file_name2, 'r', TREXIO_HDF5);
+  assert (file2 == NULL);
+
+  // test appending non-existing file, should create it
+  const char* file_name3 = "test_append.h5";
+  trexio_t* file3 = NULL;
+
+  file3 = trexio_open(file_name3, 'a', TREXIO_HDF5);
+  assert (file3 != NULL);
+
+  rc = trexio_close(file3);
   assert (rc == TREXIO_SUCCESS);
 
   free(coord);
