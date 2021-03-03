@@ -7,10 +7,10 @@
 
 #include "trexio_hdf5.h"
 
-  #define NUCLEUS_GROUP_NAME  "nucleus"
-  #define NUCLEUS_NUM_NAME    "nucleus_num"
-  #define NUCLEUS_CHARGE_NAME "nucleus_charge"
-  #define NUCLEUS_COORD_NAME  "nucleus_coord"
+#define NUCLEUS_GROUP_NAME  "nucleus"
+#define NUCLEUS_NUM_NAME    "nucleus_num"
+#define NUCLEUS_CHARGE_NAME "nucleus_charge"
+#define NUCLEUS_COORD_NAME  "nucleus_coord"
 
 /* 
  * Currently H5LTread_dataset_ is used instead of this function 
@@ -68,26 +68,59 @@ trexio_exit_code trexio_hdf5_init(trexio_t* file) {
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   /* If file doesn't exist, create it */
-  int f_ishere = 0;
+  int f_exists = 0;
   struct stat st;
   
-  if (stat(file->file_name, &st) == 0) {
-    printf("%s \n","HDF5 file already exists");
-   // RDWR OR RDONLY ???
-    f->file_id = H5Fopen(file->file_name, H5F_ACC_RDWR, H5P_DEFAULT);
-    f_ishere = 1;
+  if (stat(file->file_name, &st) == 0) f_exists = 1;
+  
+  if (f_exists == 1) {
+
+    switch (file->mode) {
+    case 'r': 
+      // reading the existing file -> open as RDONLY
+      f->file_id = H5Fopen(file->file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
+      break;
+    case 'a': 
+      // appending the existing file -> open as RDWR
+      f->file_id = H5Fopen(file->file_name, H5F_ACC_RDWR, H5P_DEFAULT);
+      break;
+    case 'w': 
+      // writing the existing file -> overwrite it (_TRUNC) [_EXCL | H5F_ACC_DEBUG as an alternative]
+      f->file_id = H5Fcreate(file->file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+      break;
+    }  
+
   } else {
-    f->file_id = H5Fcreate(file->file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    f_ishere = 0;
+
+    switch (file->mode) {
+    case 'r': 
+      // reading non-existing file -> error
+      return TREXIO_FAILURE;
+    case 'a': 
+    case 'w': 
+      // appending or writing non-existing file -> create it
+      f->file_id = H5Fcreate(file->file_name, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+      break;
+    }  
+
   }  
 
-  /* Create groups in the hdf5 file */
-  if (f_ishere == 0){
-    f->nucleus_group = H5Gcreate(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    //f->electron_group = H5Gcreate(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  } else { 
-    f->nucleus_group = H5Gopen(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT);
-    //f->electron_group = H5Gopen(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT);   
+  /* Create or open groups in the hdf5 file assuming that they exist if file exists */    
+  switch (file->mode) {
+    case 'r':
+    case 'a': 
+      if (f_exists == 1) {
+        f->nucleus_group = H5Gopen(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT);
+      //f->electron_group = H5Gopen(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT);   
+      } else {
+        f->nucleus_group = H5Gcreate(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      //f->electron_group = H5Gcreate(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      }
+      break;
+    case 'w':
+      f->nucleus_group = H5Gcreate(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      //f->electron_group = H5Gcreate(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      break;
   }
   assert (f->nucleus_group > 0L);
   //assert (f->electron_group > 0L);

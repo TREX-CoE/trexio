@@ -46,7 +46,8 @@ test: libtrexio.so test.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test
 
 clean:
-	rm -f *.o libtrexio.so test test_write.h5
+	rm -f *.o libtrexio.so test test_*.h5 
+	rm -r trexio_test/
 
 %.o: %.c $(HEADER_FILES)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $*.c -o $*.o

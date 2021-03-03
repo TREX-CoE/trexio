@@ -27,7 +27,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   if (back_end <  0) return NULL;
   if (back_end >= TREXIO_INVALID_BACK_END) return NULL;
   
-  if (mode != 'r' && mode != 'w') return NULL;
+  if (mode != 'r' && mode != 'w' && mode != 'a') return NULL;
 
   trexio_t* result = NULL;
   
