@@ -39,8 +39,7 @@
 ,*/
 
   #+end_src
-
-
+  
   #+begin_src c :tangle trexio_s.h :noweb yes
 <<header>>
 #ifndef _TREXIO_S_H
@@ -50,51 +49,6 @@
 #include <pthread.h>
 #include <assert.h>
   #+end_src
-
-  #+begin_src c :tangle trexio_text.h :noweb yes
-<<header>>
-#ifndef _TREXIO_TEXT_H
-#define _TREXIO_TEXT_H
-
-#include "trexio.h"
-#include "trexio_s.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <sys/stat.h>
-
-  #+end_src
-  
-  #+begin_src c :tangle trexio_text.c :noweb yes
-<<header>>
-#include "trexio_text.h"
-  #+end_src
-
-  #+begin_src c :tangle trexio_hdf5.h :noweb yes
-<<header>>
-#ifndef _TREXIO_HDF5_H
-#define _TREXIO_HDF5_H
-
-#include "trexio.h"
-#include "trexio_s.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <sys/stat.h>
-
-#include "hdf5.h"
-#include "hdf5_hl.h" // needed for high-level APIs like H5LT, requires additional linking in Makefile
-  #+end_src
-  
-  #+begin_src c :tangle trexio_hdf5.c :noweb yes
-<<header>>
-#include "trexio_hdf5.h"
-  #+end_src
-
 
 * Coding conventions
 
@@ -115,15 +69,21 @@
    #+begin_src c :tangle trexio.h
 typedef int32_t trexio_exit_code;
 
-#define TREXIO_SUCCESS ( (trexio_exit_code) 0 )
-#define TREXIO_FAILURE ( (trexio_exit_code) 1 )
+#define TREXIO_FAILURE       ( (trexio_exit_code) -1 )
+#define TREXIO_SUCCESS       ( (trexio_exit_code)  0 )
+#define TREXIO_INVALID_ARG_1 ( (trexio_exit_code)  1 )
+#define TREXIO_INVALID_ARG_2 ( (trexio_exit_code)  2 )
+#define TREXIO_INVALID_ARG_3 ( (trexio_exit_code)  3 )
+#define TREXIO_INVALID_ARG_4 ( (trexio_exit_code)  4 )
+#define TREXIO_INVALID_ARG_5 ( (trexio_exit_code)  5 )
+#define TREXIO_END           ( (trexio_exit_code) 10 )
+#define TREXIO_READONLY      ( (trexio_exit_code) 11 )
    #+end_src
-   
    
 ** Back ends
 
    #+begin_src c :tangle trexio.h
-typedef uint32_t back_end_t;
+typedef int32_t back_end_t;
 
 #define TREXIO_HDF5             ( (back_end_t) 0 )
 #define TREXIO_TEXT             ( (back_end_t) 1 ) 
@@ -189,23 +149,23 @@ struct trexio_back_end_s {
 } 
    #+end_src
    
-** File creation and opening
+** File opening
    
    #+begin_src c :tangle trexio.h
-trexio_t* trexio_create(const char* file_name, back_end_t back_end);
+trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end);
    #+end_src
-
    
    #+begin_src c :tangle trexio.c
-trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
+trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end) {
   
-  /* Check that file name is not NULL or empty */
-  assert (file_name != NULL);
-  assert (file_name[0] != '\0');
+  if (file_name == NULL) return NULL;
+  if (file_name[0] == '\0') return NULL;
   
-  /* Check that back_end is valid */
-  assert (back_end < TREXIO_INVALID_BACK_END);
+  if (back_end <  0) return NULL;
+  if (back_end >= TREXIO_INVALID_BACK_END) return NULL;
   
+  if (mode != 'r' && mode != 'w') return NULL;
+
   trexio_t* result = NULL;
   
   switch (back_end) {
@@ -222,8 +182,6 @@ trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
     result = (trexio_t*) malloc (sizeof(trexio_json_t));
     break;
 ,*/      
-  default:
-    assert (1 == 0);  /* Impossible case */
   }
   
   /* TODO: Error handling */
@@ -232,7 +190,7 @@ trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
   result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
   strcpy(result->file_name, file_name);
   result->back_end    = back_end;
-  result->mode        = 'w';  /* Upon creation, mode=write */
+  result->mode        = mode;
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
   assert (irc == 0);
 
@@ -252,15 +210,12 @@ trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
     rc = trexio_json_init(result);
     break;
 ,*/      
-  default:
-    assert (1 == 0);  /* Impossible case */
   }
-  assert (rc == TREXIO_SUCCESS);
+  if (rc != TREXIO_SUCCESS) return NULL;
   
   return result;
 }
    #+end_src
-   
    
 ** File closing
    
@@ -271,7 +226,7 @@ trexio_exit_code trexio_close(trexio_t* file);
    #+begin_src c :tangle trexio.c
 trexio_exit_code trexio_close(trexio_t* file) {
 
-  assert (file != NULL);
+  if (file == NULL) return TREXIO_FAILURE;
   
   trexio_exit_code rc;
   
@@ -309,72 +264,91 @@ trexio_exit_code trexio_close(trexio_t* file) {
 }
    #+end_src
 ** Reading/writing data
-
-   #+begin_src c :tangle trexio.h
-trexio_exit_code trexio_read_nucleus_num(trexio_t* file, uint64_t* num);
-trexio_exit_code trexio_write_nucleus_num(trexio_t* file, uint64_t num);
-   #+end_src
+*** nucleus
+**** num
+     #+begin_src c :tangle trexio.h
+trexio_exit_code trexio_read_nucleus_num(trexio_t* file, int64_t* num);
+trexio_exit_code trexio_write_nucleus_num(trexio_t* file, const int64_t num);
+     #+end_src
    
-   #+begin_src c :tangle trexio.c
-trexio_exit_code trexio_read_nucleus_num(trexio_t* file, uint64_t* num) {
-  if (file == NULL) return TREXIO_FAILURE;
+     #+begin_src c :tangle trexio.c
+trexio_exit_code trexio_read_nucleus_num(trexio_t* file, int64_t* num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  uint64_t u_num = 0;
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_num(file, num);
+    rc = trexio_text_read_nucleus_num(file, &u_num);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_nucleus_num(file, num);
+    rc = trexio_hdf5_read_nucleus_num(file, &u_num);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_nucleus_num(file, num);
+    rc =trexio_json_read_nucleus_num(file, &u_num);
     break;
-*/      
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
+,*/      
   }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+                              
+  /**/ *num = (int64_t) u_num;
+  return TREXIO_SUCCESS;
 }
 
-trexio_exit_code trexio_write_nucleus_num(trexio_t* file, uint64_t num) {
-  if (file == NULL) return TREXIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_num(trexio_t* file, const int64_t num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (num  <  0   ) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_num(file, num);
+    rc = trexio_text_write_nucleus_num(file, (uint64_t) num);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_write_nucleus_num(file, num);
+    rc = trexio_hdf5_write_nucleus_num(file, (uint64_t) num);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_write_nucleus_num(file, num);
+    rc = trexio_json_write_nucleus_num(file, (uint64_t) num);
     break;
-*/      
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
+,*/      
   }
+  if (rc != TREXIO_SUCCESS) return rc;
+                              
+  return TREXIO_SUCCESS;
 }
-   #+end_src
+     #+end_src
 
-
-   #+begin_src c :tangle trexio.h
+**** coord
+     #+begin_src c :tangle trexio.h
 trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord);
-trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, double* coord);
-   #+end_src
+trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord);
+     #+end_src
    
-   #+begin_src c :tangle trexio.c
+     #+begin_src c :tangle trexio.c
 trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
-  if (file == NULL) return TREXIO_FAILURE;
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (coord == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_coord = nucleus_num*3;
+  if (dim_coord < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_coord(file, coord);
+    return trexio_text_read_nucleus_coord(file, coord, (uint64_t) dim_coord);
     break;
 
   case TREXIO_HDF5:
@@ -390,13 +364,21 @@ trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
   }
 }
 
-trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, double* coord) {
-  if (file == NULL) return TREXIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (coord == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_coord = nucleus_num*3;
+  if (dim_coord < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_coord(file, coord);
+    return trexio_text_write_nucleus_coord(file, coord, (uint64_t) dim_coord);
     break;
 
   case TREXIO_HDF5:
@@ -411,22 +393,30 @@ trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, double* coord) {
     return TREXIO_FAILURE;  /* Impossible case */
   }
 }
-   #+end_src
+     #+end_src
 
-
-   #+begin_src c :tangle trexio.h
+**** charge
+     #+begin_src c :tangle trexio.h
 trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge);
-trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge);
-   #+end_src
+trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, const double* charge);
+     #+end_src
    
-   #+begin_src c :tangle trexio.c
+     #+begin_src c :tangle trexio.c
 trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge) {
-  if (file == NULL) return TREXIO_FAILURE;
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (charge == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_charge = nucleus_num;
+  if (dim_charge < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_charge(file, charge);
+    return trexio_text_read_nucleus_charge(file, charge, (uint64_t) dim_charge);
     break;
 /*
   case TREXIO_HDF5:
@@ -436,19 +426,27 @@ trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge) {
   case TREXIO_JSON:
     return trexio_json_read_nucleus_charge(file, charge);
     break;
-*/
+,*/
   default:
     return TREXIO_FAILURE;  /* Impossible case */
   }
 }
 
-trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge) {
-  if (file == NULL) return TREXIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, const double* charge) {
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (charge == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_charge = nucleus_num;
+  if (dim_charge < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_charge(file, charge);
+    return trexio_text_write_nucleus_charge(file, charge, (uint64_t) dim_charge);
     break;
 /*
   case TREXIO_HDF5:
@@ -463,7 +461,139 @@ trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge) {
     return TREXIO_FAILURE;  /* Impossible case */
   }
 }
-   #+end_src
+     #+end_src
+   
+*** rdm
+**** one_e 
+     #+begin_src c :tangle trexio.h
+trexio_exit_code trexio_read_rdm_one_e(trexio_t* file, double* one_e);
+trexio_exit_code trexio_write_rdm_one_e(trexio_t* file, const double* one_e);
+     #+end_src
+   
+     #+begin_src c :tangle trexio.c
+trexio_exit_code trexio_read_rdm_one_e(trexio_t* file, double* one_e) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t dim_one_e = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &dim_one_e); /* This dimension is wrong. Should be mo_num */
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (dim_one_e < 0) return TREXIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_rdm_one_e(file, one_e);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_read_rdm_one_e(file, one_e);
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trexio_exit_code trexio_write_rdm_one_e(trexio_t* file, const double* one_e) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_one_e = nucleus_num * nucleus_num; /* This dimension is wrong. Should be mo_num */
+  if (dim_one_e < 0) return TREXIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_rdm_one_e(file, one_e);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_write_rdm_one_e(file, one_e);
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+     #+end_src
+   
+**** two_e
+
+     ~buffered_read~ functions return ~TREXIO_SUCCESS~ if the complete
+     buffer was read or written. If the read data is smaller than the
+     buffer because the end is reached, the function returns ~TREXIO_END~.
+
+     #+begin_src c :tangle trexio.h
+trexio_exit_code trexio_buffered_read_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, int64_t* index, double* value);
+trexio_exit_code trexio_buffered_write_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, const int64_t* index, const double* value);
+     #+end_src
+   
+     #+begin_src c :tangle trexio.c
+trexio_exit_code trexio_buffered_read_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, int64_t* index, double* value) {
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
+  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
+  if (index  == NULL) return TREXIO_INVALID_ARG_4;
+  if (value  == NULL) return TREXIO_INVALID_ARG_5;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_buffered_read_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_buffered_read_rdm_two_e(file, size);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_buffered_read_rdm_two_e(file, size);
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trexio_exit_code trexio_buffered_write_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, const int64_t* index, const double* value) {
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
+  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
+  if (index  == NULL) return TREXIO_INVALID_ARG_4;
+  if (value  == NULL) return TREXIO_INVALID_ARG_5;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_buffered_write_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_buffered_write_rdm_two_e(file, size);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_buffered_write_rdm_two_e(file, size);
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+     #+end_src
    
 * Back ends
   
@@ -473,883 +603,6 @@ trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge) {
    - Text files: not to be used for production, but useful for debugging
    - JSON: for portability
      
-** TEXT Back end
-
-  #+begin_src c :tangle trexio_text.h
-typedef struct nucleus_s {
-  double*  coord;
-  double*  charge;
-  uint64_t  num;
-} nucleus_t;
-
-typedef struct electron_s {
-  uint64_t  alpha_num;
-  uint64_t  beta_num;
-} electron_t;
-
-typedef struct trexio_text_s {
-  trexio_t     parent ;
-  char*      nucleus_file_name;
-  char*      electron_file_name;
-} trexio_text_t;
-
-  #+end_src
-
-
-  #+begin_src c :tangle trexio_text.h
-trexio_exit_code trexio_text_init(trexio_t* file);
-  #+end_src
-  
-  #+begin_src c :tangle trexio_text.c
-trexio_exit_code trexio_text_init(trexio_t* file) {
-
-  trexio_text_t* f = (trexio_text_t*) file;
-
-  /* If directory doesn't exist, create it */
-  struct stat st;
-  
-  if (stat(file->file_name, &st) == 0 && S_ISDIR(st.st_mode)) {
-    /* Do nothing */
-  } else {
-    if (mkdir(file->file_name, 0777) != 0) {
-      return TREXIO_FAILURE;
-    }
-  }  
-
-  /* Create name of files in the directory */
-  const char* nucleus_file_name = "/nucleus.txt";
-  f->nucleus_file_name = (char*)
-    calloc( strlen(file->file_name) + strlen(nucleus_file_name) + 1,
-            sizeof(char));
-  assert (f->nucleus_file_name != NULL);
-  strcpy (f->nucleus_file_name, file->file_name);
-  strcat (f->nucleus_file_name, nucleus_file_name);
-
-
-  const char* electron_file_name = "/electron.txt";
-  f->electron_file_name = (char*)
-    calloc( strlen(file->file_name) + strlen(electron_file_name) + 1,
-            sizeof(char));
-  assert (f->electron_file_name != NULL);
-  strcpy (f->electron_file_name, file->file_name);
-  strcat (f->electron_file_name, electron_file_name);
-
-  return TREXIO_SUCCESS;
-}
-
-  #+end_src
-
-    
-  #+begin_src c :tangle trexio_text.h
-trexio_exit_code trexio_text_finalize(trexio_t* file);
-  #+end_src
-
-  #+begin_src c :tangle trexio_text.c
-trexio_exit_code trexio_text_finalize(trexio_t* file) {
-
-  trexio_text_t* f = (trexio_text_t*) file;
-
-  free (f->nucleus_file_name);
-  f->nucleus_file_name = NULL;
-
-  free (f->electron_file_name);
-  f->electron_file_name = NULL;
-
-  return TREXIO_SUCCESS;
-}
-  #+end_src
-
-  
-  
-*** Read/write the nucleus struct
-
-   #+begin_src c :tangle trexio_text.c
-nucleus_t* trexio_text_read_nucleus(const trexio_text_t* file) {
-
-  /* Allocate the data structure */
-  nucleus_t* nucleus = (nucleus_t*) malloc(sizeof(nucleus_t));
-  assert (nucleus != NULL);
-
-  nucleus->num    = 0;
-  nucleus->coord  = NULL;
-  nucleus->charge = NULL;
-
-  /* Try to open the file. If the file does not exist, return */
-  FILE* f = fopen(file->nucleus_file_name,"r");
-  if (f == NULL) {
-    return nucleus;
-  }
-
-  /* Find size of file to allocate the max size of the string buffer */
-  fseek(f, 0L, SEEK_END);
-  size_t sz = ftell(f);
-  fseek(f, 0L, SEEK_SET);
-  char* buffer = (char*) malloc(sz*sizeof(char));
-
-  /* Read the dimensioning variables */
-  fscanf(f, "%s", buffer);
-  assert (strcmp(buffer, "num") == 0);
-
-  fscanf(f, "%lu", &(nucleus->num));
-  assert (nucleus->num > 0);
-
-  /* Allocate arrays */
-  nucleus->charge = (double*) calloc(nucleus->num, sizeof(double));
-  assert (nucleus->charge != NULL);
-  
-  nucleus->coord = (double*) calloc(3 * nucleus->num, sizeof(double));
-  assert (nucleus->coord != NULL);
-
-  /* Read arrays */
-  fscanf(f, "%s", buffer);
-  assert (strcmp(buffer, "charge") == 0);
-
-  for (size_t i=0 ; i<nucleus->num ; i++) {
-    fscanf(f, "%lf", &(nucleus->charge[i]));
-  }
-  
-  fscanf(f, "%s", buffer);
-  assert (strcmp(buffer, "coord") == 0);
-
-  for (size_t i=0 ; i<3*nucleus->num ; i++) {
-      fscanf(f, "%lf", &(nucleus->coord[i]));
-  }
-  free(buffer);
-  fclose(f);
-  return nucleus;
-}
-
-
-trexio_exit_code trexio_text_write_nucleus(const trexio_text_t* file, nucleus_t* nucleus) {
-  assert (nucleus != NULL);
-
-  FILE* f = fopen(file->nucleus_file_name,"w");
-  assert (f != NULL);
-
-  /* Write the dimensioning variables */
-  fprintf(f, "num %ld\n", nucleus->num);
-
-  /* Write arrays */
-  fprintf(f, "charge\n");
-  for (size_t i=0 ; i<nucleus->num ; i++) {
-    fprintf(f, "%lf\n", nucleus->charge[i]);
-  }
-
-  fprintf(f, "coord\n");
-  for (size_t i=0 ; i<3*nucleus->num ; i++) {
-      fprintf(f, "%lf\n", nucleus->coord[i]);
-  }
-
-  fclose(f);
-  return TREXIO_SUCCESS;
-}
-  #+end_src
-
-*** Free memory
-
-    Memory is allocated when reading. The followig function frees memory.
-    
-   #+begin_src c :tangle trexio_text.c
-trexio_exit_code trexio_text_free_nucleus(nucleus_t* nucleus) {
-  
-  if (nucleus == NULL) {
-    return TREXIO_FAILURE;
-  }
-  
-  if (nucleus->coord != NULL) {
-    free (nucleus->coord);
-  }
-  nucleus->coord = NULL;
-  
-  if (nucleus->charge != NULL) {
-    free (nucleus->charge);
-  }
-  nucleus->charge = NULL;
-  
-  free (nucleus);
-  return TREXIO_SUCCESS;
-}
-   #+end_src
-
-*** Read/Write the num attribute
-
-   #+begin_src c :tangle trexio_text.h
-trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num);
-trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint64_t num);
-  #+end_src
-
-   #+begin_src c :tangle trexio_text.c
-trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num) {
-
-  assert (file != NULL);
-  assert (num  != NULL);
-
-  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
-  
-  if (nucleus == NULL) {
-    return TREXIO_FAILURE;
-  }
-
-  /**/ *num = nucleus->num;
-
-  trexio_text_free_nucleus(nucleus);
-  return TREXIO_SUCCESS;
-}
-
- 
-trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint64_t num) {
-
-  assert (num > 0L);
-  assert (file != NULL);
-  
-  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
-
-  assert (nucleus != NULL);
-  
-  if (nucleus->num != num) {
-
-    nucleus->num = num;
-
-    if (nucleus->charge != NULL) free(nucleus->charge);
-    nucleus->charge = NULL;
-
-    nucleus->charge = (double*) calloc(num, sizeof(double));
-    assert (nucleus->charge != NULL);
-    
-    if (nucleus->coord  != NULL) free(nucleus->coord );
-    nucleus->coord = NULL;
-
-    nucleus->coord = (double*) calloc(3*num, sizeof(double));
-    assert (nucleus->coord != NULL);
-
-  } else {
-    nucleus->num = num;
-  }
-  
-  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
-  assert (rc == TREXIO_SUCCESS);
-
-  trexio_text_free_nucleus(nucleus);
-  
-  return TREXIO_SUCCESS;
-}
-    #+end_src
-
-*** Read/Write the coord attribute
-
-    The ~coord~ array is assumed allocated with the appropriate size.
-    
-   #+begin_src c :tangle trexio_text.h
-trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord);
-trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord);
-  #+end_src
-
-   #+begin_src c :tangle trexio_text.c
-trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord) {
-
-  assert (file != NULL);
-  assert (file != NULL);
-  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
-  
-  if (nucleus == NULL) {
-    return TREXIO_FAILURE;
-  }
-
-  assert (coord != NULL);
-  
-  for (size_t i=0 ; i<3*nucleus->num ; i++) {
-    coord[i] = nucleus->coord[i];
-  }
-
-  trexio_text_free_nucleus(nucleus);
-  return TREXIO_SUCCESS;
-}
-
- 
-trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord) {
-
-  assert (coord != NULL);
-  assert (file != NULL);
-  
-  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
-  assert (nucleus != NULL);
-  
-  for (size_t i=0 ; i<3*nucleus->num ; i++) {
-    nucleus->coord[i] = coord[i];
-  }
-  
-  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
-  assert (rc == TREXIO_SUCCESS);
-
-  trexio_text_free_nucleus(nucleus);
-  
-  return TREXIO_SUCCESS;
-}
-    #+end_src
-*** Read/Write the charge attribute
-
-    The ~charge~ array is assumed allocated with the appropriate size.
-    
-   #+begin_src c :tangle trexio_text.h
-trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* coord);
-trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* coord);
-  #+end_src
-
-   #+begin_src c :tangle trexio_text.c
-trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge) {
-
-  assert (file != NULL);
-  assert (file != NULL);
-  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*)file);
-  
-  if (nucleus == NULL) {
-    return TREXIO_FAILURE;
-  }
-
-  assert (charge != NULL);
-  
-  for (size_t i=0 ; i<nucleus->num ; i++) {
-    charge[i] = nucleus->charge[i];
-  }
-
-  trexio_text_free_nucleus(nucleus);
-  return TREXIO_SUCCESS;
-}
-
- 
-trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* charge) {
-
-  assert (charge != NULL);
-  assert (file != NULL);
-  
-  nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*)file);
-  assert (nucleus != NULL);
-  
-  for (size_t i=0 ; i<nucleus->num ; i++) {
-    nucleus->charge[i] = charge[i];
-  }
-  
-  trexio_exit_code rc = trexio_text_write_nucleus((trexio_text_t*) file, nucleus);
-  assert (rc == TREXIO_SUCCESS);
-
-  trexio_text_free_nucleus(nucleus);
-  
-  return TREXIO_SUCCESS;
-}
-    #+end_src
-** HDF5 Back end
-
-*** HDF5 definitions
-
-#+begin_src c :tangle trexio_hdf5.c
-  #define NUCLEUS_GROUP_NAME  "nucleus"
-  #define NUCLEUS_NUM_NAME    "nucleus_num"
-  #define NUCLEUS_CHARGE_NAME "nucleus_charge"
-  #define NUCLEUS_COORD_NAME  "nucleus_coord"
-  
-#+end_src
-
-*** HDF5 structures
-
-  #+begin_src c :tangle trexio_hdf5.h
-
-typedef struct slab_s {
-  uint64_t a;
-  uint64_t b;
-  uint64_t c;
-  uint64_t d;
-} slab_t;
-
-typedef struct dset_s {
-  hid_t dset_id;
-  hid_t dspace_id;
-  hid_t dtype_id;
-  uint64_t* dims;
-  uint32_t rank;
-  const char* dset_name;
-} dset_t;
-
-typedef struct h5nucleus_s {
-  uint64_t   num;
-  double    *coord;
-  double    *charge;
-  dset_t*    h5_coord;
-  dset_t*    h5_charge;
-} h5nucleus_t;
-
-typedef struct h5electron_s {
-  uint64_t  alpha_num;
-  uint64_t  beta_num;
-} h5electron_t;
-
-typedef struct trexio_hdf5_s {
-  trexio_t     parent ;
-  hid_t      file_id;
-  hid_t      nucleus_group;
-  hid_t      electron_group;
-  //... other groups' id
-  const char* file_name;
-} trexio_hdf5_t;
-
-  #+end_src
-
-*** HDF5 basic functions
-
-
-  #+begin_src c :tangle trexio_hdf5.h
-trexio_exit_code trexio_hdf5_init(trexio_t* file);
-  #+end_src
-
-
-  #+begin_src c :tangle trexio_hdf5.c
-
-/* 
- * Currently H5LTread_dataset_ is used instead of this function 
- * but keep it for later if we decide to get rid of the H5LT API 
- */
-dset_t* trexio_hdf5_read_dset_low(const trexio_hdf5_t* file, const char *dset_name, void *buf) {
-
-  assert (file != NULL);
-  assert (dset_name != NULL);
-  assert (buf != NULL);
-  /*
-   * Low-level implementation. Involves dealing with all HDF5 handles and dimensions
-   */
-  dset_t* dset = (dset_t*) malloc(sizeof(dset_t));
-  assert (dset != NULL);
-
-  dset->dset_id = H5Dopen(file->nucleus_group, 
-                          dset_name, 
-                          H5P_DEFAULT);
-  assert (dset->dset_id > 0);
-  /*
-   * Get dataspace, datatype and dimensions
-   * dspace and dtype handles created below have to be closed when not used
-   */    
-  dset->dspace_id = H5Dget_space(dset->dset_id);
-  assert (dset->dspace_id > 0);
-  
-  dset->dtype_id = H5Dget_type(dset->dset_id);
-  assert (dset->dtype_id > 0);
-  
-  /* Check dimensions. Usefull, but then additional parameters 
-   * ranks and dims[] have to be passed to the function
-  int rrank;
-  const int rank = 1;
-  hsize_t dims[1] = {0};
-  rrank = H5Sget_simple_extent_dims(nucleus->h5_charge->dspace_id, 
-                                    dims, NULL);
-  assert (rrank == rank);
-  for (int i=0; i<rank; i++){
-    assert (dims[i] > 0);
-  }
-  */
-  herr_t status;
-  status = H5Dread(dset->dset_id, dset->dtype_id,
-               H5S_ALL, H5S_ALL, H5P_DEFAULT,
-	       buf);
-  assert (status >= 0);
-
-  return dset;
-
-}
-
-trexio_exit_code trexio_hdf5_init(trexio_t* file) {
-
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
-
-  /* If file doesn't exist, create it */
-  int f_ishere = 0;
-  struct stat st;
-  
-  if (stat(file->file_name, &st) == 0) {
-    printf("%s \n","HDF5 file already exists");
-   // RDWR OR RDONLY ???
-    f->file_id = H5Fopen(file->file_name, H5F_ACC_RDWR, H5P_DEFAULT);
-    f_ishere = 1;
-  } else {
-    f->file_id = H5Fcreate(file->file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    f_ishere = 0;
-  }  
-
-  /* Create groups in the hdf5 file */
-  if (f_ishere == 0){
-    f->nucleus_group = H5Gcreate(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    //f->electron_group = H5Gcreate(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  } else { 
-    f->nucleus_group = H5Gopen(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT);
-    //f->electron_group = H5Gopen(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT);   
-  }
-  assert (f->nucleus_group > 0L);
-  //assert (f->electron_group > 0L);
-
-  return TREXIO_SUCCESS;
-}
-
-  #+end_src
-
-    
-  #+begin_src c :tangle trexio_hdf5.h
-trexio_exit_code trexio_hdf5_finalize(trexio_t* file);
-  #+end_src
-
-  #+begin_src c :tangle trexio_hdf5.c
-trexio_exit_code trexio_hdf5_finalize(trexio_t* file) {
-
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
-
-  H5Gclose(f->nucleus_group);
-  f->nucleus_group = 0;
-
-/*
-  H5Gclose(f->electron_group);
-  f->electron_group = 0; 
-*/
-
-  H5Fclose(f->file_id);
-  f->file_id = 0;
-
-  return TREXIO_SUCCESS;
-}
-  #+end_src
-
-  
-  
-*** Read/write the nucleus struct
-
-   #+begin_src c :tangle trexio_hdf5.c
-h5nucleus_t* trexio_hdf5_read_nucleus(const trexio_hdf5_t* file) {
-  
-  /* Allocate the data structure */
-  h5nucleus_t* nucleus = (h5nucleus_t*) malloc(sizeof(h5nucleus_t));
-  assert (nucleus != NULL);
-
-  nucleus->num    = 0;
-  nucleus->coord  = NULL;
-  nucleus->charge = NULL;
-  nucleus->h5_coord  = NULL;
-  nucleus->h5_charge = NULL;
-
-  /* Check that the file was opened/created correctly, return */ 
-  if (file->file_id < 0) return nucleus;
-
-  /* Quit if the dimensioning attribute is missing in the file */
-  if (H5Aexists(file->nucleus_group, NUCLEUS_NUM_NAME) == 0) return nucleus;
-
-  herr_t status;  
-  /* Read the nucleus_num attribute of nucleus group */
-  hid_t num_id;
-  num_id = H5Aopen(file->nucleus_group, NUCLEUS_NUM_NAME, H5P_DEFAULT);
-  assert (num_id > 0);
-
-  status = H5Aread(num_id, H5T_NATIVE_ULLONG, &(nucleus->num));
-  assert (status >= 0);
-
-  /* Allocate and read nucleus_charge array */
-  nucleus->charge = (double*) calloc(nucleus->num, sizeof(double));
-  assert (nucleus->charge != NULL);
-
-  /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  status = H5LTread_dataset_double(file->nucleus_group, 
-                                NUCLEUS_CHARGE_NAME, 
-				nucleus->charge);
-
-  /* Allocate and read nucleus_coord array */
-  nucleus->coord = (double*) calloc(3 * nucleus->num, sizeof(double));
-  assert (nucleus->coord != NULL);
-
-  /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  status = H5LTread_dataset_double(file->nucleus_group, 
-                                    NUCLEUS_COORD_NAME, 
-				    nucleus->coord);
-  assert (status >= 0);
-
-  /* Low-level read. Do not forget to close the associated IDs (dset,dtype,dspace) 
-   *  when not used anymore, see below. Note how this function is similar to H5LTread_dataset_double
-   */
-  /*
-  nucleus->h5_coord = trexio_hdf5_read_dset_low(file, NUCLEUS_COORD_NAME, 
-  		  		nucleus->coord); 
-
-  H5Sclose(nucleus->h5_coord->dspace_id);
-  H5Tclose(nucleus->h5_coord->dtype_id);
-  H5Dclose(nucleus->h5_coord->dset_id);
-  */
-
-  H5Aclose(num_id);
-
-  return nucleus;
-}
-
-
-trexio_exit_code trexio_hdf5_write_nucleus(const trexio_hdf5_t* file, h5nucleus_t* nucleus) {
-
-  assert (file != NULL);
-  assert (nucleus != NULL);
-
-  herr_t status;
-  hid_t dspace, dtype; 
-  hid_t attr_id;
-    
-  dtype = H5Tcopy(H5T_NATIVE_ULLONG);
-  /* Write the dimensioning variables */
-  if (H5Aexists(file->nucleus_group, NUCLEUS_NUM_NAME) == 0) {
-    dspace = H5Screate(H5S_SCALAR);
-    attr_id = H5Acreate(file->nucleus_group, NUCLEUS_NUM_NAME, dtype, dspace,
-                     H5P_DEFAULT, H5P_DEFAULT);
-    assert (attr_id > 0);
-
-    /* High-level routine does not work for some reason
-     * status = H5LTset_attribute_ulong (file->nucleus_group, "nucleus", NUCLEUS_NUM_NAME, 
-     *                                  &(nucleus->num), 1);
-     */
-  } else {
-    attr_id = H5Aopen(file->nucleus_group, NUCLEUS_NUM_NAME, H5P_DEFAULT);
-    assert (attr_id > 0);
-  }
-
-  status = H5Awrite(attr_id, dtype, &(nucleus->num));
-  assert (status >= 0); 
-
-  H5Aclose(attr_id);
-  
-  /* Write arrays */
-  hid_t dset_id;
-  int charge_rank = 1;
-  const hsize_t charge_dims[1] = {nucleus->num};
-
-  if ( H5LTfind_dataset(file->nucleus_group, NUCLEUS_CHARGE_NAME) != 1) { 
-    
-    status = H5LTmake_dataset_double (file->nucleus_group, NUCLEUS_CHARGE_NAME, 
-                                    charge_rank, charge_dims, nucleus->charge);
-    assert (status >= 0);
-
-  } else {   
-
-    dset_id = H5Dopen(file->nucleus_group, NUCLEUS_CHARGE_NAME, H5P_DEFAULT);
-    assert (dset_id > 0);
-    
-    dspace = H5Dget_space(dset_id);
-    assert (dspace > 0);
-
-    dtype = H5Dget_type(dset_id);
-    assert (dtype > 0);
-
-    
-    int rrank;
-    hsize_t dims[1] = {0};
-    rrank = H5Sget_simple_extent_dims(dspace,
-                                    dims, NULL);
-    assert (rrank == charge_rank);
-    // disabling asserts like this allows to overwrite _num variable
-    for (int i=0; i<rrank; i++){
-      assert (dims[i] == charge_dims[i]);
-    }
-
-    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, nucleus->charge);
-    assert (status >= 0);
-
-    H5Sclose(dspace);
-    H5Tclose(dtype);
-    H5Dclose(dset_id);
-
-  }
-
-  int coord_rank = 2;
-  const hsize_t coord_dims[2] = {nucleus->num, 3};
-  if ( H5LTfind_dataset(file->nucleus_group, NUCLEUS_COORD_NAME) != 1) { 
-    status = H5LTmake_dataset_double (file->nucleus_group, NUCLEUS_COORD_NAME, 
-                                    coord_rank, coord_dims, nucleus->coord);
-    assert (status >= 0);
-
-  } else {   
-
-    dset_id = H5Dopen(file->nucleus_group, NUCLEUS_COORD_NAME, H5P_DEFAULT);
-    assert (dset_id > 0);
-    
-    dspace = H5Dget_space(dset_id);
-    assert (dspace > 0);
-
-    dtype = H5Dget_type(dset_id);
-    assert (dtype > 0);
-
-    
-    int rrank;
-    hsize_t dims[2] = {0, 0};
-    rrank = H5Sget_simple_extent_dims(dspace,
-                                    dims, NULL);
-    assert (rrank == coord_rank);
-    for (int i=0; i<rrank; i++){
-      assert (dims[i] == coord_dims[i]);
-    }
-
-    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, nucleus->coord);
-    assert (status >= 0);
-
-    H5Sclose(dspace);
-    H5Tclose(dtype);
-    H5Dclose(dset_id);
-
-  }
-
-  return TREXIO_SUCCESS;
-}
-
-  #+end_src
-
-*** Free memory
-
-    Memory is allocated when reading. The followig function frees memory.
-    
-   #+begin_src c :tangle trexio_hdf5.c
-trexio_exit_code trexio_hdf5_free_nucleus(h5nucleus_t* nucleus) {
-  
-  if (nucleus == NULL) return TREXIO_FAILURE;
-  
-  if (nucleus->coord != NULL) free (nucleus->coord);
-  nucleus->coord = NULL;
-  
-  if (nucleus->charge != NULL) free (nucleus->charge);
-  nucleus->charge = NULL;
-  
-  if (nucleus->h5_coord != NULL) free (nucleus->h5_coord);
-  nucleus->h5_coord = NULL;
-  
-  if (nucleus->h5_charge != NULL) free (nucleus->h5_charge);
-  nucleus->h5_charge = NULL;
-
-  free (nucleus);
-
-  return TREXIO_SUCCESS;
-}
-   #+end_src
-
-*** Read/Write the num attribute
-
-   #+begin_src c :tangle trexio_hdf5.h
-trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* num);
-trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint64_t num);
-  #+end_src
-
-   #+begin_src c :tangle trexio_hdf5.c
-trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* num) {
-
-  assert (file != NULL);
-  assert (num  != NULL);
-
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
-  
-  if (nucleus == NULL) {
-    return TREXIO_FAILURE;
-  }
-
-  /**/ *num = nucleus->num;
-
-  trexio_hdf5_free_nucleus(nucleus);
-  return TREXIO_SUCCESS;
-}
-
- 
-trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint64_t num) {
-
-  assert (file != NULL);
-  assert (num > 0L);
-  
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
-
-  assert (nucleus != NULL);
-  
-  if (nucleus->num != num) {
-
-    if (nucleus->num != 0) {
-	printf("%ld -> %ld %s \n", num, nucleus->num, 
-	       "This variable alreasy exists. Overwriting it is not supported");
-        trexio_hdf5_free_nucleus(nucleus);
-    	return TREXIO_FAILURE;
-    }
-
-    nucleus->num = num;
-
-    if (nucleus->charge != NULL) free(nucleus->charge);
-    nucleus->charge = NULL;
-
-    nucleus->charge = (double*) calloc(num, sizeof(double));
-    assert (nucleus->charge != NULL);
-    
-    if (nucleus->coord  != NULL) free(nucleus->coord );
-    nucleus->coord = NULL;
-
-    nucleus->coord = (double*) calloc(3*num, sizeof(double));
-    assert (nucleus->coord != NULL);
-
-  } else {
-    nucleus->num = num;
-  }
-  
-  trexio_exit_code rc = trexio_hdf5_write_nucleus((trexio_hdf5_t*) file, nucleus);
-  assert (rc == TREXIO_SUCCESS);
-
-  trexio_hdf5_free_nucleus(nucleus);
-  
-  return TREXIO_SUCCESS;
-}
-    #+end_src
-
-
-*** Read/Write the coord attribute
-
-    The ~coord~ array is assumed allocated with the appropriate size.
-    
-   #+begin_src c :tangle trexio_hdf5.h
-trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord);
-trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const double* coord);
-  #+end_src
-
-   #+begin_src c :tangle trexio_hdf5.c
-trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord) {
-
-  assert (file != NULL);
-  assert (coord != NULL);
-
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
-
-  if (nucleus == NULL) return TREXIO_FAILURE;
-  assert (nucleus->coord != NULL);
-  
-  for (size_t i=0 ; i<3*nucleus->num ; i++) {
-    coord[i] = nucleus->coord[i];
-  }
-
-  trexio_hdf5_free_nucleus(nucleus);
-  return TREXIO_SUCCESS;
-}
-
- 
-trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const double* coord) {
-
-  assert (file != NULL);
-  assert (coord != NULL);
-  
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
-
-  if (nucleus == NULL) return TREXIO_FAILURE;
-  assert (nucleus->coord != NULL); 
- 
-  for (size_t i=0 ; i<3*nucleus->num ; i++) {
-    nucleus->coord[i] = coord[i];
-  }
-  
-  trexio_exit_code rc = trexio_hdf5_write_nucleus((trexio_hdf5_t*) file, nucleus);
-  assert (rc == TREXIO_SUCCESS);
-
-  trexio_hdf5_free_nucleus(nucleus);
-  
-  return TREXIO_SUCCESS;
-}
-
-    #+end_src
-*** TODO Read/Write the charge attribute
-
 * File suffixes                                                     :noxport:
 
   #+begin_src c :tangle trexio.h
@@ -1357,14 +610,6 @@ trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const dou
   #+end_src
   
   #+begin_src c :tangle trexio_s.h
-#endif
-  #+end_src
-
-  #+begin_src c :tangle trexio_text.h
-#endif
-  #+end_src
-
-  #+begin_src c :tangle trexio_hdf5.h
 #endif
   #+end_src
 

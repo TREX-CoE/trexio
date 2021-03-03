@@ -19,15 +19,16 @@
 #include "trexio_json.h"
 */
 
-trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
+trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end) {
   
-  /* Check that file name is not NULL or empty */
-  assert (file_name != NULL);
-  assert (file_name[0] != '\0');
+  if (file_name == NULL) return NULL;
+  if (file_name[0] == '\0') return NULL;
   
-  /* Check that back_end is valid */
-  assert (back_end < TREXIO_INVALID_BACK_END);
+  if (back_end <  0) return NULL;
+  if (back_end >= TREXIO_INVALID_BACK_END) return NULL;
   
+  if (mode != 'r' && mode != 'w') return NULL;
+
   trexio_t* result = NULL;
   
   switch (back_end) {
@@ -44,8 +45,6 @@ trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
     result = (trexio_t*) malloc (sizeof(trexio_json_t));
     break;
 */      
-  default:
-    assert (1 == 0);  /* Impossible case */
   }
   
   /* TODO: Error handling */
@@ -54,7 +53,7 @@ trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
   result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
   strcpy(result->file_name, file_name);
   result->back_end    = back_end;
-  result->mode        = 'w';  /* Upon creation, mode=write */
+  result->mode        = mode;
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
   assert (irc == 0);
 
@@ -74,17 +73,15 @@ trexio_t* trexio_create(const char* file_name, back_end_t back_end) {
     rc = trexio_json_init(result);
     break;
 */      
-  default:
-    assert (1 == 0);  /* Impossible case */
   }
-  assert (rc == TREXIO_SUCCESS);
+  if (rc != TREXIO_SUCCESS) return NULL;
   
   return result;
 }
 
 trexio_exit_code trexio_close(trexio_t* file) {
 
-  assert (file != NULL);
+  if (file == NULL) return TREXIO_FAILURE;
   
   trexio_exit_code rc;
   
@@ -121,57 +118,75 @@ trexio_exit_code trexio_close(trexio_t* file) {
   return TREXIO_SUCCESS;
 }
 
-trexio_exit_code trexio_read_nucleus_num(trexio_t* file, uint64_t* num) {
-  if (file == NULL) return TREXIO_FAILURE;
+trexio_exit_code trexio_read_nucleus_num(trexio_t* file, int64_t* num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  uint64_t u_num = 0;
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_num(file, num);
+    rc = trexio_text_read_nucleus_num(file, &u_num);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_nucleus_num(file, num);
+    rc = trexio_hdf5_read_nucleus_num(file, &u_num);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_nucleus_num(file, num);
+    rc =trexio_json_read_nucleus_num(file, &u_num);
     break;
 */      
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
   }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+                              
+  /**/ *num = (int64_t) u_num;
+  return TREXIO_SUCCESS;
 }
 
-trexio_exit_code trexio_write_nucleus_num(trexio_t* file, uint64_t num) {
-  if (file == NULL) return TREXIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_num(trexio_t* file, const int64_t num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (num  <  0   ) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_num(file, num);
+    rc = trexio_text_write_nucleus_num(file, (uint64_t) num);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_write_nucleus_num(file, num);
+    rc = trexio_hdf5_write_nucleus_num(file, (uint64_t) num);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_write_nucleus_num(file, num);
+    rc = trexio_json_write_nucleus_num(file, (uint64_t) num);
     break;
 */      
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
   }
+  if (rc != TREXIO_SUCCESS) return rc;
+                              
+  return TREXIO_SUCCESS;
 }
 
 trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
-  if (file == NULL) return TREXIO_FAILURE;
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (coord == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_coord = nucleus_num*3;
+  if (dim_coord < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_coord(file, coord);
+    return trexio_text_read_nucleus_coord(file, coord, (uint64_t) dim_coord);
     break;
 
   case TREXIO_HDF5:
@@ -187,13 +202,21 @@ trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
   }
 }
 
-trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, double* coord) {
-  if (file == NULL) return TREXIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (coord == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_coord = nucleus_num*3;
+  if (dim_coord < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_coord(file, coord);
+    return trexio_text_write_nucleus_coord(file, coord, (uint64_t) dim_coord);
     break;
 
   case TREXIO_HDF5:
@@ -210,12 +233,20 @@ trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, double* coord) {
 }
 
 trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge) {
-  if (file == NULL) return TREXIO_FAILURE;
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (charge == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_charge = nucleus_num;
+  if (dim_charge < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_charge(file, charge);
+    return trexio_text_read_nucleus_charge(file, charge, (uint64_t) dim_charge);
     break;
 /*
   case TREXIO_HDF5:
@@ -231,13 +262,21 @@ trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge) {
   }
 }
 
-trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge) {
-  if (file == NULL) return TREXIO_FAILURE;
+trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, const double* charge) {
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (charge == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_charge = nucleus_num;
+  if (dim_charge < 0) return TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_charge(file, charge);
+    return trexio_text_write_nucleus_charge(file, charge, (uint64_t) dim_charge);
     break;
 /*
   case TREXIO_HDF5:
@@ -246,6 +285,116 @@ trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, double* charge) {
 
   case TREXIO_JSON:
     return trexio_json_write_nucleus_charge(file, charge);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trexio_exit_code trexio_read_rdm_one_e(trexio_t* file, double* one_e) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t dim_one_e = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &dim_one_e); /* This dimension is wrong. Should be mo_num */
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (dim_one_e < 0) return TREXIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_rdm_one_e(file, one_e);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_read_rdm_one_e(file, one_e);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trexio_exit_code trexio_write_rdm_one_e(trexio_t* file, const double* one_e) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t nucleus_num = -1;
+  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  int64_t dim_one_e = nucleus_num * nucleus_num; /* This dimension is wrong. Should be mo_num */
+  if (dim_one_e < 0) return TREXIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_rdm_one_e(file, one_e);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_write_rdm_one_e(file, one_e);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trexio_exit_code trexio_buffered_read_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, int64_t* index, double* value) {
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
+  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
+  if (index  == NULL) return TREXIO_INVALID_ARG_4;
+  if (value  == NULL) return TREXIO_INVALID_ARG_5;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_buffered_read_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_buffered_read_rdm_two_e(file, size);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_buffered_read_rdm_two_e(file, size);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+
+trexio_exit_code trexio_buffered_write_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, const int64_t* index, const double* value) {
+  if (file   == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
+  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
+  if (index  == NULL) return TREXIO_INVALID_ARG_4;
+  if (value  == NULL) return TREXIO_INVALID_ARG_5;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_buffered_write_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
+    break;
+/*
+  case TREXIO_HDF5:
+    return trexio_hdf5_buffered_write_rdm_two_e(file, size);
+    break;
+
+  case TREXIO_JSON:
+    return trexio_json_buffered_write_rdm_two_e(file, size);
     break;
 */
   default:
