@@ -59,6 +59,18 @@ int test_h5write() {
   rc = trexio_write_nucleus_num(file,25);
   assert (rc != TREXIO_SUCCESS);
 
+  // close current session
+  rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+
+  file = trexio_open(file_name, 'a', TREXIO_HDF5);
+  assert (file != NULL);
+  
+  // works: try to read the nucleus_num from existing file
+  rc = trexio_read_nucleus_num(file,&num);
+  assert (rc == TREXIO_SUCCESS);
+  assert (num == 12);
+
   // works: try to rewrite the nucleus_coord
   coord[0] = 666.666;
   rc = trexio_write_nucleus_coord(file,coord);
