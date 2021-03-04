@@ -36,7 +36,7 @@
 #include "trexio_hdf5.h"
   #+end_src
 
-
+  
 * HDF5 Back end
 
 ** HDF5 definitions
@@ -574,33 +574,36 @@ trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* co
   assert (file != NULL);
   assert (coord != NULL);
   
-  uint64_t nucleus_num;
-  trexio_exit_code rc = trexio_hdf5_read_nucleus_num(file, &(nucleus_num));
-  assert (rc == TREXIO_SUCCESS);
-  assert (nucleus_num > 0L);
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
   
-  uint64_t ddims[2] = {nucleus_num, 3};
+  herr_t status;
+  int rrank;
+  status = H5LTget_dataset_ndims (f->nucleus_group, NUCLEUS_COORD_NAME, 
+                                  &rrank);
+  assert (status >= 0);
+  assert (rrank == rank);
+
+  hsize_t* ddims = (hsize_t*) calloc(rrank, sizeof(hsize_t));
+  
+  hid_t dset_id = H5Dopen(f->nucleus_group, NUCLEUS_COORD_NAME, H5P_DEFAULT);
+  assert (dset_id > 0);
+
+  status = H5LDget_dset_dims(dset_id, ddims);
+  assert (status >= 0);
+  
+  H5Dclose(dset_id);
+
+  //uint64_t ddims[2] = {nucleus_num, 3};
   for (int i=0; i<rank; i++){
       assert (ddims[i] == dims[i]);
   }
 
-  double* nucleus_coord = (double*) calloc(3 * nucleus_num, sizeof(double));
-  assert (nucleus_coord != NULL);
-
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
-  
   /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  herr_t status = H5LTread_dataset_double(f->nucleus_group,
+  status = H5LTread_dataset_double(f->nucleus_group,
                                     NUCLEUS_COORD_NAME,
-                                    nucleus_coord);
+                                    coord);
 				   
   assert (status >= 0);
-
-  for (size_t i=0 ; i<3*nucleus_num ; i++) {
-    coord[i] = nucleus_coord[i];
-  }
-
-  free(nucleus_coord);
 
   return TREXIO_SUCCESS;
 }
@@ -616,20 +619,13 @@ trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const dou
   assert (rc == TREXIO_SUCCESS);
   assert (nucleus_num > 0L);
 
-  double* nucleus_coord = (double*) calloc(3 * nucleus_num, sizeof(double));
-  assert (nucleus_coord != NULL);
-
-  for (size_t i=0 ; i<3*nucleus_num ; i++) {
-    nucleus_coord[i] = coord[i];
-  }
-
   trexio_hdf5_t* f = (trexio_hdf5_t*) file; 
 
   herr_t status;
   if ( H5LTfind_dataset(f->nucleus_group, NUCLEUS_COORD_NAME) != 1) { 
     
     status = H5LTmake_dataset_double (f->nucleus_group, NUCLEUS_COORD_NAME, 
-                                      rank, (hsize_t*) dims, nucleus_coord);
+                                      rank, (hsize_t*) dims, coord);
     assert (status >= 0);
 
   } else {   
@@ -637,14 +633,12 @@ trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const dou
     hid_t dset_id = H5Dopen(f->nucleus_group, NUCLEUS_COORD_NAME, H5P_DEFAULT);
     assert (dset_id > 0);
     
-    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, nucleus_coord);
+    status = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, coord);
     assert (status >= 0);
 
     H5Dclose(dset_id);
 
   }
-
-  free(nucleus_coord);
   
   return TREXIO_SUCCESS;
 }
