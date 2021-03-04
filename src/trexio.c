@@ -74,6 +74,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
     break;
 */      
   }
+
   if (rc != TREXIO_SUCCESS) {
     free(result->file_name);
     free(result);
@@ -107,17 +108,15 @@ trexio_exit_code trexio_close(trexio_t* file) {
     assert (1 == 0);  /* Impossible case */
   }
 
-  if (rc != TREXIO_SUCCESS) {
-    return TREXIO_FAILURE;
-  }
-  
   free(file->file_name);
   file->file_name = NULL;
   
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
   assert (irc == 0);
 
-  free(file);
+  free(file); 
+
+  if (rc != TREXIO_SUCCESS) return rc;
   
   return TREXIO_SUCCESS;
 }
@@ -187,7 +186,7 @@ trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
   int64_t dim_coord = nucleus_num*3;
   if (dim_coord < 0) return TREXIO_FAILURE;
 
-  int rank = 2;
+  uint32_t rank = 2;
   uint64_t dims[2] = {nucleus_num, 3}; 
 
   switch (file->back_end) {
@@ -220,7 +219,7 @@ trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord)
   int64_t dim_coord = nucleus_num*3;
   if (dim_coord < 0) return TREXIO_FAILURE;
 
-  int rank = 2;
+  uint32_t rank = 2;
   uint64_t dims[2] = {nucleus_num, 3};
  
   switch (file->back_end) {
