@@ -94,9 +94,9 @@ trexio_exit_code trexio_hdf5_init(trexio_t* file) {
 
     switch (file->mode) {
     case 'r': 
+    case 'a': 
       // reading non-existing file -> error
       return TREXIO_FAILURE;
-    case 'a': 
     case 'w': 
       // appending or writing non-existing file -> create it
       f->file_id = H5Fcreate(file->file_name, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
@@ -109,13 +109,8 @@ trexio_exit_code trexio_hdf5_init(trexio_t* file) {
   switch (file->mode) {
     case 'r':
     case 'a': 
-      if (f_exists == 1) {
-        f->nucleus_group = H5Gopen(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT);
+      f->nucleus_group = H5Gopen(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT);
       //f->electron_group = H5Gopen(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT);   
-      } else {
-        f->nucleus_group = H5Gcreate(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      //f->electron_group = H5Gcreate(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      }
       break;
     case 'w':
       f->nucleus_group = H5Gcreate(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -441,6 +436,8 @@ trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* co
                                     coord);
 				   
   assert (status >= 0);
+
+  free(ddims);
 
   return TREXIO_SUCCESS;
 }

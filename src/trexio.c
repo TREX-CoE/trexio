@@ -74,8 +74,12 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
     break;
 */      
   }
-  if (rc != TREXIO_SUCCESS) return NULL;
-  
+  if (rc != TREXIO_SUCCESS) {
+    free(result->file_name);
+    free(result);
+    return NULL;
+  }
+
   return result;
 }
 
