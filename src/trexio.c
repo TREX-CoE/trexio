@@ -31,6 +31,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
   trexio_t* result = NULL;
   
+  /* Allocate data structures */
   switch (back_end) {
 
   case TREXIO_TEXT:
@@ -47,8 +48,10 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 */      
   }
   
-  /* TODO: Error handling */
-  assert (result != NULL);
+  assert (result != NULL);    /* TODO: Error handling */
+
+
+  /* Data for the parent type */
 
   result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
   strcpy(result->file_name, file_name);
@@ -57,7 +60,11 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
   assert (irc == 0);
 
-  trexio_exit_code rc = TREXIO_FAILURE;
+  trexio_exit_code rc;
+  
+  /* Back end initialization */
+  
+  rc = TREXIO_FAILURE;
   
   switch (back_end) {
 
@@ -81,6 +88,32 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
     return NULL;
   }
 
+  /* File locking */
+  
+  rc = TREXIO_FAILURE;
+  
+  switch (back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_lock(result);
+    break;
+
+  case TREXIO_HDF5:
+    rc = TREXIO_SUCCESS;
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_lock(result);
+    break;
+*/      
+  }
+  
+  if (rc != TREXIO_SUCCESS) {
+    free(result->file_name);
+    free(result);
+    return NULL;
+  }
+  
   return result;
 }
 
@@ -90,6 +123,7 @@ trexio_exit_code trexio_close(trexio_t* file) {
   
   trexio_exit_code rc;
   
+  /* Terminate the back end */
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -108,16 +142,44 @@ trexio_exit_code trexio_close(trexio_t* file) {
     assert (1 == 0);  /* Impossible case */
   }
 
+  if (rc != TREXIO_SUCCESS) {
+    free(file->file_name);
+    free(file);
+    return TREXIO_FAILURE;
+  }
+  
+  /* File unlocking */
+  
+  rc = TREXIO_FAILURE;
+  
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_unlock(file);
+    break;
+
+  case TREXIO_HDF5:
+    rc = TREXIO_SUCCESS;
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_unlock(file);
+    break;
+*/      
+  }
+
+  /* Terminate front end */
+  
   free(file->file_name);
   file->file_name = NULL;
   
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
-  assert (irc == 0);
-
-  free(file); 
-
-  if (rc != TREXIO_SUCCESS) return rc;
   
+  free(file);
+
+  if (irc != 0) return TREXIO_ERRNO;
+  if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
+    
   return TREXIO_SUCCESS;
 }
 

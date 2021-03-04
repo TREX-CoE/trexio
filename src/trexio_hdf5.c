@@ -95,10 +95,10 @@ trexio_exit_code trexio_hdf5_init(trexio_t* file) {
     switch (file->mode) {
     case 'r': 
     case 'a': 
-      // reading non-existing file -> error
+      // reading or appending non-existing file -> error
       return TREXIO_FAILURE;
     case 'w': 
-      // appending or writing non-existing file -> create it
+      // writing non-existing file -> create it
       f->file_id = H5Fcreate(file->file_name, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
       break;
     }  
@@ -107,10 +107,11 @@ trexio_exit_code trexio_hdf5_init(trexio_t* file) {
 
   /* Create or open groups in the hdf5 file assuming that they exist if file exists */    
   switch (file->mode) {
+    // the switch for 'r'/'a' is reached only if file exists
     case 'r':
     case 'a': 
       f->nucleus_group = H5Gopen(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT);
-      //f->electron_group = H5Gopen(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT);   
+      //f->electron_group = H5Gopen(f->file_id, ELECTRON_GROUP_NAME, H5P_DEFAULT); 
       break;
     case 'w':
       f->nucleus_group = H5Gcreate(f->file_id, NUCLEUS_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -370,7 +371,7 @@ trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint6
 
     if (nucleus->num != 0) {
 	printf("%ld -> %ld %s \n", num, nucleus->num, 
-	       "This variable alreasy exists. Overwriting it is not supported");
+	       "This variable already exists. Overwriting it is not supported");
         trexio_hdf5_free_nucleus(nucleus);
     	return TREXIO_FAILURE;
     }

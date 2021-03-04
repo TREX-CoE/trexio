@@ -56,7 +56,11 @@ typedef struct trexio_text_s {
 
 trexio_exit_code trexio_text_init(trexio_t* file);
 
+trexio_exit_code trexio_text_lock(trexio_t* file);
+
 trexio_exit_code trexio_text_finalize(trexio_t* file);
+
+trexio_exit_code trexio_text_unlock(trexio_t* file);
 
 nucleus_t* trexio_text_read_nucleus(trexio_text_t* file);
 

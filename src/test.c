@@ -120,15 +120,11 @@ int test_h5read() {
   file2 = trexio_open(file_name2, 'r', TREXIO_HDF5);
   assert (file2 == NULL);
 
-  // test appending non-existing file, should create it
-  const char* file_name3 = "test_append.h5";
+  // test appending non-existing file, should fail and return NULL
   trexio_t* file3 = NULL;
 
-  file3 = trexio_open(file_name3, 'a', TREXIO_HDF5);
-  assert (file3 != NULL);
-
-  rc = trexio_close(file3);
-  assert (rc == TREXIO_SUCCESS);
+  file3 = trexio_open(file_name2, 'a', TREXIO_HDF5);
+  assert (file3 == NULL);
 
   free(coord);
 
