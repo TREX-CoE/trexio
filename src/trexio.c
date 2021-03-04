@@ -183,6 +183,9 @@ trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
   int64_t dim_coord = nucleus_num*3;
   if (dim_coord < 0) return TREXIO_FAILURE;
 
+  int rank = 2;
+  uint64_t dims[2] = {nucleus_num, 3}; 
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -190,7 +193,7 @@ trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_nucleus_coord(file, coord);
+    return trexio_hdf5_read_nucleus_coord(file, coord, rank, dims);
     break;
 /*
   case TREXIO_JSON:
@@ -213,6 +216,9 @@ trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord)
   int64_t dim_coord = nucleus_num*3;
   if (dim_coord < 0) return TREXIO_FAILURE;
 
+  int rank = 2;
+  uint64_t dims[2] = {nucleus_num, 3};
+ 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -220,7 +226,7 @@ trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord)
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_write_nucleus_coord(file, coord);
+    return trexio_hdf5_write_nucleus_coord(file, coord, rank, dims);
     break;
 /*
   case TREXIO_JSON:
