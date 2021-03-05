@@ -91,7 +91,7 @@ typedef struct four_index_s {
 trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* num);
 trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint64_t num);
 
-trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord);
-trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const double* coord);
+trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_hdf5_write_nucleus_coord(const trexio_t* file, const double* coord, const uint32_t rank, const uint64_t* dims);
 
 #endif

@@ -22,6 +22,8 @@ typedef int32_t trexio_exit_code;
 #define TREXIO_END           ( (trexio_exit_code) 10 )
 #define TREXIO_READONLY      ( (trexio_exit_code) 11 )
 #define TREXIO_ERRNO         ( (trexio_exit_code) 12 )
+#define TREXIO_INVALID_ID    ( (trexio_exit_code) 20 )
+#define TREXIO_INVALID_NUM   ( (trexio_exit_code) 21 )
 
 typedef int32_t back_end_t;
 

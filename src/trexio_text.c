@@ -448,7 +448,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
   if (file->parent.mode == 'w') {
     rdm->file = fopen(file_name,"a");  
   } else {
-    rdm->file = fopen(file_name,"");  
+    rdm->file = fopen(file_name,"r");  
   }
   free(file_name);
   file->rdm = rdm ;
