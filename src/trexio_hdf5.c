@@ -344,16 +344,18 @@ trexio_exit_code trexio_hdf5_read_nucleus_num(const trexio_t* file, uint64_t* nu
 
   assert (file != NULL);
   assert (num  != NULL);
-
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
   
-  if (nucleus == NULL) {
-    return TREXIO_FAILURE;
-  }
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  /* Quit if the dimensioning attribute is missing in the file */
+  if (H5Aexists(f->nucleus_group, NUCLEUS_NUM_NAME) == 0) return TREXIO_FAILURE;
 
-  /**/ *num = nucleus->num;
+  /* Read the nucleus_num attribute of nucleus group */
+  hid_t num_id = H5Aopen(f->nucleus_group, NUCLEUS_NUM_NAME, H5P_DEFAULT);
+  if (num_id <= 0) return TREXIO_INVALID_ID;
 
-  trexio_hdf5_free_nucleus(nucleus);
+  herr_t status = H5Aread(num_id, H5T_NATIVE_ULLONG, num);
+  if (status < 0) return TREXIO_FAILURE;
+
   return TREXIO_SUCCESS;
 }
 
@@ -362,44 +364,56 @@ trexio_exit_code trexio_hdf5_write_nucleus_num(const trexio_t* file, const uint6
 
   assert (file != NULL);
   assert (num > 0L);
+ 
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  hid_t num_id;
+  herr_t status;
+  /* Write the dimensioning variables */
+  hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+
+  if (H5Aexists(f->nucleus_group, NUCLEUS_NUM_NAME) == 0) {
+   
+    hid_t dspace = H5Screate(H5S_SCALAR);
+
+    num_id = H5Acreate(f->nucleus_group, NUCLEUS_NUM_NAME, dtype, dspace,
+                     H5P_DEFAULT, H5P_DEFAULT);
+    assert (num_id > 0);
   
-  h5nucleus_t* nucleus = trexio_hdf5_read_nucleus((trexio_hdf5_t*) file);
+    status = H5Awrite(num_id, dtype, &(num));
+    assert (status >= 0); 
 
-  assert (nucleus != NULL);
-  
-  if (nucleus->num != num) {
-
-    if (nucleus->num != 0) {
-	printf("%ld -> %ld %s \n", num, nucleus->num, 
-	       "This variable already exists. Overwriting it is not supported");
-        trexio_hdf5_free_nucleus(nucleus);
-    	return TREXIO_FAILURE;
-    }
-
-    nucleus->num = num;
-
-    if (nucleus->charge != NULL) free(nucleus->charge);
-    nucleus->charge = NULL;
-
-    nucleus->charge = (double*) calloc(num, sizeof(double));
-    assert (nucleus->charge != NULL);
+    H5Sclose(dspace);
     
-    if (nucleus->coord  != NULL) free(nucleus->coord );
-    nucleus->coord = NULL;
-
-    nucleus->coord = (double*) calloc(3*num, sizeof(double));
-    assert (nucleus->coord != NULL);
-
   } else {
-    nucleus->num = num;
-  }
-  
-  trexio_exit_code rc = trexio_hdf5_write_nucleus((trexio_hdf5_t*) file, nucleus);
-  assert (rc == TREXIO_SUCCESS);
 
-  trexio_hdf5_free_nucleus(nucleus);
-  
+    uint64_t nucleus_num;
+    trexio_exit_code rc = trexio_hdf5_read_nucleus_num(file, &(nucleus_num));
+    if (rc != TREXIO_SUCCESS) return rc;
+
+    if (nucleus_num != num) {
+
+      if (nucleus_num != 0) {
+	printf("%ld -> %ld %s \n", num, nucleus_num, 
+	       "This variable already exists. Overwriting it is not supported");
+        H5Tclose(dtype);
+    	return TREXIO_FAILURE;
+
+      } else {
+    
+        num_id = H5Aopen(f->nucleus_group, NUCLEUS_NUM_NAME, H5P_DEFAULT);
+        assert (num_id > 0);
+       
+        status = H5Awrite(num_id, dtype, &(num));
+        assert (status >= 0); 
+
+      }
+    }
+  }
+
+  H5Aclose(num_id);
+  H5Tclose(dtype);
   return TREXIO_SUCCESS;
+  
 }
 
 trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* coord, const uint32_t rank, const uint64_t* dims) {
