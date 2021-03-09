@@ -53,8 +53,15 @@ print('Strings I/O currently not supported')
 # TODO, for now remove char-related stuff
 datasets_nostr = {}
 for k,v in datasets.items():
+    tmp_dict = {}
     if 'char' not in v[0]:
-        datasets_nostr[k] = v
+        if v[0] == 'float':
+            datatype = 'double'
+        elif v[0] == 'int':
+            datatype = 'int64_t'
+        tmp_dict['dtype'] = datatype
+        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+        datasets_nostr[k] = tmp_dict
 
 #print(datasets_nostr)
 #print(numbers)
@@ -73,30 +80,57 @@ files = [f for f in listdir(temp_path) if isfile(join(temp_path, f)) and f not i
 #print(files)
 
 files_funcs = [f for f in files if 'read_' in f or 'write_' in f or 'rw_' in f ]
+files_funcs_dsets = [f for f in files_funcs if 'dset' in f]
+files_funcs_nums  = [f for f in files_funcs if 'num' in f]
+
 files_auxil = [f for f in files if not ('read_' in f or 'write_' in f or 'rw_' in f)]
-print(files_auxil)
 
-# build files with $group$ only
-for fname in ['basic_hdf5.c', 'struct_hdf5.h']:
+print(files_funcs_dsets)
+
+# build files with functions
+for fname in ['write_dset_hdf5.c']:
     fname_new = 'populated/pop_' + fname
-    with open(f'{temp_path}/{fname}', 'r') as f_in:
-        with open(f'{temp_path}/{fname_new}', 'w') as f_out:
-            for line in f_in:
-                if '$group$' in line or '$GROUP$' in line:
-                    for grname in config.keys():
-                        templine1 = line.replace('$group$', grname)
-                        templine2 = templine1.replace('$GROUP$', grname.upper())
-                        #templine1 = templine2.replace('$GROUP_NUM$', dim.upper())
-                        #templine2 = templine1.replace('$group_num$', dim)
-                        #templine1 = templine2.replace('$GROUP_DSET$', '')
-                        #templine2 = templine1.replace('$group_dset$', '')
+    for dset,params in datasets_nostr.items():
 
-                        f_out.write(templine2)
-                else:        
-                    f_out.write(line)
+        grname = dset.split('_')[0]
+
+        with open(f'{temp_path}/{fname}', 'r') as f_in :
+            with open(f'{temp_path}/{fname_new}', 'a') as f_out :
+                for line in f_in :
+                    if '$' in line:
+                        templine1 = line.replace('$GROUP$_$GROUP_DSET$', dset.upper())
+                        templine2 = templine1.replace('$group$_$group_dset$', dset)
+
+                        templine1 = templine2.replace('$group_dset$', dset)
+                        templine2 = templine1
+
+                        templine1 = templine2.replace('$group_dset_dtype$', params['dtype'])
+                        templine2 = templine1
+
+                        if params['dtype'] == 'double':
+                            h5_dtype = 'double'
+                        elif params['dtype'] == 'int64_t':
+                            h5_dtype = 'long'
+
+                        templine1 = templine2.replace('$group_dset_h5_dtype$', h5_dtype)
+                        templine2 = templine1.replace('$group_dset_h5_dtype$'.upper(), h5_dtype.upper())
+
+                        for dim in params['dims']:
+                            if dim.isdigit():
+                                continue
+                            else:
+                                templine1 = templine2.replace('$group_dset_dim$', dim)
+                                templine2 = templine1
+
+                        templine1 = templine2.replace('$group$', grname)
+                        templine2 = templine1.replace('$GROUP$', grname.upper())
+                            
+                        f_out.write(templine2)                
+                    else:        
+                        f_out.write(line)
 
 # build files with $group$ and $group$-based
-for fname in ['def_hdf5.c'] :
+for fname in ['def_hdf5.c', 'basic_hdf5.c', 'struct_hdf5.h'] :
     fname_new = 'populated/pop_' + fname
     with open(f'{temp_path}/{fname}', 'r') as f_in :
         with open(f'{temp_path}/{fname_new}', 'w') as f_out :
