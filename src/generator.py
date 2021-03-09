@@ -85,10 +85,29 @@ files_funcs_nums  = [f for f in files_funcs if 'num' in f]
 
 files_auxil = [f for f in files if not ('read_' in f or 'write_' in f or 'rw_' in f)]
 
-print(files_funcs_dsets)
+# build files with functions
+for fname in files_funcs_nums:
+    fname_new = 'populated/pop_' + fname
+    for dim in dim_variables.keys():
+
+        grname = dim.split('_')[0]
+
+        with open(f'{temp_path}/{fname}', 'r') as f_in :
+            with open(f'{temp_path}/{fname_new}', 'a') as f_out :
+                for line in f_in :
+                    if '$' in line:
+                        templine1 = line.replace('$GROUP_NUM$', dim.upper())
+                        templine2 = templine1.replace('$group_num$', dim)
+
+                        templine1 = templine2.replace('$group$', grname)
+                        templine2 = templine1.replace('$GROUP$', grname.upper())
+                            
+                        f_out.write(templine2)                
+                    else:        
+                        f_out.write(line)
 
 # build files with functions
-for fname in ['write_dset_hdf5.c']:
+for fname in files_funcs_dsets:
     fname_new = 'populated/pop_' + fname
     for dset,params in datasets_nostr.items():
 
@@ -119,8 +138,11 @@ for fname in ['write_dset_hdf5.c']:
                             if dim.isdigit():
                                 continue
                             else:
+                                print("TODO: this only populate 1 dim and not all !")
                                 templine1 = templine2.replace('$group_dset_dim$', dim)
                                 templine2 = templine1
+                                                    
+                            f_out.write(templine2)
 
                         templine1 = templine2.replace('$group$', grname)
                         templine2 = templine1.replace('$GROUP$', grname.upper())
