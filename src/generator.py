@@ -63,24 +63,18 @@ for k,v in datasets.items():
         elif v[0] == 'int':
             datatype = 'int64_t'
         tmp_dict['dtype'] = datatype
-        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]] 
+
         datasets_nostr[k] = tmp_dict
 
 #print(datasets_nostr)
 #print(numbers)
-
-#print(attributes)
-#print(groups)
-
-#file_list = ['temp_trexio_hdf5.c']
-file_list = []
 
 temp_path = join(fileDir,'templates_hdf5')
 
 files_exclude = ['prefix_hdf5.c', 'prefix_hdf5.h', 'suffix_hdf5.h', 'templator_hdf5.org']
 
 files = [f for f in listdir(temp_path) if isfile(join(temp_path, f)) and f not in files_exclude]
-#print(files)
 
 files_funcs = [f for f in files if 'read_' in f or 'write_' in f or 'rw_' in f ]
 files_funcs_dsets = [f for f in files_funcs if 'dset' in f]
@@ -120,6 +114,20 @@ for fname in files_funcs_dsets:
             with open(f'{temp_path}/{fname_new}', 'a') as f_out :
                 for line in f_in :
                     if '$' in line:
+
+                        if '$group_dset_dim$' in line:
+                            rc_line = '  if (rc != TREXIO_SUCCESS) return rc;\n'
+                            for dim in params['dims']:
+                                if not dim.isdigit():
+                                    templine1 = line.replace('$group_dset_dim$', dim)
+                                    templine2 = templine1
+                                    if '_read' in templine2:
+                                            templine1 = rc_line
+                                            templine2 += templine1   
+
+                                    f_out.write(templine2)
+                            continue
+
                         templine1 = line.replace('$GROUP$_$GROUP_DSET$', dset.upper())
                         templine2 = templine1.replace('$group$_$group_dset$', dset)
 
@@ -136,16 +144,6 @@ for fname in files_funcs_dsets:
 
                         templine1 = templine2.replace('$group_dset_h5_dtype$', h5_dtype)
                         templine2 = templine1.replace('$group_dset_h5_dtype$'.upper(), h5_dtype.upper())
-
-                        for dim in params['dims']:
-                            if dim.isdigit():
-                                continue
-                            else:
-                                print("TODO: this only populate 1 dim and not all !")
-                                templine1 = templine2.replace('$group_dset_dim$', dim)
-                                templine2 = templine1
-                                                    
-                            f_out.write(templine2)
 
                         templine1 = templine2.replace('$group$', grname)
                         templine2 = templine1.replace('$GROUP$', grname.upper())
