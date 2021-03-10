@@ -84,13 +84,13 @@ files_auxil = [f for f in files if not ('read_' in f or 'write_' in f or 'rw_' i
 
 # build files with functions
 for fname in files_funcs_nums:
-    fname_new = 'populated/pop_' + fname
+    fname_new = join('populated',f'pop_{fname}')
     for dim in dim_variables.keys():
 
         grname = dim.split('_')[0]
 
-        with open(f'{temp_path}/{fname}', 'r') as f_in :
-            with open(f'{temp_path}/{fname_new}', 'a') as f_out :
+        with open(join(temp_path,fname), 'r') as f_in :
+            with open(join(temp_path,fname_new), 'a') as f_out :
                 for line in f_in :
                     if '$' in line:
                         templine1 = line.replace('$GROUP_NUM$', dim.upper())
@@ -105,13 +105,13 @@ for fname in files_funcs_nums:
 
 # build files with functions
 for fname in files_funcs_dsets:
-    fname_new = 'populated/pop_' + fname
+    fname_new = join('populated',f'pop_{fname}')
     for dset,params in datasets_nostr.items():
 
         grname = dset.split('_')[0]
 
-        with open(f'{temp_path}/{fname}', 'r') as f_in :
-            with open(f'{temp_path}/{fname_new}', 'a') as f_out :
+        with open(join(temp_path,fname), 'r') as f_in :
+            with open(join(temp_path,fname_new), 'a') as f_out :
                 for line in f_in :
                     if '$' in line:
 
@@ -154,9 +154,9 @@ for fname in files_funcs_dsets:
 
 # build files with $group$ and $group$-based
 for fname in ['def_hdf5.c', 'basic_hdf5.c', 'struct_hdf5.h'] :
-    fname_new = 'populated/pop_' + fname
-    with open(f'{temp_path}/{fname}', 'r') as f_in :
-        with open(f'{temp_path}/{fname_new}', 'w') as f_out :
+    fname_new = join('populated',f'pop_{fname}')
+    with open(join(temp_path,fname), 'r') as f_in :
+        with open(join(temp_path,fname_new), 'a') as f_out :
             for line in f_in :
                 if '$group_dset$' in line or '$GROUP_DSET$' in line :
                     for dset in datasets_nostr.keys():
