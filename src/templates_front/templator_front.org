@@ -1,4 +1,4 @@
-#+Title: Templator for frontend
+g+Title: Templator for frontend
 
 * Constant file prefixes (not used by generator)                    :noxport:
 
@@ -397,7 +397,7 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
      #+begin_src c :tangle read_dset_front.c
 trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dtype$* $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (coord == NULL) return TREXIO_INVALID_ARG_2;
+  if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
     
   trexio_exit_code rc;
   uint64_t $group_dset_dim$ = -1;
@@ -435,7 +435,7 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dt
 
 trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_dset_dtype$* $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (coord == NULL) return TREXIO_INVALID_ARG_2;
+  if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
 
   trexio_exit_code rc;
   uint64_t $group_dset_dim$ = -1;
@@ -469,138 +469,6 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
 }
      #+end_src
     
-     ## *** rdm
-**** one_e 
-     #+begin_src c :tangle trexio.h
-trexio_exit_code trexio_read_rdm_one_e(trexio_t* file, double* one_e);
-trexio_exit_code trexio_write_rdm_one_e(trexio_t* file, const double* one_e);
-     #+end_src
-   
-     #+begin_src c :tangle trexio.c
-trexio_exit_code trexio_read_rdm_one_e(trexio_t* file, double* one_e) {
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
-
-  int64_t dim_one_e = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &dim_one_e); /* This dimension is wrong. Should be mo_num */
-  if (rc != TREXIO_SUCCESS) return rc;
-  if (dim_one_e < 0) return TREXIO_FAILURE;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_read_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_read_rdm_one_e(file, one_e);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_read_rdm_one_e(file, one_e);
-    break;
-,*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_write_rdm_one_e(trexio_t* file, const double* one_e) {
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
-
-  int64_t nucleus_num = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
-  if (rc != TREXIO_SUCCESS) return rc;
-
-  int64_t dim_one_e = nucleus_num * nucleus_num; /* This dimension is wrong. Should be mo_num */
-  if (dim_one_e < 0) return TREXIO_FAILURE;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_write_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_write_rdm_one_e(file, one_e);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_write_rdm_one_e(file, one_e);
-    break;
-,*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-     #+end_src
-   
-**** two_e
-
-     ~buffered_read~ functions return ~TREXIO_SUCCESS~ if the complete
-     buffer was read or written. If the read data is smaller than the
-     buffer because the end is reached, the function returns ~TREXIO_END~.
-
-     #+begin_src c :tangle trexio.h
-trexio_exit_code trexio_buffered_read_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, int64_t* index, double* value);
-trexio_exit_code trexio_buffered_write_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, const int64_t* index, const double* value);
-     #+end_src
-   
-     #+begin_src c :tangle trexio.c
-trexio_exit_code trexio_buffered_read_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, int64_t* index, double* value) {
-  if (file   == NULL) return TREXIO_INVALID_ARG_1;
-  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
-  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
-  if (index  == NULL) return TREXIO_INVALID_ARG_4;
-  if (value  == NULL) return TREXIO_INVALID_ARG_5;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_buffered_read_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_buffered_read_rdm_two_e(file, size);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_buffered_read_rdm_two_e(file, size);
-    break;
-,*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_buffered_write_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, const int64_t* index, const double* value) {
-  if (file   == NULL) return TREXIO_INVALID_ARG_1;
-  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
-  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
-  if (index  == NULL) return TREXIO_INVALID_ARG_4;
-  if (value  == NULL) return TREXIO_INVALID_ARG_5;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_buffered_write_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_buffered_write_rdm_two_e(file, size);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_buffered_write_rdm_two_e(file, size);
-    break;
-,*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-     #+end_src
-   
 
 * Back ends
   
