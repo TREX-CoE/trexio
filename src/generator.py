@@ -1,9 +1,12 @@
 import json
 
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, dirname, abspath
 
-with open('../trex.json', 'r') as f:
+fileDir = dirname(abspath(__file__))
+parentDir = dirname(fileDir)
+
+with open(join(parentDir,'trex.json'), 'r') as f:
     config0 = json.load(f)
 
 print('Metadata I/O currently not supported')
@@ -35,7 +38,7 @@ for k1,v1 in config.items():
                 dim_dict[grname] = dim_list
                 dim_list = []
 
-print(dim_variables)
+#print(dim_variables)
 #print(dim_dict)
 
 datasets = {}
@@ -72,7 +75,7 @@ for k,v in datasets.items():
 #file_list = ['temp_trexio_hdf5.c']
 file_list = []
 
-temp_path = 'templates_hdf5'
+temp_path = join(fileDir,'templates_hdf5')
 
 files_exclude = ['prefix_hdf5.c', 'prefix_hdf5.h', 'suffix_hdf5.h', 'templator_hdf5.org']
 
