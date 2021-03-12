@@ -7,10 +7,10 @@
 
 #include "trexio_hdf5.h"
 
-#define NUCLEUS_GROUP_NAME  "nucleus"
-#define NUCLEUS_NUM_NAME    "nucleus_num"
-#define NUCLEUS_CHARGE_NAME "nucleus_charge"
-#define NUCLEUS_COORD_NAME  "nucleus_coord"
+  #define NUCLEUS_GROUP_NAME  "nucleus"
+  #define NUCLEUS_NUM_NAME    "nucleus_num"
+  #define NUCLEUS_CHARGE_NAME "nucleus_charge"
+  #define NUCLEUS_COORD_NAME  "nucleus_coord"
 
 /* 
  * Currently H5LTread_dataset_ is used instead of this function 
@@ -24,7 +24,7 @@ dset_t* trexio_hdf5_read_dset_low(const trexio_hdf5_t* file, const char *dset_na
   /*
    * Low-level implementation. Involves dealing with all HDF5 handles and dimensions
    */
-  dset_t* dset = (dset_t*) malloc(sizeof(dset_t));
+  dset_t* dset = MALLOC(dset_t);
   assert (dset != NULL);
 
   dset->dset_id = H5Dopen(file->nucleus_group, 
@@ -145,7 +145,7 @@ trexio_exit_code trexio_hdf5_finalize(trexio_t* file) {
 h5nucleus_t* trexio_hdf5_read_nucleus(const trexio_hdf5_t* file) {
   
   /* Allocate the data structure */
-  h5nucleus_t* nucleus = (h5nucleus_t*) malloc(sizeof(h5nucleus_t));
+  h5nucleus_t* nucleus = MALLOC(h5nucleus_t);
   assert (nucleus != NULL);
 
   nucleus->num    = 0;
@@ -323,19 +323,19 @@ trexio_exit_code trexio_hdf5_free_nucleus(h5nucleus_t* nucleus) {
   
   if (nucleus == NULL) return TREXIO_FAILURE;
   
-  if (nucleus->coord != NULL) free (nucleus->coord);
-  nucleus->coord = NULL;
+  if (nucleus->coord != NULL)
+    FREE (nucleus->coord);
   
-  if (nucleus->charge != NULL) free (nucleus->charge);
-  nucleus->charge = NULL;
+  if (nucleus->charge != NULL)
+    FREE (nucleus->charge);
   
-  if (nucleus->h5_coord != NULL) free (nucleus->h5_coord);
-  nucleus->h5_coord = NULL;
+  if (nucleus->h5_coord != NULL)
+    FREE (nucleus->h5_coord);
   
-  if (nucleus->h5_charge != NULL) free (nucleus->h5_charge);
-  nucleus->h5_charge = NULL;
+  if (nucleus->h5_charge != NULL)
+    FREE (nucleus->h5_charge);
 
-  free (nucleus);
+  FREE (nucleus);
 
   return TREXIO_SUCCESS;
 }
@@ -446,17 +446,17 @@ trexio_exit_code trexio_hdf5_read_nucleus_coord(const trexio_t* file, double* co
 
   H5Dclose(dset_id);
   if (status < 0) {
-    free(ddims);
+    FREE(ddims);
     return TREXIO_FAILURE;
   }
 
   for (uint32_t i=0; i<rank; i++){
      if (ddims[i] != dims[i]) {
-       free(ddims);
+       FREE(ddims);
        return TREXIO_INVALID_ARG_4;
      }
   }
-  free(ddims);
+  FREE(ddims);
 
   /* High-level H5LT API. No need to deal with dataspaces and datatypes */
   status = H5LTread_dataset_double(f->nucleus_group,

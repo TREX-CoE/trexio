@@ -9,6 +9,7 @@
 #define _TREXIO_TEXT_H
 
 #include "trexio.h"
+#include "trexio_private.h"
 #include "trexio_s.h"
 #include <errno.h>
 #include <stdint.h>

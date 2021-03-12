@@ -36,7 +36,7 @@ trexio_exit_code trexio_text_init(trexio_t* file) {
 
   f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
   assert (f->lock_file > 0);
-  free(file_name);
+  FREE(file_name);
 
   f->nucleus = NULL;
   f->electron= NULL;
@@ -102,7 +102,7 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
   if (file->nucleus != NULL) return file->nucleus;
   
   /* Allocate the data structure */
-  nucleus_t* nucleus = (nucleus_t*) malloc(sizeof(nucleus_t));
+  nucleus_t* nucleus = MALLOC(nucleus_t);
   assert (nucleus != NULL);
 
   nucleus->file     = NULL;
@@ -130,7 +130,7 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
     fseek(f, 0L, SEEK_END);
     size_t sz = ftell(f);
     fseek(f, 0L, SEEK_SET);
-    char* buffer = (char*) malloc(sz*sizeof(char));
+    char* buffer = CALLOC(sz,char);
     
     /* Read the dimensioning variables */
     int rc;
@@ -212,7 +212,7 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
       rc = fscanf(f, "%lf", &(nucleus->coord[i]));
       assert (rc == 1);
     }
-    free(buffer);
+    FREE(buffer);
     fclose(f);
     f = NULL;
   }
@@ -221,7 +221,7 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
   } else { 
     nucleus->file = fopen(file_name,"r");  
   }
-  free(file_name);
+  FREE(file_name);
   file->nucleus = nucleus;
   return nucleus;
 }
@@ -293,27 +293,22 @@ trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
   }
 
   if (nucleus->dims_coord != NULL) {
-    free (nucleus->dims_coord);
-    nucleus->dims_coord = NULL;
+    FREE (nucleus->dims_coord);
   }
 
   if (nucleus->coord != NULL) {
-    free (nucleus->coord);
-    nucleus->coord = NULL;
+    FREE (nucleus->coord);
   }
  
   if (nucleus->dims_charge != NULL) {
-    free (nucleus->dims_charge);
-    nucleus->dims_charge = NULL;
+    FREE (nucleus->dims_charge);
   }
  
   if (nucleus->charge != NULL) {
-    free (nucleus->charge);
-    nucleus->charge = NULL;
+    FREE (nucleus->charge);
   }
   
-  free (nucleus);
-  file->nucleus = NULL;
+  FREE (nucleus);
   return TREXIO_SUCCESS;
 }
 
@@ -380,13 +375,11 @@ trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const dou
   if (nucleus == NULL) return TREXIO_FAILURE;
   
   if (nucleus->coord != NULL) {
-    free(nucleus->coord);
-    nucleus->coord = NULL;
+    FREE(nucleus->coord);
   }
 
   if (nucleus->dims_coord != NULL) {
-    free(nucleus->dims_coord);
-    nucleus->dims_coord = NULL;
+    FREE(nucleus->dims_coord);
   }
 
   nucleus->rank_coord = rank;
@@ -442,13 +435,11 @@ trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const do
   if (nucleus == NULL) return TREXIO_FAILURE;
   
   if (nucleus->charge != NULL) {
-    free(nucleus->charge);
-    nucleus->charge = NULL;
+    FREE(nucleus->charge);
   }
 
   if (nucleus->dims_charge != NULL) {
-    free(nucleus->dims_charge);
-    nucleus->dims_charge = NULL;
+    FREE(nucleus->dims_charge);
   }
 
   nucleus->rank_charge = rank;
@@ -477,7 +468,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
   if (file->rdm != NULL) return file->rdm;
 
   /* Allocate the data structure */
-  rdm_t* rdm = (rdm_t*) malloc(sizeof(rdm_t));
+  rdm_t* rdm = MALLOC(rdm_t);
   assert (rdm != NULL);
 
   rdm->one_e           = NULL;
@@ -502,7 +493,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
     fseek(f, 0L, SEEK_END);
     size_t sz = ftell(f);
     fseek(f, 0L, SEEK_SET);
-    char* buffer = (char*) malloc(sz*sizeof(char));
+    char* buffer = CALLOC(sz,char);
     
     /* Read the dimensioning variables */
     int rc;
@@ -534,10 +525,10 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
     
     rc = fscanf(f, "%s", buffer);
     assert (rc == 1);
-    rdm->two_e_file_name = (char*) malloc (strlen(buffer)*sizeof(char));
+    rdm->two_e_file_name = CALLOC (strlen(buffer),char);
     strcpy(rdm->two_e_file_name, buffer);
     
-    free(buffer);
+    FREE(buffer);
     fclose(f);
     f = NULL;
   }
@@ -546,7 +537,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
   } else {
     rdm->file = fopen(file_name,"r");  
   }
-  free(file_name);
+  FREE(file_name);
   file->rdm = rdm ;
   return rdm;
 }
@@ -600,13 +591,11 @@ trexio_exit_code trexio_text_free_rdm(trexio_text_t* file) {
   }
   
   if (rdm->one_e != NULL) {
-    free (rdm->one_e);
-    rdm->one_e = NULL;
+    FREE (rdm->one_e);
   }
   
   if (rdm->two_e_file_name != NULL) {
-    free (rdm->two_e_file_name);
-    rdm->two_e_file_name = NULL;
+    FREE (rdm->two_e_file_name);
   }
   
   free (rdm);
