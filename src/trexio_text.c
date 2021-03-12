@@ -108,6 +108,7 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
   nucleus->file     = NULL;
   nucleus->num      = 0;
   nucleus->coord    = NULL;
+  nucleus->dims_coord = NULL;
   nucleus->charge   = NULL;
   nucleus->to_flush = 0;
 
@@ -141,16 +142,32 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
     
     rc = fscanf(f, "%s", buffer);
     assert (rc == 1);
-    assert (strcmp(buffer, "dim_coord") == 0);
+    assert (strcmp(buffer, "rank_coord") == 0);
     
-    rc = fscanf(f, "%lu", &(nucleus->dim_coord));
+    rc = fscanf(f, "%u", &(nucleus->rank_coord));
     assert (rc == 1);
+     
+    nucleus->dims_coord = (uint64_t*) calloc(nucleus->rank_coord, sizeof(uint64_t));
+    assert (nucleus->dims_coord != NULL);
+    
+    uint64_t dim_coord = 1;
+    for (uint i=0; i<nucleus->rank_coord; i++){
+
+      rc = fscanf(f, "%s", buffer);
+      assert (rc == 1);
+      //assert (strcmp(buffer, "dims_coord") == 0);
+    
+      rc = fscanf(f, "%lu", &(nucleus->dims_coord[i]));
+      assert (rc == 1);
+
+      dim_coord *= nucleus->dims_coord[i];
+    }
     
     /* Allocate arrays */
     nucleus->charge = (double*) calloc(nucleus->dim_charge, sizeof(double));
     assert (nucleus->charge != NULL);
     
-    nucleus->coord = (double*) calloc(nucleus->dim_coord, sizeof(double));
+    nucleus->coord = (double*) calloc(dim_coord, sizeof(double));
     assert (nucleus->coord != NULL);
     
     /* Read data */
@@ -174,7 +191,7 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
     assert (rc == 1);
     assert (strcmp(buffer, "coord") == 0);
     
-    for (uint64_t i=0 ; i<nucleus->dim_coord ; i++) {
+    for (uint64_t i=0 ; i<dim_coord ; i++) {
       rc = fscanf(f, "%lf", &(nucleus->coord[i]));
       assert (rc == 1);
     }
@@ -207,9 +224,15 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   assert (f != NULL);
   rewind(f);
 
-  /* Write the dimensioning variables */
-  fprintf(f, "dim_charge %ld\n", nucleus->dim_charge);
-  fprintf(f, "dim_coord  %ld\n", nucleus->dim_coord );
+  /* Write the dimensioning variables */ 
+  fprintf(f, "dim_charge  %ld\n", nucleus->dim_charge );
+  fprintf(f, "rank_coord %d\n", nucleus->rank_coord);
+
+  uint64_t dim_coord = (nucleus->dims_coord[0])*(nucleus->dims_coord[1]);
+  for (uint i=0; i<nucleus->rank_coord; i++){
+    fprintf(f, "dims_coord[%d] %ld\n", i, nucleus->dims_coord[i]);
+    //dim_coord *= nucleus->dims_coord[i];
+  } 
 
   /* Write arrays */
   fprintf(f, "num %ld\n", nucleus->num);
@@ -219,7 +242,7 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   }
 
   fprintf(f, "coord\n");
-  for (uint64_t i=0 ; i<nucleus->dim_coord ; i++) {
+  for (uint64_t i=0 ; i<dim_coord ; i++) {
       fprintf(f, "%lf\n", nucleus->coord[i]);
   }
   fflush(f);
@@ -243,6 +266,11 @@ trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
   if (nucleus->file != NULL) {
     fclose(nucleus->file);
     nucleus->file = NULL;
+  }
+
+  if (nucleus->dims_coord != NULL) {
+    free (nucleus->dims_coord);
+    nucleus->dims_coord = NULL;
   }
 
   if (nucleus->coord != NULL) {
@@ -289,7 +317,7 @@ trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint6
   return TREXIO_SUCCESS;
 }
 
-trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord, const uint64_t dim_coord) {
+trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord, const uint32_t rank, const uint64_t* dims) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (coord == NULL) return TREXIO_INVALID_ARG_2;
@@ -297,9 +325,15 @@ trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* co
   nucleus_t* nucleus = trexio_text_read_nucleus((trexio_text_t*) file);
   if (nucleus == NULL) return TREXIO_FAILURE;
 
-  if (dim_coord != nucleus->dim_coord) return TREXIO_INVALID_ARG_3;
+  if (rank != nucleus->rank_coord) return TREXIO_INVALID_ARG_3;
   
-  for (uint64_t i=0 ; i<dim_coord ; i++) {
+  for (uint i=0; i<rank; i++){
+    if (dims[i] != nucleus->dims_coord[i]) return TREXIO_INVALID_ARG_4;
+  }
+  //if (dim_coord != nucleus->dim_coord) return TREXIO_INVALID_ARG_3;
+  uint64_t dim_size = dims[0]*dims[1];
+
+  for (uint64_t i=0 ; i<dim_size ; i++) {
     coord[i] = nucleus->coord[i];
   }
 
@@ -307,7 +341,7 @@ trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* co
 }
 
  
-trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord, const uint64_t dim_coord) {
+trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord, const uint32_t rank, const uint64_t* dims) {
   if (file  == NULL)  return TREXIO_INVALID_ARG_1;
   if (coord == NULL)  return TREXIO_INVALID_ARG_2;
 
@@ -321,10 +355,23 @@ trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const dou
     nucleus->coord = NULL;
   }
 
-  nucleus->dim_coord = dim_coord;
-  nucleus->coord = (double*) calloc(dim_coord, sizeof(double));
+  if (nucleus->dims_coord != NULL) {
+    free(nucleus->dims_coord);
+    nucleus->dims_coord = NULL;
+  }
 
-  for (uint64_t i=0 ; i<dim_coord ; i++) {
+  nucleus->rank_coord = rank;
+
+  nucleus->dims_coord = (uint64_t*) calloc(rank, sizeof(uint64_t));
+  
+  for (uint i=0; i<nucleus->rank_coord; i++){
+    nucleus->dims_coord[i] = dims[i];
+  }
+
+  uint64_t dim_size = dims[0]*dims[1];
+  nucleus->coord = (double*) calloc(dim_size, sizeof(double));
+
+  for (uint64_t i=0 ; i<dim_size ; i++) {
     nucleus->coord[i] = coord[i];
   }
   
