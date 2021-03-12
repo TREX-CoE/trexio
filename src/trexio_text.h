@@ -25,8 +25,9 @@ typedef struct nucleus_s {
   double*  coord;
   double*  charge;
   uint64_t num;
-  uint64_t dim_charge;
+  uint64_t* dims_charge;
   uint64_t* dims_coord;
+  uint32_t rank_charge;
   uint32_t rank_coord;
   int      to_flush;
 } nucleus_t;
@@ -75,8 +76,8 @@ trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint6
 trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord, const uint32_t rank, const uint64_t* dims);
 trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const double* coord, const uint32_t rank, const uint64_t* dims);
 
-trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge, const uint64_t dim_charge);
-trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* charge, const uint64_t dim_charge);
+trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const double* charge, const uint32_t rank, const uint64_t* dims);
 
 rdm_t* trexio_text_read_rdm(trexio_text_t* file);
 

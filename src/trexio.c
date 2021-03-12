@@ -245,9 +245,6 @@ trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
   trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
   if (rc != TREXIO_SUCCESS) return rc;
 
-  int64_t dim_coord = nucleus_num*3;
-  if (dim_coord < 0) return TREXIO_FAILURE;
-
   uint32_t rank = 2;
   uint64_t dims[2] = {nucleus_num, 3}; 
 
@@ -277,9 +274,6 @@ trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord)
   int64_t nucleus_num = -1;
   trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
   if (rc != TREXIO_SUCCESS) return rc;
-
-  int64_t dim_coord = nucleus_num*3;
-  if (dim_coord < 0) return TREXIO_FAILURE;
 
   uint32_t rank = 2;
   uint64_t dims[2] = {nucleus_num, 3};
@@ -311,13 +305,13 @@ trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge) {
   trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
   if (rc != TREXIO_SUCCESS) return rc;
 
-  int64_t dim_charge = nucleus_num;
-  if (dim_charge < 0) return TREXIO_FAILURE;
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_charge(file, charge, (uint64_t) dim_charge);
+    return trexio_text_read_nucleus_charge(file, charge, rank, dims);
     break;
 /*
   case TREXIO_HDF5:
@@ -341,13 +335,13 @@ trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, const double* charg
   trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
   if (rc != TREXIO_SUCCESS) return rc;
 
-  int64_t dim_charge = nucleus_num;
-  if (dim_charge < 0) return TREXIO_FAILURE;
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_charge(file, charge, (uint64_t) dim_charge);
+    return trexio_text_write_nucleus_charge(file, charge, rank, dims);
     break;
 /*
   case TREXIO_HDF5:
