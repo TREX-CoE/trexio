@@ -100,13 +100,6 @@ typedef struct rdm_s {
   int      to_flush;
 } rdm_t;
     #+end_src
-
-    
-*** TO DO
-    - to_flush = 1 in write
-    - to_flush = 0 when flushed
-    - name 
-
 *** Structs for the text back end
     
     #+begin_src c :tangle trexio_text.h
@@ -321,11 +314,11 @@ DEBUG
     }
      
     uint64_t size_charge = 1;
-    for (uint i=0; i<nucleus->rank_charge; i++){
+    for (unsigned int i=0; i<nucleus->rank_charge; i++){
 
-      uint j=-1;
+      unsigned int j=-1;
       rc = fscanf(f, "%s %u", buffer, &j);
-      if ((rc != 1) || (strcmp(buffer, "dims_charge") != 0) || (j!=i)) {
+      if ((rc != 2) || (strcmp(buffer, "dims_charge") != 0) || (j!=i)) {
         FREE(buffer);
         FREE(file_name);
         FREE(nucleus);
@@ -366,11 +359,11 @@ DEBUG
     }
      
     uint64_t size_coord = 1;
-    for (uint i=0; i<nucleus->rank_coord; i++){
+    for (unsigned int i=0; i<nucleus->rank_coord; i++){
 
-      uint j=-1;
+      unsigned int j=-1;
       rc = fscanf(f, "%s %u", buffer, &j);
-      if ((rc != 1) || (strcmp(buffer, "dims_coord") != 0) || (j!=i)) {
+      if ((rc != 2) || (strcmp(buffer, "dims_coord") != 0) || (j!=i)) {
         FREE(buffer);
         FREE(file_name);
         FREE(nucleus);
@@ -534,7 +527,7 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   fprintf(f, "rank_charge %d\n", nucleus->rank_charge);
 
   uint64_t size_charge = 1;
-  for (uint i=0; i<nucleus->rank_charge; i++){
+  for (unsigned int i=0; i<nucleus->rank_charge; i++){
     fprintf(f, "dims_charge %d  %ld\n", i, nucleus->dims_charge[i]);
     size_charge *= nucleus->dims_charge[i];
   } 
@@ -542,7 +535,7 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   fprintf(f, "rank_coord %d\n", nucleus->rank_coord);
 
   uint64_t size_coord = 1;
-  for (uint i=0; i<nucleus->rank_coord; i++){
+  for (unsigned int i=0; i<nucleus->rank_coord; i++){
     fprintf(f, "dims_coord %d  %ld\n", i, nucleus->dims_coord[i]);
     size_coord *= nucleus->dims_coord[i];
   } 
@@ -573,33 +566,33 @@ trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file);
     #+end_src
     
     #+begin_src c :tangle trexio_text.c
-trexio_exit_code trexio_text_free_rdm(trexio_text_t* file) {
+trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   
   trexio_exit_code rc;
+
   if (file->parent.mode != 'r') {
-    rc = trexio_text_flush_rdm(file);
+    rc = trexio_text_flush_nucleus(file);
     if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
   }
 
-  rdm_t* rdm = file->rdm;
-  if (rdm == NULL) return TREXIO_SUCCESS;
+  nucleus_t* nucleus = file->nucleus;
+  if (nucleus == NULL) return TREXIO_SUCCESS;
 
-  if (rdm->file != NULL) {
-    fclose(rdm->file);
-    rdm->file = NULL;
+  if (nucleus->file != NULL) {
+    fclose(nucleus->file);
+    nucleus->file = NULL;
+  }
+
+  if (nucleus->coord != NULL) {
+    FREE (nucleus->coord);
+  }
+ 
+  if (nucleus->charge != NULL) {
+    FREE (nucleus->charge);
   }
   
-  if (rdm->one_e != NULL) {
-    FREE (rdm->one_e);
-  }
-  
-  if (rdm->two_e_file_name != NULL) {
-    FREE (rdm->two_e_file_name);
-  }
-  
-  free (rdm);
-  file->rdm = NULL;
+  FREE (nucleus);
   return TREXIO_SUCCESS;
 }
     #+end_src
@@ -663,7 +656,7 @@ trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* co
   if (rank != nucleus->rank_coord) return TREXIO_INVALID_ARG_3;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<rank; i++){
+  for (unsigned int i=0; i<rank; i++){
     if (dims[i] != nucleus->dims_coord[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
@@ -692,7 +685,7 @@ trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const dou
   nucleus->rank_coord = rank;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<nucleus->rank_coord; i++){
+  for (unsigned int i=0; i<nucleus->rank_coord; i++){
     nucleus->dims_coord[i] = dims[i];
     dim_size *= dims[i];
   }
@@ -728,7 +721,7 @@ trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* c
   if (rank != nucleus->rank_charge) return TREXIO_INVALID_ARG_3;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<rank; i++){
+  for (unsigned int i=0; i<rank; i++){
     if (dims[i] != nucleus->dims_charge[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
@@ -757,7 +750,7 @@ trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const do
   nucleus->rank_charge = rank;
 
   uint64_t dim_size = 1;
-  for (uint i=0; i<nucleus->rank_charge; i++){
+  for (unsigned int i=0; i<nucleus->rank_charge; i++){
     nucleus->dims_charge[i] = dims[i];
     dim_size *= dims[i];
   }

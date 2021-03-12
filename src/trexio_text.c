@@ -1,4 +1,3 @@
-/* [[file:trexio_text.org::*File prefixes][File prefixes:4]] */
 /* This file was generated from the trexio.org org-mode file.
    To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
@@ -7,9 +6,7 @@
 
 
 #include "trexio_text.h"
-/* File prefixes:4 ends here */
 
-/* [[file:trexio_text.org::*Init/deinit functions][Init/deinit functions:2]] */
 trexio_exit_code trexio_text_init(trexio_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -52,9 +49,7 @@ trexio_exit_code trexio_text_init(trexio_t* file) {
 
   return TREXIO_SUCCESS;
 }
-/* Init/deinit functions:2 ends here */
 
-/* [[file:trexio_text.org::*Init/deinit functions][Init/deinit functions:4]] */
 trexio_exit_code trexio_text_lock(trexio_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -73,9 +68,7 @@ trexio_exit_code trexio_text_lock(trexio_t* file) {
 
   return TREXIO_SUCCESS;
 }
-/* Init/deinit functions:4 ends here */
 
-/* [[file:trexio_text.org::*Init/deinit functions][Init/deinit functions:6]] */
 trexio_exit_code trexio_text_finalize(trexio_t* file) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -88,9 +81,7 @@ trexio_exit_code trexio_text_finalize(trexio_t* file) {
   
   return TREXIO_SUCCESS;
 }
-/* Init/deinit functions:6 ends here */
 
-/* [[file:trexio_text.org::*Init/deinit functions][Init/deinit functions:8]] */
 trexio_exit_code trexio_text_unlock(trexio_t* file) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -109,9 +100,7 @@ trexio_exit_code trexio_text_unlock(trexio_t* file) {
   close(f->lock_file);
   return TREXIO_SUCCESS;
 }
-/* Init/deinit functions:8 ends here */
 
-/* [[file:trexio_text.org::*Read the struct][Read the struct:2]] */
 #define DEBUG printf("%s : line %d\n", __FILE__, __LINE__);
 
 nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
@@ -182,9 +171,9 @@ DEBUG
     }
      
     uint64_t size_charge = 1;
-    for (uint i=0; i<nucleus->rank_charge; i++){
+    for (unsigned int i=0; i<nucleus->rank_charge; i++){
 
-      uint j=-1;
+      unsigned int j=-1;
       rc = fscanf(f, "%s %u", buffer, &j);
       if ((rc != 2) || (strcmp(buffer, "dims_charge") != 0) || (j!=i)) {
         FREE(buffer);
@@ -227,9 +216,9 @@ DEBUG
     }
      
     uint64_t size_coord = 1;
-    for (uint i=0; i<nucleus->rank_coord; i++){
+    for (unsigned int i=0; i<nucleus->rank_coord; i++){
 
-      uint j=-1;
+      unsigned int j=-1;
       rc = fscanf(f, "%s %u", buffer, &j);
       if ((rc != 2) || (strcmp(buffer, "dims_coord") != 0) || (j!=i)) {
         FREE(buffer);
@@ -367,9 +356,7 @@ DEBUG
   file->nucleus = nucleus;
   return nucleus;
 }
-/* Read the struct:2 ends here */
 
-/* [[file:trexio_text.org::*Flush the struct][Flush the struct:2]] */
 trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -389,7 +376,7 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   fprintf(f, "rank_charge %d\n", nucleus->rank_charge);
 
   uint64_t size_charge = 1;
-  for (uint i=0; i<nucleus->rank_charge; i++){
+  for (unsigned int i=0; i<nucleus->rank_charge; i++){
     fprintf(f, "dims_charge %d  %ld\n", i, nucleus->dims_charge[i]);
     size_charge *= nucleus->dims_charge[i];
   } 
@@ -397,7 +384,7 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   fprintf(f, "rank_coord %d\n", nucleus->rank_coord);
 
   uint64_t size_coord = 1;
-  for (uint i=0; i<nucleus->rank_coord; i++){
+  for (unsigned int i=0; i<nucleus->rank_coord; i++){
     fprintf(f, "dims_coord %d  %ld\n", i, nucleus->dims_coord[i]);
     size_coord *= nucleus->dims_coord[i];
   } 
@@ -417,9 +404,7 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   file->nucleus->to_flush = 0;
   return TREXIO_SUCCESS;
 }
-/* Flush the struct:2 ends here */
 
-/* [[file:trexio_text.org::*Free memory][Free memory:2]] */
 trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   
@@ -449,9 +434,7 @@ trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
   FREE (nucleus);
   return TREXIO_SUCCESS;
 }
-/* Free memory:2 ends here */
 
-/* [[file:trexio_text.org::*Read/Write the num attribute][Read/Write the num attribute:2]] */
 trexio_exit_code trexio_text_read_nucleus_num(const trexio_t* file, uint64_t* num) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -480,9 +463,7 @@ trexio_exit_code trexio_text_write_nucleus_num(const trexio_t* file, const uint6
   
   return TREXIO_SUCCESS;
 }
-/* Read/Write the num attribute:2 ends here */
 
-/* [[file:trexio_text.org::*Read/Write the coord attribute][Read/Write the coord attribute:2]] */
 trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* coord, const uint32_t rank, const uint64_t* dims) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -494,7 +475,7 @@ trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* co
   if (rank != nucleus->rank_coord) return TREXIO_INVALID_ARG_3;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<rank; i++){
+  for (unsigned int i=0; i<rank; i++){
     if (dims[i] != nucleus->dims_coord[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
@@ -523,7 +504,7 @@ trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const dou
   nucleus->rank_coord = rank;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<nucleus->rank_coord; i++){
+  for (unsigned int i=0; i<nucleus->rank_coord; i++){
     nucleus->dims_coord[i] = dims[i];
     dim_size *= dims[i];
   }
@@ -537,9 +518,7 @@ trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const dou
   nucleus->to_flush = 1;
   return TREXIO_SUCCESS;
 }
-/* Read/Write the coord attribute:2 ends here */
 
-/* [[file:trexio_text.org::*Read/Write the charge attribute][Read/Write the charge attribute:2]] */
 trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* charge, const uint32_t rank, const uint64_t* dims) {
 
   if (file   == NULL) return TREXIO_INVALID_ARG_1;
@@ -551,7 +530,7 @@ trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* c
   if (rank != nucleus->rank_charge) return TREXIO_INVALID_ARG_3;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<rank; i++){
+  for (unsigned int i=0; i<rank; i++){
     if (dims[i] != nucleus->dims_charge[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
@@ -580,7 +559,7 @@ trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const do
   nucleus->rank_charge = rank;
 
   uint64_t dim_size = 1;
-  for (uint i=0; i<nucleus->rank_charge; i++){
+  for (unsigned int i=0; i<nucleus->rank_charge; i++){
     nucleus->dims_charge[i] = dims[i];
     dim_size *= dims[i];
   }
@@ -594,9 +573,7 @@ trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const do
   nucleus->to_flush = 1;
   return TREXIO_SUCCESS;
 }
-/* Read/Write the charge attribute:2 ends here */
 
-/* [[file:trexio_text.org::*Read the complete struct][Read the complete struct:2]] */
 rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
   if (file  == NULL) return NULL;
 
@@ -676,9 +653,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
   file->rdm = rdm ;
   return rdm;
 }
-/* Read the complete struct:2 ends here */
 
-/* [[file:trexio_text.org::*Flush the complete struct][Flush the complete struct:2]] */
 trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -709,9 +684,7 @@ trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
   file->rdm->to_flush = 0;
   return TREXIO_SUCCESS;
 }
-/* Flush the complete struct:2 ends here */
 
-/* [[file:trexio_text.org::*Free memory][Free memory:2]] */
 trexio_exit_code trexio_text_free_rdm(trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   
@@ -741,9 +714,7 @@ trexio_exit_code trexio_text_free_rdm(trexio_text_t* file) {
   file->rdm = NULL;
   return TREXIO_SUCCESS;
 }
-/* Free memory:2 ends here */
 
-/* [[file:trexio_text.org::*Read/Write the one_e attribute][Read/Write the one_e attribute:2]] */
 trexio_exit_code trexio_text_read_rdm_one_e(const trexio_t* file, double* one_e, const uint64_t dim_one_e) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -778,9 +749,7 @@ trexio_exit_code trexio_text_write_rdm_one_e(const trexio_t* file, const double*
   rdm->to_flush = 1;
   return TREXIO_SUCCESS;
 }
-/* Read/Write the one_e attribute:2 ends here */
 
-/* [[file:trexio_text.org::*Read/Write the two_e attribute][Read/Write the two_e attribute:2]] */
 trexio_exit_code trexio_text_buffered_read_rdm_two_e(const trexio_t* file, const uint64_t offset, const uint64_t size, int64_t* index, double* value) {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -845,4 +814,3 @@ trexio_exit_code trexio_text_buffered_write_rdm_two_e(const trexio_t* file, cons
 
   return TREXIO_SUCCESS;
 }
-/* Read/Write the two_e attribute:2 ends here */
