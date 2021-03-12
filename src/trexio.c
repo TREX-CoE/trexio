@@ -254,7 +254,7 @@ trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_coord(file, coord, (uint64_t) dim_coord);
+    return trexio_text_read_nucleus_coord(file, coord, rank, dims);
     break;
 
   case TREXIO_HDF5:
@@ -287,7 +287,7 @@ trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord)
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_nucleus_coord(file, coord, (uint64_t) dim_coord);
+    return trexio_text_write_nucleus_coord(file, coord, rank, dims);
     break;
 
   case TREXIO_HDF5:
