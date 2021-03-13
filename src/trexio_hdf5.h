@@ -9,6 +9,7 @@
 #define _TREXIO_HDF5_H
 
 #include "trexio.h"
+#include "trexio_private.h"
 #include "trexio_s.h"
 #include <stdint.h>
 #include <stdio.h>

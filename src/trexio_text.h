@@ -9,6 +9,7 @@
 #define _TREXIO_TEXT_H
 
 #include "trexio.h"
+#include "trexio_private.h"
 #include "trexio_s.h"
 #include <errno.h>
 #include <stdint.h>
@@ -25,8 +26,8 @@ typedef struct nucleus_s {
   double*  coord;
   double*  charge;
   uint64_t num;
-  uint64_t* dims_charge;
-  uint64_t* dims_coord;
+  uint64_t dims_charge[16];
+  uint64_t dims_coord[16];
   uint32_t rank_charge;
   uint32_t rank_coord;
   int      to_flush;

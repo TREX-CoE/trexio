@@ -53,7 +53,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
   /* Data for the parent type */
 
-  result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
+  result->file_name   = CALLOC(strlen(file_name)+1,char);
   strcpy(result->file_name, file_name);
   result->back_end    = back_end;
   result->mode        = mode;
@@ -83,8 +83,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   }
 
   if (rc != TREXIO_SUCCESS) {
-    free(result->file_name);
-    free(result);
+    FREE(result->file_name);
+    FREE(result);
     return NULL;
   }
 
@@ -109,8 +109,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   }
   
   if (rc != TREXIO_SUCCESS) {
-    free(result->file_name);
-    free(result);
+    FREE(result->file_name);
+    FREE(result);
     return NULL;
   }
   
@@ -143,8 +143,8 @@ trexio_exit_code trexio_close(trexio_t* file) {
   }
 
   if (rc != TREXIO_SUCCESS) {
-    free(file->file_name);
-    free(file);
+    FREE(file->file_name);
+    FREE(file);
     return TREXIO_FAILURE;
   }
   
@@ -170,12 +170,11 @@ trexio_exit_code trexio_close(trexio_t* file) {
 
   /* Terminate front end */
   
-  free(file->file_name);
-  file->file_name = NULL;
+  FREE(file->file_name);
   
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
   
-  free(file);
+  FREE(file);
 
   if (irc != 0) return TREXIO_ERRNO;
   if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;

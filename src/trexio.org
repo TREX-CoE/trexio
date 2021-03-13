@@ -46,6 +46,7 @@
 #define _TREXIO_S_H
 
 #include "trexio.h"
+#include "trexio_private.h"
 #include <pthread.h>
 #include <assert.h>
   #+end_src
@@ -61,6 +62,24 @@
   - structs are suffixed by ~_s~
   - types are suffixed by ~_t~
 
+** Memory allocation
+
+   Memory allocation of structures can be facilitated by using the
+   following macro, which ensures that the size of the allocated
+   object is the same as the size of the data type pointed by the pointer.
+
+   #+begin_src c :tangle trexio_private.h
+#define MALLOC(T) (T*) malloc (sizeof(T));
+#define CALLOC(N,T) (T*) calloc ((N),sizeof(T));
+   #+end_src
+
+   When a pointer is freed, it should be set to ~NULL~.
+   This can be facilitated by the use of the following macro:
+
+   #+begin_src c :tangle trexio_private.h
+#define FREE(X) { free(X) ; (X)=NULL; }
+   #+end_src
+
 * Front end
 
  All calls to TREXIO are thread-safe.
@@ -69,18 +88,19 @@
    #+begin_src c :tangle trexio.h
 typedef int32_t trexio_exit_code;
 
-#define TREXIO_FAILURE       ( (trexio_exit_code) -1 )
-#define TREXIO_SUCCESS       ( (trexio_exit_code)  0 )
-#define TREXIO_INVALID_ARG_1 ( (trexio_exit_code)  1 )
-#define TREXIO_INVALID_ARG_2 ( (trexio_exit_code)  2 )
-#define TREXIO_INVALID_ARG_3 ( (trexio_exit_code)  3 )
-#define TREXIO_INVALID_ARG_4 ( (trexio_exit_code)  4 )
-#define TREXIO_INVALID_ARG_5 ( (trexio_exit_code)  5 )
-#define TREXIO_END           ( (trexio_exit_code) 10 )
-#define TREXIO_READONLY      ( (trexio_exit_code) 11 )
-#define TREXIO_ERRNO         ( (trexio_exit_code) 12 )
-#define TREXIO_INVALID_ID    ( (trexio_exit_code) 20 )
-#define TREXIO_INVALID_NUM   ( (trexio_exit_code) 21 )
+#define  TREXIO_FAILURE            (  (trexio_exit_code)  -1  )
+#define  TREXIO_SUCCESS            (  (trexio_exit_code)   0  )
+#define  TREXIO_INVALID_ARG_1      (  (trexio_exit_code)   1  )
+#define  TREXIO_INVALID_ARG_2      (  (trexio_exit_code)   2  )
+#define  TREXIO_INVALID_ARG_3      (  (trexio_exit_code)   3  )
+#define  TREXIO_INVALID_ARG_4      (  (trexio_exit_code)   4  )
+#define  TREXIO_INVALID_ARG_5      (  (trexio_exit_code)   5  )
+#define  TREXIO_END                (  (trexio_exit_code)  10  )
+#define  TREXIO_READONLY           (  (trexio_exit_code)  11  )
+#define  TREXIO_ERRNO              (  (trexio_exit_code)  12  )
+#define  TREXIO_INVALID_ID         (  (trexio_exit_code)  20  )
+#define  TREXIO_ALLOCATION_FAILED  (  (trexio_exit_code)  21  )
+#define  TREXIO_INVALID_NUM        (  (trexio_exit_code)  22  )
    #+end_src
    
 ** Back ends
@@ -193,7 +213,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
   /* Data for the parent type */
 
-  result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
+  result->file_name   = CALLOC(strlen(file_name)+1,char);
   strcpy(result->file_name, file_name);
   result->back_end    = back_end;
   result->mode        = mode;
@@ -223,8 +243,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   }
 
   if (rc != TREXIO_SUCCESS) {
-    free(result->file_name);
-    free(result);
+    FREE(result->file_name);
+    FREE(result);
     return NULL;
   }
 
@@ -249,8 +269,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   }
   
   if (rc != TREXIO_SUCCESS) {
-    free(result->file_name);
-    free(result);
+    FREE(result->file_name);
+    FREE(result);
     return NULL;
   }
   
@@ -291,8 +311,8 @@ trexio_exit_code trexio_close(trexio_t* file) {
   }
 
   if (rc != TREXIO_SUCCESS) {
-    free(file->file_name);
-    free(file);
+    FREE(file->file_name);
+    FREE(file);
     return TREXIO_FAILURE;
   }
   
@@ -318,12 +338,11 @@ trexio_exit_code trexio_close(trexio_t* file) {
 
   /* Terminate front end */
   
-  free(file->file_name);
-  file->file_name = NULL;
+  FREE(file->file_name);
   
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
   
-  free(file);
+  FREE(file);
 
   if (irc != 0) return TREXIO_ERRNO;
   if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;

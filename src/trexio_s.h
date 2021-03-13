@@ -9,6 +9,7 @@
 #define _TREXIO_S_H
 
 #include "trexio.h"
+#include "trexio_private.h"
 #include <pthread.h>
 #include <assert.h>
 
