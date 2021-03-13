@@ -53,7 +53,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
   /* Data for the parent type */
 
-  result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
+  result->file_name   = CALLOC(strlen(file_name)+1,char);
   strcpy(result->file_name, file_name);
   result->back_end    = back_end;
   result->mode        = mode;

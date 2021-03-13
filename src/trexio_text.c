@@ -12,6 +12,9 @@ trexio_exit_code trexio_text_init(trexio_t* file) {
 
   trexio_text_t* f = (trexio_text_t*) file;
 
+  /* Put all pointers to NULL but leave parent untouched */
+  memset(&(f->parent)+1,0,sizeof(trexio_text_t)-sizeof(trexio_t));
+
   /* If directory doesn't exist, create it in write mode */
   struct stat st;
   
@@ -27,21 +30,23 @@ trexio_exit_code trexio_text_init(trexio_t* file) {
 
   /* Create the lock file in the directory */
   const char* lock_file_name = "/.lock";
-  char* file_name = (char*)
-    calloc( strlen(file->file_name) + strlen(lock_file_name) + 1,
-            sizeof(char));
-  assert (file_name != NULL);
+  char* file_name =
+    CALLOC(strlen(file->file_name) + strlen(lock_file_name) + 1, char);
+
+  if (file_name == NULL) {
+    return TREXIO_ALLOCATION_FAILED;
+  }
+ 
   strcpy (file_name, file->file_name);
   strcat (file_name, lock_file_name);
 
   f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
-  assert (f->lock_file > 0);
   FREE(file_name);
 
-  f->nucleus = NULL;
-  f->electron= NULL;
-  f->rdm     = NULL;
-  
+  if (f->lock_file <= 0) {
+    return TREXIO_FAILURE;
+  }
+
   return TREXIO_SUCCESS;
 }
 
@@ -96,29 +101,34 @@ trexio_exit_code trexio_text_unlock(trexio_t* file) {
   return TREXIO_SUCCESS;
 }
 
+#define DEBUG printf("%s : line %d\n", __FILE__, __LINE__);
+
 nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
   if (file == NULL) return NULL;
 
-  if (file->nucleus != NULL) return file->nucleus;
+  /* If the data structure exists, return it */
+  if (file->nucleus != NULL) {
+    return file->nucleus;
+  }
   
   /* Allocate the data structure */
   nucleus_t* nucleus = MALLOC(nucleus_t);
-  assert (nucleus != NULL);
+  if (nucleus == NULL) return NULL;
 
-  nucleus->file     = NULL;
-  nucleus->num      = 0;
-  nucleus->coord    = NULL;
-  nucleus->dims_coord = NULL;
-  nucleus->charge   = NULL;
-  nucleus->dims_charge = NULL;
-  nucleus->to_flush = 0;
+  memset(nucleus,0,sizeof(nucleus_t));
 
-  /* Try to open the file. If the file does not exist, return */
+  /* Build the file name */
   const char* nucleus_file_name = "/nucleus.txt";
   char * file_name = (char*)
     calloc( strlen(file->parent.file_name) + strlen(nucleus_file_name) + 1,
             sizeof(char));
-  assert (file_name != NULL);
+
+  if (file_name == NULL) {
+    FREE(nucleus);
+DEBUG
+    return NULL;
+  }
+  
   strcpy (file_name, file->parent.file_name);
   strcat (file_name, nucleus_file_name);
 
@@ -130,98 +140,219 @@ nucleus_t* trexio_text_read_nucleus(trexio_text_t* file) {
     fseek(f, 0L, SEEK_END);
     size_t sz = ftell(f);
     fseek(f, 0L, SEEK_SET);
+
     char* buffer = CALLOC(sz,char);
+    if (buffer == NULL) {
+      FREE(file_name);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
     
     /* Read the dimensioning variables */
     int rc;
+
     rc = fscanf(f, "%s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "rank_charge") == 0);
+    if ((rc != 1) || (strcmp(buffer, "rank_charge") != 0)) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
     
     rc = fscanf(f, "%u", &(nucleus->rank_charge));
-    assert (rc == 1);
+    if (rc != 1) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
      
-    nucleus->dims_charge = (uint64_t*) calloc(nucleus->rank_charge, sizeof(uint64_t));
-    assert (nucleus->dims_charge != NULL);
-    
     uint64_t size_charge = 1;
-    for (uint i=0; i<nucleus->rank_charge; i++){
+    for (unsigned int i=0; i<nucleus->rank_charge; i++){
 
-      rc = fscanf(f, "%s", buffer);
-      assert (rc == 1);
-      //assert (strcmp(buffer, "dims_charge") == 0);
+      unsigned int j=-1;
+      rc = fscanf(f, "%s %u", buffer, &j);
+      if ((rc != 2) || (strcmp(buffer, "dims_charge") != 0) || (j!=i)) {
+        FREE(buffer);
+        FREE(file_name);
+        FREE(nucleus);
+DEBUG
+          return NULL;
+      }
     
-      rc = fscanf(f, "%lu", &(nucleus->dims_charge[i]));
-      assert (rc == 1);
+      rc = fscanf(f, "%lu\n", &(nucleus->dims_charge[i]));
+      assert(!(rc != 1));
+      if (rc != 1) {
+        FREE(buffer);
+        FREE(file_name);
+        FREE(nucleus);
+DEBUG
+        return NULL;
+      }
 
       size_charge *= nucleus->dims_charge[i];
     }
     
     rc = fscanf(f, "%s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "rank_coord") == 0);
+    if ((rc != 1) || (strcmp(buffer, "rank_coord") != 0)) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
     
     rc = fscanf(f, "%u", &(nucleus->rank_coord));
-    assert (rc == 1);
+    assert(!(rc != 1));
+    if (rc != 1) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
      
-    nucleus->dims_coord = (uint64_t*) calloc(nucleus->rank_coord, sizeof(uint64_t));
-    assert (nucleus->dims_coord != NULL);
-    
     uint64_t size_coord = 1;
-    for (uint i=0; i<nucleus->rank_coord; i++){
+    for (unsigned int i=0; i<nucleus->rank_coord; i++){
 
-      rc = fscanf(f, "%s", buffer);
-      assert (rc == 1);
-      //assert (strcmp(buffer, "dims_coord") == 0);
+      unsigned int j=-1;
+      rc = fscanf(f, "%s %u", buffer, &j);
+      if ((rc != 2) || (strcmp(buffer, "dims_coord") != 0) || (j!=i)) {
+        FREE(buffer);
+        FREE(file_name);
+        FREE(nucleus);
+DEBUG
+        return NULL;
+      }
     
       rc = fscanf(f, "%lu", &(nucleus->dims_coord[i]));
-      assert (rc == 1);
+      assert(!(rc != 1));
+      if (rc != 1) {
+        FREE(buffer);
+        FREE(file_name);
+        FREE(nucleus);
+DEBUG
+        return NULL;
+      }
 
       size_coord *= nucleus->dims_coord[i];
     }
     
     /* Allocate arrays */
     nucleus->charge = (double*) calloc(size_charge, sizeof(double));
-    assert (nucleus->charge != NULL);
+    assert (!(nucleus->charge == NULL));
+    if (nucleus->charge == NULL) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
     
     nucleus->coord = (double*) calloc(size_coord, sizeof(double));
-    assert (nucleus->coord != NULL);
+    assert (!(nucleus->coord == NULL));
+    if (nucleus->coord == NULL) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus->charge);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
     
     /* Read data */
     rc = fscanf(f, "%s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "num") == 0);
+    assert(!((rc != 1) || (strcmp(buffer, "num") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "num") != 0)) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus->charge);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
     
     rc = fscanf(f, "%lu", &(nucleus->num));
-    assert (rc == 1);
-    
-    rc = fscanf(f, "%s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "charge") == 0);
-    
-    for (uint64_t i=0 ; i<size_charge ; i++) {
-      rc = fscanf(f, "%lf", &(nucleus->charge[i]));
-      assert (rc == 1);
+    assert(!(rc != 1));
+    if (rc != 1) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus->charge);
+      FREE(nucleus);
+DEBUG
+      return NULL;
     }
     
     rc = fscanf(f, "%s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "coord") == 0);
+    assert(!((rc != 1) || (strcmp(buffer, "charge") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "charge") != 0)) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus->charge);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
+    
+    for (uint64_t i=0 ; i<size_charge ; i++) {
+      rc = fscanf(f, "%lf", &(nucleus->charge[i]));
+      assert(!(rc != 1));
+      if (rc != 1) {
+        FREE(buffer);
+        FREE(file_name);
+        FREE(nucleus->charge);
+        FREE(nucleus);
+DEBUG
+        return NULL;
+      }
+    }
+    
+    rc = fscanf(f, "%s", buffer);
+    assert(!((rc != 1) || (strcmp(buffer, "coord") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "coord") != 0)) {
+      FREE(buffer);
+      FREE(file_name);
+      FREE(nucleus->charge);
+      FREE(nucleus);
+DEBUG
+      return NULL;
+    }
     
     for (uint64_t i=0 ; i<size_coord ; i++) {
       rc = fscanf(f, "%lf", &(nucleus->coord[i]));
-      assert (rc == 1);
+      assert(!(rc != 1));
+      if (rc != 1) {
+        FREE(buffer);
+        FREE(file_name);
+        FREE(nucleus->charge);
+        FREE(nucleus);
+DEBUG
+        return NULL;
+      }
     }
     FREE(buffer);
     fclose(f);
     f = NULL;
   }
+
   if (file->parent.mode == 'w') {
     nucleus->file = fopen(file_name,"a");  
   } else { 
     nucleus->file = fopen(file_name,"r");  
   }
   FREE(file_name);
+  assert (!(nucleus->file == NULL));
+  if (nucleus->file == NULL) {
+    FREE(nucleus->charge);
+    FREE(nucleus);
+DEBUG
+    return NULL;
+  }
+
+  fseek(nucleus->file, 0L, SEEK_SET);
   file->nucleus = nucleus;
   return nucleus;
 }
@@ -245,16 +376,16 @@ trexio_exit_code trexio_text_flush_nucleus(const trexio_text_t* file) {
   fprintf(f, "rank_charge %d\n", nucleus->rank_charge);
 
   uint64_t size_charge = 1;
-  for (uint i=0; i<nucleus->rank_charge; i++){
-    fprintf(f, "dims_charge[%d] %ld\n", i, nucleus->dims_charge[i]);
+  for (unsigned int i=0; i<nucleus->rank_charge; i++){
+    fprintf(f, "dims_charge %d  %ld\n", i, nucleus->dims_charge[i]);
     size_charge *= nucleus->dims_charge[i];
   } 
 
   fprintf(f, "rank_coord %d\n", nucleus->rank_coord);
 
   uint64_t size_coord = 1;
-  for (uint i=0; i<nucleus->rank_coord; i++){
-    fprintf(f, "dims_coord[%d] %ld\n", i, nucleus->dims_coord[i]);
+  for (unsigned int i=0; i<nucleus->rank_coord; i++){
+    fprintf(f, "dims_coord %d  %ld\n", i, nucleus->dims_coord[i]);
     size_coord *= nucleus->dims_coord[i];
   } 
 
@@ -292,16 +423,8 @@ trexio_exit_code trexio_text_free_nucleus(trexio_text_t* file) {
     nucleus->file = NULL;
   }
 
-  if (nucleus->dims_coord != NULL) {
-    FREE (nucleus->dims_coord);
-  }
-
   if (nucleus->coord != NULL) {
     FREE (nucleus->coord);
-  }
- 
-  if (nucleus->dims_charge != NULL) {
-    FREE (nucleus->dims_charge);
   }
  
   if (nucleus->charge != NULL) {
@@ -352,7 +475,7 @@ trexio_exit_code trexio_text_read_nucleus_coord(const trexio_t* file, double* co
   if (rank != nucleus->rank_coord) return TREXIO_INVALID_ARG_3;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<rank; i++){
+  for (unsigned int i=0; i<rank; i++){
     if (dims[i] != nucleus->dims_coord[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
@@ -378,15 +501,10 @@ trexio_exit_code trexio_text_write_nucleus_coord(const trexio_t* file, const dou
     FREE(nucleus->coord);
   }
 
-  if (nucleus->dims_coord != NULL) {
-    FREE(nucleus->dims_coord);
-  }
-
   nucleus->rank_coord = rank;
-  nucleus->dims_coord = (uint64_t*) calloc(rank, sizeof(uint64_t));
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<nucleus->rank_coord; i++){
+  for (unsigned int i=0; i<nucleus->rank_coord; i++){
     nucleus->dims_coord[i] = dims[i];
     dim_size *= dims[i];
   }
@@ -412,7 +530,7 @@ trexio_exit_code trexio_text_read_nucleus_charge(const trexio_t* file, double* c
   if (rank != nucleus->rank_charge) return TREXIO_INVALID_ARG_3;
   
   uint64_t dim_size = 1;
-  for (uint i=0; i<rank; i++){
+  for (unsigned int i=0; i<rank; i++){
     if (dims[i] != nucleus->dims_charge[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
@@ -438,16 +556,10 @@ trexio_exit_code trexio_text_write_nucleus_charge(const trexio_t* file, const do
     FREE(nucleus->charge);
   }
 
-  if (nucleus->dims_charge != NULL) {
-    FREE(nucleus->dims_charge);
-  }
-
   nucleus->rank_charge = rank;
 
-  nucleus->dims_charge = (uint64_t*) calloc(rank, sizeof(uint64_t));
-  
   uint64_t dim_size = 1;
-  for (uint i=0; i<nucleus->rank_charge; i++){
+  for (unsigned int i=0; i<nucleus->rank_charge; i++){
     nucleus->dims_charge[i] = dims[i];
     dim_size *= dims[i];
   }

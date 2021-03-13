@@ -12,18 +12,19 @@
 
 typedef int32_t trexio_exit_code;
 
-#define TREXIO_FAILURE       ( (trexio_exit_code) -1 )
-#define TREXIO_SUCCESS       ( (trexio_exit_code)  0 )
-#define TREXIO_INVALID_ARG_1 ( (trexio_exit_code)  1 )
-#define TREXIO_INVALID_ARG_2 ( (trexio_exit_code)  2 )
-#define TREXIO_INVALID_ARG_3 ( (trexio_exit_code)  3 )
-#define TREXIO_INVALID_ARG_4 ( (trexio_exit_code)  4 )
-#define TREXIO_INVALID_ARG_5 ( (trexio_exit_code)  5 )
-#define TREXIO_END           ( (trexio_exit_code) 10 )
-#define TREXIO_READONLY      ( (trexio_exit_code) 11 )
-#define TREXIO_ERRNO         ( (trexio_exit_code) 12 )
-#define TREXIO_INVALID_ID    ( (trexio_exit_code) 20 )
-#define TREXIO_INVALID_NUM   ( (trexio_exit_code) 21 )
+#define  TREXIO_FAILURE            (  (trexio_exit_code)  -1  )
+#define  TREXIO_SUCCESS            (  (trexio_exit_code)   0  )
+#define  TREXIO_INVALID_ARG_1      (  (trexio_exit_code)   1  )
+#define  TREXIO_INVALID_ARG_2      (  (trexio_exit_code)   2  )
+#define  TREXIO_INVALID_ARG_3      (  (trexio_exit_code)   3  )
+#define  TREXIO_INVALID_ARG_4      (  (trexio_exit_code)   4  )
+#define  TREXIO_INVALID_ARG_5      (  (trexio_exit_code)   5  )
+#define  TREXIO_END                (  (trexio_exit_code)  10  )
+#define  TREXIO_READONLY           (  (trexio_exit_code)  11  )
+#define  TREXIO_ERRNO              (  (trexio_exit_code)  12  )
+#define  TREXIO_INVALID_ID         (  (trexio_exit_code)  20  )
+#define  TREXIO_ALLOCATION_FAILED  (  (trexio_exit_code)  21  )
+#define  TREXIO_INVALID_NUM        (  (trexio_exit_code)  22  )
 
 typedef int32_t back_end_t;
 
