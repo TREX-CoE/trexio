@@ -1,4 +1,4 @@
-g+Title: Templator for frontend
+#+Title: Templator for frontend
 
 * Constant file prefixes (not used by generator)                    :noxport:
 
@@ -50,6 +50,41 @@ g+Title: Templator for frontend
 #include <assert.h>
   #+end_src
 
+
+* Coding conventions
+
+  - integer types will be defined using types given in ~stdint.h~
+  - pointers are always initialized to ~NULL~
+  - when memory is freed, the pointer is set to ~NULL~
+  - ~assert.h~ should be used extensively
+  - variable names are in lower case
+  - ~#define~ constants are in upper case
+  - structs are suffixed by ~_s~
+  - types are suffixed by ~_t~
+
+** Memory allocation
+
+   Memory allocation of structures can be facilitated by using the
+   following macro, which ensures that the size of the allocated
+   object is the same as the size of the data type pointed by the pointer.
+
+   #+begin_src c :tangle trexio_private.h
+#define MALLOC(T) (T*) malloc (sizeof(T));
+#define CALLOC(N,T) (T*) calloc ((N),sizeof(T));
+   #+end_src
+
+   When a pointer is freed, it should be set to ~NULL~.
+   This can be facilitated by the use of the following macro:
+
+   #+begin_src c :tangle trexio_private.h
+#define FREE(X) { free(X) ; (X)=NULL; }
+   #+end_src
+
+* Front end
+
+ All calls to TREXIO are thread-safe.
+
+
 ** Error handling
    #+begin_src c :tangle prefix_front.h
 typedef int32_t trexio_exit_code;
@@ -65,7 +100,9 @@ typedef int32_t trexio_exit_code;
 #define TREXIO_READONLY      ( (trexio_exit_code) 11 )
 #define TREXIO_ERRNO         ( (trexio_exit_code) 12 )
 #define TREXIO_INVALID_ID    ( (trexio_exit_code) 20 )
-#define TREXIO_INVALID_NUM   ( (trexio_exit_code) 21 )
+#define TREXIO_ALLOCATION_FAILED  (  (trexio_exit_code)  21  )
+#define TREXIO_INVALID_NUM   ( (trexio_exit_code) 22 )
+
    #+end_src
    
 ** Back ends
@@ -318,7 +355,7 @@ trexio_exit_code trexio_close(trexio_t* file) {
    #+end_src
 
 
-* Front end
+* Templates for front end
 
 ** Template for frontend read/write a number
    
@@ -405,16 +442,13 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dt
   rc = trexio_hdf5_read_$group_dset_dim$(file, &$group_dset_dim$); 
   if ($group_dset_dim$ <= 0L) return TREXIO_INVALID_NUM;
 
-  int64_t dim_total = nucleus_num*3;
-  if (dim_total < 0) return TREXIO_FAILURE;
-
   uint32_t rank = $group_dset_rank$;
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$}; 
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group$_$group_dset$(file, $group_dset$, (uint64_t) dim_total);
+    return trexio_text_read_$group$_$group_dset$(file, $group_dset$, rank, dims);
     break;
 
   case TREXIO_HDF5:
@@ -443,16 +477,13 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
   rc = trexio_hdf5_read_$group_dset_dim$(file, &$group_dset_dim$); 
   if ($group_dset_dim$ <= 0L) return TREXIO_INVALID_NUM;
 
-  int64_t dim_total = nucleus_num*3;
-  if (dim_total < 0) return TREXIO_FAILURE;
-
   uint32_t rank = $group_dset_rank$;
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$}; 
  
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group$_$group_dset$(file, $group_dset$, (uint64_t) dim_total);
+    return trexio_text_write_$group$_$group_dset$(file, $group_dset$, rank, dims);
     break;
 
   case TREXIO_HDF5:

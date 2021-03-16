@@ -85,10 +85,10 @@ templ_path_hdf5 = join(fileDir,'templates_hdf5')
 templ_path_front = join(fileDir,'templates_front')
 
 #clean the populated/ directory
-for popdir in [templ_path_front, templ_path_front, templ_path_text]:
-    cleandir = join(popdir, 'populated')
-    for f in scandir(cleandir):
-        remove(f.path)
+#for popdir in [templ_path_front, templ_path_front, templ_path_text]:
+#    cleandir = join(popdir, 'populated')
+#    for f in scandir(cleandir):
+#        remove(f.path)
 
 files_exclude = ['prefix_hdf5.c', 'prefix_hdf5.h', 'suffix_hdf5.h', 
                  'prefix_text.c', 'prefix_text.h', 'suffix_text.h', 
@@ -329,8 +329,8 @@ for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c',
                         templine2 = templine1.replace('$group_dset$', dset)
                         f_out.write(templine2)
                 elif '$group_num$' in line or '$GROUP_NUM$' in line :
-                    #for num in dim_variables.keys():
-                    for num in numbers.keys():
+                    for num in dim_variables.keys():
+                    #for num in numbers.keys():
                         templine1 = line.replace('$GROUP_NUM$', num.upper())
                         templine2 = templine1.replace('$group_num$', num)
                         f_out.write(templine2)                
