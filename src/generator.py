@@ -15,8 +15,8 @@ del config0['metadata']
 
 config = {}
 for k,v in config0.items():
-    #if k == 'nucleus' or k == 'mo':
-    if k == 'nucleus': #or k == 'electron':
+    #if k == 'nucleus' or k == 'ecp':
+    if k == 'nucleus': 
         config[k] = v
 
 #print(config)
@@ -74,7 +74,7 @@ for k,v in datasets.items():
         tmp_dict['dim_list'] = dim_str 
         datasets_nostr[k] = tmp_dict
 
-print(datasets_nostr['nucleus_coord'])
+#print(datasets_nostr['nucleus_coord'])
 
 #put also dimensioning variables in numbers
 numbers.update(dim_variables)
@@ -108,7 +108,7 @@ files_funcs_nums  = [f for f in files_funcs if 'num' in f]
 files_funcs_groups = [f for f in files_funcs if 'group' in f]
 
 files_funcs_groups.append('struct_text_group_dset.h')
-print(files_funcs_groups)
+#print(files_funcs_groups)
 
 files_auxil = [f for f in files if not ('read_' in f or 'write_' in f or 'rw_' in f)]
 
