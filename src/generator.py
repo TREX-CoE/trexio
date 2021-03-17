@@ -245,7 +245,7 @@ for fname in files_funcs_dsets:
                                 if not dim.isdigit():
                                     templine1 = line.replace('$group_dset_dim$', dim)
                                     templine2 = templine1
-                                    if '_read' in templine2:
+                                    if '_read' in templine2 and 'hdf5' in fname:
                                             templine1 = rc_line
                                             templine2 += templine1   
 
@@ -292,8 +292,8 @@ for fname in files_funcs_nums:
     if '_text' in fname:
         templ_path = templ_path_text
         
-    #for dim in dim_variables.keys():
-    for dim in numbers.keys():
+    for dim in dim_variables.keys():
+    #for dim in numbers.keys():
         grname = dim.split('_')[0]
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :

@@ -438,8 +438,25 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dt
     
   trexio_exit_code rc;
   uint64_t $group_dset_dim$ = -1;
-  // error handling for rc is added by the generator
-  rc = trexio_hdf5_read_$group_dset_dim$(file, &$group_dset_dim$); 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_$group_dset_dim$(file, &$group_dset_dim$);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_$group_dset_dim$(file, &$group_dset_dim$);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_$group_dset_dim$(file, &$group_dset_dim$);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
   if ($group_dset_dim$ <= 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
@@ -473,8 +490,23 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
 
   trexio_exit_code rc;
   uint64_t $group_dset_dim$ = -1;
-  // error handling for rc is added by the generator
-  rc = trexio_hdf5_read_$group_dset_dim$(file, &$group_dset_dim$); 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_$group_dset_dim$(file, &$group_dset_dim$);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_$group_dset_dim$(file, &$group_dset_dim$);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_$group_dset_dim$(file, &$group_dset_dim$);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
   if ($group_dset_dim$ <= 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
