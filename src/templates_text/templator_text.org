@@ -370,7 +370,7 @@ DEBUG
     // START REPEAT GROUP_DSET   
      
     /* Allocate arrays */
-    $group$->$group_dset$ = (double*) calloc(size_$group_dset$, sizeof(double));
+    $group$->$group_dset$ = ($group_dset_dtype$*) calloc(size_$group_dset$, sizeof($group_dset_dtype$));
     assert (!($group$->$group_dset$ == NULL));
     if ($group$->$group_dset$ == NULL) {
       FREE(buffer);
@@ -393,7 +393,7 @@ DEBUG
     }
     
     for (uint64_t i=0 ; i<size_$group_dset$ ; i++) {
-      rc = fscanf(f, "%lf", &($group$->$group_dset$[i]));
+      rc = fscanf(f, "%$group_dset_std_dtype$", &($group$->$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
         FREE(buffer);
@@ -479,7 +479,7 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
   
   fprintf(f, "$group_dset$\n");
   for (uint64_t i=0 ; i<size_$group_dset$ ; i++) {
-    fprintf(f, "%lf\n", $group$->$group_dset$[i]);
+    fprintf(f, "%$group_dset_std_dtype$\n", $group$->$group_dset$[i]);
   }
 
   // END REPEAT GROUP_DSET
@@ -627,7 +627,7 @@ trexio_exit_code trexio_text_write_$group_dset$(const trexio_t* file, const $gro
     dim_size *= dims[i];
   }
 
-  $group$->$group_dset$ = (double*) calloc(dim_size, sizeof(double));
+  $group$->$group_dset$ = ($group_dset_dtype$*) calloc(dim_size, sizeof($group_dset_dtype$));
 
   for (uint64_t i=0 ; i<dim_size ; i++) {
     $group$->$group_dset$[i] = $group_dset$[i];

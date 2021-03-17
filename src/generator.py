@@ -15,8 +15,8 @@ del config0['metadata']
 
 config = {}
 for k,v in config0.items():
-    #if k == 'nucleus' or k == 'ecp':
-    if k == 'nucleus': 
+    if k == 'nucleus' or k == 'ecp':
+    #if k == 'nucleus': 
         config[k] = v
 
 #print(config)
@@ -145,7 +145,19 @@ for fname in files_funcs_groups:
                                     continue         
                                                         
                                 templine1 = loop_body.replace('$group_dset$', dset)
-                                templine2 = templine1.replace('$group$', grname)                           
+                                templine2 = templine1.replace('$group$', grname)  
+
+                                templine1 = templine2.replace('$group_dset_dtype$', params['dtype'])
+                                templine2 = templine1
+
+                                if params['dtype'] == 'double':
+                                    std_dtype = 'lf'
+                                elif params['dtype'] == 'int64_t':
+                                    std_dtype = 'ld'
+
+                                templine1 = templine2.replace('$group_dset_std_dtype$', std_dtype)
+                                templine2 = templine1
+
                                 f_out.write(templine2)
                         elif do_num:
                             #for dim in dim_variables.keys():
@@ -268,6 +280,7 @@ for fname in files_funcs_dsets:
 
                         templine1 = templine2.replace('$group_dset_h5_dtype$', h5_dtype)
                         templine2 = templine1.replace('$group_dset_h5_dtype$'.upper(), h5_dtype.upper())
+
 
                         templine1 = templine2.replace('$group_dset_rank$', str(params['rank']))
                         templine2 = templine1
