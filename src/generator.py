@@ -19,8 +19,6 @@ for k,v in config0.items():
     #if k == 'nucleus': 
         config[k] = v
 
-#print(config)
-
 groups = [group for group in config.keys()]
 
 dim_variables = {}
@@ -39,9 +37,6 @@ for k1,v1 in config.items():
                 dim_dict[grname] = dim_list
                 dim_list = []
 
-#print(dim_variables)
-#print(dim_dict)
-
 datasets = {}
 numbers = {}
 for k1,v1 in config.items():
@@ -53,8 +48,9 @@ for k1,v1 in config.items():
             if var_name not in dim_variables.keys():
                 numbers[var_name] = v2[0]
 
-print('Strings I/O currently not supported')
 # TODO, for now remove char-related stuff
+print('Strings I/O currently not supported')
+
 datasets_nostr = {}
 for k,v in datasets.items():
     tmp_dict = {}
@@ -74,21 +70,14 @@ for k,v in datasets.items():
         tmp_dict['dim_list'] = dim_str 
         datasets_nostr[k] = tmp_dict
 
-#print(datasets_nostr['nucleus_coord'])
 
 #put also dimensioning variables in numbers
 numbers.update(dim_variables)
-print(numbers)
 
 templ_path_text = join(fileDir,'templates_text')
 templ_path_hdf5 = join(fileDir,'templates_hdf5')
 templ_path_front = join(fileDir,'templates_front')
 
-#clean the populated/ directory
-#for popdir in [templ_path_front, templ_path_front, templ_path_text]:
-#    cleandir = join(popdir, 'populated')
-#    for f in scandir(cleandir):
-#        remove(f.path)
 
 files_exclude = ['prefix_hdf5.c', 'prefix_hdf5.h', 'suffix_hdf5.h', 
                  'prefix_text.c', 'prefix_text.h', 'suffix_text.h', 
@@ -106,14 +95,11 @@ files_funcs = [f for f in files if 'read_' in f or 'write_' in f or 'flush_' in 
 files_funcs_dsets = [f for f in files_funcs if 'dset' in f]
 files_funcs_nums  = [f for f in files_funcs if 'num' in f]
 files_funcs_groups = [f for f in files_funcs if 'group' in f]
-
-files_funcs_groups.append('struct_text_group_dset.h')
-#print(files_funcs_groups)
-
 files_auxil = [f for f in files if not ('read_' in f or 'write_' in f or 'rw_' in f)]
 
-# build files with functions for text groups
+files_funcs_groups.append('struct_text_group_dset.h')
 
+# build files with functions for text groups
 for fname in files_funcs_groups:
     fname_new = join('populated',f'pop_{fname}')
     if '_text' in fname:
@@ -173,7 +159,6 @@ for fname in files_funcs_groups:
                         else:
                             print('fishy')
                     
-                        #print(loop_body)
                         loop_body = ''
                         subloop = False
                         do_dset = False
@@ -230,7 +215,6 @@ for fname in files_funcs_groups:
 
                     elif not subloop:        
                         f_out.write(line)
-
 
 
 # build files with functions
