@@ -17,14 +17,14 @@ mkdir -p templates_hdf5/populated
 # not options. It is safer.
 
 echo "remove existing templates"
-rm -- templates_front/*.{c,h}
-rm -- templates_text/*.{c,h}
-rm -- templates_hdf5/*.{c,h}
+rm -- templates_front/*.{c,h} || true
+rm -- templates_text/*.{c,h} || true
+rm -- templates_hdf5/*.{c,h} || true
 
 echo "clean populated directories"
-rm -- templates_front/populated/*
-rm -- templates_text/populated/*
-rm -- templates_hdf5/populated/*
+rm -- templates_front/populated/* || true
+rm -- templates_text/populated/* || true
+rm -- templates_hdf5/populated/* || true
 
 echo "tangle org files to generate templates"
 cd templates_front
