@@ -3,13 +3,10 @@
    M-x org-babel-tangle
 */
 
-
-
 #ifndef _TREXIO_S_H
 #define _TREXIO_S_H
 
 #include "trexio.h"
-#include "trexio_private.h"
 #include <pthread.h>
 #include <assert.h>
 
@@ -20,5 +17,4 @@ struct trexio_s {
   char              mode;
   char              padding[7];   /* Ensures the proper alignment of back-ends */
 };
-
 #endif

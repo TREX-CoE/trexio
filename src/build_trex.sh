@@ -1,22 +1,30 @@
 #!/bin/bash
 
+if [[ $(basename $PWD) != "src" ]] ; then
+  echo "This script should run in the src directory"
+  exit -1
+fi
+
+# We want the script to crash on the 1st error:
+set -e
+
 echo "create populated directories"
 mkdir -p templates_front/populated
 mkdir -p templates_text/populated
 mkdir -p templates_hdf5/populated
 
+# It is important to ad '--' to rm because it tells rm that what follows are
+# not options. It is safer.
+
 echo "remove existing templates"
-rm templates_front/*.c
-rm templates_text/*.c
-rm templates_hdf5/*.c
-rm templates_front/*.h
-rm templates_text/*.h
-rm templates_hdf5/*.h
+rm -- templates_front/*.{c,h}
+rm -- templates_text/*.{c,h}
+rm -- templates_hdf5/*.{c,h}
 
 echo "clean populated directories"
-rm templates_front/populated/*
-rm templates_text/populated/*
-rm templates_hdf5/populated/*
+rm -- templates_front/populated/*
+rm -- templates_text/populated/*
+rm -- templates_hdf5/populated/*
 
 echo "tangle org files to generate templates"
 cd templates_front
@@ -32,7 +40,7 @@ emacs --batch --eval "(require 'org)" --eval '(org-babel-tangle-file "templator_
 cd ..
 
 echo "run generator script to populate templates"
-python generator.py
+python3 generator.py
 
 sleep 2
 

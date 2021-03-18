@@ -3,8 +3,6 @@
    M-x org-babel-tangle
 */
 
-
-
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -53,7 +51,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
   /* Data for the parent type */
 
-  result->file_name   = CALLOC(strlen(file_name)+1,char);
+  result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
   strcpy(result->file_name, file_name);
   result->back_end    = back_end;
   result->mode        = mode;
@@ -83,8 +81,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   }
 
   if (rc != TREXIO_SUCCESS) {
-    FREE(result->file_name);
-    FREE(result);
+    free(result->file_name);
+    free(result);
     return NULL;
   }
 
@@ -109,8 +107,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   }
   
   if (rc != TREXIO_SUCCESS) {
-    FREE(result->file_name);
-    FREE(result);
+    free(result->file_name);
+    free(result);
     return NULL;
   }
   
@@ -143,8 +141,8 @@ trexio_exit_code trexio_close(trexio_t* file) {
   }
 
   if (rc != TREXIO_SUCCESS) {
-    FREE(file->file_name);
-    FREE(file);
+    free(file->file_name);
+    free(file);
     return TREXIO_FAILURE;
   }
   
@@ -170,18 +168,624 @@ trexio_exit_code trexio_close(trexio_t* file) {
 
   /* Terminate front end */
   
-  FREE(file->file_name);
+  free(file->file_name);
+  file->file_name = NULL;
   
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
   
-  FREE(file);
+  free(file);
 
   if (irc != 0) return TREXIO_ERRNO;
   if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
     
   return TREXIO_SUCCESS;
 }
+trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* nucleus_charge) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (nucleus_charge == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_nucleus_charge(file, nucleus_charge, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_nucleus_charge(file, nucleus_charge, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_nucleus_charge(file, nucleus_charge);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* nucleus_coord) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (nucleus_coord == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, 3}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_nucleus_coord(file, nucleus_coord, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_nucleus_coord(file, nucleus_coord, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_nucleus_coord(file, nucleus_coord);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_lmax_plus_1(trexio_t* file, int64_t* ecp_lmax_plus_1) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_lmax_plus_1 == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_lmax_plus_1(file, ecp_lmax_plus_1, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_lmax_plus_1(file, ecp_lmax_plus_1, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_lmax_plus_1(file, ecp_lmax_plus_1);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_z_core(trexio_t* file, int64_t* ecp_z_core) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_z_core == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_z_core(file, ecp_z_core, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_z_core(file, ecp_z_core, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_z_core(file, ecp_z_core);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_local_n(trexio_t* file, int64_t* ecp_local_n) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_n == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_local_n(file, ecp_local_n, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_local_n(file, ecp_local_n, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_local_n(file, ecp_local_n);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_local_exponent(trexio_t* file, double* ecp_local_exponent) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_exponent == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_local_num_n_max = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_local_num_n_max}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_local_exponent(file, ecp_local_exponent, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_local_exponent(file, ecp_local_exponent, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_local_exponent(file, ecp_local_exponent);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_local_coef(trexio_t* file, double* ecp_local_coef) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_coef == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_local_num_n_max = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_local_num_n_max}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_local_coef(file, ecp_local_coef, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_local_coef(file, ecp_local_coef, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_local_coef(file, ecp_local_coef);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_local_power(trexio_t* file, int64_t* ecp_local_power) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_power == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_local_num_n_max = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_local_num_n_max}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_local_power(file, ecp_local_power, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_local_power(file, ecp_local_power, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_local_power(file, ecp_local_power);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_non_local_n(trexio_t* file, int64_t* ecp_non_local_n) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_n == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_non_local_n(file, ecp_non_local_n, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_non_local_n(file, ecp_non_local_n, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_non_local_n(file, ecp_non_local_n);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_non_local_exponent(trexio_t* file, double* ecp_non_local_exponent) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_exponent == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_non_local_num_n_max = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_non_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_non_local_num_n_max}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_non_local_exponent(file, ecp_non_local_exponent, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_non_local_exponent(file, ecp_non_local_exponent, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_non_local_exponent(file, ecp_non_local_exponent);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_non_local_coef(trexio_t* file, double* ecp_non_local_coef) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_coef == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_non_local_num_n_max = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_non_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_non_local_num_n_max}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_non_local_coef(file, ecp_non_local_coef, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_non_local_coef(file, ecp_non_local_coef, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_non_local_coef(file, ecp_non_local_coef);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_read_ecp_non_local_power(trexio_t* file, int64_t* ecp_non_local_power) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_power == NULL) return TREXIO_INVALID_ARG_2;
+    
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_non_local_num_n_max = -1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_non_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_non_local_num_n_max}; 
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_ecp_non_local_power(file, ecp_non_local_power, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_ecp_non_local_power(file, ecp_non_local_power, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_ecp_non_local_power(file, ecp_non_local_power);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
 trexio_exit_code trexio_read_nucleus_num(trexio_t* file, int64_t* num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
@@ -209,7 +813,642 @@ trexio_exit_code trexio_read_nucleus_num(trexio_t* file, int64_t* num) {
   /**/ *num = (int64_t) u_num;
   return TREXIO_SUCCESS;
 }
+trexio_exit_code trexio_read_ecp_local_num_n_max(trexio_t* file, int64_t* num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
 
+  uint64_t u_num = 0;
+  trexio_exit_code rc = TREXIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_ecp_local_num_n_max(file, &u_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_ecp_local_num_n_max(file, &u_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc =trexio_json_read_ecp_local_num_n_max(file, &u_num);
+    break;
+*/      
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+                              
+  /**/ *num = (int64_t) u_num;
+  return TREXIO_SUCCESS;
+}
+trexio_exit_code trexio_read_ecp_non_local_num_n_max(trexio_t* file, int64_t* num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  uint64_t u_num = 0;
+  trexio_exit_code rc = TREXIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_ecp_non_local_num_n_max(file, &u_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_ecp_non_local_num_n_max(file, &u_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc =trexio_json_read_ecp_non_local_num_n_max(file, &u_num);
+    break;
+*/      
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+                              
+  /**/ *num = (int64_t) u_num;
+  return TREXIO_SUCCESS;
+}
+trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, const double* nucleus_charge) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (nucleus_charge == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_nucleus_charge(file, nucleus_charge, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_nucleus_charge(file, nucleus_charge, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_nucleus_charge(file, nucleus_charge);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* nucleus_coord) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (nucleus_coord == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, 3}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_nucleus_coord(file, nucleus_coord, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_nucleus_coord(file, nucleus_coord, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_nucleus_coord(file, nucleus_coord);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_lmax_plus_1(trexio_t* file, const int64_t* ecp_lmax_plus_1) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_lmax_plus_1 == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_lmax_plus_1(file, ecp_lmax_plus_1, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_lmax_plus_1(file, ecp_lmax_plus_1, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_lmax_plus_1(file, ecp_lmax_plus_1);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_z_core(trexio_t* file, const int64_t* ecp_z_core) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_z_core == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_z_core(file, ecp_z_core, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_z_core(file, ecp_z_core, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_z_core(file, ecp_z_core);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_local_n(trexio_t* file, const int64_t* ecp_local_n) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_n == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_local_n(file, ecp_local_n, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_local_n(file, ecp_local_n, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_local_n(file, ecp_local_n);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_local_exponent(trexio_t* file, const double* ecp_local_exponent) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_exponent == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_local_num_n_max = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_local_num_n_max}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_local_exponent(file, ecp_local_exponent, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_local_exponent(file, ecp_local_exponent, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_local_exponent(file, ecp_local_exponent);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_local_coef(trexio_t* file, const double* ecp_local_coef) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_coef == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_local_num_n_max = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_local_num_n_max}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_local_coef(file, ecp_local_coef, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_local_coef(file, ecp_local_coef, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_local_coef(file, ecp_local_coef);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_local_power(trexio_t* file, const int64_t* ecp_local_power) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_local_power == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_local_num_n_max = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_local_num_n_max(file, &ecp_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_local_num_n_max}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_local_power(file, ecp_local_power, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_local_power(file, ecp_local_power, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_local_power(file, ecp_local_power);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_non_local_n(trexio_t* file, const int64_t* ecp_non_local_n) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_n == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {nucleus_num}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_non_local_n(file, ecp_non_local_n, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_non_local_n(file, ecp_non_local_n, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_non_local_n(file, ecp_non_local_n);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_non_local_exponent(trexio_t* file, const double* ecp_non_local_exponent) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_exponent == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_non_local_num_n_max = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_non_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_non_local_num_n_max}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_non_local_exponent(file, ecp_non_local_exponent, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_non_local_exponent(file, ecp_non_local_exponent, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_non_local_exponent(file, ecp_non_local_exponent);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_non_local_coef(trexio_t* file, const double* ecp_non_local_coef) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_coef == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_non_local_num_n_max = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_non_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_non_local_num_n_max}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_non_local_coef(file, ecp_non_local_coef, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_non_local_coef(file, ecp_non_local_coef, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_non_local_coef(file, ecp_non_local_coef);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+trexio_exit_code trexio_write_ecp_non_local_power(trexio_t* file, const int64_t* ecp_non_local_power) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (ecp_non_local_power == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  uint64_t nucleus_num = -1;
+  uint64_t ecp_non_local_num_n_max = -1;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_text_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_hdf5_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_nucleus_num(file, &nucleus_num);
+    rc = trexio_json_read_ecp_non_local_num_n_max(file, &ecp_non_local_num_n_max);
+    break;
+*/
+  }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (nucleus_num <= 0L) return TREXIO_INVALID_NUM;
+  if (ecp_non_local_num_n_max <= 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {nucleus_num, ecp_non_local_num_n_max}; 
+ 
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_ecp_non_local_power(file, ecp_non_local_power, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_ecp_non_local_power(file, ecp_non_local_power, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_ecp_non_local_power(file, ecp_non_local_power);
+    break;
+*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
 trexio_exit_code trexio_write_nucleus_num(trexio_t* file, const int64_t num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
@@ -235,233 +1474,53 @@ trexio_exit_code trexio_write_nucleus_num(trexio_t* file, const int64_t num) {
                               
   return TREXIO_SUCCESS;
 }
+trexio_exit_code trexio_write_ecp_local_num_n_max(trexio_t* file, const int64_t num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
-trexio_exit_code trexio_read_nucleus_coord(trexio_t* file, double* coord) {
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (coord == NULL) return TREXIO_INVALID_ARG_2;
+  trexio_exit_code rc = TREXIO_FAILURE;
 
-  int64_t nucleus_num = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_write_ecp_local_num_n_max(file, (uint64_t) num);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_write_ecp_local_num_n_max(file, (uint64_t) num);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_write_ecp_local_num_n_max(file, (uint64_t) num);
+    break;
+*/      
+  }
   if (rc != TREXIO_SUCCESS) return rc;
+                              
+  return TREXIO_SUCCESS;
+}
+trexio_exit_code trexio_write_ecp_non_local_num_n_max(trexio_t* file, const int64_t num) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
-  uint32_t rank = 2;
-  uint64_t dims[2] = {nucleus_num, 3}; 
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_nucleus_coord(file, coord, rank, dims);
+    rc = trexio_text_write_ecp_non_local_num_n_max(file, (uint64_t) num);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_nucleus_coord(file, coord, rank, dims);
+    rc = trexio_hdf5_write_ecp_non_local_num_n_max(file, (uint64_t) num);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_nucleus_coord(file, coord);
+    rc = trexio_json_write_ecp_non_local_num_n_max(file, (uint64_t) num);
     break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
+*/      
   }
-}
-
-trexio_exit_code trexio_write_nucleus_coord(trexio_t* file, const double* coord) {
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (coord == NULL) return TREXIO_INVALID_ARG_2;
-
-  int64_t nucleus_num = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
   if (rc != TREXIO_SUCCESS) return rc;
-
-  uint32_t rank = 2;
-  uint64_t dims[2] = {nucleus_num, 3};
- 
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_write_nucleus_coord(file, coord, rank, dims);
-    break;
-
-  case TREXIO_HDF5:
-    return trexio_hdf5_write_nucleus_coord(file, coord, rank, dims);
-    break;
-/*
-  case TREXIO_JSON:
-    return trexio_json_write_nucleus_coord(file, coord);
-    break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_read_nucleus_charge(trexio_t* file, double* charge) {
-  if (file   == NULL) return TREXIO_INVALID_ARG_1;
-  if (charge == NULL) return TREXIO_INVALID_ARG_2;
-
-  int64_t nucleus_num = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
-  if (rc != TREXIO_SUCCESS) return rc;
-
-  uint32_t rank = 1;
-  uint64_t dims[1] = {nucleus_num}; 
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_read_nucleus_charge(file, charge, rank, dims);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_read_nucleus_charge(file, charge);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_read_nucleus_charge(file, charge);
-    break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_write_nucleus_charge(trexio_t* file, const double* charge) {
-  if (file   == NULL) return TREXIO_INVALID_ARG_1;
-  if (charge == NULL) return TREXIO_INVALID_ARG_2;
-
-  int64_t nucleus_num = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
-  if (rc != TREXIO_SUCCESS) return rc;
-
-  uint32_t rank = 1;
-  uint64_t dims[1] = {nucleus_num}; 
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_write_nucleus_charge(file, charge, rank, dims);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_write_nucleus_charge(file, charge);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_write_nucleus_charge(file, charge);
-    break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_read_rdm_one_e(trexio_t* file, double* one_e) {
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
-
-  int64_t dim_one_e = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &dim_one_e); /* This dimension is wrong. Should be mo_num */
-  if (rc != TREXIO_SUCCESS) return rc;
-  if (dim_one_e < 0) return TREXIO_FAILURE;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_read_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_read_rdm_one_e(file, one_e);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_read_rdm_one_e(file, one_e);
-    break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_write_rdm_one_e(trexio_t* file, const double* one_e) {
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
-
-  int64_t nucleus_num = -1;
-  trexio_exit_code rc = trexio_read_nucleus_num(file, &nucleus_num);
-  if (rc != TREXIO_SUCCESS) return rc;
-
-  int64_t dim_one_e = nucleus_num * nucleus_num; /* This dimension is wrong. Should be mo_num */
-  if (dim_one_e < 0) return TREXIO_FAILURE;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_write_rdm_one_e(file, one_e, (uint64_t) dim_one_e);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_write_rdm_one_e(file, one_e);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_write_rdm_one_e(file, one_e);
-    break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_buffered_read_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, int64_t* index, double* value) {
-  if (file   == NULL) return TREXIO_INVALID_ARG_1;
-  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
-  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
-  if (index  == NULL) return TREXIO_INVALID_ARG_4;
-  if (value  == NULL) return TREXIO_INVALID_ARG_5;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_buffered_read_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_buffered_read_rdm_two_e(file, size);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_buffered_read_rdm_two_e(file, size);
-    break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-
-trexio_exit_code trexio_buffered_write_rdm_two_e(trexio_t* file, const int64_t offset, const int64_t size, const int64_t* index, const double* value) {
-  if (file   == NULL) return TREXIO_INVALID_ARG_1;
-  if (offset <= 0   ) return TREXIO_INVALID_ARG_2;
-  if (size   <= 0   ) return TREXIO_INVALID_ARG_3;
-  if (index  == NULL) return TREXIO_INVALID_ARG_4;
-  if (value  == NULL) return TREXIO_INVALID_ARG_5;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_buffered_write_rdm_two_e(file, (uint64_t) offset, (uint64_t) size, index, value);
-    break;
-/*
-  case TREXIO_HDF5:
-    return trexio_hdf5_buffered_write_rdm_two_e(file, size);
-    break;
-
-  case TREXIO_JSON:
-    return trexio_json_buffered_write_rdm_two_e(file, size);
-    break;
-*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
+                              
+  return TREXIO_SUCCESS;
 }
