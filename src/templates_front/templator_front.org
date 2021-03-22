@@ -12,7 +12,6 @@
   #+end_src
 
   #+begin_src fortran :tangle prefix_fortran.f90 :noweb yes
-<<header>>
 
 module trexio
 
@@ -292,9 +291,9 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 interface
    type (c_ptr) function trexio_open (filename, mode, backend) bind(C)
      use, intrinsic :: iso_c_binding
-     character(kind=c_char), dimension(*)   :: filename
-     character(kind=c_char), intent(in)     :: mode
-     integer (c_int32_t), intent(in), value :: backend
+     character(kind=c_char), dimension(*)      :: filename
+     character(kind=c_char), intent(in), value :: mode
+     integer (c_int32_t), intent(in), value    :: backend
    end function trexio_open
 end interface   
    #+end_src
@@ -375,7 +374,7 @@ trexio_exit_code trexio_close(trexio_t* file) {
 
    #+begin_src fortran :tangle prefix_fortran.f90
 interface
-   type (c_int32_t) function trexio_close (trex_file) bind(C)
+   integer (c_int32_t) function trexio_close (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      type (c_ptr), intent(in), value :: trex_file
    end function trexio_close
@@ -469,7 +468,7 @@ interface
    integer (c_int32_t) function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      type (c_ptr), intent(in), value :: trex_file
-     integer (c_int64_t), intent(inout), value :: num
+     integer (c_int64_t), value :: num
    end function trexio_read_$group_num$
 end interface
 
