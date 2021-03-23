@@ -582,7 +582,30 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
   }
 }
      #+end_src
-    
+   
+     #+begin_src fortran :tangle write_dset_front_fortran.f90
+
+interface
+   integer (c_int32_t) function trexio_write_$group$_$group_dset$ (trex_file, dset) bind(C)
+     use, intrinsic :: iso_c_binding
+     type (c_ptr), intent(in), value :: trex_file
+     type (c_ptr), value :: dset
+   end function trexio_write_$group$_$group_dset$
+end interface
+
+     #+end_src
+
+     #+begin_src fortran :tangle read_dset_front_fortran.f90
+     
+interface
+   integer (c_int32_t) function trexio_read_$group$_$group_dset$ (trex_file, dset) bind(C)
+     use, intrinsic :: iso_c_binding
+     type (c_ptr), intent(in), value :: trex_file
+     type (c_ptr), value :: dset
+   end function trexio_read_$group$_$group_dset$
+end interface
+
+     #+end_src
 
 * Back ends
   
