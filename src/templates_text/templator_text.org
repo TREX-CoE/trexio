@@ -314,7 +314,10 @@ DEBUG
       return NULL;
     }
 
-    uint64_t size_$group_dset$ = 1;
+    // workaround for the case of missing blocks in the file
+    uint64_t size_$group_dset$ = 0;
+    if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
+
     for (unsigned int i=0; i<$group$->rank_$group_dset$; i++){
 
       unsigned int j=-1;
@@ -462,7 +465,10 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
  
   fprintf(f, "rank_$group_dset$ %d\n", $group$->rank_$group_dset$);
 
-  uint64_t size_$group_dset$ = 1;
+  // workaround for the case of missing blocks in the file
+  uint64_t size_$group_dset$ = 0;
+  if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
+
   for (unsigned int i=0; i<$group$->rank_$group_dset$; i++){
     fprintf(f, "dims_$group_dset$ %d  %ld\n", i, $group$->dims_$group_dset$[i]);
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
