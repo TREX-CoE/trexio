@@ -295,12 +295,12 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
    #+begin_src fortran :tangle prefix_fortran.f90
 interface
-   integer(8) function trexio_open (filename, mode, backend) bind(C)
+   integer(8) function trexio_open_c (filename, mode, backend) bind(C, name="trexio_open")
      use, intrinsic :: iso_c_binding
-     character(kind=c_char), dimension(*)      :: filename
-     character, intent(in), value :: mode
-     integer, intent(in), value    :: backend
-   end function trexio_open
+     character(kind=c_char), dimension(*)  :: filename
+     character, intent(in), value          :: mode
+     integer, intent(in), value            :: backend
+   end function trexio_open_c
 end interface   
    #+end_src
    
@@ -621,6 +621,25 @@ end interface
    - Text files: not to be used for production, but useful for debugging
    - JSON: for portability
      
+
+* Fortran helper/wrapper functions
+
+  #+begin_src fortran :tangle suffix_fortran.f90
+contains
+   integer(8) function trexio_open (filename, mode, backend)
+     use, intrinsic :: iso_c_binding
+     implicit none
+     character(len=*)      :: filename
+     character, intent(in), value :: mode
+     integer, intent(in), value   :: backend
+     character(len=len_trim(filename)+1) :: filename_c
+    
+     filename_c = trim(filename) // c_null_char
+     trexio_open = trexio_open_c(filename_c, mode, backend)
+   end function trexio_open
+  #+end_src
+
+
 * File suffixes                                                     :noxport:
 
   #+begin_src c :tangle suffix_front.h

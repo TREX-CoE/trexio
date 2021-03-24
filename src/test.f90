@@ -38,9 +38,8 @@ subroutine test_write()
              2.14171677 ,  1.23652075 ,  0.00000000 , &
              0.00000000 ,  2.47304151 ,  0.00000000 /)
 
-
-  trex_file = trexio_open('test_text_fort' // c_null_char, 'w', TREXIO_TEXT)
-!  trex_file = trexio_open('test_hdf5_fort.h5' // c_null_char, 'w', TREXIO_HDF5)
+!  trex_file = trexio_open('test_text_fort', 'w', TREXIO_TEXT)
+  trex_file = trexio_open('test_hdf5_fort.h5', 'w', TREXIO_HDF5)
 
   rc = trexio_write_nucleus_num(trex_file, num)
   if (rc == 0) write(*,*) 'SUCCESS WRITE NUM'
@@ -60,16 +59,16 @@ subroutine test_write()
 ! hdf5 backend -> open with 'a'
 ! ---------------------------------- !
 
-  trex_file = trexio_open('test_text_fort' // c_null_char, 'w', TREXIO_TEXT);
+!  trex_file = trexio_open('test_text_fort' // c_null_char, 'w', TREXIO_TEXT);
 !  trex_file = trexio_open('test_hdf5_fort.h5' // c_null_char, 'a', TREXIO_HDF5)
   
-  coord(1) = 666.666
+!  coord(1) = 666.666
 
-  rc = trexio_write_nucleus_coord(trex_file,coord)
-  if (rc == 0) write(*,*) 'SUCCESS MODIFY COORD'
+!  rc = trexio_write_nucleus_coord(trex_file,coord)
+!  if (rc == 0) write(*,*) 'SUCCESS MODIFY COORD'
 
-  rc = trexio_close(trex_file)
-  if (rc == 0) write(*,*) 'SUCCESS CLOSE' 
+!  rc = trexio_close(trex_file)
+!  if (rc == 0) write(*,*) 'SUCCESS CLOSE' 
 
 end subroutine test_write
 
@@ -90,8 +89,8 @@ subroutine test_read()
 
   rc = 0
 
-  trex_file = trexio_open('test_text_fort' // c_null_char, 'r', TREXIO_TEXT)
-!  trex_file = trexio_open('test_hdf5_fort.h5' // c_null_char, 'r', TREXIO_HDF5)
+!  trex_file = trexio_open('test_text_fort', 'r', TREXIO_TEXT)
+  trex_file = trexio_open('test_hdf5_fort.h5', 'r', TREXIO_HDF5)
 
   rc = trexio_read_nucleus_num(trex_file, num_read)
 
