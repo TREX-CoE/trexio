@@ -51,7 +51,7 @@ fortran: libtrexio.so trexio_f.f90
 test: libtrexio.so test.c test.f90 trexio_f.o
 	rm -f -r test_text_fort/
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test
-	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 -ltrexio $(LIBS) -o test_f
+	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LIBS) -o test_f
 
 clean:
 	rm -f *.o libtrexio.so test test_*.h5 test_f
