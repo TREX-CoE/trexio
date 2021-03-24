@@ -82,6 +82,7 @@ templ_path_front = join(fileDir,'templates_front')
 files_exclude = ['prefix_hdf5.c', 'prefix_hdf5.h', 'suffix_hdf5.h', 
                  'prefix_text.c', 'prefix_text.h', 'suffix_text.h', 
                  'prefix_front.c', 'prefix_front.h', 'suffix_front.h', 
+                 'prefix_fortran.f90', 'suffix_fortran.f90',
                  'prefix_s_front.h', 'suffix_s_front.h',
                  'templator_front.org', 'templator_hdf5.org', 'templator_text.org']
 
@@ -259,12 +260,16 @@ for fname in files_funcs_dsets:
 
                         if params['dtype'] == 'double':
                             h5_dtype = 'double'
+                            f_dtype = 'real(8)'
                         elif params['dtype'] == 'int64_t':
                             h5_dtype = 'long'
+                            f_dtype = 'integer(8)'
 
                         templine1 = templine2.replace('$group_dset_h5_dtype$', h5_dtype)
                         templine2 = templine1.replace('$group_dset_h5_dtype$'.upper(), h5_dtype.upper())
 
+                        templine1 = templine2.replace('$group_dset_f_dtype$', f_dtype)
+                        templine2 = templine1.replace('$group_dset_f_dtype$'.upper(), f_dtype.upper())
 
                         templine1 = templine2.replace('$group_dset_rank$', str(params['rank']))
                         templine2 = templine1

@@ -16,7 +16,13 @@
 module trexio
 
   use, intrinsic :: iso_c_binding
+  implicit none 
 
+  integer, parameter :: TREXIO_HDF5 = 0
+  integer, parameter :: TREXIO_TEXT = 1
+! integer, parameter :: TREXIO_JSON = 2
+  integer, parameter :: TREXIO_INVALID_BACK_END = 3
+  
   #+end_src
 
   #+begin_src c :tangle prefix_front.h :noweb yes
@@ -289,11 +295,11 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
    #+begin_src fortran :tangle prefix_fortran.f90
 interface
-   type (c_ptr) function trexio_open (filename, mode, backend) bind(C)
+   integer(8) function trexio_open (filename, mode, backend) bind(C)
      use, intrinsic :: iso_c_binding
      character(kind=c_char), dimension(*)      :: filename
-     character(kind=c_char), intent(in), value :: mode
-     integer (c_int32_t), intent(in), value    :: backend
+     character, intent(in), value :: mode
+     integer, intent(in), value    :: backend
    end function trexio_open
 end interface   
    #+end_src
@@ -374,9 +380,9 @@ trexio_exit_code trexio_close(trexio_t* file) {
 
    #+begin_src fortran :tangle prefix_fortran.f90
 interface
-   integer (c_int32_t) function trexio_close (trex_file) bind(C)
+   integer function trexio_close (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     type (c_ptr), intent(in), value :: trex_file
+     integer(8), intent(in), value :: trex_file
    end function trexio_close
 end interface   
    #+end_src
@@ -452,10 +458,10 @@ trexio_exit_code trexio_write_$group_num$(trexio_t* file, const int64_t num) {
      #+begin_src fortran :tangle write_num_front_fortran.f90
 
 interface
-   integer (c_int32_t) function trexio_write_$group_num$ (trex_file, num) bind(C)
+   integer function trexio_write_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     type (c_ptr), intent(in), value :: trex_file
-     integer (c_int64_t), intent(in), value :: num
+     integer(8), intent(in), value :: trex_file
+     integer(8), intent(in), value :: num
    end function trexio_write_$group_num$
 end interface
 
@@ -465,10 +471,10 @@ end interface
      #+begin_src fortran :tangle read_num_front_fortran.f90
      
 interface
-   integer (c_int32_t) function trexio_read_$group_num$ (trex_file, num) bind(C)
+   integer function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     type (c_ptr), intent(in), value :: trex_file
-     type (c_ptr), value :: num
+     integer(8), intent(in), value :: trex_file
+     integer(8), intent(out) :: num
    end function trexio_read_$group_num$
 end interface
 
@@ -586,10 +592,10 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
      #+begin_src fortran :tangle write_dset_front_fortran.f90
 
 interface
-   integer (c_int32_t) function trexio_write_$group$_$group_dset$ (trex_file, dset) bind(C)
+   integer function trexio_write_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     type (c_ptr), intent(in), value :: trex_file
-     type (c_ptr), value :: dset
+     integer(8), intent(in), value :: trex_file
+     $group_dset_f_dtype$, intent(in) :: dset(*)
    end function trexio_write_$group$_$group_dset$
 end interface
 
@@ -598,10 +604,10 @@ end interface
      #+begin_src fortran :tangle read_dset_front_fortran.f90
      
 interface
-   integer (c_int32_t) function trexio_read_$group$_$group_dset$ (trex_file, dset) bind(C)
+   integer function trexio_read_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     type (c_ptr), intent(in), value :: trex_file
-     type (c_ptr), value :: dset
+     integer(8), intent(in), value :: trex_file
+     $group_dset_f_dtype$, intent(out) :: dset(*)
    end function trexio_read_$group$_$group_dset$
 end interface
 
