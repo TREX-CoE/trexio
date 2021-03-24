@@ -49,13 +49,13 @@ fortran: libtrexio.so trexio_f.f90
 	$(FC) $(FFLAGS) -c trexio_f.f90 -o trexio_f.o
 
 test: libtrexio.so test.c test.f90 trexio_f.o
-	rm -f -r trexio_test/
+	rm -f -r test_text_fort/
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 -ltrexio $(LIBS) -o test_f
 
 clean:
 	rm -f *.o libtrexio.so test test_*.h5 test_f
-	rm -r trexio_test/
+	rm -r test_text_fort/
 
 %.o: %.c $(HEADER_FILES)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $*.c -o $*.o
