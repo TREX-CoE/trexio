@@ -34,7 +34,7 @@ subroutine test_write()
              2.14171677 ,  1.23652075 ,  0.00000000 , &
              0.00000000 ,  2.47304151 ,  0.00000000 /)
 
-!  trex_file = trexio_open('test_text_fort', 'w', TREXIO_TEXT)
+!  trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT)
   trex_file = trexio_open('test_hdf5_fort.h5', 'w', TREXIO_HDF5)
 
   rc = trexio_write_nucleus_num(trex_file, num)
@@ -55,7 +55,7 @@ subroutine test_write()
 ! hdf5 backend -> open with 'a'
 ! ---------------------------------- !
 
-!!  trex_file = trexio_open('test_text_fort', 'w', TREXIO_TEXT);
+!!  trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT);
 !!  trex_file = trexio_open('test_hdf5_fort.h5', 'a', TREXIO_HDF5)
   
 !  coord(1) = 666.666
@@ -84,7 +84,7 @@ subroutine test_read()
 
   num = 12
 
-!  trex_file = trexio_open('test_text_fort', 'r', TREXIO_TEXT)
+!  trex_file = trexio_open('trexio_test_fort', 'r', TREXIO_TEXT)
   trex_file = trexio_open('test_hdf5_fort.h5', 'r', TREXIO_HDF5)
 
   rc = trexio_read_nucleus_num(trex_file, num_read)
