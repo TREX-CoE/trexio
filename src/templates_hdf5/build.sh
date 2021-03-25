@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 cat prefix_hdf5.c   > trexio_hdf5.c
 cat prefix_hdf5.h   > trexio_hdf5.h

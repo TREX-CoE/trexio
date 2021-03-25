@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 cat prefix_text.c   > trexio_text.c
 cat prefix_text.h   > trexio_text.h
