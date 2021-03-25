@@ -6,7 +6,7 @@ ifeq ($(COMPILER),GNU)
 CC=gcc -g
 CFLAGS=-fPIC -fexceptions -Wall -Werror -Wpedantic -Wextra
 
-FS=gfortran -g
+FC=gfortran -g
 FFLAGS=-fPIC -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
 
 LIBS= -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl -lgfortran
@@ -33,8 +33,6 @@ FFLAGS=fPIC -g -O2
 
 LIBS=-lm
 endif
-
-RM=rm -f
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
 HEADER_FILES= trexio.h trexio_text.h trexio_hdf5.h trexio_s.h
