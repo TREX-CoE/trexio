@@ -2,15 +2,27 @@
 
 * Constant file prefixes (not used by generator)                    :noxport:
 
-** Prefixes
-
   #+NAME:header
   #+begin_src c 
-/* This file was generated from the trexio.org org-mode file.
+/* This file was generated from the templator_front.org org-mode file.
    To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
 */
 
+  #+end_src
+
+  #+begin_src fortran :tangle prefix_fortran.f90 :noweb yes
+
+module trexio
+
+  use, intrinsic :: iso_c_binding
+  implicit none 
+
+  integer, parameter :: TREXIO_HDF5 = 0
+  integer, parameter :: TREXIO_TEXT = 1
+! integer, parameter :: TREXIO_JSON = 2
+  integer, parameter :: TREXIO_INVALID_BACK_END = 3
+  
   #+end_src
 
   #+begin_src c :tangle prefix_front.h :noweb yes
@@ -79,6 +91,7 @@
    #+begin_src c :tangle trexio_private.h
 #define FREE(X) { free(X) ; (X)=NULL; }
    #+end_src
+
 
 * Front end
 
@@ -175,7 +188,7 @@ struct trexio_back_end_s {
    #+end_src
    
 ** File opening
-   
+
    #+begin_src c :tangle prefix_front.h
 trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end);
    #+end_src
@@ -279,9 +292,20 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   return result;
 }
    #+end_src
+
+   #+begin_src fortran :tangle prefix_fortran.f90
+interface
+   integer(8) function trexio_open_c (filename, mode, backend) bind(C, name="trexio_open")
+     use, intrinsic :: iso_c_binding
+     character(kind=c_char), dimension(*)  :: filename
+     character, intent(in), value          :: mode
+     integer, intent(in), value            :: backend
+   end function trexio_open_c
+end interface   
+   #+end_src
    
 ** File closing
-   
+ 
    #+begin_src c :tangle prefix_front.h
 trexio_exit_code trexio_close(trexio_t* file);
    #+end_src
@@ -354,9 +378,16 @@ trexio_exit_code trexio_close(trexio_t* file) {
 }
    #+end_src
 
+   #+begin_src fortran :tangle prefix_fortran.f90
+interface
+   integer function trexio_close (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_close
+end interface   
+   #+end_src
 
 * Templates for front end
-
 ** Template for frontend read/write a number
    
      #+begin_src c :tangle rw_num_front.h
@@ -421,6 +452,32 @@ trexio_exit_code trexio_write_$group_num$(trexio_t* file, const int64_t num) {
                               
   return TREXIO_SUCCESS;
 }
+     #+end_src
+
+
+     #+begin_src fortran :tangle write_num_front_fortran.f90
+
+interface
+   integer function trexio_write_$group_num$ (trex_file, num) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     integer(8), intent(in), value :: num
+   end function trexio_write_$group_num$
+end interface
+
+     #+end_src
+
+
+     #+begin_src fortran :tangle read_num_front_fortran.f90
+     
+interface
+   integer function trexio_read_$group_num$ (trex_file, num) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     integer(8), intent(out) :: num
+   end function trexio_read_$group_num$
+end interface
+
      #+end_src
 
 
@@ -531,7 +588,30 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
   }
 }
      #+end_src
-    
+   
+     #+begin_src fortran :tangle write_dset_front_fortran.f90
+
+interface
+   integer function trexio_write_$group$_$group_dset$ (trex_file, dset) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     $group_dset_f_dtype$, intent(in) :: dset(*)
+   end function trexio_write_$group$_$group_dset$
+end interface
+
+     #+end_src
+
+     #+begin_src fortran :tangle read_dset_front_fortran.f90
+     
+interface
+   integer function trexio_read_$group$_$group_dset$ (trex_file, dset) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     $group_dset_f_dtype$, intent(out) :: dset(*)
+   end function trexio_read_$group$_$group_dset$
+end interface
+
+     #+end_src
 
 * Back ends
   
@@ -541,6 +621,25 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
    - Text files: not to be used for production, but useful for debugging
    - JSON: for portability
      
+
+* Fortran helper/wrapper functions
+
+  #+begin_src fortran :tangle suffix_fortran.f90
+contains
+   integer(8) function trexio_open (filename, mode, backend)
+     use, intrinsic :: iso_c_binding
+     implicit none
+     character(len=*)      :: filename
+     character, intent(in), value :: mode
+     integer, intent(in), value   :: backend
+     character(len=len_trim(filename)+1) :: filename_c
+    
+     filename_c = trim(filename) // c_null_char
+     trexio_open = trexio_open_c(filename_c, mode, backend)
+   end function trexio_open
+  #+end_src
+
+
 * File suffixes                                                     :noxport:
 
   #+begin_src c :tangle suffix_front.h
@@ -549,6 +648,10 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
   
   #+begin_src c :tangle suffix_s_front.h
 #endif
+  #+end_src
+
+  #+begin_src fortran :tangle suffix_fortran.f90
+end module trexio
   #+end_src
 
 

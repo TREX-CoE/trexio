@@ -17,7 +17,7 @@ mkdir -p templates_hdf5/populated
 # not options. It is safer.
 
 echo "remove existing templates"
-rm -f -- templates_front/*.{c,h}
+rm -f -- templates_front/*.{c,h,f90}
 rm -f -- templates_text/*.{c,h} 
 rm -f -- templates_hdf5/*.{c,h} 
 

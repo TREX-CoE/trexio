@@ -1,15 +1,20 @@
 #!/bin/bash
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+# prefixes
+cat prefix_front.c   > trexio.c
+cat prefix_front.h   > trexio.h
+cat prefix_s_front.h > trexio_s.h
+cat prefix_fortran.f90   > trexio_f.f90
 
-cat $DIR/prefix_front.c   > trexio.c
-cat $DIR/prefix_front.h   > trexio.h
-cat $DIR/prefix_s_front.h > trexio_s.h
+# c front end
+cat populated/pop_*.c >> trexio.c
+cat populated/pop_*.h >> trexio.h
 
-cat $DIR/populated/pop_*.c >> trexio.c
-cat $DIR/populated/pop_*.h >> trexio.h
+# fortran front end
+cat populated/pop_*.f90  >> trexio_f.f90
 
-cat $DIR/suffix_s_front.h >> trexio_s.h
-cat $DIR/suffix_front.h   >> trexio.h
-
+# suffixes
+cat suffix_s_front.h >> trexio_s.h
+cat suffix_front.h   >> trexio.h
+cat suffix_fortran.f90 >> trexio_f.f90
 
