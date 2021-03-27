@@ -56,8 +56,6 @@
 
 #include "trexio_text.h"
 
-#define DEBUG printf("%s : line %d\n", __FILE__, __LINE__);
-
   #+end_src
 
 
@@ -267,7 +265,6 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
 
   if (file_name == NULL) {
     FREE($group$);
-DEBUG
     return NULL;
   }
 
@@ -286,8 +283,8 @@ DEBUG
     char* buffer = CALLOC(sz,char);
     if (buffer == NULL) {
       FREE(file_name);
+      fclose(f);
       FREE($group$);
-DEBUG
       return NULL;
     }
     
@@ -300,8 +297,8 @@ DEBUG
     if ((rc != 1) || (strcmp(buffer, "rank_$group_dset$") != 0)) {
       FREE(buffer);
       FREE(file_name);
+      fclose(f);
       FREE($group$);
-DEBUG
       return NULL;
     }
     
@@ -309,8 +306,8 @@ DEBUG
     if (rc != 1) {
       FREE(buffer);
       FREE(file_name);
+      fclose(f);
       FREE($group$);
-DEBUG
       return NULL;
     }
 
@@ -325,8 +322,8 @@ DEBUG
       if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
         FREE(buffer);
         FREE(file_name);
+        fclose(f);
         FREE($group$);
-DEBUG
           return NULL;
       }
     
@@ -335,8 +332,8 @@ DEBUG
       if (rc != 1) {
         FREE(buffer);
         FREE(file_name);
+        fclose(f);
         FREE($group$);
-DEBUG
         return NULL;
       }
 
@@ -353,8 +350,8 @@ DEBUG
     if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
       FREE(buffer);
       FREE(file_name);
+      fclose(f);
       FREE($group$);
-DEBUG
       return NULL;
     }
      
@@ -363,8 +360,8 @@ DEBUG
     if (rc != 1) {
       FREE(buffer);
       FREE(file_name);
+      fclose(f);
       FREE($group$);
-DEBUG
       return NULL;
     }
 
@@ -378,8 +375,8 @@ DEBUG
     if ($group$->$group_dset$ == NULL) {
       FREE(buffer);
       FREE(file_name);
+      fclose(f);
       FREE($group$);
-DEBUG
       return NULL;
     }
  
@@ -388,10 +385,10 @@ DEBUG
     if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
       FREE(buffer);
       FREE(file_name);
+      fclose(f);
       // TODO: free all dsets
       FREE($group$->$group_dset$);
       FREE($group$);
-DEBUG
       return NULL;
     }
     
@@ -401,10 +398,10 @@ DEBUG
       if (rc != 1) {
         FREE(buffer);
         FREE(file_name);
+        fclose(f);
       // TODO: free all dsets
         FREE($group$->$group_dset$);
         FREE($group$);
-DEBUG
         return NULL;
       }
     }
@@ -427,7 +424,6 @@ DEBUG
     // TODO: free all dsets
     FREE($group$->$group_dset$);
     FREE($group$);
-DEBUG
     return NULL;
   }
 
