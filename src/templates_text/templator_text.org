@@ -204,12 +204,11 @@ trexio_exit_code trexio_text_unlock(trexio_t* file) {
 
   struct flock fl;
 
-  fl.l_type   = F_WRLCK;
+  fl.l_type   = F_UNLCK;   
   fl.l_whence = SEEK_SET;
   fl.l_start  = 0;         
   fl.l_len    = 0;         
   fl.l_pid    = getpid();  
-  fl.l_type   = F_UNLCK;   
   fcntl(f->lock_file, F_SETLK, &fl);
     
   close(f->lock_file);
@@ -493,7 +492,7 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
   // END REPEAT GROUP_DSET
 
   fflush(f);
-  file->$group$->to_flush = 0;
+  $group$->to_flush = 0;
   return TREXIO_SUCCESS;
 }
    #+end_src
@@ -510,10 +509,8 @@ trexio_exit_code trexio_text_free_$group$(trexio_text_t* file);
 trexio_exit_code trexio_text_free_$group$(trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   
-  trexio_exit_code rc;
-
   if (file->parent.mode != 'r') {
-    rc = trexio_text_flush_$group$(file);
+    trexio_exit_code rc = trexio_text_flush_$group$(file);
     if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
   }
 
@@ -772,7 +769,7 @@ trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
   fprintf(f, "%s\n", rdm->two_e_file_name);
 
   fflush(f);
-  file->rdm->to_flush = 0;
+  rdm->to_flush = 0;
   return TREXIO_SUCCESS;
 }
    #+end_src
@@ -789,9 +786,8 @@ trexio_exit_code trexio_text_free_rdm(trexio_text_t* file);
 trexio_exit_code trexio_text_free_rdm(trexio_text_t* file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   
-  trexio_exit_code rc;
   if (file->parent.mode != 'r') {
-    rc = trexio_text_flush_rdm(file);
+    trexio_exit_code rc = trexio_text_flush_rdm(file);
     if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
   }
 
