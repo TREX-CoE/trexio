@@ -460,14 +460,14 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
  
   // START REPEAT GROUP_DSET
  
-  fprintf(f, "rank_$group_dset$ %d\n", $group$->rank_$group_dset$);
+  fprintf(f, "rank_$group_dset$ %u\n", $group$->rank_$group_dset$);
 
   // workaround for the case of missing blocks in the file
   uint64_t size_$group_dset$ = 0;
   if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
 
   for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
-    fprintf(f, "dims_$group_dset$ %d  %ld\n", i, $group$->dims_$group_dset$[i]);
+    fprintf(f, "dims_$group_dset$ %u  %lu\n", i, $group$->dims_$group_dset$[i]);
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
   } 
 
@@ -475,7 +475,7 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
 
   // START REPEAT GROUP_NUM
 
-  fprintf(f, "$group_num$ %ld\n", $group$->$group_num$);
+  fprintf(f, "$group_num$ %lu\n", $group$->$group_num$);
 
   // END REPEAT GROUP_NUM
 
@@ -757,7 +757,7 @@ trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
   rewind(f);
 
   /* Write the dimensioning variables */
-  fprintf(f, "num %ld\n", rdm->dim_one_e);
+  fprintf(f, "num %lu\n", rdm->dim_one_e);
 
   /* Write arrays */
   fprintf(f, "one_e\n");
@@ -925,7 +925,7 @@ trexio_exit_code trexio_text_buffered_write_rdm_two_e(const trexio_t* file, cons
   
   int rc;
   for (uint64_t i=0 ; i<size ; ++i) {
-    rc = fprintf(f, "%9ld %9ld %9ld %9ld %24le\n",
+    rc = fprintf(f, "%9lu %9lu %9lu %9lu %24le\n",
            index[4*i], 
            index[4*i+1], 
            index[4*i+2], 
