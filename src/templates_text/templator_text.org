@@ -716,7 +716,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
     
     rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
-    size_t str_size = strlen(buffer);
+    str_size = strlen(buffer);
     rdm->two_e_file_name = CALLOC(str_size,char);
     strncpy(rdm->two_e_file_name, buffer, str_size);
     
@@ -888,9 +888,8 @@ trexio_exit_code trexio_text_buffered_read_rdm_two_e(const trexio_t* file, const
   const uint64_t line_length = 64L;
   fseek(f, (long) offset * line_length, SEEK_SET);
   
-  int rc;
   for (uint64_t i=0 ; i<size ; ++i) {
-    rc = fscanf(f, "%9ld %9ld %9ld %9ld %24le\n",
+    int rc = fscanf(f, "%9ld %9ld %9ld %9ld %24le\n",
            &index[4*i], 
            &index[4*i+1], 
            &index[4*i+2], 
@@ -922,9 +921,8 @@ trexio_exit_code trexio_text_buffered_write_rdm_two_e(const trexio_t* file, cons
   const uint64_t line_length = 64L;
   fseek(f, (long) offset * line_length, SEEK_SET);
   
-  int rc;
   for (uint64_t i=0 ; i<size ; ++i) {
-    rc = fprintf(f, "%9ld %9ld %9ld %9ld %24le\n",
+    int rc = fprintf(f, "%9ld %9ld %9ld %9ld %24le\n",
            index[4*i], 
            index[4*i+1], 
            index[4*i+2], 
