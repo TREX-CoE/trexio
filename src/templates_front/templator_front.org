@@ -27,8 +27,8 @@ module trexio
 
   #+begin_src c :tangle prefix_front.h :noweb yes
 <<header>>
-#ifndef _TREXIO_H
-#define _TREXIO_H
+#ifndef TREXIO_H
+#define TREXIO_H
 
 #include <stdint.h>
 
@@ -228,8 +228,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
   /* Data for the parent type */
 
-  result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
-  strcpy(result->file_name, file_name);
+  result->file_name   = CALLOC(strlen(file_name)+1, char);
+  strncpy(result->file_name, file_name, strlen(file_name)+1);
   result->back_end    = back_end;
   result->mode        = mode;
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);

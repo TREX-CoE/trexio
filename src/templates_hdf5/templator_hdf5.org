@@ -14,10 +14,11 @@
 
   #+begin_src c :tangle prefix_hdf5.h :noweb yes
 <<header>>
-#ifndef _TREXIO_HDF5_H
-#define _TREXIO_HDF5_H
+#ifndef TREXIO_HDF5_H
+#define TREXIO_HDF5_H
 
 #include "trexio.h"
+#include "trexio_private.h"
 #include "trexio_s.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -272,7 +273,7 @@ trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(const trexio_t* file, $gr
   if (dset_id <= 0) return TREXIO_INVALID_ID; 
 
   // allocate space for the dimensions to be read
-  hsize_t* ddims = (hsize_t*) calloc( (int) rank, sizeof(hsize_t));
+  hsize_t* ddims = CALLOC( (int) rank, hsize_t);
   if (ddims == NULL) return TREXIO_FAILURE;
 
   // read dimensions from the existing dataset
