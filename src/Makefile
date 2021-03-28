@@ -37,13 +37,19 @@ endif
 RM=rm -f
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
+SOURCE_FILES= test.c trexio.c trexio_hdf5.c trexio_text.c
 HEADER_FILES= trexio.h trexio_text.h trexio_hdf5.h trexio_s.h
 
 export CC CFLAGS FC FFLAGS LIBS
 
 .PHONY: clean
 
-libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES)
+cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
+	cppcheck --addon=cert -q --error-exitcode=1  \
+          --enable=style,warning,unusedFunction,performance,portability,missingInclude \
+          --language=c -rp --std=c99 -v $(SOURCE_FILES) 2>$@
+
+libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) cppcheck.out
 	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
 
 fortran: libtrexio.so trexio_f.f90
