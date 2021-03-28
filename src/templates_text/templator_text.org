@@ -281,6 +281,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
     size_t sz = ftell(f);
     fseek(f, 0L, SEEK_SET);
 
+    sz = (sz < 1024) ? (1024) : (sz);
     char* buffer = CALLOC(sz, char);
     if (buffer == NULL) {
       FREE(file_name);
@@ -294,7 +295,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
 
     // START REPEAT GROUP_DSET
 
-    rc = fscanf(f, "%s", buffer);
+    rc = fscanf(f, "%1023s", buffer);
     if ((rc != 1) || (strcmp(buffer, "rank_$group_dset$") != 0)) {
       FREE(buffer);
       FREE(file_name);
@@ -312,14 +313,15 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
       return NULL;
     }
 
-    // workaround for the case of missing blocks in the file
+    /* workaround for the case of missing blocks in the file */
     uint64_t size_$group_dset$ = 0;
     if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
 
     for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
 
-      unsigned int j=-1;
-      rc = fscanf(f, "%s %u", buffer, &j);
+      unsigned int j=0;
+
+      rc = fscanf(f, "%1023s %u", buffer, &j);
       if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
         FREE(buffer);
         FREE(file_name);
@@ -346,7 +348,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
     // START REPEAT GROUP_NUM
 
     /* Read data */
-    rc = fscanf(f, "%s", buffer);
+    rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
     if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
       FREE(buffer);
@@ -381,7 +383,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
       return NULL;
     }
  
-    rc = fscanf(f, "%s", buffer);
+    rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
     if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
       FREE(buffer);
@@ -454,7 +456,7 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
 
   FILE* f = $group$->file;
   assert (f != NULL);
-  rewind(f);
+  fseek(f, 0L, SEEK_SET);
 
   /* Write the dimensioning variables */ 
  
@@ -684,11 +686,12 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
     fseek(f, 0L, SEEK_END);
     size_t sz = ftell(f);
     fseek(f, 0L, SEEK_SET);
+    sz = (sz < 1024) ? (1024) : (sz);
     char* buffer = CALLOC(sz, char);
     
     /* Read the dimensioning variables */
     int rc;
-    rc = fscanf(f, "%s", buffer);
+    rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     assert (strcmp(buffer, "dim_one_e") == 0);
     
@@ -700,7 +703,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
     assert (rdm->one_e != NULL);
     
     /* Read one_e */
-    rc = fscanf(f, "%s", buffer);
+    rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     assert (strcmp(buffer, "one_e") == 0);
     
@@ -710,11 +713,11 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
     }
     
     /* Read two_e */
-    rc = fscanf(f, "%s", buffer);
+    rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     assert (strcmp(buffer, "two_e_file_name") == 0);
     
-    rc = fscanf(f, "%s", buffer);
+    rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     size_t str_size = strlen(buffer);
     rdm->two_e_file_name = CALLOC(str_size,char);
@@ -754,7 +757,7 @@ trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
 
   FILE* f = rdm->file;
   assert (f != NULL);
-  rewind(f);
+  fseek(f, 0L, SEEK_SET);
 
   /* Write the dimensioning variables */
   fprintf(f, "num %lu\n", rdm->dim_one_e);
@@ -925,7 +928,7 @@ trexio_exit_code trexio_text_buffered_write_rdm_two_e(const trexio_t* file, cons
   
   int rc;
   for (uint64_t i=0 ; i<size ; ++i) {
-    rc = fprintf(f, "%9lu %9lu %9lu %9lu %24le\n",
+    rc = fprintf(f, "%9ld %9ld %9ld %9ld %24le\n",
            index[4*i], 
            index[4*i+1], 
            index[4*i+2], 
