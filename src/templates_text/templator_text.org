@@ -315,7 +315,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
     uint64_t size_$group_dset$ = 0;
     if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
 
-    for (unsigned int i=0; i<$group$->rank_$group_dset$; i++){
+    for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
 
       unsigned int j=-1;
       rc = fscanf(f, "%s %u", buffer, &j);
@@ -392,7 +392,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* file) {
       return NULL;
     }
     
-    for (uint64_t i=0 ; i<size_$group_dset$ ; i++) {
+    for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
       rc = fscanf(f, "%$group_dset_std_dtype$", &($group$->$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
@@ -465,7 +465,7 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
   uint64_t size_$group_dset$ = 0;
   if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
 
-  for (unsigned int i=0; i<$group$->rank_$group_dset$; i++){
+  for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
     fprintf(f, "dims_$group_dset$ %d  %ld\n", i, $group$->dims_$group_dset$[i]);
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
   } 
@@ -483,7 +483,7 @@ trexio_exit_code trexio_text_flush_$group$(const trexio_text_t* file) {
   /* Write arrays */
   
   fprintf(f, "$group_dset$\n");
-  for (uint64_t i=0 ; i<size_$group_dset$ ; i++) {
+  for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
     fprintf(f, "%$group_dset_std_dtype$\n", $group$->$group_dset$[i]);
   }
 
@@ -596,12 +596,12 @@ trexio_exit_code trexio_text_read_$group_dset$(const trexio_t* file, $group_dset
   if (rank != $group$->rank_$group_dset$) return TREXIO_INVALID_ARG_3;
   
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<rank; i++){
+  for (unsigned int i=0; i<rank; ++i){
     if (dims[i] != $group$->dims_$group_dset$[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
 
-  for (uint64_t i=0 ; i<dim_size ; i++) {
+  for (uint64_t i=0 ; i<dim_size ; ++i) {
     $group_dset$[i] = $group$->$group_dset$[i];
   }
 
@@ -627,14 +627,14 @@ trexio_exit_code trexio_text_write_$group_dset$(const trexio_t* file, const $gro
   $group$->rank_$group_dset$ = rank;
   
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<$group$->rank_$group_dset$; i++){
+  for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
     $group$->dims_$group_dset$[i] = dims[i];
     dim_size *= dims[i];
   }
 
   $group$->$group_dset$ = CALLOC(dim_size, $group_dset_dtype$);
 
-  for (uint64_t i=0 ; i<dim_size ; i++) {
+  for (uint64_t i=0 ; i<dim_size ; ++i) {
     $group$->$group_dset$[i] = $group_dset$[i];
   }
   
@@ -703,7 +703,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* file) {
     assert (rc == 1);
     assert (strcmp(buffer, "one_e") == 0);
     
-    for (uint64_t i=0 ; i<rdm->dim_one_e; i++) {
+    for (uint64_t i=0 ; i<rdm->dim_one_e; ++i) {
       rc = fscanf(f, "%lf", &(rdm->one_e[i]));
       assert (rc == 1);
     }
@@ -760,7 +760,7 @@ trexio_exit_code trexio_text_flush_rdm(const trexio_text_t* file) {
 
   /* Write arrays */
   fprintf(f, "one_e\n");
-  for (uint64_t i=0 ; i< rdm->dim_one_e; i++) {
+  for (uint64_t i=0 ; i< rdm->dim_one_e; ++i) {
     fprintf(f, "%lf\n", rdm->one_e[i]);
   }
 
@@ -833,7 +833,7 @@ trexio_exit_code trexio_text_read_rdm_one_e(const trexio_t* file, double* one_e,
 
   if (dim_one_e != rdm->dim_one_e) return TREXIO_INVALID_ARG_3;
 
-  for (uint64_t i=0 ; i<dim_one_e ; i++) {
+  for (uint64_t i=0 ; i<dim_one_e ; ++i) {
     one_e[i] = rdm->one_e[i];
   }
 
@@ -850,7 +850,7 @@ trexio_exit_code trexio_text_write_rdm_one_e(const trexio_t* file, const double*
   if (rdm == NULL) return TREXIO_FAILURE;
   
   rdm->dim_one_e = dim_one_e;
-  for (uint64_t i=0 ; i<dim_one_e ; i++) {
+  for (uint64_t i=0 ; i<dim_one_e ; ++i) {
     rdm->one_e[i] = one_e[i];
   }
   
@@ -885,11 +885,11 @@ trexio_exit_code trexio_text_buffered_read_rdm_two_e(const trexio_t* file, const
   FILE* f = fopen(rdm->two_e_file_name, "r");
   if (f == NULL) return TREXIO_END;
 
-  const uint64_t line_length = 64;
+  const uint64_t line_length = 64L;
   fseek(f, (long) offset * line_length, SEEK_SET);
   
   int rc;
-  for (uint64_t i=0 ; i<size ; i++) {
+  for (uint64_t i=0 ; i<size ; ++i) {
     rc = fscanf(f, "%9ld %9ld %9ld %9ld %24le\n",
            &index[4*i], 
            &index[4*i+1], 
@@ -921,11 +921,11 @@ trexio_exit_code trexio_text_buffered_write_rdm_two_e(const trexio_t* file, cons
   FILE* f = fopen(rdm->two_e_file_name, "w");
   if (f == NULL) return TREXIO_FAILURE;
 
-  const uint64_t line_length = 64;
+  const uint64_t line_length = 64L;
   fseek(f, (long) offset * line_length, SEEK_SET);
   
   int rc;
-  for (uint64_t i=0 ; i<size ; i++) {
+  for (uint64_t i=0 ; i<size ; ++i) {
     rc = fprintf(f, "%9ld %9ld %9ld %9ld %24le\n",
            index[4*i], 
            index[4*i+1], 
