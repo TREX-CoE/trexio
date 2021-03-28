@@ -149,7 +149,7 @@ trexio_exit_code trexio_text_init(trexio_t* const file) {
   }
  
   strncpy (file_name, file->file_name, str_size);
-  strcat (file_name, lock_file_name);
+  strncat (file_name, lock_file_name, strlen(lock_file_name));
 
   f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
   FREE(file_name);
@@ -268,7 +268,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
   }
 
   strncpy (file_name, file->parent.file_name, str_size);
-  strcat (file_name, $group$_file_name);
+  strncat (file_name, $group$_file_name, strlen($group$_file_name));
 
   /* If the file exists, read it */
   FILE* f = fopen(file_name,"r");
@@ -671,7 +671,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* const file) {
 
   assert (file_name != NULL);
   strncpy (file_name, file->parent.file_name, str_size);
-  strcat (file_name, rdm_file_name);
+  strncat (file_name, rdm_file_name, strlen(rdm_file_name));
 
   /* If the file exists, read it */
   FILE* f = fopen(file_name,"r");
