@@ -52,8 +52,9 @@ fortran: libtrexio.so trexio_f.f90
 
 cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
 	cppcheck --addon=cert -q --error-exitcode=0  \
-          --enable=style,warning,unusedFunction,performance,portability,missingInclude \
-          --language=c -rp --std=c99 -v $(SOURCE_FILES) 2>$@
+          --enable=warning,performance,portability,missingInclude,information \
+          --language=c --std=c99 -rp --platform=unix64  \
+          $(INCLUDE) $(SOURCE_FILES) 2>$@
 
 test_c: libtrexio.so test.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test_c
