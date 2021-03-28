@@ -328,10 +328,10 @@ trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(trexio_t* const file, co
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file; 
 
-  herr_t status;
   if ( H5LTfind_dataset(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME) != 1) { 
     
-    status = H5LTmake_dataset_$group_dset_h5_dtype$ (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, 
+    const herr_t status =
+      H5LTmake_dataset_$group_dset_h5_dtype$ (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, 
                                       (int) rank, (const hsize_t*) dims, $group_dset$);
     if (status < 0) return TREXIO_FAILURE;
 
@@ -340,7 +340,9 @@ trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(trexio_t* const file, co
     hid_t dset_id = H5Dopen(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, H5P_DEFAULT);
     if (dset_id <= 0) return TREXIO_INVALID_ID;
     
-    status = H5Dwrite(dset_id, H5T_NATIVE_$GROUP_DSET_H5_DTYPE$, H5S_ALL, H5S_ALL, H5P_DEFAULT, $group_dset$);
+    const herr_t status =
+      H5Dwrite(dset_id, H5T_NATIVE_$GROUP_DSET_H5_DTYPE$, H5S_ALL, H5S_ALL,
+               H5P_DEFAULT, $group_dset$);
     
     H5Dclose(dset_id);
     if (status < 0) return TREXIO_FAILURE;
