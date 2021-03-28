@@ -390,8 +390,8 @@ end interface
 ** Template for frontend read/write a number
    
      #+begin_src c :tangle rw_num_front.h
-trexio_exit_code trexio_read_$group_num$(trexio_t* file, int64_t* num);
-trexio_exit_code trexio_write_$group_num$(trexio_t* file, const int64_t num);
+trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int64_t* const num);
+trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num);
      #+end_src
    
      #+begin_src c :tangle read_num_front.c
@@ -426,7 +426,7 @@ trexio_exit_code trexio_read_$group_num$(trexio_t* file, int64_t* num) {
    
      #+begin_src c :tangle write_num_front.c
 
-trexio_exit_code trexio_write_$group_num$(trexio_t* file, const int64_t num) {
+trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
@@ -483,12 +483,12 @@ end interface
 ** Template for frontend read/write a dataset
 
      #+begin_src c :tangle rw_dset_front.h
-trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dtype$* $group_dset$);
-trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_dset_dtype$* $group_dset$);
+trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$);
+trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$);
      #+end_src
    
      #+begin_src c :tangle read_dset_front.c
-trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dtype$* $group_dset$) {
+trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
     
@@ -540,7 +540,7 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dt
    
      #+begin_src c :tangle write_dset_front.c
 
-trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_dset_dtype$* $group_dset$) {
+trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
 

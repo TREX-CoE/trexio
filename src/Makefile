@@ -44,16 +44,16 @@ export CC CFLAGS FC FFLAGS LIBS
 
 .PHONY: clean
 
-cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
-	cppcheck --addon=cert -q --error-exitcode=0  \
-          --enable=style,warning,unusedFunction,performance,portability,missingInclude \
-          --language=c -rp --std=c99 -v $(SOURCE_FILES) 2>$@
-
 libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) cppcheck.out
 	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
 
 fortran: libtrexio.so trexio_f.f90
 	$(FC) $(FFLAGS) -c trexio_f.f90 -o trexio_f.o
+
+cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
+	cppcheck --addon=cert -q --error-exitcode=0  \
+          --enable=style,warning,unusedFunction,performance,portability,missingInclude \
+          --language=c -rp --std=c99 -v $(SOURCE_FILES) 2>$@
 
 test_c: libtrexio.so test.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test_c
