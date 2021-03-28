@@ -78,12 +78,12 @@
     #+begin_src c :tangle struct_text_group_dset.h
 
 typedef struct $group$_s {
+  uint64_t $group_num$;
   FILE*    file;
   $group_dset_dtype$*  $group_dset$;
-  uint64_t $group_num$;
-  uint64_t dims_$group_dset$[16];
   uint32_t rank_$group_dset$;
-  int      to_flush;
+  uint32_t to_flush;
+  uint64_t dims_$group_dset$[16];
 } $group$_t;
 
     #+end_src
@@ -93,18 +93,19 @@ typedef struct $group$_s {
     #+begin_src c :tangle struct_text_group.h
 
 typedef struct rdm_s {
-  FILE*    file;
   uint64_t dim_one_e;
+  uint32_t to_flush;
+  uint32_t padding;
   double*  one_e;
+  FILE*    file;
   char*    two_e_file_name;
-  int      to_flush;
 } rdm_t;
 
 typedef struct trexio_text_s {
   trexio_t   parent ;
-  int        lock_file;
   $group$_t* $group$;
   rdm_t*      rdm;
+  int        lock_file;
 } trexio_text_t;
 
     #+end_src
