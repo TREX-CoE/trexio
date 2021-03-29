@@ -121,6 +121,7 @@ for fname in files_funcs_groups:
         do_dset = False
         do_num = False
         loop_body = ''
+        dset_allocated = []
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
                 for line in f_in :
@@ -133,11 +134,21 @@ for fname in files_funcs_groups:
                                 if dset_grname != grname:
                                     continue
 
-                                templine1 = loop_body.replace('$group_dset$', dset)
-                                templine2 = templine1.replace('$group$', grname)
+                                dset_allocated.append(dset)
 
-                                templine1 = templine2.replace('$group_dset_dtype$', params['dtype'])
+                                templine1 = loop_body.replace('$group_dset_dtype$', params['dtype'])
                                 templine2 = templine1
+
+                                if 'FREE($group$->$group_dset$)' in loop_body:
+                                    tmp_string = ''
+                                    for dset_alloc in dset_allocated:
+                                        tmp_string += f'FREE({grname}->{dset_alloc});\n        '
+
+                                    templine1 =  templine2.replace('FREE($group$->$group_dset$);',tmp_string)
+                                    templine2 = templine1
+
+                                templine1 = templine2.replace('$group_dset$', dset)
+                                templine2 = templine1.replace('$group$', grname)
 
                                 if params['dtype'] == 'double':
                                     std_dtype = 'lf'
@@ -163,6 +174,7 @@ for fname in files_funcs_groups:
                             print('fishy')
 
                         loop_body = ''
+                        dset_allocated = []
                         subloop = False
                         do_dset = False
                         do_num = False

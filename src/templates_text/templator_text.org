@@ -73,7 +73,7 @@
   
   The file is written when closed, or when the flush function is called.
   
-*** Template for group-related structures in text back end
+** Template for group-related structures in text back end
 
     #+begin_src c :tangle struct_text_group_dset.h
 
@@ -88,7 +88,7 @@ typedef struct $group$_s {
 
     #+end_src
 
-*** Template for general structure in text back end
+** Template for general structure in text back end
     
     #+begin_src c :tangle struct_text_group.h
 
@@ -110,7 +110,7 @@ typedef struct trexio_text_s {
 
     #+end_src
 
-*** Init/deinit functions (constant part)
+** Init/deinit functions (constant part)
 
     #+begin_src c :tangle basic_text.h
 trexio_exit_code trexio_text_init(trexio_t* const file);
@@ -217,15 +217,13 @@ trexio_exit_code trexio_text_unlock(trexio_t* const file) {
     #+end_src
 
    
-*** Init/deinit functions (templated part)
+** Init/deinit functions (templated part)
  
     #+begin_src c :tangle basic_text_group.c
 trexio_exit_code trexio_text_finalize(trexio_t* const file) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
 
   trexio_exit_code rc;
-  //rc = trexio_text_free_$group$( (trexio_text_t*) file);
-  //assert (rc == TREXIO_SUCCESS);
 
   assert (trexio_text_free_$group$( (trexio_text_t*) file) == TREXIO_SUCCESS);
 
@@ -236,7 +234,7 @@ trexio_exit_code trexio_text_finalize(trexio_t* const file) {
 }
     #+end_src
 
-*** Template for text read struct
+** Template for text read struct
 
     #+begin_src c :tangle read_group_text.h
 $group$_t* trexio_text_read_$group$(trexio_text_t* const file);
@@ -290,9 +288,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
     
     /* Read the dimensioning variables */
     int rc;
-
     // START REPEAT GROUP_DSET
-
     rc = fscanf(f, "%1023s", buffer);
     if ((rc != 1) || (strcmp(buffer, "rank_$group_dset$") != 0)) {
       FREE(buffer);
@@ -325,7 +321,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
         FREE(file_name);
         fclose(f);
         FREE($group$);
-          return NULL;
+        return NULL;
       }
     
       rc = fscanf(f, "%lu\n", &($group$->dims_$group_dset$[i]));
@@ -340,11 +336,9 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
 
       size_$group_dset$ *= $group$->dims_$group_dset$[i];
     }
-
     // END REPEAT GROUP_DSET
 
     // START REPEAT GROUP_NUM
-
     /* Read data */
     rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
@@ -365,11 +359,9 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
       FREE($group$);
       return NULL;
     }
-
     // END REPEAT GROUP_NUM
     
     // START REPEAT GROUP_DSET   
-     
     /* Allocate arrays */
     $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
     assert (!($group$->$group_dset$ == NULL));
@@ -384,13 +376,12 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
     rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
     if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
-      FREE(buffer);
-      FREE(file_name);
-      fclose(f);
-      // TODO: free all dsets
-      FREE($group$->$group_dset$);
-      FREE($group$);
-      return NULL;
+        FREE(buffer);
+        FREE(file_name);
+        fclose(f);
+        FREE($group$->$group_dset$);
+        FREE($group$);
+        return NULL;
     }
     
     for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
@@ -400,13 +391,11 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
         FREE(buffer);
         FREE(file_name);
         fclose(f);
-      // TODO: free all dsets
         FREE($group$->$group_dset$);
         FREE($group$);
         return NULL;
       }
     }
-
     // END REPEAT GROUP_DSET
 
     FREE(buffer);
@@ -422,7 +411,6 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
   FREE(file_name);
   assert (!($group$->file == NULL));
   if ($group$->file == NULL) {
-    // TODO: free all dsets
     FREE($group$->$group_dset$);
     FREE($group$);
     return NULL;
@@ -434,7 +422,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
 }
    #+end_src
    
-*** Template for text flush struct
+** Template for text flush struct
 
     #+begin_src c :tangle flush_group_text.h
 trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file);
@@ -456,12 +444,9 @@ trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file) {
   assert (f != NULL);
   fseek(f, 0L, SEEK_SET);
 
-  /* Write the dimensioning variables */ 
- 
+  /* Write the dimensioning variables */
   // START REPEAT GROUP_DSET
- 
   fprintf(f, "rank_$group_dset$ %u\n", $group$->rank_$group_dset$);
-
   // workaround for the case of missing blocks in the file
   uint64_t size_$group_dset$ = 0;
   if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
@@ -469,25 +454,21 @@ trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file) {
   for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
     fprintf(f, "dims_$group_dset$ %u  %lu\n", i, $group$->dims_$group_dset$[i]);
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
-  } 
+  }
 
   // END REPEAT GROUP_DSET 
 
   // START REPEAT GROUP_NUM
-
   fprintf(f, "$group_num$ %lu\n", $group$->$group_num$);
-
   // END REPEAT GROUP_NUM
 
-  // START REPEAT GROUP_DSET
-  
   /* Write arrays */
-  
+  // START REPEAT GROUP_DSET
+
   fprintf(f, "$group_dset$\n");
   for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
     fprintf(f, "%$group_dset_std_dtype$\n", $group$->$group_dset$[i]);
   }
-
   // END REPEAT GROUP_DSET
 
   fflush(f);
@@ -496,7 +477,7 @@ trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file) {
 }
    #+end_src
 
-*** Template for text free memory
+** Template for text free memory
 
      Memory is allocated when reading. The following function frees memory.
     
@@ -522,19 +503,17 @@ trexio_exit_code trexio_text_free_$group$(trexio_text_t* const file) {
   }
  
   // START REPEAT GROUP_DSET
-
   if ($group$->$group_dset$ != NULL) {
     FREE ($group$->$group_dset$);
   }
-  
   // END REPEAT GROUP_DSET
-  
+
   FREE ($group$);
   return TREXIO_SUCCESS;
 }
     #+end_src
 
-*** Template for read/write the $group_num$ attribute
+** Template for read/write the $group_num$ attribute
 
     #+begin_src c :tangle rw_num_text.h
 trexio_exit_code trexio_text_read_$group_num$ (trexio_t* const file, uint64_t* const num);
@@ -574,7 +553,7 @@ trexio_exit_code trexio_text_write_$group_num$(trexio_t* const file, const uint6
 }
      #+end_src
 
-*** Template for read/write the $group_dset$ dataset
+** Template for read/write the $group_dset$ dataset
 
      The ~dset~ array is assumed allocated with the appropriate size.
     
@@ -642,8 +621,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const $gro
      #+end_src
      
 
-*** RDM struct
-**** Read the complete struct
+** RDM struct
+*** Read the complete struct
 
     #+begin_src c :tangle rdm_text.h
 rdm_t* trexio_text_read_rdm(trexio_text_t* const file);
@@ -733,7 +712,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* const file) {
 }
    #+end_src
 
-**** Flush the complete struct
+*** Flush the complete struct
 
     #+begin_src c :tangle rdm_text.h
 trexio_exit_code trexio_text_flush_rdm(trexio_text_t* const file);
@@ -772,7 +751,7 @@ trexio_exit_code trexio_text_flush_rdm(trexio_text_t* const file) {
 }
    #+end_src
 
-**** Free memory
+*** Free memory
 
      Memory is allocated when reading. The followig function frees memory.
     
@@ -811,7 +790,7 @@ trexio_exit_code trexio_text_free_rdm(trexio_text_t* const file) {
 }
     #+end_src
 
-**** Read/Write the one_e attribute
+*** Read/Write the one_e attribute
 
      The ~one_e~ array is assumed allocated with the appropriate size.
     
@@ -871,7 +850,7 @@ trexio_text_write_rdm_one_e(trexio_t* const file,
 }
      #+end_src
 
-**** Read/Write the two_e attribute
+*** Read/Write the two_e attribute
 
      ~two_e~ is a sparse data structure, which can be too large to fit
      in memory. So we provide functions to read and write it by
