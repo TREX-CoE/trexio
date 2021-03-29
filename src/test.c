@@ -27,8 +27,6 @@ int test_h5write() {
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
-  rc = TREXIO_SUCCESS;
-
   int64_t num = 12;
 
   double coord[36] = {

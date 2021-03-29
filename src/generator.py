@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 
 from os import listdir, scandir, remove
@@ -16,7 +18,7 @@ del config0['metadata']
 config = {}
 for k,v in config0.items():
     if k == 'nucleus' or k == 'ecp':
-    #if k == 'nucleus': 
+    #if k == 'nucleus':
         config[k] = v
 
 groups = [group for group in config.keys()]
@@ -31,9 +33,9 @@ for k1,v1 in config.items():
             if not dim.isdigit():
                 tmp = dim.replace('.','_')
                 dim_variables[tmp] = 0
-                if dim not in dim_list: 
+                if dim not in dim_list:
                     dim_list.append(tmp)
-                    
+
                 dim_dict[grname] = dim_list
                 dim_list = []
 
@@ -60,14 +62,14 @@ for k,v in datasets.items():
         elif v[0] == 'int':
             datatype = 'int64_t'
         tmp_dict['dtype'] = datatype
-        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]] 
-        tmp_dict['rank'] = len(v[1]) 
+        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+        tmp_dict['rank'] = len(v[1])
         dim_str = tmp_dict['dims'][0]
         if tmp_dict['rank'] > 1:
             for i in range(1, tmp_dict['rank']):
                 dim_toadd = tmp_dict['dims'][i]
                 dim_str += f', {dim_toadd}'
-        tmp_dict['dim_list'] = dim_str 
+        tmp_dict['dim_list'] = dim_str
         datasets_nostr[k] = tmp_dict
 
 
@@ -79,9 +81,9 @@ templ_path_hdf5 = join(fileDir,'templates_hdf5')
 templ_path_front = join(fileDir,'templates_front')
 
 
-files_exclude = ['prefix_hdf5.c', 'prefix_hdf5.h', 'suffix_hdf5.h', 
-                 'prefix_text.c', 'prefix_text.h', 'suffix_text.h', 
-                 'prefix_front.c', 'prefix_front.h', 'suffix_front.h', 
+files_exclude = ['prefix_hdf5.c', 'prefix_hdf5.h', 'suffix_hdf5.h',
+                 'prefix_text.c', 'prefix_text.h', 'suffix_text.h',
+                 'prefix_front.c', 'prefix_front.h', 'suffix_front.h',
                  'prefix_fortran.f90', 'suffix_fortran.f90',
                  'prefix_s_front.h', 'suffix_s_front.h',
                  'templator_front.org', 'templator_hdf5.org', 'templator_text.org']
@@ -122,17 +124,17 @@ for fname in files_funcs_groups:
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
                 for line in f_in :
-                    
+
                     if 'END REPEAT' in line:
 
                         if do_dset:
-                            for dset,params in datasets_nostr.items():                           
+                            for dset,params in datasets_nostr.items():
                                 dset_grname = dset.split('_')[0]
                                 if dset_grname != grname:
-                                    continue         
-                                                        
+                                    continue
+
                                 templine1 = loop_body.replace('$group_dset$', dset)
-                                templine2 = templine1.replace('$group$', grname)  
+                                templine2 = templine1.replace('$group$', grname)
 
                                 templine1 = templine2.replace('$group_dset_dtype$', params['dtype'])
                                 templine2 = templine1
@@ -155,11 +157,11 @@ for fname in files_funcs_groups:
                                     continue
 
                                 templine1 = loop_body.replace('$group_num$', dim)
-                                templine2 = templine1.replace('$group$', grname)                            
-                                f_out.write(templine2)     
+                                templine2 = templine1.replace('$group$', grname)
+                                f_out.write(templine2)
                         else:
                             print('fishy')
-                    
+
                         loop_body = ''
                         subloop = False
                         do_dset = False
@@ -168,7 +170,7 @@ for fname in files_funcs_groups:
 
                     if subloop:
                         loop_body += line
-                
+
                     if 'START REPEAT' in line:
                         if 'GROUP_DSET' in line:
                             do_dset = True
@@ -178,7 +180,7 @@ for fname in files_funcs_groups:
 
                     if '$group_dset' in line and not subloop:
                         for dset,params in datasets_nostr.items():
-                            
+
                             dset_grname = dset.split('_')[0]
                             if dset_grname != grname:
                                 continue
@@ -191,8 +193,8 @@ for fname in files_funcs_groups:
 
                             templine1 = templine2.replace('$group$', grname)
                             templine2 = templine1.replace('$GROUP$', grname.upper())
-                            
-                            f_out.write(templine2)   
+
+                            f_out.write(templine2)
                     elif '$group_num' in line and not subloop:
                         #for dim in dim_variables.keys():
                         for dim in numbers.keys():
@@ -205,16 +207,16 @@ for fname in files_funcs_groups:
 
                             templine1 = templine2.replace('$group$', grname)
                             templine2 = templine1.replace('$GROUP$', grname.upper())
-                            
-                            f_out.write(templine2)     
 
-                    elif '$group$' in line and not subloop: 
+                            f_out.write(templine2)
+
+                    elif '$group$' in line and not subloop:
 
                         templine1 = line.replace('$group$', grname)
                         templine2 = templine1.replace('$GROUP$', grname.upper())
-                        f_out.write(templine2)     
+                        f_out.write(templine2)
 
-                    elif not subloop:        
+                    elif not subloop:
                         f_out.write(line)
 
 
@@ -237,14 +239,15 @@ for fname in files_funcs_dsets:
                     if '$' in line:
 
                         if '$group_dset_dim$' in line:
-                            rc_line = '  if (rc != TREXIO_SUCCESS) return rc;\n'
+                            rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
+                            indentlevel = len(line) - len(line.lstrip())
                             for dim in params['dims']:
                                 if not dim.isdigit():
                                     templine1 = line.replace('$group_dset_dim$', dim)
                                     templine2 = templine1
-                                    if '_read' in templine2 and 'hdf5' in fname:
-                                            templine1 = rc_line
-                                            templine2 += templine1   
+                                    if '_read' in templine2: # and 'hdf5' in fname:
+                                            templine1 = indentlevel*" " + rc_line
+                                            templine2 += templine1
 
                                     f_out.write(templine2)
                             continue
@@ -279,9 +282,9 @@ for fname in files_funcs_dsets:
 
                         templine1 = templine2.replace('$group$', grname)
                         templine2 = templine1.replace('$GROUP$', grname.upper())
-                            
-                        f_out.write(templine2)                
-                    else:        
+
+                        f_out.write(templine2)
+                    else:
                         f_out.write(line)
 
 # build files with functions
@@ -293,7 +296,7 @@ for fname in files_funcs_nums:
         templ_path = templ_path_front
     if '_text' in fname:
         templ_path = templ_path_text
-        
+
     for dim in dim_variables.keys():
     #for dim in numbers.keys():
         grname = dim.split('_')[0]
@@ -306,13 +309,13 @@ for fname in files_funcs_nums:
 
                         templine1 = templine2.replace('$group$', grname)
                         templine2 = templine1.replace('$GROUP$', grname.upper())
-                            
-                        f_out.write(templine2)                
-                    else:        
+
+                        f_out.write(templine2)
+                    else:
                         f_out.write(line)
 
 # build files with $group$ and $group$-based
-for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 
+for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c',
               'struct_hdf5.h', 'struct_text_group.h'] :
     fname_new = join('populated',f'pop_{fname}')
     if '_hdf5' in fname:
@@ -335,13 +338,13 @@ for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c',
                     #for num in numbers.keys():
                         templine1 = line.replace('$GROUP_NUM$', num.upper())
                         templine2 = templine1.replace('$group_num$', num)
-                        f_out.write(templine2)                
+                        f_out.write(templine2)
                 elif '$group$' in line or '$GROUP$' in line :
                     for grname in config.keys():
                         templine1 = line.replace('$group$', grname)
                         templine2 = templine1.replace('$GROUP$', grname.upper())
-                        f_out.write(templine2)                
-                else:        
+                        f_out.write(templine2)
+                else:
                     f_out.write(line)
 
 
