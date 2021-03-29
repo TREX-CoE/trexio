@@ -58,7 +58,7 @@ test_c: libtrexio.so test.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test_c
 
 test_f: libtrexio.so test.f90 trexio_f.o
-	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LIBS) -o test_f
+	$(FC) $(FFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LIBS) -o test_f
 
 test: test_c test_f
 	$(RM) -r trexio_test

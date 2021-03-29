@@ -8,7 +8,6 @@ end program test_trexio
 subroutine test_write()
    
   use trexio
-  use, intrinsic :: iso_c_binding
   implicit none
 
   integer(8) :: trex_file
@@ -35,19 +34,19 @@ subroutine test_write()
              0.00000000 ,  2.47304151 ,  0.00000000 /)
 
 !  trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT)
-  trex_file = trexio_open('test_hdf5_fort.h5', 'w', TREXIO_HDF5)
+   trex_file = trexio_open('test_hdf5_fort.h5', 'w', TREXIO_HDF5)
 
   rc = trexio_write_nucleus_num(trex_file, num)
-  if (rc == 0) write(*,*) 'SUCCESS WRITE NUM'
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE NUM'
 
   rc = trexio_write_nucleus_charge(trex_file, charge)
-  if (rc == 0) write(*,*) 'SUCCESS WRITE CHARGE'
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE CHARGE'
 
   rc = trexio_write_nucleus_coord(trex_file, coord)
-  if (rc == 0) write(*,*) 'SUCCESS WRITE COORD'
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE COORD'
 
   rc = trexio_close(trex_file)
-  if (rc == 0) write(*,*) 'SUCCESS CLOSE' 
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE' 
 
 ! ---------------------------------- !
 ! to modify fiels of existing file:
@@ -61,17 +60,16 @@ subroutine test_write()
 !  coord(1) = 666.666
 
 !  rc = trexio_write_nucleus_coord(trex_file,coord)
-!  if (rc == 0) write(*,*) 'SUCCESS MODIFY COORD'
+!  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS MODIFY COORD'
 
 !  rc = trexio_close(trex_file)
-!  if (rc == 0) write(*,*) 'SUCCESS CLOSE' 
+!  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE' 
 
 end subroutine test_write
 
 subroutine test_read()
 
   use trexio
-  use, intrinsic :: iso_c_binding
   implicit none
 
   integer(8) :: trex_file
@@ -80,7 +78,7 @@ subroutine test_read()
   integer(8) :: num, num_read
 
   double precision :: charge(12) 
-  double precision :: coord(36) 
+  double precision :: coord(3,12) 
 
   num = 12
 
@@ -89,18 +87,18 @@ subroutine test_read()
 
   rc = trexio_read_nucleus_num(trex_file, num_read)
 
-  if (rc == 0 .and. num_read == num) write(*,*) 'SUCCESS READ NUM'
+  if (rc == TREXIO_SUCCESS .and. num_read == num) write(*,*) 'SUCCESS READ NUM'
 
   rc = trexio_read_nucleus_charge(trex_file, charge)
    
-  if (rc == 0 .and. (abs (charge(11) - 1.0) < 1.0D-8) ) write(*,*) 'SUCCESS READ CHARGE'
+  if (rc == TREXIO_SUCCESS .and. (abs (charge(11) - 1.0) < 1.0D-8) ) write(*,*) 'SUCCESS READ CHARGE'
 
   rc = trexio_read_nucleus_coord(trex_file, coord)
    
-  if (rc == 0 .and. (abs (coord(2) - 1.39250319) < 1.0D-8) ) write(*,*) 'SUCCESS READ COORD'
+  if (rc == TREXIO_SUCCESS .and. (abs (coord(2,1) - 1.39250319) < 1.0D-8) ) write(*,*) 'SUCCESS READ COORD'
 
   rc = trexio_close(trex_file)
-  if (rc == 0) write(*,*) 'SUCCESS CLOSE' 
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE' 
 
 end subroutine test_read
 
