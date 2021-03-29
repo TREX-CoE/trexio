@@ -14,10 +14,11 @@
 
   #+begin_src c :tangle prefix_hdf5.h :noweb yes
 <<header>>
-#ifndef _TREXIO_HDF5_H
-#define _TREXIO_HDF5_H
+#ifndef TREXIO_HDF5_H
+#define TREXIO_HDF5_H
 
 #include "trexio.h"
+#include "trexio_private.h"
 #include "trexio_s.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -59,8 +60,8 @@ typedef struct trexio_hdf5_s {
   const char* file_name;
 } trexio_hdf5_t;
 
-trexio_exit_code trexio_hdf5_init(trexio_t* file);
-trexio_exit_code trexio_hdf5_finalize(trexio_t* file);
+trexio_exit_code trexio_hdf5_init(trexio_t* const file);
+trexio_exit_code trexio_hdf5_finalize(trexio_t* const file);
 
   #+end_src
   
@@ -69,9 +70,9 @@ trexio_exit_code trexio_hdf5_finalize(trexio_t* file);
 
   #+begin_src c :tangle basic_hdf5.c
 
-trexio_exit_code trexio_hdf5_init(trexio_t* file) {
+trexio_exit_code trexio_hdf5_init(trexio_t* const file) {
 
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  trexio_hdf5_t* const f = (trexio_hdf5_t*) file;
 
   /* If file doesn't exist, create it */
   int f_exists = 0;
@@ -130,7 +131,7 @@ trexio_exit_code trexio_hdf5_init(trexio_t* file) {
   return TREXIO_SUCCESS;
 }
 
-trexio_exit_code trexio_hdf5_finalize(trexio_t* file) {
+trexio_exit_code trexio_hdf5_finalize(trexio_t* const file) {
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
@@ -155,26 +156,26 @@ trexio_exit_code trexio_hdf5_finalize(trexio_t* file) {
 ** Template for HDF5 read/write a number
 
   #+begin_src c :tangle rw_num_hdf5.h
-trexio_exit_code trexio_hdf5_read_$group_num$ (const trexio_t* file, uint64_t* num);
-trexio_exit_code trexio_hdf5_write_$group_num$ (const trexio_t* file, const uint64_t num);
+trexio_exit_code trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num);
+trexio_exit_code trexio_hdf5_write_$group_num$(trexio_t* const file, const uint64_t num);
   #+end_src
 
    
   #+begin_src c :tangle read_num_hdf5.c
-trexio_exit_code trexio_hdf5_read_$group_num$ (const trexio_t* file, uint64_t* num) {
+trexio_exit_code trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num) {
 
   assert (file != NULL);
   assert (num  != NULL);
   
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
   /* Quit if the dimensioning attribute is missing in the file */
   if (H5Aexists(f->$group$_group, $GROUP_NUM$_NAME) == 0) return TREXIO_FAILURE;
 
   /* Read the nucleus_num attribute of nucleus group */
-  hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
+  const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
   if (num_id <= 0) return TREXIO_INVALID_ID;
 
-  herr_t status = H5Aread(num_id, H5T_NATIVE_ULLONG, num);
+  const herr_t status = H5Aread(num_id, H5T_NATIVE_ULLONG, num);
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
@@ -183,29 +184,39 @@ trexio_exit_code trexio_hdf5_read_$group_num$ (const trexio_t* file, uint64_t* n
 
  
   #+begin_src c :tangle write_num_hdf5.c
-trexio_exit_code trexio_hdf5_write_$group_num$ (const trexio_t* file, const uint64_t num) {
+trexio_exit_code trexio_hdf5_write_$group_num$ (trexio_t* const file, const uint64_t num) {
 
   assert (file != NULL);
   assert (num > 0L);
  
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
-  hid_t num_id;
-  herr_t status;
-  /* Write the dimensioning variables */
-  hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+  trexio_hdf5_t* const f = (trexio_hdf5_t*) file;
 
   if (H5Aexists(f->$group$_group, $GROUP_NUM$_NAME) == 0) {
    
-    hid_t dspace = H5Screate(H5S_SCALAR);
+    /* Write the dimensioning variables */
+    const hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+    const hid_t dspace = H5Screate(H5S_SCALAR);
 
-    num_id = H5Acreate(f->$group$_group, $GROUP_NUM$_NAME, dtype, dspace,
+    const hid_t num_id = H5Acreate(f->$group$_group, $GROUP_NUM$_NAME, dtype, dspace,
                      H5P_DEFAULT, H5P_DEFAULT);
-    if (num_id <= 0) return TREXIO_INVALID_ID;
+    if (num_id <= 0) {
+      H5Sclose(dspace);
+      H5Tclose(dtype);
+      return TREXIO_INVALID_ID;
+    }
   
-    status = H5Awrite(num_id, dtype, &(num));
-    if (status < 0) return TREXIO_FAILURE;
+    const herr_t status = H5Awrite(num_id, dtype, &(num));
+    if (status < 0) {
+      H5Aclose(num_id);
+      H5Sclose(dspace);
+      H5Tclose(dtype);
+      return TREXIO_FAILURE;
+    }
 
     H5Sclose(dspace);
+    H5Aclose(num_id);
+    H5Tclose(dtype);
+    return TREXIO_SUCCESS;
     
   } else {
 
@@ -216,26 +227,26 @@ trexio_exit_code trexio_hdf5_write_$group_num$ (const trexio_t* file, const uint
     if (infile_num != num) {
 
       if (infile_num != 0) {
-        printf("%ld -> %ld %s \n", num, infile_num, 
+        printf("%lu -> %lu %s \n", num, infile_num, 
 	       "This variable already exists. Overwriting it is not supported");
-        H5Tclose(dtype);
         return TREXIO_FAILURE;
 
       } else {
     
-        num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
+        const hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+        const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
         if (num_id <= 0) return TREXIO_INVALID_ID;
        
-        status = H5Awrite(num_id, dtype, &(num));
+        const herr_t status = H5Awrite(num_id, dtype, &(num));
         if (status < 0) return TREXIO_FAILURE;
 
+        H5Aclose(num_id);
+        H5Tclose(dtype);
       }
     }
+    return TREXIO_SUCCESS;
   }
 
-  H5Aclose(num_id);
-  H5Tclose(dtype);
-  return TREXIO_SUCCESS;
   
 }
     #+end_src
@@ -245,17 +256,17 @@ trexio_exit_code trexio_hdf5_write_$group_num$ (const trexio_t* file, const uint
 
     
    #+begin_src c :tangle rw_dset_hdf5.h
-trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(const trexio_t* file, $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims);
-trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(const trexio_t* file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims);
   #+end_src
 
    #+begin_src c :tangle read_dset_hdf5.c
-trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(const trexio_t* file, $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims) {
+trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$, const uint32_t rank, const uint64_t* dims) {
 
   assert (file != NULL);
   assert ($group_dset$ != NULL);
   
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
   
   herr_t status;
   int rrank;
@@ -272,7 +283,7 @@ trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(const trexio_t* file, $gr
   if (dset_id <= 0) return TREXIO_INVALID_ID; 
 
   // allocate space for the dimensions to be read
-  hsize_t* ddims = (hsize_t*) calloc( (int) rank, sizeof(hsize_t));
+  hsize_t* ddims = CALLOC( (int) rank, hsize_t);
   if (ddims == NULL) return TREXIO_FAILURE;
 
   // read dimensions from the existing dataset
@@ -284,7 +295,7 @@ trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(const trexio_t* file, $gr
     return TREXIO_FAILURE;
   }
 
-  for (uint32_t i=0; i<rank; i++){
+  for (uint32_t i=0; i<rank; ++i){
      if (ddims[i] != dims[i]) {
        free(ddims);
        return TREXIO_INVALID_ARG_4;
@@ -304,7 +315,7 @@ trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(const trexio_t* file, $gr
     #+end_src
 
    #+begin_src c :tangle write_dset_hdf5.c
-trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(const trexio_t* file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims) {
+trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims) {
 
   assert (file != NULL);
   assert ($group_dset$ != NULL);
@@ -313,15 +324,15 @@ trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(const trexio_t* file, co
   uint64_t $group_dset_dim$;
   // error handling for rc is added by the generator
   rc = trexio_hdf5_read_$group_dset_dim$(file, &($group_dset_dim$)); 
-  if ($group_dset_dim$ <= 0L) return TREXIO_INVALID_NUM;
+  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file; 
 
-  herr_t status;
   if ( H5LTfind_dataset(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME) != 1) { 
     
-    status = H5LTmake_dataset_$group_dset_h5_dtype$ (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, 
-                                      (int) rank, (hsize_t*) dims, $group_dset$);
+    const herr_t status =
+      H5LTmake_dataset_$group_dset_h5_dtype$ (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, 
+                                      (int) rank, (const hsize_t*) dims, $group_dset$);
     if (status < 0) return TREXIO_FAILURE;
 
   } else {   
@@ -329,7 +340,9 @@ trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(const trexio_t* file, co
     hid_t dset_id = H5Dopen(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, H5P_DEFAULT);
     if (dset_id <= 0) return TREXIO_INVALID_ID;
     
-    status = H5Dwrite(dset_id, H5T_NATIVE_$GROUP_DSET_H5_DTYPE$, H5S_ALL, H5S_ALL, H5P_DEFAULT, $group_dset$);
+    const herr_t status =
+      H5Dwrite(dset_id, H5T_NATIVE_$GROUP_DSET_H5_DTYPE$, H5S_ALL, H5S_ALL,
+               H5P_DEFAULT, $group_dset$);
     
     H5Dclose(dset_id);
     if (status < 0) return TREXIO_FAILURE;

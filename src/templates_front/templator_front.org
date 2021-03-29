@@ -27,8 +27,8 @@ module trexio
 
   #+begin_src c :tangle prefix_front.h :noweb yes
 <<header>>
-#ifndef _TREXIO_H
-#define _TREXIO_H
+#ifndef TREXIO_H
+#define TREXIO_H
 
 #include <stdint.h>
 
@@ -40,7 +40,6 @@ module trexio
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 
 #include "trexio.h"
 #include "trexio_s.h"
@@ -228,8 +227,8 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
 
   /* Data for the parent type */
 
-  result->file_name   = (char*) calloc(strlen(file_name)+1,sizeof(char));
-  strcpy(result->file_name, file_name);
+  result->file_name   = CALLOC(strlen(file_name)+1, char);
+  strncpy(result->file_name, file_name, strlen(file_name)+1);
   result->back_end    = back_end;
   result->mode        = mode;
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
@@ -391,8 +390,8 @@ end interface
 ** Template for frontend read/write a number
    
      #+begin_src c :tangle rw_num_front.h
-trexio_exit_code trexio_read_$group_num$(trexio_t* file, int64_t* num);
-trexio_exit_code trexio_write_$group_num$(trexio_t* file, const int64_t num);
+trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int64_t* const num);
+trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num);
      #+end_src
    
      #+begin_src c :tangle read_num_front.c
@@ -427,7 +426,7 @@ trexio_exit_code trexio_read_$group_num$(trexio_t* file, int64_t* num) {
    
      #+begin_src c :tangle write_num_front.c
 
-trexio_exit_code trexio_write_$group_num$(trexio_t* file, const int64_t num) {
+trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
@@ -484,17 +483,17 @@ end interface
 ** Template for frontend read/write a dataset
 
      #+begin_src c :tangle rw_dset_front.h
-trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dtype$* $group_dset$);
-trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_dset_dtype$* $group_dset$);
+trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$);
+trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$);
      #+end_src
    
      #+begin_src c :tangle read_dset_front.c
-trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dtype$* $group_dset$) {
+trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
     
   trexio_exit_code rc;
-  uint64_t $group_dset_dim$ = -1;
+  uint64_t $group_dset_dim$ = 0;
 
   switch (file->back_end) {
 
@@ -514,7 +513,7 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dt
 
   if (rc != TREXIO_SUCCESS) return rc;
 
-  if ($group_dset_dim$ <= 0L) return TREXIO_INVALID_NUM;
+  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$}; 
@@ -541,12 +540,12 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* file, $group_dset_dt
    
      #+begin_src c :tangle write_dset_front.c
 
-trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_dset_dtype$* $group_dset$) {
+trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
 
   trexio_exit_code rc;
-  uint64_t $group_dset_dim$ = -1;
+  uint64_t $group_dset_dim$ = 0;
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -564,7 +563,7 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* file, const $group_
   }
 
   if (rc != TREXIO_SUCCESS) return rc;
-  if ($group_dset_dim$ <= 0L) return TREXIO_INVALID_NUM;
+  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$}; 
