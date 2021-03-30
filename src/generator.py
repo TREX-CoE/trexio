@@ -16,10 +16,12 @@ print('Metadata I/O currently not supported')
 del config0['metadata']
 
 config = {}
-for k,v in config0.items():
-    if k == 'nucleus' or k == 'ecp':
-    #if k == 'nucleus':
-        config[k] = v
+#for k,v in config0.items():
+#    if k == 'nucleus' or k == 'ecp':
+#        config[k] = v
+config = config0
+# for now remove rdm because it is hardcoded
+del config['rdm']
 
 groups = [group for group in config.keys()]
 
@@ -111,7 +113,8 @@ for fname in files_funcs_groups:
     groups_done = []
     for group in config.keys():
 
-        grname = group.split('_')[0]
+        #grname = group.split('_')[0]
+        grname = group
         if grname in groups_done:
             continue
         else:
@@ -130,8 +133,8 @@ for fname in files_funcs_groups:
 
                         if do_dset:
                             for dset,params in datasets_nostr.items():
-                                dset_grname = dset.split('_')[0]
-                                if dset_grname != grname:
+                                #dset_grname = dset.split('_')[0]
+                                if grname not in dset: #dset_grname != grname:
                                     continue
 
                                 dset_allocated.append(dset)
@@ -165,8 +168,8 @@ for fname in files_funcs_groups:
                             #for dim in dim_variables.keys():
                             for dim in numbers.keys():
 
-                                num_grname = dim.split('_')[0]
-                                if num_grname != grname:
+                                #num_grname = dim.split('_')[0]
+                                if grname not in dim: #num_grname != grname:
                                     continue
 
                                 templine1 = loop_body.replace('$group_num$', dim)
@@ -195,8 +198,8 @@ for fname in files_funcs_groups:
                     if '$group_dset' in line and not subloop:
                         for dset,params in datasets_nostr.items():
 
-                            dset_grname = dset.split('_')[0]
-                            if dset_grname != grname:
+                            #dset_grname = dset.split('_')[0]
+                            if grname not in dset: #dset_grname != grname:
                                 continue
 
                             templine1 = line.replace('$group_dset$', dset)
@@ -212,8 +215,8 @@ for fname in files_funcs_groups:
                     elif '$group_num' in line and not subloop:
                         #for dim in dim_variables.keys():
                         for dim in numbers.keys():
-                            num_grname = dim.split('_')[0]
-                            if num_grname != grname:
+                            #num_grname = dim.split('_')[0]
+                            if grname not in dim: #num_grname != grname:
                                 continue
 
                             templine1 = line.replace('$GROUP_NUM$', dim.upper())
@@ -246,9 +249,15 @@ for fname in files_funcs_dsets:
 
     for dset,params in datasets_nostr.items():
 
-        grname = dset.split('_')[0]
+        #grname = dset.split('_')[0]
+        # the problem was when group name has underscores in it, special case needed!
+        for group_tmp in config.keys():
+            if group_tmp in dset:
+                grname = group_tmp
+
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
+                num_written = []
                 for line in f_in :
                     if '$' in line:
 
@@ -256,7 +265,8 @@ for fname in files_funcs_dsets:
                             rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
                             indentlevel = len(line) - len(line.lstrip())
                             for dim in params['dims']:
-                                if not dim.isdigit():
+                                if not dim.isdigit() and not dim in num_written:
+                                    num_written.append(dim)
                                     templine1 = line.replace('$group_dset_dim$', dim)
                                     templine2 = templine1
                                     if '_read' in templine2: # and 'hdf5' in fname:
@@ -264,6 +274,7 @@ for fname in files_funcs_dsets:
                                             templine2 += templine1
 
                                     f_out.write(templine2)
+                            num_written = []
                             continue
 
                         templine1 = line.replace('$GROUP$_$GROUP_DSET$', dset.upper())
