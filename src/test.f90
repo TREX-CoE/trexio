@@ -6,6 +6,8 @@ program test_trexio
 end program test_trexio
 
 subroutine test_write()
+
+! ============ Test write functionality =============== !
    
   use trexio
   implicit none
@@ -18,20 +20,23 @@ subroutine test_write()
   double precision :: charge(12)
   double precision :: coord(36)
 
+  ! parameters to be written
   num = 12
   charge = (/6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1. /)
-  coord = (/ 0.00000000 ,  1.39250319 ,  0.00000000 , &
-            -1.20594314 ,  0.69625160 ,  0.00000000 , &
-            -1.20594314 , -0.69625160 ,  0.00000000 , &
-             0.00000000 , -1.39250319 ,  0.00000000 , &
-             1.20594314 , -0.69625160 ,  0.00000000 , &
-             1.20594314 ,  0.69625160 ,  0.00000000 , &
-            -2.14171677 ,  1.23652075 ,  0.00000000 , &
-            -2.14171677 , -1.23652075 ,  0.00000000 , &
-             0.00000000 , -2.47304151 ,  0.00000000 , &
-             2.14171677 , -1.23652075 ,  0.00000000 , &
-             2.14171677 ,  1.23652075 ,  0.00000000 , &
-             0.00000000 ,  2.47304151 ,  0.00000000 /)
+  coord = (/ 0.00000000d0,  1.39250319d0 ,  0.00000000d0 , &
+            -1.20594314d0,  0.69625160d0 ,  0.00000000d0 , &
+            -1.20594314d0, -0.69625160d0 ,  0.00000000d0 , &
+             0.00000000d0, -1.39250319d0 ,  0.00000000d0 , &
+             1.20594314d0, -0.69625160d0 ,  0.00000000d0 , &
+             1.20594314d0,  0.69625160d0 ,  0.00000000d0 , &
+            -2.14171677d0,  1.23652075d0 ,  0.00000000d0 , &
+            -2.14171677d0, -1.23652075d0 ,  0.00000000d0 , &
+             0.00000000d0, -2.47304151d0 ,  0.00000000d0 , &
+             2.14171677d0, -1.23652075d0 ,  0.00000000d0 , &
+             2.14171677d0,  1.23652075d0 ,  0.00000000d0 , &
+             0.00000000d0,  2.47304151d0 ,  0.00000000d0 /)
+
+! ================= START OF TEST ===================== !
 
   trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT)
 !  trex_file = trexio_open('test_hdf5_fort.h5', 'w', TREXIO_HDF5)
@@ -75,9 +80,13 @@ subroutine test_write()
 !  rc = trexio_close(trex_file)
 !  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE' 
 
+! ================= END OF TEST ===================== !
+
 end subroutine test_write
 
 subroutine test_read()
+
+! ============ Test read functionality =============== !
 
   use trexio
   implicit none
@@ -92,6 +101,8 @@ subroutine test_read()
 
   num = 12
 
+! ================= START OF TEST ===================== !
+
   trex_file = trexio_open('trexio_test_fort', 'r', TREXIO_TEXT)
 !  trex_file = trexio_open('test_hdf5_fort.h5', 'r', TREXIO_HDF5)
 
@@ -101,14 +112,16 @@ subroutine test_read()
 
   rc = trexio_read_nucleus_charge(trex_file, charge)
    
-  if (rc == TREXIO_SUCCESS .and. (abs (charge(11) - 1.0) < 1.0D-8) ) write(*,*) 'SUCCESS READ CHARGE'
+  if (rc == TREXIO_SUCCESS .and. (abs(charge(11) - 1.0) < 1.0D-8) ) write(*,*) 'SUCCESS READ CHARGE'
 
   rc = trexio_read_nucleus_coord(trex_file, coord)
-   
-  if (rc == TREXIO_SUCCESS .and. (abs (coord(2,1) - 1.39250319) < 1.0D-8) ) write(*,*) 'SUCCESS READ COORD'
+
+  if (rc == TREXIO_SUCCESS .and. (abs(coord(2,1) - 1.39250319d0) < 1.0D-8) ) write(*,*) 'SUCCESS READ COORD'
 
   rc = trexio_close(trex_file)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE' 
+
+! ================= END OF TEST ===================== !
 
 end subroutine test_read
 
