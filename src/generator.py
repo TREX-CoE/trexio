@@ -151,12 +151,14 @@ for fname in files_funcs_groups:
                                 templine2 = templine1.replace('$group$', grname)
 
                                 if params['dtype'] == 'double':
-                                    std_dtype = 'lf'
+                                    std_dtype_out = '24.16e'
+                                    std_dtype_in = 'lf'
                                 elif params['dtype'] == 'int64_t':
-                                    std_dtype = 'ld'
+                                    std_dtype_out = 'ld'
+                                    std_dtype_in = 'ld'
 
-                                templine1 = templine2.replace('$group_dset_std_dtype$', std_dtype)
-                                templine2 = templine1
+                                templine1 = templine2.replace('$group_dset_std_dtype_out$', std_dtype_out)
+                                templine2 = templine1.replace('$group_dset_std_dtype_in$', std_dtype_in)
 
                                 f_out.write(templine2)
                         elif do_num:
