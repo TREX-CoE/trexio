@@ -441,7 +441,7 @@ trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file) {
   if ($group$->to_flush == 0) return TREXIO_SUCCESS;
 
   FILE* f = $group$->file;
-  assert (f != NULL);
+  if (f == NULL) return TREXIO_INVALID_ARG_1;
   fseek(f, 0L, SEEK_SET);
 
   /* Write the dimensioning variables */
