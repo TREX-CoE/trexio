@@ -94,11 +94,11 @@ files_front = [f for f in listdir(templ_path_front) if isfile(join(templ_path_fr
 
 files = files_text + files_hdf5 + files_front
 
-files_funcs = [f for f in files if 'read_' in f or 'write_' in f or 'flush_' in f or 'free_' in f or 'rw_' in f ]
+files_funcs = [f for f in files if 'read_' in f or 'write_' in f or 'flush_' in f or 'free_' in f or 'hrw_' in f or 'has_' in f]
 files_funcs_dsets = [f for f in files_funcs if 'dset' in f]
 files_funcs_nums  = [f for f in files_funcs if 'num' in f]
 files_funcs_groups = [f for f in files_funcs if 'group' in f]
-files_auxil = [f for f in files if not ('read_' in f or 'write_' in f or 'rw_' in f)]
+files_auxil = [f for f in files if not ('read_' in f or 'write_' in f or 'hrw_' in f or 'has_' in f)]
 
 files_funcs_groups.append('struct_text_group_dset.h')
 
