@@ -47,10 +47,20 @@ int test_h5write() {
   file = trexio_open(file_name, 'w', TREXIO_HDF5);
   assert (file != NULL);
 
+  rc = trexio_has_nucleus_num(file);
+  assert (rc == TREXIO_HAS_NOT);
+  rc = trexio_has_nucleus_coord(file);
+  assert (rc == TREXIO_HAS_NOT);
+
   // works: try writing info in an empty file
   rc = trexio_write_nucleus_num(file,num);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_coord(file,coord);
+  assert (rc == TREXIO_SUCCESS);
+
+  rc = trexio_has_nucleus_num(file);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_has_nucleus_coord(file);
   assert (rc == TREXIO_SUCCESS);
 
   // should not work: try to rewrite the nucleus_num
@@ -100,10 +110,6 @@ int test_h5read() {
   coord = (double*) calloc(3*num, sizeof(double));
   rc = trexio_read_nucleus_coord(file,coord);
   assert (rc == TREXIO_SUCCESS);
-
-  /*for (size_t i=0; i<3*num; i++){
-	  printf("%lf \n", coord[i]);
-  }*/
 
   double x = coord[30] - 2.14171677;
   assert( x*x < 1.e-12);
@@ -159,6 +165,11 @@ int test_write() {
   file = trexio_open(file_name, 'w', TREXIO_TEXT);
   assert (file != NULL);
 
+  rc = trexio_has_nucleus_num(file);
+  assert (rc == TREXIO_HAS_NOT);
+  rc = trexio_has_nucleus_coord(file);
+  assert (rc == TREXIO_HAS_NOT);
+
   rc = trexio_write_nucleus_num(file,num);
   assert (rc == TREXIO_SUCCESS);
 
@@ -166,6 +177,11 @@ int test_write() {
   assert (rc == TREXIO_SUCCESS);
 
   rc = trexio_write_nucleus_coord(file,coord);
+  assert (rc == TREXIO_SUCCESS);
+
+  rc = trexio_has_nucleus_num(file);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_has_nucleus_coord(file);
   assert (rc == TREXIO_SUCCESS);
 
   rc = trexio_close(file);

@@ -33,17 +33,27 @@ subroutine test_write()
              2.14171677 ,  1.23652075 ,  0.00000000 , &
              0.00000000 ,  2.47304151 ,  0.00000000 /)
 
-!  trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT)
-   trex_file = trexio_open('test_hdf5_fort.h5', 'w', TREXIO_HDF5)
+  trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT)
+!  trex_file = trexio_open('test_hdf5_fort.h5', 'w', TREXIO_HDF5)
+
+  rc = trexio_has_nucleus_num(trex_file)
+  if (rc == TREXIO_HAS_NOT) write(*,*) 'SUCCESS HAS NOT 1' 
+  rc = trexio_has_nucleus_charge(trex_file)
+  if (rc == TREXIO_HAS_NOT) write(*,*) 'SUCCESS HAS NOT 2' 
 
   rc = trexio_write_nucleus_num(trex_file, num)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE NUM'
-
+  
   rc = trexio_write_nucleus_charge(trex_file, charge)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE CHARGE'
 
   rc = trexio_write_nucleus_coord(trex_file, coord)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE COORD'
+
+  rc = trexio_has_nucleus_num(trex_file)
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS HAS 1' 
+  rc = trexio_has_nucleus_coord(trex_file)
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS HAS 2' 
 
   rc = trexio_close(trex_file)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE' 
@@ -82,8 +92,8 @@ subroutine test_read()
 
   num = 12
 
-!  trex_file = trexio_open('trexio_test_fort', 'r', TREXIO_TEXT)
-  trex_file = trexio_open('test_hdf5_fort.h5', 'r', TREXIO_HDF5)
+  trex_file = trexio_open('trexio_test_fort', 'r', TREXIO_TEXT)
+!  trex_file = trexio_open('test_hdf5_fort.h5', 'r', TREXIO_HDF5)
 
   rc = trexio_read_nucleus_num(trex_file, num_read)
 
