@@ -12,7 +12,6 @@
   #+end_src
 
   #+begin_src fortran :tangle prefix_fortran.f90 :noweb yes
-
 module trexio
 
   use, intrinsic :: iso_c_binding
@@ -36,7 +35,8 @@ module trexio
   integer, parameter :: TREXIO_INVALID_ID        = 20
   integer, parameter :: TREXIO_ALLOCATION_FAILED = 21  
   integer, parameter :: TREXIO_INVALID_NUM       = 22  
-  
+  integer, parameter :: TREXIO_HAS_NOT           = 30
+
   #+end_src
 
   #+begin_src c :tangle prefix_front.h :noweb yes
@@ -128,6 +128,7 @@ typedef int32_t trexio_exit_code;
 #define TREXIO_INVALID_ID    ( (trexio_exit_code) 20 )
 #define TREXIO_ALLOCATION_FAILED  (  (trexio_exit_code)  21  )
 #define TREXIO_INVALID_NUM   ( (trexio_exit_code) 22 )
+#define TREXIO_HAS_NOT   ( (trexio_exit_code) 30 )
 
    #+end_src
    
@@ -401,15 +402,16 @@ end interface
    #+end_src
 
 * Templates for front end
-** Template for frontend read/write a number
+** Template for frontend has/read/write a number
    
-     #+begin_src c :tangle rw_num_front.h
+     #+begin_src c :tangle hrw_num_front.h
+trexio_exit_code trexio_has_$group_num$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int64_t* const num);
 trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num);
      #+end_src
    
      #+begin_src c :tangle read_num_front.c
-trexio_exit_code trexio_read_$group_num$(trexio_t* file, int64_t* num) {
+trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int64_t* const num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   uint64_t u_num = 0;
@@ -433,13 +435,12 @@ trexio_exit_code trexio_read_$group_num$(trexio_t* file, int64_t* num) {
 
   if (rc != TREXIO_SUCCESS) return rc;
                               
-  /**/ *num = (int64_t) u_num;
+  *num = (int64_t) u_num;
   return TREXIO_SUCCESS;
 }
      #+end_src
    
      #+begin_src c :tangle write_num_front.c
-
 trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
@@ -459,7 +460,7 @@ trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t nu
   case TREXIO_JSON:
     rc = trexio_json_write_$group_num$(file, (uint64_t) num);
     break;
-,*/      
+,*/
   }
   if (rc != TREXIO_SUCCESS) return rc;
                               
@@ -467,9 +468,32 @@ trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t nu
 }
      #+end_src
 
+     #+begin_src c :tangle has_num_front.c
+trexio_exit_code trexio_has_$group_num$(trexio_t* const file) {
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_$group_num$(file);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_has_$group_num$(file);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_$group_num$(file);
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+
+}
+     #+end_src
 
      #+begin_src fortran :tangle write_num_front_fortran.f90
-
 interface
    integer function trexio_write_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -477,12 +501,9 @@ interface
      integer(8), intent(in), value :: num
    end function trexio_write_$group_num$
 end interface
-
      #+end_src
 
-
      #+begin_src fortran :tangle read_num_front_fortran.f90
-     
 interface
    integer function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -490,13 +511,21 @@ interface
      integer(8), intent(out) :: num
    end function trexio_read_$group_num$
 end interface
-
      #+end_src
 
+     #+begin_src fortran :tangle has_num_front_fortran.f90
+interface
+   integer function trexio_has_$group_num$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_has_$group_num$
+end interface
+     #+end_src
 
-** Template for frontend read/write a dataset
+** Template for frontend has/read/write a dataset
 
-     #+begin_src c :tangle rw_dset_front.h
+     #+begin_src c :tangle hrw_dset_front.h
+trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$);
 trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$);
      #+end_src
@@ -553,7 +582,6 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_d
      #+end_src
    
      #+begin_src c :tangle write_dset_front.c
-
 trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
@@ -601,9 +629,33 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $
   }
 }
      #+end_src
+
+     #+begin_src c :tangle has_dset_front.c
+trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file) {
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_$group$_$group_dset$(file);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_has_$group$_$group_dset$(file);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_$group$_$group_dset$(file);
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+     #+end_src
+
    
      #+begin_src fortran :tangle write_dset_front_fortran.f90
-
 interface
    integer function trexio_write_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -611,11 +663,9 @@ interface
      $group_dset_f_dtype$, intent(in) :: dset(*)
    end function trexio_write_$group$_$group_dset$
 end interface
-
      #+end_src
 
      #+begin_src fortran :tangle read_dset_front_fortran.f90
-     
 interface
    integer function trexio_read_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -623,7 +673,15 @@ interface
      $group_dset_f_dtype$, intent(out) :: dset(*)
    end function trexio_read_$group$_$group_dset$
 end interface
+     #+end_src
 
+     #+begin_src fortran :tangle has_dset_front_fortran.f90
+interface
+   integer function trexio_has_$group$_$group_dset$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_has_$group$_$group_dset$
+end interface
      #+end_src
 
 * Back ends
