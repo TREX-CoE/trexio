@@ -19,6 +19,7 @@ int main() {
   test_write();
   test_read();
 
+  printf("%s\n", trexio_string_of_error(TREXIO_INVALID_ARG_2));
   return 0 ;
 }
 

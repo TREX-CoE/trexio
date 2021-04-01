@@ -18,25 +18,35 @@ mkdir -p templates_hdf5/populated
 
 echo "remove existing templates"
 rm -f -- templates_front/*.{c,h,f90}
-rm -f -- templates_text/*.{c,h} 
-rm -f -- templates_hdf5/*.{c,h} 
+rm -f -- templates_text/*.{c,h}
+rm -f -- templates_hdf5/*.{c,h}
 
 echo "clean populated directories"
 rm -f -- templates_front/populated/*
-rm -f -- templates_text/populated/* 
-rm -f -- templates_hdf5/populated/* 
+rm -f -- templates_text/populated/*
+rm -f -- templates_hdf5/populated/*
+
+function tangle()
+{
+  local command="(org-babel-tangle-file \"$1\")"
+  emacs --batch \
+        --eval "(require 'org)" \
+        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \
+        --eval "(setq org-confirm-babel-evaluate nil)" \
+        --eval "$command"
+}
 
 echo "tangle org files to generate templates"
 cd templates_front
-emacs --batch --eval "(require 'org)" --eval '(org-babel-tangle-file "templator_front.org")'
+tangle templator_front.org
 cd ..
 
 cd templates_text
-emacs --batch --eval "(require 'org)" --eval '(org-babel-tangle-file "templator_text.org")'
+tangle templator_text.org
 cd ..
 
 cd templates_hdf5
-emacs --batch --eval "(require 'org)" --eval '(org-babel-tangle-file "templator_hdf5.org")'
+tangle templator_hdf5.org
 cd ..
 
 echo "run generator script to populate templates"

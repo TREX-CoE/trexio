@@ -1,9 +1,9 @@
 #+Title: Templator for frontend
 
-* Constant file prefixes (not used by generator)                    :noxport:
+* Constant file prefixes (not used by generator)                   :noexport:
 
   #+NAME:header
-  #+begin_src c 
+  #+begin_src c
 /* This file was generated from the templator_front.org org-mode file.
    To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
@@ -11,31 +11,19 @@
 
   #+end_src
 
-  #+begin_src fortran :tangle prefix_fortran.f90 :noweb yes
+  #+begin_src f90 :tangle prefix_fortran.f90 :noweb yes
 module trexio
 
   use, intrinsic :: iso_c_binding
-  implicit none 
+  implicit none
+
+  integer, parameter :: trexio_exit_code = 4
 
   integer, parameter :: TREXIO_HDF5 = 0
   integer, parameter :: TREXIO_TEXT = 1
 ! integer, parameter :: TREXIO_JSON = 2
   integer, parameter :: TREXIO_INVALID_BACK_END = 3
-
-  integer, parameter :: TREXIO_FAILURE           = -1
-  integer, parameter :: TREXIO_SUCCESS           =  0
-  integer, parameter :: TREXIO_INVALID_ARG_1     =  1
-  integer, parameter :: TREXIO_INVALID_ARG_2     =  2
-  integer, parameter :: TREXIO_INVALID_ARG_3     =  3
-  integer, parameter :: TREXIO_INVALID_ARG_4     =  4
-  integer, parameter :: TREXIO_INVALID_ARG_5     =  5
-  integer, parameter :: TREXIO_END               = 10
-  integer, parameter :: TREXIO_READONLY          = 11
-  integer, parameter :: TREXIO_ERRNO             = 12
-  integer, parameter :: TREXIO_INVALID_ID        = 20
-  integer, parameter :: TREXIO_ALLOCATION_FAILED = 21  
-  integer, parameter :: TREXIO_INVALID_NUM       = 22  
-  integer, parameter :: TREXIO_HAS_NOT           = 30
+   #+end_src
 
   #+end_src
 
@@ -46,8 +34,9 @@ module trexio
 
 #include <stdint.h>
 
+typedef int32_t trexio_exit_code;
   #+end_src
-  
+
   #+begin_src c :tangle prefix_front.c :noweb yes
 <<header>>
 #include <pthread.h>
@@ -64,7 +53,7 @@ module trexio
 ,*/
 
   #+end_src
-  
+
   #+begin_src c :tangle prefix_s_front.h :noweb yes
 <<header>>
 #ifndef _TREXIO_S_H
@@ -110,45 +99,219 @@ module trexio
 
  All calls to TREXIO are thread-safe.
 
-
 ** Error handling
-   #+begin_src c :tangle prefix_front.h
-typedef int32_t trexio_exit_code;
 
-#define TREXIO_FAILURE       ( (trexio_exit_code) -1 )
-#define TREXIO_SUCCESS       ( (trexio_exit_code)  0 )
-#define TREXIO_INVALID_ARG_1 ( (trexio_exit_code)  1 )
-#define TREXIO_INVALID_ARG_2 ( (trexio_exit_code)  2 )
-#define TREXIO_INVALID_ARG_3 ( (trexio_exit_code)  3 )
-#define TREXIO_INVALID_ARG_4 ( (trexio_exit_code)  4 )
-#define TREXIO_INVALID_ARG_5 ( (trexio_exit_code)  5 )
-#define TREXIO_END           ( (trexio_exit_code) 10 )
-#define TREXIO_READONLY      ( (trexio_exit_code) 11 )
-#define TREXIO_ERRNO         ( (trexio_exit_code) 12 )
-#define TREXIO_INVALID_ID    ( (trexio_exit_code) 20 )
-#define TREXIO_ALLOCATION_FAILED  (  (trexio_exit_code)  21  )
-#define TREXIO_INVALID_NUM   ( (trexio_exit_code) 22 )
-#define TREXIO_HAS_NOT   ( (trexio_exit_code) 30 )
+      #+NAME: table-exit-codes
+   | Macro                      | Code | Description          |
+   |----------------------------+------+----------------------|
+   | ~TREXIO_FAILURE~           |   -1 | 'Unknown failure'    |
+   | ~TREXIO_SUCCESS~           |    0 | 'Success'            |
+   | ~TREXIO_INVALID_ARG_1~     |    1 | 'Invalid argument 1' |
+   | ~TREXIO_INVALID_ARG_2~     |    2 | 'Invalid argument 2' |
+   | ~TREXIO_INVALID_ARG_3~     |    3 | 'Invalid argument 3' |
+   | ~TREXIO_INVALID_ARG_4~     |    4 | 'Invalid argument 4' |
+   | ~TREXIO_INVALID_ARG_5~     |    5 | 'Invalid argument 5' |
+   | ~TREXIO_END~               |    6 | 'End of file'        |
+   | ~TREXIO_READONLY~          |    7 | 'Read-only file'     |
+   | ~TREXIO_ERRNO~             |    8 | strerror(errno)      |
+   | ~TREXIO_INVALID_ID~        |    9 | 'Invalid ID'         |
+   | ~TREXIO_ALLOCATION_FAILED~ |   10 | 'Allocation failed'  |
+   | ~TREXIO_HAS_NOT~           |   11 | 'Element absent'     |
+   | ~TREXIO_INVALID_NUM~       |   12 | 'Invalid exit code'  |
+
+   # We need to force Emacs not to indent the Python code:
+   # -*- org-src-preserve-indentation: t
+
+   #+begin_src python :var table=table-exit-codes :results drawer :exports none
+""" This script generates the C and Fortran constants for the error
+    codes from the org-mode table.
+"""
+
+result = [ "#+begin_src c :tangle prefix_front.h :exports none" ]
+for (text, code,_) in table:
+    text=text.replace("~","")
+    result += [ f"#define  {text:30s} ((trexio_exit_code) {code:d})" ]
+result += [ "#+end_src" ]
+
+result += [ "" ]
+
+result += [ "#+begin_src f90 :tangle prefix_fortran.f90 :exports none" ]
+for (text, code,_) in table:
+    text=text.replace("~","")
+    result += [ f"   integer(trexio_exit_code), parameter :: {text:30s} = {code:d}" ]
+result += [ "#+end_src" ]
+
+return '\n'.join(result)
 
    #+end_src
-   
+
+   #+RESULTS:
+   :results:
+   #+begin_src c :tangle prefix_front.h :exports none
+   #define  TREXIO_FAILURE                 ((trexio_exit_code) -1)
+   #define  TREXIO_SUCCESS                 ((trexio_exit_code) 0)
+   #define  TREXIO_INVALID_ARG_1           ((trexio_exit_code) 1)
+   #define  TREXIO_INVALID_ARG_2           ((trexio_exit_code) 2)
+   #define  TREXIO_INVALID_ARG_3           ((trexio_exit_code) 3)
+   #define  TREXIO_INVALID_ARG_4           ((trexio_exit_code) 4)
+   #define  TREXIO_INVALID_ARG_5           ((trexio_exit_code) 5)
+   #define  TREXIO_END                     ((trexio_exit_code) 6)
+   #define  TREXIO_READONLY                ((trexio_exit_code) 7)
+   #define  TREXIO_ERRNO                   ((trexio_exit_code) 8)
+   #define  TREXIO_INVALID_ID              ((trexio_exit_code) 9)
+   #define  TREXIO_ALLOCATION_FAILED       ((trexio_exit_code) 10)
+   #define  TREXIO_HAS_NOT                 ((trexio_exit_code) 11)
+   #define  TREXIO_INVALID_NUM             ((trexio_exit_code) 12)
+   #+end_src
+
+   #+begin_src f90 :tangle prefix_fortran.f90 :exports none
+      integer(trexio_exit_code), parameter :: TREXIO_FAILURE                 = -1
+      integer(trexio_exit_code), parameter :: TREXIO_SUCCESS                 = 0
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_1           = 1
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_2           = 2
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_3           = 3
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_4           = 4
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_5           = 5
+      integer(trexio_exit_code), parameter :: TREXIO_END                     = 6
+      integer(trexio_exit_code), parameter :: TREXIO_READONLY                = 7
+      integer(trexio_exit_code), parameter :: TREXIO_ERRNO                   = 8
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ID              = 9
+      integer(trexio_exit_code), parameter :: TREXIO_ALLOCATION_FAILED       = 10
+      integer(trexio_exit_code), parameter :: TREXIO_HAS_NOT                 = 11
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_NUM             = 12
+   #+end_src
+   :end:
+
+   The ~trexio_string_of_error~ converts an exit code into a string. The
+   string is assumed to be large enough to contain the error message
+   (typically 128 characters).
+
+◉ Decoding errors
+
+   To decode the error messages, ~trexio_string_of_error~ converts an
+   error code into a string.
+
+   #+NAME: MAX_STRING_LENGTH
+   : 128
+
+   #+begin_src c :tangle prefix_front.h :exports none :noweb yes
+const char* trexio_string_of_error(const trexio_exit_code error);
+
+void trexio_string_of_error_f(const trexio_exit_code error,
+                             char result[<<MAX_STRING_LENGTH()>>]);
+   #+end_src
+
+   The text strings are extracted from the previous table.
+
+   #+NAME:cases
+   #+begin_src python :var table=table-exit-codes :exports none :noweb yes
+""" This script extracts the text associated with the error codes
+    from the table.
+"""
+
+result = []
+for (text, code, message) in table:
+    text = text.replace("~","")
+    message = message.replace("'",'"')
+    result += [ f"""case {text}:
+      return {message};
+    break;""" ]
+return '\n'.join(result)
+
+   #+end_src
+
+   #+RESULTS: cases
+   #+begin_example
+   case TREXIO_FAILURE:
+         return "Unknown failure";
+       break;
+   case TREXIO_SUCCESS:
+         return ;
+       break;
+   case TREXIO_INVALID_ARG_1:
+         return "Invalid argument 1";
+       break;
+   case TREXIO_INVALID_ARG_2:
+         return "Invalid argument 2";
+       break;
+   case TREXIO_INVALID_ARG_3:
+         return "Invalid argument 3";
+       break;
+   case TREXIO_INVALID_ARG_4:
+         return "Invalid argument 4";
+       break;
+   case TREXIO_INVALID_ARG_5:
+         return "Invalid argument 5";
+       break;
+   case TREXIO_END:
+         return "End of file";
+       break;
+   case TREXIO_READONLY:
+         return "Read-only file";
+       break;
+   case TREXIO_ERRNO:
+         return strerror(errno);
+       break;
+   case TREXIO_INVALID_ID:
+         return "Invalid ID";
+       break;
+   case TREXIO_ALLOCATION_FAILED:
+         return "Allocation failed";
+       break;
+   case TREXIO_HAS_NOT:
+         return "Element absent";
+       break;
+   case TREXIO_INVALID_NUM:
+         return "Invalid exit code";
+       break;
+   #+end_example
+
+   # Source
+   #+begin_src c :tangle prefix_front.c :noweb yes
+const char* trexio_string_of_error(const trexio_exit_code error) {
+  switch (error) {
+  <<cases()>>
+  }
+  return "Unknown error";
+}
+
+void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>]) {
+  strncpy(result, trexio_string_of_error(error), <<MAX_STRING_LENGTH()>>);
+}
+   #+end_src
+
+  # Fortran interface
+  #+begin_src f90 :tangle prefix_fortran.f90 :noexport :noweb yes
+  interface
+     subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
+       use, intrinsic :: iso_c_binding
+       import
+       integer (trexio_exit_code), intent(in), value :: error
+       character, intent(out) :: string(<<MAX_STRING_LENGTH()>>)
+     end subroutine trexio_string_of_error
+  end interface
+  #+end_src
+
+
+
+
 ** Back ends
 
    #+begin_src c :tangle prefix_front.h
 typedef int32_t back_end_t;
 
 #define TREXIO_HDF5             ( (back_end_t) 0 )
-#define TREXIO_TEXT             ( (back_end_t) 1 ) 
-#define TREXIO_JSON             ( (back_end_t) 2 ) 
+#define TREXIO_TEXT             ( (back_end_t) 1 )
+#define TREXIO_JSON             ( (back_end_t) 2 )
 #define TREXIO_INVALID_BACK_END ( (back_end_t) 3 )
    #+end_src
 
 ** Read/write behavior
-   
+
    Every time a reading function is called, the data is read from the
    disk. If data needs to be cached, this is left to the user of the
    library.
- 
+
    Writing to TREXIO files is done with transactions (all-or-nothing
    effect) in a per-group fashion.  File writes are attempted by
    calling explicitly the flush function, or when the TREXIO file is
@@ -161,14 +324,14 @@ typedef int32_t back_end_t;
    The TREXIO files are supposed to be opened by only one program at a
    time: if the same TREXIO file is modified simultaneously by multiple
    concurrent programs, the behavior is not specified.
- 
+
 ** TREXIO file type
-   
+
    ~trexio_s~ is the the main type for TREXIO files, visible to the users
    of the library. This type is kept opaque, and all modifications to
    the files will be necessarily done through the use of functions,
    taking such a type as argument.
-  
+
    File creation and opening functions will return /TREXIO file handles/,
    namely pointers to ~trexio_s~ types. All functions accessing to the
    TREXIO files will have as a first argument the TREXIO file handle.
@@ -176,7 +339,7 @@ typedef int32_t back_end_t;
    #+begin_src c :tangle prefix_front.h
 typedef struct trexio_s trexio_t;
    #+end_src
-   
+
    #+begin_src c :tangle prefix_s_front.h
 struct trexio_s {
   char*             file_name;
@@ -188,38 +351,38 @@ struct trexio_s {
    #+end_src
 
 ** Polymorphism of the file handle
-   
+
    Polymorphism of the ~trexio_t~ type is handled by ensuring that the
    corresponding types for all back ends can be safely casted to
    ~trexio_t~. This is done by making the back end structs start with
    ~struct trexio_s~:
 
-   #+begin_src c 
+   #+begin_src c
 struct trexio_back_end_s {
   trexio_t     parent ;
   /* add below specific back end data */
-} 
+}
    #+end_src
-   
+
 ** File opening
 
    #+begin_src c :tangle prefix_front.h
 trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end);
    #+end_src
-   
+
    #+begin_src c :tangle prefix_front.c
 trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end) {
-  
+
   if (file_name == NULL) return NULL;
   if (file_name[0] == '\0') return NULL;
-  
+
   if (back_end <  0) return NULL;
   if (back_end >= TREXIO_INVALID_BACK_END) return NULL;
-  
+
   if (mode != 'r' && mode != 'w' && mode != 'a') return NULL;
 
   trexio_t* result = NULL;
-  
+
   /* Allocate data structures */
   switch (back_end) {
 
@@ -234,9 +397,9 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   case TREXIO_JSON:
     result = (trexio_t*) malloc (sizeof(trexio_json_t));
     break;
-,*/      
+,*/
   }
-  
+
   assert (result != NULL);    /* TODO: Error handling */
 
 
@@ -250,11 +413,11 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   assert (irc == 0);
 
   trexio_exit_code rc;
-  
+
   /* Back end initialization */
-  
+
   rc = TREXIO_FAILURE;
-  
+
   switch (back_end) {
 
   case TREXIO_TEXT:
@@ -268,7 +431,7 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   case TREXIO_JSON:
     rc = trexio_json_init(result);
     break;
-,*/      
+,*/
   }
 
   if (rc != TREXIO_SUCCESS) {
@@ -278,9 +441,9 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   }
 
   /* File locking */
-  
+
   rc = TREXIO_FAILURE;
-  
+
   switch (back_end) {
 
   case TREXIO_TEXT:
@@ -294,20 +457,20 @@ trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t b
   case TREXIO_JSON:
     rc = trexio_json_lock(result);
     break;
-*/      
+*/
   }
-  
+
   if (rc != TREXIO_SUCCESS) {
     free(result->file_name);
     free(result);
     return NULL;
   }
-  
+
   return result;
 }
    #+end_src
 
-   #+begin_src fortran :tangle prefix_fortran.f90
+   #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(8) function trexio_open_c (filename, mode, backend) bind(C, name="trexio_open")
      use, intrinsic :: iso_c_binding
@@ -315,11 +478,11 @@ interface
      character, intent(in), value          :: mode
      integer, intent(in), value            :: backend
    end function trexio_open_c
-end interface   
+end interface
    #+end_src
-   
+
 ** File closing
- 
+
    #+begin_src c :tangle prefix_front.h
 trexio_exit_code trexio_close(trexio_t* file);
    #+end_src
@@ -328,9 +491,9 @@ trexio_exit_code trexio_close(trexio_t* file);
 trexio_exit_code trexio_close(trexio_t* file) {
 
   if (file == NULL) return TREXIO_FAILURE;
-  
+
   trexio_exit_code rc;
-  
+
   /* Terminate the back end */
   switch (file->back_end) {
 
@@ -345,7 +508,7 @@ trexio_exit_code trexio_close(trexio_t* file) {
   case TREXIO_JSON:
     rc = trexio_json_finalize(file);
     break;
-,*/      
+,*/
   default:
     assert (1 == 0);  /* Impossible case */
   }
@@ -355,11 +518,11 @@ trexio_exit_code trexio_close(trexio_t* file) {
     free(file);
     return TREXIO_FAILURE;
   }
-  
+
   /* File unlocking */
-  
+
   rc = TREXIO_FAILURE;
-  
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -373,43 +536,43 @@ trexio_exit_code trexio_close(trexio_t* file) {
   case TREXIO_JSON:
     rc = trexio_json_unlock(file);
     break;
-*/      
+*/
   }
 
   /* Terminate front end */
-  
+
   free(file->file_name);
   file->file_name = NULL;
-  
+
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
-  
+
   free(file);
 
   if (irc != 0) return TREXIO_ERRNO;
   if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
-    
+
   return TREXIO_SUCCESS;
 }
    #+end_src
 
-   #+begin_src fortran :tangle prefix_fortran.f90
+   #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer function trexio_close (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
    end function trexio_close
-end interface   
+end interface
    #+end_src
 
 * Templates for front end
 ** Template for frontend has/read/write a number
-   
+
      #+begin_src c :tangle hrw_num_front.h
 trexio_exit_code trexio_has_$group_num$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int64_t* const num);
 trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num);
      #+end_src
-   
+
      #+begin_src c :tangle read_num_front.c
 trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int64_t* const num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -430,16 +593,16 @@ trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int64_t* const nu
   case TREXIO_JSON:
     rc =trexio_json_read_$group_num$(file, &u_num);
     break;
-,*/      
+,*/
   }
 
   if (rc != TREXIO_SUCCESS) return rc;
-                              
+
   *num = (int64_t) u_num;
   return TREXIO_SUCCESS;
 }
      #+end_src
-   
+
      #+begin_src c :tangle write_num_front.c
 trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -463,7 +626,7 @@ trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int64_t nu
 ,*/
   }
   if (rc != TREXIO_SUCCESS) return rc;
-                              
+
   return TREXIO_SUCCESS;
 }
      #+end_src
@@ -493,7 +656,7 @@ trexio_exit_code trexio_has_$group_num$(trexio_t* const file) {
 }
      #+end_src
 
-     #+begin_src fortran :tangle write_num_front_fortran.f90
+     #+begin_src f90 :tangle write_num_front_fortran.f90
 interface
    integer function trexio_write_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -503,7 +666,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src fortran :tangle read_num_front_fortran.f90
+     #+begin_src f90 :tangle read_num_front_fortran.f90
 interface
    integer function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -513,7 +676,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src fortran :tangle has_num_front_fortran.f90
+     #+begin_src f90 :tangle has_num_front_fortran.f90
 interface
    integer function trexio_has_$group_num$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
@@ -529,12 +692,12 @@ trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$);
 trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$);
      #+end_src
-   
+
      #+begin_src c :tangle read_dset_front.c
 trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
-    
+
   trexio_exit_code rc;
   uint64_t $group_dset_dim$ = 0;
 
@@ -559,7 +722,7 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_d
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
-  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$}; 
+  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
   switch (file->back_end) {
 
@@ -580,7 +743,7 @@ trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_d
   }
 }
      #+end_src
-   
+
      #+begin_src c :tangle write_dset_front.c
 trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -608,8 +771,8 @@ trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
-  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$}; 
- 
+  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -654,8 +817,8 @@ trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file) {
 }
      #+end_src
 
-   
-     #+begin_src fortran :tangle write_dset_front_fortran.f90
+
+     #+begin_src f90 :tangle write_dset_front_fortran.f90
 interface
    integer function trexio_write_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -665,7 +828,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src fortran :tangle read_dset_front_fortran.f90
+     #+begin_src f90 :tangle read_dset_front_fortran.f90
 interface
    integer function trexio_read_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -675,7 +838,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src fortran :tangle has_dset_front_fortran.f90
+     #+begin_src f90 :tangle has_dset_front_fortran.f90
 interface
    integer function trexio_has_$group$_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
@@ -685,17 +848,17 @@ end interface
      #+end_src
 
 * Back ends
-  
+
    TREXIO has multiple possible back ends:
 
    - HDF5: The most efficient back-end, by default
    - Text files: not to be used for production, but useful for debugging
    - JSON: for portability
-     
+
 
 * Fortran helper/wrapper functions
 
-  #+begin_src fortran :tangle suffix_fortran.f90
+  #+begin_src f90 :tangle suffix_fortran.f90
 contains
    integer(8) function trexio_open (filename, mode, backend)
      use, intrinsic :: iso_c_binding
@@ -704,7 +867,7 @@ contains
      character, intent(in), value :: mode
      integer, intent(in), value   :: backend
      character(len=len_trim(filename)+1) :: filename_c
-    
+
      filename_c = trim(filename) // c_null_char
      trexio_open = trexio_open_c(filename_c, mode, backend)
    end function trexio_open
@@ -716,14 +879,14 @@ contains
   #+begin_src c :tangle suffix_front.h
 #endif
   #+end_src
-  
+
   #+begin_src c :tangle suffix_s_front.h
 #endif
   #+end_src
 
-  #+begin_src fortran :tangle suffix_fortran.f90
+  #+begin_src f90 :tangle suffix_fortran.f90
 end module trexio
   #+end_src
 
 
-  
+
