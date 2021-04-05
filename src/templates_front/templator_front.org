@@ -819,9 +819,9 @@ trexio_exit_code trexio_read_$group$_$group_dset$_64(trexio_t* const file, $grou
   trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
 
+  /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
-  if (rc != TREXIO_SUCCESS) return rc;
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
@@ -854,10 +854,10 @@ trexio_exit_code trexio_write_$group$_$group_dset$_64(trexio_t* const file, cons
 
   trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
-  
+
+  /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
-  if (rc != TREXIO_SUCCESS) return rc;
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
@@ -891,9 +891,9 @@ trexio_exit_code trexio_read_$group$_$group_dset$_32(trexio_t* const file, $grou
   trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
 
-  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$)); 
+  /* Error handling for this call is added by the generator */
+  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
-  if (rc != TREXIO_SUCCESS) return rc;
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
@@ -946,10 +946,10 @@ trexio_exit_code trexio_write_$group$_$group_dset$_32(trexio_t* const file, cons
 
   trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
-  
+
+  /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$)); 
 
-  if (rc != TREXIO_SUCCESS) return rc;
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
@@ -962,17 +962,16 @@ trexio_exit_code trexio_write_$group$_$group_dset$_32(trexio_t* const file, cons
 
   $group_dset_dtype_double$* $group_dset$_64 = CALLOC(dim_size, $group_dset_dtype_double$);
   if ($group_dset$_64 == NULL) return TREXIO_ALLOCATION_FAILED;
+
   /* 
-  TODO: implement a type conversion from single precision to double using conversion to str 
-  May be an overkill for int arrays but definitely needed for floats
-  See functions like snpring, gcvt etc.
+  A type conversion from single precision to double reqired since backend only accepts 64-bit data
+  1) using basic type casting
+  2) using conversion to str (see functions like snpring, gcvt etc.)
   */
-  /*
   for (uint64_t i=0; i<dim_size; ++i){
-    TMP_VAR = FLOAT_TO_STR($group_dset$[i]);
-    $group_dset$_64[i] = STR_TO_DOUBLE(TMP_VAR);
+    $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i];
   }
-  */
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
