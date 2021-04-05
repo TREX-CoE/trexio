@@ -1,6 +1,5 @@
 #include "trexio.h"
 #include <assert.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,7 +31,7 @@ int test_h5write() {
   trexio_exit_code rc;
 
   // parameters to be written
-  int32_t num = 12;
+  int num = 12;
   double charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
 
   double coord[36] = {
@@ -115,7 +114,7 @@ int test_h5read() {
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
-  int32_t num;
+  int num;
   double* coord;
 
 /*================= START OF TEST ==================*/
@@ -170,7 +169,7 @@ int test_write() {
   trexio_exit_code rc;
 
   // parameters to be written
-  int32_t num = 12;
+  int num = 12;
   float charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
   double coord[36] = {
   0.00000000 ,  1.39250319 ,  0.00000000 ,
@@ -227,7 +226,7 @@ int test_read() {
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
-  int32_t num;
+  int num;
   float* charge;
   double* coord;
 
