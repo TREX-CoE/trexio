@@ -9,19 +9,13 @@ fileDir = dirname(abspath(__file__))
 parentDir = dirname(fileDir)
 
 with open(join(parentDir,'trex.json'), 'r') as f:
-    config0 = json.load(f)
+    config = json.load(f)
 
 print('Metadata I/O currently not supported')
 # TODO, for now remove metadata-related stuff
-del config0['metadata']
-
-config = {}
-for k,v in config0.items():
-    if k == 'nucleus':# or k == 'ecp':
-        config[k] = v
-#config = config0
+del config['metadata']
 # for now remove rdm because it is hardcoded
-#del config['rdm']
+del config['rdm']
 
 groups = [group for group in config.keys()]
 
