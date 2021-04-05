@@ -32,7 +32,7 @@ int test_h5write() {
   trexio_exit_code rc;
 
   // parameters to be written
-  int64_t num = 12;
+  int32_t num = 12;
 
   double coord[36] = {
   0.00000000 ,  1.39250319 ,  0.00000000 ,
@@ -112,7 +112,7 @@ int test_h5read() {
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
-  int64_t num;
+  int32_t num;
   double* coord;
 
 /*================= START OF TEST ==================*/
@@ -167,7 +167,7 @@ int test_write() {
   trexio_exit_code rc;
 
   // parameters to be written
-  int64_t num = 12;
+  int32_t num = 12;
   double charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
   double coord[36] = {
   0.00000000 ,  1.39250319 ,  0.00000000 ,
@@ -224,7 +224,7 @@ int test_read() {
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
-  int64_t num;
+  int32_t num;
   double* charge;
   double* coord;
 
