@@ -2,7 +2,7 @@
 
 * Constant file prefixes (not used by generator)                   :noexport:
 
-Prefixes in C contain mainly `#include` as well as some 
+Prefixes in C contain mainly `#include` as well as some
 `#define` and `typedef` statements.
 Prefixes in Fortran contain backend definitions.
 
@@ -100,7 +100,7 @@ typedef int32_t trexio_exit_code;
 
 * Front-end
 
-  All calls to TREXIO are thread-safe. 
+  All calls to TREXIO are thread-safe.
   TREXIO front-end is modular, which simplifies impelementation of new back-ends.
 
 ** Error handling
@@ -302,7 +302,7 @@ void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_ST
 
    TREXIO has several back-ends:
 
-   1) `TREXIO_HDF5` relies on extensive use of the HDF5 library and the associated file format. 
+   1) `TREXIO_HDF5` relies on extensive use of the HDF5 library and the associated file format.
    The HDF5 file is binary and tailored to high-performance I/O. This backend is the default one.
    HDF5 can be compiled with MPI for parallel I/O.
    Note, that HDF5 has to be downloaded and installed independently of TREXIO, which may cause
@@ -310,13 +310,13 @@ void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_ST
    The produced files usually have `.h5` extension.
 
    2) `TREXIO_TEXT` relies on basic file I/O in C, namely `fopen, fclose, fprintf, fscanf` etc.
-   from `stdio.h` library. This back-end is not optimized for performance. It is supposed to be 
+   from `stdio.h` library. This back-end is not optimized for performance. It is supposed to be
    used for debug purposes or, for example, when the user wants to modify some data manually within the file.
-   This back-end is supposed to work "out-of-the-box" since there are no external dependencies, which might 
-   be useful for users that do not have access to HDF5 library. 
+   This back-end is supposed to work "out-of-the-box" since there are no external dependencies, which might
+   be useful for users that do not have access to HDF5 library.
    The produced files usually have `.txt` extension.
 
-   Additional back-ends can be implemented thanks to the modular nature of the front-end. 
+   Additional back-ends can be implemented thanks to the modular nature of the front-end.
    This can be achieved by adding a new `case` (corresponding to the desired back-end) in the front-end `switch`
    Then the corresponding back-end `has/read/write_` functions has to be implemented. For example, see the commented
    lines that correspond to the `TREXIO_JSON` back-end (not implemented yet).
@@ -338,8 +338,8 @@ typedef int32_t back_end_t;
 
    Writing to TREXIO files is done with transactions (all-or-nothing
    effect) in a per-group fashion.  File writes are attempted by
-   calling explicitly the write (`TREXIO_HDF5`) or flush (`TREXIO_TEXT`) 
-   function, or when the TREXIO file is closed. 
+   calling explicitly the write (`TREXIO_HDF5`) or flush (`TREXIO_TEXT`)
+   function, or when the TREXIO file is closed.
    If writing is impossible because the data is not valid, no data is written.
 
    The order in which the data is written is not necessarily consistent
@@ -389,11 +389,11 @@ struct trexio_back_end_s {
    #+end_src
 
 ** File opening
-  
+
    `trexio_open` creates a new `trexio_t` file or opens existing one.
 
    `trexio_open` input:
-   1) `file_name` -- string containing file name   
+   1) `file_name` -- string containing file name
    2) `mode`      -- character containing open mode (see below)
      1. `'w'`       -- (write)  creates a new file as READWRITE (overwrite existing file)
      2. `'r'`       -- (read)   opens existing file as READONLY
@@ -405,11 +405,11 @@ struct trexio_back_end_s {
    `trexio_open` output:
    `trexio_t` file handle
 
-   _**Note: the `file_name` in TEXT back-end actually corresponds to the name of the folder where `.txt` 
-   data files are stored. The actual name of each `.txt.` file corresponds to the `group` name provided in 
-   `trex.config` (e.g. `nucleus.txt` for nucleus-related data like atomic coordinates). 
-   These names are populated by the `generator.py` (i.e. they are hard-coded), which is why the user 
-   should tend to avoid renaming the `.txt` data files.**_ 
+   _**Note: the `file_name` in TEXT back-end actually corresponds to the name of the folder where `.txt`
+   data files are stored. The actual name of each `.txt.` file corresponds to the `group` name provided in
+   `trex.config` (e.g. `nucleus.txt` for nucleus-related data like atomic coordinates).
+   These names are populated by the `generator.py` (i.e. they are hard-coded), which is why the user
+   should tend to avoid renaming the `.txt` data files.**_
 
    #+begin_src c :tangle prefix_front.h
 trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end);
@@ -531,7 +531,7 @@ end interface
    `trexio_close` closes a `trexio_t` file.
 
    `trexio_close` input:
-   `file` -- (trexio_t) TREXIO file handle.   
+   `file` -- (trexio_t) TREXIO file handle.
 
    `trexio_close` output:
    `trexio_exit_code` exit code.
@@ -621,12 +621,12 @@ end interface
 
   ~TREXIO~ is generated automatically by the `generator.py` Python script
   based on the tree-like configuration provided in the `trex.json` file.
-  Because of that, templates can be implemented and re-used. This approach 
+  Because of that, templates can be implemented and re-used. This approach
   minimizes the number of bugs as compared with manual copy-paste-modify scheme.
 
   All templates use the `$var$` notation to indicate the variable, which will
-  be replaced by the `generator.py`. Sometimes the upper-case is used, i.e. 
-  `$VAR$`, which is useful, for example, in `#define` statements. 
+  be replaced by the `generator.py`. Sometimes the upper-case is used, i.e.
+  `$VAR$`, which is useful, for example, in `#define` statements.
   More detailed description of each variable can be found below:
 
    | Template variable             | Description                                      | Example          |
@@ -1030,7 +1030,7 @@ trexio_exit_code trexio_write_$group$_$group_dset$_32(trexio_t* const file, cons
   int64_t $group_dset_dim$ = 0;
 
   /* Error handling for this call is added by the generator */
-  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$)); 
+  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
@@ -1045,7 +1045,7 @@ trexio_exit_code trexio_write_$group$_$group_dset$_32(trexio_t* const file, cons
   $group_dset_dtype_double$* $group_dset$_64 = CALLOC(dim_size, $group_dset_dtype_double$);
   if ($group_dset$_64 == NULL) return TREXIO_ALLOCATION_FAILED;
 
-  /* 
+  /*
   A type conversion from single precision to double reqired since backend only accepts 64-bit data
   1) using basic type casting
   2) using conversion to str (see functions like snpring, gcvt etc.)
@@ -1223,6 +1223,3 @@ contains
   #+begin_src f90 :tangle suffix_fortran.f90
 end module trexio
   #+end_src
-
-
-
