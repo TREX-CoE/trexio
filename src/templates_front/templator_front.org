@@ -78,7 +78,7 @@ typedef int32_t trexio_exit_code;
   - ~#define~ constants are in upper case
   - structs are suffixed by ~_s~
   - types are suffixed by ~_t~
-  - API calls return ~trexio_exit_code~ (~int32_t~) whenever possible
+  - API calls return ~trexio_exit_code~ (except for ~trexio_open~ function)
 
 ** Memory allocation
 
@@ -295,8 +295,6 @@ void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_ST
      end subroutine trexio_string_of_error
   end interface
   #+end_src
-
-
 
 ** Back-ends
 
@@ -625,8 +623,8 @@ end interface
   minimizes the number of bugs as compared with manual copy-paste-modify scheme.
 
   All templates use the `$var$` notation to indicate the variable, which will
-  be replaced by the `generator.py`. Sometimes the upper-case is used, i.e.
-  `$VAR$`, which is useful, for example, in `#define` statements.
+  be replaced by the `generator.py`. Sometimes the upper case is applied, i.e.
+  `$VAR$`, which is used, for example, in `#define` statements.
   More detailed description of each variable can be found below:
 
    | Template variable             | Description                                      | Example          |
@@ -1185,15 +1183,12 @@ interface
 end interface
      #+end_src
 
-* Back ends
-
-   TREXIO has multiple possible back ends:
-
-   - HDF5: The most efficient back-end, by default
-   - Text files: not to be used for production, but useful for debugging
-   - JSON: for portability
-
 * Fortran helper/wrapper functions
+
+  The function below adapts the original C-based `trexio_open` for Fortran.
+  This is needed due to the fact that strings in C are terminated by NULL character `\0`
+  unlike strings in Fortran.
+  Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
 
   #+begin_src f90 :tangle suffix_fortran.f90
 contains
@@ -1210,7 +1205,7 @@ contains
    end function trexio_open
   #+end_src
 
-* File suffixes                                                     :noxport:
+* File suffixes                                                     :noexport:
 
   #+begin_src c :tangle suffix_front.h
 #endif
