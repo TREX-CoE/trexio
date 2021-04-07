@@ -15,7 +15,7 @@ subroutine test_write()
   integer(8) :: trex_file
 
   integer :: rc = 1
-  integer(8) :: num
+  integer :: num
 
   double precision :: charge(12)
   double precision :: coord(36)
@@ -94,7 +94,7 @@ subroutine test_read()
   integer(8) :: trex_file
 
   integer :: rc = 1
-  integer(8) :: num, num_read
+  integer :: num, num_read
 
   double precision :: charge(12)
   double precision :: coord(3,12)

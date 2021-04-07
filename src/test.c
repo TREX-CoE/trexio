@@ -1,6 +1,5 @@
 #include "trexio.h"
 #include <assert.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,7 +18,7 @@ int main() {
   test_write();
   test_read();
 
-  printf("%s\n", trexio_string_of_error(TREXIO_INVALID_ARG_2));
+  printf("Test error message: %s\n", trexio_string_of_error(TREXIO_INVALID_ARG_2));
   return 0 ;
 }
 
@@ -32,7 +31,8 @@ int test_h5write() {
   trexio_exit_code rc;
 
   // parameters to be written
-  int64_t num = 12;
+  int num = 12;
+  double charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
 
   double coord[36] = {
   0.00000000 ,  1.39250319 ,  0.00000000 ,
@@ -65,6 +65,8 @@ int test_h5write() {
   rc = trexio_write_nucleus_num(file,num);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_coord(file,coord);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_write_nucleus_charge(file,charge);
   assert (rc == TREXIO_SUCCESS);
 
   // check if the written data exists in the file
@@ -112,7 +114,7 @@ int test_h5read() {
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
-  int64_t num;
+  int num;
   double* coord;
 
 /*================= START OF TEST ==================*/
@@ -167,8 +169,8 @@ int test_write() {
   trexio_exit_code rc;
 
   // parameters to be written
-  int64_t num = 12;
-  double charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
+  int num = 12;
+  float charge[12] = {6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.};
   double coord[36] = {
   0.00000000 ,  1.39250319 ,  0.00000000 ,
  -1.20594314 ,  0.69625160 ,  0.00000000 ,
@@ -197,7 +199,7 @@ int test_write() {
   rc = trexio_write_nucleus_num(file,num);
   assert (rc == TREXIO_SUCCESS);
 
-  rc = trexio_write_nucleus_charge(file,charge);
+  rc = trexio_write_nucleus_charge_32(file,charge);
   assert (rc == TREXIO_SUCCESS);
 
   rc = trexio_write_nucleus_coord(file,coord);
@@ -224,8 +226,8 @@ int test_read() {
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
-  int64_t num;
-  double* charge;
+  int num;
+  float* charge;
   double* coord;
 
 /*================= START OF TEST ==================*/
@@ -237,8 +239,8 @@ int test_read() {
   assert (rc == TREXIO_SUCCESS);
   assert (num == 12);
 
-  charge = (double*) calloc(num, sizeof(double));
-  rc = trexio_read_nucleus_charge(file,charge);
+  charge = (float*) calloc(num, sizeof(float));
+  rc = trexio_read_nucleus_charge_32(file,charge);
   assert (rc == TREXIO_SUCCESS);
   assert(charge[10] == 1.);
 

@@ -9,17 +9,11 @@ fileDir = dirname(abspath(__file__))
 parentDir = dirname(fileDir)
 
 with open(join(parentDir,'trex.json'), 'r') as f:
-    config0 = json.load(f)
+    config = json.load(f)
 
 print('Metadata I/O currently not supported')
 # TODO, for now remove metadata-related stuff
-del config0['metadata']
-
-config = {}
-#for k,v in config0.items():
-#    if k == 'nucleus' or k == 'ecp':
-#        config[k] = v
-config = config0
+del config['metadata']
 # for now remove rdm because it is hardcoded
 del config['rdm']
 
@@ -288,16 +282,26 @@ for fname in files_funcs_dsets:
 
                         if params['dtype'] == 'double':
                             h5_dtype = 'double'
-                            f_dtype = 'real(8)'
+                            f_dtype_double = 'real(8)'
+                            f_dtype_single = 'real(4)'
+                            c_dtype_double = 'double'
+                            c_dtype_single = 'float'
+
                         elif params['dtype'] == 'int64_t':
                             h5_dtype = 'long'
-                            f_dtype = 'integer(8)'
+                            f_dtype_double = 'integer(8)'
+                            f_dtype_single = 'integer(4)'
+                            c_dtype_double = 'int64_t'
+                            c_dtype_single = 'int32_t'
+
+                        templine1 = templine2.replace('$group_dset_dtype_double$', c_dtype_double)
+                        templine2 = templine1.replace('$group_dset_dtype_single$', c_dtype_single)
 
                         templine1 = templine2.replace('$group_dset_h5_dtype$', h5_dtype)
                         templine2 = templine1.replace('$group_dset_h5_dtype$'.upper(), h5_dtype.upper())
 
-                        templine1 = templine2.replace('$group_dset_f_dtype$', f_dtype)
-                        templine2 = templine1.replace('$group_dset_f_dtype$'.upper(), f_dtype.upper())
+                        templine1 = templine2.replace('$group_dset_f_dtype_double$', f_dtype_double)
+                        templine2 = templine1.replace('$group_dset_f_dtype_single$', f_dtype_single)
 
                         templine1 = templine2.replace('$group_dset_rank$', str(params['rank']))
                         templine2 = templine1
