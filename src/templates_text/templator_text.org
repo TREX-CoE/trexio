@@ -17,7 +17,7 @@
 
 
   #+NAME:header
-  #+begin_src c 
+  #+begin_src c
 /* This file was generated from the trexio.org org-mode file.
    To generate it, open trexio.org in Emacs and execute
    M-x org-babel-tangle
@@ -46,7 +46,7 @@
 #include <sys/stat.h>
 
   #+end_src
-  
+
   #+begin_src c :tangle prefix_text.c :noweb yes
 /* This file was generated from the trexio.org org-mode file.
    To generate it, open trexio.org in Emacs and execute
@@ -63,16 +63,16 @@
 
   The "file" produced by the text back end is a directory with one
   file per group.
-  
+
   When the file is open, it is locked by the current process. No other
   process can read/write the same file. This guarantees that the
   representation in memory is consistent with the file and avoid
   re-reading the file before writing.
   To lock the file, we lock the =.lock= file which is present in the
-  directory. 
-  
+  directory.
+
   The file is written when closed, or when the flush function is called.
-  
+
 ** Template for group-related structures in text back end
 
     #+begin_src c :tangle struct_text_group_dset.h
@@ -89,7 +89,7 @@ typedef struct $group$_s {
     #+end_src
 
 ** Template for general structure in text back end
-    
+
     #+begin_src c :tangle struct_text_group.h
 
 typedef struct rdm_s {
@@ -115,7 +115,7 @@ typedef struct trexio_text_s {
     #+begin_src c :tangle basic_text.h
 trexio_exit_code trexio_text_init(trexio_t* const file);
     #+end_src
-  
+
     #+begin_src c :tangle basic_text.c
 trexio_exit_code trexio_text_init(trexio_t* const file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -127,16 +127,16 @@ trexio_exit_code trexio_text_init(trexio_t* const file) {
 
   /* If directory doesn't exist, create it in write mode */
   struct stat st;
-  
+
   if (stat(file->file_name, &st) == 0 && S_ISDIR(st.st_mode)) {
     /* Do nothing */
   } else {
     if (file->mode == 'r') return TREXIO_READONLY;
-    
+
     if (mkdir(file->file_name, 0777) != 0) {
       return TREXIO_FAILURE;
     }
-  }  
+  }
 
   /* Create the lock file in the directory */
   const char* lock_file_name = "/.lock";
@@ -147,7 +147,7 @@ trexio_exit_code trexio_text_init(trexio_t* const file) {
   if (file_name == NULL) {
     return TREXIO_ALLOCATION_FAILED;
   }
- 
+
   strncpy (file_name, file->file_name, str_size);
   strncat (file_name, lock_file_name, strlen(lock_file_name));
 
@@ -165,7 +165,7 @@ trexio_exit_code trexio_text_init(trexio_t* const file) {
     #+begin_src c :tangle basic_text.h
 trexio_exit_code trexio_text_lock(trexio_t* const file);
     #+end_src
-  
+
     #+begin_src c :tangle basic_text.c
 trexio_exit_code trexio_text_lock(trexio_t* const file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -173,13 +173,13 @@ trexio_exit_code trexio_text_lock(trexio_t* const file) {
   trexio_text_t* const f = (trexio_text_t*) file;
 
   struct flock fl;
-  
+
   fl.l_type   = F_WRLCK;
   fl.l_whence = SEEK_SET;
-  fl.l_start  = 0;       
-  fl.l_len    = 0;       
+  fl.l_start  = 0;
+  fl.l_len    = 0;
   fl.l_pid    = getpid();
-  
+
   int rc = fcntl(f->lock_file, F_SETLKW, &fl);
   if (rc == -1) return TREXIO_FAILURE;
 
@@ -187,15 +187,15 @@ trexio_exit_code trexio_text_lock(trexio_t* const file) {
 }
     #+end_src
 
-    
+
     #+begin_src c :tangle basic_text.h
-trexio_exit_code trexio_text_finalize(trexio_t* const file);
+trexio_exit_code trexio_text_deinit(trexio_t* const file);
     #+end_src
 
     #+begin_src c :tangle basic_text.h
 trexio_exit_code trexio_text_unlock(trexio_t* const file);
     #+end_src
-    
+
     #+begin_src c :tangle basic_text.c
 trexio_exit_code trexio_text_unlock(trexio_t* const file) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -204,23 +204,23 @@ trexio_exit_code trexio_text_unlock(trexio_t* const file) {
 
   struct flock fl;
 
-  fl.l_type   = F_UNLCK;   
+  fl.l_type   = F_UNLCK;
   fl.l_whence = SEEK_SET;
-  fl.l_start  = 0;         
-  fl.l_len    = 0;         
-  fl.l_pid    = getpid();  
+  fl.l_start  = 0;
+  fl.l_len    = 0;
+  fl.l_pid    = getpid();
   fcntl(f->lock_file, F_SETLK, &fl);
-    
+
   close(f->lock_file);
   return TREXIO_SUCCESS;
 }
     #+end_src
 
-   
+
 ** Init/deinit functions (templated part)
- 
+
     #+begin_src c :tangle basic_text_group.c
-trexio_exit_code trexio_text_finalize(trexio_t* const file) {
+trexio_exit_code trexio_text_deinit(trexio_t* const file) {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
 
   trexio_exit_code rc;
@@ -229,7 +229,7 @@ trexio_exit_code trexio_text_finalize(trexio_t* const file) {
 
   rc = trexio_text_free_rdm( (trexio_text_t*) file);
   assert (rc == TREXIO_SUCCESS);
-  
+
   return TREXIO_SUCCESS;
 }
     #+end_src
@@ -248,7 +248,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
   if (file->$group$ != NULL) {
     return file->$group$;
   }
-  
+
   /* Allocate the data structure */
   $group$_t* $group$ = MALLOC($group$_t);
   if ($group$ == NULL) return NULL;
@@ -271,7 +271,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
   /* If the file exists, read it */
   FILE* f = fopen(file_name,"r");
   if (f != NULL) {
-    
+
     /* Find size of file to allocate the max size of the string buffer */
     fseek(f, 0L, SEEK_END);
     size_t sz = ftell(f);
@@ -285,7 +285,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
       FREE($group$);
       return NULL;
     }
-    
+
     /* Read the dimensioning variables */
     int rc;
     // START REPEAT GROUP_DSET
@@ -297,7 +297,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
       FREE($group$);
       return NULL;
     }
-    
+
     rc = fscanf(f, "%u", &($group$->rank_$group_dset$));
     if (rc != 1) {
       FREE(buffer);
@@ -317,21 +317,21 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
 
       rc = fscanf(f, "%1023s %u", buffer, &j);
       if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
-        FREE(buffer);
-        FREE(file_name);
-        fclose(f);
-        FREE($group$);
-        return NULL;
+	FREE(buffer);
+	FREE(file_name);
+	fclose(f);
+	FREE($group$);
+	return NULL;
       }
-    
+
       rc = fscanf(f, "%lu\n", &($group$->dims_$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
-        FREE(buffer);
-        FREE(file_name);
-        fclose(f);
-        FREE($group$);
-        return NULL;
+	FREE(buffer);
+	FREE(file_name);
+	fclose(f);
+	FREE($group$);
+	return NULL;
       }
 
       size_$group_dset$ *= $group$->dims_$group_dset$[i];
@@ -349,7 +349,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
       FREE($group$);
       return NULL;
     }
-     
+
     rc = fscanf(f, "%lu", &($group$->$group_num$));
     assert(!(rc != 1));
     if (rc != 1) {
@@ -360,8 +360,8 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
       return NULL;
     }
     // END REPEAT GROUP_NUM
-    
-    // START REPEAT GROUP_DSET   
+
+    // START REPEAT GROUP_DSET
     /* Allocate arrays */
     $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
     assert (!($group$->$group_dset$ == NULL));
@@ -372,28 +372,28 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
       FREE($group$);
       return NULL;
     }
- 
+
     rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
     if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
-        FREE(buffer);
-        FREE(file_name);
-        fclose(f);
-        FREE($group$->$group_dset$);
-        FREE($group$);
-        return NULL;
+	FREE(buffer);
+	FREE(file_name);
+	fclose(f);
+	FREE($group$->$group_dset$);
+	FREE($group$);
+	return NULL;
     }
-    
+
     for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
       rc = fscanf(f, "%$group_dset_std_dtype_in$", &($group$->$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
-        FREE(buffer);
-        FREE(file_name);
-        fclose(f);
-        FREE($group$->$group_dset$);
-        FREE($group$);
-        return NULL;
+	FREE(buffer);
+	FREE(file_name);
+	fclose(f);
+	FREE($group$->$group_dset$);
+	FREE($group$);
+	return NULL;
       }
     }
     // END REPEAT GROUP_DSET
@@ -404,9 +404,9 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
   }
 
   if (file->parent.mode == 'w') {
-    $group$->file = fopen(file_name,"a");  
-  } else { 
-    $group$->file = fopen(file_name,"r");  
+    $group$->file = fopen(file_name,"a");
+  } else {
+    $group$->file = fopen(file_name,"r");
   }
   FREE(file_name);
   assert (!($group$->file == NULL));
@@ -421,7 +421,7 @@ $group$_t* trexio_text_read_$group$(trexio_text_t* const file) {
   return $group$;
 }
    #+end_src
-   
+
 ** Template for text flush struct
 
     #+begin_src c :tangle flush_group_text.h
@@ -435,7 +435,7 @@ trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file) {
   if (file->parent.mode == 'r') return TREXIO_READONLY;
 
   $group$_t* $group$ = file->$group$;
-  
+
   if ($group$ == NULL) return TREXIO_SUCCESS;
 
   if ($group$->to_flush == 0) return TREXIO_SUCCESS;
@@ -456,7 +456,7 @@ trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file) {
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
   }
 
-  // END REPEAT GROUP_DSET 
+  // END REPEAT GROUP_DSET
 
   // START REPEAT GROUP_NUM
   fprintf(f, "$group_num$ %lu\n", $group$->$group_num$);
@@ -480,15 +480,15 @@ trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file) {
 ** Template for text free memory
 
      Memory is allocated when reading. The following function frees memory.
-    
+
     #+begin_src c :tangle free_group_text.h
 trexio_exit_code trexio_text_free_$group$(trexio_text_t* const file);
     #+end_src
-    
+
     #+begin_src c :tangle free_group_text.c
 trexio_exit_code trexio_text_free_$group$(trexio_text_t* const file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  
+
   if (file->parent.mode != 'r') {
     trexio_exit_code rc = trexio_text_flush_$group$(file);
     if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
@@ -501,7 +501,7 @@ trexio_exit_code trexio_text_free_$group$(trexio_text_t* const file) {
     fclose($group$->file);
     $group$->file = NULL;
   }
- 
+
   // START REPEAT GROUP_DSET
   if ($group$->$group_dset$ != NULL) {
     FREE ($group$->$group_dset$);
@@ -536,17 +536,17 @@ trexio_exit_code trexio_text_read_$group_num$(trexio_t* const file, uint64_t* co
    #+end_src
 
    #+begin_src c :tangle write_num_text.c
- 
+
 trexio_exit_code trexio_text_write_$group_num$(trexio_t* const file, const uint64_t num) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (file->mode == 'r') return TREXIO_READONLY;
-  
+
   $group$_t* $group$ = trexio_text_read_$group$((trexio_text_t*) file);
   if ($group$ == NULL) return TREXIO_FAILURE;
-  
+
   $group$->$group_num$ = num;
   $group$->to_flush = 1;
-  
+
   return TREXIO_SUCCESS;
 }
      #+end_src
@@ -571,7 +571,7 @@ trexio_exit_code trexio_text_has_$group_num$(trexio_t* const file) {
 ** Template for has/read/write the $group_dset$ dataset
 
      The ~dset~ array is assumed allocated with the appropriate size.
-    
+
    #+begin_src c :tangle hrw_dset_text.h
 trexio_exit_code trexio_text_has_$group_dset$ (trexio_t* const file);
 trexio_exit_code trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$, const uint32_t rank, const uint64_t* dims);
@@ -588,7 +588,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file, $group_dset
   if ($group$ == NULL) return TREXIO_FAILURE;
 
   if (rank != $group$->rank_$group_dset$) return TREXIO_INVALID_ARG_3;
-  
+
   uint64_t dim_size = 1;
   for (unsigned int i=0; i<rank; ++i){
     if (dims[i] != $group$->dims_$group_dset$[i]) return TREXIO_INVALID_ARG_4;
@@ -612,13 +612,13 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const $gro
 
   $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
   if ($group$ == NULL) return TREXIO_FAILURE;
-  
+
   if ($group$->$group_dset$ != NULL) {
     FREE($group$->$group_dset$);
   }
 
   $group$->rank_$group_dset$ = rank;
-  
+
   uint64_t dim_size = 1;
   for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
     $group$->dims_$group_dset$[i] = dims[i];
@@ -630,7 +630,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const $gro
   for (uint64_t i=0 ; i<dim_size ; ++i) {
     $group$->$group_dset$[i] = $group_dset$[i];
   }
-  
+
   $group$->to_flush = 1;
   return TREXIO_SUCCESS;
 }
@@ -657,7 +657,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file) {
     #+begin_src c :tangle rdm_text.h
 rdm_t* trexio_text_read_rdm(trexio_text_t* const file);
     #+end_src
-    
+
     #+begin_src c :tangle rdm_text.c
 rdm_t* trexio_text_read_rdm(trexio_text_t* const file) {
   if (file  == NULL) return NULL;
@@ -685,56 +685,56 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* const file) {
   /* If the file exists, read it */
   FILE* f = fopen(file_name,"r");
   if (f != NULL) {
-    
+
     /* Find size of file to allocate the max size of the string buffer */
     fseek(f, 0L, SEEK_END);
     size_t sz = ftell(f);
     fseek(f, 0L, SEEK_SET);
     sz = (sz < 1024) ? (1024) : (sz);
     char* buffer = CALLOC(sz, char);
-    
+
     /* Read the dimensioning variables */
     int rc;
     rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     assert (strcmp(buffer, "dim_one_e") == 0);
-    
+
     rc = fscanf(f, "%lu", &(rdm->dim_one_e));
     assert (rc == 1);
-    
+
     /* Allocate arrays */
     rdm->one_e = CALLOC(rdm->dim_one_e, double);
     assert (rdm->one_e != NULL);
-    
+
     /* Read one_e */
     rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     assert (strcmp(buffer, "one_e") == 0);
-    
+
     for (uint64_t i=0 ; i<rdm->dim_one_e; ++i) {
       rc = fscanf(f, "%lf", &(rdm->one_e[i]));
       assert (rc == 1);
     }
-    
+
     /* Read two_e */
     rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     assert (strcmp(buffer, "two_e_file_name") == 0);
-    
+
     rc = fscanf(f, "%1023s", buffer);
     assert (rc == 1);
     str_size = strlen(buffer);
     rdm->two_e_file_name = CALLOC(str_size,char);
     strncpy(rdm->two_e_file_name, buffer, str_size);
-    
+
     FREE(buffer);
     fclose(f);
     f = NULL;
   }
   if (file->parent.mode == 'w') {
-    rdm->file = fopen(file_name,"a");  
+    rdm->file = fopen(file_name,"a");
   } else {
-    rdm->file = fopen(file_name,"r");  
+    rdm->file = fopen(file_name,"r");
   }
   FREE(file_name);
   file->rdm = rdm ;
@@ -784,15 +784,15 @@ trexio_exit_code trexio_text_flush_rdm(trexio_text_t* const file) {
 *** Free memory
 
      Memory is allocated when reading. The followig function frees memory.
-    
+
     #+begin_src c :tangle rdm_text.h
 trexio_exit_code trexio_text_free_rdm(trexio_text_t* const file);
     #+end_src
-    
+
     #+begin_src c :tangle rdm_text.c
 trexio_exit_code trexio_text_free_rdm(trexio_text_t* const file) {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  
+
   if (file->parent.mode != 'r') {
     trexio_exit_code rc = trexio_text_flush_rdm(file);
     if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
@@ -805,15 +805,15 @@ trexio_exit_code trexio_text_free_rdm(trexio_text_t* const file) {
     fclose(rdm->file);
     rdm->file = NULL;
   }
-  
+
   if (rdm->one_e != NULL) {
     FREE (rdm->one_e);
   }
-  
+
   if (rdm->two_e_file_name != NULL) {
     FREE (rdm->two_e_file_name);
   }
-  
+
   free (rdm);
   file->rdm = NULL;
   return TREXIO_SUCCESS;
@@ -823,24 +823,24 @@ trexio_exit_code trexio_text_free_rdm(trexio_text_t* const file) {
 *** Read/Write the one_e attribute
 
      The ~one_e~ array is assumed allocated with the appropriate size.
-    
+
     #+begin_src c :tangle rdm_text.h
 trexio_exit_code
 trexio_text_read_rdm_one_e(trexio_t* const file,
-                           double* const one_e,
-                           const uint64_t dim_one_e);
+			   double* const one_e,
+			   const uint64_t dim_one_e);
 
 trexio_exit_code
 trexio_text_write_rdm_one_e(trexio_t* const file,
-                            const double* one_e,
-                            const uint64_t dim_one_e);
+			    const double* one_e,
+			    const uint64_t dim_one_e);
    #+end_src
 
     #+begin_src c :tangle rdm_text.c
 trexio_exit_code
 trexio_text_read_rdm_one_e(trexio_t* const file,
-                           double* const one_e,
-                           const uint64_t dim_one_e)
+			   double* const one_e,
+			   const uint64_t dim_one_e)
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (one_e == NULL) return TREXIO_INVALID_ARG_2;
@@ -857,11 +857,11 @@ trexio_text_read_rdm_one_e(trexio_t* const file,
   return TREXIO_SUCCESS;
 }
 
- 
+
 trexio_exit_code
 trexio_text_write_rdm_one_e(trexio_t* const file,
-                            const double* one_e,
-                            const uint64_t dim_one_e)
+			    const double* one_e,
+			    const uint64_t dim_one_e)
 {
   if (file  == NULL)  return TREXIO_INVALID_ARG_1;
   if (one_e == NULL)  return TREXIO_INVALID_ARG_2;
@@ -869,12 +869,12 @@ trexio_text_write_rdm_one_e(trexio_t* const file,
 
   rdm_t* const rdm = trexio_text_read_rdm((trexio_text_t*) file);
   if (rdm == NULL) return TREXIO_FAILURE;
-  
+
   rdm->dim_one_e = dim_one_e;
   for (uint64_t i=0 ; i<dim_one_e ; ++i) {
     rdm->one_e[i] = one_e[i];
   }
-  
+
   rdm->to_flush = 1;
   return TREXIO_SUCCESS;
 }
@@ -887,30 +887,30 @@ trexio_text_write_rdm_one_e(trexio_t* const file,
      chunks.
      In the text back end, the easiest way to do it is to create a
      file for each sparse float structure.
-    
+
     #+begin_src c :tangle rdm_text.h
 trexio_exit_code
 trexio_text_buffered_read_rdm_two_e(trexio_t* const file,
-                                    const uint64_t offset,
-                                    const uint64_t size,
-                                    int64_t* const index,
-                                    double* const value);
+				    const uint64_t offset,
+				    const uint64_t size,
+				    int64_t* const index,
+				    double* const value);
 
 trexio_exit_code
 trexio_text_buffered_write_rdm_two_e(trexio_t* const file,
-                                     const uint64_t offset,
-                                     const uint64_t size,
-                                     const int64_t* index,
-                                     const double* value);
+				     const uint64_t offset,
+				     const uint64_t size,
+				     const int64_t* index,
+				     const double* value);
    #+end_src
 
     #+begin_src c :tangle rdm_text.c
 trexio_exit_code
 trexio_text_buffered_read_rdm_two_e(trexio_t* const file,
-                                    const uint64_t offset,
-                                    const uint64_t size,
-                                    int64_t* const index,
-                                    double* const value)
+				    const uint64_t offset,
+				    const uint64_t size,
+				    int64_t* const index,
+				    double* const value)
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (index == NULL) return TREXIO_INVALID_ARG_4;
@@ -924,14 +924,14 @@ trexio_text_buffered_read_rdm_two_e(trexio_t* const file,
 
   const uint64_t line_length = 64L;
   fseek(f, (long) offset * line_length, SEEK_SET);
-  
+
   for (uint64_t i=0 ; i<size ; ++i) {
     int rc = fscanf(f, "%9ld %9ld %9ld %9ld %24le\n",
-           &index[4*i], 
-           &index[4*i+1], 
-           &index[4*i+2], 
-           &index[4*i+3], 
-           &value[i]);
+	   &index[4*i],
+	   &index[4*i+1],
+	   &index[4*i+2],
+	   &index[4*i+3],
+	   &value[i]);
     if (rc == 5) {
       /* Do nothing */
     } else if (rc == EOF) {
@@ -942,13 +942,13 @@ trexio_text_buffered_read_rdm_two_e(trexio_t* const file,
   return TREXIO_SUCCESS;
 }
 
- 
+
 trexio_exit_code
 trexio_text_buffered_write_rdm_two_e(trexio_t* const file,
-                                     const uint64_t offset,
-                                     const uint64_t size,
-                                     const int64_t* index,
-                                     const double* value)
+				     const uint64_t offset,
+				     const uint64_t size,
+				     const int64_t* index,
+				     const double* value)
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (index == NULL) return TREXIO_INVALID_ARG_4;
@@ -963,14 +963,14 @@ trexio_text_buffered_write_rdm_two_e(trexio_t* const file,
 
   const uint64_t line_length = 64L;
   fseek(f, (long) offset * line_length, SEEK_SET);
-  
+
   for (uint64_t i=0 ; i<size ; ++i) {
     int rc = fprintf(f, "%9ld %9ld %9ld %9ld %24le\n",
-           index[4*i], 
-           index[4*i+1], 
-           index[4*i+2], 
-           index[4*i+3], 
-           value[i]);
+	   index[4*i],
+	   index[4*i+1],
+	   index[4*i+2],
+	   index[4*i+3],
+	   value[i]);
     if (rc != 5) return TREXIO_FAILURE;
   }
 
@@ -978,7 +978,7 @@ trexio_text_buffered_write_rdm_two_e(trexio_t* const file,
 }
      #+end_src
 
-                                                   :noexport:
+						   :noexport:
 
 * Constant file suffixes                                            :noxport:
 

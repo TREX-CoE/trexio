@@ -549,19 +549,19 @@ trexio_exit_code trexio_close(trexio_t* file) {
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_finalize(file);
+    rc = trexio_text_deinit(file);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_finalize(file);
+    rc = trexio_hdf5_deinit(file);
     break;
 /*
   case TREXIO_JSON:
-    rc = trexio_json_finalize(file);
+    rc = trexio_json_deinit(file);
     break;
 ,*/
   default:
-    assert (1 == 0);  /* Impossible case */
+    rc = TREXIO_FAILURE;  /* Impossible case */
   }
 
   if (rc != TREXIO_SUCCESS) {
