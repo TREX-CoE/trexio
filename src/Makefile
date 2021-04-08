@@ -68,7 +68,7 @@ cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
 
 
 trexio.c trexio_f.f90 trexio.h: $(ORG_FILES)
-	./build_trex.sh
+	./build_trexio.sh
 
 
 test_c: libtrexio.so test.c
