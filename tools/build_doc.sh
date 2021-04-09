@@ -82,6 +82,7 @@ function extract_doc()
       --load ${CONFIG_TANGLE}    \
       -f org-html-export-to-html 
     mv ${local_html} ${DOCS}
+    rm -f "${local_html}~"
 
 }
 
