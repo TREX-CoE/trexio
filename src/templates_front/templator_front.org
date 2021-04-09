@@ -1,9 +1,12 @@
-#+Title: Templator for front end
+#+TITLE: Front end API
+#+PROPERTY: comments org
+#+SETUPFILE: ../../docs/theme.setup
+# -*- mode: org -*-
 
 * Constant file prefixes (not used by generator)                   :noexport:
 
-  Prefixes in C contain mainly `#include` as well as some
-  `#define` and `typedef` statements.
+  Prefixes in C contain mainly ~#include~ as well as some
+  ~#define~ and ~typedef~ statements.
   Prefixes in Fortran contain back-end definitions.
 
   #+NAME:header
@@ -133,21 +136,22 @@ typedef int32_t trexio_exit_code;
 
 result = [ "#+begin_src c :tangle prefix_front.h :exports none" ]
 for (text, code,_) in table:
-    text=text.replace("~","")
-    result += [ f"#define  {text:30s} ((trexio_exit_code) {code:d})" ]
+  text=text.replace("~","")
+  result += [ f"#define  {text:30s} ((trexio_exit_code) {code:d})" ]
 result += [ "#+end_src" ]
 
 result += [ "" ]
 
 result += [ "#+begin_src f90 :tangle prefix_fortran.f90 :exports none" ]
 for (text, code,_) in table:
-    text=text.replace("~","")
-    result += [ f"   integer(trexio_exit_code), parameter :: {text:30s} = {code:d}" ]
+  text=text.replace("~","")
+  result += [ f"   integer(trexio_exit_code), parameter :: {text:30s} = {code:d}" ]
 result += [ "#+end_src" ]
 
 return '\n'.join(result)
 
    #+end_src
+
 
    #+RESULTS:
    :results:
@@ -200,9 +204,7 @@ return '\n'.join(result)
 
    #+begin_src c :tangle prefix_front.h :exports none :noweb yes
 const char* trexio_string_of_error(const trexio_exit_code error);
-
-void trexio_string_of_error_f(const trexio_exit_code error,
-			      char result[<<MAX_STRING_LENGTH()>>]);
+void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>]);
    #+end_src
 
    The text strings are extracted from the previous table.
@@ -215,11 +217,11 @@ void trexio_string_of_error_f(const trexio_exit_code error,
 
 result = []
 for (text, code, message) in table:
-    text = text.replace("~","")
-    message = message.replace("'",'"')
-    result += [ f"""case {text}:
-      return {message};
-    break;""" ]
+  text = text.replace("~","")
+  message = message.replace("'",'"')
+  result += [ f"""case {text}:
+  return {message};
+  break;""" ]
 return '\n'.join(result)
 
    #+end_src
@@ -272,52 +274,46 @@ return '\n'.join(result)
 
    # Source
    #+begin_src c :tangle prefix_front.c :noweb yes
-const char* trexio_string_of_error(const trexio_exit_code error) {
+const char*
+trexio_string_of_error (const trexio_exit_code error)
+{
   switch (error) {
   <<cases()>>
   }
   return "Unknown error";
 }
 
-void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>]) {
+void
+trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>])
+{
   strncpy(result, trexio_string_of_error(error), <<MAX_STRING_LENGTH()>>);
 }
    #+end_src
 
   # Fortran interface
   #+begin_src f90 :tangle prefix_fortran.f90 :noexport :noweb yes
-  interface
-     subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
-       use, intrinsic :: iso_c_binding
-       import
-       integer (trexio_exit_code), intent(in), value :: error
-       character, intent(out) :: string(<<MAX_STRING_LENGTH()>>)
-     end subroutine trexio_string_of_error
-  end interface
+interface
+   subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
+     use, intrinsic :: iso_c_binding
+     import
+     integer (trexio_exit_code), intent(in), value :: error
+     character, intent(out) :: string(<<MAX_STRING_LENGTH()>>)
+   end subroutine trexio_string_of_error
+end interface
   #+end_src
 
 ** Back ends
 
    TREXIO has several back ends:
 
-   1) `TREXIO_HDF5` relies on extensive use of the HDF5 library and the associated file format.
-   The HDF5 file is binary and tailored to high-performance I/O. This back end is the default one.
-   HDF5 can be compiled with MPI for parallel I/O.
-   Note, that HDF5 has to be downloaded and installed independently of TREXIO, which may cause
-   some obstacles, especially when the user is not allowed to install external software.
-   The produced files usually have `.h5` extension.
+   1) ~TREXIO_HDF5~ relies on extensive use of the HDF5 library and the associated file format. The HDF5 file is binary and tailored to high-performance I/O. This back end is the default one. HDF5 can be compiled with MPI for parallel I/O. Note, that HDF5 has to be downloaded and installed independently of TREXIO, which may cause some obstacles, especially when the user is not allowed to install external software. The produced files usually have ~.h5~ extension.
 
-   2) `TREXIO_TEXT` relies on basic file I/O in C, namely `fopen, fclose, fprintf, fscanf` etc.
-   from `stdio.h` library. This back end is not optimized for performance. It is supposed to be
-   used for debug purposes or, for example, when the user wants to modify some data manually within the file.
-   This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might
-   be useful for users that do not have access to HDF5 library.
-   The produced files usually have `.txt` extension.
+   2) ~TREXIO_TEXT~ relies on basic file I/O in C, namely ~fopen, fclose, fprintf, fscanf~ etc. from ~stdio.h~ library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have ~.txt~ extension.
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
-   This can be achieved by adding a new `case` (corresponding to the desired back end) in the front-end `switch`
-   Then the corresponding back-end `has/read/write_` functions has to be implemented. For example, see the commented
-   lines that correspond to the `TREXIO_JSON` back end (not implemented yet).
+   This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
+   Then the corresponding back-end ~has/read/write~ functions has to be implemented. For example, see the commented
+   lines that correspond to the ~TREXIO_JSON~ back end (not implemented yet).
 
    #+begin_src c :tangle prefix_front.h
 typedef int32_t back_end_t;
@@ -327,7 +323,6 @@ typedef int32_t back_end_t;
 /*#define TREXIO_JSON             ( (back_end_t) 2 )*/
 #define TREXIO_INVALID_BACK_END ( (back_end_t) 2 )
    #+end_src
-
 ** Read/write behavior
 
    Every time a reading function is called, the data is read from the
@@ -336,7 +331,7 @@ typedef int32_t back_end_t;
 
    Writing to TREXIO files is done with transactions (all-or-nothing
    effect) in a per-group fashion.  File writes are attempted by
-   calling explicitly the write (`TREXIO_HDF5`) or flush (`TREXIO_TEXT`)
+   calling explicitly the write (~TREXIO_HDF5~) or flush (~TREXIO_TEXT~)
    function, or when the TREXIO file is closed.
    If writing is impossible because the data is not valid, no data is written.
 
@@ -346,7 +341,6 @@ typedef int32_t back_end_t;
    The TREXIO files are supposed to be opened by only one program at a
    time: if the same TREXIO file is modified simultaneously by multiple
    concurrent programs, the behavior is not specified.
-
 ** TREXIO file type
 
    ~trexio_s~ is the the main type for TREXIO files, visible to the users
@@ -371,7 +365,6 @@ struct trexio_s {
   char              padding[7];   /* Ensures the proper alignment of back ends */
 };
    #+end_src
-
 ** Polymorphism of the file handle
 
    Polymorphism of the ~trexio_t~ type is handled by ensuring that the
@@ -388,33 +381,36 @@ struct trexio_back_end_s {
 
 ** File opening
 
-   `trexio_open` creates a new ~TREXIO~ file or opens existing one.
+   ~trexio_open~ creates a new TREXIO file or opens existing one.
 
-   `trexio_open` input:
-     1) `file_name`     - string containing file name
-     2) `mode`          - character containing open mode (see below)
-       1. `'w'`         - (write)  creates a new file as READWRITE (overwrite existing file)
-       2. `'r'`         - (read)   opens existing file as READONLY
-       3. `'a'`         - (append) either opens file in READWRITE mode if it already exists or creates a new one
-     3) `back_end`      - integer number (or the corresponding global parameter) specifying the back end
-       1. `TREXIO_HDF5` - for HDF5 back end (integer alternative: 0)
-       2. `TREXIO_TEXT` - for TEXT back end (integer alternative: 1)
+   input parameters:
+     1) ~file_name~     - string containing file name
+     2) ~mode~          - character containing open mode (see below)
+       - ~'w'~         - (write)  creates a new file as READWRITE (overwrite existing file)
+       - ~'r'~         - (read)   opens existing file as READONLY
+       - ~'a'~         - (append) either opens file in READWRITE mode if it already exists or creates a new one
+     3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
+       - ~TREXIO_HDF5~ - for HDF5 back end (integer alternative: 0)
+       - ~TREXIO_TEXT~ - for TEXT back end (integer alternative: 1)
 
-   `trexio_open` output:
-     `trexio_t` file handle
+   output:
+     ~trexio_t~ file handle
 
-   _**Note: the `file_name` in TEXT back end actually corresponds to the name of the folder where `.txt`
-   data files are stored. The actual name of each `.txt.` file corresponds to the `group` name provided in
-   `trex.config` (e.g. `nucleus.txt` for nucleus-related data like atomic coordinates).
-   These names are populated by the `generator.py` (i.e. they are hard-coded), which is why the user
-   should tend to avoid renaming the `.txt` data files.**_
+   Note: the ~file_name~ in TEXT back end actually corresponds to the name of the folder where ~.txt~
+   data files are stored. The actual name of each ~.txt~ file corresponds to the group name provided in
+   ~trex.config~ (e.g. ~nucleus.txt~ for nuclei-related data).
+   These names are populated by the generator.py (i.e. they are hard-coded), which is why the user
+   should tend to avoid renaming the ~.txt~ data files.
 
    #+begin_src c :tangle prefix_front.h
 trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end);
    #+end_src
 
    #+begin_src c :tangle prefix_front.c
-trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end) {
+trexio_t*
+trexio_open(const char* file_name, const char mode,
+	    const back_end_t back_end)
+{
 
   if (file_name == NULL) return NULL;
   if (file_name[0] == '\0') return NULL;
@@ -526,20 +522,22 @@ end interface
 
 ** File closing
 
-   `trexio_close` closes an existing `trexio_t` file.
+    ~trexio_close~ closes an existing ~trexio_t~ file.
 
-   `trexio_close` input:
-     `file` - TREXIO file handle.
+    input parameters:
+      ~file~ -- TREXIO file handle.
 
-   `trexio_close` output:
-     `trexio_exit_code` exit code.
+    output:
+      ~trexio_exit_code~ exit code.
 
-   #+begin_src c :tangle prefix_front.h
+    #+begin_src c :tangle prefix_front.h
 trexio_exit_code trexio_close(trexio_t* file);
-   #+end_src
+    #+end_src
 
-   #+begin_src c :tangle prefix_front.c
-trexio_exit_code trexio_close(trexio_t* file) {
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_close (trexio_t* file)
+{
 
   if (file == NULL) return TREXIO_FAILURE;
 
@@ -604,21 +602,23 @@ trexio_exit_code trexio_close(trexio_t* file) {
 
   return TREXIO_SUCCESS;
 }
-   #+end_src
+    #+end_src
 
-   #+begin_src f90 :tangle prefix_fortran.f90
+    #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer function trexio_close (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
    end function trexio_close
 end interface
-   #+end_src
+    #+end_src
 
 * Templates for front end
 
-  Consider the following block of `trex.json`:
+  Consider the following block of ~trex.json~:
 
+
+   #+begin_src python
   {
     "nucleus": {
 	"num"                : [ "int"  , [                     ] ]
@@ -627,46 +627,47 @@ end interface
       , "label"              : [ "char" , [ "nucleus.num", "32" ] ]
     }
   }
+   #+end_src
 
-  ~TREXIO~ is generated automatically by the `generator.py` Python script
-  based on the tree-like configuration provided in the `trex.json` file.
+  ~TREXIO~ is generated automatically by the ~generator.py~ Python script
+  based on the tree-like configuration provided in the ~trex.json~ file.
   Because of that, generalized templates can be implemented and re-used.
   This approach minimizes the number of bugs as compared with manual copy-paste-modify scheme.
 
-  All templates presented below use the `$var$` notation to indicate the variable,
-  which will be replaced by the `generator.py`. Sometimes the upper case is used, i.e.
-  `$VAR$` (for example, in `#define` statements).
+  All templates presented below use the ~$var$~ notation to indicate the variable,
+  which will be replaced by the ~generator.py~. Sometimes the upper case is used, i.e.
+  ~$VAR$~ (for example, in ~#define~ statements).
   More detailed description of each variable can be found below:
 
-   | Template variable             | Description                                      | Example          |
-   |-------------------------------+--------------------------------------------------+------------------|
-   | ~$group$~                     | 'Name of the group'                              | nucleus          |
-   | ~$group_num$~                 | 'Name of the dimensioning variable (scalar)'     | nucleus_num      |
-   | ~$group_dset$~                | 'Name of the dataset (vector/matrix/tensor)'     | nucleus_coord    |
-   | ~$group_dset_rank$~           | 'Rank of the dataset'                            | 2                |
-   | ~$group_dset_dim$~            | 'Selected dimension of the dataset'              | nucleus_num      |
-   | ~$group_dset_dim_list$~       | 'All dimensions of the dataset'                  | {nucleus_num, 3} |
-   | ~$group_dset_dtype$~          | 'Basic type of the dataset (int/float/char)'     | float            |
-   | ~$group_dset_h5_dtype$~       | 'Type of the dataset in HDF5'                    | double           |
-   | ~$group_dset_std_dtype_in$~   | 'Input type of the dataset in TEXT  [fscanf] '   | %lf              |
-   | ~$group_dset_std_dtype_out$~  | 'Output type of the dataset in TEXT [fprintf]'   | %24.16e          |
-   | ~$group_dset_dtype_single$~   | 'Single precision type of the dataset [C]'       | float            |
-   | ~$group_dset_dtype_double$~   | 'Double precision type of the dataset [C]'       | double           |
-   | ~$group_dset_f_dtype_single$~ | 'Single precision type of the dataset [Fortran]' | real(4)          |
-   | ~$group_dset_f_dtype_double$~ | 'Double precision type of the dataset [Fortran]' | real(8)          |
+   | Template variable             | Description                                      | Example            |
+   |-------------------------------+--------------------------------------------------+--------------------|
+   | ~$group$~                     | 'Name of the group'                              | ~nucleus~          |
+   | ~$group_num$~                 | 'Name of the dimensioning variable (scalar)'     | ~nucleus_num~      |
+   | ~$group_dset$~                | 'Name of the dataset (vector/matrix/tensor)'     | ~nucleus_coord~    |
+   | ~$group_dset_rank$~           | 'Rank of the dataset'                            | ~2~                |
+   | ~$group_dset_dim$~            | 'Selected dimension of the dataset'              | ~nucleus_num~      |
+   | ~$group_dset_dim_list$~       | 'All dimensions of the dataset'                  | ~{nucleus_num, 3}~ |
+   | ~$group_dset_dtype$~          | 'Basic type of the dataset (int/float/char)'     | ~float~            |
+   | ~$group_dset_h5_dtype$~       | 'Type of the dataset in HDF5'                    | ~double~           |
+   | ~$group_dset_std_dtype_in$~   | 'Input type of the dataset in TEXT  [fscanf] '   | ~%lf~              |
+   | ~$group_dset_std_dtype_out$~  | 'Output type of the dataset in TEXT [fprintf]'   | ~%24.16e~          |
+   | ~$group_dset_dtype_single$~   | 'Single precision type of the dataset [C]'       | ~float~            |
+   | ~$group_dset_dtype_double$~   | 'Double precision type of the dataset [C]'       | ~double~           |
+   | ~$group_dset_f_dtype_single$~ | 'Single precision type of the dataset [Fortran]' | ~real(4)~          |
+   | ~$group_dset_f_dtype_double$~ | 'Double precision type of the dataset [Fortran]' | ~real(8)~          |
 
-   Note: parent group name is always added to the child objects upon consruction of TREXIO
-   (e.g. `num` of `nucleus` group becomes `nucleus_num` and should be accessed accordingly within TREXIO).
+   Note: parent group name is always added to the child objects upon construction of TREXIO
+   (e.g. ~num~ of ~nucleus~ group becomes ~nucleus_num~ and should be accessed accordingly within TREXIO).
 
-   TREXIO generator parses the `trex.json` file. TREXIO operates with names of variables
-   based on the 1-st (parent group) and 2-nd (child object) levels of `trex.json`.
-   The parsed configutation is divided in 2 parts:
+   TREXIO generator parses the ~trex.json~ file. TREXIO operates with names of variables
+   based on the 1-st (parent group) and 2-nd (child object) levels of ~trex.json~ .
+   The parsed data is divided in 2 parts:
 
-   1) Dimensioning variables (containing `num`). These are always scalar integers.
-   2) Datasets. These can be vectors, matrices or tensors. The types are indicated in `trex.json`.
+   1) Dimensioning variables (contain ~num~ in their names). These are always scalar integers.
+   2) Datasets. These can be vectors, matrices or tensors. The types are indicated in ~trex.json~.
       Currently supported types: int, float. TODO: strings.
 
-   For each of the aforementioned objects, TREXIO provides `has`,`read` and `write` functionality.
+   For each of the aforementioned objects, TREXIO provides *has*, *read* and *write* functionality.
    TREXIO supports I/O with single or double precision for integer and floating point numbers.
 
 
@@ -674,26 +675,26 @@ end interface
 
    This section concerns API calls related to dimensioning variables.
 
-   | Function name                 | Description                                        | Precision |
-   |-------------------------------+----------------------------------------------------+-----------|
-   | ~trexio_has_$group_num$~      | 'Check if a dimensioning variable exists in a file | ---       |
-   | ~trexio_read_$group_num$~     | 'Read a dimensioning variable '                    | Single    |
-   | ~trexio_write_$group_num$~    | 'Write a dimensioning variable'                    | Single    |
-   | ~trexio_read_$group_num$_32~  | 'Read a dimensioning variable '                    | Single    |
-   | ~trexio_write_$group_num$_32~ | 'Write a dimensioning variable'                    | Single    |
-   | ~trexio_read_$group_num$_64~  | 'Read a dimensioning variable '                    | Double    |
-   | ~trexio_write_$group_num$_64~ | 'Write a dimensioning variable'                    | Double    |
+   | Function name                 | Description                                         | Precision |
+   |-------------------------------+-----------------------------------------------------+-----------|
+   | ~trexio_has_$group_num$~      | 'Check if a dimensioning variable exists in a file' | ---       |
+   | ~trexio_read_$group_num$~     | 'Read a dimensioning variable '                     | Single    |
+   | ~trexio_write_$group_num$~    | 'Write a dimensioning variable'                     | Single    |
+   | ~trexio_read_$group_num$_32~  | 'Read a dimensioning variable '                     | Single    |
+   | ~trexio_write_$group_num$_32~ | 'Write a dimensioning variable'                     | Single    |
+   | ~trexio_read_$group_num$_64~  | 'Read a dimensioning variable '                     | Double    |
+   | ~trexio_write_$group_num$_64~ | 'Write a dimensioning variable'                     | Double    |
 
-*** C templates for front end f
+*** C templates for front end
 
-   The C templates that correspond to each of the abovementioned functions can be found below.
+   The ~C~ templates that correspond to each of the abovementioned functions can be found below.
    First parameter is the ~TREXIO~ file handle. Second parameter is the variable to be written/read
-   to/from the ~TREXIO~ file (except for `trexio_has_` functions).
-   Suffixes `_32` and `_64` correspond to API calls dealing with single and double precision, respectively.
+   to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
+   Suffixes ~_32~ and ~_64~ correspond to API calls dealing with single and double precision, respectively.
    The basic (non-suffixed) API call on dimensioning variables deals with single precision (see Table above).
 
 
-     #+begin_src c :tangle hrw_num_front.h
+     #+begin_src c :tangle hrw_num_front.h :exports none
 trexio_exit_code trexio_has_$group_num$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int32_t* const num);
 trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int32_t num);
@@ -704,7 +705,9 @@ trexio_exit_code trexio_write_$group_num$_64(trexio_t* const file, const int64_t
      #+end_src
 
      #+begin_src c :tangle read_num_64_front.c
-trexio_exit_code trexio_read_$group_num$_64(trexio_t* const file, int64_t* const num) {
+trexio_exit_code
+trexio_read_$group_num$_64 (trexio_t* const file, int64_t* const num)
+{
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   uint64_t u_num = 0;
@@ -734,7 +737,9 @@ trexio_exit_code trexio_read_$group_num$_64(trexio_t* const file, int64_t* const
      #+end_src
 
      #+begin_src c :tangle write_num_64_front.c
-trexio_exit_code trexio_write_$group_num$_64(trexio_t* const file, const int64_t num) {
+trexio_exit_code
+trexio_write_$group_num$_64 (trexio_t* const file, const int64_t num)
+{
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
@@ -762,7 +767,9 @@ trexio_exit_code trexio_write_$group_num$_64(trexio_t* const file, const int64_t
      #+end_src
 
      #+begin_src c :tangle read_num_32_front.c
-trexio_exit_code trexio_read_$group_num$_32(trexio_t* const file, int32_t* const num) {
+trexio_exit_code
+trexio_read_$group_num$_32 (trexio_t* const file, int32_t* const num)
+{
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   uint64_t u_num = 0;
@@ -792,7 +799,10 @@ trexio_exit_code trexio_read_$group_num$_32(trexio_t* const file, int32_t* const
      #+end_src
 
      #+begin_src c :tangle write_num_32_front.c
-trexio_exit_code trexio_write_$group_num$_32(trexio_t* const file, const int32_t num) {
+trexio_exit_code
+trexio_write_$group_num$_32 (trexio_t* const file, const int32_t num)
+{
+
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
@@ -820,19 +830,26 @@ trexio_exit_code trexio_write_$group_num$_32(trexio_t* const file, const int32_t
      #+end_src
 
      #+begin_src c :tangle read_num_def_front.c
-trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int32_t* const num) {
+trexio_exit_code
+trexio_read_$group_num$ (trexio_t* const file, int32_t* const num)
+{
   return trexio_read_$group_num$_32(file, num);
 }
      #+end_src
 
      #+begin_src c :tangle write_num_def_front.c
-trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int32_t num) {
+trexio_exit_code
+trexio_write_$group_num$ (trexio_t* const file, const int32_t num)
+{
   return trexio_write_$group_num$_32(file, num);
 }
      #+end_src
 
      #+begin_src c :tangle has_num_front.c
-trexio_exit_code trexio_has_$group_num$(trexio_t* const file) {
+trexio_exit_code
+trexio_has_$group_num$ (trexio_t* const file)
+{
+
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   switch (file->back_end) {
@@ -858,8 +875,8 @@ trexio_exit_code trexio_has_$group_num$(trexio_t* const file) {
 
 *** Fortran templates for front end
 
-    The Fortran templates that provide an access to the C API calls from Fortran.
-    These templates are based on the use of `iso_c_binding`. Pointers have to be passed by value.
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
 
      #+begin_src f90 :tangle write_num_64_front_fortran.f90
 interface
@@ -929,30 +946,32 @@ interface
    end function trexio_has_$group_num$
 end interface
      #+end_src
+
+
 ** Templates for front end has/read/write a dataset
 
    This section concerns API calls related to datasets.
 
-   | Function name                          | Description                          | Precision |
-   |----------------------------------------+--------------------------------------+-----------|
-   | ~trexio_has_$group$_$group_dset$~      | 'Check if a dataset exists in a file | ---       |
-   | ~trexio_read_$group$_$group_dset$~     | 'Read  a dataset '                   | Double    |
-   | ~trexio_write_$group$_$group_dset$~    | 'Write a dataset'                    | Double    |
-   | ~trexio_read_$group$_$group_dset$_32~  | 'Read  a dataset'                    | Single    |
-   | ~trexio_write_$group$_$group_dset$_32~ | 'Write a dataset'                    | Single    |
-   | ~trexio_read_$group$_$group_dset$_64~  | 'Read  a dataset'                    | Double    |
-   | ~trexio_write_$group$_$group_dset$_64~ | 'Write a dataset'                    | Double    |
+   | Function name                          | Description                           | Precision |
+   |----------------------------------------+---------------------------------------+-----------|
+   | ~trexio_has_$group$_$group_dset$~      | 'Check if a dataset exists in a file' | ---       |
+   | ~trexio_read_$group$_$group_dset$~     | 'Read  a dataset '                    | Double    |
+   | ~trexio_write_$group$_$group_dset$~    | 'Write a dataset'                     | Double    |
+   | ~trexio_read_$group$_$group_dset$_32~  | 'Read  a dataset'                     | Single    |
+   | ~trexio_write_$group$_$group_dset$_32~ | 'Write a dataset'                     | Single    |
+   | ~trexio_read_$group$_$group_dset$_64~  | 'Read  a dataset'                     | Double    |
+   | ~trexio_write_$group$_$group_dset$_64~ | 'Write a dataset'                     | Double    |
 
 *** C templates for front end
 
    The C templates that correspond to each of the abovementioned functions can be found below.
    First parameter is the ~TREXIO~ file handle. Second parameter is the variable to be written/read
-   to/from the ~TREXIO~ file (except for `trexio_has_` functions).
-   Suffixes `_32` and `_64` correspond to API calls dealing with single and double precision, respectively.
+   to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
+   Suffixes ~_32~ and ~_64~ correspond to API calls dealing with single and double precision, respectively.
    The basic (non-suffixed) API call on datasets deals with double precision (see Table above).
 
 
-     #+begin_src c :tangle hrw_dset_front.h
+     #+begin_src c :tangle hrw_dset_front.h :exports none
 trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype_double$* const $group_dset$);
 trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$);
@@ -963,7 +982,10 @@ trexio_exit_code trexio_write_$group$_$group_dset$_64(trexio_t* const file, cons
      #+end_src
 
      #+begin_src c :tangle read_dset_64_front.c
-trexio_exit_code trexio_read_$group$_$group_dset$_64(trexio_t* const file, $group_dset_dtype_double$* const $group_dset$) {
+trexio_exit_code
+trexio_read_$group$_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* const $group_dset$)
+{
+
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
 
@@ -999,7 +1021,10 @@ trexio_exit_code trexio_read_$group$_$group_dset$_64(trexio_t* const file, $grou
      #+end_src
 
      #+begin_src c :tangle write_dset_64_front.c
-trexio_exit_code trexio_write_$group$_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$) {
+trexio_exit_code
+trexio_write_$group$_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$)
+{
+
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
 
@@ -1035,7 +1060,10 @@ trexio_exit_code trexio_write_$group$_$group_dset$_64(trexio_t* const file, cons
      #+end_src
 
      #+begin_src c :tangle read_dset_32_front.c
-trexio_exit_code trexio_read_$group$_$group_dset$_32(trexio_t* const file, $group_dset_dtype_single$* const $group_dset$) {
+trexio_exit_code
+trexio_read_$group$_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* const $group_dset$)
+{
+
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
 
@@ -1091,7 +1119,10 @@ trexio_exit_code trexio_read_$group$_$group_dset$_32(trexio_t* const file, $grou
      #+end_src
 
      #+begin_src c :tangle write_dset_32_front.c
-trexio_exit_code trexio_write_$group$_$group_dset$_32(trexio_t* const file, const $group_dset_dtype_single$* $group_dset$) {
+trexio_exit_code
+trexio_write_$group$_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_single$* $group_dset$)
+{
+
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
 
@@ -1146,19 +1177,26 @@ trexio_exit_code trexio_write_$group$_$group_dset$_32(trexio_t* const file, cons
      #+end_src
 
      #+begin_src c :tangle read_dset_def_front.c
-trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype_double$* const $group_dset$) {
+trexio_exit_code
+trexio_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype_double$* const $group_dset$)
+{
   return trexio_read_$group$_$group_dset$_64(file, $group_dset$);
 }
      #+end_src
 
      #+begin_src c :tangle write_dset_def_front.c
-trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$) {
+trexio_exit_code
+trexio_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$)
+{
   return trexio_write_$group$_$group_dset$_64(file, $group_dset$);
 }
      #+end_src
 
      #+begin_src c :tangle has_dset_front.c
-trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file) {
+trexio_exit_code
+trexio_has_$group$_$group_dset$ (trexio_t* const file)
+{
+
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
 
   switch (file->back_end) {
@@ -1183,8 +1221,8 @@ trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file) {
 
 *** Fortran templates for front end
 
-    The Fortran templates that provide an access to the C API calls from Fortran.
-    These templates are based on the use of `iso_c_binding`. Pointers have to be passed by value.
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from ~Fortran~.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
 
      #+begin_src f90 :tangle write_dset_64_front_fortran.f90
 interface
@@ -1257,8 +1295,8 @@ end interface
 
 * Fortran helper/wrapper functions
 
-  The function below adapts the original C-based `trexio_open` for Fortran.
-  This is needed due to the fact that strings in C are terminated by NULL character `\0`
+  The function below adapts the original C-based ~trexio_open~ for Fortran.
+  This is needed due to the fact that strings in C are terminated by ~NULL~ character ~\0~
   unlike strings in Fortran.
   Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
 
