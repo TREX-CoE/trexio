@@ -1,24 +1,19 @@
 #!/bin/bash
 # Script to build the documentation
-#   :PROPERTIES:
-#   :header-args:bash: :tangle build_doc.sh :noweb  yes :shebang #!/bin/bash :comments org
-#   :END:
+
+TREXIO_ROOT=$(dirname "${PWD}")
 
 #   First define readonly global variables.
-
-TREXIO_ROOT=~/trexio-html
-
 readonly DOCS=${TREXIO_ROOT}/docs
 readonly SRC=${TREXIO_ROOT}/src
-readonly HTMLIZE=${DOCS}/htmlize.el
-readonly CONFIG_DOC=${TREXIO_ROOT}/tools/config_doc.el  
-readonly CONFIG_TANGLE=${TREXIO_ROOT}/tools/config_tangle.el
-
+readonly TOOLS=${TREXIO_ROOT}/tools
+readonly ELDIR=${TREXIO_ROOT}/tools/emacs
+readonly HTMLIZE=${ELDIR}/htmlize.el
+readonly CONFIG_DOC=${ELDIR}/config_doc.el  
+readonly CONFIG_TANGLE=${ELDIR}/config_tangle.el
 
 
 # Check that all the defined global variables correspond to files.
-
-
 function check_preconditions()
 {
     if [[ -z ${TREXIO_ROOT} ]]
@@ -27,7 +22,7 @@ function check_preconditions()
         exit 1
     fi
 
-    for dir in ${DOCS} ${SRC}
+    for dir in ${DOCS} ${SRC} ${TOOLS} ${ELDIR}
     do
         if [[ ! -d ${dir} ]]
         then
@@ -47,23 +42,20 @@ function check_preconditions()
 }
 
 
-
-# ~install_htmlize~ installs the htmlize Emacs plugin if the
-# =htmlize.el= file is not present.
-
-
+# Download the htmlize Emacs plugin if not present
 function install_htmlize()
 {
     local url="https://github.com/hniksic/emacs-htmlize"
     local repo="emacs-htmlize"
     
-    [[ -f ${HTMLIZE} ]] || (
-        cd ${DOCS}
+    if [[ ! -f "${HTMLIZE}" ]]
+    then
+        cd ${TOOLS}
         git clone ${url} \
             && cp ${repo}/htmlize.el ${HTMLIZE} \
             && rm -rf ${repo}
-        cd -
-    )
+        cd ..
+    fi
 
     # Assert htmlize is installed
     [[ -f ${HTMLIZE} ]] \
@@ -71,10 +63,7 @@ function install_htmlize()
 }
 
 
-
-# Extract documentation from an org-mode file.
-
-
+# Compile org-mode file into html
 function extract_doc()
 {
     local org=$1
@@ -97,24 +86,19 @@ function extract_doc()
 }
 
 
-
 # The main function of the script.
-
-
 function main() {
     
-    [[ check_preconditions ]] \
-        || exit 1
+    # Check directories and files for existence
+    check_preconditions
     
     # Install htmlize if needed
-    [[ install_htmlize ]] \
-        || exit 2
+    install_htmlize
 
     # Create documentation
-    cd ${SRC} \
-        || exit 3
+    cd ${SRC} 
 
-    for dir in ${SRC}/*/
+    for dir in ${SRC}/templates_*/
     do
 	dir=${dir%*/}
 	echo ${dir}
@@ -143,4 +127,5 @@ function main() {
         exit 3
     fi
 }
+
 main
