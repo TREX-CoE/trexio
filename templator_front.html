@@ -1,0 +1,1949 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2021-04-12 Mon 12:32 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Front end API</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="TREX-CoE" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" title="Standard" href="trexio.css" type="text/css" />
+
+<script type="text/javascript" src="org-info.js">
+/**
+ *
+ * @source: org-info.js
+ *
+ * @licstart  The following is the entire license notice for the
+ *  JavaScript code in org-info.js.
+ *
+ * Copyright (C) 2012-2019 Free Software Foundation, Inc.
+ *
+ *
+ * The JavaScript code in this tag is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU
+ * General Public License (GNU GPL) as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+ *
+ * As additional permission under GNU GPL version 3 section 7, you
+ * may distribute non-source (e.g., minimized or compacted) forms of
+ * that code without the copy of the GNU GPL normally required by
+ * section 4, provided you include this license notice and a URL
+ * through which recipients can access the Corresponding Source.
+ *
+ * @licend  The above is the entire license notice
+ * for the JavaScript code in org-info.js.
+ *
+ */
+</script>
+
+<script type="text/javascript">
+
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+
+<!--/*--><![CDATA[/*><!--*/
+org_html_manager.set("TOC_DEPTH", "4");
+org_html_manager.set("LINK_HOME", "index.html");
+org_html_manager.set("LINK_UP", "");
+org_html_manager.set("LOCAL_TOC", "1");
+org_html_manager.set("VIEW_BUTTONS", "0");
+org_html_manager.set("MOUSE_HINT", "underline");
+org_html_manager.set("FIXED_TOC", "0");
+org_html_manager.set("TOC", "1");
+org_html_manager.set("VIEW", "info");
+org_html_manager.setup();  // activate after the parameters are set
+/*]]>*///-->
+</script>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href=""> UP </a>
+ |
+ <a accesskey="H" href="index.html"> HOME </a>
+</div><div id="content">
+<h1 class="title">Front end API</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgdb5c2ff">1. Coding conventions</a>
+<ul>
+<li><a href="#orgd2c60c4">1.1. Memory allocation</a></li>
+</ul>
+</li>
+<li><a href="#orgdb7da65">2. Front end</a>
+<ul>
+<li><a href="#org7d55a7b">2.1. Error handling</a></li>
+<li><a href="#org61f4b88">2.2. Back ends</a></li>
+<li><a href="#org702991d">2.3. Read/write behavior</a></li>
+<li><a href="#orgf0e14fa">2.4. TREXIO file type</a></li>
+<li><a href="#org9346ba4">2.5. Polymorphism of the file handle</a></li>
+<li><a href="#org81e2272">2.6. File opening</a></li>
+<li><a href="#orge249d7a">2.7. File closing</a></li>
+</ul>
+</li>
+<li><a href="#org8578282">3. Templates for front end</a>
+<ul>
+<li><a href="#org9b85810">3.1. Templates for front end has/read/write a dimension</a>
+<ul>
+<li><a href="#orgd03e4eb">3.1.1. C templates for front end</a></li>
+<li><a href="#orgda0954e">3.1.2. Fortran templates for front end</a></li>
+</ul>
+</li>
+<li><a href="#org42a1e83">3.2. Templates for front end has/read/write a dataset</a>
+<ul>
+<li><a href="#org3cc64ed">3.2.1. C templates for front end</a></li>
+<li><a href="#org9df2b23">3.2.2. Fortran templates for front end</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgd887d7b">4. Fortran helper/wrapper functions</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgdb5c2ff" class="outline-2">
+<h2 id="orgdb5c2ff"><span class="section-number-2">1</span> Coding conventions</h2>
+<div class="outline-text-2" id="text-1">
+<ul class="org-ul">
+<li>integer types will be defined using types given in <code>stdint.h</code></li>
+<li>pointers are always initialized to <code>NULL</code></li>
+<li>when memory is freed, the pointer is set to <code>NULL</code></li>
+<li><code>assert.h</code> should be used extensively</li>
+<li>variable names are in lower case</li>
+<li><code>#define</code> constants are in upper case</li>
+<li>structs are suffixed by <code>_s</code></li>
+<li>types are suffixed by <code>_t</code></li>
+<li>API calls return <code>trexio_exit_code</code> (except for <code>trexio_open</code> function)</li>
+</ul>
+</div>
+
+<div id="outline-container-orgd2c60c4" class="outline-3">
+<h3 id="orgd2c60c4"><span class="section-number-3">1.1</span> Memory allocation</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+Memory allocation of structures can be facilitated by using the
+following macro, which ensures that the size of the allocated
+object is the same as the size of the data type pointed by the pointer.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #483d8b;">#define</span> <span style="color: #0000ff;">MALLOC</span>(<span style="color: #a0522d;">T</span>) (<span style="color: #228b22;">T</span>*) malloc (<span style="color: #a020f0;">sizeof</span>(T));
+<span style="color: #483d8b;">#define</span> <span style="color: #0000ff;">CALLOC</span>(<span style="color: #a0522d;">N</span>,<span style="color: #a0522d;">T</span>) (<span style="color: #228b22;">T</span>*) calloc ((N),<span style="color: #a020f0;">sizeof</span>(T));
+</pre>
+</div>
+
+<p>
+When a pointer is freed, it should be set to <code>NULL</code>.
+This can be facilitated by the use of the following macro:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #483d8b;">#define</span> <span style="color: #0000ff;">FREE</span>(<span style="color: #a0522d;">X</span>) { free(X) ; (X)=<span style="color: #008b8b;">NULL</span>; }
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgdb7da65" class="outline-2">
+<h2 id="orgdb7da65"><span class="section-number-2">2</span> Front end</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+All calls to TREXIO are thread-safe.
+TREXIO front end is modular, which simplifies impelementation of new back ends.
+</p>
+</div>
+
+<div id="outline-container-org7d55a7b" class="outline-3">
+<h3 id="org7d55a7b"><span class="section-number-3">2.1</span> Error handling</h3>
+<div class="outline-text-3" id="text-2-1">
+<table id="orged1685d" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Macro</th>
+<th scope="col" class="org-right">Code</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>TREXIO_FAILURE</code></td>
+<td class="org-right">-1</td>
+<td class="org-left">'Unknown failure'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_SUCCESS</code></td>
+<td class="org-right">0</td>
+<td class="org-left">'Success'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_INVALID_ARG_1</code></td>
+<td class="org-right">1</td>
+<td class="org-left">'Invalid argument 1'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_INVALID_ARG_2</code></td>
+<td class="org-right">2</td>
+<td class="org-left">'Invalid argument 2'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_INVALID_ARG_3</code></td>
+<td class="org-right">3</td>
+<td class="org-left">'Invalid argument 3'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_INVALID_ARG_4</code></td>
+<td class="org-right">4</td>
+<td class="org-left">'Invalid argument 4'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_INVALID_ARG_5</code></td>
+<td class="org-right">5</td>
+<td class="org-left">'Invalid argument 5'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_END</code></td>
+<td class="org-right">6</td>
+<td class="org-left">'End of file'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_READONLY</code></td>
+<td class="org-right">7</td>
+<td class="org-left">'Read-only file'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_ERRNO</code></td>
+<td class="org-right">8</td>
+<td class="org-left">strerror(errno)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_INVALID_ID</code></td>
+<td class="org-right">9</td>
+<td class="org-left">'Invalid ID'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_ALLOCATION_FAILED</code></td>
+<td class="org-right">10</td>
+<td class="org-left">'Allocation failed'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_HAS_NOT</code></td>
+<td class="org-right">11</td>
+<td class="org-left">'Element absent'</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>TREXIO_INVALID_NUM</code></td>
+<td class="org-right">12</td>
+<td class="org-left">'Invalid exit code'</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+The <code>trexio_string_of_error</code> converts an exit code into a string. The
+string is assumed to be large enough to contain the error message
+(typically 128 characters).
+</p>
+
+<p>
+◉ Decoding errors
+</p>
+
+<p>
+To decode the error messages, <code>trexio_string_of_error</code> converts an
+error code into a string.
+</p>
+
+<pre class="example">
+128
+
+</pre>
+
+<p>
+The text strings are extracted from the previous table.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>*
+<span style="color: #0000ff;">trexio_string_of_error</span> (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">error</span>)
+{
+  <span style="color: #a020f0;">switch</span> (error) {
+  <span style="color: #a020f0;">case</span> TREXIO_FAILURE:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Unknown failure"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_SUCCESS:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Success"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_INVALID_ARG_1:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Invalid argument 1"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_INVALID_ARG_2:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Invalid argument 2"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_INVALID_ARG_3:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Invalid argument 3"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_INVALID_ARG_4:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Invalid argument 4"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_INVALID_ARG_5:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Invalid argument 5"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_END:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"End of file"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_READONLY:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Read-only file"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_ERRNO:
+          <span style="color: #a020f0;">return</span> strerror(errno);
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_INVALID_ID:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Invalid ID"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_ALLOCATION_FAILED:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Allocation failed"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_HAS_NOT:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Element absent"</span>;
+          <span style="color: #a020f0;">break</span>;
+  <span style="color: #a020f0;">case</span> TREXIO_INVALID_NUM:
+          <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Invalid exit code"</span>;
+          <span style="color: #a020f0;">break</span>;
+  }
+  <span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Unknown error"</span>;
+}
+
+<span style="color: #228b22;">void</span>
+<span style="color: #0000ff;">trexio_string_of_error_f</span> (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">error</span>, <span style="color: #228b22;">char</span> <span style="color: #a0522d;">result</span>[128])
+{
+  strncpy(result, trexio_string_of_error(error), 128);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">trexio_string_of_error</span> (error, string) <span style="color: #a020f0;">bind</span>(C, name=<span style="color: #8b2252;">'trexio_string_of_error_f'</span>)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">import</span>
+     <span style="color: #228b22;">integer</span> (trexio_exit_code), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> error</span>
+     <span style="color: #228b22;">character</span>, <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> string(128)</span>
+   <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">trexio_string_of_error</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org61f4b88" class="outline-3">
+<h3 id="org61f4b88"><span class="section-number-3">2.2</span> Back ends</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+TREXIO has several back ends:
+</p>
+
+<ol class="org-ol">
+<li><code>TREXIO_HDF5</code> relies on extensive use of the HDF5 library and the associated file format. The HDF5 file is binary and tailored to high-performance I/O. This back end is the default one. HDF5 can be compiled with MPI for parallel I/O. Note, that HDF5 has to be downloaded and installed independently of TREXIO, which may cause some obstacles, especially when the user is not allowed to install external software. The produced files usually have <code>.h5</code> extension.</li>
+
+<li><code>TREXIO_TEXT</code> relies on basic file I/O in C, namely <code>fopen, fclose, fprintf, fscanf</code> etc. from <code>stdio.h</code> library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have <code>.txt</code> extension.</li>
+</ol>
+
+<p>
+Additional back ends can be implemented thanks to the modular nature of the front end.
+This can be achieved by adding a new <code>case</code> (corresponding to the desired back end) in the front-end <code>switch</code>.
+Then the corresponding back-end <code>has/read/write</code> functions has to be implemented. For example, see the commented
+lines that correspond to the <code>TREXIO_JSON</code> back end (not implemented yet).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #228b22;">int32_t</span> <span style="color: #228b22;">back_end_t</span>;
+
+<span style="color: #483d8b;">#define</span> <span style="color: #a0522d;">TREXIO_HDF5</span>             ( (<span style="color: #228b22;">back_end_t</span>) 0 )
+<span style="color: #483d8b;">#define</span> <span style="color: #a0522d;">TREXIO_TEXT</span>             ( (<span style="color: #228b22;">back_end_t</span>) 1 )
+/*<span style="color: #b22222;">#define TREXIO_JSON             ( (back_end_t) 2 )</span>*/
+<span style="color: #483d8b;">#define</span> <span style="color: #a0522d;">TREXIO_INVALID_BACK_END</span> ( (<span style="color: #228b22;">back_end_t</span>) 2 )
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org702991d" class="outline-3">
+<h3 id="org702991d"><span class="section-number-3">2.3</span> Read/write behavior</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+Every time a reading function is called, the data is read from the
+disk. If data needs to be cached, this is left to the user of the
+library.
+</p>
+
+<p>
+Writing to TREXIO files is done with transactions (all-or-nothing
+effect) in a per-group fashion.  File writes are attempted by
+calling explicitly the write (<code>TREXIO_HDF5</code>) or flush (<code>TREXIO_TEXT</code>)
+function, or when the TREXIO file is closed.
+If writing is impossible because the data is not valid, no data is written.
+</p>
+
+<p>
+The order in which the data is written is not necessarily consistent
+with the order in which the function calls were made.
+</p>
+
+<p>
+The TREXIO files are supposed to be opened by only one program at a
+time: if the same TREXIO file is modified simultaneously by multiple
+concurrent programs, the behavior is not specified.
+</p>
+</div>
+</div>
+<div id="outline-container-orgf0e14fa" class="outline-3">
+<h3 id="orgf0e14fa"><span class="section-number-3">2.4</span> TREXIO file type</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+<code>trexio_s</code> is the the main type for TREXIO files, visible to the users
+of the library. This type is kept opaque, and all modifications to
+the files will be necessarily done through the use of functions,
+taking such a type as argument.
+</p>
+
+<p>
+File creation and opening functions will return <i>TREXIO file handles</i>,
+namely pointers to <code>trexio_s</code> types. All functions accessing to the
+TREXIO files will have as a first argument the TREXIO file handle.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_s</span> <span style="color: #228b22;">trexio_t</span>;
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_s</span> {
+  <span style="color: #228b22;">char</span>*             <span style="color: #a0522d;">file_name</span>;
+  <span style="color: #228b22;">pthread_mutex_t</span>   <span style="color: #a0522d;">thread_lock</span>;
+  <span style="color: #228b22;">back_end_t</span>        <span style="color: #a0522d;">back_end</span>;
+  <span style="color: #228b22;">char</span>              <span style="color: #a0522d;">mode</span>;
+  <span style="color: #228b22;">char</span>              <span style="color: #a0522d;">padding</span>[7];   /* <span style="color: #b22222;">Ensures the proper alignment of back ends </span>*/
+};
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9346ba4" class="outline-3">
+<h3 id="org9346ba4"><span class="section-number-3">2.5</span> Polymorphism of the file handle</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+Polymorphism of the <code>trexio_t</code> type is handled by ensuring that the
+corresponding types for all back ends can be safely casted to
+<code>trexio_t</code>. This is done by making the back-end structs start with
+<code>struct trexio_s</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_back_end_s</span> {
+  <span style="color: #228b22;">trexio_t</span>     <span style="color: #a0522d;">parent</span> ;
+  /* <span style="color: #b22222;">add below specific back-end data </span>*/
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org81e2272" class="outline-3">
+<h3 id="org81e2272"><span class="section-number-3">2.6</span> File opening</h3>
+<div class="outline-text-3" id="text-2-6">
+<p>
+<code>trexio_open</code> creates a new TREXIO file or opens existing one.
+</p>
+
+<p>
+input parameters:
+</p>
+<ol class="org-ol">
+<li><code>file_name</code>     - string containing file name</li>
+<li><code>mode</code>          - character containing open mode (see below)
+<ul class="org-ul">
+<li><code>'w'</code>         - (write)  creates a new file as READWRITE (overwrite existing file)</li>
+<li><code>'r'</code>         - (read)   opens existing file as READONLY</li>
+<li><code>'a'</code>         - (append) either opens file in READWRITE mode if it already exists or creates a new one</li>
+</ul></li>
+<li><code>back_end</code>      - integer number (or the corresponding global parameter) specifying the back end
+<ul class="org-ul">
+<li><code>TREXIO_HDF5</code> - for HDF5 back end (integer alternative: 0)</li>
+<li><code>TREXIO_TEXT</code> - for TEXT back end (integer alternative: 1)</li>
+</ul></li>
+</ol>
+
+<p>
+output:
+  <code>trexio_t</code> file handle
+</p>
+
+<p>
+Note: the <code>file_name</code> in TEXT back end actually corresponds to the name of the folder where <code>.txt</code>
+data files are stored. The actual name of each <code>.txt</code> file corresponds to the group name provided in
+<code>trex.config</code> (e.g. <code>nucleus.txt</code> for nuclei-related data).
+These names are populated by the generator.py (i.e. they are hard-coded), which is why the user
+should tend to avoid renaming the <code>.txt</code> data files.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_t</span>* <span style="color: #0000ff;">trexio_open</span>(<span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">file_name</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">mode</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">back_end_t</span> <span style="color: #a0522d;">back_end</span>);
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_t</span>*
+<span style="color: #0000ff;">trexio_open</span>(<span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">file_name</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">mode</span>,
+            <span style="color: #a020f0;">const</span> <span style="color: #228b22;">back_end_t</span> <span style="color: #a0522d;">back_end</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file_name == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+  <span style="color: #a020f0;">if</span> (file_name[0] == <span style="color: #8b2252;">'\0'</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+
+  <span style="color: #a020f0;">if</span> (back_end &lt;  0) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+  <span style="color: #a020f0;">if</span> (back_end &gt;= TREXIO_INVALID_BACK_END) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+
+  <span style="color: #a020f0;">if</span> (mode != <span style="color: #8b2252;">'r'</span> &amp;&amp; mode != <span style="color: #8b2252;">'w'</span> &amp;&amp; mode != <span style="color: #8b2252;">'a'</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+
+  <span style="color: #228b22;">trexio_t</span>* <span style="color: #a0522d;">result</span> = <span style="color: #008b8b;">NULL</span>;
+
+  /* <span style="color: #b22222;">Allocate data structures </span>*/
+  <span style="color: #a020f0;">switch</span> (back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    result = (<span style="color: #228b22;">trexio_t</span>*) malloc (<span style="color: #a020f0;">sizeof</span>(trexio_text_t));
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    result = (<span style="color: #228b22;">trexio_t</span>*) malloc (<span style="color: #a020f0;">sizeof</span>(trexio_hdf5_t));
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    result = (trexio_t*) malloc (sizeof(trexio_json_t));</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  assert (result != <span style="color: #008b8b;">NULL</span>);    /* <span style="color: #b22222;">TODO: Error handling </span>*/
+
+
+  /* <span style="color: #b22222;">Data for the parent type </span>*/
+
+  result-&gt;file_name   = CALLOC(strlen(file_name)+1, <span style="color: #228b22;">char</span>);
+  strncpy(result-&gt;file_name, file_name, strlen(file_name)+1);
+  result-&gt;back_end    = back_end;
+  result-&gt;mode        = mode;
+  <span style="color: #228b22;">int</span> <span style="color: #a0522d;">irc</span> = pthread_mutex_init ( &amp;(result-&gt;thread_lock), <span style="color: #008b8b;">NULL</span>);
+  assert (irc == 0);
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+
+  /* <span style="color: #b22222;">Back end initialization </span>*/
+
+  rc = TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">switch</span> (back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_init(result);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_init(result);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_init(result);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) {
+    free(result-&gt;file_name);
+    free(result);
+    <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+  }
+
+  /* <span style="color: #b22222;">File locking </span>*/
+
+  rc = TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">switch</span> (back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_lock(result);
+    <span style="color: #a020f0;">break</span>;
+  /* <span style="color: #b22222;">HDF5 v.&gt;=1.10 has file locking activated by default </span>*/
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = TREXIO_SUCCESS;
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_lock(result);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) {
+    free(result-&gt;file_name);
+    free(result);
+    <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+  }
+
+  <span style="color: #a020f0;">return</span> result;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer</span>(8) <span style="color: #a020f0;">function</span> <span style="color: #0000ff;">trexio_open_c</span> (filename, mode, backend) <span style="color: #a020f0;">bind</span>(C, name=<span style="color: #8b2252;">"trexio_open"</span>)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">character</span>(kind=<span style="color: #008b8b;">c_char</span>), <span style="color: #a020f0;">dimension</span>(*)  ::<span style="color: #a0522d;"> filename</span>
+     <span style="color: #228b22;">character</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span>          ::<span style="color: #a0522d;"> mode</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span>            ::<span style="color: #a0522d;"> backend</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_open_c</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge249d7a" class="outline-3">
+<h3 id="orge249d7a"><span class="section-number-3">2.7</span> File closing</h3>
+<div class="outline-text-3" id="text-2-7">
+<p>
+<code>trexio_close</code> closes an existing <code>trexio_t</code> file.
+</p>
+
+<p>
+input parameters:
+  <code>file</code> &#x2013; TREXIO file handle.
+</p>
+
+<p>
+output:
+  <code>trexio_exit_code</code> exit code.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span> <span style="color: #0000ff;">trexio_close</span>(<span style="color: #228b22;">trexio_t</span>* <span style="color: #a0522d;">file</span>);
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_close</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+
+  /* <span style="color: #b22222;">Terminate the back end </span>*/
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_deinit(file);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_deinit(file);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_deinit(file);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    rc = TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) {
+    free(file-&gt;file_name);
+    free(file);
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+  }
+
+  /* <span style="color: #b22222;">File unlocking </span>*/
+
+  rc = TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_unlock(file);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = TREXIO_SUCCESS;
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_unlock(file);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  /* <span style="color: #b22222;">Terminate front end </span>*/
+
+  free(file-&gt;file_name);
+  file-&gt;file_name = <span style="color: #008b8b;">NULL</span>;
+
+  <span style="color: #228b22;">int</span> <span style="color: #a0522d;">irc</span> = pthread_mutex_destroy( &amp;(file-&gt;thread_lock) );
+
+  free(file);
+
+  <span style="color: #a020f0;">if</span> (irc != 0) <span style="color: #a020f0;">return</span> TREXIO_ERRNO;
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_close</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_close</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8578282" class="outline-2">
+<h2 id="org8578282"><span class="section-number-2">3</span> Templates for front end</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Consider the following block of <code>trex.json</code>:
+</p>
+
+
+<div class="org-src-container">
+<pre class="src src-python">{
+  <span style="color: #8b2252;">"nucleus"</span>: {
+      <span style="color: #8b2252;">"num"</span>                : [ <span style="color: #8b2252;">"int"</span>  , [                     ] ]
+    , <span style="color: #8b2252;">"charge"</span>             : [ <span style="color: #8b2252;">"float"</span>, [ <span style="color: #8b2252;">"nucleus.num"</span>       ] ]
+    , <span style="color: #8b2252;">"coord"</span>              : [ <span style="color: #8b2252;">"float"</span>, [ <span style="color: #8b2252;">"nucleus.num"</span>, <span style="color: #8b2252;">"3"</span>  ] ]
+    , <span style="color: #8b2252;">"label"</span>              : [ <span style="color: #8b2252;">"char"</span> , [ <span style="color: #8b2252;">"nucleus.num"</span>, <span style="color: #8b2252;">"32"</span> ] ]
+  }
+}
+</pre>
+</div>
+
+<p>
+<code>TREXIO</code> is generated automatically by the <code>generator.py</code> Python script
+based on the tree-like configuration provided in the <code>trex.json</code> file.
+Because of that, generalized templates can be implemented and re-used.
+This approach minimizes the number of bugs as compared with manual copy-paste-modify scheme.
+</p>
+
+<p>
+All templates presented below use the <code>$var$</code> notation to indicate the variable,
+which will be replaced by the <code>generator.py</code>. Sometimes the upper case is used, i.e.
+<code>$VAR$</code> (for example, in <code>#define</code> statements).
+More detailed description of each variable can be found below:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Template variable</th>
+<th scope="col" class="org-left">Description</th>
+<th scope="col" class="org-left">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>$group$</code></td>
+<td class="org-left">'Name of the group'</td>
+<td class="org-left"><code>nucleus</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_num$</code></td>
+<td class="org-left">'Name of the dimensioning variable (scalar)'</td>
+<td class="org-left"><code>nucleus_num</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset$</code></td>
+<td class="org-left">'Name of the dataset (vector/matrix/tensor)'</td>
+<td class="org-left"><code>nucleus_coord</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_rank$</code></td>
+<td class="org-left">'Rank of the dataset'</td>
+<td class="org-left"><code>2</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_dim$</code></td>
+<td class="org-left">'Selected dimension of the dataset'</td>
+<td class="org-left"><code>nucleus_num</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_dim_list$</code></td>
+<td class="org-left">'All dimensions of the dataset'</td>
+<td class="org-left"><code>{nucleus_num, 3}</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_dtype$</code></td>
+<td class="org-left">'Basic type of the dataset (int/float/char)'</td>
+<td class="org-left"><code>float</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_h5_dtype$</code></td>
+<td class="org-left">'Type of the dataset in HDF5'</td>
+<td class="org-left"><code>double</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_std_dtype_in$</code></td>
+<td class="org-left">'Input type of the dataset in TEXT  [fscanf] '</td>
+<td class="org-left"><code>%lf</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_std_dtype_out$</code></td>
+<td class="org-left">'Output type of the dataset in TEXT [fprintf]'</td>
+<td class="org-left"><code>%24.16e</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_dtype_single$</code></td>
+<td class="org-left">'Single precision type of the dataset [C]'</td>
+<td class="org-left"><code>float</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_dtype_double$</code></td>
+<td class="org-left">'Double precision type of the dataset [C]'</td>
+<td class="org-left"><code>double</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_f_dtype_single$</code></td>
+<td class="org-left">'Single precision type of the dataset [Fortran]'</td>
+<td class="org-left"><code>real(4)</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>$group_dset_f_dtype_double$</code></td>
+<td class="org-left">'Double precision type of the dataset [Fortran]'</td>
+<td class="org-left"><code>real(8)</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Note: parent group name is always added to the child objects upon construction of TREXIO
+(e.g. <code>num</code> of <code>nucleus</code> group becomes <code>nucleus_num</code> and should be accessed accordingly within TREXIO).
+</p>
+
+<p>
+TREXIO generator parses the <code>trex.json</code> file. TREXIO operates with names of variables
+based on the 1-st (parent group) and 2-nd (child object) levels of <code>trex.json</code> .
+The parsed data is divided in 2 parts:
+</p>
+
+<ol class="org-ol">
+<li>Dimensioning variables (contain <code>num</code> in their names). These are always scalar integers.</li>
+<li>Datasets. These can be vectors, matrices or tensors. The types are indicated in <code>trex.json</code>.
+Currently supported types: int, float. TODO: strings.</li>
+</ol>
+
+<p>
+For each of the aforementioned objects, TREXIO provides <b>has</b>, <b>read</b> and <b>write</b> functionality.
+TREXIO supports I/O with single or double precision for integer and floating point numbers.
+</p>
+</div>
+
+
+<div id="outline-container-org9b85810" class="outline-3">
+<h3 id="org9b85810"><span class="section-number-3">3.1</span> Templates for front end has/read/write a dimension</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+This section concerns API calls related to dimensioning variables.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Function name</th>
+<th scope="col" class="org-left">Description</th>
+<th scope="col" class="org-left">Precision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>trexio_has_$group_num$</code></td>
+<td class="org-left">'Check if a dimensioning variable exists in a file'</td>
+<td class="org-left">---</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group_num$</code></td>
+<td class="org-left">'Read a dimensioning variable '</td>
+<td class="org-left">Single</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_$group_num$</code></td>
+<td class="org-left">'Write a dimensioning variable'</td>
+<td class="org-left">Single</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group_num$_32</code></td>
+<td class="org-left">'Read a dimensioning variable '</td>
+<td class="org-left">Single</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_$group_num$_32</code></td>
+<td class="org-left">'Write a dimensioning variable'</td>
+<td class="org-left">Single</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group_num$_64</code></td>
+<td class="org-left">'Read a dimensioning variable '</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_$group_num$_64</code></td>
+<td class="org-left">'Write a dimensioning variable'</td>
+<td class="org-left">Double</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div id="outline-container-orgd03e4eb" class="outline-4">
+<h4 id="orgd03e4eb"><span class="section-number-4">3.1.1</span> C templates for front end</h4>
+<div class="outline-text-4" id="text-3-1-1">
+<p>
+The <code>C</code> templates that correspond to each of the abovementioned functions can be found below.
+First parameter is the <code>TREXIO</code> file handle. Second parameter is the variable to be written/read
+to/from the <code>TREXIO</code> file (except for <code>trexio_has_</code> functions).
+Suffixes <code>_32</code> and <code>_64</code> correspond to API calls dealing with single and double precision, respectively.
+The basic (non-suffixed) API call on dimensioning variables deals with single precision (see Table above).
+</p>
+
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group_num$_64</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">num</span>)
+{
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">u_num</span> = 0;
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span> = TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_read_$group_num$(file, &amp;u_num);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_read_$group_num$(file, &amp;u_num);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc =trexio_json_read_$group_num$(file, &amp;u_num);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+  *num = (<span style="color: #228b22;">int64_t</span>) u_num;
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_$group_num$_64</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">num</span>)
+{
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (num  &lt;  0   ) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span> = TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_write_$group_num$(file, (<span style="color: #228b22;">int64_t</span>) num);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_write_$group_num$(file, (<span style="color: #228b22;">int64_t</span>) num);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_write_$group_num$(file, (int64_t) num);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group_num$_32</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">int32_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">num</span>)
+{
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">u_num</span> = 0;
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span> = TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_read_$group_num$(file, &amp;u_num);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_read_$group_num$(file, &amp;u_num);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc =trexio_json_read_$group_num$(file, &amp;u_num);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+  *num = (<span style="color: #228b22;">int32_t</span>) u_num;
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_$group_num$_32</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int32_t</span> <span style="color: #a0522d;">num</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (num  &lt;  0   ) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span> = TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_write_$group_num$(file, (<span style="color: #228b22;">int64_t</span>) num);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_write_$group_num$(file, (<span style="color: #228b22;">int64_t</span>) num);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_write_$group_num$(file, (int64_t) num);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">int32_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">num</span>)
+{
+  <span style="color: #a020f0;">return</span> trexio_read_$group_num$_32(file, num);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int32_t</span> <span style="color: #a0522d;">num</span>)
+{
+  <span style="color: #a020f0;">return</span> trexio_write_$group_num$_32(file, num);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_has_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    <span style="color: #a020f0;">return</span> trexio_text_has_$group_num$(file);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    <span style="color: #a020f0;">return</span> trexio_hdf5_has_$group_num$(file);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    return trexio_json_has_$group_num$(file);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgda0954e" class="outline-4">
+<h4 id="orgda0954e"><span class="section-number-4">3.1.2</span> Fortran templates for front end</h4>
+<div class="outline-text-4" id="text-3-1-2">
+<p>
+The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from Fortran.
+These templates are based on the use of <code>iso_c_binding</code>. Pointers have to be passed by value.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_write_$group_num$_64</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, num) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> num</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_$group_num$_64</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_read_$group_num$_64</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, num) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> num</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group_num$_64</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_write_$group_num$_32</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, num) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(4), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> num</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_$group_num$_32</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_read_$group_num$_32</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, num) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(4), <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> num</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group_num$_32</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_write_$group_num$</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, num) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(4), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> num</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_$group_num$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_read_$group_num$</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, num) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(4), <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> num</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group_num$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_has_$group_num$</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_has_$group_num$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org42a1e83" class="outline-3">
+<h3 id="org42a1e83"><span class="section-number-3">3.2</span> Templates for front end has/read/write a dataset</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+This section concerns API calls related to datasets.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Function name</th>
+<th scope="col" class="org-left">Description</th>
+<th scope="col" class="org-left">Precision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>trexio_has_$group$_$group_dset$</code></td>
+<td class="org-left">'Check if a dataset exists in a file'</td>
+<td class="org-left">---</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group$_$group_dset$</code></td>
+<td class="org-left">'Read  a dataset '</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_$group$_$group_dset$</code></td>
+<td class="org-left">'Write a dataset'</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group$_$group_dset$_32</code></td>
+<td class="org-left">'Read  a dataset'</td>
+<td class="org-left">Single</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_$group$_$group_dset$_32</code></td>
+<td class="org-left">'Write a dataset'</td>
+<td class="org-left">Single</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group$_$group_dset$_64</code></td>
+<td class="org-left">'Read  a dataset'</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_$group$_$group_dset$_64</code></td>
+<td class="org-left">'Write a dataset'</td>
+<td class="org-left">Double</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div id="outline-container-org3cc64ed" class="outline-4">
+<h4 id="org3cc64ed"><span class="section-number-4">3.2.1</span> C templates for front end</h4>
+<div class="outline-text-4" id="text-3-2-1">
+<p>
+The C templates that correspond to each of the abovementioned functions can be found below.
+First parameter is the <code>TREXIO</code> file handle. Second parameter is the variable to be written/read
+to/from the <code>TREXIO</code> file (except for <code>trexio_has_</code> functions).
+Suffixes <code>_32</code> and <code>_64</code> correspond to API calls dealing with single and double precision, respectively.
+The basic (non-suffixed) API call on datasets deals with double precision (see Table above).
+</p>
+
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group$_$group_dset$_64</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, $group_dset_dtype_double$* <span style="color: #a020f0;">const</span> $group_dset$)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> ($group_dset$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+  int64_t $group_dset_dim$ = 0;
+
+  /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
+  rc = trexio_read_$group_dset_dim$_64(file, &amp;($group_dset_dim$));
+
+  <span style="color: #a020f0;">if</span> ($group_dset_dim$ == 0L) <span style="color: #a020f0;">return</span> TREXIO_INVALID_NUM;
+
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = $group_dset_rank$;
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    <span style="color: #a020f0;">return</span> trexio_text_read_$group$_$group_dset$(file, $group_dset$, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    <span style="color: #a020f0;">return</span> trexio_hdf5_read_$group$_$group_dset$(file, $group_dset$, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    return trexio_json_read_$group$_$group_dset$(file, $group_dset$, rank, dims);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_$group$_$group_dset$_64</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> $group_dset_dtype_double$* $group_dset$)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> ($group_dset$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+  int64_t $group_dset_dim$ = 0;
+
+  /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
+  rc = trexio_read_$group_dset_dim$_64(file, &amp;($group_dset_dim$));
+
+  <span style="color: #a020f0;">if</span> ($group_dset_dim$ == 0L) <span style="color: #a020f0;">return</span> TREXIO_INVALID_NUM;
+
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = $group_dset_rank$;
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    <span style="color: #a020f0;">return</span> trexio_text_write_$group$_$group_dset$(file, $group_dset$, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    <span style="color: #a020f0;">return</span> trexio_hdf5_write_$group$_$group_dset$(file, $group_dset$, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    return trexio_json_write_$group$_$group_dset$(file, $group_dset$, rank, dims);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group$_$group_dset$_32</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, $group_dset_dtype_single$* <span style="color: #a020f0;">const</span> $group_dset$)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> ($group_dset$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+  int64_t $group_dset_dim$ = 0;
+
+  /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
+  rc = trexio_read_$group_dset_dim$_64(file, &amp;($group_dset_dim$));
+
+  <span style="color: #a020f0;">if</span> ($group_dset_dim$ == 0L) <span style="color: #a020f0;">return</span> TREXIO_INVALID_NUM;
+
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = $group_dset_rank$;
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dim_size</span> = 1;
+  <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">unsigned</span> <span style="color: #228b22;">int</span> <span style="color: #a0522d;">i</span>=0; i&lt;rank; ++i){
+    dim_size *= dims[i];
+  }
+
+  $group_dset_dtype_double$* $group_dset$_64 = CALLOC(dim_size, $group_dset_dtype_double$);
+  <span style="color: #a020f0;">if</span> ($group_dset$_64 == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_ALLOCATION_FAILED;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_read_$group$_$group_dset$(file, $group_dset$_64, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_read_$group$_$group_dset$(file, $group_dset$_64, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_read_$group$_$group_dset$(file, $group_dset$_64, rank, dims);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS){
+    FREE($group_dset$_64);
+    <span style="color: #a020f0;">return</span> rc;
+  }
+
+  <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0; i&lt;dim_size; ++i){
+    $group_dset$[i] = ($group_dset_dtype_single$) $group_dset$_64[i];
+  }
+
+  FREE($group_dset$_64);
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_$group$_$group_dset$_32</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> $group_dset_dtype_single$* $group_dset$)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> ($group_dset$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+  int64_t $group_dset_dim$ = 0;
+
+  /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
+  rc = trexio_read_$group_dset_dim$_64(file, &amp;($group_dset_dim$));
+
+  <span style="color: #a020f0;">if</span> ($group_dset_dim$ == 0L) <span style="color: #a020f0;">return</span> TREXIO_INVALID_NUM;
+
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = $group_dset_rank$;
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dim_size</span> = 1;
+  <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">unsigned</span> <span style="color: #228b22;">int</span> <span style="color: #a0522d;">i</span>=0; i&lt;rank; ++i){
+    dim_size *= dims[i];
+  }
+
+  $group_dset_dtype_double$* $group_dset$_64 = CALLOC(dim_size, $group_dset_dtype_double$);
+  <span style="color: #a020f0;">if</span> ($group_dset$_64 == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_ALLOCATION_FAILED;
+
+  /* <span style="color: #b22222;">A type conversion from single precision to double reqired since back end only accepts 64-bit data </span>*/
+  <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0; i&lt;dim_size; ++i){
+    $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i];
+  }
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_write_$group$_$group_dset$(file, $group_dset$_64, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    rc = trexio_hdf5_write_$group$_$group_dset$(file, $group_dset$_64, rank, dims);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_write_$group$_$group_dset$(file, $group_dset$_64, rank, dims);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+
+  FREE($group_dset$_64);
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group$_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, $group_dset_dtype_double$* <span style="color: #a020f0;">const</span> $group_dset$)
+{
+  <span style="color: #a020f0;">return</span> trexio_read_$group$_$group_dset$_64(file, $group_dset$);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_$group$_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> $group_dset_dtype_double$* $group_dset$)
+{
+  <span style="color: #a020f0;">return</span> trexio_write_$group$_$group_dset$_64(file, $group_dset$);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_has_$group$_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    <span style="color: #a020f0;">return</span> trexio_text_has_$group$_$group_dset$(file);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+    <span style="color: #a020f0;">return</span> trexio_hdf5_has_$group$_$group_dset$(file);
+    <span style="color: #a020f0;">break</span>;
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    return trexio_json_has_$group$_$group_dset$(file);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9df2b23" class="outline-4">
+<h4 id="org9df2b23"><span class="section-number-4">3.2.2</span> Fortran templates for front end</h4>
+<div class="outline-text-4" id="text-3-2-2">
+<p>
+The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from <code>Fortran</code>.
+These templates are based on the use of <code>iso_c_binding</code>. Pointers have to be passed by value.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_write_$group$_$group_dset$_64</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, dset) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     $group_dset_f_dtype_double$, <span style="color: #a020f0;">intent</span>(in) :: dset(*)
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_$group$_$group_dset$_64</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_read_$group$_$group_dset$_64</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, dset) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     $group_dset_f_dtype_double$, <span style="color: #a020f0;">intent</span>(out) :: dset(*)
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group$_$group_dset$_64</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_write_$group$_$group_dset$_32</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, dset) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     $group_dset_f_dtype_single$, <span style="color: #a020f0;">intent</span>(in) :: dset(*)
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_$group$_$group_dset$_32</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_read_$group$_$group_dset$_32</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, dset) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     $group_dset_f_dtype_single$, <span style="color: #a020f0;">intent</span>(out) :: dset(*)
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group$_$group_dset$_32</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_write_$group$_$group_dset$</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, dset) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     $group_dset_f_dtype_double$, <span style="color: #a020f0;">intent</span>(in) :: dset(*)
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_$group$_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_read_$group$_$group_dset$</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file, dset) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     $group_dset_f_dtype_double$, <span style="color: #a020f0;">intent</span>(out) :: dset(*)
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group$_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer </span><span style="color: #a020f0;">function</span><span style="color: #a0522d;"> </span><span style="color: #0000ff;">trexio_has_$group$_$group_dset$</span><span style="color: #a0522d;"> </span><span style="color: #000000; background-color: #ffffff;">(trex_file) bind(C)</span>
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #228b22;">integer</span>(8), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_has_$group$_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd887d7b" class="outline-2">
+<h2 id="orgd887d7b"><span class="section-number-2">4</span> Fortran helper/wrapper functions</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+The function below adapts the original C-based <code>trexio_open</code> for Fortran.
+This is needed due to the fact that strings in C are terminated by <code>NULL</code> character <code>\0</code>
+unlike strings in Fortran.
+Note, that Fortran interface calls the main <code>TREXIO</code> API, which is written in C.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">contains</span>
+   <span style="color: #228b22;">integer</span>(8) <span style="color: #a020f0;">function</span> <span style="color: #0000ff;">trexio_open</span> (filename, mode, backend)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">implicit</span> <span style="color: #228b22;">none</span>
+     <span style="color: #228b22;">character</span>(len=*)      ::<span style="color: #a0522d;"> filename</span>
+     <span style="color: #228b22;">character</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> mode</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span>   ::<span style="color: #a0522d;"> backend</span>
+     <span style="color: #228b22;">character</span>(len=<span style="color: #a020f0;">len_trim</span>(filename)+1) ::<span style="color: #a0522d;"> filename_c</span>
+
+     filename_c = <span style="color: #a020f0;">trim</span>(filename) // <span style="color: #008b8b;">c_null_char</span>
+     trexio_open = trexio_open_c(filename_c, mode, backend)
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_open</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: TREX-CoE</p>
+<p class="date">Created: 2021-04-12 Mon 12:32</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

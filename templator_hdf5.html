@@ -1,0 +1,703 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2021-04-12 Mon 12:32 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HDF5 back end</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="TREX-CoE" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" title="Standard" href="trexio.css" type="text/css" />
+
+<script type="text/javascript" src="org-info.js">
+/**
+ *
+ * @source: org-info.js
+ *
+ * @licstart  The following is the entire license notice for the
+ *  JavaScript code in org-info.js.
+ *
+ * Copyright (C) 2012-2019 Free Software Foundation, Inc.
+ *
+ *
+ * The JavaScript code in this tag is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU
+ * General Public License (GNU GPL) as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+ *
+ * As additional permission under GNU GPL version 3 section 7, you
+ * may distribute non-source (e.g., minimized or compacted) forms of
+ * that code without the copy of the GNU GPL normally required by
+ * section 4, provided you include this license notice and a URL
+ * through which recipients can access the Corresponding Source.
+ *
+ * @licend  The above is the entire license notice
+ * for the JavaScript code in org-info.js.
+ *
+ */
+</script>
+
+<script type="text/javascript">
+
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+
+<!--/*--><![CDATA[/*><!--*/
+org_html_manager.set("TOC_DEPTH", "4");
+org_html_manager.set("LINK_HOME", "index.html");
+org_html_manager.set("LINK_UP", "");
+org_html_manager.set("LOCAL_TOC", "1");
+org_html_manager.set("VIEW_BUTTONS", "0");
+org_html_manager.set("MOUSE_HINT", "underline");
+org_html_manager.set("FIXED_TOC", "0");
+org_html_manager.set("TOC", "1");
+org_html_manager.set("VIEW", "info");
+org_html_manager.setup();  // activate after the parameters are set
+/*]]>*///-->
+</script>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href=""> UP </a>
+ |
+ <a accesskey="H" href="index.html"> HOME </a>
+</div><div id="content">
+<h1 class="title">HDF5 back end</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgdba60cb">1. HDF5 back end</a>
+<ul>
+<li><a href="#org73945cd">1.1. Template for HDF5 definitions</a></li>
+<li><a href="#orge10ebcf">1.2. Template for HDF5 structures</a></li>
+<li><a href="#org9ff3f5e">1.3. Template for HDF5 init/deinit</a></li>
+<li><a href="#org74ba7cb">1.4. Template for HDF5 has/read/write a number</a></li>
+<li><a href="#org01b35d3">1.5. Template for HDF5 has/read/write a dataset</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgdba60cb" class="outline-2">
+<h2 id="orgdba60cb"><span class="section-number-2">1</span> HDF5 back end</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-org73945cd" class="outline-3">
+<h3 id="org73945cd"><span class="section-number-3">1.1</span> Template for HDF5 definitions</h3>
+<div class="outline-text-3" id="text-1-1">
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #483d8b;">#define</span> $GROUP$_GROUP_NAME          <span style="color: #8b2252;">"$group$"</span>
+<span style="color: #483d8b;">#define</span> $GROUP_NUM$_NAME            <span style="color: #8b2252;">"$group_num$"</span>
+<span style="color: #483d8b;">#define</span> $GROUP$_$GROUP_DSET$_NAME   <span style="color: #8b2252;">"$group_dset$"</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge10ebcf" class="outline-3">
+<h3 id="orge10ebcf"><span class="section-number-3">1.2</span> Template for HDF5 structures</h3>
+<div class="outline-text-3" id="text-1-2">
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_hdf5_s</span> {
+  <span style="color: #228b22;">trexio_t</span>     <span style="color: #a0522d;">parent</span> ;
+  <span style="color: #228b22;">hid_t</span>      <span style="color: #a0522d;">file_id</span>;
+  hid_t      $group$_group;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">file_name</span>;
+} <span style="color: #228b22;">trexio_hdf5_t</span>;
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org9ff3f5e" class="outline-3">
+<h3 id="org9ff3f5e"><span class="section-number-3">1.3</span> Template for HDF5 init/deinit</h3>
+<div class="outline-text-3" id="text-1-3">
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_init</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+
+  /* <span style="color: #b22222;">If file doesn't exist, create it </span>*/
+  <span style="color: #228b22;">int</span> <span style="color: #a0522d;">f_exists</span> = 0;
+  <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">stat</span> <span style="color: #a0522d;">st</span>;
+
+  <span style="color: #a020f0;">if</span> (stat(file-&gt;file_name, &amp;st) == 0) f_exists = 1;
+
+  <span style="color: #a020f0;">if</span> (f_exists == 1) {
+
+    <span style="color: #a020f0;">switch</span> (file-&gt;mode) {
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'r'</span>:
+      // <span style="color: #b22222;">reading the existing file -&gt; open as RDONLY</span>
+      f-&gt;file_id = H5Fopen(file-&gt;file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
+      <span style="color: #a020f0;">break</span>;
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'a'</span>:
+      // <span style="color: #b22222;">appending the existing file -&gt; open as RDWR</span>
+      f-&gt;file_id = H5Fopen(file-&gt;file_name, H5F_ACC_RDWR, H5P_DEFAULT);
+      <span style="color: #a020f0;">break</span>;
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'w'</span>:
+      // <span style="color: #b22222;">writing the existing file -&gt; overwrite it (_TRUNC) [_EXCL | H5F_ACC_DEBUG as an alternative]</span>
+      f-&gt;file_id = H5Fcreate(file-&gt;file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+      <span style="color: #a020f0;">break</span>;
+    }
+
+  } <span style="color: #a020f0;">else</span> {
+
+    <span style="color: #a020f0;">switch</span> (file-&gt;mode) {
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'r'</span>:
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'a'</span>:
+      // <span style="color: #b22222;">reading or appending non-existing file -&gt; error</span>
+      <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'w'</span>:
+      // <span style="color: #b22222;">writing non-existing file -&gt; create it</span>
+      f-&gt;file_id = H5Fcreate(file-&gt;file_name, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+      <span style="color: #a020f0;">break</span>;
+    }
+
+  }
+
+  /* <span style="color: #b22222;">Create or open groups in the hdf5 file assuming that they exist if file exists </span>*/
+  <span style="color: #a020f0;">switch</span> (file-&gt;mode) {
+    // <span style="color: #b22222;">the switch for 'r'/'a' is reached only if file exists</span>
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'r'</span>:
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'a'</span>:
+      f-&gt;$group$_group = H5Gopen(f-&gt;file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+      <span style="color: #a020f0;">break</span>;
+    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'w'</span>:
+      f-&gt;$group$_group = H5Gcreate(f-&gt;file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      <span style="color: #a020f0;">break</span>;
+  }
+  <span style="color: #a020f0;">if</span> (f-&gt;$group$_group &lt;= 0L) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ID;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+
+<span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_deinit</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+
+  H5Gclose(f-&gt;$group$_group);
+  f-&gt;$group$_group = 0;
+
+  H5Fclose(f-&gt;file_id);
+  f-&gt;file_id = 0;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org74ba7cb" class="outline-3">
+<h3 id="org74ba7cb"><span class="section-number-3">1.4</span> Template for HDF5 has/read/write a number</h3>
+<div class="outline-text-3" id="text-1-4">
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_read_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">uint64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">num</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (num  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+  /* <span style="color: #b22222;">Quit if the dimensioning attribute is missing in the file </span>*/
+  <span style="color: #a020f0;">if</span> (H5Aexists(f-&gt;$group$_group, $GROUP_NUM$_NAME) == 0) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  /* <span style="color: #b22222;">Read the nucleus_num attribute of nucleus group </span>*/
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">num_id</span> = H5Aopen(f-&gt;$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
+  <span style="color: #a020f0;">if</span> (num_id &lt;= 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ID;
+
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">herr_t</span> <span style="color: #a0522d;">status</span> = H5Aread(num_id, H5T_NATIVE_ULLONG, num);
+  <span style="color: #a020f0;">if</span> (status &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+
+}
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_write_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">num</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (num  == 0L  ) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+
+  <span style="color: #a020f0;">if</span> (H5Aexists(f-&gt;$group$_group, $GROUP_NUM$_NAME) == 0) {
+
+    /* <span style="color: #b22222;">Write the dimensioning variables </span>*/
+    <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">dtype</span> = H5Tcopy(H5T_NATIVE_ULLONG);
+    <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">dspace</span> = H5Screate(H5S_SCALAR);
+
+    <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">num_id</span> = H5Acreate(f-&gt;$group$_group, $GROUP_NUM$_NAME, dtype, dspace,
+                     H5P_DEFAULT, H5P_DEFAULT);
+    <span style="color: #a020f0;">if</span> (num_id &lt;= 0) {
+      H5Sclose(dspace);
+      H5Tclose(dtype);
+      <span style="color: #a020f0;">return</span> TREXIO_INVALID_ID;
+    }
+
+    <span style="color: #a020f0;">const</span> <span style="color: #228b22;">herr_t</span> <span style="color: #a0522d;">status</span> = H5Awrite(num_id, dtype, &amp;(num));
+    <span style="color: #a020f0;">if</span> (status &lt; 0) {
+      H5Aclose(num_id);
+      H5Sclose(dspace);
+      H5Tclose(dtype);
+      <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+    }
+
+    H5Sclose(dspace);
+    H5Aclose(num_id);
+    H5Tclose(dtype);
+    <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+
+  } <span style="color: #a020f0;">else</span> {
+
+    <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">infile_num</span>;
+    <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span> = trexio_hdf5_read_$group_num$(file, &amp;(infile_num));
+    <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+    <span style="color: #a020f0;">if</span> (infile_num != num) {
+
+      <span style="color: #a020f0;">if</span> (infile_num != 0) {
+        printf(<span style="color: #8b2252;">"%lu -&gt; %lu %s \n"</span>, num, infile_num,
+               <span style="color: #8b2252;">"This variable already exists. Overwriting it is not supported"</span>);
+        <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+      } <span style="color: #a020f0;">else</span> {
+
+        <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">dtype</span> = H5Tcopy(H5T_NATIVE_ULLONG);
+        <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">num_id</span> = H5Aopen(f-&gt;$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
+        <span style="color: #a020f0;">if</span> (num_id &lt;= 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ID;
+
+        <span style="color: #a020f0;">const</span> <span style="color: #228b22;">herr_t</span> <span style="color: #a0522d;">status</span> = H5Awrite(num_id, dtype, &amp;(num));
+        <span style="color: #a020f0;">if</span> (status &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+        H5Aclose(num_id);
+        H5Tclose(dtype);
+      }
+    }
+    <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+  }
+
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_has_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+
+  <span style="color: #228b22;">htri_t</span> <span style="color: #a0522d;">status</span> = H5Aexists(f-&gt;$group$_group, $GROUP_NUM$_NAME);
+  /* <span style="color: #b22222;">H5Aexists returns positive value if attribute exists, 0 if does not, negative if error </span>*/
+  <span style="color: #a020f0;">if</span> (status &gt; 0){
+    <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+  } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (status == 0) {
+    <span style="color: #a020f0;">return</span> TREXIO_HAS_NOT;
+  } <span style="color: #a020f0;">else</span> {
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+  }
+
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org01b35d3" class="outline-3">
+<h3 id="org01b35d3"><span class="section-number-3">1.5</span> Template for HDF5 has/read/write a dataset</h3>
+<div class="outline-text-3" id="text-1-5">
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_read_$group$_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, $group_dset_dtype$* <span style="color: #a020f0;">const</span> $group_dset$,
+                                       <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint64_t</span>* <span style="color: #a0522d;">dims</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> ($group_dset$  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+
+  <span style="color: #228b22;">herr_t</span> <span style="color: #a0522d;">status</span>;
+  <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rrank</span>;
+  // <span style="color: #b22222;">get the rank of the dataset in a file</span>
+  status = H5LTget_dataset_ndims (f-&gt;$group$_group, $GROUP$_$GROUP_DSET$_NAME,
+                                  &amp;rrank);
+
+  <span style="color: #a020f0;">if</span> (status &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">if</span> (rrank != (<span style="color: #228b22;">int</span>) rank) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+
+  // <span style="color: #b22222;">open the dataset to get its dimensions</span>
+  <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">dset_id</span> = H5Dopen(f-&gt;$group$_group, $GROUP$_$GROUP_DSET$_NAME,  H5P_DEFAULT);
+  <span style="color: #a020f0;">if</span> (dset_id &lt;= 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ID;
+
+  // <span style="color: #b22222;">allocate space for the dimensions to be read</span>
+  <span style="color: #228b22;">hsize_t</span>* <span style="color: #a0522d;">ddims</span> = CALLOC( (<span style="color: #228b22;">int</span>) rank, hsize_t);
+  <span style="color: #a020f0;">if</span> (ddims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  // <span style="color: #b22222;">read dimensions from the existing dataset</span>
+  status = H5LDget_dset_dims(dset_id, ddims);
+
+  H5Dclose(dset_id);
+  <span style="color: #a020f0;">if</span> (status &lt; 0) {
+    free(ddims);
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+  }
+
+  <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">i</span>=0; i&lt;rank; ++i){
+     <span style="color: #a020f0;">if</span> (ddims[i] != dims[i]) {
+       free(ddims);
+       <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
+     }
+  }
+  free(ddims);
+
+  /* <span style="color: #b22222;">High-level H5LT API. No need to deal with dataspaces and datatypes </span>*/
+  status = H5LTread_dataset_$group_dset_h5_dtype$(f-&gt;$group$_group,
+                                    $GROUP$_$GROUP_DSET$_NAME,
+                                    $group_dset$);
+  <span style="color: #a020f0;">if</span> (status &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_write_$group$_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> $group_dset_dtype$* $group_dset$,
+                                        <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint64_t</span>* <span style="color: #a0522d;">dims</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> ($group_dset$  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+  uint64_t $group_dset_dim$;
+  // <span style="color: #b22222;">error handling for rc is added by the generator</span>
+  rc = trexio_hdf5_read_$group_dset_dim$(file, &amp;($group_dset_dim$));
+  <span style="color: #a020f0;">if</span> ($group_dset_dim$ == 0L) <span style="color: #a020f0;">return</span> TREXIO_INVALID_NUM;
+
+  <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+
+  <span style="color: #a020f0;">if</span> ( H5LTfind_dataset(f-&gt;$group$_group, $GROUP$_$GROUP_DSET$_NAME) != 1) {
+
+    <span style="color: #a020f0;">const</span> <span style="color: #228b22;">herr_t</span> <span style="color: #a0522d;">status</span> =
+      H5LTmake_dataset_$group_dset_h5_dtype$ (f-&gt;$group$_group, $GROUP$_$GROUP_DSET$_NAME,
+                                      (<span style="color: #228b22;">int</span>) rank, (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">hsize_t</span>*) dims, $group_dset$);
+    <span style="color: #a020f0;">if</span> (status &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  } <span style="color: #a020f0;">else</span> {
+
+    <span style="color: #228b22;">hid_t</span> <span style="color: #a0522d;">dset_id</span> = H5Dopen(f-&gt;$group$_group, $GROUP$_$GROUP_DSET$_NAME, H5P_DEFAULT);
+    <span style="color: #a020f0;">if</span> (dset_id &lt;= 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ID;
+
+    <span style="color: #a020f0;">const</span> <span style="color: #228b22;">herr_t</span> <span style="color: #a0522d;">status</span> =
+      H5Dwrite(dset_id, H5T_NATIVE_$GROUP_DSET_H5_DTYPE$, H5S_ALL, H5S_ALL,
+               H5P_DEFAULT, $group_dset$);
+
+    H5Dclose(dset_id);
+    <span style="color: #a020f0;">if</span> (status &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+  }
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_hdf5_has_$group$_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
+
+  <span style="color: #228b22;">herr_t</span> <span style="color: #a0522d;">status</span> = H5LTfind_dataset(f-&gt;$group$_group, $GROUP$_$GROUP_DSET$_NAME);
+  /* <span style="color: #b22222;">H5LTfind_dataset returns 1 if dataset exists, 0 otherwise </span>*/
+  <span style="color: #a020f0;">if</span> (status == 1){
+    <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+  } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (status == 0) {
+    <span style="color: #a020f0;">return</span> TREXIO_HAS_NOT;
+  } <span style="color: #a020f0;">else</span> {
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+  }
+
+}
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: TREX-CoE</p>
+<p class="date">Created: 2021-04-12 Mon 12:32</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
