@@ -47,6 +47,9 @@ export CC CFLAGS FC FFLAGS LIBS
 .PHONY: clean
 
 
+build: libtrexio.so
+
+
 libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) 
 	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
 
@@ -60,6 +63,7 @@ trexio_f.o: libtrexio.so trexio_f.f90
 
 check: cppcheck.out
 	cat cppcheck.out
+
 
 cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
 	cppcheck --addon=cert -q --error-exitcode=0  \
@@ -85,6 +89,7 @@ test: test_c test_f
 	$(RM) -r trexio_test_fort
 	./test_c
 	./test_f
+
 
 clean:
 	$(RM) *.o libtrexio.so test_*.h5 test_f test_c
