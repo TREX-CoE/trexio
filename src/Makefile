@@ -41,6 +41,9 @@ HEADER_FILES= trexio.h trexio_text.h trexio_hdf5.h trexio_s.h
 ORG_FILES= templates_front/templator_front.org  templates_text/templator_text.org \
            templates_hdf5/templator_hdf5.org
 
+TREXIO_LIB= $(prefix)/lib
+TREXIO_INCLUDE= $(prefix)/include/trexio
+
 
 export CC CFLAGS FC FFLAGS LIBS
 
@@ -92,9 +95,9 @@ test: test_c test_f
 
 
 install: build
-	mkdir -p $(prefix)/include/trexio
-	cp libtrexio.so $(prefix)/lib
-	cp trexio*.h $(prefix)/include/trexio
+	install -d $(TREXIO_LIB) $(TREXIO_INCLUDE)
+	cp libtrexio.so $(TREXIO_LIB)
+	cp trexio*.h $(TREXIO_INCLUDE)
 
 
 clean:
