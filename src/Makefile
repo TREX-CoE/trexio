@@ -47,7 +47,7 @@ export CC CFLAGS FC FFLAGS LIBS
 .PHONY: clean
 
 
-build: libtrexio.so
+build: libtrexio.so fortran
 
 
 libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) 
