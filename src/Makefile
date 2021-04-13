@@ -44,7 +44,7 @@ ORG_FILES= templates_front/templator_front.org  templates_text/templator_text.or
 
 export CC CFLAGS FC FFLAGS LIBS
 
-.PHONY: clean
+.PHONY: build clean install
 
 
 build: libtrexio.so fortran
@@ -80,7 +80,7 @@ test_c: libtrexio.so test.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test_c
 
 
-test_f: libtrexio.so test.f90 trexio_f.o 
+test_f: build test.f90
 	$(FC) $(FFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LIBS) -o test_f
 
 
@@ -89,6 +89,12 @@ test: test_c test_f
 	$(RM) -r trexio_test_fort
 	./test_c
 	./test_f
+
+
+install: build
+	mkdir -p $(prefix)/include/trexio
+	cp libtrexio.so $(prefix)/lib
+	cp trexio*.h $(prefix)/include/trexio
 
 
 clean:

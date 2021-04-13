@@ -2,9 +2,14 @@ package = trexio
 version = 1.0
 tarname = $(package)
 distdir = $(tarname)-$(version)
+prefix  = /usr/local
+
+export prefix
+
+.PHONY: FORCE build install clean test dist distcheck
 
 
-build clean:
+build install clean test:
 	cd src && $(MAKE) $@
 
 
@@ -30,10 +35,10 @@ FORCE:
 
 distcheck: $(distdir).tar.gz
 	gzip -cd $(distdir).tar.gz | tar xvf -
-	cd $(distdir) && $(MAKE) build
-	cd $(distdir) && $(MAKE) clean
+	cd $(distdir) &&\
+		$(MAKE) build &&\
+		$(MAKE) test &&\
+		$(MAKE) clean
 	rm -rf $(distdir)
 	@echo "*** Package $(distdir).tar.gz is ready for distribution."
 
-
-.PHONY: FORCE build clean dist distcheck
