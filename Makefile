@@ -35,9 +35,10 @@ FORCE:
 
 distcheck: $(distdir).tar.gz
 	gzip -cd $(distdir).tar.gz | tar xvf -
-	cd $(distdir) &&\
-		$(MAKE) build &&\
-		$(MAKE) test &&\
+	cd $(distdir) && \
+		$(MAKE) build && \
+		$(MAKE) test && \
+		$(MAKE) DESTDIR=$${PWD}/_inst install && \
 		$(MAKE) clean
 	rm -rf $(distdir)
 	@echo "*** Package $(distdir).tar.gz is ready for distribution."

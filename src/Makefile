@@ -93,11 +93,11 @@ test: test_c test_f
 	./test_c
 	./test_f
 
-
+# $(DESTDIR) is needed for future support of package managers
 install: build
-	install -d $(TREXIO_LIB) $(TREXIO_INCLUDE)
-	cp libtrexio.so $(TREXIO_LIB)
-	cp trexio*.h $(TREXIO_INCLUDE)
+	install -d $(DESTDIR)$(TREXIO_LIB) $(DESTDIR)$(TREXIO_INCLUDE)
+	cp libtrexio.so $(DESTDIR)$(TREXIO_LIB)
+	cp trexio*.h $(DESTDIR)$(TREXIO_INCLUDE)
 
 
 clean:
