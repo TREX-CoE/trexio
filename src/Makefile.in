@@ -1,3 +1,26 @@
+# @configure_input@
+
+# Package-specific substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-specific substitution variables
+prefix      = @prefix@
+includedir  = @includedir@
+docdir      = @docdir@
+htmldir     = @htmldir@
+libdir      = @libdir@
+# Supplementary
+exec_prefix = @exec_prefix@
+libexecdir  = @libexecdir@
+lispdir     = @lispdir@
+# VPATH-specific substitution variables
+srcdir = @srcdir@
+VPATH  = @srcdir@
+
+
 COMPILER=GNU
 #COMPILER=INTEL
 #COMPILER=LLVM
@@ -94,7 +117,8 @@ test: test_c test_f
 	./test_f
 
 # $(DESTDIR) is needed for future support of package managers
-install: build
+# install should avoid build target due to possible conflict when prefix overriden
+install:
 	install -d $(DESTDIR)$(TREXIO_LIB) $(DESTDIR)$(TREXIO_INCLUDE)
 	cp libtrexio.so $(DESTDIR)$(TREXIO_LIB)
 	cp trexio*.h $(DESTDIR)$(TREXIO_INCLUDE)
@@ -107,4 +131,12 @@ clean:
 
 %.o: %.c $(HEADER_FILES)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $*.c -o $*.o
+
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status src/$@
+
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
 

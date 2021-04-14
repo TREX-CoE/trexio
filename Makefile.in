@@ -1,10 +1,24 @@
-package = trexio
-version = 1.0
-tarname = $(package)
-distdir = $(tarname)-$(version)
-prefix  = /usr/local
+# @configure_input@
 
-export prefix
+# Package-specific substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-specific substitution variables
+prefix      = @prefix@
+includedir  = @includedir@
+docdir      = @docdir@
+htmldir     = @htmldir@
+libdir      = @libdir@
+# Supplementary
+exec_prefix = @exec_prefix@
+libexecdir  = @libexecdir@
+lispdir     = @lispdir@
+# VPATH-specific substitution variables
+srcdir = @srcdir@
+VPATH  = @srcdir@
 
 .PHONY: FORCE build install clean test dist distcheck
 
@@ -24,8 +38,10 @@ $(distdir).tar.gz: $(distdir)
 # later on can be changed to ship only files like *.c *.h *.f90 *.so *.mod
 $(distdir): FORCE
 	mkdir -p $(distdir)
-	cp -r src/ $(distdir)
-	cp Makefile LICENSE README.md $(distdir)
+	cp $(srcdir)/configure.ac $(distdir)
+	cp $(srcdir)/configure $(distdir)
+	cp -r $(srcdir)/src/ $(distdir)
+	cp $(srcdir)/Makefile.in $(srcdir)/LICENSE $(srcdir)/README.md $(distdir)
 
 
 FORCE:
@@ -36,10 +52,19 @@ FORCE:
 distcheck: $(distdir).tar.gz
 	gzip -cd $(distdir).tar.gz | tar xvf -
 	cd $(distdir) && \
+		./configure && \
 		$(MAKE) build && \
 		$(MAKE) test && \
 		$(MAKE) DESTDIR=$${PWD}/_inst install && \
 		$(MAKE) clean
 	rm -rf $(distdir)
 	@echo "*** Package $(distdir).tar.gz is ready for distribution."
+
+
+Makefile: Makefile.in config.status
+	./config.status $@
+
+
+config.status: configure
+	./config.status --recheck
 
