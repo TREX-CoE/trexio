@@ -2,13 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([TREXIO], [1.0], [])
-AC_CONFIG_SRCDIR([src/trexio_text.h])
+AC_INIT([TREXIO], [0.2], [https://github.com/TREX-CoE/trexio/issues])
+AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_INSTALL
 AC_PROG_LN_S
 
 # Checks for libraries.
