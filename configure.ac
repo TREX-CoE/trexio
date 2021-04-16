@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([TREXIO], [0.2], [https://github.com/TREX-CoE/trexio/issues])
-AC_CONFIG_SRCDIR([src])
+AC_CONFIG_SRCDIR([src/trexio_text.h])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
@@ -14,13 +14,13 @@ AC_PROG_LN_S
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhdf5':
-AC_CHECK_LIB([hdf5], [main])
+AC_CHECK_LIB([hdf5], [H5_OPEN])
 # FIXME: Replace `main' with a function in `-lhdf5_hl':
-AC_CHECK_LIB([hdf5_hl], [main])
+AC_CHECK_LIB([hdf5_hl], [H5LT_FIND_DATASET])
 # FIXME: Replace `main' with a function in `-lm':
 AC_CHECK_LIB([m], [main])
 # FIXME: Replace `main' with a function in `-ltrexio':
-AC_CHECK_LIB([trexio], [main])
+AC_CHECK_LIB([trexio], [trexio_open])
 # FIXME: Replace `main' with a function in `-lz':
 AC_CHECK_LIB([z], [main])
 
