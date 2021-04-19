@@ -1,0 +1,41 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install extra repository
+        run: sudo add-apt-repository ppa:kelleyk/emacs
+
+      - name: refresh apt
+        run: sudo apt-get update
+
+      - name: install dependencies
+        run: sudo apt-get install emacs26
+
+      - name: make
+        run: cd tools/ && ./build_doc.sh && cd ..
+
+      - name: pwd
+        run: pwd
+
+      - name: ls
+        run: ls -sh ./docs
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.0
+        with:
+           branch: gh-pages
+           folder: ./docs
+
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          publish_dir: ./docs
+
+
