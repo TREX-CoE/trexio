@@ -21,38 +21,41 @@ srcdir = @srcdir@
 VPATH  = @srcdir@
 
 # Tool-specific substitution variables
-CC     = @CC@
-LIBS   = @LIBS@
-LDFLAGS= @LDFLAGS@
-CFLAGS = @CFLAGS@
-INSTALL= @INSTALL@
+CC        = @CC@
+LIBS      = @LIBS@
+#LDFLAGS   = @LDFLAGS@
+#CFLAGS    = @CFLAGS@
+INSTALL   = @INSTALL@
+
+# TODO: user-provided path to HDF5 as ./configure option
+hdf5_path  = /usr/lib/x86_64-linux-gnu/hdf5/serial
 
 ifeq ($(CC),gcc)
 #CC     = gcc
-#CFLAGS = -g -fPIC -fexceptions -Wall -Werror -Wpedantic -Wextra
+CFLAGS = -g -fPIC -O2 -fexceptions -Wall -Werror -Wpedantic -Wextra
 FC     = gfortran
-FFLAGS = -g -fPIC -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
+FFLAGS = -g -fPIC -O2 -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
 endif
 
 ifeq ($(CC),icc)
 #CC     = icc
-#CFLAGS = -xHost -fPIC -g -O2 -fexceptions -Wall -Werror -Wextra
+CFLAGS = -xHost -fPIC -g -O2 -fexceptions -Wall -Werror -Wextra
 FC     = ifort
 FFLAGS = -xHost -fPIC -g -O2
 endif
 
 ifeq ($(CC),clang)
 #CC     = clang
-#CFLAGS = -fPIC -g -O2
+CFLAGS = -fPIC -g -O2
 FC     = flang
 FFLAGS = -fPIC -g -O2
 endif
 
+# hard-coded for HDF5 installed with apt-get 
 #LIBS      = -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl -lpthread
 LIBS          = -lz -lm -lhdf5 -lhdf5_hl -lpthread
-HDF5_APT_DIR  = /usr/lib/x86_64-linux-gnu/hdf5/serial
-LDFLAGS       = -L$(HDF5_APT_DIR)/
-INCLUDE       = -I$(HDF5_APT_DIR)/include
+LDFLAGS       = -L$(hdf5_path)/
+INCLUDE       = -I$(hdf5_path)/include
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
 SOURCE_FILES= test.c trexio.c trexio_hdf5.c trexio_text.c

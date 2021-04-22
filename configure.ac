@@ -10,9 +10,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
-_DEBUG_START_
-AC_CHECK_PROG(H5CC_EXISTS, h5cc, TRUE, FALSE)
-_DEBUG_END_
+
+AC_CHECK_PROG(H5CC_EXISTS, h5cc, 1, 0)
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhdf5':
@@ -24,11 +23,24 @@ AC_CHECK_LIB([m], [main])
 # FIXME: Replace `main' with a function in `-lz':
 AC_CHECK_LIB([z], [main])
 # search for pthread
-AC_SEARCH_LIBS([pthread_create], [pthread])
+have_pthreads=no
+AC_SEARCH_LIBS([pthread_create], [pthread], [have_pthreads=yes])
+
+if test "x${have_pthreads}" = xyes; then
+   AC_CHECK_HEADERS([pthread.h], [], [have_pthreads=no])
+fi
+
+if test "x${have_pthreads}" = xno; then
+AC_MSG_ERROR([
+	------------------------------------------
+	The pthread library and header file
+	required to build TREXIO. Stopping...
+	Check 'config.log' for more information.
+	------------------------------------------])
+fi
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
-AC_CHECK_HEADERS([pthread.h])
 # Checks for HDF5-related header files
 AC_CHECK_HEADERS([hdf5.h hdf5_hl.h])
 
@@ -46,3 +58,22 @@ AC_CHECK_FUNCS([memset mkdir strerror])
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 AC_OUTPUT
+
+echo \
+"-------------------------------------------------
+
+${PACKAGE_NAME} Version ${PACKAGE_VERSION}
+
+Prefix: '${prefix}'.
+Compiler: '${CC} ${CFLAGS} ${CPPFLAGS}'
+
+Package features:
+  Async Execution: ${async_exec}
+
+Now type 'make @<:@<target>@:>@'
+where the optional <target> is:
+  all 		- build
+  check		- check
+  clean 	- clean 
+--------------------------------------------------"
+
