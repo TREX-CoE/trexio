@@ -7,10 +7,12 @@ AC_CONFIG_SRCDIR([src/trexio_text.h])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
-AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
+_DEBUG_START_
+AC_CHECK_PROG(H5CC_EXISTS, h5cc, TRUE, FALSE)
+_DEBUG_END_
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhdf5':
@@ -19,13 +21,16 @@ AC_CHECK_LIB([hdf5], [H5_OPEN])
 AC_CHECK_LIB([hdf5_hl], [H5LT_FIND_DATASET])
 # FIXME: Replace `main' with a function in `-lm':
 AC_CHECK_LIB([m], [main])
-# FIXME: Replace `main' with a function in `-ltrexio':
-AC_CHECK_LIB([trexio], [trexio_open])
 # FIXME: Replace `main' with a function in `-lz':
 AC_CHECK_LIB([z], [main])
+# search for pthread
+AC_SEARCH_LIBS([pthread_create], [pthread])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([pthread.h])
+# Checks for HDF5-related header files
+AC_CHECK_HEADERS([hdf5.h hdf5_hl.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT32_T

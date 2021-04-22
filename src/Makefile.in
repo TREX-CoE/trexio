@@ -20,42 +20,39 @@ lispdir     = @lispdir@
 srcdir = @srcdir@
 VPATH  = @srcdir@
 
-COMPILER=GNU
-#COMPILER=INTEL
-#COMPILER=LLVM
+# Tool-specific substitution variables
+CC     = @CC@
+LIBS   = @LIBS@
+LDFLAGS= @LDFLAGS@
+CFLAGS = @CFLAGS@
+INSTALL= @INSTALL@
 
-ifeq ($(COMPILER),GNU)
-CC=gcc -g
-CFLAGS=-fPIC -fexceptions -Wall -Werror -Wpedantic -Wextra
-
-FC=gfortran -g
-FFLAGS=-fPIC -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
-
-LIBS= -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl
-INCLUDE     = -I/usr/include/hdf5/serial
+ifeq ($(CC),gcc)
+#CC     = gcc
+#CFLAGS = -g -fPIC -fexceptions -Wall -Werror -Wpedantic -Wextra
+FC     = gfortran
+FFLAGS = -g -fPIC -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
 endif
 
-ifeq ($(COMPILER),INTEL)
-CC=icc -xHost
-CFLAGS=-fPIC -g -O2 -fexceptions -Wall -Werror -Wextra
-
-FC=ifort -xHost
-FFLAGS=-fPIC -g -O2
-
-LIBS= -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lhdf5 -lhdf5_hl
-INCLUDE     = -I/usr/include/hdf5/serial
+ifeq ($(CC),icc)
+#CC     = icc
+#CFLAGS = -xHost -fPIC -g -O2 -fexceptions -Wall -Werror -Wextra
+FC     = ifort
+FFLAGS = -xHost -fPIC -g -O2
 endif
 
-#TODO
-ifeq ($(COMPILER),LLVM)
-CC=clang
-CFLAGS=-fPIC -g -O2
-
-FC=flang
-FFLAGS=fPIC -g -O2
-
-LIBS=-lm
+ifeq ($(CC),clang)
+#CC     = clang
+#CFLAGS = -fPIC -g -O2
+FC     = flang
+FFLAGS = -fPIC -g -O2
 endif
+
+#LIBS      = -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl -lpthread
+LIBS          = -lz -lm -lhdf5 -lhdf5_hl -lpthread
+HDF5_APT_DIR  = /usr/lib/x86_64-linux-gnu/hdf5/serial
+LDFLAGS       = -L$(HDF5_APT_DIR)/
+INCLUDE       = -I$(HDF5_APT_DIR)/include
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
 SOURCE_FILES= test.c trexio.c trexio_hdf5.c trexio_text.c
@@ -66,8 +63,7 @@ ORG_FILES= templates_front/templator_front.org  templates_text/templator_text.or
 TREXIO_LIB= $(prefix)/lib
 TREXIO_INCLUDE= $(prefix)/include/trexio
 
-
-export CC CFLAGS FC FFLAGS LIBS
+#export CC CFLAGS FC FFLAGS LIBS
 
 .PHONY: all clean install
 .POSIX:
@@ -104,11 +100,11 @@ trexio.c trexio_f.f90 trexio.h: $(ORG_FILES)
 
 
 test_c: libtrexio.so test.c
-	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test_c
+	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LDFLAGS) $(LIBS) -o test_c
 
 
-test_f: libtrexio.so trexio_f.f90 test.f90
-	$(FC) $(FFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LIBS) -o test_f
+test_f: libtrexio.so trexio_f.o test.f90
+	$(FC) $(FFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LDFLAGS) $(LIBS) -o test_f
 
 
 check: test_c test_f
@@ -120,7 +116,7 @@ check: test_c test_f
 # $(DESTDIR) is needed for future support of package managers
 # install should avoid build target due to possible conflict when prefix overriden
 install:
-	install -d $(DESTDIR)$(TREXIO_LIB) $(DESTDIR)$(TREXIO_INCLUDE)
+	$(INSTALL) -d $(DESTDIR)$(TREXIO_LIB) $(DESTDIR)$(TREXIO_INCLUDE)
 	cp libtrexio.so $(DESTDIR)$(TREXIO_LIB)
 	cp trexio*.h $(DESTDIR)$(TREXIO_INCLUDE)
 
