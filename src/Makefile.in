@@ -69,10 +69,12 @@ TREXIO_INCLUDE= $(prefix)/include/trexio
 
 export CC CFLAGS FC FFLAGS LIBS
 
-.PHONY: build clean install
+.PHONY: all clean install
+.POSIX:
+.SUFFIXES:
 
 
-build: libtrexio.so fortran
+all: libtrexio.so fortran
 
 
 libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) 
@@ -86,7 +88,7 @@ trexio_f.o: libtrexio.so trexio_f.f90
 	$(FC) $(FFLAGS) -c trexio_f.f90 -o trexio_f.o
 
 
-check: cppcheck.out
+cppcheck: cppcheck.out
 	cat cppcheck.out
 
 
@@ -105,11 +107,11 @@ test_c: libtrexio.so test.c
 	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LIBS) -o test_c
 
 
-test_f: build test.f90
+test_f: libtrexio.so trexio_f.f90 test.f90
 	$(FC) $(FFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LIBS) -o test_f
 
 
-test: test_c test_f
+check: test_c test_f
 	$(RM) -r trexio_test
 	$(RM) -r trexio_test_fort
 	./test_c
