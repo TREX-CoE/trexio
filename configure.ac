@@ -8,10 +8,11 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_FC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-AC_CHECK_PROG(H5CC_EXISTS, h5cc, 1, 0)
+AC_CHECK_PROG(H5CC_EXISTS, h5cc, TRUE, FALSE)
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhdf5':
