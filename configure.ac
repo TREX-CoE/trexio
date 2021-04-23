@@ -11,7 +11,6 @@ AC_PROG_CC
 AC_PROG_FC
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_CHECK_PROG(HAVE_H5CC, h5cc, TRUE, FALSE)
 
 
 # Checks for libraries.
@@ -25,33 +24,32 @@ AC_CHECK_LIB([m], [main])
 AC_CHECK_LIB([z], [main])
 
 
-# search for hdf5
-have_hdf5=no
-AC_SEARCH_LIBS([H5_OPEN], [hdf5], [have_hdf5=yes])
-
-if test "x${have_hdf5}" = xyes; then
-   AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
-fi
-
-if test "x${have_hdf5}" = xno; then
-AC_MSG_WARN([
-	------------------------------------------
-	The HDF5 library and header file
-	required to build efficient TREXIO.
-	------------------------------------------])
-fi
-
 AC_ARG_WITH([hdf5],
-	    AS_HELP_STRING([--with-hdf5], [Include HDF5 functionality]))
+	    AS_HELP_STRING([--with-hdf5], 
+		[Include HDF5 functionality @<:@default: yes@:>@])],
+	     [hdf5=${withval}],
+	     [hdf5=yes])
 
 AS_IF([test "x$with_hdf5" != "xno"], [
-  dnl Do the stuff needed for enabling the feature
+  AC_ARG_VAR(hdf5_path, Path to the HDF5 directory)	\
+  AC_CHECK_PROG(HAVE_H5CC, h5cc, TRUE, FALSE)		
 ])
 
-AC_ARG_VAR(hdf5_path, Path to HDF5)
+if test "x${hdf5}" = xyes; then
+  have_hdf5=no								
+  AC_SEARCH_LIBS([H5_OPEN], [hdf5], [have_hdf5=yes])  	
+  if test "x${have_hdf5}" = xyes; then               	
+     AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])	
+  fi                                                    
+  if test "x${have_hdf5}" = xno; then                   
+    AC_MSG_WARN([                                     
+      ------------------------------------------      
+      The HDF5 library and header file                
+      required to build efficient TREXIO.             
+      ------------------------------------------])    
+  fi                                                 
+fi
 
-#FOO_CFLAGS="-I{FOO_DIR}/include -DFOO_BAR=1"
-#AC_SUBST(FOO_CLAGS)
 
 # search for pthread
 have_pthreads=no
