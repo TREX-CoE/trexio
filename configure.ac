@@ -12,6 +12,8 @@ AC_PROG_FC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
+# without Automake:
+# ./configure CFLAGS="-g -fPIC" hdf5_path=/usr/lib/x86_64-linux-gnu/hdf5/serial
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhdf5':
