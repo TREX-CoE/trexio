@@ -22,40 +22,41 @@ VPATH  = @srcdir@
 
 # Tool-specific substitution variables
 CC        = @CC@
+CFLAGS    = @CFLAGS@
+FC        = @FC@
+FFLAGS    = @FFLAGS@
 LIBS      = @LIBS@
-#LDFLAGS   = @LDFLAGS@
-#CFLAGS    = @CFLAGS@
+LDFLAGS   = @LDFLAGS@
 INSTALL   = @INSTALL@
 
 # TODO: user-provided path to HDF5 as ./configure option
-hdf5_path  = /usr/lib/x86_64-linux-gnu/hdf5/serial
+#hdf5_path  = /usr/lib/x86_64-linux-gnu/hdf5/serial
+hdf5_path  = @hdf5_path@
+# hard-coded for HDF5 installed with apt-get 
+LIBS          = -lz -lm -lhdf5 -lhdf5_hl -lpthread
+LDFLAGS       = -L$(hdf5_path)/
+INCLUDE       = -I$(hdf5_path)/include
 
 ifeq ($(CC),gcc)
-#CC     = gcc
-CFLAGS = -g -fPIC -O2 -fexceptions -Wall -Werror -Wpedantic -Wextra
-FC     = gfortran
+#CFLAGS = -g -fPIC -O2 -fexceptions -Wall -Werror -Wpedantic -Wextra
+endif
+ifeq ($(FC),gfortran)
 FFLAGS = -g -fPIC -O2 -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
 endif
 
 ifeq ($(CC),icc)
-#CC     = icc
 CFLAGS = -xHost -fPIC -g -O2 -fexceptions -Wall -Werror -Wextra
-FC     = ifort
+endif
+ifeq ($(FC),ifort)
 FFLAGS = -xHost -fPIC -g -O2
 endif
 
 ifeq ($(CC),clang)
-#CC     = clang
 CFLAGS = -fPIC -g -O2
-FC     = flang
+endif
+ifeq ($(FC),flang)
 FFLAGS = -fPIC -g -O2
 endif
-
-# hard-coded for HDF5 installed with apt-get 
-#LIBS      = -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl -lpthread
-LIBS          = -lz -lm -lhdf5 -lhdf5_hl -lpthread
-LDFLAGS       = -L$(hdf5_path)/
-INCLUDE       = -I$(hdf5_path)/include
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
 SOURCE_FILES= test.c trexio.c trexio_hdf5.c trexio_text.c
@@ -63,12 +64,8 @@ HEADER_FILES= trexio.h trexio_text.h trexio_hdf5.h trexio_s.h
 ORG_FILES= templates_front/templator_front.org  templates_text/templator_text.org \
            templates_hdf5/templator_hdf5.org
 
-#TREXIO_LIB= $(prefix)/lib
-#TREXIO_INCLUDE= $(prefix)/include/trexio
 
-#export CC CFLAGS FC FFLAGS LIBS
-
-.PHONY: all clean install
+.PHONY: all fortran clean install
 .POSIX:
 .SUFFIXES:
 
