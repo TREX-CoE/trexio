@@ -15,7 +15,7 @@ AC_PROG_LN_S
 # Minimal configure without Automake but with HDF5 (default: with HDF5) [optional]:
 # ./configure CFLAGS="-g -fPIC" HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial [--with-hdf5]
 # Minimal configure without Automake and without HDF5:
-# ./configure CFLAGS="-g -fPIC" --with-hdf5=no
+# ./configure CFLAGS="-g -fPIC" --without-hdf5 [or --with-hdf5=no]
 
 # Checks for basic libraries.
 AC_CHECK_LIB([m], [main])
@@ -43,7 +43,7 @@ fi
 AC_ARG_WITH([hdf5],
 	    AS_HELP_STRING([--with-hdf5], 
 		[Include HDF5 functionality @<:@default: yes@:>@])],
-	     [],
+	     [hdf5=${withval}],
 	     [hdf5=yes])
 
 if test "x${hdf5}" = xno; then                   
@@ -54,6 +54,14 @@ if test "x${hdf5}" = xno; then
     ------------------------------------------])    
 else
   AC_ARG_VAR(HDF5_PATH, Path to the HDF5 directory)
+  if test "x${HDF5_PATH}" = x; then                   
+    AC_MSG_ERROR([                                     
+    ------------------------------------------      
+    The path to HDF5 library is required. 
+    Maybe you forgot to pass HDF5_PATH="/your/path" to configure script. 
+    Stopping...
+    ------------------------------------------])    
+  fi
 
   have_hdf5=no					
   have_hdf5_hl=no					
@@ -73,7 +81,6 @@ else
 
   #CPPFLAGS="${CPPFLAGS_TMP}"
   #LDFLAGS="${LDFLAGS_TMP}"
-
 fi
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -101,6 +108,7 @@ Compiler: '${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS}'
 
 Package features:
   Compilation with HDF5: ${hdf5}
+  HDF5 located at: ${HDF5_PATH}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
