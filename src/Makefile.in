@@ -23,39 +23,40 @@ VPATH  = @srcdir@
 # Tool-specific substitution variables
 CC        = @CC@
 CFLAGS    = @CFLAGS@
+CPPFLAGS  = @CPPFLAGS@
 FC        = @FC@
-FFLAGS    = @FFLAGS@
+FCFLAGS   = @FCFLAGS@
 LIBS      = @LIBS@
 LDFLAGS   = @LDFLAGS@
 INSTALL   = @INSTALL@
 
 # TODO: user-provided path to HDF5 as ./configure option
 #hdf5_path  = /usr/lib/x86_64-linux-gnu/hdf5/serial
-hdf5_path  = @hdf5_path@
+#hdf5_path  = @hdf5_path@
 # hard-coded for HDF5 installed with apt-get 
-LIBS          = -lz -lm -lhdf5 -lhdf5_hl -lpthread
-LDFLAGS       = -L$(hdf5_path)/
-INCLUDE       = -I$(hdf5_path)/include
+#LIBS          = -lz -lm -lhdf5 -lhdf5_hl -lpthread
+#LDFLAGS       = -L$(hdf5_path)/
+#INCLUDE       = -I$(hdf5_path)/include
 
 ifeq ($(CC),gcc)
 #CFLAGS = -g -fPIC -O2 -fexceptions -Wall -Werror -Wpedantic -Wextra
 endif
 ifeq ($(FC),gfortran)
-FFLAGS = -g -fPIC -O2 -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
+FCFLAGS = -g -fPIC -O2 -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow,underflow -finit-real=nan
 endif
 
 ifeq ($(CC),icc)
 CFLAGS = -xHost -fPIC -g -O2 -fexceptions -Wall -Werror -Wextra
 endif
 ifeq ($(FC),ifort)
-FFLAGS = -xHost -fPIC -g -O2
+FCFLAGS = -xHost -fPIC -g -O2
 endif
 
 ifeq ($(CC),clang)
 CFLAGS = -fPIC -g -O2
 endif
 ifeq ($(FC),flang)
-FFLAGS = -fPIC -g -O2
+FCFLAGS = -fPIC -g -O2
 endif
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
@@ -81,7 +82,7 @@ fortran: trexio_f.o
 
 
 trexio_f.o: libtrexio.so trexio_f.f90
-	$(FC) $(FFLAGS) -c trexio_f.f90 -o trexio_f.o
+	$(FC) $(FCFLAGS) -c trexio_f.f90 -o trexio_f.o
 
 
 cppcheck: cppcheck.out
@@ -92,7 +93,7 @@ cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
 	cppcheck --addon=cert -q --error-exitcode=0  \
           --enable=warning,performance,portability,missingInclude,information \
           --language=c --std=c99 -rp --platform=unix64  \
-          $(INCLUDE) $(SOURCE_FILES) 2>$@
+          $(CPPFLAGS) $(SOURCE_FILES) 2>$@
 
 
 trexio.c trexio_f.f90 trexio.h: $(ORG_FILES)
@@ -100,11 +101,11 @@ trexio.c trexio_f.f90 trexio.h: $(ORG_FILES)
 
 
 test_c: libtrexio.so test.c
-	$(CC) $(CFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LDFLAGS) $(LIBS) -o test_c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LDFLAGS) $(LIBS) -o test_c
 
 
 test_f: libtrexio.so trexio_f.o test.f90
-	$(FC) $(FFLAGS) $(INCLUDE) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LDFLAGS) $(LIBS) -o test_f
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LDFLAGS) $(LIBS) -o test_f
 
 
 check: test_c test_f
@@ -127,7 +128,7 @@ clean:
 
 
 %.o: %.c $(HEADER_FILES)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $*.c -o $*.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $*.c -o $*.o
 
 
 Makefile: Makefile.in ../config.status

@@ -22,14 +22,15 @@ VPATH  = @srcdir@
 # Tool-specific substitution variables
 CC        = @CC@
 CFLAGS    = @CFLAGS@
+CPPFLAGS  = @CPPFLAGS@
 FC        = @FC@
-FFLAGS    = @FFLAGS@
+FCFLAGS   = @FCFLAGS@
 LIBS      = @LIBS@
 LDFLAGS   = @LDFLAGS@
 INSTALL   = @INSTALL@
 # TODO: user-provided path to HDF5 as ./configure option
 #hdf5_path  = /usr/lib/x86_64-linux-gnu/hdf5/serial
-hdf5_path  = @hdf5_path@
+HDF5_PATH = @HDF5_PATH@
 
 .PHONY: FORCE all install clean check dist distcheck
 .POSIX:
@@ -67,7 +68,7 @@ FORCE:
 distcheck: $(distdir).tar.gz
 	gzip -cd $(distdir).tar.gz | tar xvf -
 	cd $(distdir) && \
-		./configure CC="$(CC)" CFLAGS="$(CFLAGS)" hdf5_path=$(hdf5_path) --with-hdf5 && \
+		./configure CC="$(CC)" CFLAGS="$(CFLAGS)" HDF5_PATH="$(HDF5_PATH)" && \
 		$(MAKE) all && \
 		$(MAKE) check && \
 		$(MAKE) DESTDIR=$${PWD}/_inst install && \
