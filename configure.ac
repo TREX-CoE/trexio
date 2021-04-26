@@ -12,48 +12,18 @@ AC_PROG_FC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-# without Automake:
-# ./configure CFLAGS="-g -fPIC" hdf5_path=/usr/lib/x86_64-linux-gnu/hdf5/serial
+# Minimal configure without Automake but with HDF5 (default: with HDF5) [optional]:
+# ./configure CFLAGS="-g -fPIC" HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial [--with-hdf5]
+# Minimal configure without Automake and without HDF5:
+# ./configure CFLAGS="-g -fPIC" --with-hdf5=no
 
-# Checks for libraries.
-# FIXME: Replace `main' with a function in `-lhdf5':
-#AC_CHECK_LIB([hdf5], [H5_OPEN])
-# FIXME: Replace `main' with a function in `-lhdf5_hl':
-#AC_CHECK_LIB([hdf5_hl], [H5LT_FIND_DATASET])
-# FIXME: Replace `main' with a function in `-lm':
+# Checks for basic libraries.
 AC_CHECK_LIB([m], [main])
-# FIXME: Replace `main' with a function in `-lz':
 AC_CHECK_LIB([z], [main])
+# Checks for basic header files.
+AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
 
-
-AC_ARG_WITH([hdf5],
-	    AS_HELP_STRING([--with-hdf5], 
-		[Include HDF5 functionality @<:@default: yes@:>@])],
-	     [hdf5=${withval}],
-	     [hdf5=yes])
-
-AS_IF([test "x$with_hdf5" != "xno"], [
-  AC_ARG_VAR(hdf5_path, Path to the HDF5 directory)	\
-  AC_CHECK_PROG(HAVE_H5CC, h5cc, TRUE, FALSE)		
-])
-
-if test "x${hdf5}" = xyes; then
-  have_hdf5=no								
-  AC_SEARCH_LIBS([H5_OPEN], [hdf5], [have_hdf5=yes])  	
-  if test "x${have_hdf5}" = xyes; then               	
-     AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])	
-  fi                                                    
-  if test "x${have_hdf5}" = xno; then                   
-    AC_MSG_WARN([                                     
-      ------------------------------------------      
-      The HDF5 library and header file                
-      required to build efficient TREXIO.             
-      ------------------------------------------])    
-  fi                                                 
-fi
-
-
-# search for pthread
+# Search for pthread
 have_pthreads=no
 AC_SEARCH_LIBS([pthread_create], [pthread], [have_pthreads=yes])
 
@@ -70,8 +40,41 @@ AC_MSG_ERROR([
 	------------------------------------------])
 fi
 
-# Checks for header files.
-AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
+AC_ARG_WITH([hdf5],
+	    AS_HELP_STRING([--with-hdf5], 
+		[Include HDF5 functionality @<:@default: yes@:>@])],
+	     [],
+	     [hdf5=yes])
+
+if test "x${hdf5}" = xno; then                   
+  AC_MSG_WARN([                                     
+    ------------------------------------------      
+    Configuring with the HDF5 library is               
+    recommended to build efficient TREXIO.             
+    ------------------------------------------])    
+else
+  AC_ARG_VAR(HDF5_PATH, Path to the HDF5 directory)
+
+  have_hdf5=no					
+  have_hdf5_hl=no					
+
+  # The trick with FLAGS_TMP is necessary to check for HDF5 functions 
+  CPPFLAGS_TMP="${CPPFLAGS}"
+  LDFLAGS_TMP="${LDFLAGS}"
+
+  CPPFLAGS="-I${HDF5_PATH}/include ${CPPFLAGS_TMP}"
+  LDFLAGS="-L${HDF5_PATH} ${LDFLAGS_TMP}"
+
+  AC_CHECK_HEADERS([hdf5_hl.h], [], [have_hdf5_hl=no])	
+  AC_CHECK_LIB([hdf5_hl], [H5LTfind_dataset], [], [have_hdf5_hl=no])
+
+  AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
+  AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
+
+  #CPPFLAGS="${CPPFLAGS_TMP}"
+  #LDFLAGS="${LDFLAGS_TMP}"
+
+fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT32_T
@@ -94,15 +97,15 @@ echo \
 ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
 Prefix: '${prefix}'.
-Compiler: '${CC} ${CFLAGS} ${CPPFLAGS}'
+Compiler: '${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS}'
 
 Package features:
-  Async Execution: ${async_exec}
+  Compilation with HDF5: ${hdf5}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
-  all 		- build
-  check		- check
-  clean 	- clean 
+  all 		- build C and Fortran APIs
+  check		- check C and Fortran APIs
+  clean 	- clean the produced files
 --------------------------------------------------"
 
