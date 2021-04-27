@@ -13,11 +13,11 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 
 # Configure with HDF5 (default: using pkg-config, see --with-hdf5=find):
-# ./configure CFLAGS="-g -fPIC" [--with-hdf5=find]
+# ./configure [--with-hdf5=find]
 # Configure with user-provided path to HDF5:
-# ./configure CFLAGS="-g -fPIC" --with-hdf5=yes HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial
+# ./configure --with-hdf5=yes HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial
 # Configure without HDF5:
-# ./configure CFLAGS="-g -fPIC" --without-hdf5 [or --with-hdf5=no]
+# ./configure --without-hdf5 [or --with-hdf5=no]
 
 # Checks for basic libraries.
 AC_CHECK_LIB([m], [main])
@@ -44,7 +44,7 @@ fi
 
 AC_ARG_WITH([hdf5],
 	    AS_HELP_STRING([--with-hdf5], 
-		[Include HDF5 functionality @<:@default: yes@:>@])],
+			   [Include HDF5 functionality @<:@default: find@:>@])],
 	     [hdf5=${withval}],
 	     [hdf5=find])
 
@@ -85,6 +85,20 @@ elif test "x${hdf5}" = xfind; then
   LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
 
 fi
+
+# add -fPIC if not present in CFLAGS, necessary to compile TREXIO
+case "${CFLAGS}" in
+    *-fPIC*)
+    ;;
+    *)
+    AC_MSG_WARN([
+    ------------------------------------------      
+    Adding -fPIC option to CFLAGS.
+    This is necessary to build TREXIO.
+    ------------------------------------------])
+    CFLAGS="${CFLAGS} -fPIC"
+    ;;
+esac
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT32_T
