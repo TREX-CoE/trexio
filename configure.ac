@@ -5,16 +5,18 @@ AC_PREREQ([2.69])
 AC_INIT([TREXIO], [0.2], [https://github.com/TREX-CoE/trexio/issues])
 AC_CONFIG_SRCDIR([src/trexio_text.h])
 AC_CONFIG_HEADERS([config.h])
-
+PKG_PROG_PKG_CONFIG()
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_FC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-# Minimal configure without Automake but with HDF5 (default: with HDF5) [optional]:
-# ./configure CFLAGS="-g -fPIC" HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial [--with-hdf5]
-# Minimal configure without Automake and without HDF5:
+# Configure with HDF5 (default: using pkg-config, see --with-hdf5=find):
+# ./configure CFLAGS="-g -fPIC" [--with-hdf5=find]
+# Configure with user-provided path to HDF5:
+# ./configure CFLAGS="-g -fPIC" --with-hdf5=yes HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial
+# Configure without HDF5:
 # ./configure CFLAGS="-g -fPIC" --without-hdf5 [or --with-hdf5=no]
 
 # Checks for basic libraries.
@@ -44,7 +46,7 @@ AC_ARG_WITH([hdf5],
 	    AS_HELP_STRING([--with-hdf5], 
 		[Include HDF5 functionality @<:@default: yes@:>@])],
 	     [hdf5=${withval}],
-	     [hdf5=yes])
+	     [hdf5=find])
 
 if test "x${hdf5}" = xno; then                   
   AC_MSG_WARN([                                     
@@ -52,7 +54,8 @@ if test "x${hdf5}" = xno; then
     Configuring with the HDF5 library is               
     recommended to build efficient TREXIO.             
     ------------------------------------------])    
-else
+elif test "x${hdf5}" = xyes; then
+
   AC_ARG_VAR(HDF5_PATH, Path to the HDF5 directory)
   if test "x${HDF5_PATH}" = x; then                   
     AC_MSG_ERROR([                                     
@@ -66,12 +69,8 @@ else
   have_hdf5=no					
   have_hdf5_hl=no					
 
-  # The trick with FLAGS_TMP is necessary to check for HDF5 functions 
-  CPPFLAGS_TMP="${CPPFLAGS}"
-  LDFLAGS_TMP="${LDFLAGS}"
-
-  CPPFLAGS="-I${HDF5_PATH}/include ${CPPFLAGS_TMP}"
-  LDFLAGS="-L${HDF5_PATH} ${LDFLAGS_TMP}"
+  CPPFLAGS="-I${HDF5_PATH}/include ${CPPFLAGS}"
+  LDFLAGS="-L${HDF5_PATH} ${LDFLAGS}"
 
   AC_CHECK_HEADERS([hdf5_hl.h], [], [have_hdf5_hl=no])	
   AC_CHECK_LIB([hdf5_hl], [H5LTfind_dataset], [], [have_hdf5_hl=no])
@@ -79,8 +78,12 @@ else
   AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
   AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
 
-  #CPPFLAGS="${CPPFLAGS_TMP}"
-  #LDFLAGS="${LDFLAGS_TMP}"
+elif test "x${hdf5}" = xfind; then
+
+  PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+  CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
+  LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
+
 fi
 
 # Checks for typedefs, structures, and compiler characteristics.
