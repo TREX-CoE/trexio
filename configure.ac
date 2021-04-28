@@ -12,10 +12,10 @@ AC_PROG_FC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-# Configure with HDF5 (default: using pkg-config, see --with-hdf5=find):
-# ./configure [--with-hdf5=find]
+# Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
+# ./configure [--with-hdf5 or --with-hdf5=yes]
 # Configure with user-provided path to HDF5:
-# ./configure --with-hdf5=yes HDF5_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial
+# ./configure --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial
 # Configure without HDF5:
 # ./configure --without-hdf5 [or --with-hdf5=no]
 
@@ -44,9 +44,9 @@ fi
 
 AC_ARG_WITH([hdf5],
 	    AS_HELP_STRING([--with-hdf5], 
-			   [Include HDF5 functionality @<:@default: find@:>@])],
+			   [Include HDF5 functionality @<:@default: yes@:>@])],
 	     [hdf5=${withval}],
-	     [hdf5=find])
+	     [hdf5=yes])
 
 if test "x${hdf5}" = xno; then                   
   AC_MSG_WARN([                                     
@@ -56,12 +56,17 @@ if test "x${hdf5}" = xno; then
     ------------------------------------------])    
 elif test "x${hdf5}" = xyes; then
 
-  AC_ARG_VAR(HDF5_PATH, Path to the HDF5 directory)
-  if test "x${HDF5_PATH}" = x; then                   
+  PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+  CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
+  LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
+
+else
+
+  if test "x${hdf5}" = x; then
     AC_MSG_ERROR([                                     
-    ------------------------------------------      
-    The path to HDF5 library is required. 
-    Maybe you forgot to pass HDF5_PATH="/your/path" to configure script. 
+    ------------------------------------------
+    The path to HDF5 library is required.
+    Maybe you forgot to pass --with-hdf5="/your/path/" to configure script.
     Stopping...
     ------------------------------------------])    
   fi
@@ -69,8 +74,8 @@ elif test "x${hdf5}" = xyes; then
   have_hdf5=no					
   have_hdf5_hl=no					
 
-  CPPFLAGS="-I${HDF5_PATH}/include ${CPPFLAGS}"
-  LDFLAGS="-L${HDF5_PATH} ${LDFLAGS}"
+  CPPFLAGS="-I${hdf5}/include ${CPPFLAGS}"
+  LDFLAGS="-L${hdf5} ${LDFLAGS}"
 
   AC_CHECK_HEADERS([hdf5_hl.h], [], [have_hdf5_hl=no])	
   AC_CHECK_LIB([hdf5_hl], [H5LTfind_dataset], [], [have_hdf5_hl=no])
@@ -78,15 +83,10 @@ elif test "x${hdf5}" = xyes; then
   AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
   AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
 
-elif test "x${hdf5}" = xfind; then
-
-  PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-  CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
-  LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
-
 fi
 
 # add -fPIC if not present in CFLAGS, necessary to compile TREXIO
+# TODO: replace with AM_CFLAGS for appropriate targer once Automake is introduced
 case "${CFLAGS}" in
     *-fPIC*)
     ;;
@@ -121,11 +121,17 @@ echo \
 ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
 Prefix: '${prefix}'.
-Compiler: '${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS}'
+
+CC: 		${CC} 
+CPPFLAGS:	${CPPFLAGS}
+CFLAGS:		${CFLAGS}
+FC: 		${FC}
+FFLAGS:		${FCFLAGS}
+LDFLAGS:	${LDFLAGS}
+LIBS:		${LIBS}
 
 Package features:
   Compilation with HDF5: ${hdf5}
-  HDF5 located at: ${HDF5_PATH}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
