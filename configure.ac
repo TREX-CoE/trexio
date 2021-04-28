@@ -136,7 +136,7 @@ CC:           ${CC}
 CPPFLAGS:     ${CPPFLAGS}
 CFLAGS:	      ${CFLAGS}
 FC:           ${FC}
-FFLAGS:	      ${FCFLAGS}
+FCLAGS:       ${FCFLAGS}
 LDFLAGS:      ${LDFLAGS}
 LIBS:         ${LIBS}
 
