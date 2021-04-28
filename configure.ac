@@ -11,6 +11,7 @@ AC_PROG_CC
 AC_PROG_FC
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_PROG_CC_C99
 
 # Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
 # ./configure [--with-hdf5 or --with-hdf5=yes]
@@ -48,6 +49,9 @@ AC_ARG_WITH([hdf5],
 	     [hdf5=${withval}],
 	     [hdf5=yes])
 
+#have_hdf5=no
+#have_hdf5_hl=no
+
 if test "x${hdf5}" = xno; then                   
   AC_MSG_WARN([                                     
     ------------------------------------------      
@@ -56,9 +60,19 @@ if test "x${hdf5}" = xno; then
     ------------------------------------------])    
 elif test "x${hdf5}" = xyes; then
 
-  PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-  CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
-  LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
+  # Check if HDF5 is already configured (e.g. after calling `module load hdf5-<version>`)
+  AC_CHECK_HEADERS([hdf5_hl.h])
+  AC_CHECK_LIB([hdf5_hl], [H5LTfind_dataset], [], [have_hdf5_hl=no])
+
+  AC_CHECK_HEADERS([hdf5.h])
+  AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
+
+  # If HDF5 is not configured, try using pkg-config
+  if test "x${have_hdf5}" = xno; then
+    PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+    CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
+    LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
+  fi
 
 else
 
@@ -70,9 +84,6 @@ else
     Stopping...
     ------------------------------------------])    
   fi
-
-  have_hdf5=no					
-  have_hdf5_hl=no					
 
   CPPFLAGS="-I${hdf5}/include ${CPPFLAGS}"
   LDFLAGS="-L${hdf5} ${LDFLAGS}"
