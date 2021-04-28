@@ -1,0 +1,83 @@
+# @configure_input@
+
+# Package-specific substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-specific substitution variables
+prefix      = @prefix@
+includedir  = @includedir@
+docdir      = @docdir@
+htmldir     = @htmldir@
+libdir      = @libdir@
+# Supplementary
+exec_prefix = @exec_prefix@
+libexecdir  = @libexecdir@
+lispdir     = @lispdir@
+# VPATH-specific substitution variables
+srcdir = @srcdir@
+VPATH  = @srcdir@
+# Tool-specific substitution variables
+CC        = @CC@
+CFLAGS    = @CFLAGS@
+CPPFLAGS  = @CPPFLAGS@
+FC        = @FC@
+FCFLAGS   = @FCFLAGS@
+LIBS      = @LIBS@
+LDFLAGS   = @LDFLAGS@
+INSTALL   = @INSTALL@
+
+.PHONY: FORCE all install clean check dist distcheck
+.POSIX:
+.SUFFIXES:
+
+all install clean check:
+	cd src && $(MAKE) $@
+
+
+dist: $(distdir).tar.gz
+
+
+$(distdir).tar.gz: $(distdir)
+	tar chof - $(distdir) | gzip -9 -c > $@
+	rm -rf $(distdir)
+
+# for now copy entire src/ directory into $(distdir) in order for distcheck rule to work
+# later on can be changed to ship only files like *.c *.h *.f90 *.so *.mod
+$(distdir): FORCE
+	mkdir -p $(distdir)
+	cp $(srcdir)/configure.ac $(distdir)
+	cp $(srcdir)/configure $(distdir)
+	cp $(srcdir)/config.h.in $(distdir)
+	cp $(srcdir)/install-sh $(distdir)
+	cp -r $(srcdir)/src $(distdir)
+	cp $(srcdir)/Makefile.in $(distdir)
+	cp $(srcdir)/LICENSE $(distdir)
+
+
+FORCE:
+	-rm $(distdir).tar.gz >/dev/null 2>&1
+	-rm -rf $(distdir) >/dev/null 2>&1
+
+
+distcheck: $(distdir).tar.gz
+	gzip -cd $(distdir).tar.gz | tar xvf -
+	cd $(distdir) && \
+		./configure CC="$(CC)" CFLAGS="$(CFLAGS)" && \
+		$(MAKE) all && \
+		$(MAKE) check && \
+		$(MAKE) DESTDIR=$${PWD}/_inst install && \
+		$(MAKE) clean
+	rm -rf $(distdir)
+	@echo "*** Package $(distdir).tar.gz is ready for distribution."
+
+
+Makefile: Makefile.in config.status
+	./config.status $@
+
+
+config.status: configure
+	./config.status --recheck
+
