@@ -20,6 +20,9 @@ AC_PROG_CC_C99
 # Configure without HDF5:
 # ./configure --without-hdf5 [or --with-hdf5=no]
 
+# when configure complains about missing install-sh or install.sh, execute:
+# automake --add-missing --copy
+
 # Checks for basic libraries.
 AC_CHECK_LIB([m], [main])
 AC_CHECK_LIB([z], [main])
@@ -49,8 +52,6 @@ AC_ARG_WITH([hdf5],
 	     [hdf5=${withval}],
 	     [hdf5=yes])
 
-have_hdf5=no
-have_hdf5_hl=no
 if test "x${hdf5}" = xno; then                   
   AC_MSG_WARN([                                     
     ------------------------------------------      
@@ -87,10 +88,10 @@ else
   CPPFLAGS="-I${hdf5}/include ${CPPFLAGS}"
   LDFLAGS="-L${hdf5} ${LDFLAGS}"
 
-  AC_CHECK_HEADERS([hdf5_hl.h], [], [have_hdf5_hl=no])	
+  AC_CHECK_HEADERS([hdf5_hl.h])
   AC_CHECK_LIB([hdf5_hl], [H5LTfind_dataset], [], [have_hdf5_hl=no])
 
-  AC_CHECK_HEADERS([hdf5.h], [], [have_hdf5=no])
+  AC_CHECK_HEADERS([hdf5.h])
   AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
 
 fi
