@@ -53,6 +53,7 @@ typedef int32_t trexio_exit_code;
 
 #include "trexio.h"
 #include "trexio_s.h"
+#include "trexio_private.h"
 #include "trexio_text.h"
 #include "trexio_hdf5.h"
 /*
@@ -90,8 +91,8 @@ typedef int32_t trexio_exit_code;
    object is the same as the size of the data type pointed by the pointer.
 
    #+begin_src c :tangle trexio_private.h
-#define MALLOC(T) (T*) malloc (sizeof(T));
-#define CALLOC(N,T) (T*) calloc ((N),sizeof(T));
+#define MALLOC(T) (T*) malloc (sizeof(T))
+#define CALLOC(N,T) (T*) calloc ( (N) , sizeof(T) )
    #+end_src
 
    When a pointer is freed, it should be set to ~NULL~.
@@ -101,6 +102,10 @@ typedef int32_t trexio_exit_code;
 #define FREE(X) { free(X) ; (X)=NULL; }
    #+end_src
 
+   The maximum string size for the filenames is 4096 characters.
+   #+begin_src c :tangle trexio_private.h
+#define TREXIO_MAX_FILENAME_LENGTH 4096
+   #+end_src
 * Front end
 
   All calls to TREXIO are thread-safe.
@@ -414,6 +419,7 @@ trexio_open(const char* file_name, const char mode,
 
   if (file_name == NULL) return NULL;
   if (file_name[0] == '\0') return NULL;
+  /* Check overflow in file_name */
 
   if (back_end <  0) return NULL;
   if (back_end >= TREXIO_INVALID_BACK_END) return NULL;
@@ -444,8 +450,14 @@ trexio_open(const char* file_name, const char mode,
 
   /* Data for the parent type */
 
-  result->file_name   = CALLOC(strlen(file_name)+1, char);
-  strncpy(result->file_name, file_name, strlen(file_name)+1);
+  result->file_name   = CALLOC(TREXIO_MAX_FILENAME_LENGTH, char);
+  strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH);
+  if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
+    free(result->file_name);
+    free(result);
+    return NULL;
+  }
+
   result->back_end    = back_end;
   result->mode        = mode;
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
@@ -496,7 +508,7 @@ trexio_open(const char* file_name, const char mode,
   case TREXIO_JSON:
     rc = trexio_json_lock(result);
     break;
-*/
+,*/
   }
 
   if (rc != TREXIO_SUCCESS) {
@@ -563,8 +575,8 @@ trexio_close (trexio_t* file)
   }
 
   if (rc != TREXIO_SUCCESS) {
-    free(file->file_name);
-    free(file);
+    FREE(file->file_name);
+    FREE(file);
     return TREXIO_FAILURE;
   }
 
@@ -590,8 +602,7 @@ trexio_close (trexio_t* file)
 
   /* Terminate front end */
 
-  free(file->file_name);
-  file->file_name = NULL;
+  FREE(file->file_name);
 
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
 
