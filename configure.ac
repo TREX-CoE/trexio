@@ -49,9 +49,8 @@ AC_ARG_WITH([hdf5],
 	     [hdf5=${withval}],
 	     [hdf5=yes])
 
-#have_hdf5=no
-#have_hdf5_hl=no
-
+have_hdf5=no
+have_hdf5_hl=no
 if test "x${hdf5}" = xno; then                   
   AC_MSG_WARN([                                     
     ------------------------------------------      
@@ -133,21 +132,21 @@ ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
 Prefix: '${prefix}'.
 
-CC: 		${CC} 
-CPPFLAGS:	${CPPFLAGS}
-CFLAGS:		${CFLAGS}
-FC: 		${FC}
-FFLAGS:		${FCFLAGS}
-LDFLAGS:	${LDFLAGS}
-LIBS:		${LIBS}
+CC:           ${CC}
+CPPFLAGS:     ${CPPFLAGS}
+CFLAGS:	      ${CFLAGS}
+FC:           ${FC}
+FFLAGS:	      ${FCFLAGS}
+LDFLAGS:      ${LDFLAGS}
+LIBS:         ${LIBS}
 
 Package features:
   Compilation with HDF5: ${hdf5}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
-  all 		- build C and Fortran APIs
-  check		- check C and Fortran APIs
-  clean 	- clean the produced files
+  all           - build C and Fortran APIs
+  check	        - check C and Fortran APIs
+  clean         - clean the produced files
 --------------------------------------------------"
 
