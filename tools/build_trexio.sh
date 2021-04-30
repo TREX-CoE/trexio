@@ -10,6 +10,7 @@ TREXIO_ROOT=$(dirname "${PWD}../")
 
 #   First define readonly global variables.
 readonly SRC=${TREXIO_ROOT}/src
+readonly TOOLS=${TREXIO_ROOT}/tools
 
 # Go to src directory
 cd ${SRC}
@@ -66,7 +67,9 @@ cd ..
 
 # Populate templates with TREXIO structure according to trex.json file
 echo "run generator script to populate templates"
+cp ${TOOLS}/generator.py ${SRC}
 python3 generator.py
+rm -f -- ${SRC}/generator.py
 
 # Put pieces of source files together
 echo "compile populated files in the lib source files "
