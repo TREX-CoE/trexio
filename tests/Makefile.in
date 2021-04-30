@@ -45,11 +45,11 @@ check: test_c test_f
 
 
 test_c: test.c
-	$(CC) $(CPPFLAGS) -I$(includedir) $(CFLAGS) test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
+	$(CC) $(CPPFLAGS) -I$(includedir) $(CFLAGS) -Wl,-rpath,$(libdir) -L$(libdir) test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
 
 
 test_f: trexio_f.o test.f90
-	$(FC) $(CPPFLAGS) -I$(includedir) $(FCFLAGS) test.f90 trexio_f.o $(LDFLAGS) -ltrexio $(LIBS) -o test_f
+	$(FC) $(CPPFLAGS) -I$(includedir) $(FCFLAGS) -Wl,-rpath,$(libdir) -L$(libdir) test.f90 trexio_f.o $(LDFLAGS) -ltrexio $(LIBS) -o test_f
 
 
 clean:
