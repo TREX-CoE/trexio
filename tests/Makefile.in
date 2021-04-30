@@ -44,18 +44,12 @@ check: test_c test_f
 	./test_f
 
 
-test_c: upd_trexio test.c
-	$(CC) $(CPPFLAGS) -I$(includedir) $(CFLAGS) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LDFLAGS) $(LIBS) -o test_c
+test_c: test.c
+	$(CC) $(CPPFLAGS) -I$(includedir) $(CFLAGS) test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
 
 
-test_f: upd_trexio test.f90
-	$(FC) $(CPPFLAGS) -I$(includedir) $(FCFLAGS) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LDFLAGS) $(LIBS) -o test_f
-
-
-upd_trexio: $(trexio_src)/libtrexio.so $(trexio_src)/trexio_f.o
-	cp $(trexio_src)/libtrexio.so .
-	cp $(trexio_src)/trexio_f.o .
-	cp $(trexio_src)/trexio.mod $(includedir)
+test_f: trexio_f.o test.f90
+	$(FC) $(CPPFLAGS) -I$(includedir) $(FCFLAGS) test.f90 trexio_f.o $(LDFLAGS) -ltrexio $(LIBS) -o test_f
 
 
 clean:

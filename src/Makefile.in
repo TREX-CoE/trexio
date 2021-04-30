@@ -69,7 +69,8 @@ all: libtrexio.so fortran
 
 libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) 
 	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
-	cp -- $(HEADER_FILES) $(includedir)
+	cp libtrexio.so $(libdir)
+	cp $(HEADER_FILES) $(includedir)
 
 
 fortran: trexio_f.o
@@ -78,6 +79,7 @@ fortran: trexio_f.o
 trexio_f.o: libtrexio.so trexio_f.f90
 	$(FC) $(FCFLAGS) -c trexio_f.f90 -o trexio_f.o
 	cp -- trexio.mod $(includedir)
+	cp -- trexio_f.o ../tests
 
 
 cppcheck: cppcheck.out
@@ -101,7 +103,7 @@ install:
 	$(INSTALL) -d $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
 	cp libtrexio.so $(DESTDIR)$(libdir)
 	cp trexio*.h $(DESTDIR)$(includedir)
-#	cp trexio.mod $(DESTDIR)$(includedir)
+	cp trexio.mod $(DESTDIR)$(includedir)
 
 
 clean:
@@ -109,7 +111,7 @@ clean:
 
 
 clean-all:
-	$(RM) -- *.c *.h *.o libtrexio.so trexio.mod
+	$(RM) -- *.c *.h *.o libtrexio.so trexio_f.f90 trexio.mod
 
 
 %.o: %.c $(HEADER_FILES)

@@ -51,7 +51,7 @@ dist: $(distdir).tar.gz
 
 $(distdir).tar.gz: $(distdir)
 	tar chof - $(distdir) | gzip -9 -c > $@
-	rm -rf $(distdir)
+	rm -rf -- $(distdir)
 
 # for now copy entire src/ directory into $(distdir) in order for distcheck rule to work
 # later on can be changed to ship only files like *.c *.h *.f90 *.so *.mod
@@ -62,6 +62,9 @@ $(distdir): FORCE
 	cp $(srcdir)/config.h.in $(distdir)
 	cp $(srcdir)/install-sh $(distdir)
 	cp -r $(srcdir)/src $(distdir)
+	cp -r $(srcdir)/tests $(distdir)
+	cp -r $(srcdir)/lib $(distdir)
+	cp -r $(srcdir)/include $(distdir)
 	cp $(srcdir)/Makefile.in $(distdir)
 	cp $(srcdir)/LICENSE $(distdir)
 
@@ -74,12 +77,12 @@ FORCE:
 distcheck: $(distdir).tar.gz
 	gzip -cd $(distdir).tar.gz | tar xvf -
 	cd $(distdir) && \
-		./configure CC="$(CC)" CFLAGS="$(CFLAGS)" && \
+		./configure prefix=$${PWD}/$(distdir) CC="$(CC)" CFLAGS="$(CFLAGS)" && \
 		$(MAKE) all && \
 		$(MAKE) check && \
 		$(MAKE) DESTDIR=$${PWD}/_inst install && \
 		$(MAKE) clean
-	rm -rf $(distdir)
+	rm -rf -- $(distdir)
 	@echo "*** Package $(distdir).tar.gz is ready for distribution."
 
 
