@@ -5,7 +5,7 @@ TREX I/O library
 
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio` 
-4. `cd tools && ./build_trexio.sh && cd ..
+4. `cd tools && ./build_trexio.sh && cd ..`
 5. `autoreconf`
 6. `automake --add-missing --copy`
 7. `./configure`
