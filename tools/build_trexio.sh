@@ -6,8 +6,13 @@ if [[ $(basename $PWD) != "tools" ]] ; then
   exit -1
 fi
 
+TREXIO_ROOT=$(dirname "${PWD}../")
+
+#   First define readonly global variables.
+readonly SRC=${TREXIO_ROOT}/src
+
 # Go to src directory
-cd ../src
+cd ${SRC}
 
 # We want the script to crash on the 1st error:
 set -e
@@ -80,5 +85,3 @@ source build.sh
 cp trexio* ../
 cd ..
 
-# Come back to the TREXIO root directory
-cd ..
