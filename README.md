@@ -8,7 +8,7 @@ TREX I/O library
 4. `cd tools && ./build_trexio.sh && cd ..`
 5. `autoreconf`
 6. `automake --add-missing --copy`
-7. `./configure`
+7. `./configure prefix=~/trexio`
 8. `make && make check`
 
 Note: The code should be compliant with the C99 [CERT C coding
