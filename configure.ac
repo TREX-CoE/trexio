@@ -71,6 +71,7 @@ elif test "x${hdf5}" = xyes; then
   if test "x${have_hdf5}" = xno; then
     PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
     CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
+    FCFLAGS="${HDF5_CFLAGS} ${FCFLAGS}"
     LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
   fi
 
