@@ -29,11 +29,11 @@ LIBS      = @LIBS@
 LDFLAGS   = @LDFLAGS@
 INSTALL   = @INSTALL@
 
-.PHONY: FORCE all install clean clean-all check dist distcheck
+.PHONY: FORCE all install uninstall clean clean-all check dist distcheck
 .POSIX:
 .SUFFIXES:
 
-all install:
+all install uninstall:
 	cd src && $(MAKE) $@
 
 
@@ -51,7 +51,7 @@ dist: $(distdir).tar.gz
 
 $(distdir).tar.gz: $(distdir)
 	tar chof - $(distdir) | gzip -9 -c > $@
-	rm -rf -- $(distdir)
+	$(RM) -r -- $(distdir)
 
 # for now copy entire src/ directory into $(distdir) in order for distcheck rule to work
 # later on can be changed to ship only files like *.c *.h *.f90 *.so *.mod
@@ -61,28 +61,36 @@ $(distdir): FORCE
 	cp $(srcdir)/configure $(distdir)
 	cp $(srcdir)/config.h.in $(distdir)
 	cp $(srcdir)/install-sh $(distdir)
-	cp -r $(srcdir)/src $(distdir)
-	cp -r $(srcdir)/tests $(distdir)
-	cp -r $(srcdir)/lib $(distdir)
-	cp -r $(srcdir)/include $(distdir)
+	mkdir -p $(distdir)/src
+	mkdir -p $(distdir)/tests
+	mkdir -p $(distdir)/include
+	mkdir -p $(distdir)/lib
+	cp $(srcdir)/src/trexio*.c $(distdir)/src
+	cp $(srcdir)/src/trexio*.h $(distdir)/src
+	cp $(srcdir)/src/trexio*.f90 $(distdir)/src
+	cp $(srcdir)/src/Makefile.in $(distdir)/src
+	cp $(srcdir)/tests/test.c $(distdir)/tests
+	cp $(srcdir)/tests/test.f90 $(distdir)/tests
+	cp $(srcdir)/tests/Makefile.in $(distdir)/tests
 	cp $(srcdir)/Makefile.in $(distdir)
 	cp $(srcdir)/LICENSE $(distdir)
 
 
 FORCE:
-	-rm $(distdir).tar.gz >/dev/null 2>&1
-	-rm -rf $(distdir) >/dev/null 2>&1
+	-$(RM) -- $(distdir).tar.gz >/dev/null 2>&1
+	-$(RM) -r -- $(distdir) >/dev/null 2>&1
 
 
 distcheck: $(distdir).tar.gz
 	gzip -cd $(distdir).tar.gz | tar xvf -
 	cd $(distdir) && \
-		./configure prefix=$${PWD} CC="$(CC)" CFLAGS="$(CFLAGS)" && \
-		$(MAKE) all && \
-		$(MAKE) check && \
+		./configure CC="$(CC)" CFLAGS="$(CFLAGS)" && \
+		$(MAKE) && \
 		$(MAKE) DESTDIR=$${PWD}/_inst install && \
+		$(MAKE) DESTDIR=$${PWD}/_inst check && \
+		$(MAKE) DESTDIR=$${PWD}/_inst uninstall && \
 		$(MAKE) clean
-	rm -rf -- $(distdir)
+	$(RM) -r -- $(distdir)
 	@echo "*** Package $(distdir).tar.gz is ready for distribution."
 
 

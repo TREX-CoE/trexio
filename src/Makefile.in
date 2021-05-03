@@ -55,8 +55,6 @@ endif
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
 SOURCE_FILES= test.c trexio.c trexio_hdf5.c trexio_text.c
 HEADER_FILES= trexio.h trexio_text.h trexio_hdf5.h trexio_s.h
-ORG_FILES= templates_front/templator_front.org  templates_text/templator_text.org \
-           templates_hdf5/templator_hdf5.org
 
 
 .PHONY: all fortran clean clean-all install
@@ -69,8 +67,6 @@ all: libtrexio.so fortran
 
 libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) 
 	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
-	cp libtrexio.so $(libdir) && $(RM) -- libtrexio.so
-	cp $(HEADER_FILES) $(includedir)
 
 
 fortran: trexio_f.o
@@ -78,8 +74,6 @@ fortran: trexio_f.o
 
 trexio_f.o: libtrexio.so trexio_f.f90
 	$(FC) $(FCFLAGS) -c trexio_f.f90 -o trexio_f.o
-	cp -- trexio.mod $(includedir)
-	cp -- trexio_f.o ../tests
 
 
 cppcheck: cppcheck.out
@@ -93,17 +87,19 @@ cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
           $(CPPFLAGS) $(SOURCE_FILES) 2>$@
 
 
-trexio.c trexio_f.f90 trexio.h: $(ORG_FILES)
-	cd ../tools && ./build_trexio.sh && cd ../src
-
-
 # $(DESTDIR) is needed for future support of package managers
 # install should avoid build target due to possible conflict when prefix overriden
 install:
 	$(INSTALL) -d $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
-	cp $(libdir)/libtrexio.so $(DESTDIR)$(libdir)
+	cp libtrexio.so $(DESTDIR)$(libdir)
 	cp trexio*.h $(DESTDIR)$(includedir)
-	cp trexio.mod $(DESTDIR)$(includedir)
+	cp trexio_f.f90 $(DESTDIR)$(includedir)
+
+
+uninstall:
+	-$(RM) -- $(DESTDIR)$(libdir)/libtrexio.so
+	-$(RM) -- $(DESTDIR)$(includedir)/trexio*.h
+	-$(RM) -- $(DESTDIR)$(includedir)/trexio_f.f90
 
 
 clean:

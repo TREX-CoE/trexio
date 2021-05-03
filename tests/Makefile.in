@@ -30,8 +30,6 @@ LIBS      = @LIBS@
 LDFLAGS   = @LDFLAGS@
 INSTALL   = @INSTALL@
 
-# Temporary solution to obtain compiled TREXIO from src directory
-trexio_src = $(PWD)/../src
 
 .PHONY: clean
 .POSIX:
@@ -45,21 +43,24 @@ check: test_c test_f
 
 
 test_c: test.c
-	$(CC) $(CPPFLAGS) -I$(includedir) $(CFLAGS) -Wl,-rpath,$(libdir) -L$(libdir) test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
+	$(CC) $(CPPFLAGS) -I$(DESTDIR)$(includedir) $(CFLAGS) -Wl,-rpath,$(DESTDIR)$(libdir) -L$(DESTDIR)$(libdir) test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
 
 
-test_f: trexio_f.o test.f90
-	$(FC) $(CPPFLAGS) -I$(includedir) $(FCFLAGS) -Wl,-rpath,$(libdir) -L$(libdir) test.f90 trexio_f.o $(LDFLAGS) -ltrexio $(LIBS) -o test_f
+test_f: trexio_f.f90 test.f90
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -Wl,-rpath,$(DESTDIR)$(libdir) -L$(DESTDIR)$(libdir) trexio_f.f90 test.f90 $(LDFLAGS) -ltrexio $(LIBS) -o test_f
+
+
+trexio_f.f90:
+	cp $(DESTDIR)$(includedir)/trexio_f.f90 .
 
 
 clean:
-	$(RM) -- *.h5 test_f test_c
+	$(RM) -- trexio.mod test_f test_c *.h5
 	$(RM) -r -- trexio_test/ trexio_test_fort/
 
 
-clean-all:
-	$(RM) -- trexio_f.o libtrexio.so test_*.h5 test_f test_c
-	$(RM) -r -- trexio_test/ trexio_test_fort/
+clean-all: clean
+	$(RM) -- trexio_f.o
 
 
 Makefile: Makefile.in ../config.status
