@@ -59,7 +59,7 @@ ORG_FILES= templates_front/templator_front.org  templates_text/templator_text.or
            templates_hdf5/templator_hdf5.org
 
 
-.PHONY: all fortran clean install
+.PHONY: all fortran clean clean-all install
 .POSIX:
 .SUFFIXES:
 
@@ -69,6 +69,8 @@ all: libtrexio.so fortran
 
 libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) 
 	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
+	cp libtrexio.so $(libdir) && $(RM) -- libtrexio.so
+	cp $(HEADER_FILES) $(includedir)
 
 
 fortran: trexio_f.o
@@ -76,6 +78,8 @@ fortran: trexio_f.o
 
 trexio_f.o: libtrexio.so trexio_f.f90
 	$(FC) $(FCFLAGS) -c trexio_f.f90 -o trexio_f.o
+	cp -- trexio.mod $(includedir)
+	cp -- trexio_f.o ../tests
 
 
 cppcheck: cppcheck.out
@@ -93,31 +97,21 @@ trexio.c trexio_f.f90 trexio.h: $(ORG_FILES)
 	cd ../tools && ./build_trexio.sh && cd ../src
 
 
-test_c: libtrexio.so test.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -Wl,-rpath,$(PWD) -L. test.c -ltrexio $(LDFLAGS) $(LIBS) -o test_c
-
-
-test_f: libtrexio.so trexio_f.o test.f90
-	$(FC) $(CPPFLAGS) $(FCFLAGS) -Wl,-rpath,$(PWD) -L. test.f90 trexio_f.o -ltrexio $(LDFLAGS) $(LIBS) -o test_f
-
-
-check: test_c test_f
-	$(RM) -r trexio_test
-	$(RM) -r trexio_test_fort
-	./test_c
-	./test_f
-
 # $(DESTDIR) is needed for future support of package managers
 # install should avoid build target due to possible conflict when prefix overriden
 install:
 	$(INSTALL) -d $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
-	cp libtrexio.so $(DESTDIR)$(libdir)
+	cp $(libdir)/libtrexio.so $(DESTDIR)$(libdir)
 	cp trexio*.h $(DESTDIR)$(includedir)
+	cp trexio.mod $(DESTDIR)$(includedir)
 
 
 clean:
-	$(RM) *.o libtrexio.so test_*.h5 test_f test_c
-	$(RM) -r trexio_test/ trexio_test_fort/
+	$(RM) -- *.o libtrexio.so trexio.mod 
+
+
+clean-all:
+	$(RM) -- *.c *.h *.o libtrexio.so trexio_f.f90 trexio.mod
 
 
 %.o: %.c $(HEADER_FILES)

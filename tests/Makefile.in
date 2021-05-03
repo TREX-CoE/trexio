@@ -1,0 +1,71 @@
+# @configure_input@
+
+# Package-specific substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-specific substitution variables
+prefix      = @prefix@
+includedir  = @includedir@
+docdir      = @docdir@
+htmldir     = @htmldir@
+libdir      = @libdir@
+# Supplementary
+exec_prefix = @exec_prefix@
+libexecdir  = @libexecdir@
+lispdir     = @lispdir@
+# VPATH-specific substitution variables
+srcdir = @srcdir@
+VPATH  = @srcdir@
+
+# Tool-specific substitution variables
+CC        = @CC@
+CFLAGS    = @CFLAGS@
+CPPFLAGS  = @CPPFLAGS@
+FC        = @FC@
+FCFLAGS   = @FCFLAGS@
+LIBS      = @LIBS@
+LDFLAGS   = @LDFLAGS@
+INSTALL   = @INSTALL@
+
+# Temporary solution to obtain compiled TREXIO from src directory
+trexio_src = $(PWD)/../src
+
+.PHONY: clean
+.POSIX:
+
+
+check: test_c test_f
+	$(RM) -r -- trexio_test
+	$(RM) -r -- trexio_test_fort
+	./test_c
+	./test_f
+
+
+test_c: test.c
+	$(CC) $(CPPFLAGS) -I$(includedir) $(CFLAGS) -Wl,-rpath,$(libdir) -L$(libdir) test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
+
+
+test_f: trexio_f.o test.f90
+	$(FC) $(CPPFLAGS) -I$(includedir) $(FCFLAGS) -Wl,-rpath,$(libdir) -L$(libdir) test.f90 trexio_f.o $(LDFLAGS) -ltrexio $(LIBS) -o test_f
+
+
+clean:
+	$(RM) -- *.h5 test_f test_c
+	$(RM) -r -- trexio_test/ trexio_test_fort/
+
+
+clean-all:
+	$(RM) -- trexio_f.o libtrexio.so test_*.h5 test_f test_c
+	$(RM) -r -- trexio_test/ trexio_test_fort/
+
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status tests/$@
+
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+

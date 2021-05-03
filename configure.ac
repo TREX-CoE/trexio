@@ -123,7 +123,8 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+		 tests/Makefile])
 AC_OUTPUT
 
 echo \
