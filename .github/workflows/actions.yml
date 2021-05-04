@@ -1,0 +1,35 @@
+name: TREXIO CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+    
+      - name: install-dependencies    
+        run: |
+          sudo add-apt-repository ppa:kelleyk/emacs
+          sudo apt-get install libhdf5-dev emacs27
+        
+      - name: generate-trexio
+        run: cd src && source build_trex.sh
+        
+      - name: make_c
+        run: cd src && make
+        
+      - name: make_f
+        run: cd src && make fortran
+        
+      - name: test
+        run: cd src && make test
+        
