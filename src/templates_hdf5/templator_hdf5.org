@@ -6,7 +6,7 @@
 * Constant file prefixes (not used by the generator)               :noexport:
 
   #+begin_src emacs-lisp
- (setq-local org-babel-default-header-args:c '((:comments . "both")))
+  (setq-local org-babel-default-header-args:c '((:comments . "both")))
   org-babel-default-header-args:c
   #+end_src
 
@@ -21,8 +21,6 @@
 */
 
   #+end_src
-
-DOCUMENT HDF5 BACK END HERE
 
 
   #+begin_src c :tangle prefix_hdf5.h :noweb yes
@@ -182,7 +180,7 @@ trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num)
   const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
   if (num_id <= 0) return TREXIO_INVALID_ID;
 
-  const herr_t status = H5Aread(num_id, H5T_NATIVE_ULLONG, num);
+  const herr_t status = H5Aread(num_id, H5T_NATIVE_UINT64, num);
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
@@ -204,7 +202,7 @@ trexio_hdf5_write_$group_num$ (trexio_t* const file, const uint64_t num)
   if (H5Aexists(f->$group$_group, $GROUP_NUM$_NAME) == 0) {
 
     /* Write the dimensioning variables */
-    const hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+    const hid_t dtype = H5Tcopy(H5T_NATIVE_UINT64);
     const hid_t dspace = H5Screate(H5S_SCALAR);
 
     const hid_t num_id = H5Acreate(f->$group$_group, $GROUP_NUM$_NAME, dtype, dspace,
@@ -243,7 +241,7 @@ trexio_hdf5_write_$group_num$ (trexio_t* const file, const uint64_t num)
 
       } else {
 
-	const hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+	const hid_t dtype = H5Tcopy(H5T_NATIVE_UINT64);
 	const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
 	if (num_id <= 0) return TREXIO_INVALID_ID;
 
@@ -304,15 +302,14 @@ trexio_hdf5_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype$*
   herr_t status;
   int rrank;
   // get the rank of the dataset in a file
-  status = H5LTget_dataset_ndims (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME,
-				  &rrank);
+  status = H5LTget_dataset_ndims (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, &rrank);
 
   if (status < 0) return TREXIO_FAILURE;
 
   if (rrank != (int) rank) return TREXIO_INVALID_ARG_3;
 
   // open the dataset to get its dimensions
-  hid_t dset_id = H5Dopen(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME,  H5P_DEFAULT);
+  hid_t dset_id = H5Dopen(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, H5P_DEFAULT);
   if (dset_id <= 0) return TREXIO_INVALID_ID;
 
   // allocate space for the dimensions to be read
@@ -329,17 +326,18 @@ trexio_hdf5_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype$*
   }
 
   for (uint32_t i=0; i<rank; ++i){
-     if (ddims[i] != dims[i]) {
-       free(ddims);
-       return TREXIO_INVALID_ARG_4;
-     }
+    if (ddims[i] != dims[i]) {
+      free(ddims);
+      return TREXIO_INVALID_ARG_4;
+    }
   }
   free(ddims);
 
   /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  status = H5LTread_dataset_$group_dset_h5_dtype$(f->$group$_group,
-				    $GROUP$_$GROUP_DSET$_NAME,
-				    $group_dset$);
+  status = H5LTread_dataset(f->$group$_group,
+			    $GROUP$_$GROUP_DSET$_NAME,
+			    H5T_NATIVE_$GROUP_DSET_H5_DTYPE$,
+			    $group_dset$);
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
@@ -363,11 +361,13 @@ trexio_hdf5_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
-  if ( H5LTfind_dataset(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME) != 1) {
+  if ( H5LTfind_dataset(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME) != 1 ) {
 
-    const herr_t status =
-      H5LTmake_dataset_$group_dset_h5_dtype$ (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME,
-				      (int) rank, (const hsize_t*) dims, $group_dset$);
+    const herr_t status = H5LTmake_dataset(f->$group$_group,
+					   $GROUP$_$GROUP_DSET$_NAME,
+					   (int) rank, (const hsize_t*) dims,
+					   H5T_NATIVE_$GROUP_DSET_H5_DTYPE$,
+					   $group_dset$);
     if (status < 0) return TREXIO_FAILURE;
 
   } else {
@@ -375,9 +375,10 @@ trexio_hdf5_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_
     hid_t dset_id = H5Dopen(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, H5P_DEFAULT);
     if (dset_id <= 0) return TREXIO_INVALID_ID;
 
-    const herr_t status =
-      H5Dwrite(dset_id, H5T_NATIVE_$GROUP_DSET_H5_DTYPE$, H5S_ALL, H5S_ALL,
-	       H5P_DEFAULT, $group_dset$);
+    const herr_t status = H5Dwrite(dset_id,
+				   H5T_NATIVE_$GROUP_DSET_H5_DTYPE$,
+				   H5S_ALL, H5S_ALL, H5P_DEFAULT,
+				   $group_dset$);
 
     H5Dclose(dset_id);
     if (status < 0) return TREXIO_FAILURE;
@@ -417,3 +418,5 @@ trexio_hdf5_has_$group$_$group_dset$ (trexio_t* const file)
 
 #endif
   #+end_src
+
+

@@ -288,7 +288,7 @@ for fname in files_funcs_dsets:
                             c_dtype_single = 'float'
 
                         elif params['dtype'] == 'int64_t':
-                            h5_dtype = 'long'
+                            h5_dtype = 'int64'
                             f_dtype_double = 'integer(8)'
                             f_dtype_single = 'integer(4)'
                             c_dtype_double = 'int64_t'
