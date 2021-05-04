@@ -182,7 +182,7 @@ trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num)
   const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
   if (num_id <= 0) return TREXIO_INVALID_ID;
 
-  const herr_t status = H5Aread(num_id, H5T_NATIVE_ULLONG, num);
+  const herr_t status = H5Aread(num_id, H5T_NATIVE_UINT64, num);
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
@@ -204,7 +204,7 @@ trexio_hdf5_write_$group_num$ (trexio_t* const file, const uint64_t num)
   if (H5Aexists(f->$group$_group, $GROUP_NUM$_NAME) == 0) {
 
     /* Write the dimensioning variables */
-    const hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+    const hid_t dtype = H5Tcopy(H5T_NATIVE_UINT64);
     const hid_t dspace = H5Screate(H5S_SCALAR);
 
     const hid_t num_id = H5Acreate(f->$group$_group, $GROUP_NUM$_NAME, dtype, dspace,
@@ -243,7 +243,7 @@ trexio_hdf5_write_$group_num$ (trexio_t* const file, const uint64_t num)
 
       } else {
 
-	const hid_t dtype = H5Tcopy(H5T_NATIVE_ULLONG);
+	const hid_t dtype = H5Tcopy(H5T_NATIVE_UINT64);
 	const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
 	if (num_id <= 0) return TREXIO_INVALID_ID;
 
