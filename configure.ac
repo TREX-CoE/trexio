@@ -17,8 +17,9 @@ fi
 
 AC_CONFIG_SRCDIR([src/Makefile.in])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES([trexio.pc])
 PKG_PROG_PKG_CONFIG()
+PKG_LIBS=""
+PKG_CFLAGS=""
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_FC
@@ -38,7 +39,6 @@ AC_PROG_CC_C99
 
 # Checks for basic libraries.
 AC_CHECK_LIB([m], [main])
-AC_CHECK_LIB([z], [main])
 # Checks for basic header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
 
@@ -48,6 +48,7 @@ AC_SEARCH_LIBS([pthread_create], [pthread], [have_pthreads=yes])
 
 if test "x${have_pthreads}" = xyes; then
    AC_CHECK_HEADERS([pthread.h], [], [have_pthreads=no])
+   PKG_LIBS="${PKG_LIBS} -lpthread"
 fi
 
 if test "x${have_pthreads}" = xno; then
@@ -65,15 +66,13 @@ AC_ARG_WITH([hdf5],
 	     [hdf5=${withval}],
 	     [hdf5=yes])
 
+PKG_HDF5=""
 if test "x${hdf5}" = xno; then
   AC_MSG_WARN([
     ------------------------------------------
     Configuring with the HDF5 library is
     recommended to build efficient TREXIO.
     ------------------------------------------])
-  PKG_HDF5=""
-  PKG_HDF5_LIBS=""
-  PKG_HDF5_CFLAGS=""
 
 elif test "x${hdf5}" = xyes; then
 
@@ -91,12 +90,10 @@ elif test "x${hdf5}" = xyes; then
     FCFLAGS="${HDF5_CFLAGS} ${FCFLAGS}"
     LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
     PKG_HDF5="hdf5"
-    PKG_HDF5_LIBS=""
-    PKG_HDF5_CFLAGS=""
   else
     PKG_HDF5=""
-    PKG_HDF5_LIBS="${HDF5_LIBS} -lhdf5_hl"
-    PKG_HDF5_CFLAGS="${HDF5_CFLAGS}"
+    PKG_LIBS="${PKG_LIBS} ${HDF5_LIBS} -lhdf5_hl"
+    PKG_CFLAGS="${PKG_CFLAGS} ${HDF5_CFLAGS}"
   fi
 
 else
@@ -120,12 +117,12 @@ else
   AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
 
   PKG_HDF5=""
-  PKG_HDF5_LIBS="-L${hdf5} -lhdf5_hl"
-  PKG_HDF5_CFLAGS="-I${hdf5}/include"
+  PKG_LIBS="${PKG_LIBS} -L${hdf5} -lhdf5_hl"
+  PKG_CFLAGS="${PKG_CFLAGS} -I${hdf5}/include"
 fi
 AC_SUBST([PKG_HDF5])
-AC_SUBST([PKG_HDF5_LIBS])
-AC_SUBST([PKG_HDF5_CFLAGS])
+AC_SUBST([PKG_LIBS])
+AC_SUBST([PKG_CFLAGS])
 
 
 # add -fPIC if not present in CFLAGS, necessary to compile TREXIO
@@ -156,6 +153,7 @@ AC_CHECK_FUNCS([memset mkdir strerror])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 trexio.pc
 		 tests/Makefile])
 AC_OUTPUT
 
