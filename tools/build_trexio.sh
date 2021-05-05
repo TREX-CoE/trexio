@@ -77,6 +77,7 @@ cd templates_front
 source build.sh
 cp trexio* ../
 cd ..
+mv trexio.h trexio_f.f90 ../include
 
 cd templates_text
 source build.sh

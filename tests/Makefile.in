@@ -7,16 +7,6 @@ tarname = @PACKAGE_TARNAME@
 distdir = $(tarname)-$(version)
 
 # Prefix-specific substitution variables
-prefix      = @prefix@
-includedir  = @includedir@
-docdir      = @docdir@
-htmldir     = @htmldir@
-libdir      = @libdir@
-# Supplementary
-exec_prefix = @exec_prefix@
-libexecdir  = @libexecdir@
-lispdir     = @lispdir@
-# VPATH-specific substitution variables
 srcdir = @srcdir@
 VPATH  = @srcdir@
 
@@ -31,7 +21,7 @@ LDFLAGS   = @LDFLAGS@
 INSTALL   = @INSTALL@
 
 
-.PHONY: clean
+.PHONY: clean maintainer-clean check
 .POSIX:
 
 
@@ -43,15 +33,15 @@ check: test_c test_f
 
 
 test_c: test.c
-	$(CC) $(CPPFLAGS) -I$(DESTDIR)$(includedir) $(CFLAGS) -Wl,-rpath,$(DESTDIR)$(libdir) -L$(DESTDIR)$(libdir) test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
+	$(CC) $(CPPFLAGS) -I$(srcdir)/../include $(CFLAGS) -Wl,-rpath,$(srcdir)/../lib -L$(srcdir)/../lib test.c $(LDFLAGS) -ltrexio $(LIBS) -o test_c
 
 
 test_f: trexio_f.f90 test.f90
-	$(FC) $(CPPFLAGS) $(FCFLAGS) -Wl,-rpath,$(DESTDIR)$(libdir) -L$(DESTDIR)$(libdir) trexio_f.f90 test.f90 $(LDFLAGS) -ltrexio $(LIBS) -o test_f
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -Wl,-rpath,$(srcdir)/../lib -L$(srcdir)/../lib trexio_f.f90 test.f90 $(LDFLAGS) -ltrexio $(LIBS) -o test_f
 
 
 trexio_f.f90:
-	cp $(DESTDIR)$(includedir)/trexio_f.f90 .
+	cp $(srcdir)/../include/trexio_f.f90 .
 
 
 clean:
@@ -59,7 +49,7 @@ clean:
 	$(RM) -r -- trexio_test/ trexio_test_fort/
 
 
-clean-all: clean
+maintainer-clean: clean
 	$(RM) -- trexio_f.o
 
 

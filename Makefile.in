@@ -7,6 +7,7 @@ tarname = @PACKAGE_TARNAME@
 distdir = $(tarname)-$(version)
 
 # Prefix-specific substitution variables
+datarootdir = @datarootdir@
 prefix      = @prefix@
 includedir  = @includedir@
 docdir      = @docdir@
@@ -29,7 +30,7 @@ LIBS      = @LIBS@
 LDFLAGS   = @LDFLAGS@
 INSTALL   = @INSTALL@
 
-.PHONY: FORCE all install uninstall clean clean-all check dist distcheck
+.PHONY: FORCE all install uninstall clean maintainer-clean check dist distcheck
 .POSIX:
 .SUFFIXES:
 
@@ -41,7 +42,7 @@ check:
 	cd tests && $(MAKE) $@
 
 
-clean clean-all:
+clean maintainer-clean:
 	cd src && $(MAKE) $@
 	cd tests && $(MAKE) $@
 
@@ -65,9 +66,10 @@ $(distdir): FORCE
 	mkdir -p $(distdir)/tests
 	mkdir -p $(distdir)/include
 	mkdir -p $(distdir)/lib
+	cp $(srcdir)/include/trexio.h $(distdir)/include
+	cp $(srcdir)/include/trexio_f.f90 $(distdir)/include
 	cp $(srcdir)/src/trexio*.c $(distdir)/src
 	cp $(srcdir)/src/trexio*.h $(distdir)/src
-	cp $(srcdir)/src/trexio*.f90 $(distdir)/src
 	cp $(srcdir)/src/Makefile.in $(distdir)/src
 	cp $(srcdir)/tests/test.c $(distdir)/tests
 	cp $(srcdir)/tests/test.f90 $(distdir)/tests

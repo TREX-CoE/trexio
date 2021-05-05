@@ -20,6 +20,15 @@ lispdir     = @lispdir@
 srcdir = @srcdir@
 VPATH  = @srcdir@
 
+libtrexio_so=libtrexio.so
+libtrexio=$(srcdir)/../lib/$(libtrexio_so)
+
+trexio_f_file=trexio_f.f90
+trexio_f=$(srcdir)/../include/$(trexio_f_file)
+
+trexio_h_file=trexio.h
+trexio_h=$(srcdir)/../include/$(trexio_h_file)
+
 # Tool-specific substitution variables
 CC        = @CC@
 CFLAGS    = @CFLAGS@
@@ -54,26 +63,26 @@ endif
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
 SOURCE_FILES= test.c trexio.c trexio_hdf5.c trexio_text.c
-HEADER_FILES= trexio.h trexio_text.h trexio_hdf5.h trexio_s.h
+HEADER_FILES= $(trexio_h) trexio_text.h trexio_hdf5.h trexio_s.h
 
 
-.PHONY: all fortran clean clean-all install
+.PHONY: all fortran clean maintainer-clean install
 .POSIX:
 .SUFFIXES:
 
 
-all: libtrexio.so fortran
+all: $(libtrexio) fortran
 
 
-libtrexio.so: $(OBJECT_FILES) $(HEADER_FILES) 
-	$(CC) -shared $(OBJECT_FILES) -o libtrexio.so
+$(libtrexio): $(OBJECT_FILES) $(HEADER_FILES) 
+	$(CC) -shared $(OBJECT_FILES) -o $(libtrexio)
 
 
 fortran: trexio_f.o
 
 
-trexio_f.o: libtrexio.so trexio_f.f90
-	$(FC) $(FCFLAGS) -c trexio_f.f90 -o trexio_f.o
+trexio_f.o: $(libtrexio) $(trexio_f)
+	$(FC) $(FCFLAGS) -c $(trexio_f)  -o trexio_f.o
 
 
 cppcheck: cppcheck.out
@@ -91,27 +100,27 @@ cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
 # install should avoid build target due to possible conflict when prefix overriden
 install:
 	$(INSTALL) -d $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
-	cp libtrexio.so $(DESTDIR)$(libdir)
-	cp trexio*.h $(DESTDIR)$(includedir)
-	cp trexio_f.f90 $(DESTDIR)$(includedir)
+	cp $(libtrexio) $(DESTDIR)$(libdir)
+	cp $(trexio_h) $(DESTDIR)$(includedir)
+	cp $(trexio_f) $(DESTDIR)$(includedir)
 
 
 uninstall:
-	-$(RM) -- $(DESTDIR)$(libdir)/libtrexio.so
-	-$(RM) -- $(DESTDIR)$(includedir)/trexio*.h
-	-$(RM) -- $(DESTDIR)$(includedir)/trexio_f.f90
+	-$(RM) -- $(DESTDIR)$(libdir)/$(libtrexio_so)
+	-$(RM) -- $(DESTDIR)$(includedir)/$(trexio_h_file)
+	-$(RM) -- $(DESTDIR)$(includedir)/$(trexio_f_file)
 
 
 clean:
-	$(RM) -- *.o libtrexio.so trexio.mod 
+	$(RM) -- *.o $(libtrexio) trexio.mod 
 
 
-clean-all:
-	$(RM) -- *.c *.h *.o libtrexio.so trexio_f.f90 trexio.mod
+maintainer-clean:
+	$(RM) -- *.c *.h *.o $(libtrexio) $(trexio_f) trexio.mod
 
 
 %.o: %.c $(HEADER_FILES)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $*.c -o $*.o
+	$(CC) -I$(srcdir)/../include $(CPPFLAGS) $(CFLAGS) -c $*.c -o $*.o
 
 
 Makefile: Makefile.in ../config.status
