@@ -17,6 +17,7 @@ fi
 
 AC_CONFIG_SRCDIR([src/Makefile.in])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([trexio.pc])
 PKG_PROG_PKG_CONFIG()
 # Checks for programs.
 AC_PROG_CC
@@ -59,17 +60,21 @@ AC_MSG_ERROR([
 fi
 
 AC_ARG_WITH([hdf5],
-	    AS_HELP_STRING([--with-hdf5], 
+	    AS_HELP_STRING([--with-hdf5],
 			   [Include HDF5 functionality @<:@default: yes@:>@])],
 	     [hdf5=${withval}],
 	     [hdf5=yes])
 
-if test "x${hdf5}" = xno; then                   
-  AC_MSG_WARN([                                     
-    ------------------------------------------      
-    Configuring with the HDF5 library is               
-    recommended to build efficient TREXIO.             
-    ------------------------------------------])    
+if test "x${hdf5}" = xno; then
+  AC_MSG_WARN([
+    ------------------------------------------
+    Configuring with the HDF5 library is
+    recommended to build efficient TREXIO.
+    ------------------------------------------])
+  PKG_HDF5=""
+  PKG_HDF5_LIBS=""
+  PKG_HDF5_CFLAGS=""
+
 elif test "x${hdf5}" = xyes; then
 
   # Check if HDF5 is already configured (e.g. after calling `module load hdf5-<version>`)
@@ -85,17 +90,24 @@ elif test "x${hdf5}" = xyes; then
     CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
     FCFLAGS="${HDF5_CFLAGS} ${FCFLAGS}"
     LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
+    PKG_HDF5="hdf5"
+    PKG_HDF5_LIBS=""
+    PKG_HDF5_CFLAGS=""
+  else
+    PKG_HDF5=""
+    PKG_HDF5_LIBS="${HDF5_LIBS} -lhdf5_hl"
+    PKG_HDF5_CFLAGS="${HDF5_CFLAGS}"
   fi
 
 else
 
   if test "x${hdf5}" = x; then
-    AC_MSG_ERROR([                                     
+    AC_MSG_ERROR([
     ------------------------------------------
     The path to HDF5 library is required.
     Maybe you forgot to pass --with-hdf5="/your/path/" to configure script.
     Stopping...
-    ------------------------------------------])    
+    ------------------------------------------])
   fi
 
   CPPFLAGS="-I${hdf5}/include ${CPPFLAGS}"
@@ -107,7 +119,14 @@ else
   AC_CHECK_HEADERS([hdf5.h])
   AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
 
+  PKG_HDF5=""
+  PKG_HDF5_LIBS="-L${hdf5} -lhdf5_hl"
+  PKG_HDF5_CFLAGS="-I${hdf5}/include"
 fi
+AC_SUBST([PKG_HDF5])
+AC_SUBST([PKG_HDF5_LIBS])
+AC_SUBST([PKG_HDF5_CFLAGS])
+
 
 # add -fPIC if not present in CFLAGS, necessary to compile TREXIO
 # TODO: replace with AM_CFLAGS for appropriate targer once Automake is introduced
@@ -116,7 +135,7 @@ case "${CFLAGS}" in
     ;;
     *)
     AC_MSG_WARN([
-    ------------------------------------------      
+    ------------------------------------------
     Adding -fPIC option to CFLAGS.
     This is necessary to build TREXIO.
     ------------------------------------------])

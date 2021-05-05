@@ -12,6 +12,8 @@ includedir  = @includedir@
 docdir      = @docdir@
 htmldir     = @htmldir@
 libdir      = @libdir@
+pkgconfigdir=  $(libdir)/pkgconfig
+
 # Supplementary
 exec_prefix = @exec_prefix@
 libexecdir  = @libexecdir@
@@ -74,7 +76,7 @@ HEADER_FILES= $(trexio_h) trexio_text.h trexio_hdf5.h trexio_s.h
 all: $(libtrexio) fortran
 
 
-$(libtrexio): $(OBJECT_FILES) $(HEADER_FILES) 
+$(libtrexio): $(OBJECT_FILES) $(HEADER_FILES)
 	$(CC) -shared $(OBJECT_FILES) -o $(libtrexio)
 
 
@@ -99,20 +101,24 @@ cppcheck.out: $(HEADER_FILES) $(SOURCE_FILES)
 # $(DESTDIR) is needed for future support of package managers
 # install should avoid build target due to possible conflict when prefix overriden
 install:
-	$(INSTALL) -d $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
+	$(INSTALL) -d $(DESTDIR)$(libdir) 
+	$(INSTALL) -d $(DESTDIR)$(includedir)
+	$(INSTALL) -d $(DESTDIR)$(pkgconfigdir)
 	cp $(libtrexio) $(DESTDIR)$(libdir)
 	cp $(trexio_h) $(DESTDIR)$(includedir)
 	cp $(trexio_f) $(DESTDIR)$(includedir)
+	cp ../trexio.pc  $(DESTDIR)$(pkgconfigdir)
 
 
 uninstall:
 	-$(RM) -- $(DESTDIR)$(libdir)/$(libtrexio_so)
 	-$(RM) -- $(DESTDIR)$(includedir)/$(trexio_h_file)
 	-$(RM) -- $(DESTDIR)$(includedir)/$(trexio_f_file)
+	-$(RM) -- $(DESTDIR)$(pkgconfigdir)/trexio.pc
 
 
 clean:
-	$(RM) -- *.o $(libtrexio) trexio.mod 
+	$(RM) -- *.o $(libtrexio) trexio.mod
 
 
 maintainer-clean:
