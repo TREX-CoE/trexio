@@ -90,6 +90,7 @@ elif test "x${hdf5}" = xyes; then
     FCFLAGS="${HDF5_CFLAGS} ${FCFLAGS}"
     LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
     PKG_HDF5="hdf5"
+    PKG_LIBS="${PKG_LIBS} -lhdf5_hl"
   else
     PKG_HDF5=""
     PKG_LIBS="${PKG_LIBS} ${HDF5_LIBS} -lhdf5_hl"
