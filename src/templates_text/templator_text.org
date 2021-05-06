@@ -38,7 +38,7 @@
 #include "trexio_private.h"
 #include "trexio_s.h"
 #include <errno.h>
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -347,7 +347,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 	return NULL;
       }
 
-      rc = fscanf(f, "%lu\n", &($group$->dims_$group_dset$[i]));
+      rc = fscanf(f, "%" SCNu64 "\n", &($group$->dims_$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
 	FREE(buffer);
@@ -373,7 +373,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       return NULL;
     }
 
-    rc = fscanf(f, "%lu", &($group$->$group_num$));
+    rc = fscanf(f, "%" SCNu64 "", &($group$->$group_num$));
     assert(!(rc != 1));
     if (rc != 1) {
       FREE(buffer);
@@ -479,14 +479,14 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
   if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
 
   for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
-    fprintf(f, "dims_$group_dset$ %u  %lu\n", i, $group$->dims_$group_dset$[i]);
+    fprintf(f, "dims_$group_dset$ %u %" PRIu64 "\n", i, $group$->dims_$group_dset$[i]);
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
   }
 
   // END REPEAT GROUP_DSET
 
   // START REPEAT GROUP_NUM
-  fprintf(f, "$group_num$ %lu\n", $group$->$group_num$);
+  fprintf(f, "$group_num$ %" PRIu64 "\n", $group$->$group_num$);
   // END REPEAT GROUP_NUM
 
   /* Write arrays */
@@ -758,7 +758,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* const file) {
     assert (rc == 1);
     assert (strcmp(buffer, "dim_one_e") == 0);
 
-    rc = fscanf(f, "%lu", &(rdm->dim_one_e));
+    rc = fscanf(f, "%" SCNu64 "", &(rdm->dim_one_e));
     assert (rc == 1);
 
     /* Allocate arrays */
@@ -831,7 +831,7 @@ trexio_exit_code trexio_text_flush_rdm(trexio_text_t* const file) {
   fseek(f, 0L, SEEK_SET);
 
   /* Write the dimensioning variables */
-  fprintf(f, "num %lu\n", rdm->dim_one_e);
+  fprintf(f, "num %" PRIu64 "\n", rdm->dim_one_e);
 
   /* Write arrays */
   fprintf(f, "one_e\n");
