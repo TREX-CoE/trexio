@@ -1,4 +1,4 @@
-#+TITLE: Front end API
+d+TITLE: Front end API
 #+PROPERTY: comments org
 #+SETUPFILE: ../../docs/theme.setup
 # -*- mode: org -*-
@@ -109,27 +109,35 @@ typedef int32_t trexio_exit_code;
 * Front end
 
   All calls to TREXIO are thread-safe.
-  TREXIO front end is modular, which simplifies impelementation of new back ends.
+  TREXIO front end is modular, which simplifies implementation of new back ends.
 
 ** Error handling
 
       #+NAME: table-exit-codes
-   | Macro                      | Code | Description          |
-   |----------------------------+------+----------------------|
-   | ~TREXIO_FAILURE~           |   -1 | 'Unknown failure'    |
-   | ~TREXIO_SUCCESS~           |    0 | 'Success'            |
-   | ~TREXIO_INVALID_ARG_1~     |    1 | 'Invalid argument 1' |
-   | ~TREXIO_INVALID_ARG_2~     |    2 | 'Invalid argument 2' |
-   | ~TREXIO_INVALID_ARG_3~     |    3 | 'Invalid argument 3' |
-   | ~TREXIO_INVALID_ARG_4~     |    4 | 'Invalid argument 4' |
-   | ~TREXIO_INVALID_ARG_5~     |    5 | 'Invalid argument 5' |
-   | ~TREXIO_END~               |    6 | 'End of file'        |
-   | ~TREXIO_READONLY~          |    7 | 'Read-only file'     |
-   | ~TREXIO_ERRNO~             |    8 | strerror(errno)      |
-   | ~TREXIO_INVALID_ID~        |    9 | 'Invalid ID'         |
-   | ~TREXIO_ALLOCATION_FAILED~ |   10 | 'Allocation failed'  |
-   | ~TREXIO_HAS_NOT~           |   11 | 'Element absent'     |
-   | ~TREXIO_INVALID_NUM~       |   12 | 'Invalid exit code'  |
+   | Macro                      | Code | Description            |
+   |----------------------------+------+------------------------|
+   | ~TREXIO_FAILURE~           |   -1 | 'Unknown failure'      |
+   | ~TREXIO_SUCCESS~           |    0 | 'Success'              |
+   | ~TREXIO_INVALID_ARG_1~     |    1 | 'Invalid argument 1'   |
+   | ~TREXIO_INVALID_ARG_2~     |    2 | 'Invalid argument 2'   |
+   | ~TREXIO_INVALID_ARG_3~     |    3 | 'Invalid argument 3'   |
+   | ~TREXIO_INVALID_ARG_4~     |    4 | 'Invalid argument 4'   |
+   | ~TREXIO_INVALID_ARG_5~     |    5 | 'Invalid argument 5'   |
+   | ~TREXIO_END~               |    6 | 'End of file'          |
+   | ~TREXIO_READONLY~          |    7 | 'Read-only file'       |
+   | ~TREXIO_ERRNO~             |    8 | strerror(errno)        |
+   | ~TREXIO_INVALID_ID~        |    9 | 'Invalid ID'           |
+   | ~TREXIO_ALLOCATION_FAILED~ |   10 | 'Allocation failed'    |
+   | ~TREXIO_HAS_NOT~           |   11 | 'Element absent'       |
+   | ~TREXIO_INVALID_NUM~       |   12 | 'Invalid exit code'    |
+   | ~TREXIO_OPEN_ERROR~        |   13 | 'Error opening file'   |
+   | ~TREXIO_LOCK_ERROR~        |   14 | 'Error locking file'   |
+   | ~TREXIO_UNLOCK_ERROR~      |   15 | 'Error unlocking file' |
+   | ~TREXIO_FILE_ERROR~        |   16 | 'Invalid file handle'  |
+   | ~TREXIO_GROUP_READ_ERROR~  |   17 | 'Error reading group'  |
+   | ~TREXIO_GROUP_WRITE_ERROR~ |   18 | 'Error writing group'  |
+   | ~TREXIO_ELEM_READ_ERROR~   |   19 | 'Error reading element |
+   | ~TREXIO_ELEM_WRITE_ERROR~  |   20 | 'Error writing element |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -467,7 +475,7 @@ trexio_open(const char* file_name, const char mode,
 
   /* Back end initialization */
 
-  rc = TREXIO_FAILURE;
+  rc = TREXIO_OPEN_ERROR;
 
   switch (back_end) {
 
@@ -493,7 +501,7 @@ trexio_open(const char* file_name, const char mode,
 
   /* File locking */
 
-  rc = TREXIO_FAILURE;
+  rc = TREXIO_LOCK_ERROR;
 
   switch (back_end) {
 
@@ -551,7 +559,7 @@ trexio_exit_code
 trexio_close (trexio_t* file)
 {
 
-  if (file == NULL) return TREXIO_FAILURE;
+  if (file == NULL) return TREXIO_FILE_ERROR;
 
   trexio_exit_code rc;
 
@@ -577,12 +585,12 @@ trexio_close (trexio_t* file)
   if (rc != TREXIO_SUCCESS) {
     FREE(file->file_name);
     FREE(file);
-    return TREXIO_FAILURE;
+    return rc;
   }
 
   /* File unlocking */
 
-  rc = TREXIO_FAILURE;
+  rc = TREXIO_UNLOCK_ERROR;
 
   switch (file->back_end) {
 
@@ -609,7 +617,7 @@ trexio_close (trexio_t* file)
   free(file);
 
   if (irc != 0) return TREXIO_ERRNO;
-  if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
+  if (rc != TREXIO_SUCCESS) return rc;
 
   return TREXIO_SUCCESS;
 }
@@ -722,7 +730,7 @@ trexio_read_$group_num$_64 (trexio_t* const file, int64_t* const num)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   uint64_t u_num = 0;
-  trexio_exit_code rc = TREXIO_FAILURE;
+  trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
 
   switch (file->back_end) {
 
@@ -754,7 +762,7 @@ trexio_write_$group_num$_64 (trexio_t* const file, const int64_t num)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
-  trexio_exit_code rc = TREXIO_FAILURE;
+  trexio_exit_code rc = TREXIO_GROUP_WRITE_ERROR;
 
   switch (file->back_end) {
 
@@ -784,7 +792,7 @@ trexio_read_$group_num$_32 (trexio_t* const file, int32_t* const num)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   uint64_t u_num = 0;
-  trexio_exit_code rc = TREXIO_FAILURE;
+  trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
 
   switch (file->back_end) {
 
@@ -817,7 +825,7 @@ trexio_write_$group_num$_32 (trexio_t* const file, const int32_t num)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
-  trexio_exit_code rc = TREXIO_FAILURE;
+  trexio_exit_code rc = TREXIO_GROUP_WRITE_ERROR;
 
   switch (file->back_end) {
 
@@ -957,7 +965,6 @@ interface
    end function trexio_has_$group_num$
 end interface
      #+end_src
-
 
 ** Templates for front end has/read/write a dataset
 
@@ -1229,7 +1236,7 @@ trexio_has_$group$_$group_dset$ (trexio_t* const file)
   }
 }
      #+end_src
-
+     
 *** Fortran templates for front end
 
     The ~Fortran~ templates that provide an access to the ~C~ API calls from ~Fortran~.
