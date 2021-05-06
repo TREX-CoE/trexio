@@ -1,4 +1,4 @@
-d+TITLE: Front end API
+#+TITLE: Front end API
 #+PROPERTY: comments org
 #+SETUPFILE: ../../docs/theme.setup
 # -*- mode: org -*-
@@ -106,6 +106,7 @@ typedef int32_t trexio_exit_code;
    #+begin_src c :tangle trexio_private.h
 #define TREXIO_MAX_FILENAME_LENGTH 4096
    #+end_src
+
 * Front end
 
   All calls to TREXIO are thread-safe.
@@ -694,69 +695,76 @@ end interface
   }
    #+end_src
 
-  ~TREXIO~ is generated automatically by the ~generator.py~ Python script
-  based on the tree-like configuration provided in the ~trex.json~ file.
-  Because of that, generalized templates can be implemented and re-used.
-  This approach minimizes the number of bugs as compared with manual copy-paste-modify scheme.
+  ~TREXIO~ is generated automatically by the ~generator.py~ Python
+  script based on the tree-like configuration provided in the
+  ~trex.json~ file.  Because of that, generalized templates can be
+  implemented and re-used.  This approach minimizes the number of bugs
+  as compared with manual copy-paste-modify scheme.
 
-  All templates presented below use the ~$var$~ notation to indicate the variable,
-  which will be replaced by the ~generator.py~. Sometimes the upper case is used, i.e.
-  ~$VAR$~ (for example, in ~#define~ statements).
-  More detailed description of each variable can be found below:
+  All templates presented below use the ~$var$~ notation to indicate
+  the variable, which will be replaced by the
+  ~generator.py~. Sometimes the upper case is used, i.e.  ~$VAR$~ (for
+  example, in ~#define~ statements).  More detailed description of
+  each variable can be found below:
 
-   | Template variable             | Description                                      | Example            |
-   |-------------------------------+--------------------------------------------------+--------------------|
-   | ~$group$~                     | 'Name of the group'                              | ~nucleus~          |
-   | ~$group_num$~                 | 'Name of the dimensioning variable (scalar)'     | ~nucleus_num~      |
-   | ~$group_dset$~                | 'Name of the dataset (vector/matrix/tensor)'     | ~nucleus_coord~    |
-   | ~$group_dset_rank$~           | 'Rank of the dataset'                            | ~2~                |
-   | ~$group_dset_dim$~            | 'Selected dimension of the dataset'              | ~nucleus_num~      |
-   | ~$group_dset_dim_list$~       | 'All dimensions of the dataset'                  | ~{nucleus_num, 3}~ |
-   | ~$group_dset_dtype$~          | 'Basic type of the dataset (int/float/char)'     | ~float~            |
-   | ~$group_dset_h5_dtype$~       | 'Type of the dataset in HDF5'                    | ~double~           |
-   | ~$group_dset_std_dtype_in$~   | 'Input type of the dataset in TEXT  [fscanf] '   | ~%lf~              |
-   | ~$group_dset_std_dtype_out$~  | 'Output type of the dataset in TEXT [fprintf]'   | ~%24.16e~          |
-   | ~$group_dset_dtype_single$~   | 'Single precision type of the dataset [C]'       | ~float~            |
-   | ~$group_dset_dtype_double$~   | 'Double precision type of the dataset [C]'       | ~double~           |
-   | ~$group_dset_f_dtype_single$~ | 'Single precision type of the dataset [Fortran]' | ~real(4)~          |
-   | ~$group_dset_f_dtype_double$~ | 'Double precision type of the dataset [Fortran]' | ~real(8)~          |
+   | Template variable             | Description                                    | Example            |
+   |-------------------------------+------------------------------------------------+--------------------|
+   | ~$group$~                     | Name of the group                              | ~nucleus~          |
+   | ~$group_num$~                 | Name of the dimensioning variable (scalar)     | ~nucleus_num~      |
+   | ~$group_dset$~                | Name of the dataset (vector/matrix/tensor)     | ~nucleus_coord~    |
+   | ~$group_dset_rank$~           | Rank of the dataset                            | ~2~                |
+   | ~$group_dset_dim$~            | Selected dimension of the dataset              | ~nucleus_num~      |
+   | ~$group_dset_dim_list$~       | All dimensions of the dataset                  | ~{nucleus_num, 3}~ |
+   | ~$group_dset_dtype$~          | Basic type of the dataset (int/float/char)     | ~float~            |
+   | ~$group_dset_h5_dtype$~       | Type of the dataset in HDF5                    | ~double~           |
+   | ~$group_dset_std_dtype_in$~   | Input type of the dataset in TEXT  [fscanf]    | ~%lf~              |
+   | ~$group_dset_std_dtype_out$~  | Output type of the dataset in TEXT [fprintf]   | ~%24.16e~          |
+   | ~$group_dset_dtype_single$~   | Single precision type of the dataset [C]       | ~float~            |
+   | ~$group_dset_dtype_double$~   | Double precision type of the dataset [C]       | ~double~           |
+   | ~$group_dset_f_dtype_single$~ | Single precision type of the dataset [Fortran] | ~real(4)~          |
+   | ~$group_dset_f_dtype_double$~ | Double precision type of the dataset [Fortran] | ~real(8)~          |
 
-   Note: parent group name is always added to the child objects upon construction of TREXIO
-   (e.g. ~num~ of ~nucleus~ group becomes ~nucleus_num~ and should be accessed accordingly within TREXIO).
+   Note: parent group name is always added to the child objects upon
+   construction of TREXIO (e.g. ~num~ of ~nucleus~ group becomes
+   ~nucleus_num~ and should be accessed accordingly within TREXIO).
 
-   TREXIO generator parses the ~trex.json~ file. TREXIO operates with names of variables
-   based on the 1-st (parent group) and 2-nd (child object) levels of ~trex.json~ .
-   The parsed data is divided in 2 parts:
+   TREXIO generator parses the ~trex.json~ file. TREXIO operates with
+   names of variables based on the 1-st (parent group) and 2-nd (child
+   object) levels of ~trex.json~ .  The parsed data is divided in 2
+   parts:
 
    1) Dimensioning variables (contain ~num~ in their names). These are always scalar integers.
    2) Datasets. These can be vectors, matrices or tensors. The types are indicated in ~trex.json~.
       Currently supported types: int, float. TODO: strings.
 
-   For each of the aforementioned objects, TREXIO provides *has*, *read* and *write* functionality.
-   TREXIO supports I/O with single or double precision for integer and floating point numbers.
-
+   For each of the aforementioned objects, TREXIO provides *has*,
+   *read* and *write* functionality.  TREXIO supports I/O with single
+   or double precision for integer and floating point numbers.
 
 ** Templates for front end has/read/write a dimension
 
    This section concerns API calls related to dimensioning variables.
 
-   | Function name                 | Description                                         | Precision |
-   |-------------------------------+-----------------------------------------------------+-----------|
-   | ~trexio_has_$group_num$~      | 'Check if a dimensioning variable exists in a file' | ---       |
-   | ~trexio_read_$group_num$~     | 'Read a dimensioning variable '                     | Single    |
-   | ~trexio_write_$group_num$~    | 'Write a dimensioning variable'                     | Single    |
-   | ~trexio_read_$group_num$_32~  | 'Read a dimensioning variable '                     | Single    |
-   | ~trexio_write_$group_num$_32~ | 'Write a dimensioning variable'                     | Single    |
-   | ~trexio_read_$group_num$_64~  | 'Read a dimensioning variable '                     | Double    |
-   | ~trexio_write_$group_num$_64~ | 'Write a dimensioning variable'                     | Double    |
+   | Function name                 | Description                                       | Precision |
+   |-------------------------------+---------------------------------------------------+-----------|
+   | ~trexio_has_$group_num$~      | Check if a dimensioning variable exists in a file | ---       |
+   | ~trexio_read_$group_num$~     | Read a dimensioning variable                      | Single    |
+   | ~trexio_write_$group_num$~    | Write a dimensioning variable                     | Single    |
+   | ~trexio_read_$group_num$_32~  | Read a dimensioning variable                      | Single    |
+   | ~trexio_write_$group_num$_32~ | Write a dimensioning variable                     | Single    |
+   | ~trexio_read_$group_num$_64~  | Read a dimensioning variable                      | Double    |
+   | ~trexio_write_$group_num$_64~ | Write a dimensioning variable                     | Double    |
 
 *** C templates for front end
 
-   The ~C~ templates that correspond to each of the abovementioned functions can be found below.
-   First parameter is the ~TREXIO~ file handle. Second parameter is the variable to be written/read
+   The ~C~ templates that correspond to each of the abovementioned
+   functions can be found below.  First parameter is the ~TREXIO~ file
+   handle. Second parameter is the variable to be written/read
    to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
-   Suffixes ~_32~ and ~_64~ correspond to API calls dealing with single and double precision, respectively.
-   The basic (non-suffixed) API call on dimensioning variables deals with single precision (see Table above).
+   Suffixes ~_32~ and ~_64~ correspond to API calls dealing with
+   single and double precision, respectively.  The basic
+   (non-suffixed) API call on dimensioning variables deals with single
+   precision (see Table above).
 
 
      #+begin_src c :tangle hrw_num_front.h :exports none
@@ -1016,15 +1024,15 @@ end interface
 
    This section concerns API calls related to datasets.
 
-   | Function name                          | Description                           | Precision |
-   |----------------------------------------+---------------------------------------+-----------|
-   | ~trexio_has_$group$_$group_dset$~      | 'Check if a dataset exists in a file' | ---       |
-   | ~trexio_read_$group$_$group_dset$~     | 'Read  a dataset '                    | Double    |
-   | ~trexio_write_$group$_$group_dset$~    | 'Write a dataset'                     | Double    |
-   | ~trexio_read_$group$_$group_dset$_32~  | 'Read  a dataset'                     | Single    |
-   | ~trexio_write_$group$_$group_dset$_32~ | 'Write a dataset'                     | Single    |
-   | ~trexio_read_$group$_$group_dset$_64~  | 'Read  a dataset'                     | Double    |
-   | ~trexio_write_$group$_$group_dset$_64~ | 'Write a dataset'                     | Double    |
+   | Function name                          | Description                         | Precision |
+   |----------------------------------------+-------------------------------------+-----------|
+   | ~trexio_has_$group$_$group_dset$~      | Check if a dataset exists in a file | ---       |
+   | ~trexio_read_$group$_$group_dset$~     | Read  a dataset                     | Double    |
+   | ~trexio_write_$group$_$group_dset$~    | Write a dataset                     | Double    |
+   | ~trexio_read_$group$_$group_dset$_32~  | Read  a dataset                     | Single    |
+   | ~trexio_write_$group$_$group_dset$_32~ | Write a dataset                     | Single    |
+   | ~trexio_read_$group$_$group_dset$_64~  | Read  a dataset                     | Double    |
+   | ~trexio_write_$group$_$group_dset$_64~ | Write a dataset                     | Double    |
 
 *** C templates for front end
 
