@@ -65,11 +65,11 @@ ifeq ($(FC),flang)
 endif
 
 OBJECT_FILES= trexio.o trexio_text.o trexio_hdf5.o
-SOURCE_FILES= test.c trexio.c trexio_hdf5.c trexio_text.c
+SOURCE_FILES= trexio.c trexio_hdf5.c trexio_text.c
 HEADER_FILES= $(trexio_h) trexio_text.h trexio_hdf5.h trexio_s.h
 
 
-.PHONY: all fortran clean maintainer-clean install
+.PHONY: all fortran clean maintainer-clean install sources FORCE
 .POSIX:
 .SUFFIXES:
 
@@ -137,3 +137,7 @@ Makefile: Makefile.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
+sources: FORCE
+	cd ../tools && ./build_trexio.sh 
+
+FORCE:
