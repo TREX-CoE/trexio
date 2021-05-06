@@ -151,8 +151,8 @@ for fname in files_funcs_groups:
                                     std_dtype_out = '24.16e'
                                     std_dtype_in = 'lf'
                                 elif params['dtype'] == 'int64_t':
-                                    std_dtype_out = 'ld'
-                                    std_dtype_in = 'ld'
+                                    std_dtype_out = 'lld'
+                                    std_dtype_in = 'lld'
 
                                 templine1 = templine2.replace('$group_dset_std_dtype_out$', std_dtype_out)
                                 templine2 = templine1.replace('$group_dset_std_dtype_in$', std_dtype_in)
@@ -326,8 +326,8 @@ for fname in files_funcs_nums:
     if '_text' in fname:
         templ_path = templ_path_text
 
-    for dim in dim_variables.keys():
-    #for dim in numbers.keys():
+    #for dim in dim_variables.keys():
+    for dim in numbers.keys():
         grname = dim.split('_')[0]
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
@@ -363,8 +363,8 @@ for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c',
                         templine2 = templine1.replace('$group_dset$', dset)
                         f_out.write(templine2)
                 elif '$group_num$' in line or '$GROUP_NUM$' in line :
-                    for num in dim_variables.keys():
-                    #for num in numbers.keys():
+                    #for num in dim_variables.keys():
+                    for num in numbers.keys():
                         templine1 = line.replace('$GROUP_NUM$', num.upper())
                         templine2 = templine1.replace('$group_num$', num)
                         f_out.write(templine2)
