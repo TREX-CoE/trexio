@@ -38,7 +38,7 @@ AC_PROG_CC_C99
 # automake --add-missing --copy
 
 # Checks for basic libraries.
-AC_CHECK_LIB([m], [main])
+AC_CHECK_LIB([m], [sqrt])
 # Checks for basic header files.
 AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
 
