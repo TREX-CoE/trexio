@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2021-05-06 Thu 11:40 -->
+<!-- 2021-05-06 Thu 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HDF5 back end</title>
@@ -311,25 +311,25 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org1d4b0d0">1. HDF5 back end</a>
+<li><a href="#org6262305">1. HDF5 back end</a>
 <ul>
-<li><a href="#org8fb8fb4">1.1. Template for HDF5 definitions</a></li>
-<li><a href="#orgf649511">1.2. Template for HDF5 structures</a></li>
-<li><a href="#orgd0c9ae5">1.3. Template for HDF5 init/deinit</a></li>
-<li><a href="#orgb7b9c66">1.4. Template for HDF5 has/read/write a number</a></li>
-<li><a href="#org5296f23">1.5. Template for HDF5 has/read/write a dataset</a></li>
+<li><a href="#org07793d4">1.1. Template for HDF5 definitions</a></li>
+<li><a href="#org11b0ec3">1.2. Template for HDF5 structures</a></li>
+<li><a href="#orgb192786">1.3. Template for HDF5 init/deinit</a></li>
+<li><a href="#org80c8bf4">1.4. Template for HDF5 has/read/write a number</a></li>
+<li><a href="#org992ea72">1.5. Template for HDF5 has/read/write a dataset</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org1d4b0d0" class="outline-2">
-<h2 id="org1d4b0d0"><span class="section-number-2">1</span> HDF5 back end</h2>
+<div id="outline-container-org6262305" class="outline-2">
+<h2 id="org6262305"><span class="section-number-2">1</span> HDF5 back end</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-org8fb8fb4" class="outline-3">
-<h3 id="org8fb8fb4"><span class="section-number-3">1.1</span> Template for HDF5 definitions</h3>
+<div id="outline-container-org07793d4" class="outline-3">
+<h3 id="org07793d4"><span class="section-number-3">1.1</span> Template for HDF5 definitions</h3>
 <div class="outline-text-3" id="text-1-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #483d8b;">#define</span> $GROUP$_GROUP_NAME          <span style="color: #8b2252;">"$group$"</span>
@@ -340,8 +340,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-orgf649511" class="outline-3">
-<h3 id="orgf649511"><span class="section-number-3">1.2</span> Template for HDF5 structures</h3>
+<div id="outline-container-org11b0ec3" class="outline-3">
+<h3 id="org11b0ec3"><span class="section-number-3">1.2</span> Template for HDF5 structures</h3>
 <div class="outline-text-3" id="text-1-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_hdf5_s</span> {
@@ -356,8 +356,8 @@ for the JavaScript code in this tag.
 </div>
 
 
-<div id="outline-container-orgd0c9ae5" class="outline-3">
-<h3 id="orgd0c9ae5"><span class="section-number-3">1.3</span> Template for HDF5 init/deinit</h3>
+<div id="outline-container-orgb192786" class="outline-3">
+<h3 id="orgb192786"><span class="section-number-3">1.3</span> Template for HDF5 init/deinit</h3>
 <div class="outline-text-3" id="text-1-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -440,8 +440,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-orgb7b9c66" class="outline-3">
-<h3 id="orgb7b9c66"><span class="section-number-3">1.4</span> Template for HDF5 has/read/write a number</h3>
+<div id="outline-container-org80c8bf4" class="outline-3">
+<h3 id="org80c8bf4"><span class="section-number-3">1.4</span> Template for HDF5 has/read/write a number</h3>
 <div class="outline-text-3" id="text-1-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -515,9 +515,8 @@ for the JavaScript code in this tag.
     <span style="color: #a020f0;">if</span> (infile_num != num) {
 
       <span style="color: #a020f0;">if</span> (infile_num != 0) {
-        printf(<span style="color: #8b2252;">"%lu -&gt; %lu %s \n"</span>, num, infile_num,
-               <span style="color: #8b2252;">"This variable already exists. Overwriting it is not supported"</span>);
-        <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+
+        <span style="color: #a020f0;">return</span> TREXIO_NUM_ALREADY_EXISTS;
 
       } <span style="color: #a020f0;">else</span> {
 
@@ -564,8 +563,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org5296f23" class="outline-3">
-<h3 id="org5296f23"><span class="section-number-3">1.5</span> Template for HDF5 has/read/write a dataset</h3>
+<div id="outline-container-org992ea72" class="outline-3">
+<h3 id="org992ea72"><span class="section-number-3">1.5</span> Template for HDF5 has/read/write a dataset</h3>
 <div class="outline-text-3" id="text-1-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -699,7 +698,7 @@ for the JavaScript code in this tag.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2021-05-06 Thu 11:40</p>
+<p class="date">Created: 2021-05-06 Thu 16:09</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
