@@ -226,7 +226,7 @@ trexio_text_unlock (trexio_t* const file)
 
 }
     #+end_src
-    
+
 ** Deinitialize function (templated part)
 
     #+begin_src c :tangle basic_text_group.c
@@ -283,7 +283,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
   strncpy (file_name, file->parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
   strncat (file_name, $group$_file_name,
-           TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
 
   if (file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
     FREE(file_name);
@@ -347,7 +347,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 	return NULL;
       }
 
-      rc = fscanf(f, "%llu\n", &($group$->dims_$group_dset$[i]));
+      rc = fscanf(f, "%lu\n", &($group$->dims_$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
 	FREE(buffer);
@@ -373,7 +373,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       return NULL;
     }
 
-    rc = fscanf(f, "%llu", &($group$->$group_num$));
+    rc = fscanf(f, "%lu", &($group$->$group_num$));
     assert(!(rc != 1));
     if (rc != 1) {
       FREE(buffer);
@@ -479,14 +479,14 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
   if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
 
   for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
-    fprintf(f, "dims_$group_dset$ %u  %llu\n", i, $group$->dims_$group_dset$[i]);
+    fprintf(f, "dims_$group_dset$ %u  %lu\n", i, $group$->dims_$group_dset$[i]);
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
   }
 
   // END REPEAT GROUP_DSET
 
   // START REPEAT GROUP_NUM
-  fprintf(f, "$group_num$ %llu\n", $group$->$group_num$);
+  fprintf(f, "$group_num$ %lu\n", $group$->$group_num$);
   // END REPEAT GROUP_NUM
 
   /* Write arrays */
@@ -734,7 +734,7 @@ rdm_t* trexio_text_read_rdm(trexio_text_t* const file) {
   strncpy (file_name, file->parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
 
   strncat (file_name, rdm_file_name,
-           TREXIO_MAX_FILENAME_LENGTH-strlen(rdm_file_name));
+	   TREXIO_MAX_FILENAME_LENGTH-strlen(rdm_file_name));
 
   if (file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
     FREE(file_name);
@@ -993,7 +993,7 @@ trexio_text_buffered_read_rdm_two_e(trexio_t* const file,
   fseek(f, (long) offset * line_length, SEEK_SET);
 
   for (uint64_t i=0 ; i<size ; ++i) {
-    int rc = fscanf(f, "%9lld %9lld %9lld %9lld %24le\n",
+    int rc = fscanf(f, "%9ld %9ld %9ld %9ld %24le\n",
 	   &index[4*i],
 	   &index[4*i+1],
 	   &index[4*i+2],
@@ -1032,7 +1032,7 @@ trexio_text_buffered_write_rdm_two_e(trexio_t* const file,
   fseek(f, (long) offset * line_length, SEEK_SET);
 
   for (uint64_t i=0 ; i<size ; ++i) {
-    int rc = fprintf(f, "%9lld %9lld %9lld %9lld %24le\n",
+    int rc = fprintf(f, "%9ld %9ld %9ld %9ld %24le\n",
 	   index[4*i],
 	   index[4*i+1],
 	   index[4*i+2],
