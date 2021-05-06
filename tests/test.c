@@ -77,7 +77,7 @@ int test_h5write() {
 
   // should not work: try to overwrite the nucleus_num
   rc = trexio_write_nucleus_num(file,25);
-  assert (rc != TREXIO_SUCCESS);
+  assert (rc == TREXIO_NUM_ALREADY_EXISTS);
 
   // close current session
   rc = trexio_close(file);

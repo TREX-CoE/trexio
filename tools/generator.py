@@ -151,8 +151,8 @@ for fname in files_funcs_groups:
                                     std_dtype_out = '24.16e'
                                     std_dtype_in = 'lf'
                                 elif params['dtype'] == 'int64_t':
-                                    std_dtype_out = 'ld'
-                                    std_dtype_in = 'ld'
+                                    std_dtype_out = '" PRId64 "'
+                                    std_dtype_in = '" SCNd64 "'
 
                                 templine1 = templine2.replace('$group_dset_std_dtype_out$', std_dtype_out)
                                 templine2 = templine1.replace('$group_dset_std_dtype_in$', std_dtype_in)

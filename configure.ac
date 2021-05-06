@@ -40,7 +40,7 @@ AC_PROG_CC_C99
 # Checks for basic libraries.
 AC_CHECK_LIB([m], [sqrt])
 # Checks for basic header files.
-AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdlib.h string.h unistd.h])
 
 # Search for pthread
 have_pthreads=no
@@ -154,8 +154,8 @@ AC_CHECK_FUNCS([memset mkdir strerror])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 trexio.pc
-		 tests/Makefile])
+		 tests/Makefile
+                 trexio.pc])
 AC_OUTPUT
 
 echo \
