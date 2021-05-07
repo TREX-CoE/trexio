@@ -312,6 +312,12 @@ for fname in files_funcs_dsets:
                         templine1 = templine2.replace('$group$', grname)
                         templine2 = templine1.replace('$GROUP$', grname.upper())
 
+                        if "$group_dset_f_dims$" in templine2:
+                            dims = "(" + ",".join([":" for _ in range(params['rank'])]) + ")"
+                            if dims == "()": dims = ""
+                            templine1 = templine2.replace("$group_dset_f_dims$", dims)
+                            templine2 = templine1
+
                         f_out.write(templine2)
                     else:
                         f_out.write(line)
