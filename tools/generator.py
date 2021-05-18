@@ -281,18 +281,24 @@ for fname in files_funcs_dsets:
                         templine2 = templine1
 
                         if params['dtype'] == 'double':
-                            h5_dtype = 'double'
+                            h5_dtype       = 'double'
+                            f_dtype_default= 'real(8)'
                             f_dtype_double = 'real(8)'
                             f_dtype_single = 'real(4)'
+                            c_dtype_default= 'double'
                             c_dtype_double = 'double'
                             c_dtype_single = 'float'
+                            default_prec   = '64'
 
                         elif params['dtype'] == 'int64_t':
                             h5_dtype = 'int64'
+                            f_dtype_default= 'integer(4)'
                             f_dtype_double = 'integer(8)'
                             f_dtype_single = 'integer(4)'
+                            c_dtype_default= 'int32_t'
                             c_dtype_double = 'int64_t'
                             c_dtype_single = 'int32_t'
+                            default_prec   = '32'
 
                         templine1 = templine2.replace('$group_dset_dtype_double$', c_dtype_double)
                         templine2 = templine1.replace('$group_dset_dtype_single$', c_dtype_single)
@@ -302,6 +308,12 @@ for fname in files_funcs_dsets:
 
                         templine1 = templine2.replace('$group_dset_f_dtype_double$', f_dtype_double)
                         templine2 = templine1.replace('$group_dset_f_dtype_single$', f_dtype_single)
+
+                        templine1 = templine2.replace('$group_dset_f_dtype_default$', f_dtype_default)
+                        templine2 = templine1.replace('$group_dset_dtype_default$', c_dtype_default)
+                        
+                        templine1 = templine2.replace('$default_prec$', default_prec)
+                        templine2 = templine1
 
                         templine1 = templine2.replace('$group_dset_rank$', str(params['rank']))
                         templine2 = templine1
