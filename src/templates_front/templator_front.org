@@ -707,23 +707,26 @@ end interface
   example, in ~#define~ statements).  More detailed description of
   each variable can be found below:
 
-   | Template variable             | Description                                    | Example            |
-   |-------------------------------+------------------------------------------------+--------------------|
-   | ~$group$~                     | Name of the group                              | ~nucleus~          |
-   | ~$group_num$~                 | Name of the dimensioning variable (scalar)     | ~nucleus_num~      |
-   | ~$group_dset$~                | Name of the dataset (vector/matrix/tensor)     | ~nucleus_coord~    |
-   | ~$group_dset_rank$~           | Rank of the dataset                            | ~2~                |
-   | ~$group_dset_dim$~            | Selected dimension of the dataset              | ~nucleus_num~      |
-   | ~$group_dset_dim_list$~       | All dimensions of the dataset                  | ~{nucleus_num, 3}~ |
-   | ~$group_dset_dtype$~          | Basic type of the dataset (int/float/char)     | ~float~            |
-   | ~$group_dset_h5_dtype$~       | Type of the dataset in HDF5                    | ~double~           |
-   | ~$group_dset_std_dtype_in$~   | Input type of the dataset in TEXT  [fscanf]    | ~%lf~              |
-   | ~$group_dset_std_dtype_out$~  | Output type of the dataset in TEXT [fprintf]   | ~%24.16e~          |
-   | ~$group_dset_dtype_single$~   | Single precision type of the dataset [C]       | ~float~            |
-   | ~$group_dset_dtype_double$~   | Double precision type of the dataset [C]       | ~double~           |
-   | ~$group_dset_f_dtype_single$~ | Single precision type of the dataset [Fortran] | ~real(4)~          |
-   | ~$group_dset_f_dtype_double$~ | Double precision type of the dataset [Fortran] | ~real(8)~          |
-   | ~$group_dset_f_dims$~         | Dimensions in Fortran                          | ~(:,:)~            |
+   | Template variable              | Description                                         | Example              |
+   |--------------------------------+-----------------------------------------------------+----------------------|
+   | ~$group$~                      | Name of the group                                   | ~nucleus~            |
+   | ~$group_num$~                  | Name of the dimensioning variable (scalar)          | ~nucleus_num~        |
+   | ~$group_dset$~                 | Name of the dataset (vector/matrix/tensor)          | ~nucleus_coord~      |
+   | ~$group_dset_rank$~            | Rank of the dataset                                 | ~2~                  |
+   | ~$group_dset_dim$~             | Selected dimension of the dataset                   | ~nucleus_num~        |
+   | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~   |
+   | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~              |
+   | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~             |
+   | ~$group_dset_std_dtype_in$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                |
+   | ~$group_dset_std_dtype_out$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~            |
+   | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~     |
+   | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~      |
+   | ~$group_dset_dtype_double$~    | Double precision datatype of the dataset [C]        | ~double/int64_t~     |
+   | ~$defulat_prec$~               | Default precision for read/write without suffix [C] | ~32~                 |
+   | ~$group_dset_f_dtype_default$~ | Default datatype of the dataset [Fortran]           | ~real(8)/integer(4)~ |
+   | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(4)/integer(4)~ |
+   | ~$group_dset_f_dtype_double$~  | Double precision datatype of the dataset [Fortran]  | ~real(8)/integer(8)~ |
+   | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~              |
    
 
    Note: parent group name is always added to the child objects upon
@@ -1047,8 +1050,8 @@ end interface
 
      #+begin_src c :tangle hrw_dset_front.h :exports none
 trexio_exit_code trexio_has_$group$_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype_double$* const $group_dset$);
-trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$);
+trexio_exit_code trexio_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const $group_dset$);
+trexio_exit_code trexio_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype_default$* $group_dset$);
 trexio_exit_code trexio_read_$group$_$group_dset$_32(trexio_t* const file, $group_dset_dtype_single$* const $group_dset$);
 trexio_exit_code trexio_write_$group$_$group_dset$_32(trexio_t* const file, const $group_dset_dtype_single$* $group_dset$);
 trexio_exit_code trexio_read_$group$_$group_dset$_64(trexio_t* const file, $group_dset_dtype_double$* const $group_dset$);
@@ -1252,17 +1255,17 @@ trexio_write_$group$_$group_dset$_32 (trexio_t* const file, const $group_dset_dt
 
      #+begin_src c :tangle read_dset_def_front.c
 trexio_exit_code
-trexio_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype_double$* const $group_dset$)
+trexio_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* const $group_dset$)
 {
-  return trexio_read_$group$_$group_dset$_64(file, $group_dset$);
+  return trexio_read_$group$_$group_dset$_$default_prec$(file, $group_dset$);
 }
      #+end_src
 
      #+begin_src c :tangle write_dset_def_front.c
 trexio_exit_code
-trexio_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$)
+trexio_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default$* $group_dset$)
 {
-  return trexio_write_$group$_$group_dset$_64(file, $group_dset$);
+  return trexio_write_$group$_$group_dset$_$default_prec$(file, $group_dset$);
 }
      #+end_src
 
@@ -1343,7 +1346,7 @@ interface
    integer function trexio_write_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     $group_dset_f_dtype_double$, intent(in) :: dset$group_dset_f_dims$
+     $group_dset_f_dtype_default$, intent(in) :: dset$group_dset_f_dims$
    end function trexio_write_$group$_$group_dset$
 end interface
      #+end_src
@@ -1353,7 +1356,7 @@ interface
    integer function trexio_read_$group$_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     $group_dset_f_dtype_double$, intent(out) :: dset$group_dset_f_dims$
+     $group_dset_f_dtype_default$, intent(out) :: dset$group_dset_f_dims$
    end function trexio_read_$group$_$group_dset$
 end interface
      #+end_src
