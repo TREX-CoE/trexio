@@ -232,10 +232,11 @@ trexio_text_deinit (trexio_t* const file)
 
   trexio_exit_code rc;
 
-  assert (trexio_text_free_$group$( (trexio_text_t*) file) == TREXIO_SUCCESS);
+  /* Error handling for this call is added by the generator */
+  rc = trexio_text_free_$group$( (trexio_text_t*) file);
 
   rc = trexio_text_free_rdm( (trexio_text_t*) file);
-  assert (rc == TREXIO_SUCCESS);
+  if (rc != TREXIO_SUCCESS) return rc;
 
   return TREXIO_SUCCESS;
 
@@ -772,7 +773,6 @@ trexio_exit_code trexio_text_flush_rdm(trexio_text_t* const file) {
 
   if (rdm->to_flush == 0) return TREXIO_SUCCESS;
 
-   
   FILE* f = fopen(rdm->file_name,"w");
   assert (f != NULL);
 

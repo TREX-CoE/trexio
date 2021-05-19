@@ -386,6 +386,12 @@ for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c',
                         templine1 = line.replace('$GROUP_NUM$', num.upper())
                         templine2 = templine1.replace('$group_num$', num)
                         f_out.write(templine2)
+                # special case for proper error handling when deallocting text groups
+                elif 'rc = trexio_text_free_$group$' in line:
+                    for grname in config.keys():
+                        templine1 = line.replace('$group$', grname)
+                        templine2 = templine1 + '  if (rc != TREXIO_SUCCESS) return rc;\n'
+                        f_out.write(templine2)
                 elif '$group$' in line or '$GROUP$' in line :
                     for grname in config.keys():
                         templine1 = line.replace('$group$', grname)
