@@ -311,7 +311,7 @@ for fname in files_funcs_dsets:
 
                         templine1 = templine2.replace('$group_dset_f_dtype_default$', f_dtype_default)
                         templine2 = templine1.replace('$group_dset_dtype_default$', c_dtype_default)
-                        
+
                         templine1 = templine2.replace('$default_prec$', default_prec)
                         templine2 = templine1
 
@@ -326,7 +326,10 @@ for fname in files_funcs_dsets:
 
                         if "$group_dset_f_dims$" in templine2:
                             dims = "(" + ",".join([":" for _ in range(params['rank'])]) + ")"
-                            if dims == "()": dims = ""
+                            if dims == "()":
+                              dims = ""
+                            else:
+                              dims = "(*)"
                             templine1 = templine2.replace("$group_dset_f_dims$", dims)
                             templine2 = templine1
 
