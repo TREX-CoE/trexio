@@ -5,6 +5,8 @@ import json
 from os import listdir, scandir, remove
 from os.path import isfile, join, dirname, abspath
 
+from generator_tools import *
+
 fileDir = dirname(abspath(__file__))
 parentDir = dirname(fileDir)
 
@@ -17,60 +19,16 @@ del config['metadata']
 # for now remove rdm because it is hardcoded
 ##del config['rdm']
 
-groups = [group for group in config.keys()]
-
-dim_variables = {}
-dim_list = []
-dim_dict = {}
-for k1,v1 in config.items():
-    grname = k1
-    for v2 in v1.values():
-        for dim in v2[1]:
-            if not dim.isdigit():
-                tmp = dim.replace('.','_')
-                dim_variables[tmp] = 0
-                if dim not in dim_list:
-                    dim_list.append(tmp)
-
-                dim_dict[grname] = dim_list
-                dim_list = []
-
-datasets = {}
-numbers = {}
-for k1,v1 in config.items():
-    for k2,v2 in v1.items():
-        if len(v2[1]) > 0:
-            datasets[f'{k1}_{k2}'] = v2
-        else:
-            var_name = f'{k1}_{k2}'
-            if var_name not in dim_variables.keys():
-                numbers[var_name] = v2[0]
-
 # TODO, for now remove char-related stuff
 print('Strings I/O currently not supported')
 
-datasets_nostr = {}
-for k,v in datasets.items():
-    tmp_dict = {}
-    if 'char' not in v[0]:
-        if v[0] == 'float':
-            datatype = 'double'
-        elif v[0] == 'int':
-            datatype = 'int64_t'
-        tmp_dict['dtype'] = datatype
-        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
-        tmp_dict['rank'] = len(v[1])
-        dim_str = tmp_dict['dims'][0]
-        if tmp_dict['rank'] > 1:
-            for i in range(1, tmp_dict['rank']):
-                dim_toadd = tmp_dict['dims'][i]
-                dim_str += f', {dim_toadd}'
-        tmp_dict['dim_list'] = dim_str
-        datasets_nostr[k] = tmp_dict
+groups = [group for group in config.keys()]
 
+dim_dict = get_dim_dict(config)
+datasets = get_dset_dict(config)
+numbers = get_num_dict(config)
 
-#put also dimensioning variables in numbers
-numbers.update(dim_variables)
+datasets_nostr, datasets_str = split_dset_dict(datasets)
 
 templ_path_text = join(fileDir,'templates_text')
 templ_path_hdf5 = join(fileDir,'templates_hdf5')
@@ -126,8 +84,7 @@ for fname in files_funcs_groups:
 
                         if do_dset:
                             for dset,params in datasets_nostr.items():
-                                #dset_grname = dset.split('_')[0]
-                                if grname not in dset: #dset_grname != grname:
+                                if grname not in dset: 
                                     continue
 
                                 dset_allocated.append(dset)
@@ -256,7 +213,7 @@ for fname in files_funcs_dsets:
                                     num_written.append(dim)
                                     templine1 = line.replace('$group_dset_dim$', dim)
                                     templine2 = templine1
-                                    if '_read' in templine2: # and 'hdf5' in fname:
+                                    if '_read' in templine2: 
                                             templine1 = indentlevel*" " + rc_line
                                             templine2 += templine1
 
