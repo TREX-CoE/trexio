@@ -11,6 +11,16 @@ def populate (input_str: str, input_dict: dict) -> str:
 def replace_str (input_str: str) -> str:
     return input_str
 
+
+def get_template_path (filename: str, path_dict: dict) -> str:
+    for dir_type in ['front', 'hdf5', 'text']:
+        if dir_type in filename:
+            path = path_dict[dir_type]
+            return path
+        
+    raise ValueError('Filename should contain one of the keywords')
+
+
 def get_group_dict (configuration: dict) -> dict:
     group_dict = {}
     for k in configuration.keys():

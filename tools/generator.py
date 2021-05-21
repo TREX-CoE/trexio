@@ -30,6 +30,10 @@ numbers = get_num_dict(config)
 
 datasets_nostr, datasets_str = split_dset_dict(datasets)
 
+path_dict = {}
+for dir in ['front', 'hdf5', 'text']:
+    path_dict[dir] = join(fileDir,f'templates_{dir}')
+
 templ_path_text = join(fileDir,'templates_text')
 templ_path_hdf5 = join(fileDir,'templates_hdf5')
 templ_path_front = join(fileDir,'templates_front')
@@ -52,12 +56,8 @@ files_auxil = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.
 # build files with $group$ and $group$-based
 for fname in files_auxil:
     fname_new = join('populated',f'pop_{fname}')
-    if '_hdf5' in fname:
-        templ_path = templ_path_hdf5
-    if '_front' in fname:
-        templ_path = templ_path_front
-    if '_text' in fname:
-        templ_path = templ_path_text
+
+    templ_path = get_template_path(fname, path_dict)
 
     with open(join(templ_path,fname), 'r') as f_in :
         with open(join(templ_path,fname_new), 'a') as f_out :
@@ -89,12 +89,8 @@ for fname in files_auxil:
 # populate has/read/write_num functions 
 for fname in files_funcs_nums:
     fname_new = join('populated',f'pop_{fname}')
-    if '_hdf5' in fname:
-        templ_path = templ_path_hdf5
-    if '_front' in fname:
-        templ_path = templ_path_front
-    if '_text' in fname:
-        templ_path = templ_path_text
+
+    templ_path = get_template_path(fname, path_dict)
 
     for dim in numbers.keys():
         grname = dim.split('_')[0]
@@ -116,12 +112,8 @@ for fname in files_funcs_nums:
 # populate has/read/write_dset functions 
 for fname in files_funcs_dsets:
     fname_new = join('populated',f'pop_{fname}')
-    if '_hdf5' in fname:
-        templ_path = templ_path_hdf5
-    if '_front' in fname:
-        templ_path = templ_path_front
-    if '_text' in fname:
-        templ_path = templ_path_text
+
+    templ_path = get_template_path(fname, path_dict)
 
     for dset,params in datasets_nostr.items():
 
