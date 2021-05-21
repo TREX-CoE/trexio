@@ -1,0 +1,392 @@
+#+TITLE: TREX Configuration file
+
+All the quantities are saved in atomic units.
+  #+begin_src python :tangle trex.json 
+{
+  #+end_src
+
+
+* Metadata
+  
+  #+NAME: metadata
+  | ~code_num~    | ~int~ |                         | Number of codes used to produce the file |
+  | ~code ~       | ~str~ | ~(metadata.code_num)~   | Names of the codes used                  |
+  | ~author_num~  | ~int~ |                         | Number of authors of the file            |
+  | ~author~      | ~str~ | ~(metadata.author_num)~ | Names of the authors of the file         |
+  | ~description~ | ~str~ |                         | Text describing the content of file      |
+
+  #+CALL: json(data=metadata, title="metadata")
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "metadata": {
+             "code_num" : [ "int", []                        ]
+        ,       "code " : [ "str", [ "metadata.code_num" ]   ]
+        ,  "author_num" : [ "int", []                        ]
+        ,      "author" : [ "str", [ "metadata.author_num" ] ]
+        , "description" : [ "str", []                        ]
+      } ,
+  #+end_src
+  :end:
+
+* Electron
+
+  #+NAME:electron
+  | ~up_num~ | ~int~ | Number of $\uparrow$-spin electrons   |
+  | ~dn_num~ | ~int~ | Number of $\downarrow$-spin electrons |
+
+  #+CALL: json(data=electron, title="electron")
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "electron": {
+          "up_num" : [ "int", []  ]
+        , "dn_num" : [ "int", []  ]
+      } ,
+  #+end_src
+  :end:
+
+* Nucleus
+
+  #+NAME: nucleus
+  | ~num~         | ~int~   |                    | Number of nuclei         |
+  | ~charge~      | ~float~ | ~(nucleus.num)~    | Charges of the nuclei    |
+  | ~coord~       | ~float~ | ~(nucleus.num, 3)~ | Coordinates of the atoms |
+  | ~label~       | ~str~   | ~(nucleus.num)~    | Atom labels              |
+  | ~point_group~ | ~str~   |                    | Symmetry point group     |
+
+  #+CALL: json(data=nucleus, title="nucleus")
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "nucleus": {
+                  "num" : [ "int"  , []                     ]
+        ,      "charge" : [ "float", [ "nucleus.num" ]      ]
+        ,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
+        ,       "label" : [ "str"  , [ "nucleus.num" ]      ]
+        , "point_group" : [ "str"  , []                     ]
+      } ,
+  #+end_src
+  :end:
+
+* TODO Effective core potentials
+
+  - $\hat{V}_\text{ecp,l} =$ : local component
+  - $\hat{V}_\text{ecp,nl} =$ : non-local component
+
+  #+NAME: ecp
+  | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $l_{\max} + 1$             |
+  | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove          |
+  | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local function   |
+  | ~local_num_n_max~     | ~int~   |                                          | Maximum value of ~local_n~ |
+  | ~local_exponent~      | ~float~ | ~(nucleus.num, ecp.local_num_n_max)~     |                            |
+  | ~local_coef~          | ~float~ | ~(nucleus.num, ecp.local_num_n_max)~     |                            |
+  | ~local_power~         | ~int~   | ~(nucleus.num, ecp.local_num_n_max)~     |                            |
+  | ~non_local_n~         | ~int~   | ~(nucleus.num)~                          |                            |
+  | ~non_local_num_n_max~ | ~int~   |                                          |                            |
+  | ~non_local_exponent~  | ~float~ | ~(nucleus.num, ecp.non_local_num_n_max)~ |                            |
+  | ~non_local_coef~      | ~float~ | ~(nucleus.num, ecp.non_local_num_n_max)~ |                            |
+  | ~non_local_power~     | ~int~   | ~(nucleus.num, ecp.non_local_num_n_max)~ |                            |
+
+  #+CALL: json(data=ecp, title="ecp")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "ecp": {
+                  "lmax_plus_1" : [ "int"  , [ "nucleus.num" ]                            ]
+        ,              "z_core" : [ "float", [ "nucleus.num" ]                            ]
+        ,             "local_n" : [ "int"  , [ "nucleus.num" ]                            ]
+        ,     "local_num_n_max" : [ "int"  , []                                           ]
+        ,      "local_exponent" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+        ,          "local_coef" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+        ,         "local_power" : [ "int"  , [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+        ,         "non_local_n" : [ "int"  , [ "nucleus.num" ]                            ]
+        , "non_local_num_n_max" : [ "int"  , []                                           ]
+        ,  "non_local_exponent" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+        ,      "non_local_coef" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+        ,     "non_local_power" : [ "int"  , [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+      } ,
+  #+end_src
+  :end:
+
+* Basis set
+
+  #+NAME: basis
+  | ~type~           | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"         |
+  | ~shell_num~      | ~int~   |                     | Total Number of shells                            |
+  | ~shell_factor~   | ~float~ | ~(basis.shell_num)~ | Normalization factor of the shell                 |
+  | ~shell_center~   | ~int~   | ~(basis.shell_num)~ | Nucleus on which the shell is centered            |
+  | ~shell_ang_mom~  | ~int~   | ~(basis.shell_num)~ | Angular momentum ~0:S, 1:P, 2:D, ...~             |
+  | ~shell_prim_num~ | ~int~   | ~(basis.shell_num)~ | Number of primitives in the shell                 |
+  | ~prim_index~     | ~int~   | ~(basis.shell_num)~ | Index of the first primitive in the complete list |
+  | ~prim_num~       | ~int~   |                     | Total number of primitives                        |
+  | ~exponent~       | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives                       |
+  | ~coefficient~    | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives                   |
+    
+  #+CALL: json(data=basis, title="basis")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "basis": {
+                    "type" : [ "str"  , []                    ]
+        ,      "shell_num" : [ "int"  , []                    ]
+        ,   "shell_factor" : [ "float", [ "basis.shell_num" ] ]
+        ,   "shell_center" : [ "int"  , [ "basis.shell_num" ] ]
+        ,  "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ] ]
+        , "shell_prim_num" : [ "int"  , [ "basis.shell_num" ] ]
+        ,     "prim_index" : [ "int"  , [ "basis.shell_num" ] ]
+        ,       "prim_num" : [ "int"  , []                    ]
+        ,       "exponent" : [ "float", [ "basis.prim_num" ]  ]
+        ,    "coefficient" : [ "float", [ "basis.prim_num" ]  ]
+      } ,
+  #+end_src
+  :end:
+
+* Atomic orbitals
+
+  #+NAME: ao
+  | ~num~           | ~int~   |          | Number of atomic orbitals       |
+  | ~cartesian~     | ~int~   |          | ~1~: true, ~0~: false           |
+  | ~shell~         | ~int~   | ~ao.num~ | ID of the basis set shell       |
+  | ~normalization~ | ~float~ | ~ao.num~ | Normalization factor of the AOs |
+
+  #+CALL: json(data=ao, title="ao")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "ao": {
+                    "num" : [ "int"  , []  ]
+        ,     "cartesian" : [ "int"  , []  ]
+        ,         "shell" : [ "int"  , []  ]
+        , "normalization" : [ "float", []  ]
+      } ,
+  #+end_src
+  :end:
+    
+** One-electron integrals
+   
+  - \[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
+    \sum_{i=1}^{N_\text{elec}} \frac{-Q_A }{\vert \mathbf{R}_A -
+    \mathbf{r}_i \vert} \] : electron-nucleus attractive potential,
+  - \[ \hat{T}_{\text{e}} = 
+    \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy
+  - $\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} +
+    \hat{V}_\text{ecp,l} + \hat{V}_\text{ecp,nl}$ : core electronic Hamiltonian
+
+  The one-electron integrals for a one-electron operator $\hat{O}$ are
+  \[ \langle p \vert \hat{O} \vert q \rangle \], returned as a matrix
+  over atomic orbitals.
+
+  #+NAME: ao_1e_int
+  | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                              |
+  | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$              |
+  | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$    |
+  | ~ecp_local~        | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,l} \vert q \rangle$  |
+  | ~ecp_non_local~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,nl} \vert q \rangle$ |
+  | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                |
+
+  #+CALL: json(data=ao_1e_int, title="ao_1e_int")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "ao_1e_int": {
+                   "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
+        ,          "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
+        ,    "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
+        ,        "ecp_local" : [ "float", [ "ao.num", "ao.num" ] ]
+        ,    "ecp_non_local" : [ "float", [ "ao.num", "ao.num" ] ]
+        , "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+** Two-electron integrals
+
+  The two-electron integrals for a two-electron operator $\hat{O}$ are
+  \[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
+  notation or \[ ( pr \vert \hat{O} \vert qs ) \] in chemists
+  notation, where $p,q,r,s$ are indices over atomic orbitals.
+
+  Functions are provided to get the indices in physicists or chemists
+  notation.
+
+  # TODO: Physicist / Chemist functions
+  
+  - \[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.
+  - \[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
+    \sum_{j=1}^{i-1} \frac{\text{erf}(\vert \mathbf{r}_i -
+    \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential
+
+  #+NAME: ao_2e_int
+  | ~eri~    | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Electron repulsion integrals            |
+  | ~eri_lr~ | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Long-range Electron repulsion integrals |
+
+  #+CALL: json(data=ao_2e_int, title="ao_2e_int")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "ao_2e_int": {
+             "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
+        , "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+* Molecular orbitals
+
+  #+NAME: mo
+  | ~type~       | ~str~   |                    | String identify the set of MOs           |
+  | ~num~        | ~int~   |                    | Number of MOs                            |
+  | ~coef~       | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                          |
+  | ~class~      | ~str~   | ~(mo.num)~         | Core, Inactive, Active, Virtual, Deleted |
+  | ~symmetry~   | ~str~   | ~(mo.num)~         | Symmetry in the point group              |
+  | ~occupation~ | ~float~ | ~(mo.num)~         | Occupation number                        |
+
+  #+CALL: json(data=mo, title="mo")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "mo": {
+                "type" : [ "str"  , []                     ]
+        ,        "num" : [ "int"  , []                     ]
+        ,       "coef" : [ "float", [ "ao.num", "mo.num" ] ]
+        ,      "class" : [ "str"  , [ "mo.num" ]           ]
+        ,   "symmetry" : [ "str"  , [ "mo.num" ]           ]
+        , "occupation" : [ "float", [ "mo.num" ]           ]
+      } ,
+  #+end_src
+  :end:
+
+** One-electron integrals
+
+   The operators as the same as those defined in the AO one-electron
+   integrals section. Here, the integrals are given in the basis of
+   molecular orbitals.
+   
+   #+NAME: mo_1e_int
+   | ~overlap~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                              |
+   | ~kinetic~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$              |
+   | ~potential_n_e~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$    |
+   | ~ecp_local~        | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,l} \vert j \rangle$  |
+   | ~ecp_non_local~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,nl} \vert j \rangle$ |
+   | ~core_hamiltonian~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$                |
+
+   #+CALL: json(data=mo_1e_int, title="mo_1e_int")
+
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+       "mo_1e_int": {
+                    "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,          "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,    "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,        "ecp_local" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,    "ecp_non_local" : [ "float", [ "mo.num", "mo.num" ] ]
+         , "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+       } ,
+   #+end_src
+   :end:
+
+** Two-electron integrals
+
+   The operators as the same as those defined in the AO two-electron
+   integrals section. Here, the integrals are given in the basis of
+   molecular orbitals.
+
+   #+NAME: mo_2e_int
+   | ~eri~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Electron repulsion integrals            |
+   | ~eri_lr~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Long-range Electron repulsion integrals |
+
+   #+CALL: json(data=mo_2e_int, title="mo_2e_int")
+
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+       "mo_2e_int": {
+              "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+         , "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+       } ,
+   #+end_src
+   :end:
+
+* TODO Slater determinants
+* TODO Reduced density matrices
+  
+  #+NAME: rdm
+  | ~one_e~    | ~float~        | ~(mo.num, mo.num)~                |
+  | ~one_e_up~ | ~float~        | ~(mo.num, mo.num)~                |
+  | ~one_e_dn~ | ~float~        | ~(mo.num, mo.num)~                |
+  | ~two_e~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ |
+
+  #+CALL: json(data=rdm, title="rdm", last=1)
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "rdm": {
+             "one_e" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
+        , "one_e_up" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
+        , "one_e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
+        ,    "two_e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+      }
+  #+end_src
+  :end:
+
+* Appendix                                                         :noexport:
+** Python script from table to json
+
+ #+NAME: json
+ #+begin_src python :var data=nucleus title="nucleus" last=0 :results output drawer 
+print("""#+begin_src python :tangle trex.json""") 
+print("""    "%s": {"""%(title))
+indent = "        "
+f1 = 0 ; f2 = 0 ; f3 = 0
+for line in data:
+    line = [ x.replace("~","") for x in line ]
+    name = '"'+line[0]+'"'
+    typ  = '"'+line[1]+'"'
+    dims = line[2]
+    if '(' in dims:
+        dims = dims.strip()[1:-1]
+        dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
+        dims = "[ " + ", ".join(dims) + " ]"
+    else:
+        dims = "[ ]"
+    f1 = max(f1, len(name))
+    f2 = max(f2, len(typ))
+    f3 = max(f3, len(dims))
+
+fmt = "%%s%%%ds : [ %%%ds, %%%ds ]" % (f1, f2, f3)
+for line in data:
+    line = [ x.replace("~","") for x in line ]
+    name = '"'+line[0]+'"'
+    typ  = '"'+line[1]+'"'
+    dims = line[2]
+    if '(' in dims:
+        dims = dims.strip()[1:-1]
+        dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
+        dims = "[ " + ", ".join(dims) + " ]"
+    else:
+        dims = "[]"
+    buffer = fmt % (indent, name, typ.ljust(f2), dims.ljust(f3))
+    indent = "      , "
+    print(buffer)
+
+if last == 0:
+    print("    } ,")
+else:
+    print("    }")
+print("""#+end_src""")
+
+ #+end_src
+
+
+  #+begin_src python :tangle trex.json :results output drawer
+}
+  #+end_src

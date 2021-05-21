@@ -12,6 +12,21 @@ TREXIO_ROOT=$(dirname "${PWD}../")
 readonly SRC=${TREXIO_ROOT}/src
 readonly TOOLS=${TREXIO_ROOT}/tools
 
+# Function to produce TREXIO source files from org-mode files
+function tangle()
+{
+  local command="(org-babel-tangle-file \"$1\")"
+  emacs --batch \
+        --eval "(require 'org)" \
+        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \
+        --eval "(setq org-confirm-babel-evaluate nil)" \
+        --eval "$command"
+}
+
+# Create trex.json file
+cd ${TREXIO_ROOT}
+tangle trex.org
+
 # Go to src directory
 cd ${SRC}
 
@@ -37,17 +52,6 @@ echo "clean populated directories"
 rm -f -- templates_front/populated/*
 rm -f -- templates_text/populated/*
 rm -f -- templates_hdf5/populated/*
-
-# Function to produce TREXIO source files from org-mode files
-function tangle()
-{
-  local command="(org-babel-tangle-file \"$1\")"
-  emacs --batch \
-        --eval "(require 'org)" \
-        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \
-        --eval "(setq org-confirm-babel-evaluate nil)" \
-        --eval "$command"
-}
 
 # Produce source files for front end
 echo "tangle org files to generate templates"
