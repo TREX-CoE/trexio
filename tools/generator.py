@@ -15,7 +15,7 @@ print('Metadata I/O currently not supported')
 # TODO, for now remove metadata-related stuff
 del config['metadata']
 # for now remove rdm because it is hardcoded
-del config['rdm']
+##del config['rdm']
 
 groups = [group for group in config.keys()]
 
@@ -107,7 +107,6 @@ for fname in files_funcs_groups:
     groups_done = []
     for group in config.keys():
 
-        #grname = group.split('_')[0]
         grname = group
         if grname in groups_done:
             continue
@@ -159,11 +158,9 @@ for fname in files_funcs_groups:
 
                                 f_out.write(templine2)
                         elif do_num:
-                            #for dim in dim_variables.keys():
                             for dim in numbers.keys():
 
-                                #num_grname = dim.split('_')[0]
-                                if grname not in dim: #num_grname != grname:
+                                if grname not in dim:
                                     continue
 
                                 templine1 = loop_body.replace('$group_num$', dim)
@@ -192,8 +189,7 @@ for fname in files_funcs_groups:
                     if '$group_dset' in line and not subloop:
                         for dset,params in datasets_nostr.items():
 
-                            #dset_grname = dset.split('_')[0]
-                            if grname not in dset: #dset_grname != grname:
+                            if grname not in dset:
                                 continue
 
                             templine1 = line.replace('$group_dset$', dset)
@@ -207,10 +203,8 @@ for fname in files_funcs_groups:
 
                             f_out.write(templine2)
                     elif '$group_num' in line and not subloop:
-                        #for dim in dim_variables.keys():
                         for dim in numbers.keys():
-                            #num_grname = dim.split('_')[0]
-                            if grname not in dim: #num_grname != grname:
+                            if grname not in dim: 
                                 continue
 
                             templine1 = line.replace('$GROUP_NUM$', dim.upper())
@@ -243,7 +237,6 @@ for fname in files_funcs_dsets:
 
     for dset,params in datasets_nostr.items():
 
-        #grname = dset.split('_')[0]
         # the problem was when group name has underscores in it, special case needed!
         for group_tmp in config.keys():
             if group_tmp in dset:
@@ -347,7 +340,6 @@ for fname in files_funcs_nums:
     if '_text' in fname:
         templ_path = templ_path_text
 
-    #for dim in dim_variables.keys():
     for dim in numbers.keys():
         grname = dim.split('_')[0]
         with open(join(templ_path,fname), 'r') as f_in :
@@ -384,7 +376,6 @@ for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c',
                         templine2 = templine1.replace('$group_dset$', dset)
                         f_out.write(templine2)
                 elif '$group_num$' in line or '$GROUP_NUM$' in line :
-                    #for num in dim_variables.keys():
                     for num in numbers.keys():
                         templine1 = line.replace('$GROUP_NUM$', num.upper())
                         templine2 = templine1.replace('$group_num$', num)
