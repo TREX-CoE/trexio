@@ -22,7 +22,7 @@ del config['metadata']
 # TODO, for now remove char-related stuff
 print('Strings I/O currently not supported')
 
-groups = [group for group in config.keys()]
+group_dict = get_group_dict(config)
 
 dim_dict = get_dim_dict(config)
 datasets = get_dset_dict(config)
@@ -34,7 +34,6 @@ templ_path_text = join(fileDir,'templates_text')
 templ_path_hdf5 = join(fileDir,'templates_hdf5')
 templ_path_front = join(fileDir,'templates_front')
 
-
 files_text = [f for f in listdir(templ_path_text) if isfile(join(templ_path_text, f))]
 files_hdf5 = [f for f in listdir(templ_path_hdf5) if isfile(join(templ_path_hdf5, f))]
 files_front = [f for f in listdir(templ_path_front) if isfile(join(templ_path_front, f))]
@@ -45,10 +44,76 @@ files_funcs = [f for f in files if 'read_' in f or 'write_' in f or 'flush_' in 
 files_funcs_dsets = [f for f in files_funcs if 'dset' in f]
 files_funcs_nums  = [f for f in files_funcs if 'num' in f]
 files_funcs_groups = [f for f in files_funcs if 'group' in f]
-
 files_funcs_groups.append('struct_text_group_dset.h')
+# files that correspond to todo1 group (e.g. only groups have to be populated)
+files_auxil = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.h', 'struct_text_group.h'] 
 
-# build files with functions
+
+# build files with $group$ and $group$-based
+for fname in files_auxil:
+    fname_new = join('populated',f'pop_{fname}')
+    if '_hdf5' in fname:
+        templ_path = templ_path_hdf5
+    if '_front' in fname:
+        templ_path = templ_path_front
+    if '_text' in fname:
+        templ_path = templ_path_text
+
+    with open(join(templ_path,fname), 'r') as f_in :
+        with open(join(templ_path,fname_new), 'a') as f_out :
+            for line in f_in :
+                if '$group_dset$' in line or '$GROUP_DSET$' in line :
+                    for dset in datasets.keys():
+                        templine1 = line.replace('$GROUP_DSET$', dset.upper())
+                        templine2 = templine1.replace('$group_dset$', dset)
+                        f_out.write(templine2)
+                elif '$group_num$' in line or '$GROUP_NUM$' in line :
+                    for num in numbers.keys():
+                        templine1 = line.replace('$GROUP_NUM$', num.upper())
+                        templine2 = templine1.replace('$group_num$', num)
+                        f_out.write(templine2)
+                # special case for proper error handling when deallocting text groups
+                elif 'rc = trexio_text_free_$group$' in line:
+                    for grname in config.keys():
+                        templine1 = line.replace('$group$', grname)
+                        templine2 = templine1 + '  if (rc != TREXIO_SUCCESS) return rc;\n'
+                        f_out.write(templine2)
+                elif '$group$' in line or '$GROUP$' in line :
+                    for grname in config.keys():
+                        templine1 = line.replace('$group$', grname)
+                        templine2 = templine1.replace('$GROUP$', grname.upper())
+                        f_out.write(templine2)
+                else:
+                    f_out.write(line)
+
+# populate has/read/write_num functions 
+for fname in files_funcs_nums:
+    fname_new = join('populated',f'pop_{fname}')
+    if '_hdf5' in fname:
+        templ_path = templ_path_hdf5
+    if '_front' in fname:
+        templ_path = templ_path_front
+    if '_text' in fname:
+        templ_path = templ_path_text
+
+    for dim in numbers.keys():
+        grname = dim.split('_')[0]
+        with open(join(templ_path,fname), 'r') as f_in :
+            with open(join(templ_path,fname_new), 'a') as f_out :
+                for line in f_in :
+                    if '$' in line:
+                        templine1 = line.replace('$GROUP_NUM$', dim.upper())
+                        templine2 = templine1.replace('$group_num$', dim)
+
+                        templine1 = templine2.replace('$group$', grname)
+                        templine2 = templine1.replace('$GROUP$', grname.upper())
+
+                        f_out.write(templine2)
+                    else:
+                        f_out.write(line)
+
+
+# populate has/read/write_dset functions 
 for fname in files_funcs_dsets:
     fname_new = join('populated',f'pop_{fname}')
     if '_hdf5' in fname:
@@ -87,8 +152,8 @@ for fname in files_funcs_dsets:
                             num_written = []
                             continue
 
-                        templine1 = line.replace('$GROUP$_$GROUP_DSET$', dset.upper())
-                        templine2 = templine1.replace('$group$_$group_dset$', dset)
+                        templine1 = line.replace('$GROUP_DSET$', dset.upper())
+                        templine2 = templine1.replace('$group_dset$', dset)
 
                         templine1 = templine2.replace('$group_dset$', dset)
                         templine2 = templine1
@@ -152,71 +217,6 @@ for fname in files_funcs_dsets:
                         f_out.write(templine2)
                     else:
                         f_out.write(line)
-
-# build files with functions
-for fname in files_funcs_nums:
-    fname_new = join('populated',f'pop_{fname}')
-    if '_hdf5' in fname:
-        templ_path = templ_path_hdf5
-    if '_front' in fname:
-        templ_path = templ_path_front
-    if '_text' in fname:
-        templ_path = templ_path_text
-
-    for dim in numbers.keys():
-        grname = dim.split('_')[0]
-        with open(join(templ_path,fname), 'r') as f_in :
-            with open(join(templ_path,fname_new), 'a') as f_out :
-                for line in f_in :
-                    if '$' in line:
-                        templine1 = line.replace('$GROUP_NUM$', dim.upper())
-                        templine2 = templine1.replace('$group_num$', dim)
-
-                        templine1 = templine2.replace('$group$', grname)
-                        templine2 = templine1.replace('$GROUP$', grname.upper())
-
-                        f_out.write(templine2)
-                    else:
-                        f_out.write(line)
-
-# build files with $group$ and $group$-based
-for fname in ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c',
-              'struct_hdf5.h', 'struct_text_group.h'] :
-    fname_new = join('populated',f'pop_{fname}')
-    if '_hdf5' in fname:
-        templ_path = templ_path_hdf5
-    if '_front' in fname:
-        templ_path = templ_path_front
-    if '_text' in fname:
-        templ_path = templ_path_text
-
-    with open(join(templ_path,fname), 'r') as f_in :
-        with open(join(templ_path,fname_new), 'a') as f_out :
-            for line in f_in :
-                if '$group_dset$' in line or '$GROUP_DSET$' in line :
-                    for dset in datasets_nostr.keys():
-                        templine1 = line.replace('$GROUP$_$GROUP_DSET$', dset.upper())
-                        templine2 = templine1.replace('$group_dset$', dset)
-                        f_out.write(templine2)
-                elif '$group_num$' in line or '$GROUP_NUM$' in line :
-                    for num in numbers.keys():
-                        templine1 = line.replace('$GROUP_NUM$', num.upper())
-                        templine2 = templine1.replace('$group_num$', num)
-                        f_out.write(templine2)
-                # special case for proper error handling when deallocting text groups
-                elif 'rc = trexio_text_free_$group$' in line:
-                    for grname in config.keys():
-                        templine1 = line.replace('$group$', grname)
-                        templine2 = templine1 + '  if (rc != TREXIO_SUCCESS) return rc;\n'
-                        f_out.write(templine2)
-                elif '$group$' in line or '$GROUP$' in line :
-                    for grname in config.keys():
-                        templine1 = line.replace('$group$', grname)
-                        templine2 = templine1.replace('$GROUP$', grname.upper())
-                        f_out.write(templine2)
-                else:
-                    f_out.write(line)
-
 
 
 # build files with functions for text groups

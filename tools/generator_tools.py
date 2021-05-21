@@ -1,3 +1,21 @@
+def populate (input_str: str, input_dict: dict) -> str:
+    for names in input_dict.keys():
+        templine = input_str()
+
+
+        templine1 = line.replace('$GROUP_DSET$', dset.upper())
+        templine2 = templine1.replace('$group_dset$', dset)
+
+    return 
+
+def replace_str (input_str: str) -> str:
+    return input_str
+
+def get_group_dict (configuration: dict) -> dict:
+    group_dict = {}
+    for k in configuration.keys():
+        group_dict[k] = 0
+
 def get_dim_dict (configuration: dict) -> dict:
     ''' 
     Returns the dictionary of dimensioning variables. 
