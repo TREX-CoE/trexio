@@ -1,6 +1,11 @@
 #+TITLE: TREX Configuration file
 
 All the quantities are saved in atomic units.
+The dimensions of the arrays in the tables below are given in
+column-major order (as in Fortran), and the ordering of the dimensions
+is reversed in the produces JSON configuration file as the library is
+written in C.
+
   #+begin_src python :tangle trex.json 
 {
   #+end_src
@@ -8,9 +13,15 @@ All the quantities are saved in atomic units.
 
 * Metadata
   
+  As we expect our files to be archived in open-data repositories, we
+  need to give the possibility to the users to store some metadata
+  inside the files. We propose to store the list of names of the codes
+  which have participated to the creation of the file, a list of
+  authors of the file, and a textual description.
+
   #+NAME: metadata
   | ~code_num~    | ~int~ |                         | Number of codes used to produce the file |
-  | ~code ~       | ~str~ | ~(metadata.code_num)~   | Names of the codes used                  |
+  | ~code~        | ~str~ | ~(metadata.code_num)~   | Names of the codes used                  |
   | ~author_num~  | ~int~ |                         | Number of authors of the file            |
   | ~author~      | ~str~ | ~(metadata.author_num)~ | Names of the authors of the file         |
   | ~description~ | ~str~ |                         | Text describing the content of file      |
@@ -19,21 +30,24 @@ All the quantities are saved in atomic units.
   #+RESULTS:
   :results:
   #+begin_src python :tangle trex.json
-      "metadata": {
-             "code_num" : [ "int", []                        ]
-        ,       "code " : [ "str", [ "metadata.code_num" ]   ]
-        ,  "author_num" : [ "int", []                        ]
-        ,      "author" : [ "str", [ "metadata.author_num" ] ]
-        , "description" : [ "str", []                        ]
-      } ,
+"metadata": {
+    "code_num" : [ "int", []                        ]
+    ,       "code " : [ "str", [ "metadata.code_num" ]   ]
+    ,  "author_num" : [ "int", []                        ]
+    ,      "author" : [ "str", [ "metadata.author_num" ] ]
+    , "description" : [ "str", []                        ]
+} ,
   #+end_src
   :end:
 
 * Electron
 
+   We consider wave functions expressed in the spin-free formalism, where
+   the number of \uparrow and \downarrow electrons is fixed.
+
   #+NAME:electron
-  | ~up_num~ | ~int~ | Number of $\uparrow$-spin electrons   |
-  | ~dn_num~ | ~int~ | Number of $\downarrow$-spin electrons |
+  | ~up_num~ | ~int~ | Number of \uparrow-spin electrons   |
+  | ~dn_num~ | ~int~ | Number of \downarrow-spin electrons |
 
   #+CALL: json(data=electron, title="electron")
   #+RESULTS:
@@ -48,12 +62,15 @@ All the quantities are saved in atomic units.
 
 * Nucleus
 
+  The nuclei are considered as fixed point charges. Coordinates are
+  given in Cartesian $(x,y,z)$ format.
+
   #+NAME: nucleus
-  | ~num~         | ~int~   |                    | Number of nuclei         |
-  | ~charge~      | ~float~ | ~(nucleus.num)~    | Charges of the nuclei    |
-  | ~coord~       | ~float~ | ~(nucleus.num, 3)~ | Coordinates of the atoms |
-  | ~label~       | ~str~   | ~(nucleus.num)~    | Atom labels              |
-  | ~point_group~ | ~str~   |                    | Symmetry point group     |
+  | ~num~         | ~int~   |                   | Number of nuclei         |
+  | ~charge~      | ~float~ | ~(nucleus.num)~   | Charges of the nuclei    |
+  | ~coord~       | ~float~ | ~(3,nucleus.num)~ | Coordinates of the atoms |
+  | ~label~       | ~str~   | ~(nucleus.num)~   | Atom labels              |
+  | ~point_group~ | ~str~   |                   | Symmetry point group     |
 
   #+CALL: json(data=nucleus, title="nucleus")
   #+RESULTS:
@@ -71,46 +88,100 @@ All the quantities are saved in atomic units.
 
 * TODO Effective core potentials
 
-  - $\hat{V}_\text{ecp,l} =$ : local component
-  - $\hat{V}_\text{ecp,nl} =$ : non-local component
+  An effective core potential (ECP) $V_A^{\text{pp}}$ replacing the
+  core electrons of atom $A$ is the sum of a local component
+  $V_A^{\text{l}}$ and a non-local component $V_A^{\text{nl}}$.
+  The local component is given by
+
+  \[
+  \hat{V}_A^{\text{l}}(r) = -\frac{Z_A^{\text{eff}}}{r} +
+  \frac{Z_A^{\text{eff}}}{r}\, \exp\left( -\alpha_A\, r^2\right) +
+  Z_{\text{eff}}\, \alpha_A\, r\, \exp\left( -\beta_A\, r^2\right) +
+  \gamma_A \exp\left( -\delta_A\, r^2\right),
+  \]
+
+  and the component obtained after localizing the non-local operator is
+
+  \[
+  \hat{V}_A^{\text{nl}}(r) =
+  \zeta_A\, \exp\left( -\eta_A\, r^2\right) |0\rangle \langle 0| +
+  \mu_A \,  \exp\left( -\nu_A \, r^2\right) |1\rangle \langle 1|
+  \]
+
+  where $r=|\mathbf{r-R}_A|$ is the distance to the nucleus on which the
+  potential is centered, $Z_A^{\text{eff}}$ is the effective charge
+  due to the removed electrons, $|0\rangle \langle 0|$
+  and $|1\rangle \langle 1|$ are projections over zero and one principal angular
+  momenta, respectively (generalization to higher angular momenta is
+  straightforward),  and all the parameters labeled by Greek
+  letters are parameters.
+
+  - $\hat{V}_\text{ecp,l} = \sum_A \hat{V}_A^{\text{l}}$ : local component
+  - $\hat{V}_\text{ecp,nl} = \sum_A \hat{V}_A^{\text{nl}}$ : non-local component
 
   #+NAME: ecp
   | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $l_{\max} + 1$             |
   | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove          |
   | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local function   |
   | ~local_num_n_max~     | ~int~   |                                          | Maximum value of ~local_n~ |
-  | ~local_exponent~      | ~float~ | ~(nucleus.num, ecp.local_num_n_max)~     |                            |
-  | ~local_coef~          | ~float~ | ~(nucleus.num, ecp.local_num_n_max)~     |                            |
-  | ~local_power~         | ~int~   | ~(nucleus.num, ecp.local_num_n_max)~     |                            |
+  | ~local_exponent~      | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     |                            |
+  | ~local_coef~          | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     |                            |
+  | ~local_power~         | ~int~   | ~(ecp.local_num_n_max, nucleus.num)~     |                            |
   | ~non_local_n~         | ~int~   | ~(nucleus.num)~                          |                            |
   | ~non_local_num_n_max~ | ~int~   |                                          |                            |
-  | ~non_local_exponent~  | ~float~ | ~(nucleus.num, ecp.non_local_num_n_max)~ |                            |
-  | ~non_local_coef~      | ~float~ | ~(nucleus.num, ecp.non_local_num_n_max)~ |                            |
-  | ~non_local_power~     | ~int~   | ~(nucleus.num, ecp.non_local_num_n_max)~ |                            |
+  | ~non_local_exponent~  | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ |                            |
+  | ~non_local_coef~      | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ |                            |
+  | ~non_local_power~     | ~int~   | ~(ecp.non_local_num_n_max, nucleus.num)~ |                            |
 
   #+CALL: json(data=ecp, title="ecp")
 
   #+RESULTS:
   :results:
   #+begin_src python :tangle trex.json
-      "ecp": {
-                  "lmax_plus_1" : [ "int"  , [ "nucleus.num" ]                            ]
-        ,              "z_core" : [ "float", [ "nucleus.num" ]                            ]
-        ,             "local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-        ,     "local_num_n_max" : [ "int"  , []                                           ]
-        ,      "local_exponent" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-        ,          "local_coef" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-        ,         "local_power" : [ "int"  , [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-        ,         "non_local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-        , "non_local_num_n_max" : [ "int"  , []                                           ]
-        ,  "non_local_exponent" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-        ,      "non_local_coef" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-        ,     "non_local_power" : [ "int"  , [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-      } ,
+"ecp": {
+    "lmax_plus_1" : [ "int"  , [ "nucleus.num" ]                            ]
+    ,              "z_core" : [ "float", [ "nucleus.num" ]                            ]
+    ,             "local_n" : [ "int"  , [ "nucleus.num" ]                            ]
+    ,     "local_num_n_max" : [ "int"  , []                                           ]
+    ,      "local_exponent" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+    ,          "local_coef" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+    ,         "local_power" : [ "int"  , [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+    ,         "non_local_n" : [ "int"  , [ "nucleus.num" ]                            ]
+    , "non_local_num_n_max" : [ "int"  , []                                           ]
+    ,  "non_local_exponent" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+    ,      "non_local_coef" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+    ,     "non_local_power" : [ "int"  , [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+} ,
   #+end_src
   :end:
 
 * Basis set
+
+  We consider here basis functions centered on nuclei. Hence, we enable
+  the possibility to define \emph{dummy atoms} to place basis functions
+  in random positions.
+
+  The atomic basis set is defined as a list of shells. Each shell $s$ is
+  centered on a center $A$, possesses a given angular momentum $l$ and a
+  radial function $R_s$. The radial function is a linear combination of
+  $N_{\text{prim}}$ /primitive/ functions that can be of type
+  Slater ($p=1$) or Gaussian ($p=2$),
+  parameterized by exponents $\gamma_{ks}$ and coefficients $a_{ks}$:
+  \[
+  R_s(\mathbf{r}) = \mathcal{N}_s \vert\mathbf{r}-\mathbf{R}_A\vert^{n_s}
+  \sum_{k=1}^{N_{\text{prim}}} a_{ks}
+  \exp \left( - \gamma_{ks}
+  \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right). 
+  \]
+
+  In the case of Gaussian functions, $n_s$ is always zero.  The
+  normalization factor $\mathcal{N}_s$ ensures that all the functions
+  of the shell are normalized to unity. As this normalization requires
+  the ability to compute overlap integrals, the normalization factors
+  should be written in the file to ensure that the file is
+  self-contained and does not require the client program to have the
+  ability to compute such integrals.
+
 
   #+NAME: basis
   | ~type~           | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"         |
@@ -146,96 +217,138 @@ All the quantities are saved in atomic units.
 
 * Atomic orbitals
 
+  Going from the atomic basis set to AOs implies a systematic
+  construction of all the angular functions of each shell.  We
+  consider two cases for the angular functions: the real-valued
+  spherical harmonics, and the polynomials in Cartesian coordinates.
+  In the case of spherical harmonics, the AOs are ordered in
+  increasing magnetic quantum number ($-l \le m \le l$), and in the case
+  of polynomials we impose the canonical ordering of the
+  Libint2 library, i.e
+
+  \begin{eqnarray}
+  p & : & p_x, p_y, p_z \nonumber \\
+  d & : & d_{xx}, d_{xy}, d_{xz}, d_{yy}, d_{yz}, d_{zz} \nonumber \\
+  f & : & f_{xxx}, f_{xxy}, f_{xxz}, f_{xyy}, f_{xyz}, f_{xzz}, f_{yyy}, f_{yyz}, f_{yzz},      …f_{zzz} \nonumber \\
+  {\rm etc.} \nonumber
+  \end{eqnarray}
+
+  AOs are defined as
+
+  \[
+  \chi_i (\mathbf{r}) = \mathcal{N}_i\, P_{\eta(i)}(\mathbf{r})\, R_{\theta(i)} (\mathbf{r})
+  \]
+
+  where $i$ is the atomic orbital index,
+  $P$ encodes for either the
+  polynomials or the spherical harmonics, $\theta(i)$ returns the
+  shell on which the AO is expanded, and $\eta(i)$ denotes which
+  angular function is chosen.
+  $\mathcal{N}_i$ is a normalization factor that enables the
+  possibility to have different normalization coefficients within a
+  shell, as in the GAMESS convention where
+  $\mathcal{N}_{x^2} \ne \mathcal{N}_{xy}$ because
+  \[ \left[ \iiint \left(x-X_A \right)^2 R_{\theta(i)}
+  (\mathbf{r}) dx\, dy\, dz \right]^{-1/2} \ne 
+   \left[ \iiint \left( x-X_A \right) \left( y-Y_A \right) R_{\theta(i)}
+  (\mathbf{r}) dx\, dy\, dz \right]^{-1/2}.  \] 
+
+  In such a case, one should set the normalization of the shell (in
+  the [[Basis set][Basis set]] section) to $\mathcal{N}_{z^2}$, which is the
+  normalization factor of the atomic orbitals in spherical coordinates.
+  The normalization factor of the $xy$ function which should be
+  introduced here should be $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
+
   #+NAME: ao
-  | ~num~           | ~int~   |          | Number of atomic orbitals       |
   | ~cartesian~     | ~int~   |          | ~1~: true, ~0~: false           |
-  | ~shell~         | ~int~   | ~ao.num~ | ID of the basis set shell       |
-  | ~normalization~ | ~float~ | ~ao.num~ | Normalization factor of the AOs |
+  | ~num~           | ~int~   |          | Total number of atomic orbitals |
+  | ~shell~         | ~int~   | ~ao.num~ | basis set shell for each AO     |
+  | ~normalization~ | ~float~ | ~ao.num~ | Normalization factors           |
 
   #+CALL: json(data=ao, title="ao")
 
   #+RESULTS:
   :results:
   #+begin_src python :tangle trex.json
-      "ao": {
-                    "num" : [ "int"  , []  ]
-        ,     "cartesian" : [ "int"  , []  ]
-        ,         "shell" : [ "int"  , []  ]
-        , "normalization" : [ "float", []  ]
-      } ,
+"ao": {
+    "num" : [ "int"  , []  ]
+    ,     "cartesian" : [ "int"  , []  ]
+    ,         "shell" : [ "int"  , []  ]
+    , "normalization" : [ "float", []  ]
+} ,
   #+end_src
   :end:
     
 ** One-electron integrals
    
-  - \[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
-    \sum_{i=1}^{N_\text{elec}} \frac{-Q_A }{\vert \mathbf{R}_A -
-    \mathbf{r}_i \vert} \] : electron-nucleus attractive potential,
-  - \[ \hat{T}_{\text{e}} = 
-    \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy
-  - $\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} +
-    \hat{V}_\text{ecp,l} + \hat{V}_\text{ecp,nl}$ : core electronic Hamiltonian
+   - \[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
+     \sum_{i=1}^{N_\text{elec}} \frac{-Z_A }{\vert \mathbf{R}_A -
+     \mathbf{r}_i \vert} \] : electron-nucleus attractive potential,
+   - \[ \hat{T}_{\text{e}} = 
+     \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy
+   - $\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} +
+     \hat{V}_\text{ecp,l} + \hat{V}_\text{ecp,nl}$ : core electronic Hamiltonian
 
-  The one-electron integrals for a one-electron operator $\hat{O}$ are
-  \[ \langle p \vert \hat{O} \vert q \rangle \], returned as a matrix
-  over atomic orbitals.
+   The one-electron integrals for a one-electron operator $\hat{O}$ are
+   \[ \langle p \vert \hat{O} \vert q \rangle \], returned as a matrix
+   over atomic orbitals.
 
-  #+NAME: ao_1e_int
-  | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                              |
-  | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$              |
-  | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$    |
-  | ~ecp_local~        | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,l} \vert q \rangle$  |
-  | ~ecp_non_local~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,nl} \vert q \rangle$ |
-  | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                |
+   #+NAME: ao_1e_int
+   | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                              |
+   | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$              |
+   | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$    |
+   | ~ecp_local~        | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,l} \vert q \rangle$  |
+   | ~ecp_non_local~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,nl} \vert q \rangle$ |
+   | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                |
 
-  #+CALL: json(data=ao_1e_int, title="ao_1e_int")
+   #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
-  #+RESULTS:
-  :results:
-  #+begin_src python :tangle trex.json
-      "ao_1e_int": {
-                   "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
-        ,          "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
-        ,    "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
-        ,        "ecp_local" : [ "float", [ "ao.num", "ao.num" ] ]
-        ,    "ecp_non_local" : [ "float", [ "ao.num", "ao.num" ] ]
-        , "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
-      } ,
-  #+end_src
-  :end:
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+"ao_1e_int": {
+    "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
+    ,          "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
+    ,    "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
+    ,        "ecp_local" : [ "float", [ "ao.num", "ao.num" ] ]
+    ,    "ecp_non_local" : [ "float", [ "ao.num", "ao.num" ] ]
+    , "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+} ,
+   #+end_src
+   :end:
 
 ** Two-electron integrals
 
-  The two-electron integrals for a two-electron operator $\hat{O}$ are
-  \[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
-  notation or \[ ( pr \vert \hat{O} \vert qs ) \] in chemists
-  notation, where $p,q,r,s$ are indices over atomic orbitals.
+   The two-electron integrals for a two-electron operator $\hat{O}$ are
+   \[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
+   notation or \[ ( pr \vert \hat{O} \vert qs ) \] in chemists
+   notation, where $p,q,r,s$ are indices over atomic orbitals.
 
-  Functions are provided to get the indices in physicists or chemists
-  notation.
+   Functions are provided to get the indices in physicists or chemists
+   notation.
 
-  # TODO: Physicist / Chemist functions
+   # TODO: Physicist / Chemist functions
   
-  - \[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.
-  - \[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
-    \sum_{j=1}^{i-1} \frac{\text{erf}(\vert \mathbf{r}_i -
-    \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential
+   - \[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.
+   - \[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
+     \sum_{j=1}^{i-1} \frac{\text{erf}(\vert \mathbf{r}_i -
+     \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential
 
-  #+NAME: ao_2e_int
-  | ~eri~    | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Electron repulsion integrals            |
-  | ~eri_lr~ | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Long-range Electron repulsion integrals |
+   #+NAME: ao_2e_int
+   | ~eri~    | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Electron repulsion integrals            |
+   | ~eri_lr~ | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Long-range Electron repulsion integrals |
 
-  #+CALL: json(data=ao_2e_int, title="ao_2e_int")
+   #+CALL: json(data=ao_2e_int, title="ao_2e_int")
 
-  #+RESULTS:
-  :results:
-  #+begin_src python :tangle trex.json
-      "ao_2e_int": {
-             "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
-        , "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
-      } ,
-  #+end_src
-  :end:
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+"ao_2e_int": {
+    "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
+    , "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
+} ,
+   #+end_src
+   :end:
 
 * Molecular orbitals
 
@@ -371,6 +484,7 @@ for line in data:
     if '(' in dims:
         dims = dims.strip()[1:-1]
         dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
+        dims.reverse()
         dims = "[ " + ", ".join(dims) + " ]"
     else:
         dims = "[]"
