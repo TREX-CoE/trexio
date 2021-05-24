@@ -26,6 +26,21 @@ def get_group_dict (configuration: dict) -> dict:
     for k in configuration.keys():
         group_dict[k] = 0
 
+
+def get_dset_per_group (configuration: dict, datasets: dict) -> dict:
+    
+    output = {}
+    for k1,v1 in configuration.items():
+        tmp_list = []
+        for k2,v2 in v1.items():
+            if len(v2[1]) != 0:
+                tmp_dset = f'{k1}_{k2}'
+                tmp_list.append(tmp_dset)
+
+        output[k1] = tmp_list
+
+    return output
+
 def get_dim_dict (configuration: dict) -> dict:
     ''' 
     Returns the dictionary of dimensioning variables. 

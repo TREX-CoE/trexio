@@ -28,6 +28,9 @@ dim_dict = get_dim_dict(config)
 datasets = get_dset_dict(config)
 numbers = get_num_dict(config)
 
+dset_per_group = get_dset_per_group(config, datasets)
+print(dset_per_group)
+
 datasets_nostr, datasets_str = split_dset_dict(datasets)
 
 path_dict = {}
