@@ -1,14 +1,30 @@
-def populate (input_str: str, input_dict: dict) -> str:
-    for names in input_dict.keys():
-        templine = input_str()
+
+def check_triggers (input_line: str, triggers: list) -> int:
+
+    out_id = -1
+    for id,trig in enumerate(triggers):
+        if trig in input_line or trig.upper() in input_line:
+            out_id = id
+            return out_id
+        
+    return out_id
 
 
-        templine1 = line.replace('$GROUP_DSET$', dset.upper())
-        templine2 = templine1.replace('$group_dset$', dset)
+def iterative_replace_str (input_line: str, case: str, source: dict, add_line: str) -> str:
+    output_block = ""
+    for item in source.keys():
+        templine1 = input_line.replace(case.upper(), item.upper())
+        templine2 = templine1.replace(case, item)
+        if add_line != None:
+            templine2 += add_line
 
-    return 
+        output_block += templine2
 
-def replace_str (input_str: str) -> str:
+    print(output_block)
+    return output_block
+
+
+def recursive_replace_str (input_str: str) -> str:
     return input_str
 
 
@@ -25,6 +41,8 @@ def get_group_dict (configuration: dict) -> dict:
     group_dict = {}
     for k in configuration.keys():
         group_dict[k] = 0
+
+    return group_dict
 
 
 def get_dset_per_group (configuration: dict, datasets: dict) -> dict:

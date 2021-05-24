@@ -23,8 +23,10 @@ del config['metadata']
 print('Strings I/O currently not supported')
 
 group_dict = get_group_dict(config)
+group_list = [item for item in group_dict.keys()]
 
 dim_dict = get_dim_dict(config)
+
 datasets = get_dset_dict(config)
 numbers = get_num_dict(config)
 
@@ -57,6 +59,11 @@ files_auxil = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.
 
 
 # build files with $group$ and $group$-based
+add_condition = 'rc = trexio_text_free_$group$'
+triggers = [add_condition, '$group_dset$', '$group_num$', '$group$']
+# Note: it is important that special conditions like add_condition above will be checked before standard triggers
+# that contain only basic $-ed variable (like $group$). Otherwise, the standard triggers will be removed 
+# from the template and the special condition will never be met.
 for fname in files_auxil:
     fname_new = join('populated',f'pop_{fname}')
 
@@ -65,27 +72,21 @@ for fname in files_auxil:
     with open(join(templ_path,fname), 'r') as f_in :
         with open(join(templ_path,fname_new), 'a') as f_out :
             for line in f_in :
-                if '$group_dset$' in line or '$GROUP_DSET$' in line :
-                    for dset in datasets.keys():
-                        templine1 = line.replace('$GROUP_DSET$', dset.upper())
-                        templine2 = templine1.replace('$group_dset$', dset)
-                        f_out.write(templine2)
-                elif '$group_num$' in line or '$GROUP_NUM$' in line :
-                    for num in numbers.keys():
-                        templine1 = line.replace('$GROUP_NUM$', num.upper())
-                        templine2 = templine1.replace('$group_num$', num)
-                        f_out.write(templine2)
-                # special case for proper error handling when deallocting text groups
-                elif 'rc = trexio_text_free_$group$' in line:
-                    for grname in config.keys():
-                        templine1 = line.replace('$group$', grname)
-                        templine2 = templine1 + '  if (rc != TREXIO_SUCCESS) return rc;\n'
-                        f_out.write(templine2)
-                elif '$group$' in line or '$GROUP$' in line :
-                    for grname in config.keys():
-                        templine1 = line.replace('$group$', grname)
-                        templine2 = templine1.replace('$GROUP$', grname.upper())
-                        f_out.write(templine2)
+                id = check_triggers(line, triggers)
+                if id == 0:
+                    # special case for proper error handling when deallocting text groups
+                    error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
+                    populated_line = iterative_replace_str(line, triggers[3], group_dict, add_line=error_handler)
+                    f_out.write(populated_line)
+                elif id == 1:
+                    populated_line = iterative_replace_str(line, triggers[id], datasets, None)
+                    f_out.write(populated_line)
+                elif id == 2:
+                    populated_line = iterative_replace_str(line, triggers[id], numbers, None)
+                    f_out.write(populated_line)
+                elif id == 3:
+                    populated_line = iterative_replace_str(line, triggers[id], group_dict, None)
+                    f_out.write(populated_line)
                 else:
                     f_out.write(line)
 
