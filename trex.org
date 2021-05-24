@@ -186,10 +186,10 @@ written in C.
   #+NAME: basis
   | ~type~           | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"         |
   | ~shell_num~      | ~int~   |                     | Total Number of shells                            |
-  | ~shell_factor~   | ~float~ | ~(basis.shell_num)~ | Normalization factor of the shell                 |
   | ~shell_center~   | ~int~   | ~(basis.shell_num)~ | Nucleus on which the shell is centered            |
   | ~shell_ang_mom~  | ~int~   | ~(basis.shell_num)~ | Angular momentum ~0:S, 1:P, 2:D, ...~             |
   | ~shell_prim_num~ | ~int~   | ~(basis.shell_num)~ | Number of primitives in the shell                 |
+  | ~shell_factor~   | ~float~ | ~(basis.shell_num)~ | Normalization factor of the shell                 |
   | ~prim_index~     | ~int~   | ~(basis.shell_num)~ | Index of the first primitive in the complete list |
   | ~prim_num~       | ~int~   |                     | Total number of primitives                        |
   | ~exponent~       | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives                       |
@@ -262,24 +262,27 @@ written in C.
   #+NAME: ao
   | ~cartesian~     | ~int~   |          | ~1~: true, ~0~: false           |
   | ~num~           | ~int~   |          | Total number of atomic orbitals |
-  | ~shell~         | ~int~   | ~ao.num~ | basis set shell for each AO     |
-  | ~normalization~ | ~float~ | ~ao.num~ | Normalization factors           |
+  | ~shell~         | ~int~   | ~(ao.num)~ | basis set shell for each AO     |
+  | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factors           |
 
   #+CALL: json(data=ao, title="ao")
 
   #+RESULTS:
   :results:
   #+begin_src python :tangle trex.json
-"ao": {
-    "num" : [ "int"  , []  ]
-    ,     "cartesian" : [ "int"  , []  ]
-    ,         "shell" : [ "int"  , []  ]
-    , "normalization" : [ "float", []  ]
-} ,
+      "ao": {
+              "cartesian" : [ "int"  , []           ]
+        ,           "num" : [ "int"  , []           ]
+        ,         "shell" : [ "int"  , [ "ao.num" ] ]
+        , "normalization" : [ "float", [ "ao.num" ] ]
+      } ,
   #+end_src
   :end:
     
 ** One-electron integrals
+   :PROPERTIES:
+   :CUSTOM_ID: ao_one_e
+   :END:
    
    - \[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
      \sum_{i=1}^{N_\text{elec}} \frac{-Z_A }{\vert \mathbf{R}_A -
@@ -318,6 +321,9 @@ written in C.
    :end:
 
 ** Two-electron integrals
+   :PROPERTIES:
+   :CUSTOM_ID: ao_two_e
+   :END:
 
    The two-electron integrals for a two-electron operator $\hat{O}$ are
    \[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
@@ -353,12 +359,12 @@ written in C.
 * Molecular orbitals
 
   #+NAME: mo
-  | ~type~       | ~str~   |                    | String identify the set of MOs           |
-  | ~num~        | ~int~   |                    | Number of MOs                            |
-  | ~coef~       | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                          |
-  | ~class~      | ~str~   | ~(mo.num)~         | Core, Inactive, Active, Virtual, Deleted |
-  | ~symmetry~   | ~str~   | ~(mo.num)~         | Symmetry in the point group              |
-  | ~occupation~ | ~float~ | ~(mo.num)~         | Occupation number                        |
+  | ~type~        | ~str~   |                    | String identify the set of MOs           |
+  | ~num~         | ~int~   |                    | Number of MOs                            |
+  | ~coefficient~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                          |
+  | ~class~       | ~str~   | ~(mo.num)~         | Core, Inactive, Active, Virtual, Deleted |
+  | ~symmetry~    | ~str~   | ~(mo.num)~         | Symmetry in the point group              |
+  | ~occupation~  | ~float~ | ~(mo.num)~         | Occupation number                        |
 
   #+CALL: json(data=mo, title="mo")
 
@@ -366,21 +372,21 @@ written in C.
   :results:
   #+begin_src python :tangle trex.json
       "mo": {
-                "type" : [ "str"  , []                     ]
-        ,        "num" : [ "int"  , []                     ]
-        ,       "coef" : [ "float", [ "ao.num", "mo.num" ] ]
-        ,      "class" : [ "str"  , [ "mo.num" ]           ]
-        ,   "symmetry" : [ "str"  , [ "mo.num" ]           ]
-        , "occupation" : [ "float", [ "mo.num" ]           ]
+                 "type" : [ "str"  , []                     ]
+        ,         "num" : [ "int"  , []                     ]
+        , "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
+        ,       "class" : [ "str"  , [ "mo.num" ]           ]
+        ,    "symmetry" : [ "str"  , [ "mo.num" ]           ]
+        ,  "occupation" : [ "float", [ "mo.num" ]           ]
       } ,
   #+end_src
   :end:
 
 ** One-electron integrals
 
-   The operators as the same as those defined in the AO one-electron
-   integrals section. Here, the integrals are given in the basis of
-   molecular orbitals.
+   The operators as the same as those defined in the
+   [[ao_one_e][AO one-electron integrals section]]. Here, the integrals are given in
+   the basis of molecular orbitals.
    
    #+NAME: mo_1e_int
    | ~overlap~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                              |
@@ -408,9 +414,9 @@ written in C.
 
 ** Two-electron integrals
 
-   The operators as the same as those defined in the AO two-electron
-   integrals section. Here, the integrals are given in the basis of
-   molecular orbitals.
+   The operators as the same as those defined in the
+   [[ao_two_e][AO two-electron integrals section]]. Here, the integrals are given in
+   the basis of molecular orbitals.
 
    #+NAME: mo_2e_int
    | ~eri~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Electron repulsion integrals            |
@@ -487,7 +493,10 @@ for line in data:
         dims.reverse()
         dims = "[ " + ", ".join(dims) + " ]"
     else:
-        dims = "[]"
+        if dims.strip() != "":
+            dims = "ERROR"
+        else:
+            dims = "[]"
     buffer = fmt % (indent, name, typ.ljust(f2), dims.ljust(f3))
     indent = "      , "
     print(buffer)
