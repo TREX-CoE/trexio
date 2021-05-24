@@ -169,31 +169,41 @@ written in C.
   parameterized by exponents $\gamma_{ks}$ and coefficients $a_{ks}$:
   \[
   R_s(\mathbf{r}) = \mathcal{N}_s \vert\mathbf{r}-\mathbf{R}_A\vert^{n_s}
-  \sum_{k=1}^{N_{\text{prim}}} a_{ks}
+  \sum_{k=1}^{N_{\text{prim}}} a_{ks}\, f_{ks}(\gamma_{ks},p)\,
   \exp \left( - \gamma_{ks}
   \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right). 
   \]
 
-  In the case of Gaussian functions, $n_s$ is always zero.  The
-  normalization factor $\mathcal{N}_s$ ensures that all the functions
-  of the shell are normalized to unity. As this normalization requires
-  the ability to compute overlap integrals, the normalization factors
-  should be written in the file to ensure that the file is
-  self-contained and does not require the client program to have the
-  ability to compute such integrals.
+  In the case of Gaussian functions, $n_s$ is always zero.
+
+  Different codes normalize functions at different levels. Computing
+  normalization factors requires the ability to compute overlap
+  integrals, so the normalization factors should be written in the
+  file to ensure that the file is self-contained and does not need the
+  client program to have the ability to compute such integrals.
+
+  Some codes assume that the contraction coefficients are for a linear
+  combination of /normalized/ primitives. This implies that a normalization
+  constant for the primitive $ks$ needs to be computed and stored. If
+  this normalization factor is not required, set $f_{ks}$ to one.
+  
+  Some codes assume that the basis function are normalized. This
+  implies the computation of an extra normalization factor, $\mathcal{N}_s$.
+  If the the basis function is not normalized, set $\mathcal{N}_s=1$.
 
 
   #+NAME: basis
-  | ~type~           | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"         |
-  | ~shell_num~      | ~int~   |                     | Total Number of shells                            |
-  | ~shell_center~   | ~int~   | ~(basis.shell_num)~ | Nucleus on which the shell is centered            |
-  | ~shell_ang_mom~  | ~int~   | ~(basis.shell_num)~ | Angular momentum ~0:S, 1:P, 2:D, ...~             |
-  | ~shell_prim_num~ | ~int~   | ~(basis.shell_num)~ | Number of primitives in the shell                 |
-  | ~shell_factor~   | ~float~ | ~(basis.shell_num)~ | Normalization factor of the shell                 |
-  | ~prim_index~     | ~int~   | ~(basis.shell_num)~ | Index of the first primitive in the complete list |
-  | ~prim_num~       | ~int~   |                     | Total number of primitives                        |
-  | ~exponent~       | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives                       |
-  | ~coefficient~    | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives                   |
+  | ~type~           | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"                |
+  | ~shell_num~      | ~int~   |                     | Total Number of shells                                   |
+  | ~shell_center~   | ~int~   | ~(basis.shell_num)~ | Nucleus on which the shell is centered ($A$)             |
+  | ~shell_ang_mom~  | ~int~   | ~(basis.shell_num)~ | Angular momentum ~0:S, 1:P, 2:D, ...~                    |
+  | ~shell_prim_num~ | ~int~   | ~(basis.shell_num)~ | Number of primitives in the shell ($N_{\text{prim}}$)    |
+  | ~shell_factor~   | ~float~ | ~(basis.shell_num)~ | Normalization factor of the shell ($\mathcal{N}_s$)      |
+  | ~prim_index~     | ~int~   | ~(basis.shell_num)~ | Index of the first primitive in the complete list        |
+  | ~prim_num~       | ~int~   |                     | Total number of primitives                               |
+  | ~exponent~       | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives ($\gamma_{ks})               |
+  | ~coefficient~    | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives ($a_{ks}$)                |
+  | ~prim_factor~    | ~float~ | ~(basis.prim_num)~  | Normalization coefficients for the primitives ($f_{ks}$) |
     
   #+CALL: json(data=basis, title="basis")
 
@@ -211,6 +221,7 @@ written in C.
         ,       "prim_num" : [ "int"  , []                    ]
         ,       "exponent" : [ "float", [ "basis.prim_num" ]  ]
         ,    "coefficient" : [ "float", [ "basis.prim_num" ]  ]
+        ,    "prim_factor" : [ "float", [ "basis.prim_num" ]  ]
       } ,
   #+end_src
   :end:
