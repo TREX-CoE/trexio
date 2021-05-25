@@ -1,12 +1,106 @@
 from os.path import join
 
+def special_populate_text_group(fname: str, paths: dict, group_list: list, detailed_dset: dict, detailed_numbers: dict):
+
+    fname_new = join('populated',f'pop_{fname}')
+    templ_path = get_template_path(fname, paths)
+
+    triggers = ['group_dset_dtype', 'group_dset_std_dtype_out', 'group_dset_std_dtype_in',
+                'group_dset', 'group_num', 'group']
+
+    for group in group_list:
+
+        with open(join(templ_path,fname), 'r') as f_in :
+            with open(join(templ_path,fname_new), 'a') as f_out :
+
+                subloop_dset = False
+                subloop_num = False
+                loop_body = ''
+                dset_allocated = []
+
+                for line in f_in :
+
+                    if 'START REPEAT GROUP_DSET' in line:
+                        subloop_dset = True
+                        continue
+                    elif 'START REPEAT GROUP_NUM' in line:
+                        subloop_num = True
+                        continue
+                    
+                    if 'END REPEAT GROUP_DSET' in line:
+
+                        for dset in detailed_dset.keys():
+                            if group != detailed_dset[dset]['group']: 
+                                continue
+
+                            dset_allocated.append(dset)
+
+                            if 'FREE($group$->$group_dset$)' in loop_body:
+                                tmp_string = ''
+                                for dset_alloc in dset_allocated:
+                                    tmp_string += f'FREE({group}->{dset_alloc});\n        '
+
+                                tmp_body = loop_body.replace('FREE($group$->$group_dset$);',tmp_string)
+
+                                populated_body = recursive_replace_line(tmp_body, triggers, detailed_dset[dset])
+                                f_out.write(populated_body)
+                            else:
+                                save_body = loop_body
+                                populated_body = recursive_replace_line(save_body, triggers, detailed_dset[dset])
+                                f_out.write(populated_body)
+
+                        subloop_dset = False
+                        loop_body = ''
+                        dset_allocated = []
+                        continue
+
+                    elif 'END REPEAT GROUP_NUM' in line:
+                        for dim in detailed_numbers.keys():
+                            if group != detailed_numbers[dim]['group']: 
+                                continue
+
+                            save_body = loop_body
+                            populated_body = recursive_replace_line(save_body, triggers, detailed_numbers[dim])
+                            f_out.write(populated_body)
+
+                        subloop_num = False
+                        loop_body = ''
+                        continue
+
+                    if not subloop_num and not subloop_dset:
+                        # NORMAL CASE WITHOUT SUBLOOPS 
+                        if '$group_dset' in line:
+                            for dset in detailed_dset.keys():
+                                if group != detailed_dset[dset]['group']: 
+                                    continue
+                                populated_line = recursive_replace_line(line, triggers, detailed_dset[dset])
+                                f_out.write(populated_line)
+                        elif '$group_num$' in line:
+                            for dim in detailed_numbers.keys():
+                                if group != detailed_numbers[dim]['group']: 
+                                    continue
+                                populated_line = recursive_replace_line(line, triggers, detailed_numbers[dim])
+                                f_out.write(populated_line)
+                        elif '$group$' in line:
+                            populated_line = line.replace('$group$', group)
+                            f_out.write(populated_line)
+                        else:
+                            f_out.write(line)
+                    else:
+                        if subloop_dset or subloop_num:
+                            loop_body += line
+
+
+
 def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
 
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
-    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 'default_prec',
-                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'default_prec',
+                'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
+                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
+                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
                 'group_dset', 'group_num', 'group']
 
     for item in detailed_source.keys():
@@ -14,21 +108,22 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
             with open(join(templ_path,fname_new), 'a') as f_out :
                 num_written = []
                 for line in f_in :
+                        # special case to add error handling for read/write of dimensioning variables
                         if '$group_dset_dim$' in line:
                             rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
                             indentlevel = len(line) - len(line.lstrip())
                             for dim in detailed_source[item]['dims']:
                                 if not dim.isdigit() and not dim in num_written:
                                     num_written.append(dim)
-                                    templine1 = line.replace('$group_dset_dim$', dim)
-                                    templine2 = templine1
-                                    if '_read' in templine2: 
-                                            templine1 = indentlevel*" " + rc_line
-                                            templine2 += templine1
+                                    templine = line.replace('$group_dset_dim$', dim)
+                                    if '_read' in templine: 
+                                            line_toadd = indentlevel*" " + rc_line
+                                            templine += line_toadd
 
-                                    f_out.write(templine2)
+                                    f_out.write(templine)
                             num_written = []
                             continue
+                        # general case of recursive replacement of inline triggers 
                         else:
                             populated_line = recursive_replace_line(line, triggers, detailed_source[item])
                             f_out.write(populated_line)
@@ -36,7 +131,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
 
 def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
     
-    triggered = False
+    is_triggered = False
     output_line = input_line
     
     if '$' in input_line:
@@ -44,14 +139,14 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
             test_case = f'${case}$'
             if test_case in input_line:
                 output_line = input_line.replace(test_case, source[case])
-                triggered = True
+                is_triggered = True
                 break
             elif test_case.upper() in input_line:
                 output_line = input_line.replace(test_case.upper(), source[case].upper())
-                triggered = True
+                is_triggered = True
                 break
 
-        if triggered:
+        if is_triggered:
             return recursive_replace_line(output_line, triggers, source)
         else:
             print(output_line)
@@ -255,6 +350,8 @@ def split_dset_dict (datasets: dict) -> tuple:
             group_dset_dtype_double = 'double'
             group_dset_dtype_single = 'float'
             default_prec   = '64'
+            group_dset_std_dtype_out = '24.16e'
+            group_dset_std_dtype_in = 'lf'
         elif v[0] == 'int':
             datatype = 'int64_t'
             group_dset_h5_dtype = 'int64'
@@ -265,6 +362,9 @@ def split_dset_dict (datasets: dict) -> tuple:
             group_dset_dtype_double = 'int64_t'
             group_dset_dtype_single = 'int32_t'
             default_prec   = '32'
+            group_dset_std_dtype_out = '" PRId64 "'
+            group_dset_std_dtype_in  = '" SCNd64 "' 
+
         elif v[0] == 'str':
             datatype = 'string'
         
@@ -281,6 +381,8 @@ def split_dset_dict (datasets: dict) -> tuple:
         tmp_dict['group_dset_dtype_double'] = group_dset_dtype_double
         tmp_dict['group_dset_dtype_single'] = group_dset_dtype_single
         tmp_dict['default_prec'] = default_prec
+        tmp_dict['group_dset_std_dtype_in'] = group_dset_std_dtype_in
+        tmp_dict['group_dset_std_dtype_out'] = group_dset_std_dtype_out
         # add the rank
         tmp_dict['rank'] = len(v[1])
         tmp_dict['group_dset_rank'] = str(tmp_dict['rank'])

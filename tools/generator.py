@@ -47,6 +47,7 @@ for num in num_per_group.keys():
 
 datasets_nostr, datasets_str = split_dset_dict(datasets)
 
+
 # print all special $group_*$ related keys
 #print( [item for item in datasets_nostr['nucleus_coord'].keys() if 'group_' in item])
 
@@ -92,125 +93,5 @@ for fname in files_funcs_dsets:
 
 # build files with functions for text groups
 for fname in files_funcs_groups:
-    fname_new = join('populated',f'pop_{fname}')
-    if '_text' in fname:
-        templ_path = templ_path_text
+    special_populate_text_group(fname, path_dict, group_list, datasets_nostr, num_detailed)
 
-    groups_done = []
-    for group in config.keys():
-
-        grname = group
-        if grname in groups_done:
-            continue
-        else:
-            groups_done.append(grname)
-
-        subloop = False
-        do_dset = False
-        do_num = False
-        loop_body = ''
-        dset_allocated = []
-        with open(join(templ_path,fname), 'r') as f_in :
-            with open(join(templ_path,fname_new), 'a') as f_out :
-                for line in f_in :
-
-                    if 'END REPEAT' in line:
-
-                        if do_dset:
-                            for dset,params in datasets_nostr.items():
-                                if grname not in dset: 
-                                    continue
-
-                                dset_allocated.append(dset)
-
-                                templine1 = loop_body.replace('$group_dset_dtype$', params['dtype'])
-                                templine2 = templine1
-
-                                if 'FREE($group$->$group_dset$)' in loop_body:
-                                    tmp_string = ''
-                                    for dset_alloc in dset_allocated:
-                                        tmp_string += f'FREE({grname}->{dset_alloc});\n        '
-
-                                    templine1 =  templine2.replace('FREE($group$->$group_dset$);',tmp_string)
-                                    templine2 = templine1
-
-                                templine1 = templine2.replace('$group_dset$', dset)
-                                templine2 = templine1.replace('$group$', grname)
-
-                                if params['dtype'] == 'double':
-                                    std_dtype_out = '24.16e'
-                                    std_dtype_in = 'lf'
-                                elif params['dtype'] == 'int64_t':
-                                    std_dtype_out = '" PRId64 "'
-                                    std_dtype_in = '" SCNd64 "'
-
-                                templine1 = templine2.replace('$group_dset_std_dtype_out$', std_dtype_out)
-                                templine2 = templine1.replace('$group_dset_std_dtype_in$', std_dtype_in)
-
-                                f_out.write(templine2)
-                        elif do_num:
-                            for dim in numbers.keys():
-
-                                if grname not in dim:
-                                    continue
-
-                                templine1 = loop_body.replace('$group_num$', dim)
-                                templine2 = templine1.replace('$group$', grname)
-                                f_out.write(templine2)
-                        else:
-                            print('fishy')
-
-                        loop_body = ''
-                        dset_allocated = []
-                        subloop = False
-                        do_dset = False
-                        do_num = False
-                        continue
-
-                    if subloop:
-                        loop_body += line
-
-                    if 'START REPEAT' in line:
-                        if 'GROUP_DSET' in line:
-                            do_dset = True
-                        if 'GROUP_NUM' in line:
-                            do_num = True
-                        subloop = True
-
-                    if '$group_dset' in line and not subloop:
-                        for dset,params in datasets_nostr.items():
-
-                            if grname not in dset:
-                                continue
-
-                            templine1 = line.replace('$group_dset$', dset)
-                            templine2 = templine1
-
-                            templine1 = templine2.replace('$group_dset_dtype$', params['dtype'])
-                            templine2 = templine1
-
-                            templine1 = templine2.replace('$group$', grname)
-                            templine2 = templine1.replace('$GROUP$', grname.upper())
-
-                            f_out.write(templine2)
-                    elif '$group_num' in line and not subloop:
-                        for dim in numbers.keys():
-                            if grname not in dim: 
-                                continue
-
-                            templine1 = line.replace('$GROUP_NUM$', dim.upper())
-                            templine2 = templine1.replace('$group_num$', dim)
-
-                            templine1 = templine2.replace('$group$', grname)
-                            templine2 = templine1.replace('$GROUP$', grname.upper())
-
-                            f_out.write(templine2)
-
-                    elif '$group$' in line and not subloop:
-
-                        templine1 = line.replace('$group$', grname)
-                        templine2 = templine1.replace('$GROUP$', grname.upper())
-                        f_out.write(templine2)
-
-                    elif not subloop:
-                        f_out.write(line)
