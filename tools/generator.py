@@ -46,7 +46,9 @@ for num in num_per_group.keys():
     num_detailed[num] = tmp_dict
 
 datasets_nostr, datasets_str = split_dset_dict(datasets)
-print(datasets_nostr)
+
+# print all special $group_*$ related keys
+#print( [item for item in datasets_nostr['nucleus_coord'].keys() if 'group_' in item])
 
 path_dict = {}
 for dir in ['front', 'hdf5', 'text']:
@@ -85,104 +87,7 @@ for fname in files_funcs_nums:
 
 # populate has/read/write_dset functions 
 for fname in files_funcs_dsets:
-    fname_new = join('populated',f'pop_{fname}')
-
-    templ_path = get_template_path(fname, path_dict)
-
-    for dset,params in datasets_nostr.items():
-
-        # the problem was when group name has underscores in it, special case needed!
-        for group_tmp in config.keys():
-            if group_tmp in dset:
-                grname = group_tmp
-
-        with open(join(templ_path,fname), 'r') as f_in :
-            with open(join(templ_path,fname_new), 'a') as f_out :
-                num_written = []
-                for line in f_in :
-                    if '$' in line:
-
-                        if '$group_dset_dim$' in line:
-                            rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
-                            indentlevel = len(line) - len(line.lstrip())
-                            for dim in params['dims']:
-                                if not dim.isdigit() and not dim in num_written:
-                                    num_written.append(dim)
-                                    templine1 = line.replace('$group_dset_dim$', dim)
-                                    templine2 = templine1
-                                    if '_read' in templine2: 
-                                            templine1 = indentlevel*" " + rc_line
-                                            templine2 += templine1
-
-                                    f_out.write(templine2)
-                            num_written = []
-                            continue
-
-                        templine1 = line.replace('$GROUP_DSET$', dset.upper())
-                        templine2 = templine1.replace('$group_dset$', dset)
-
-                        templine1 = templine2.replace('$group_dset$', dset)
-                        templine2 = templine1
-
-                        templine1 = templine2.replace('$group_dset_dtype$', params['dtype'])
-                        templine2 = templine1
-
-                        if params['dtype'] == 'double':
-                            h5_dtype       = 'double'
-                            f_dtype_default= 'real(8)'
-                            f_dtype_double = 'real(8)'
-                            f_dtype_single = 'real(4)'
-                            c_dtype_default= 'double'
-                            c_dtype_double = 'double'
-                            c_dtype_single = 'float'
-                            default_prec   = '64'
-
-                        elif params['dtype'] == 'int64_t':
-                            h5_dtype = 'int64'
-                            f_dtype_default= 'integer(4)'
-                            f_dtype_double = 'integer(8)'
-                            f_dtype_single = 'integer(4)'
-                            c_dtype_default= 'int32_t'
-                            c_dtype_double = 'int64_t'
-                            c_dtype_single = 'int32_t'
-                            default_prec   = '32'
-
-                        templine1 = templine2.replace('$group_dset_dtype_double$', c_dtype_double)
-                        templine2 = templine1.replace('$group_dset_dtype_single$', c_dtype_single)
-
-                        templine1 = templine2.replace('$group_dset_h5_dtype$', h5_dtype)
-                        templine2 = templine1.replace('$group_dset_h5_dtype$'.upper(), h5_dtype.upper())
-
-                        templine1 = templine2.replace('$group_dset_f_dtype_double$', f_dtype_double)
-                        templine2 = templine1.replace('$group_dset_f_dtype_single$', f_dtype_single)
-
-                        templine1 = templine2.replace('$group_dset_f_dtype_default$', f_dtype_default)
-                        templine2 = templine1.replace('$group_dset_dtype_default$', c_dtype_default)
-
-                        templine1 = templine2.replace('$default_prec$', default_prec)
-                        templine2 = templine1
-
-                        templine1 = templine2.replace('$group_dset_rank$', str(params['rank']))
-                        templine2 = templine1
-
-                        templine1 = templine2.replace('$group_dset_dim_list$', params['dim_list'])
-                        templine2 = templine1
-
-                        templine1 = templine2.replace('$group$', grname)
-                        templine2 = templine1.replace('$GROUP$', grname.upper())
-
-                        if "$group_dset_f_dims$" in templine2:
-                            dims = "(" + ",".join([":" for _ in range(params['rank'])]) + ")"
-                            if dims == "()":
-                              dims = ""
-                            else:
-                              dims = "(*)"
-                            templine1 = templine2.replace("$group_dset_f_dims$", dims)
-                            templine2 = templine1
-
-                        f_out.write(templine2)
-                    else:
-                        f_out.write(line)
+    recursive_populate_file(fname, path_dict, datasets_nostr)
 
 
 # build files with functions for text groups

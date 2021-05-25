@@ -5,15 +5,33 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
-    triggers = ['group_num', 'group']
+    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 'default_prec',
+                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_dset', 'group_num', 'group']
 
-    for dim in detailed_source.keys():
-        #group = detailed_source[dim]['group']
+    for item in detailed_source.keys():
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
-                for line in f_in :                      
-                    populated_line = recursive_replace_line(line, triggers, detailed_source[dim])
-                    f_out.write(populated_line)
+                num_written = []
+                for line in f_in :
+                        if '$group_dset_dim$' in line:
+                            rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
+                            indentlevel = len(line) - len(line.lstrip())
+                            for dim in detailed_source[item]['dims']:
+                                if not dim.isdigit() and not dim in num_written:
+                                    num_written.append(dim)
+                                    templine1 = line.replace('$group_dset_dim$', dim)
+                                    templine2 = templine1
+                                    if '_read' in templine2: 
+                                            templine1 = indentlevel*" " + rc_line
+                                            templine2 += templine1
+
+                                    f_out.write(templine2)
+                            num_written = []
+                            continue
+                        else:
+                            populated_line = recursive_replace_line(line, triggers, detailed_source[item])
+                            f_out.write(populated_line)
 
 
 def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
@@ -36,7 +54,8 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
         if triggered:
             return recursive_replace_line(output_line, triggers, source)
         else:
-            raise ValueError('Recursion went wrong')
+            print(output_line)
+            raise ValueError('Recursion went wrong, not all cases considered')
         
     return output_line
 
@@ -228,29 +247,65 @@ def split_dset_dict (datasets: dict) -> tuple:
         # transform datatypes to the more C-like analogues
         if v[0] == 'float':
             datatype = 'double'
+            group_dset_h5_dtype       = 'double'
+            group_dset_f_dtype_default= 'real(8)'
+            group_dset_f_dtype_double = 'real(8)'
+            group_dset_f_dtype_single = 'real(4)'
+            group_dset_dtype_default= 'double'
+            group_dset_dtype_double = 'double'
+            group_dset_dtype_single = 'float'
+            default_prec   = '64'
         elif v[0] == 'int':
             datatype = 'int64_t'
+            group_dset_h5_dtype = 'int64'
+            group_dset_f_dtype_default= 'integer(4)'
+            group_dset_f_dtype_double = 'integer(8)'
+            group_dset_f_dtype_single = 'integer(4)'
+            group_dset_dtype_default= 'int32_t'
+            group_dset_dtype_double = 'int64_t'
+            group_dset_dtype_single = 'int32_t'
+            default_prec   = '32'
         elif v[0] == 'str':
             datatype = 'string'
-        # add the datatype
+        
+        # add the dset name for templates
+        tmp_dict['group_dset'] = k
+        # add the datatypes for templates
         tmp_dict['dtype'] = datatype
-        # add the list of dimensions
-        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+        tmp_dict['group_dset_dtype'] = datatype
+        tmp_dict['group_dset_h5_dtype'] = group_dset_h5_dtype 
+        tmp_dict['group_dset_f_dtype_default'] = group_dset_f_dtype_default
+        tmp_dict['group_dset_f_dtype_double'] = group_dset_f_dtype_double
+        tmp_dict['group_dset_f_dtype_single'] = group_dset_f_dtype_single
+        tmp_dict['group_dset_dtype_default'] = group_dset_dtype_default
+        tmp_dict['group_dset_dtype_double'] = group_dset_dtype_double
+        tmp_dict['group_dset_dtype_single'] = group_dset_dtype_single
+        tmp_dict['default_prec'] = default_prec
         # add the rank
         tmp_dict['rank'] = len(v[1])
+        tmp_dict['group_dset_rank'] = str(tmp_dict['rank'])
+        # add the list of dimensions
+        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
         # build a list of dimensions to be inserted in the dims array initialization, e.g. {ao_num, ao_num}
         dim_list = tmp_dict['dims'][0]
         if tmp_dict['rank'] > 1:
             for i in range(1, tmp_dict['rank']):
                 dim_toadd = tmp_dict['dims'][i]
                 dim_list += f', {dim_toadd}'
-        tmp_dict['dim_list'] = dim_list
+        
+        tmp_dict['group_dset_dim_list'] = dim_list
+
+        if tmp_dict['rank'] == 0:
+            dim_f_list = ""
+        else:
+            dim_f_list = "(*)"
+        tmp_dict['group_dset_f_dims'] = dim_f_list
 
         # add group name as a key-value pair to the dset dict
         tmp_dict['group'] = v[2]
 
         # split datasets in numerical and string 
-        if (datatype=='string'):
+        if (datatype == 'string'):
             dset_string_dict[k] = tmp_dict
         else:
             dset_numeric_dict[k] = tmp_dict
