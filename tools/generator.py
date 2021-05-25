@@ -28,12 +28,25 @@ group_list = [item for item in group_dict.keys()]
 dim_dict = get_dim_dict(config)
 
 datasets = get_dset_dict(config)
+#print(datasets)
+
 numbers = get_num_dict(config)
 
 dset_per_group = get_dset_per_group(config, datasets)
-print(dset_per_group)
+#print(dset_per_group)
+
+num_per_group = get_num_per_group(config, numbers)
+#print(num_per_group)
+
+num_detailed = {}
+for num in num_per_group.keys():
+    tmp_dict = {}
+    tmp_dict['group'] = num_per_group[num]
+    tmp_dict['group_num'] = num
+    num_detailed[num] = tmp_dict
 
 datasets_nostr, datasets_str = split_dset_dict(datasets)
+print(datasets_nostr)
 
 path_dict = {}
 for dir in ['front', 'hdf5', 'text']:
@@ -54,63 +67,20 @@ files_funcs_dsets = [f for f in files_funcs if 'dset' in f]
 files_funcs_nums  = [f for f in files_funcs if 'num' in f]
 files_funcs_groups = [f for f in files_funcs if 'group' in f]
 files_funcs_groups.append('struct_text_group_dset.h')
-# files that correspond to todo1 group (e.g. only groups have to be populated)
+# files that correspond to todo1 group (e.g. only iterative population within the function body)
 files_auxil = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.h', 'struct_text_group.h'] 
 
 
 # build files with $group$ and $group$-based
 add_condition = 'rc = trexio_text_free_$group$'
 triggers = [add_condition, '$group_dset$', '$group_num$', '$group$']
-# Note: it is important that special conditions like add_condition above will be checked before standard triggers
-# that contain only basic $-ed variable (like $group$). Otherwise, the standard triggers will be removed 
-# from the template and the special condition will never be met.
 for fname in files_auxil:
-    fname_new = join('populated',f'pop_{fname}')
+    iterative_populate_file(fname, path_dict, triggers, datasets, numbers, group_dict)
 
-    templ_path = get_template_path(fname, path_dict)
-
-    with open(join(templ_path,fname), 'r') as f_in :
-        with open(join(templ_path,fname_new), 'a') as f_out :
-            for line in f_in :
-                id = check_triggers(line, triggers)
-                if id == 0:
-                    # special case for proper error handling when deallocting text groups
-                    error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
-                    populated_line = iterative_replace_str(line, triggers[3], group_dict, add_line=error_handler)
-                    f_out.write(populated_line)
-                elif id == 1:
-                    populated_line = iterative_replace_str(line, triggers[id], datasets, None)
-                    f_out.write(populated_line)
-                elif id == 2:
-                    populated_line = iterative_replace_str(line, triggers[id], numbers, None)
-                    f_out.write(populated_line)
-                elif id == 3:
-                    populated_line = iterative_replace_str(line, triggers[id], group_dict, None)
-                    f_out.write(populated_line)
-                else:
-                    f_out.write(line)
 
 # populate has/read/write_num functions 
 for fname in files_funcs_nums:
-    fname_new = join('populated',f'pop_{fname}')
-
-    templ_path = get_template_path(fname, path_dict)
-
-    for dim in numbers.keys():
-        grname = dim.split('_')[0]
-        with open(join(templ_path,fname), 'r') as f_in :
-            with open(join(templ_path,fname_new), 'a') as f_out :
-                for line in f_in :
-                    if '$' in line:
-                        templine1 = line.replace('$GROUP_NUM$', dim.upper())
-                        templine2 = templine1.replace('$group_num$', dim)
-
-                        templine1 = templine2.replace('$group$', grname)
-                        templine2 = templine1.replace('$GROUP$', grname.upper())
-
-                        f_out.write(templine2)
-                    else:
-                        f_out.write(line)
+    recursive_populate_file(fname, path_dict, num_detailed)
 
 
 # populate has/read/write_dset functions 

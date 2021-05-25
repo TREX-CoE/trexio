@@ -1,3 +1,75 @@
+from os.path import join
+
+def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
+
+    fname_new = join('populated',f'pop_{fname}')
+    templ_path = get_template_path(fname, paths)
+
+    triggers = ['group_num', 'group']
+
+    for dim in detailed_source.keys():
+        #group = detailed_source[dim]['group']
+        with open(join(templ_path,fname), 'r') as f_in :
+            with open(join(templ_path,fname_new), 'a') as f_out :
+                for line in f_in :                      
+                    populated_line = recursive_replace_line(line, triggers, detailed_source[dim])
+                    f_out.write(populated_line)
+
+
+def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
+    
+    triggered = False
+    output_line = input_line
+    
+    if '$' in input_line:
+        for case in triggers:
+            test_case = f'${case}$'
+            if test_case in input_line:
+                output_line = input_line.replace(test_case, source[case])
+                triggered = True
+                break
+            elif test_case.upper() in input_line:
+                output_line = input_line.replace(test_case.upper(), source[case].upper())
+                triggered = True
+                break
+
+        if triggered:
+            return recursive_replace_line(output_line, triggers, source)
+        else:
+            raise ValueError('Recursion went wrong')
+        
+    return output_line
+
+
+
+def iterative_populate_file (filename: str, paths: dict, triggers: list, datasets: dict, numbers: dict, groups: dict):
+
+    templ_path = get_template_path(filename, paths)
+    filename_out = join('populated',f'pop_{filename}')
+# Note: it is important that special conditions like add_condition above will be checked before standard triggers
+# that contain only basic $-ed variable (like $group$). Otherwise, the standard triggers will be removed 
+# from the template and the special condition will never be met.
+    with open(join(templ_path,filename), 'r') as f_in :
+        with open(join(templ_path,filename_out), 'a') as f_out :
+            for line in f_in :
+                id = check_triggers(line, triggers)
+                if id == 0:
+                    # special case for proper error handling when deallocting text groups
+                    error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
+                    populated_line = iterative_replace_str(line, triggers[3], groups, add_line=error_handler)
+                    f_out.write(populated_line)
+                elif id == 1:
+                    populated_line = iterative_replace_str(line, triggers[id], datasets, None)
+                    f_out.write(populated_line)
+                elif id == 2:
+                    populated_line = iterative_replace_str(line, triggers[id], numbers, None)
+                    f_out.write(populated_line)
+                elif id == 3:
+                    populated_line = iterative_replace_str(line, triggers[id], groups, None)
+                    f_out.write(populated_line)
+                else:
+                    f_out.write(line)
+
 
 def check_triggers (input_line: str, triggers: list) -> int:
 
@@ -20,7 +92,6 @@ def iterative_replace_str (input_line: str, case: str, source: dict, add_line: s
 
         output_block += templine2
 
-    print(output_block)
     return output_block
 
 
@@ -56,6 +127,26 @@ def get_dset_per_group (configuration: dict, datasets: dict) -> dict:
                 tmp_list.append(tmp_dset)
 
         output[k1] = tmp_list
+
+    return output
+
+
+def get_num_per_group (configuration: dict, numbers: dict) -> dict:
+    
+    output = {}
+    for k1,v1 in configuration.items():
+        # the code below return dictionary with num names as keys and corresponding groups as values
+        for k2,v2 in v1.items():
+            if len(v2[1]) == 0 and v2[0] == 'int':
+                output[f'{k1}_{k2}'] = k1
+        
+        # the code below returns dictionary with groups as keys and values as lists of corresponding num names
+        #tmp_list = []
+        #for k2,v2 in v1.items():
+        #    if len(v2[1]) == 0 and v2[0] == 'int':
+        #        tmp_dset = f'{k1}_{k2}'
+        #        tmp_list.append(tmp_dset)
+        #output[k1] = tmp_list
 
     return output
 
@@ -99,6 +190,8 @@ def get_dset_dict (configuration: dict) -> dict:
             if len(v2[1]) != 0:
                 tmp_dset = f'{k1}_{k2}'
                 dset_dict[tmp_dset] = v2
+                # append a group name for postprocessing
+                dset_dict[tmp_dset].append(k1)
 
     return dset_dict
 
@@ -152,6 +245,10 @@ def split_dset_dict (datasets: dict) -> tuple:
                 dim_toadd = tmp_dict['dims'][i]
                 dim_list += f', {dim_toadd}'
         tmp_dict['dim_list'] = dim_list
+
+        # add group name as a key-value pair to the dset dict
+        tmp_dict['group'] = v[2]
+
         # split datasets in numerical and string 
         if (datatype=='string'):
             dset_string_dict[k] = tmp_dict
