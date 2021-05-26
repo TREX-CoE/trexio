@@ -1,4 +1,54 @@
-from os.path import join
+from os import listdir
+from os.path import join, dirname, abspath, isfile
+from json import load as json_load
+
+
+def get_files_todo(source_files: dict) -> dict:
+
+    all_files = []
+    for key in source_files.keys():
+        all_files += source_files[key]
+
+    files_todo = {}       
+    #files_todo['all'] = list(filter(lambda x: 'read' in x or 'write' in x or 'has' in x or 'hrw' in x or 'flush' in x or 'free' in x, all_files))
+    files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f]
+    for key in ['dset', 'num', 'group']:
+        files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
+
+    files_todo['group'].append('struct_text_group_dset.h')
+    # files that correspond to todo1 group (e.g. only iterative population within the function body)
+    files_todo['auxiliary'] = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.h', 'struct_text_group.h'] 
+
+    return files_todo
+
+def get_source_files(paths: dict) -> dict:
+
+    file_dict = {}
+    for key in paths.keys():
+        file_dict[key] = [f for f in listdir(paths[key]) if isfile(join(paths[key], f))]
+
+    return file_dict
+
+
+def get_template_paths(source: list) -> dict:
+
+    fileDir = dirname(abspath(__file__))
+    path_dict = {}
+
+    for dir in source:
+        path_dict[dir] = join(fileDir,f'templates_{dir}')
+
+    return path_dict
+
+def read_json(fname: str) -> dict:
+
+    fileDir = dirname(abspath(__file__))
+    parentDir = dirname(fileDir)
+
+    with open(join(parentDir,fname), 'r') as f:
+        config = json_load(f)
+
+    return config
 
 def special_populate_text_group(fname: str, paths: dict, group_list: list, detailed_dset: dict, detailed_numbers: dict):
 
