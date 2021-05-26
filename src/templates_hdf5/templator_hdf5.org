@@ -55,7 +55,7 @@
   #+begin_src c :tangle def_hdf5.c
 #define $GROUP$_GROUP_NAME          "$group$"
 #define $GROUP_NUM$_NAME            "$group_num$"
-#define $GROUP$_$GROUP_DSET$_NAME   "$group_dset$"
+#define $GROUP_DSET$_NAME           "$group_dset$"
   #+end_src
 
 ** Template for HDF5 structures
@@ -282,14 +282,14 @@ trexio_hdf5_has_$group_num$ (trexio_t* const file)
 ** Template for HDF5 has/read/write a dataset
 
    #+begin_src c :tangle hrw_dset_hdf5.h :exports none
-trexio_exit_code trexio_hdf5_has_$group$_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_hdf5_read_$group$_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$, const uint32_t rank, const uint64_t* dims);
-trexio_exit_code trexio_hdf5_write_$group$_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_hdf5_read_$group_dset$(trexio_t* const file, $group_dset_dtype$* const $group_dset$, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_hdf5_write_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims);
    #+end_src
 
    #+begin_src c :tangle read_dset_hdf5.c
 trexio_exit_code
-trexio_hdf5_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$,
+trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$,
 				       const uint32_t rank, const uint64_t* dims)
 {
 
@@ -301,14 +301,14 @@ trexio_hdf5_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype$*
   herr_t status;
   int rrank;
   // get the rank of the dataset in a file
-  status = H5LTget_dataset_ndims (f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, &rrank);
+  status = H5LTget_dataset_ndims (f->$group$_group, $GROUP_DSET$_NAME, &rrank);
 
   if (status < 0) return TREXIO_FAILURE;
 
   if (rrank != (int) rank) return TREXIO_INVALID_ARG_3;
 
   // open the dataset to get its dimensions
-  hid_t dset_id = H5Dopen(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, H5P_DEFAULT);
+  hid_t dset_id = H5Dopen(f->$group$_group, $GROUP_DSET$_NAME, H5P_DEFAULT);
   if (dset_id <= 0) return TREXIO_INVALID_ID;
 
   // allocate space for the dimensions to be read
@@ -334,7 +334,7 @@ trexio_hdf5_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype$*
 
   /* High-level H5LT API. No need to deal with dataspaces and datatypes */
   status = H5LTread_dataset(f->$group$_group,
-			    $GROUP$_$GROUP_DSET$_NAME,
+			    $GROUP_DSET$_NAME,
 			    H5T_NATIVE_$GROUP_DSET_H5_DTYPE$,
 			    $group_dset$);
   if (status < 0) return TREXIO_FAILURE;
@@ -345,7 +345,7 @@ trexio_hdf5_read_$group$_$group_dset$ (trexio_t* const file, $group_dset_dtype$*
 
    #+begin_src c :tangle write_dset_hdf5.c
 trexio_exit_code
-trexio_hdf5_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* $group_dset$,
+trexio_hdf5_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* $group_dset$,
 					const uint32_t rank, const uint64_t* dims)
 {
 
@@ -360,10 +360,10 @@ trexio_hdf5_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
-  if ( H5LTfind_dataset(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME) != 1 ) {
+  if ( H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME) != 1 ) {
 
     const herr_t status = H5LTmake_dataset(f->$group$_group,
-					   $GROUP$_$GROUP_DSET$_NAME,
+					   $GROUP_DSET$_NAME,
 					   (int) rank, (const hsize_t*) dims,
 					   H5T_NATIVE_$GROUP_DSET_H5_DTYPE$,
 					   $group_dset$);
@@ -371,7 +371,7 @@ trexio_hdf5_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_
 
   } else {
 
-    hid_t dset_id = H5Dopen(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME, H5P_DEFAULT);
+    hid_t dset_id = H5Dopen(f->$group$_group, $GROUP_DSET$_NAME, H5P_DEFAULT);
     if (dset_id <= 0) return TREXIO_INVALID_ID;
 
     const herr_t status = H5Dwrite(dset_id,
@@ -391,14 +391,14 @@ trexio_hdf5_write_$group$_$group_dset$ (trexio_t* const file, const $group_dset_
 
    #+begin_src c :tangle has_dset_hdf5.c
 trexio_exit_code
-trexio_hdf5_has_$group$_$group_dset$ (trexio_t* const file)
+trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
-  herr_t status = H5LTfind_dataset(f->$group$_group, $GROUP$_$GROUP_DSET$_NAME);
+  herr_t status = H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME);
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
   if (status == 1){
     return TREXIO_SUCCESS;
