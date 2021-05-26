@@ -3,8 +3,27 @@ from os.path import join, dirname, abspath, isfile
 from json import load as json_load
 
 
+def read_json(fname: str) -> dict:
+    """ 
+    Read configuration from the input `fname` JSON file.
+
+            Parameters:
+                    fname (str)     : JSON file name
+
+            Returns:
+                    config (dict)   : full configuration dictionary loaded from the input file
+    """
+    fileDir = dirname(abspath(__file__))
+    parentDir = dirname(fileDir)
+
+    with open(join(parentDir,fname), 'r') as f:
+        config = json_load(f)
+
+    return config
+
+
 def get_files_todo(source_files: dict) -> dict:
-    ''' 
+    """ 
     Build dictionaries of templated files per objective.
 
             Parameters:
@@ -12,7 +31,7 @@ def get_files_todo(source_files: dict) -> dict:
 
             Returns:
                     file_todo (dict)    : dictionary with objective title : [list of files] as key-value pairs
-    '''
+    """
     all_files = []
     for key in source_files.keys():
         all_files += source_files[key]
@@ -31,7 +50,7 @@ def get_files_todo(source_files: dict) -> dict:
 
 
 def get_source_files(paths: dict) -> dict:
-    ''' 
+    """ 
     Build dictionaries of all files per source directory.
 
             Parameters:
@@ -39,7 +58,7 @@ def get_source_files(paths: dict) -> dict:
 
             Returns:
                     file_dict (dict) : dictionary with source title : [list of files] as key-value pairs
-    '''
+    """
     file_dict = {}
     for key in paths.keys():
         file_dict[key] = [f for f in listdir(paths[key]) if isfile(join(paths[key], f))]
@@ -48,7 +67,7 @@ def get_source_files(paths: dict) -> dict:
 
 
 def get_template_paths(source: list) -> dict:
-    ''' 
+    """ 
     Build dictionary of the absolute paths to directory with templates per source.
 
             Parameters:
@@ -56,7 +75,7 @@ def get_template_paths(source: list) -> dict:
 
             Returns:
                     path_dict (dict) : dictionary with source title : absolute path as key-value pairs
-    '''
+    """
     fileDir = dirname(abspath(__file__))
     path_dict = {}
 
@@ -66,27 +85,8 @@ def get_template_paths(source: list) -> dict:
     return path_dict
 
 
-def read_json(fname: str) -> dict:
-    ''' 
-    Read configuration from the input `fname` JSON file.
-
-            Parameters:
-                    fname (str)     : JSON file name
-
-            Returns:
-                    config (dict)   : full configuration dictionary loaded from the input file
-    '''
-    fileDir = dirname(abspath(__file__))
-    parentDir = dirname(fileDir)
-
-    with open(join(parentDir,fname), 'r') as f:
-        config = json_load(f)
-
-    return config
-
-
 def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
-    ''' 
+    """ 
     Populate files containing basic read/write/has functions.
 
             Parameters:
@@ -96,7 +96,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
 
             Returns:
                     None
-    '''
+    """
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
@@ -133,7 +133,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
 
 
 def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
-    ''' 
+    """ 
     Recursive replacer. Recursively calls itself as long as there is at least one "$" present in the `input_line`. 
 
             Parameters:
@@ -143,7 +143,7 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
 
             Returns:
                     output_line (str)   : processed (replaced) line
-    '''    
+    """    
     is_triggered = False
     output_line = input_line
     
@@ -169,7 +169,7 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
 
 
 def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict):
-    ''' 
+    """ 
     Iteratively populate files with unique functions that contain templated variables.
 
             Parameters:
@@ -181,7 +181,7 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
 
             Returns:
                     None
-    '''
+    """
     add_trigger = 'rc = trexio_text_free_$group$'
     triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
 
@@ -213,7 +213,7 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
 
 
 def iterative_replace_line (input_line: str, case: str, source: dict, add_line: str) -> str:
-    ''' 
+    """ 
     Iterative replacer. Iteratively copy-pastes `input_line` each time with a new substitution of a templated variable depending on the `case`. 
 
             Parameters:
@@ -224,7 +224,7 @@ def iterative_replace_line (input_line: str, case: str, source: dict, add_line: 
 
             Returns:
                     output_block (str)   : processed (replaced) block of text
-    '''    
+    """    
     output_block = ""
     for item in source.keys():
         templine1 = input_line.replace(case.upper(), item.upper())
@@ -238,7 +238,7 @@ def iterative_replace_line (input_line: str, case: str, source: dict, add_line: 
 
 
 def check_triggers (input_line: str, triggers: list) -> int:
-    '''
+    """
     Check the presence of the trigger in the `input_line`.
 
             Parameters:
@@ -247,7 +247,7 @@ def check_triggers (input_line: str, triggers: list) -> int:
 
             Returns:
                     out_id (int)        : id of the trigger item in the list
-    '''
+    """
     out_id = -1
     for id,trig in enumerate(triggers):
         if trig in input_line or trig.upper() in input_line:
@@ -258,7 +258,7 @@ def check_triggers (input_line: str, triggers: list) -> int:
 
 
 def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict):
-    ''' 
+    """ 
     Special population for group-related functions in the TEXT back end.
 
             Parameters:
@@ -270,7 +270,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
 
             Returns:
                     None
-    '''
+    """
 
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
@@ -361,7 +361,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
 
 
 def get_template_path (filename: str, path_dict: dict) -> str:
-    ''' 
+    """ 
     Returns the absolute path to the directory with indicated `filename` template.
 
             Parameters:
@@ -370,7 +370,7 @@ def get_template_path (filename: str, path_dict: dict) -> str:
 
             Returns:
                     path (str) : resulting path
-    '''
+    """
     for dir_type in path_dict.keys():
         if dir_type in filename:
             path = path_dict[dir_type]
@@ -380,7 +380,7 @@ def get_template_path (filename: str, path_dict: dict) -> str:
 
 
 def get_group_dict (configuration: dict) -> dict:
-    ''' 
+    """ 
     Returns the dictionary of all groups.
 
             Parameters:
@@ -388,7 +388,7 @@ def get_group_dict (configuration: dict) -> dict:
 
             Returns:
                     group_dict (dict) : dictionary of groups
-    '''
+    """
     group_dict = {}
     for k in configuration.keys():
         group_dict[k] = 0
@@ -397,7 +397,7 @@ def get_group_dict (configuration: dict) -> dict:
 
 
 def get_detailed_num_dict (configuration: dict) -> dict:
-    ''' 
+    """ 
     Returns the dictionary of all `num`-suffixed variables.
     Keys are names, values are subdictionaries containing corresponding group and group_num names. 
 
@@ -406,7 +406,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
 
             Returns:
                     num_dict (dict) : dictionary of num-suffixed variables
-    '''
+    """
     num_dict = {}
     for k1,v1 in configuration.items():
         for k2,v2 in v1.items():
@@ -422,7 +422,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
 
 
 def get_dset_dict (configuration: dict) -> dict:
-    ''' 
+    """ 
     Returns the dictionary of datasets. 
     Keys are names, values are lists containing datatype, list of dimensions and group name
 
@@ -431,7 +431,7 @@ def get_dset_dict (configuration: dict) -> dict:
 
             Returns:
                     dset_dict (dict) : dictionary of datasets
-    '''
+    """
     dset_dict = {}
     for k1,v1 in configuration.items():
         for k2,v2 in v1.items():
@@ -445,7 +445,7 @@ def get_dset_dict (configuration: dict) -> dict:
 
 
 def split_dset_dict_detailed (datasets: dict) -> tuple:
-    ''' 
+    """ 
     Returns the detailed dictionary of datasets. 
     Keys are names, values are subdictionaries containing substitutes for templated variables
 
@@ -454,7 +454,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
 
             Returns:
                     dset_numeric_dict, dset_string_dict (tuple) : dictionaries corresponding to all numeric- and string-based datasets, respectively.
-    '''
+    """
     
     dset_numeric_dict = {}
     dset_string_dict = {}
@@ -462,7 +462,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
     for k,v in datasets.items():
         # create a temp dictionary
         tmp_dict = {}
-        # transform datatypes to the more C-like analogues
+        # specify details required to replace templated variables later
         if v[0] == 'float':
             datatype = 'double'
             group_dset_h5_dtype       = 'double'
@@ -529,10 +529,11 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         # add group name as a key-value pair to the dset dict
         tmp_dict['group'] = v[2]
 
-        # split datasets in numerical and string 
+        # split datasets in numeric- and string- based
         if (datatype == 'string'):
             dset_string_dict[k] = tmp_dict
         else:
             dset_numeric_dict[k] = tmp_dict
 
     return (dset_numeric_dict, dset_string_dict)
+
