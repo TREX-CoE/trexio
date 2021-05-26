@@ -71,9 +71,10 @@ cd ..
 
 # Populate templates with TREXIO structure according to trex.json file
 echo "run generator script to populate templates"
-cp ${TOOLS}/generator.py ${SRC}
+cp ${TOOLS}/generator.py ${TOOLS}/generator_tools.py ${SRC}
 python3 generator.py
-rm -f -- ${SRC}/generator.py
+rm -f -- ${SRC}/generator.py ${SRC}/generator_tools.py
+rm -f -r -- ${SRC}/__pycache__/
 
 # Put pieces of source files together
 echo "compile populated files in the lib source files "
