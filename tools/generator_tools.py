@@ -4,7 +4,15 @@ from json import load as json_load
 
 
 def get_files_todo(source_files: dict) -> dict:
+    ''' 
+    Build dictionaries of templated files per objective.
 
+            Parameters:
+                    source_files (dict) : dictionary with source files per source directory
+
+            Returns:
+                    file_todo (dict)    : dictionary with objective title : [list of files] as key-value pairs
+    '''
     all_files = []
     for key in source_files.keys():
         all_files += source_files[key]
@@ -23,7 +31,15 @@ def get_files_todo(source_files: dict) -> dict:
 
 
 def get_source_files(paths: dict) -> dict:
+    ''' 
+    Build dictionaries of all files per source directory.
 
+            Parameters:
+                    paths (dict)     : dictionary with paths to source directories
+
+            Returns:
+                    file_dict (dict) : dictionary with source title : [list of files] as key-value pairs
+    '''
     file_dict = {}
     for key in paths.keys():
         file_dict[key] = [f for f in listdir(paths[key]) if isfile(join(paths[key], f))]
@@ -32,7 +48,15 @@ def get_source_files(paths: dict) -> dict:
 
 
 def get_template_paths(source: list) -> dict:
+    ''' 
+    Build dictionary of the absolute paths to directory with templates per source.
 
+            Parameters:
+                    source (list)    : list of source titles, i.e. ['front', 'text', 'hdf5']
+
+            Returns:
+                    path_dict (dict) : dictionary with source title : absolute path as key-value pairs
+    '''
     fileDir = dirname(abspath(__file__))
     path_dict = {}
 
@@ -43,7 +67,15 @@ def get_template_paths(source: list) -> dict:
 
 
 def read_json(fname: str) -> dict:
+    ''' 
+    Read configuration from the input `fname` JSON file.
 
+            Parameters:
+                    fname (str)     : JSON file name
+
+            Returns:
+                    config (dict)   : full configuration dictionary loaded from the input file
+    '''
     fileDir = dirname(abspath(__file__))
     parentDir = dirname(fileDir)
 
@@ -54,7 +86,17 @@ def read_json(fname: str) -> dict:
 
 
 def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
+    ''' 
+    Populate files containing basic read/write/has functions.
 
+            Parameters:
+                    filename (str)          : template file to be populated
+                    paths (dict)            : dictionary of paths per source directory
+                    detailed_source (dict)  : dictionary of variables with substitution details (usually either datasets or numbers)
+
+            Returns:
+                    None
+    '''
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
@@ -91,7 +133,17 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
 
 
 def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
-    
+    ''' 
+    Recursive replacer. Recursively calls itself as long as there is at least one "$" present in the `input_line`. 
+
+            Parameters:
+                    input_line (str)    : input line
+                    triggers (list)     : list of triggers (templated variables to be replaced)
+                    source (dict)       : dictionary of variables with substitution details (usually either datasets or numbers)
+
+            Returns:
+                    output_line (str)   : processed (replaced) line
+    '''    
     is_triggered = False
     output_line = input_line
     
@@ -117,7 +169,19 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
 
 
 def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict):
+    ''' 
+    Iteratively populate files with unique functions that contain templated variables.
 
+            Parameters:
+                    filename (str)          : template file to be populated
+                    paths (dict)            : dictionary of paths per source directory
+                    groups (dict)           : dictionary of groups
+                    datasets (dict)         : dictionary of datasets with substitution details
+                    numbers (dict)          : dictionary of numbers with substitution details
+
+            Returns:
+                    None
+    '''
     add_trigger = 'rc = trexio_text_free_$group$'
     triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
 
@@ -149,6 +213,18 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
 
 
 def iterative_replace_line (input_line: str, case: str, source: dict, add_line: str) -> str:
+    ''' 
+    Iterative replacer. Iteratively copy-pastes `input_line` each time with a new substitution of a templated variable depending on the `case`. 
+
+            Parameters:
+                    input_line (str)    : input line
+                    case (str)          : single trigger case (templated variable to be replaced)
+                    source (dict)       : dictionary of variables with substitution details
+                    add_line (str)      : special line to be added (e.g. for error handling)
+
+            Returns:
+                    output_block (str)   : processed (replaced) block of text
+    '''    
     output_block = ""
     for item in source.keys():
         templine1 = input_line.replace(case.upper(), item.upper())
@@ -162,6 +238,16 @@ def iterative_replace_line (input_line: str, case: str, source: dict, add_line: 
 
 
 def check_triggers (input_line: str, triggers: list) -> int:
+    '''
+    Check the presence of the trigger in the `input_line`.
+
+            Parameters:
+                    input_line (str)    : string to be checked
+                    triggers (list)     : list of triggers (templated variables)
+
+            Returns:
+                    out_id (int)        : id of the trigger item in the list
+    '''
     out_id = -1
     for id,trig in enumerate(triggers):
         if trig in input_line or trig.upper() in input_line:
@@ -172,6 +258,19 @@ def check_triggers (input_line: str, triggers: list) -> int:
 
 
 def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict):
+    ''' 
+    Special population for group-related functions in the TEXT back end.
+
+            Parameters:
+                    fname (str)             : template file to be populated
+                    paths (dict)            : dictionary of paths per source directory
+                    group_dict (dict)       : dictionary of groups
+                    detailed_dset (dict)    : dictionary of datasets with substitution details
+                    detailed_numbers (dict) : dictionary of numbers with substitution details
+
+            Returns:
+                    None
+    '''
 
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
@@ -262,6 +361,16 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
 
 
 def get_template_path (filename: str, path_dict: dict) -> str:
+    ''' 
+    Returns the absolute path to the directory with indicated `filename` template.
+
+            Parameters:
+                    filename (str)   : template file to be populated
+                    path_dict (dict) : dictionary of paths per source directory
+
+            Returns:
+                    path (str) : resulting path
+    '''
     for dir_type in path_dict.keys():
         if dir_type in filename:
             path = path_dict[dir_type]
@@ -271,6 +380,15 @@ def get_template_path (filename: str, path_dict: dict) -> str:
 
 
 def get_group_dict (configuration: dict) -> dict:
+    ''' 
+    Returns the dictionary of all groups.
+
+            Parameters:
+                    configuration (dict) : configuration from `trex.json`
+
+            Returns:
+                    group_dict (dict) : dictionary of groups
+    '''
     group_dict = {}
     for k in configuration.keys():
         group_dict[k] = 0
@@ -306,7 +424,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
 def get_dset_dict (configuration: dict) -> dict:
     ''' 
     Returns the dictionary of datasets. 
-    Keys are names, values are lists containing datatype and list of dimensions.
+    Keys are names, values are lists containing datatype, list of dimensions and group name
 
             Parameters:
                     configuration (dict) : configuration from `trex.json`
@@ -327,6 +445,16 @@ def get_dset_dict (configuration: dict) -> dict:
 
 
 def split_dset_dict_detailed (datasets: dict) -> tuple:
+    ''' 
+    Returns the detailed dictionary of datasets. 
+    Keys are names, values are subdictionaries containing substitutes for templated variables
+
+            Parameters:
+                    configuration (dict) : configuration from `trex.json`
+
+            Returns:
+                    dset_numeric_dict, dset_string_dict (tuple) : dictionaries corresponding to all numeric- and string-based datasets, respectively.
+    '''
     
     dset_numeric_dict = {}
     dset_string_dict = {}
