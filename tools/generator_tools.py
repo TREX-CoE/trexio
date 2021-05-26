@@ -156,11 +156,14 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
 
 
 
-def iterative_populate_file (filename: str, paths: dict, triggers: list, datasets: dict, numbers: dict, groups: dict):
+def iterative_populate_file (filename: str, paths: dict, datasets: dict, numbers: dict, groups: dict):
+
+    add_trigger = 'rc = trexio_text_free_$group$'
+    triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
 
     templ_path = get_template_path(filename, paths)
     filename_out = join('populated',f'pop_{filename}')
-# Note: it is important that special conditions like add_condition above will be checked before standard triggers
+# Note: it is important that special conditions like add_trigger above will be checked before standard triggers
 # that contain only basic $-ed variable (like $group$). Otherwise, the standard triggers will be removed 
 # from the template and the special condition will never be met.
     with open(join(templ_path,filename), 'r') as f_in :

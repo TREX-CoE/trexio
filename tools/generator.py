@@ -17,7 +17,7 @@ print('Metadata I/O currently not supported')
 # TODO, for now remove metadata-related stuff
 del config['metadata']
 # for now remove rdm because it is hardcoded
-##del config['rdm']
+del config['rdm']
 
 # TODO, for now remove char-related stuff
 print('Strings I/O currently not supported')
@@ -75,23 +75,17 @@ files_auxil = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.
 
 
 # build files with $group$ and $group$-based
-add_condition = 'rc = trexio_text_free_$group$'
-triggers = [add_condition, '$group_dset$', '$group_num$', '$group$']
 for fname in files_auxil:
-    iterative_populate_file(fname, path_dict, triggers, datasets, numbers, group_dict)
-
+    iterative_populate_file(fname, path_dict, datasets, numbers, group_dict)
 
 # populate has/read/write_num functions 
 for fname in files_funcs_nums:
     recursive_populate_file(fname, path_dict, num_detailed)
 
-
 # populate has/read/write_dset functions 
 for fname in files_funcs_dsets:
     recursive_populate_file(fname, path_dict, datasets_nostr)
 
-
 # build files with functions for text groups
 for fname in files_funcs_groups:
     special_populate_text_group(fname, path_dict, group_list, datasets_nostr, num_detailed)
-
