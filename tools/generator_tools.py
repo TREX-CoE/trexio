@@ -21,6 +21,7 @@ def get_files_todo(source_files: dict) -> dict:
 
     return files_todo
 
+
 def get_source_files(paths: dict) -> dict:
 
     file_dict = {}
@@ -40,6 +41,7 @@ def get_template_paths(source: list) -> dict:
 
     return path_dict
 
+
 def read_json(fname: str) -> dict:
 
     fileDir = dirname(abspath(__file__))
@@ -50,7 +52,126 @@ def read_json(fname: str) -> dict:
 
     return config
 
-def special_populate_text_group(fname: str, paths: dict, group_list: list, detailed_dset: dict, detailed_numbers: dict):
+
+def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
+
+    fname_new = join('populated',f'pop_{fname}')
+    templ_path = get_template_path(fname, paths)
+
+    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'default_prec',
+                'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
+                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
+                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_dset', 'group_num', 'group']
+
+    for item in detailed_source.keys():
+        with open(join(templ_path,fname), 'r') as f_in :
+            with open(join(templ_path,fname_new), 'a') as f_out :
+                num_written = []
+                for line in f_in :
+                        # special case to add error handling for read/write of dimensioning variables
+                        if '$group_dset_dim$' in line:
+                            rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
+                            indentlevel = len(line) - len(line.lstrip())
+                            for dim in detailed_source[item]['dims']:
+                                if not dim.isdigit() and not dim in num_written:
+                                    num_written.append(dim)
+                                    templine = line.replace('$group_dset_dim$', dim)
+                                    if '_read' in templine: 
+                                            line_toadd = indentlevel*" " + rc_line
+                                            templine += line_toadd
+
+                                    f_out.write(templine)
+                            num_written = []
+                            continue
+                        # general case of recursive replacement of inline triggers 
+                        else:
+                            populated_line = recursive_replace_line(line, triggers, detailed_source[item])
+                            f_out.write(populated_line)
+
+
+def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
+    
+    is_triggered = False
+    output_line = input_line
+    
+    if '$' in input_line:
+        for case in triggers:
+            test_case = f'${case}$'
+            if test_case in input_line:
+                output_line = input_line.replace(test_case, source[case])
+                is_triggered = True
+                break
+            elif test_case.upper() in input_line:
+                output_line = input_line.replace(test_case.upper(), source[case].upper())
+                is_triggered = True
+                break
+
+        if is_triggered:
+            return recursive_replace_line(output_line, triggers, source)
+        else:
+            print(output_line)
+            raise ValueError('Recursion went wrong, not all cases considered')
+        
+    return output_line
+
+
+def iterative_populate_file (filename: str, paths: dict, datasets: dict, numbers: dict, groups: dict):
+
+    add_trigger = 'rc = trexio_text_free_$group$'
+    triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
+
+    templ_path = get_template_path(filename, paths)
+    filename_out = join('populated',f'pop_{filename}')
+# Note: it is important that special conditions like add_trigger above will be checked before standard triggers
+# that contain only basic $-ed variable (like $group$). Otherwise, the standard triggers will be removed 
+# from the template and the special condition will never be met.
+    with open(join(templ_path,filename), 'r') as f_in :
+        with open(join(templ_path,filename_out), 'a') as f_out :
+            for line in f_in :
+                id = check_triggers(line, triggers)
+                if id == 0:
+                    # special case for proper error handling when deallocting text groups
+                    error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
+                    populated_line = iterative_replace_line(line, triggers[3], groups, add_line=error_handler)
+                    f_out.write(populated_line)
+                elif id == 1:
+                    populated_line = iterative_replace_line(line, triggers[id], datasets, None)
+                    f_out.write(populated_line)
+                elif id == 2:
+                    populated_line = iterative_replace_line(line, triggers[id], numbers, None)
+                    f_out.write(populated_line)
+                elif id == 3:
+                    populated_line = iterative_replace_line(line, triggers[id], groups, None)
+                    f_out.write(populated_line)
+                else:
+                    f_out.write(line)
+
+
+def iterative_replace_line(input_line: str, case: str, source: dict, add_line: str) -> str:
+    output_block = ""
+    for item in source.keys():
+        templine1 = input_line.replace(case.upper(), item.upper())
+        templine2 = templine1.replace(case, item)
+        if add_line != None:
+            templine2 += add_line
+
+        output_block += templine2
+
+    return output_block
+
+
+def check_triggers (input_line: str, triggers: list) -> int:
+    out_id = -1
+    for id,trig in enumerate(triggers):
+        if trig in input_line or trig.upper() in input_line:
+            out_id = id
+            return out_id
+        
+    return out_id
+
+
+def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict):
 
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
@@ -58,7 +179,7 @@ def special_populate_text_group(fname: str, paths: dict, group_list: list, detai
     triggers = ['group_dset_dtype', 'group_dset_std_dtype_out', 'group_dset_std_dtype_in',
                 'group_dset', 'group_num', 'group']
 
-    for group in group_list:
+    for group in group_dict.keys():
 
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
@@ -137,137 +258,11 @@ def special_populate_text_group(fname: str, paths: dict, group_list: list, detai
                         else:
                             f_out.write(line)
                     else:
-                        if subloop_dset or subloop_num:
-                            loop_body += line
-
-
-
-def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
-
-    fname_new = join('populated',f'pop_{fname}')
-    templ_path = get_template_path(fname, paths)
-
-    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'default_prec',
-                'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
-                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
-                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
-                'group_dset', 'group_num', 'group']
-
-    for item in detailed_source.keys():
-        with open(join(templ_path,fname), 'r') as f_in :
-            with open(join(templ_path,fname_new), 'a') as f_out :
-                num_written = []
-                for line in f_in :
-                        # special case to add error handling for read/write of dimensioning variables
-                        if '$group_dset_dim$' in line:
-                            rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
-                            indentlevel = len(line) - len(line.lstrip())
-                            for dim in detailed_source[item]['dims']:
-                                if not dim.isdigit() and not dim in num_written:
-                                    num_written.append(dim)
-                                    templine = line.replace('$group_dset_dim$', dim)
-                                    if '_read' in templine: 
-                                            line_toadd = indentlevel*" " + rc_line
-                                            templine += line_toadd
-
-                                    f_out.write(templine)
-                            num_written = []
-                            continue
-                        # general case of recursive replacement of inline triggers 
-                        else:
-                            populated_line = recursive_replace_line(line, triggers, detailed_source[item])
-                            f_out.write(populated_line)
-
-
-def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
-    
-    is_triggered = False
-    output_line = input_line
-    
-    if '$' in input_line:
-        for case in triggers:
-            test_case = f'${case}$'
-            if test_case in input_line:
-                output_line = input_line.replace(test_case, source[case])
-                is_triggered = True
-                break
-            elif test_case.upper() in input_line:
-                output_line = input_line.replace(test_case.upper(), source[case].upper())
-                is_triggered = True
-                break
-
-        if is_triggered:
-            return recursive_replace_line(output_line, triggers, source)
-        else:
-            print(output_line)
-            raise ValueError('Recursion went wrong, not all cases considered')
-        
-    return output_line
-
-
-
-def iterative_populate_file (filename: str, paths: dict, datasets: dict, numbers: dict, groups: dict):
-
-    add_trigger = 'rc = trexio_text_free_$group$'
-    triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
-
-    templ_path = get_template_path(filename, paths)
-    filename_out = join('populated',f'pop_{filename}')
-# Note: it is important that special conditions like add_trigger above will be checked before standard triggers
-# that contain only basic $-ed variable (like $group$). Otherwise, the standard triggers will be removed 
-# from the template and the special condition will never be met.
-    with open(join(templ_path,filename), 'r') as f_in :
-        with open(join(templ_path,filename_out), 'a') as f_out :
-            for line in f_in :
-                id = check_triggers(line, triggers)
-                if id == 0:
-                    # special case for proper error handling when deallocting text groups
-                    error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
-                    populated_line = iterative_replace_str(line, triggers[3], groups, add_line=error_handler)
-                    f_out.write(populated_line)
-                elif id == 1:
-                    populated_line = iterative_replace_str(line, triggers[id], datasets, None)
-                    f_out.write(populated_line)
-                elif id == 2:
-                    populated_line = iterative_replace_str(line, triggers[id], numbers, None)
-                    f_out.write(populated_line)
-                elif id == 3:
-                    populated_line = iterative_replace_str(line, triggers[id], groups, None)
-                    f_out.write(populated_line)
-                else:
-                    f_out.write(line)
-
-
-def check_triggers (input_line: str, triggers: list) -> int:
-
-    out_id = -1
-    for id,trig in enumerate(triggers):
-        if trig in input_line or trig.upper() in input_line:
-            out_id = id
-            return out_id
-        
-    return out_id
-
-
-def iterative_replace_str (input_line: str, case: str, source: dict, add_line: str) -> str:
-    output_block = ""
-    for item in source.keys():
-        templine1 = input_line.replace(case.upper(), item.upper())
-        templine2 = templine1.replace(case, item)
-        if add_line != None:
-            templine2 += add_line
-
-        output_block += templine2
-
-    return output_block
-
-
-def recursive_replace_str (input_str: str) -> str:
-    return input_str
+                        loop_body += line
 
 
 def get_template_path (filename: str, path_dict: dict) -> str:
-    for dir_type in ['front', 'hdf5', 'text']:
+    for dir_type in path_dict.keys():
         if dir_type in filename:
             path = path_dict[dir_type]
             return path
@@ -283,61 +278,29 @@ def get_group_dict (configuration: dict) -> dict:
     return group_dict
 
 
-def get_dset_per_group (configuration: dict, datasets: dict) -> dict:
-    
-    output = {}
-    for k1,v1 in configuration.items():
-        tmp_list = []
-        for k2,v2 in v1.items():
-            if len(v2[1]) != 0:
-                tmp_dset = f'{k1}_{k2}'
-                tmp_list.append(tmp_dset)
-
-        output[k1] = tmp_list
-
-    return output
-
-
-def get_num_per_group (configuration: dict, numbers: dict) -> dict:
-    
-    output = {}
-    for k1,v1 in configuration.items():
-        # the code below return dictionary with num names as keys and corresponding groups as values
-        for k2,v2 in v1.items():
-            if len(v2[1]) == 0 and v2[0] == 'int':
-                output[f'{k1}_{k2}'] = k1
-        
-        # the code below returns dictionary with groups as keys and values as lists of corresponding num names
-        #tmp_list = []
-        #for k2,v2 in v1.items():
-        #    if len(v2[1]) == 0 and v2[0] == 'int':
-        #        tmp_dset = f'{k1}_{k2}'
-        #        tmp_list.append(tmp_dset)
-        #output[k1] = tmp_list
-
-    return output
-
-def get_dim_dict (configuration: dict) -> dict:
+def get_detailed_num_dict (configuration: dict) -> dict:
     ''' 
-    Returns the dictionary of dimensioning variables. 
-    Keys are names, values are zeros.
-    The dimensioning variable is the `num`-suffixed variable that appears as a dimension of at least one array.
+    Returns the dictionary of all `num`-suffixed variables.
+    Keys are names, values are subdictionaries containing corresponding group and group_num names. 
 
             Parameters:
                     configuration (dict) : configuration from `trex.json`
 
             Returns:
-                    dim_dict (dict) : dictionary of dimensioning variables
+                    num_dict (dict) : dictionary of num-suffixed variables
     '''
-    dim_dict = {}
-    for v1 in configuration.values():
-        for v2 in v1.values():
-            for dim in v2[1]:
-                if not dim.isdigit():
-                    tmp_dim = dim.replace('.','_')
-                    dim_dict[tmp_dim] = 0
+    num_dict = {}
+    for k1,v1 in configuration.items():
+        for k2,v2 in v1.items():
+            if len(v2[1]) == 0:
+                tmp_num = f'{k1}_{k2}'
+                if 'str' not in v2[0]:
+                    tmp_dict = {}
+                    tmp_dict['group'] = k1
+                    tmp_dict['group_num'] = tmp_num
+                    num_dict[tmp_num] = tmp_dict
 
-    return dim_dict
+    return num_dict
 
 
 def get_dset_dict (configuration: dict) -> dict:
@@ -363,28 +326,7 @@ def get_dset_dict (configuration: dict) -> dict:
     return dset_dict
 
 
-def get_num_dict (configuration: dict) -> dict:
-    ''' 
-    Returns the dictionary of all `num`-suffixed variables.
-    Keys are names, values are datatypes (int). 
-
-            Parameters:
-                    configuration (dict) : configuration from `trex.json`
-
-            Returns:
-                    num_dict (dict) : dictionary of num-suffixed variables
-    '''
-    num_dict = {}
-    for k1,v1 in configuration.items():
-        for k2,v2 in v1.items():
-            if len(v2[1]) == 0:
-                tmp_num = f'{k1}_{k2}'
-                if 'str' not in v2[0]:
-                    num_dict[tmp_num] = v2[0]
-
-    return num_dict
-
-def split_dset_dict (datasets: dict) -> tuple:
+def split_dset_dict_detailed (datasets: dict) -> tuple:
     
     dset_numeric_dict = {}
     dset_string_dict = {}
