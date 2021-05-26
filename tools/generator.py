@@ -22,6 +22,8 @@ detailed_num = get_detailed_num_dict(trex_config)
 # helper dictionaries contain group, num or dset names as keys
 datasets = get_dset_dict(trex_config)
 detailed_dset_nostr, detailed_dset_str = split_dset_dict_detailed(datasets)
+# consistency check for dimensioning variables
+check_dim_consistency(detailed_num, datasets)
 # --------------------------------------------------------------------------- #
 
 # -------------------- GET TEMPLATED FILES TO BE POPULATED ------------------ #

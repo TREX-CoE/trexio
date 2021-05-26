@@ -85,7 +85,7 @@ def get_template_paths(source: list) -> dict:
     return path_dict
 
 
-def recursive_populate_file(fname: str, paths: dict, detailed_source: dict):
+def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> None:
     """ 
     Populate files containing basic read/write/has functions.
 
@@ -168,7 +168,7 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
     return output_line
 
 
-def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict):
+def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict) -> None:
     """ 
     Iteratively populate files with unique functions that contain templated variables.
 
@@ -257,7 +257,7 @@ def check_triggers (input_line: str, triggers: list) -> int:
     return out_id
 
 
-def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict):
+def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict) -> None:
     """ 
     Special population for group-related functions in the TEXT back end.
 
@@ -271,7 +271,6 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
             Returns:
                     None
     """
-
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
@@ -455,10 +454,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             Returns:
                     dset_numeric_dict, dset_string_dict (tuple) : dictionaries corresponding to all numeric- and string-based datasets, respectively.
     """
-    
     dset_numeric_dict = {}
     dset_string_dict = {}
-
     for k,v in datasets.items():
         # create a temp dictionary
         tmp_dict = {}
@@ -487,8 +484,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             default_prec   = '32'
             group_dset_std_dtype_out = '" PRId64 "'
             group_dset_std_dtype_in  = '" SCNd64 "' 
-
         elif v[0] == 'str':
+            # TODO
             datatype = 'string'
         
         # add the dset name for templates
@@ -537,3 +534,25 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
 
     return (dset_numeric_dict, dset_string_dict)
 
+
+def check_dim_consistency(num: dict, dset: dict) -> None:
+    """ 
+    Consistency check to make sure that each dimensioning variable exists as a num attribute of some group. 
+
+            Parameters:
+                    num (dict)  : dictionary of num-suffixed variables
+                    dset (dict) : dictionary of datasets
+
+            Returns:
+                    None
+    """
+    dim_tocheck = []
+    for v in dset.values():
+        tmp_dim_list = [dim.replace('.','_') for dim in v[1] if not dim.isdigit()]
+        for dim in tmp_dim_list:
+            if dim not in dim_tocheck:
+                dim_tocheck.append(dim)
+
+    for dim in dim_tocheck:
+        if not dim in num.keys():
+            raise ValueError(f"Dimensioning variable {dim} is not a num attribute of any group.\n")
