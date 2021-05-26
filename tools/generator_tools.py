@@ -116,7 +116,7 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
     return output_line
 
 
-def iterative_populate_file (filename: str, paths: dict, datasets: dict, numbers: dict, groups: dict):
+def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict):
 
     add_trigger = 'rc = trexio_text_free_$group$'
     triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
@@ -148,7 +148,7 @@ def iterative_populate_file (filename: str, paths: dict, datasets: dict, numbers
                     f_out.write(line)
 
 
-def iterative_replace_line(input_line: str, case: str, source: dict, add_line: str) -> str:
+def iterative_replace_line (input_line: str, case: str, source: dict, add_line: str) -> str:
     output_block = ""
     for item in source.keys():
         templine1 = input_line.replace(case.upper(), item.upper())
