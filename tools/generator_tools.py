@@ -462,7 +462,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         # specify details required to replace templated variables later
         if v[0] == 'float':
             datatype = 'double'
-            group_dset_h5_dtype       = 'double'
+            group_dset_h5_dtype       = 'native_double'
             group_dset_f_dtype_default= 'real(8)'
             group_dset_f_dtype_double = 'real(8)'
             group_dset_f_dtype_single = 'real(4)'
@@ -474,7 +474,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             group_dset_std_dtype_in = 'lf'
         elif v[0] == 'int':
             datatype = 'int64_t'
-            group_dset_h5_dtype = 'int64'
+            group_dset_h5_dtype = 'native_int64'
             group_dset_f_dtype_default= 'integer(4)'
             group_dset_f_dtype_double = 'integer(8)'
             group_dset_f_dtype_single = 'integer(4)'
