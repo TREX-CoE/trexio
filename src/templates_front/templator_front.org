@@ -705,6 +705,7 @@ trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_
     #+end_src c
 
 * Templates for front end
+** Description
 
   Consider the following block of ~trex.json~:
 
@@ -1051,7 +1052,7 @@ interface
 end interface
      #+end_src
 
-** Templates for front end has/read/write a dataset
+** Templates for front end has/read/write a dataset of numerical data
 
    This section concerns API calls related to datasets.
 
@@ -1074,7 +1075,7 @@ end interface
    The basic (non-suffixed) API call on datasets deals with double precision (see Table above).
 
 
-     #+begin_src c :tangle hrw_dset_front.h :exports none
+     #+begin_src c :tangle hrw_dset_data_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const $group_dset$);
 trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const $group_dset_dtype_default$* $group_dset$);
@@ -1084,7 +1085,7 @@ trexio_exit_code trexio_read_$group_dset$_64(trexio_t* const file, $group_dset_d
 trexio_exit_code trexio_write_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$);
      #+end_src
 
-     #+begin_src c :tangle read_dset_64_front.c
+     #+begin_src c :tangle read_dset_data_64_front.c
 trexio_exit_code
 trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* const $group_dset$)
 {
@@ -1124,7 +1125,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 }
      #+end_src
 
-     #+begin_src c :tangle write_dset_64_front.c
+     #+begin_src c :tangle write_dset_data_64_front.c
 trexio_exit_code
 trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$)
 {
@@ -1164,7 +1165,7 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 }
      #+end_src
 
-     #+begin_src c :tangle read_dset_32_front.c
+     #+begin_src c :tangle read_dset_data_32_front.c
 trexio_exit_code
 trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* const $group_dset$)
 {
@@ -1225,7 +1226,7 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
 }
      #+end_src
 
-     #+begin_src c :tangle write_dset_32_front.c
+     #+begin_src c :tangle write_dset_data_32_front.c
 trexio_exit_code
 trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_single$* $group_dset$)
 {
@@ -1284,7 +1285,7 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
 }
      #+end_src
 
-     #+begin_src c :tangle read_dset_def_front.c
+     #+begin_src c :tangle read_dset_data_def_front.c
 trexio_exit_code
 trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* const $group_dset$)
 {
@@ -1292,7 +1293,7 @@ trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* cons
 }
      #+end_src
 
-     #+begin_src c :tangle write_dset_def_front.c
+     #+begin_src c :tangle write_dset_data_def_front.c
 trexio_exit_code
 trexio_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default$* $group_dset$)
 {
@@ -1300,7 +1301,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default
 }
      #+end_src
 
-     #+begin_src c :tangle has_dset_front.c
+     #+begin_src c :tangle has_dset_data_front.c
 trexio_exit_code
 trexio_has_$group_dset$ (trexio_t* const file)
 {
@@ -1333,7 +1334,7 @@ trexio_has_$group_dset$ (trexio_t* const file)
     The ~Fortran~ templates that provide an access to the ~C~ API calls from ~Fortran~.
     These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
 
-     #+begin_src f90 :tangle write_dset_64_front_fortran.f90
+     #+begin_src f90 :tangle write_dset_data_64_front_fortran.f90
 interface
    integer function trexio_write_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1343,7 +1344,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_dset_64_front_fortran.f90
+     #+begin_src f90 :tangle read_dset_data_64_front_fortran.f90
 interface
    integer function trexio_read_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1353,7 +1354,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle write_dset_32_front_fortran.f90
+     #+begin_src f90 :tangle write_dset_data_32_front_fortran.f90
 interface
    integer function trexio_write_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1363,7 +1364,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_dset_32_front_fortran.f90
+     #+begin_src f90 :tangle read_dset_data_32_front_fortran.f90
 interface
    integer function trexio_read_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1373,7 +1374,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle write_dset_def_front_fortran.f90
+     #+begin_src f90 :tangle write_dset_data_def_front_fortran.f90
 interface
    integer function trexio_write_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1383,7 +1384,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_dset_def_front_fortran.f90
+     #+begin_src f90 :tangle read_dset_data_def_front_fortran.f90
 interface
    integer function trexio_read_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1393,7 +1394,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle has_dset_front_fortran.f90
+     #+begin_src f90 :tangle has_dset_data_front_fortran.f90
 interface
    integer function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
