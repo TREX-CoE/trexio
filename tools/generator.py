@@ -47,7 +47,7 @@ for fname in files_todo['num']:
     recursive_populate_file(fname, template_paths, detailed_num)
 
 # populate has/read/write_dset functions with recursive scheme 
-for fname in files_todo['dset']:
+for fname in files_todo['dset_data']:
     recursive_populate_file(fname, template_paths, detailed_dset_nostr)
 
 # populate group-related functions with mixed (iterative+recursive) scheme [text backend]

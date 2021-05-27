@@ -39,7 +39,7 @@ def get_files_todo(source_files: dict) -> dict:
     files_todo = {}       
     #files_todo['all'] = list(filter(lambda x: 'read' in x or 'write' in x or 'has' in x or 'hrw' in x or 'flush' in x or 'free' in x, all_files))
     files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f]
-    for key in ['dset', 'num', 'group']:
+    for key in ['dset_data', 'dset_str', 'num', 'group']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
