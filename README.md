@@ -35,13 +35,11 @@ TREX library fo efficient I/O.
 
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio`
-3. `cd tools && ./build_trexio.sh && cd ..`
-4. `autoreconf`
-5. `automake --add-missing --copy`
-6. `./configure`
-7. `make`
-8. `make check`
-9. `sudo make install`
+3. `./autogen.sh`
+4. `./configure`
+5. `make`
+6. `make check`
+7. `sudo make install`
 
 
 ## Tutorial
