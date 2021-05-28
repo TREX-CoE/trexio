@@ -16,7 +16,7 @@ if test "x${have_src}" = xno; then
 fi
 
 AC_CONFIG_SRCDIR([src/Makefile.in])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([include/config.h])
 PKG_PROG_PKG_CONFIG()
 PKG_LIBS=""
 PKG_CFLAGS=""
