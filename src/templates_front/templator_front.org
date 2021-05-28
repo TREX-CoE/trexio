@@ -1407,11 +1407,11 @@ end interface
 
    This section concerns API calls related to datasets of strings.
 
-   | Function name                   | Description                         |
-   |---------------------------------+-------------------------------------|
-   | ~trexio_has_$group_dset_str$~   | Check if a dataset exists in a file |
-   | ~trexio_read_$group_dset_str$~  | Read  a dataset                     |
-   | ~trexio_write_$group_dset_str$~ | Write a dataset                     |
+   | Function name               | Description                         |
+   |-----------------------------+-------------------------------------|
+   | ~trexio_has_$group_dset$~   | Check if a dataset exists in a file |
+   | ~trexio_read_$group_dset$~  | Read  a dataset                     |
+   | ~trexio_write_$group_dset$~ | Write a dataset                     |
 
 *** C templates for front end
 
@@ -1421,13 +1421,13 @@ end interface
 
      #+begin_src c :tangle hrw_dset_str_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, $group_dset_dtype$* const dset);
-trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const $group_dset_dtype$* dset);
+trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** const dset);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset);
      #+end_src
 
      #+begin_src c :tangle read_dset_str_front.c
 trexio_exit_code
-trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const dset)
+trexio_read_$group_dset$ (trexio_t* const file, char** const dset)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -1467,7 +1467,7 @@ trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const dset)
 
      #+begin_src c :tangle write_dset_str_front.c
 trexio_exit_code
-trexio_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* dset)
+trexio_write_$group_dset$ (trexio_t* const file, const char** dset)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
