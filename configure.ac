@@ -31,7 +31,6 @@ AC_FC_SRCEXT([f90])
 AC_PROG_FC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PROG_CC_C99
 
 # Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
 # ./configure [--with-hdf5 or --with-hdf5=yes]
