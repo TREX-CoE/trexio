@@ -9,10 +9,24 @@ LT_INIT
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
+AC_CONFIG_MACRO_DIR([m4])
+
+VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
+VERSION_MINOR=`echo ${PACKAGE_VERSION} | cut -d. -f2`
+VERSION_PATCH=`echo ${PACKAGE_VERSION} | cut -d. -f3 | cut -d- -f1`
+AC_DEFINE_UNQUOTED(TREXIO_VERSION_MAJOR, [$VERSION_MAJOR], [major version])
+AC_DEFINE_UNQUOTED(TREXIO_VERSION_MINOR, [$VERSION_MINOR], [minor version])
+AC_DEFINE_UNQUOTED(TREXIO_VERSION_PATCH, [$VERSION_PATCH], [patch version])
+AC_SUBST([VERSION_MAJOR])
+AC_SUBST([VERSION_MINOR])
+AC_SUBST([VERSION_PATCH])
+
 PKG_PROG_PKG_CONFIG()
 PKG_LIBS=""
 PKG_CFLAGS=""
+
 # Checks for programs.
+AC_LANG(C)
 AC_PROG_CC
 # Make sure the c compiler supports C99
 m4_version_prereq([2.70],[], [AC_PROG_CC_C99])
@@ -153,16 +167,38 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
+if test "x${TREXIO_DEVEL}" != "x"; then
+
+  TREXIO_DEVEL=" -- Developer mode"
+  AC_PROG_AWK
+  AM_PATH_PYTHON([3.0])
+
+  AC_CHECK_PROGS([EMACS],[emacs26 emacs],[no])
+  if test x${EMACS} == xno ; then
+    AC_MSG_ERROR([
+    --------------------------------------
+    Error: Emacs is required for org-mode.
+    --------------------------------------
+    ])
+  fi
+
+  AC_CHECK_PROGS([HAS_CPPCHECK],[cppcheck],[no])
+  if test x${HAS_CPPCHECK} != xno ; then
+        HAS_CPPCHECK=1
+  fi
+
+fi
+
 AC_CONFIG_FILES([Makefile
                  src/Makefile
 		 tests/Makefile
-                 trexio.pc])
+                 pkgconfig/trexio.pc])
 AC_OUTPUT
 
 echo \
 "-------------------------------------------------
 
-${PACKAGE_NAME} Version ${PACKAGE_VERSION}
+${PACKAGE_NAME} Version ${PACKAGE_VERSION} ${TREXIO_DEVEL}
 
 Prefix: '${prefix}'.
 
