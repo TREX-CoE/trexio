@@ -22,6 +22,9 @@ PKG_LIBS=""
 PKG_CFLAGS=""
 # Checks for programs.
 AC_PROG_CC
+# Make sure the c compiler supports C99
+m4_version_prereq([2.70],[], [AC_PROG_CC_C99])
+AS_IF([test "$ac_cv_prog_cc_c99" = "no"], [AC_MSG_ERROR([The compiler does not support C99])])
 AC_PROG_CC_C_O
 
 AC_PROG_FC
@@ -31,6 +34,7 @@ AC_FC_SRCEXT([f90])
 AC_PROG_FC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
+
 
 # Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
 # ./configure [--with-hdf5 or --with-hdf5=yes]
