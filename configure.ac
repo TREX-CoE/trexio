@@ -3,19 +3,11 @@
 
 AC_PREREQ([2.69])
 AC_INIT([TREXIO], [0.2], [https://github.com/TREX-CoE/trexio/issues])
+AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
+AM_MAINTAINER_MODE()
+LT_INIT
 
-AC_CHECK_FILE(src/trexio_text.h, [have_src=yes], [have_src=no])
-
-if test "x${have_src}" = xno; then
- AC_MSG_ERROR([
-	------------------------------------------
-	Please run:
-	 cd tools && ./build_trexio.sh && cd ..
-        before running ./configure
-	------------------------------------------])
-fi
-
-AC_CONFIG_SRCDIR([src/Makefile.in])
+AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
 PKG_PROG_PKG_CONFIG()
 PKG_LIBS=""
