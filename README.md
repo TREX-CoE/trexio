@@ -28,7 +28,7 @@ TREX library fo efficient I/O.
 
 - Automake
 - python3 	(>=3.6)
-- emacs		(>=26.0)
+- Emacs		(>=26.0)
 
 
 ## Installation procedure from the GitHub repo clone (for developers):

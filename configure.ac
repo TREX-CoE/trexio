@@ -2,11 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([TREXIO], [0.2], [https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio], [0.3.0], [https://github.com/TREX-CoE/trexio/issues])
 AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
 LT_INIT
-
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -20,10 +19,6 @@ AC_DEFINE_UNQUOTED(TREXIO_VERSION_PATCH, [$VERSION_PATCH], [patch version])
 AC_SUBST([VERSION_MAJOR])
 AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_PATCH])
-
-PKG_PROG_PKG_CONFIG()
-PKG_LIBS=""
-PKG_CFLAGS=""
 
 # Checks for programs.
 AC_LANG(C)
@@ -39,7 +34,14 @@ AC_FC_SRCEXT([f90])
 
 AC_PROG_FC_C_O
 AC_PROG_INSTALL
+AC_PROG_LIBTOOL
 AC_PROG_LN_S
+PKG_PROG_PKG_CONFIG()
+PKG_LIBS=""
+PKG_CFLAGS=""
+
+AC_FC_LIBRARY_LDFLAGS
+
 
 
 # Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
@@ -167,6 +169,8 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
+AM_CONDITIONAL([TREXIO_DEVEL],[test "x$TREXIO_DEVEL" != x])
+
 if test "x${TREXIO_DEVEL}" != "x"; then
 
   TREXIO_DEVEL=" -- Developer mode"
@@ -190,8 +194,6 @@ if test "x${TREXIO_DEVEL}" != "x"; then
 fi
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile
-		 tests/Makefile
                  pkgconfig/trexio.pc])
 AC_OUTPUT
 
