@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int test_read();
 int test_write();
@@ -49,6 +50,19 @@ int test_h5write() {
   0.00000000 ,  2.47304151 ,  0.00000000 ,
   };
 
+  const char* label[] = {"C" ,
+                         "Na",
+  	                 "C" ,
+        	         "C" ,
+                	 "C" ,
+	                 "C" ,
+        	         "H" ,
+                	 "Ru",
+	                 "H" ,
+        	         "H" ,
+                	 "H" ,
+	                 "H" };
+
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
@@ -68,11 +82,15 @@ int test_h5write() {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_charge(file,charge);
   assert (rc == TREXIO_SUCCESS);
+  rc = trexio_write_nucleus_label(file,label);
+  assert (rc == TREXIO_SUCCESS);
 
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_has_nucleus_coord(file);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_has_nucleus_label(file);
   assert (rc == TREXIO_SUCCESS);
 
   // should not work: try to overwrite the nucleus_num
@@ -116,6 +134,7 @@ int test_h5read() {
 
   int num;
   double* coord;
+  char** label;
 
 /*================= START OF TEST ==================*/
 
@@ -135,6 +154,18 @@ int test_h5read() {
 
   double x = coord[30] - 2.14171677;
   assert( x*x < 1.e-14);
+
+  // read nucleus_label
+  size_t max_str_len = 16;
+  label = (char**) malloc(num*sizeof(char*));
+  for (int i=0; i<num; i++){
+    label[i] = (char*) malloc(max_str_len*sizeof(char));
+  }
+
+  rc = trexio_read_nucleus_label(file,label);
+  assert (rc == TREXIO_SUCCESS);
+
+  assert( strcmp(label[1], "Na") == 0 );
 
   // close current session
   rc = trexio_close(file);
@@ -156,6 +187,12 @@ int test_h5read() {
 /*================= END OF TEST =====================*/
 
   free(coord);
+ 
+  for (int i=0; i<num; i++){
+    free(label[i]);
+  }
+  free(label);
+
   return 0;
 }
 
