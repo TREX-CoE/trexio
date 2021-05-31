@@ -1449,7 +1449,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char** const dset)
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_dset$(file, dset, rank, dims);
+    //return trexio_text_read_$group_dset$(file, dset, rank, dims);
     break;
 
   case TREXIO_HDF5:
@@ -1489,7 +1489,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const char** dset)
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_dset$(file, dset, rank, dims);
+    //return trexio_text_write_$group_dset$(file, dset, rank, dims);
     break;
 
   case TREXIO_HDF5:
@@ -1517,7 +1517,7 @@ trexio_has_$group_dset$ (trexio_t* const file)
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_has_$group_dset$(file);
+    //return trexio_text_has_$group_dset$(file);
     break;
 
   case TREXIO_HDF5:
@@ -1543,7 +1543,7 @@ interface
    integer function trexio_write_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     $group_dset_f_dtype$, intent(in) :: dset$group_dset_f_dims$
+     character(len=*), intent(in) :: dset(*)
    end function trexio_write_$group_dset$
 end interface
      #+end_src
@@ -1553,7 +1553,7 @@ interface
    integer function trexio_read_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     $group_dset_f_dtype$, intent(out) :: dset$group_dset_f_dims$
+     character(len=*), intent(out) :: dset(*)
    end function trexio_read_$group_dset$
 end interface
      #+end_src
