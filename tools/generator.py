@@ -18,12 +18,14 @@ print('Strings I/O currently not supported')
 
 # -------------------- GET ATTRIBUTES FROM THE CONFIGURATION ---------------- #
 group_dict = get_group_dict(trex_config)
-detailed_num = get_detailed_num_dict(trex_config)
-# helper dictionaries contain group, num or dset names as keys
-datasets = get_dset_dict(trex_config)
-detailed_dset_nostr, detailed_dset_str = split_dset_dict_detailed(datasets)
+detailed_nums = get_detailed_num_dict(trex_config)
+# helper dictionaries that contain names of groups, nums or dsets as keys
+dsets = get_dset_dict(trex_config)
+detailed_dsets_nostr, detailed_dsets_str = split_dset_dict_detailed(dsets)
+detailed_dsets = detailed_dsets_nostr.copy()
+detailed_dsets.update(detailed_dsets_str)
 # consistency check for dimensioning variables
-check_dim_consistency(detailed_num, datasets)
+check_dim_consistency(detailed_nums, dsets)
 # --------------------------------------------------------------------------- #
 
 # -------------------- GET TEMPLATED FILES TO BE POPULATED ------------------ #
@@ -40,18 +42,22 @@ files_todo = get_files_todo(source_files)
 
 # populate files with iterative scheme, i.e. for unique functions
 for fname in files_todo['auxiliary']:
-    iterative_populate_file(fname, template_paths, group_dict, detailed_dset_nostr, detailed_num)
+    iterative_populate_file(fname, template_paths, group_dict, detailed_dsets, detailed_nums)
 
 # populate has/read/write_num functions with recursive scheme
 for fname in files_todo['num']:
-    recursive_populate_file(fname, template_paths, detailed_num)
+    recursive_populate_file(fname, template_paths, detailed_nums)
 
-# populate has/read/write_dset functions with recursive scheme 
+# populate has/read/write_dset (numerical) functions with recursive scheme 
 for fname in files_todo['dset_data']:
-    recursive_populate_file(fname, template_paths, detailed_dset_nostr)
+    recursive_populate_file(fname, template_paths, detailed_dsets_nostr)
+
+# populate has/read/write_dset (strings) functions with recursive scheme 
+for fname in files_todo['dset_str']:
+    recursive_populate_file(fname, template_paths, detailed_dsets_str)
 
 # populate group-related functions with mixed (iterative+recursive) scheme [text backend]
 for fname in files_todo['group']:
-    special_populate_text_group(fname, template_paths, group_dict, detailed_dset_nostr, detailed_num)
+    special_populate_text_group(fname, template_paths, group_dict, detailed_dsets_nostr, detailed_nums)
 
 # --------------------------------------------------------------------------- #

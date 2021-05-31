@@ -485,8 +485,12 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             group_dset_std_dtype_out = '" PRId64 "'
             group_dset_std_dtype_in  = '" SCNd64 "' 
         elif v[0] == 'str':
-            # TODO
-            datatype = 'string'
+            datatype = 'char*'
+            group_dset_h5_dtype = 'c_s1'
+            group_dset_f_dtype_default = 'character(len=*)'
+            group_dset_dtype_default = 'char*'
+            group_dset_std_dtype_out = 's'
+            group_dset_std_dtype_in  = 's' 
         
         # add the dset name for templates
         tmp_dict['group_dset'] = k
@@ -527,7 +531,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group'] = v[2]
 
         # split datasets in numeric- and string- based
-        if (datatype == 'string'):
+        if (datatype == 'char*'):
             dset_string_dict[k] = tmp_dict
         else:
             dset_numeric_dict[k] = tmp_dict
