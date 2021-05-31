@@ -428,32 +428,24 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
   herr_t status;
-  int rrank;
-  // get the rank of the dataset in a file
-  status = H5LTget_dataset_ndims (f->$group$_group, $GROUP_DSET$_NAME, &rrank);
-
-  if (status < 0) return TREXIO_FAILURE;
-
-  if (rrank != (int) rank) return TREXIO_INVALID_ARG_3;
 
   // open the dataset to get its dimensions
   hid_t dset_id = H5Dopen(f->$group$_group, $GROUP_DSET$_NAME, H5P_DEFAULT);
   if (dset_id <= 0) return TREXIO_INVALID_ID;
 
+  hid_t dspace = H5Dget_space(dset_id); 
+
+  int rrank;
   // allocate space for the dimensions to be read
   hsize_t* ddims = CALLOC( (int) rank, hsize_t);
   if (ddims == NULL) return TREXIO_FAILURE;
 
-  // read dimensions from the existing dataset
-  status = H5LDget_dset_dims(dset_id, ddims);
+  // get the rank of the dataset in a file
+  rrank = H5Sget_simple_extent_dims(dspace, ddims, NULL);
 
-  H5Dclose(dset_id);
-  if (status < 0) {
-    free(ddims);
-    return TREXIO_FAILURE;
-  }
+  if (rrank != (int) rank) return TREXIO_INVALID_ARG_3;
 
-  for (uint32_t i=0; i<rank; ++i){
+  for (int i=0; i<rrank; i++){
     if (ddims[i] != dims[i]) {
       free(ddims);
       return TREXIO_INVALID_ARG_4;
@@ -461,11 +453,32 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
   }
   free(ddims);
 
-  /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  status = H5LTread_dataset_string(f->$group$_group,
-			    $GROUP_DSET$_NAME,
-			    $group_dset$);
+  hid_t memtype = H5Tcopy (H5T_C_S1);
+  status = H5Tset_size(memtype, H5T_VARIABLE);
   if (status < 0) return TREXIO_FAILURE;
+
+  char** rdata = CALLOC(dims[0], char*);
+  if (rdata == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  status = H5Dread(dset_id, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata);
+  if (status < 0) return TREXIO_FAILURE;
+
+  // copy contents of temporary rdata buffer into the group_dset otherwise they are lost
+  // when calling H5Treclaim or H5Dvlen_reclaim
+  for (uint64_t i=0; i<dims[0]; i++){
+    strcpy($group_dset$[i], rdata[i]);
+  }
+
+  // this function is introduced in HDF5 v.1.12.0
+  //status = H5Treclaim (memtype, dspace, H5P_DEFAULT, rdata);
+  // this function is introduced is deprecated but used in v.<1.12.0
+  status = H5Dvlen_reclaim (memtype, dspace, H5P_DEFAULT, rdata);
+  if (status < 0) return TREXIO_FAILURE;
+
+  if (rdata != NULL) FREE(rdata); 
+  H5Dclose(dset_id);
+  H5Sclose(dspace);
+  H5Tclose(memtype);
 
   return TREXIO_SUCCESS;
 }
@@ -510,7 +523,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
                        H5S_ALL, H5S_ALL, H5P_DEFAULT,
                        $group_dset$);
 
-    H5Dclose (dset_id)
+    H5Dclose (dset_id);
     H5Sclose (dspace);
     H5Tclose (filetype);
     H5Tclose (memtype);
