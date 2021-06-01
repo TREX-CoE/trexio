@@ -62,6 +62,8 @@ int test_h5write() {
         	         "H" ,
                 	 "H" ,
 	                 "H" };
+  
+  char labelxxx[] = "C C C Na C C H H H Ru H H";
 
 /*================= START OF TEST ==================*/
 
@@ -82,7 +84,8 @@ int test_h5write() {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_charge(file,charge);
   assert (rc == TREXIO_SUCCESS);
-  rc = trexio_write_nucleus_label(file,label);
+  //rc = trexio_write_nucleus_label(file,label);
+  rc = trexio_write_nucleus_label(file,labelxxx);
   assert (rc == TREXIO_SUCCESS);
 
   // check if the written data exists in the file
@@ -135,6 +138,7 @@ int test_h5read() {
   int num;
   double* coord;
   char** label;
+  char* labelxxx;
 
 /*================= START OF TEST ==================*/
 
@@ -162,10 +166,17 @@ int test_h5read() {
     label[i] = (char*) malloc(max_str_len*sizeof(char));
   }
 
-  rc = trexio_read_nucleus_label(file,label);
+  labelxxx = (char*) malloc(num*4*sizeof(char*));
+
+  rc = trexio_read_nucleus_label(file,labelxxx);
+  //rc = trexio_read_nucleus_label(file,label);
   assert (rc == TREXIO_SUCCESS);
 
-  assert( strcmp(label[1], "Na") == 0 );
+  printf("%s\n", labelxxx);
+  //assert( strcmp(label[1], "Na") == 0 );
+  char * pch;
+  pch = strtok(labelxxx, " ");
+  assert( strcmp(pch, "C") == 0 );
 
   // close current session
   rc = trexio_close(file);
@@ -192,6 +203,8 @@ int test_h5read() {
     free(label[i]);
   }
   free(label);
+
+  free(labelxxx);
 
   return 0;
 }
