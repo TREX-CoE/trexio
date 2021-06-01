@@ -63,7 +63,12 @@ int test_h5write() {
                 	 "H" ,
 	                 "H" };
   
-  char labelxxx[] = "C C C Na C C H H H Ru H H";
+  //char labelxxx[] = "C C C Na C C H H H Ru H H";
+  char labelxxx[128] = "";
+  for (int i=0; i<num; i++){
+    strcat(labelxxx,label[i]);
+    strcat(labelxxx,"\n");
+  }
 
 /*================= START OF TEST ==================*/
 
@@ -175,7 +180,7 @@ int test_h5read() {
   printf("%s\n", labelxxx);
   //assert( strcmp(label[1], "Na") == 0 );
   char * pch;
-  pch = strtok(labelxxx, " ");
+  pch = strtok(labelxxx, "\n");
   assert( strcmp(pch, "C") == 0 );
 
   // close current session
