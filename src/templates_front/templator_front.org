@@ -1421,13 +1421,13 @@ end interface
 
      #+begin_src c :tangle hrw_dset_str_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** const dset);
-trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset);
+trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char* const dset);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, char* dset);
      #+end_src
 
      #+begin_src c :tangle read_dset_str_front.c
 trexio_exit_code
-trexio_read_$group_dset$ (trexio_t* const file, char** const dset)
+trexio_read_$group_dset$ (trexio_t* const file, char* const dset)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -1446,14 +1446,21 @@ trexio_read_$group_dset$ (trexio_t* const file, char** const dset)
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  char** dset_str;
+  dset_str = CALLOC(dims[0],char*);
+  for (int i=0; i<dims[0]; i++){
+    dset_str[i] = CALLOC(16,char);
+  }
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    //return trexio_text_read_$group_dset$(file, dset, rank, dims);
+    //rc = return trexio_text_read_$group_dset$(file, dset_str, rank, dims);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_dset$(file, dset, rank, dims);
+    rc = trexio_hdf5_read_$group_dset$(file, dset_str, rank, dims);
+    if (rc != TREXIO_SUCCESS) return rc;
     break;
 /*
   case TREXIO_JSON:
@@ -1461,13 +1468,26 @@ trexio_read_$group_dset$ (trexio_t* const file, char** const dset)
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
+
+  strcpy(dset, "");
+  for(size_t i=0; i<dims[0]; i++){
+    strcat(dset, dset_str[i]);
+    strcat(dset, " ");
+  }
+
+  for (int i=0; i<dims[0]; i++){
+    FREE(dset_str[i]);
+  }
+  FREE(dset_str);
+
+  return TREXIO_SUCCESS;
+  
 }
      #+end_src
 
      #+begin_src c :tangle write_dset_str_front.c
 trexio_exit_code
-trexio_write_$group_dset$ (trexio_t* const file, const char** dset)
+trexio_write_$group_dset$ (trexio_t* const file, char* dset)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -1486,6 +1506,20 @@ trexio_write_$group_dset$ (trexio_t* const file, const char** dset)
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  char** dset_str = CALLOC(dims[0],char*);
+  dset_str = CALLOC(dims[0],char*);
+  for (int i=0; i<dims[0]; i++){
+    dset_str[i] = CALLOC(16,char);
+  }
+
+  char * pch;
+  pch = strtok(dset, " ");
+  strcpy(dset_str[0], pch);
+  for(size_t i=1; i<dims[0]; i++){
+    pch = strtok (NULL, " ");
+    strcpy(dset_str[i], pch);
+  }
+  
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -1493,7 +1527,8 @@ trexio_write_$group_dset$ (trexio_t* const file, const char** dset)
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_write_$group_dset$(file, dset, rank, dims);
+    rc = trexio_hdf5_write_$group_dset$(file, (const char**) dset_str, rank, dims);
+    if (rc != TREXIO_SUCCESS) return rc;
     break;
 /*
   case TREXIO_JSON:
@@ -1501,7 +1536,14 @@ trexio_write_$group_dset$ (trexio_t* const file, const char** dset)
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
+
+  for (int i=0; i<dims[0]; i++){
+    FREE(dset_str[i]);
+  }
+  FREE(dset_str);
+
+  return TREXIO_SUCCESS;
+
 }
      #+end_src
 
@@ -1543,7 +1585,7 @@ interface
    integer function trexio_write_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     character(len=*), intent(in) :: dset(*)
+     character, intent(in) :: dset(*)
    end function trexio_write_$group_dset$
 end interface
      #+end_src
@@ -1553,7 +1595,7 @@ interface
    integer function trexio_read_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     character(len=*), intent(out) :: dset(*)
+     character, intent(out) :: dset(*)
    end function trexio_read_$group_dset$
 end interface
      #+end_src
