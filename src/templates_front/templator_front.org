@@ -1422,7 +1422,7 @@ end interface
      #+begin_src c :tangle hrw_dset_str_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char* const dset);
-trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, char* dset);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char* dset);
      #+end_src
 
      #+begin_src c :tangle read_dset_str_front.c
@@ -1460,13 +1460,20 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset)
 
   case TREXIO_HDF5:
     rc = trexio_hdf5_read_$group_dset$(file, dset_str, rank, dims);
-    if (rc != TREXIO_SUCCESS) return rc;
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_$group_dset$(file, dset, rank, dims);
+    rc = trexio_json_read_$group_dset$(file, dset, rank, dims);
     break;
 ,*/
+  }
+
+  if (rc != TREXIO_SUCCESS) {
+    for (int i=0; i<dims[0]; i++){
+      FREE(dset_str[i]);
+    }
+    FREE(dset_str);
+    return rc;
   }
 
   strcpy(dset, "");
@@ -1487,7 +1494,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset)
 
      #+begin_src c :tangle write_dset_str_front.c
 trexio_exit_code
-trexio_write_$group_dset$ (trexio_t* const file, char* dset)
+trexio_write_$group_dset$ (trexio_t* const file, const char* dset)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -1512,8 +1519,8 @@ trexio_write_$group_dset$ (trexio_t* const file, char* dset)
     dset_str[i] = CALLOC(16,char);
   }
 
-  char * pch;
-  pch = strtok(dset, " ");
+  char* pch;
+  pch = strtok( (char*) dset, " ");
   strcpy(dset_str[0], pch);
   for(size_t i=1; i<dims[0]; i++){
     pch = strtok (NULL, " ");
@@ -1528,7 +1535,6 @@ trexio_write_$group_dset$ (trexio_t* const file, char* dset)
 
   case TREXIO_HDF5:
     rc = trexio_hdf5_write_$group_dset$(file, (const char**) dset_str, rank, dims);
-    if (rc != TREXIO_SUCCESS) return rc;
     break;
 /*
   case TREXIO_JSON:
@@ -1541,8 +1547,8 @@ trexio_write_$group_dset$ (trexio_t* const file, char* dset)
     FREE(dset_str[i]);
   }
   FREE(dset_str);
-
-  return TREXIO_SUCCESS;
+    
+  return rc;
 
 }
      #+end_src
