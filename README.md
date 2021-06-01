@@ -21,7 +21,7 @@ TREX library fo efficient I/O.
 7. `sudo make install`
 
 
-**Note: on systems with no `sudo` rights access, one can replace `./configure` with `./configure prefix=${PWD}` in order to execite `make install/uninstall` commands without `sudo`. This will enable the installation in the root directory of the library.**
+**Note: on systems with no `sudo` rights access, one can replace `./configure` with `./configure prefix=${PWD}` in order to execute `make install/uninstall` commands without `sudo`. This will enable the installation in the root directory of the library.**
 
 
 ## Additional requirements (for developers):
