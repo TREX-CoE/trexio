@@ -53,9 +53,6 @@ AM_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/include
 lib_LTLIBRARIES = src/libtrexio.la
 
 
-SOURCE_FILES= trexio.c trexio_hdf5.c trexio_text.c
-HEADER_FILES= $(trexio_h) trexio_text.h trexio_hdf5.h trexio_s.h
-
 SOURCES = \
  $(trexio_h) \
  $(srcdir)/src/trexio.c \
@@ -75,13 +72,16 @@ ORG_FILES = \
 
 src_libtrexio_la_SOURCES = $(SOURCES)
 
-check_PROGRAMS = tests/test_c tests/test_f
+TESTS = tests/test_c tests/test_f
+check_PROGRAMS = $(TESTS)
 
 tests_test_c_SOURCES = tests/test.c $(trexio_h)
 tests_test_c_LDADD   = src/libtrexio.la
 tests_test_c_LDFLAGS = -no-install
 
-tests_test_f_SOURCES = tests/test_f.f90 $(trexio_h) $(trexio_f)
+test_trexio_f = $(srcdir)/tests/trexio_f.f90
+
+tests_test_f_SOURCES = $(trexio_h) $(test_trexio_f)
 tests_test_f_LDADD   = src/libtrexio.la
 tests_test_f_LDFLAGS = -no-install
 
@@ -89,7 +89,10 @@ if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
-BUILT_SOURCES = $(SOURCES)
+BUILT_SOURCES = $(SOURCES) $(trexio_f) $(trexio_h)
+
+$(test_trexio_f): $(trexio_f)
+	cp $(trexio_f) $(test_trexio_f)
 
 src/trexio.c: $(trexio_h)
 
