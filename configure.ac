@@ -111,6 +111,8 @@ elif test "x${hdf5}" = xyes; then
     PKG_HDF5=""
     PKG_LIBS="${PKG_LIBS} ${HDF5_LIBS} -lhdf5_hl"
     PKG_CFLAGS="${PKG_CFLAGS} ${HDF5_CFLAGS}"
+    CFLAGS="${HDF5_LIBS}  ${CFLAGS}"
+    LDFLAGS="${HDF5_CFLAGS} -lhdf5_hl ${LDFLAGS}"
   fi
 
 else
