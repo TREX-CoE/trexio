@@ -100,12 +100,11 @@ elif test "x${hdf5}" = xyes; then
   AC_CHECK_HEADERS([hdf5.h])
   AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
 
-  # If HDF5 is not configured, try using pkg-config
   if test "x${have_hdf5}" = xno; then
+    # If HDF5 is not configured, try using pkg-config
     PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-    CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
-    FCFLAGS="${HDF5_CFLAGS} ${FCFLAGS}"
-    LIBS="${HDF5_LIBS} -lhdf5_hl ${LIBS}"
+    CFLAGS="$(pkg-config --cflags hdf5) ${CFLAGS}"
+    LDFLAGS="$(pkg-config --libs hdf5) -lhdf5_hl ${LDFLAGS}"
     PKG_HDF5="hdf5"
     PKG_LIBS="${PKG_LIBS} -lhdf5_hl"
   else
