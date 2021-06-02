@@ -706,8 +706,7 @@ trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_
 
 * Templates for front end
 
-  Consider the following block of ~trex.json~:
-
+  Consider the following block of =trex.json=:
 
    #+begin_src python
   {
@@ -722,7 +721,7 @@ trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_
 
   ~TREXIO~ is generated automatically by the ~generator.py~ Python
   script based on the tree-like configuration provided in the
-  ~trex.json~ file.  Because of that, generalized templates can be
+  =trex.json= file.  Because of that, generalized templates can be
   implemented and re-used.  This approach minimizes the number of bugs
   as compared with manual copy-paste-modify scheme.
 
@@ -758,14 +757,14 @@ trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_
    construction of TREXIO (e.g. ~num~ of ~nucleus~ group becomes
    ~nucleus_num~ and should be accessed accordingly within TREXIO).
 
-   TREXIO generator parses the ~trex.json~ file. TREXIO operates with
+   TREXIO generator parses the =trex.json= file. TREXIO operates with
    names of variables based on the 1-st (parent group) and 2-nd (child
-   object) levels of ~trex.json~ .  The parsed data is divided in 2
+   object) levels of =trex.json= .  The parsed data is divided in 2
    parts:
 
    1) Dimensioning variables (contain ~num~ in their names). These are always scalar integers.
-   2) Datasets. These can be vectors, matrices or tensors. The types are indicated in ~trex.json~.
-      Currently supported types: int, float. TODO: strings.
+   2) Datasets. These can be vectors, matrices or tensors. The types are indicated in =trex.json=.
+      Currently supported types: int, float and strings.
 
    For each of the aforementioned objects, TREXIO provides *has*,
    *read* and *write* functionality.  TREXIO supports I/O with single
@@ -1402,6 +1401,18 @@ interface
 end interface
      #+end_src
 
+** Sparse data structures
+
+   Sparse data structures are used typically for large tensors such as
+   two-electron integrals. For example, in the =trex.json= file sparse
+   arrays appear as the ~eri~ array:
+
+   #+begin_src python
+   "ao_2e_int"  : {
+     "eri_num"  : [ "int", [  ] ]
+     "eri"      : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
+   }
+   #+end_src
 * Fortran helper/wrapper functions
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.
