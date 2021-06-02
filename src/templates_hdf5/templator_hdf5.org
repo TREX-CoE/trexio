@@ -98,8 +98,8 @@ trexio_hdf5_init (trexio_t* const file)
       f->file_id = H5Fopen(file->file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
       break;
     case 'w':
-      // writing the existing file -> overwrite it (_TRUNC) [_EXCL | H5F_ACC_DEBUG as an alternative]
-      f->file_id = H5Fcreate(file->file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+      // writing the existing file -> open as RDWRITE
+      f->file_id = H5Fopen(file->file_name, H5F_ACC_RDWR, H5P_DEFAULT);
       break;
     }
 
@@ -123,7 +123,11 @@ trexio_hdf5_init (trexio_t* const file)
       f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
       break;
     case 'w':
-      f->$group$_group = H5Gcreate(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      if (f_exists == 1) {
+        f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+      } else {
+        f->$group$_group = H5Gcreate(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      }
       break;
   }
   if (f->$group$_group <= 0L) return TREXIO_INVALID_ID;
