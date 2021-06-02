@@ -451,7 +451,6 @@ struct trexio_back_end_s {
      2) ~mode~          - character containing open mode (see below)
        - ~'w'~         - (write)  creates a new file as READWRITE (overwrite existing file)
        - ~'r'~         - (read)   opens existing file as READONLY
-       - ~'a'~         - (append) either opens file in READWRITE mode if it already exists or creates a new one
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
        - ~TREXIO_HDF5~ - for HDF5 back end (integer alternative: 0)
        - ~TREXIO_TEXT~ - for TEXT back end (integer alternative: 1)
@@ -482,7 +481,7 @@ trexio_open(const char* file_name, const char mode,
   if (back_end <  0) return NULL;
   if (back_end >= TREXIO_INVALID_BACK_END) return NULL;
 
-  if (mode != 'r' && mode != 'w' && mode != 'a') return NULL;
+  if (mode != 'r' && mode != 'w') return NULL;
 
   trexio_t* result = NULL;
   void* result_tmp = NULL;

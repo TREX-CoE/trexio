@@ -97,10 +97,6 @@ trexio_hdf5_init (trexio_t* const file)
       // reading the existing file -> open as RDONLY
       f->file_id = H5Fopen(file->file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
       break;
-    case 'a':
-      // appending the existing file -> open as RDWR
-      f->file_id = H5Fopen(file->file_name, H5F_ACC_RDWR, H5P_DEFAULT);
-      break;
     case 'w':
       // writing the existing file -> overwrite it (_TRUNC) [_EXCL | H5F_ACC_DEBUG as an alternative]
       f->file_id = H5Fcreate(file->file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -111,8 +107,7 @@ trexio_hdf5_init (trexio_t* const file)
 
     switch (file->mode) {
     case 'r':
-    case 'a':
-      // reading or appending non-existing file -> error
+      // reading non-existing file -> error
       return TREXIO_FAILURE;
     case 'w':
       // writing non-existing file -> create it
@@ -124,9 +119,7 @@ trexio_hdf5_init (trexio_t* const file)
 
   /* Create or open groups in the hdf5 file assuming that they exist if file exists */
   switch (file->mode) {
-    // the switch for 'r'/'a' is reached only if file exists
     case 'r':
-    case 'a':
       f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
       break;
     case 'w':
