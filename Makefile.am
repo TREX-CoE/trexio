@@ -31,7 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ACLOCAL_AMFLAGS = -I m4
-CLEANFILES =
+CLEANFILES = trexio.mod
 
 VERSION_MAJOR   = @VERSION_MAJOR@
 VERSION_MINOR   = @VERSION_MINOR@
@@ -81,12 +81,15 @@ tests_test_c_LDFLAGS = -no-install
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
-tests_test_f_SOURCES = tests/test_f.f90 $(test_trexio_f)
+tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDADD   = src/libtrexio.la
 tests_test_f_LDFLAGS = -no-install
 
-$(test_trexio_f): $(trexio_f)
+$(test_trexio_f):
 	cp $(trexio_f) $(test_trexio_f)
+
+clean-local:
+	-rm -rf -- test_write.dir/ test_write_f.dir/ test_write.h5
 
 if TREXIO_DEVEL
 
