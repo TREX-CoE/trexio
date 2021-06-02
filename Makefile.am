@@ -81,18 +81,18 @@ tests_test_c_LDFLAGS = -no-install
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
-tests_test_f_SOURCES = $(trexio_h) $(test_trexio_f)
+tests_test_f_SOURCES = $(trexio_f) $(test_trexio_f)
 tests_test_f_LDADD   = src/libtrexio.la
 tests_test_f_LDFLAGS = -no-install
+
+$(test_trexio_f): $(trexio_f)
+	cp $(trexio_f) $(test_trexio_f)
 
 if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
 BUILT_SOURCES = $(SOURCES) $(trexio_f) $(trexio_h)
-
-$(test_trexio_f): $(trexio_f)
-	cp $(trexio_f) $(test_trexio_f)
 
 src/trexio.c: $(trexio_h)
 
