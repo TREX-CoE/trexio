@@ -67,8 +67,6 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_coord(file,coord);
   assert (rc == TREXIO_SUCCESS);
-  rc = trexio_write_nucleus_charge(file,charge);
-  assert (rc == TREXIO_SUCCESS);
 
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
@@ -76,15 +74,27 @@ int test_write(const char* file_name, const back_end_t backend) {
   rc = trexio_has_nucleus_coord(file);
   assert (rc == TREXIO_SUCCESS);
 
-  // should not work: try to overwrite the nucleus_num
+  // should not work: try to overwrite the num variable
   rc = trexio_write_nucleus_num(file,25);
   printf("Test error message: %s\n", trexio_string_of_error(rc));
   assert (rc == TREXIO_NUM_ALREADY_EXISTS);
 
-  // overwrite the nucleus_coord
+  // should not work: try to overwrite the dset
   coord[0] = 666.666;
   rc = trexio_write_nucleus_coord(file,coord);
   assert (rc == TREXIO_DSET_ALREADY_EXISTS);
+
+  // close current session
+  rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+
+  // open file again in 'write' mode
+  file = trexio_open(file_name, 'w', backend);
+  assert (file != NULL);
+
+  // write some missing blocks (e.g. if forgot last time)
+  rc = trexio_write_nucleus_charge(file,charge);
+  assert (rc == TREXIO_SUCCESS);
 
   // close current session
   rc = trexio_close(file);
