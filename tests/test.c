@@ -81,19 +81,6 @@ int test_write(const char* file_name, const back_end_t backend) {
   printf("Test error message: %s\n", trexio_string_of_error(rc));
   assert (rc == TREXIO_NUM_ALREADY_EXISTS);
 
-  // close current session
-  rc = trexio_close(file);
-  assert (rc == TREXIO_SUCCESS);
-
-  // open file again in 'append' mode
-  file = trexio_open(file_name, 'a', backend);
-  assert (file != NULL);
-
-  // read the nucleus_num from existing file
-  rc = trexio_read_nucleus_num(file,&num);
-  assert (rc == TREXIO_SUCCESS);
-  assert (num == 12);
-
   // overwrite the nucleus_coord
   coord[0] = 666.666;
   rc = trexio_write_nucleus_coord(file,coord);
@@ -147,12 +134,6 @@ int test_read(const char* file_name, const back_end_t backend) {
 
   file2 = trexio_open(file_name2, 'r', backend);
   assert (file2 == NULL);
-
-  // append non-existing file, should fail and return NULL
-  trexio_t* file3 = NULL;
-
-  file3 = trexio_open(file_name2, 'a', backend);
-  assert (file3 == NULL);
 
 /*================= END OF TEST =====================*/
 
