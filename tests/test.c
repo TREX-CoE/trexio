@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int test_read();
-int test_write();
+int test_write(const char* file_name, const back_end_t backend);
+int test_read(const char* file_name, const back_end_t backend);
 
 int main() {
 
