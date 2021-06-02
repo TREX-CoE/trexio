@@ -86,7 +86,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
 
   // open file again in 'append' mode
-  file = trexio_open(file_name, 'a', TREXIO_HDF5);
+  file = trexio_open(file_name, 'a', backend);
   assert (file != NULL);
 
   // read the nucleus_num from existing file
@@ -97,7 +97,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   // overwrite the nucleus_coord
   coord[0] = 666.666;
   rc = trexio_write_nucleus_coord(file,coord);
-  assert (rc == TREXIO_SUCCESS);
+  assert (rc == TREXIO_DSET_ALREADY_EXISTS);
 
   // close current session
   rc = trexio_close(file);
