@@ -1454,6 +1454,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  rc = TREXIO_FAILURE;
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -1470,7 +1471,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t
 ,*/
   }
 
-  return TREXIO_SUCCESS;
+  return rc;
   
 }
      #+end_src
@@ -1531,7 +1532,8 @@ trexio_write_$group_dset$ (trexio_t* const file, const char* dset, const uint32_
     strncpy(tmp_str, pch, max_str_len);
     tmp_str += max_str_len + 1;
   }
-  
+
+  rc = TREXIO_FAILURE;  
   switch (file->back_end) {
 
   case TREXIO_TEXT:
