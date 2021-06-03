@@ -1450,12 +1450,6 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset)
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
-  char** dset_str;
-  dset_str = CALLOC(dims[0],char*);
-  for (int i=0; i<dims[0]; i++){
-    dset_str[i] = CALLOC(16,char);
-  }
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
@@ -1463,7 +1457,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset)
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_read_$group_dset$(file, dset_str, rank, dims);
+    rc = trexio_hdf5_read_$group_dset$(file, dset, rank, dims);
     break;
 /*
   case TREXIO_JSON:
@@ -1471,25 +1465,6 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset)
     break;
 ,*/
   }
-
-  if (rc != TREXIO_SUCCESS) {
-    for (int i=0; i<dims[0]; i++){
-      FREE(dset_str[i]);
-    }
-    FREE(dset_str);
-    return rc;
-  }
-
-  strcpy(dset, "");
-  for(size_t i=0; i<dims[0]; i++){
-    strcat(dset, dset_str[i]);
-    strcat(dset, TREXIO_DELIM);
-  }
-
-  for (int i=0; i<dims[0]; i++){
-    FREE(dset_str[i]);
-  }
-  FREE(dset_str);
 
   return TREXIO_SUCCESS;
   
@@ -1517,18 +1492,24 @@ trexio_write_$group_dset$ (trexio_t* const file, const char* dset)
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
-  char** dset_str = CALLOC(dims[0],char*);
-  dset_str = CALLOC(dims[0],char*);
-  for (int i=0; i<dims[0]; i++){
-    dset_str[i] = CALLOC(16,char);
-  }
+  char** dset_str = CALLOC(dims[0], char*);
+  char*  tmp_str  = CALLOC(dims[0]*32, char);
 
   char* pch;
   pch = strtok( (char*) dset, TREXIO_DELIM);
-  strcpy(dset_str[0], pch);
+
+  size_t pch_len;
+  pch_len = strlen(pch);
+  dset_str[0]=tmp_str;
+  strncpy(tmp_str, pch, pch_len);
+  tmp_str += pch_len + 1;
   for(size_t i=1; i<dims[0]; i++){
-    pch = strtok (NULL, TREXIO_DELIM);
-    strcpy(dset_str[i], pch);
+    pch = strtok(NULL, TREXIO_DELIM);
+
+    pch_len = strlen(pch);
+    dset_str[i]=tmp_str;
+    strncpy(tmp_str, pch, pch_len);
+    tmp_str += pch_len + 1;
   }
   
   switch (file->back_end) {
@@ -1547,9 +1528,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const char* dset)
 ,*/
   }
 
-  for (int i=0; i<dims[0]; i++){
-    FREE(dset_str[i]);
-  }
+  FREE(dset_str[0]);
   FREE(dset_str);
     
   return rc;
