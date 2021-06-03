@@ -70,7 +70,7 @@ subroutine test_write()
   rc = trexio_write_nucleus_coord(trex_file, coord)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE COORD'
 
-  rc = trexio_write_nucleus_label(trex_file, label_str)
+  rc = trexio_write_nucleus_label(trex_file, label_str, 4)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE LABEL'
   deallocate(label_str)
 
@@ -143,7 +143,7 @@ subroutine test_read()
 
   if (rc == TREXIO_SUCCESS .and. (abs(coord(2,1) - 1.39250319d0) < 1.0D-8) ) write(*,*) 'SUCCESS READ COORD'
 
-  rc = trexio_read_nucleus_label(trex_file, label_str)
+  rc = trexio_read_nucleus_label(trex_file, label_str, 4)
 
   ! --------------------------------------------------
   ! dummy parser of big string with space delimeters

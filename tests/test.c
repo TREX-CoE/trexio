@@ -90,7 +90,7 @@ int test_h5write() {
   rc = trexio_write_nucleus_charge(file,charge);
   assert (rc == TREXIO_SUCCESS);
   //rc = trexio_write_nucleus_label(file,label);
-  rc = trexio_write_nucleus_label(file,labelxxx);
+  rc = trexio_write_nucleus_label(file,labelxxx, 4);
   assert (rc == TREXIO_SUCCESS);
 
   // check if the written data exists in the file
@@ -173,7 +173,7 @@ int test_h5read() {
 
   labelxxx = (char*) malloc(num*4*sizeof(char*));
 
-  rc = trexio_read_nucleus_label(file,labelxxx);
+  rc = trexio_read_nucleus_label(file,labelxxx, 4);
   //rc = trexio_read_nucleus_label(file,label);
   assert (rc == TREXIO_SUCCESS);
 
