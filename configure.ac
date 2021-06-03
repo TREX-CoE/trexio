@@ -20,144 +20,87 @@ AC_SUBST([VERSION_MAJOR])
 AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_PATCH])
 
-# Checks for programs.
+
+
+## -------------------
+## Checks for programs 
+## -------------------
+
 AC_LANG(C)
 AC_PROG_CC
-# Make sure the c compiler supports C99
+
+# C99 support
 m4_version_prereq([2.70],[], [AC_PROG_CC_C99])
-AS_IF([test "$ac_cv_prog_cc_c99" = "no"], [AC_MSG_ERROR([The compiler does not support C99])])
+AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
+      [AC_MSG_ERROR([The compiler does not support C99])])
 AC_PROG_CC_C_O
 
+# Fortran
 AC_PROG_FC
 AC_FC_FREEFORM
 AC_FC_SRCEXT([f90])
-
 AC_PROG_FC_C_O
+AC_FC_LIBRARY_LDFLAGS
+
+# pkg-config
+PKG_PROG_PKG_CONFIG()
+PKG_CFLAGS=""
+
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
-PKG_PROG_PKG_CONFIG()
-PKG_LIBS=""
-PKG_CFLAGS=""
-
-AC_FC_LIBRARY_LDFLAGS
 
 
+## ---------
+## Libraries
+## ---------
 
-# Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
-# ./configure [--with-hdf5 or --with-hdf5=yes]
-# Configure with user-provided path to HDF5:
-# ./configure --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial
-# Configure without HDF5:
-# ./configure --without-hdf5 [or --with-hdf5=no]
-
-# when configure complains about missing install-sh or install.sh, execute:
-# automake --add-missing --copy
-
-# Checks for basic libraries.
-AC_CHECK_LIB([m], [sqrt])
 # Checks for basic header files.
 AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdlib.h string.h unistd.h])
 
-# Search for pthread
-have_pthreads=no
-AC_SEARCH_LIBS([pthread_create], [pthread], [have_pthreads=yes])
 
-if test "x${have_pthreads}" = xyes; then
-   AC_CHECK_HEADERS([pthread.h], [], [have_pthreads=no])
-   PKG_LIBS="${PKG_LIBS} -lpthread"
-fi
+### HDF5
+### ----
 
-if test "x${have_pthreads}" = xno; then
-AC_MSG_ERROR([
-	------------------------------------------
-	The pthread library and header file
-	required to build TREXIO. Stopping...
-	Check 'config.log' for more information.
-	------------------------------------------])
-fi
+# Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
+# ./configure [--with-hdf5 or --with-hdf5=yes]
 
-AC_ARG_WITH([hdf5],
-	    AS_HELP_STRING([--with-hdf5],
-			   [Include HDF5 functionality @<:@default: yes@:>@])],
-	     [hdf5=${withval}],
-	     [hdf5=yes])
+# Configure with user-provided path to HDF5:
+# ./configure --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial
+
+# Configure without HDF5:
+# ./configure --without-hdf5 [or --with-hdf5=no]
+
 
 PKG_HDF5=""
-if test "x${hdf5}" = xno; then
+AX_LIB_HDF5([serial])
+
+if test "x${with_hdf5}" = xno; then
   AC_MSG_WARN([
     ------------------------------------------
     Configuring with the HDF5 library is
     recommended to build efficient TREXIO.
     ------------------------------------------])
-
-elif test "x${hdf5}" = xyes; then
-
-  # Check if HDF5 is already configured (e.g. after calling `module load hdf5-<version>`)
-  AC_CHECK_HEADERS([hdf5_hl.h])
-  AC_CHECK_LIB([hdf5_hl], [H5LTfind_dataset], [], [have_hdf5_hl=no])
-
-  AC_CHECK_HEADERS([hdf5.h])
-  AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
-
-  if test "x${have_hdf5}" = xno; then
-    # If HDF5 is not configured, try using pkg-config
-    PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-    CFLAGS="$(pkg-config --cflags hdf5) ${CFLAGS}"
-    LDFLAGS="$(pkg-config --libs hdf5) -lhdf5_hl ${LDFLAGS}"
-    PKG_HDF5="hdf5"
-    PKG_LIBS="${PKG_LIBS} -lhdf5_hl"
-  else
-    PKG_HDF5=""
-    PKG_LIBS="${PKG_LIBS} ${HDF5_LIBS} -lhdf5_hl"
-    PKG_CFLAGS="${PKG_CFLAGS} ${HDF5_CFLAGS}"
-    CFLAGS="${HDF5_LIBS}  ${CFLAGS}"
-    LDFLAGS="${HDF5_CFLAGS} -lhdf5_hl ${LDFLAGS}"
-  fi
-
-else
-
-  if test "x${hdf5}" = x; then
-    AC_MSG_ERROR([
-    ------------------------------------------
-    The path to HDF5 library is required.
-    Maybe you forgot to pass --with-hdf5="/your/path/" to configure script.
-    Stopping...
-    ------------------------------------------])
-  fi
-
-  CPPFLAGS="-I${hdf5}/include ${CPPFLAGS}"
-  LDFLAGS="-L${hdf5} ${LDFLAGS}"
-
-  AC_CHECK_HEADERS([hdf5_hl.h])
-  AC_CHECK_LIB([hdf5_hl], [H5LTfind_dataset], [], [have_hdf5_hl=no])
-
-  AC_CHECK_HEADERS([hdf5.h])
-  AC_CHECK_LIB([hdf5], [H5open], [], [have_hdf5=no])
-
-  PKG_HDF5=""
-  PKG_LIBS="${PKG_LIBS} -L${hdf5} -lhdf5_hl"
-  PKG_CFLAGS="${PKG_CFLAGS} -I${hdf5}/include"
 fi
+
+CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
+CPPFLAGS="${HDF5_CPPFLAGS} ${CPPFLAGS}"
+LDFLAGS="${HDF5_LDFLAGS} ${LDFLAGS}"
+LIBS="${HDF5_LIBS} ${LIBS}"
+
+
+# Check if hdf5 if available with pkg-config
+
+PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8], [
+    PKG_HDF5="hdf5"
+    ],[
+    PKG_HDF5=""
+   ])
+    PKG_CFLAGS="${PKG_CFLAGS}"
+
 AC_SUBST([PKG_HDF5])
-AC_SUBST([PKG_LIBS])
 AC_SUBST([PKG_CFLAGS])
 
-
-# add -fPIC if not present in CFLAGS, necessary to compile TREXIO
-# TODO: replace with AM_CFLAGS for appropriate targer once Automake is introduced
-case "${CFLAGS}" in
-    *-fPIC*)
-    ;;
-    *)
-    AC_MSG_WARN([
-    ------------------------------------------
-    Adding -fPIC option to CFLAGS.
-    This is necessary to build TREXIO.
-    ------------------------------------------])
-    CFLAGS="${CFLAGS} -fPIC"
-    ;;
-esac
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT32_T
@@ -194,6 +137,19 @@ if test "x${TREXIO_DEVEL}" != "x"; then
 
 fi
 
+## Libm
+## ----
+
+AC_SEARCH_LIBS([sqrt], [m], [], AC_MSG_ERROR([The libm library is required]))
+AC_CHECK_HEADERS([math.h])
+
+### pthread
+### -------
+
+AC_SEARCH_LIBS([pthread_create], [pthread], [], AC_MSG_ERROR([The pthread library is required]))
+AC_CHECK_HEADERS([pthread.h])
+
+
 AC_CONFIG_FILES([Makefile
                  pkgconfig/trexio.pc])
 AC_OUTPUT
@@ -203,23 +159,22 @@ echo \
 
 ${PACKAGE_NAME} Version ${PACKAGE_VERSION} ${TREXIO_DEVEL}
 
-Prefix: '${prefix}'.
-
-CC:           ${CC}
-CPPFLAGS:     ${CPPFLAGS}
-CFLAGS:	      ${CFLAGS}
-FC:           ${FC}
-FCLAGS:       ${FCFLAGS}
-LDFLAGS:      ${LDFLAGS}
-LIBS:         ${LIBS}
+Prefix ........:  ${prefix}
+CC ............:  ${CC}
+CPPFLAGS ......:  ${CPPFLAGS}
+CFLAGS ........:  ${CFLAGS}
+FC ............:  ${FC}
+FCLAGS ........:  ${FCFLAGS}
+LDFLAGS .......:  ${LDFLAGS}
+LIBS ..........:  ${LIBS}
 
 Package features:
-  Compilation with HDF5: ${hdf5}
+  Compilation with HDF5: ${with_hdf5}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
-  all           - build C and Fortran APIs
-  check	        - check C and Fortran APIs
-  clean         - clean the produced files
+  all           - build C library and Fortran binding
+  check	        - run unit tests
+  install       - install the library 
 --------------------------------------------------"
 
