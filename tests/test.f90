@@ -10,7 +10,7 @@ subroutine test_write()
 ! ============ Test write functionality =============== !
 
   use trexio
-  use, intrinsic :: iso_c_binding, only: c_new_line
+  use, intrinsic :: iso_c_binding
 
   implicit none
 
@@ -47,7 +47,7 @@ subroutine test_write()
   label_str=''
   do i = 1,num
 !    label_str=label_str//trim(label(i))//' '
-    label_str=label_str//trim(label(i))//c_new_line
+    label_str=label_str//trim(label(i))//TREXIO_DELIM
   enddo
 
 
@@ -155,7 +155,7 @@ subroutine test_read()
     tmp_str=''
     do j=ind,128
 
-      if ( (label_str(j)==c_new_line) ) then
+      if ( (label_str(j)==TREXIO_DELIM) ) then
 	ind=j+1
 	exit
       endif

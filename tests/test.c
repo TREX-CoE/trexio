@@ -67,7 +67,7 @@ int test_h5write() {
   char labelxxx[128] = "";
   for (int i=0; i<num; i++){
     strcat(labelxxx,label[i]);
-    strcat(labelxxx,"\n");
+    strcat(labelxxx,TREXIO_DELIM);
   }
 
 /*================= START OF TEST ==================*/
@@ -180,8 +180,10 @@ int test_h5read() {
   printf("%s\n", labelxxx);
   //assert( strcmp(label[1], "Na") == 0 );
   char * pch;
-  pch = strtok(labelxxx, "\n");
+  pch = strtok(labelxxx, TREXIO_DELIM);
   assert( strcmp(pch, "C") == 0 );
+  pch = strtok(NULL, TREXIO_DELIM);
+  assert( strcmp(pch, "Na") == 0 );
 
   // close current session
   rc = trexio_close(file);
