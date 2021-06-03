@@ -30,6 +30,8 @@ module trexio
   integer, parameter :: TREXIO_TEXT = 1
 ! integer, parameter :: TREXIO_JSON = 2
   integer, parameter :: TREXIO_INVALID_BACK_END = 2
+
+  character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
    #+end_src
 
   #+end_src
@@ -382,6 +384,8 @@ typedef int32_t back_end_t;
 #define TREXIO_TEXT             ( (back_end_t) 1 )
 /*#define TREXIO_JSON             ( (back_end_t) 2 )*/
 #define TREXIO_INVALID_BACK_END ( (back_end_t) 2 )
+
+#define TREXIO_DELIM            "\n"
    #+end_src
 ** Read/write behavior
 
@@ -702,7 +706,7 @@ trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_
 
   return TREXIO_SUCCESS;
 }
-    #+end_src c
+    #+end_src
 
 * Templates for front end
 ** Description
@@ -1479,7 +1483,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset)
   strcpy(dset, "");
   for(size_t i=0; i<dims[0]; i++){
     strcat(dset, dset_str[i]);
-    strcat(dset, "\n");
+    strcat(dset, TREXIO_DELIM);
   }
 
   for (int i=0; i<dims[0]; i++){
@@ -1520,10 +1524,10 @@ trexio_write_$group_dset$ (trexio_t* const file, const char* dset)
   }
 
   char* pch;
-  pch = strtok( (char*) dset, "\n");
+  pch = strtok( (char*) dset, TREXIO_DELIM);
   strcpy(dset_str[0], pch);
   for(size_t i=1; i<dims[0]; i++){
-    pch = strtok (NULL, "\n");
+    pch = strtok (NULL, TREXIO_DELIM);
     strcpy(dset_str[i], pch);
   }
   
