@@ -612,6 +612,15 @@ trexio_exit_code trexio_set_one_based(trexio_t* file)
 }
    #+end_src
 
+   #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer function trexio_set_one_based(trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_open_c
+end interface
+   #+end_src
+
 ** File closing
 
     ~trexio_close~ closes an existing ~trexio_t~ file.
@@ -1554,10 +1563,20 @@ contains
      character(len=*)      :: filename
      character, intent(in), value :: mode
      integer, intent(in), value   :: backend
+
      character(len=len_trim(filename)+1) :: filename_c
+     integer :: rc
 
      filename_c = trim(filename) // c_null_char
      trexio_open = trexio_open_c(filename_c, mode, backend)
+     if (trexio_open == 0_8) then
+       return
+     endif
+     rc = trexio_set_one_based(trexio_open)
+     if (rc /= TREXIO_SUCCESS) then
+        call trexio_close(trexio_open)
+        trexio_open = 0_8
+     endif
    end function trexio_open
   #+end_src
 
