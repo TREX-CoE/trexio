@@ -56,6 +56,7 @@
 #define $GROUP$_GROUP_NAME          "$group$"
 #define $GROUP_NUM$_NAME            "$group_num$"
 #define $GROUP_DSET$_NAME           "$group_dset$"
+#define $GROUP_STR$_NAME            "$group_str$"
   #+end_src
 
 ** Template for HDF5 structures
@@ -155,7 +156,7 @@ trexio_hdf5_deinit (trexio_t* const file)
 }
   #+end_src
 
-** Template for HDF5 has/read/write a number
+** Template for HDF5 has/read/write a single dimensioning variable
 
   #+begin_src c :tangle hrw_num_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_num$ (trexio_t* const file);
@@ -176,11 +177,14 @@ trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num)
   /* Quit if the dimensioning attribute is missing in the file */
   if (H5Aexists(f->$group$_group, $GROUP_NUM$_NAME) == 0) return TREXIO_FAILURE;
 
-  /* Read the nucleus_num attribute of nucleus group */
+  /* Read the $group_num$ attribute of $group$ group */
   const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
   if (num_id <= 0) return TREXIO_INVALID_ID;
 
   const herr_t status = H5Aread(num_id, H5T_NATIVE_UINT64, num);
+
+  H5Aclose(num_id);
+
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
@@ -623,7 +627,132 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 
 }
    #+end_src
+   
+** Template for HDF5 has/read/write a single string attribute
 
+  #+begin_src c :tangle hrw_attr_str_hdf5.h :exports none
+trexio_exit_code trexio_hdf5_has_$group_str$ (trexio_t* const file);
+trexio_exit_code trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str);
+trexio_exit_code trexio_hdf5_write_$group_str$(trexio_t* const file, const char* str);
+  #+end_src
+
+
+  #+begin_src c :tangle read_attr_str_hdf5.c
+trexio_exit_code
+trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+  /* Quit if the string attribute is missing in the file */
+  if (H5Aexists(f->$group$_group, $GROUP_STR$_NAME) == 0) return TREXIO_HAS_NOT;
+
+  /* Read the $group_str$ attribute of $group$ group */
+  const hid_t str_id = H5Aopen(f->$group$_group, $GROUP_STR$_NAME, H5P_DEFAULT);
+  if (str_id <= 0) return TREXIO_INVALID_ID;
+
+  const hid_t ftype_id = H5Aget_type(str_id);
+  if (ftype_id <= 0) return TREXIO_INVALID_ID;
+  uint64_t sdim = H5Tget_size(ftype_id);
+  if (sdim <= 0) return TREXIO_FAILURE;
+  sdim++;                         /* Make room for null terminator */
+
+  const hid_t mem_id = H5Tcopy(H5T_C_S1);
+  if (mem_id <= 0) return TREXIO_INVALID_ID;
+
+  herr_t status;
+  status = H5Tset_size(mem_id, sdim);
+  if (status < 0) return TREXIO_FAILURE;
+
+  status = H5Aread(str_id, mem_id, str);
+  if (status < 0) return TREXIO_FAILURE;
+
+  H5Aclose(str_id);
+  H5Tclose(mem_id);
+  H5Tclose(ftype_id);
+
+  return TREXIO_SUCCESS;
+
+}
+   #+end_src
+
+
+  #+begin_src c :tangle write_attr_str_hdf5.c
+trexio_exit_code
+trexio_hdf5_write_$group_str$ (trexio_t* const file, const char* str)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_hdf5_t* const f = (trexio_hdf5_t*) file;
+
+
+  /* Setup the dataspace */
+  const hid_t dtype_id = H5Tcopy(H5T_C_S1);
+  if (dtype_id <= 0) return TREXIO_INVALID_ID;
+
+  size_t str_attr_len = strlen(str) + 1;
+
+  herr_t status;
+  status = H5Tset_size(dtype_id, str_attr_len);
+  if (status < 0) return TREXIO_FAILURE;
+
+  status = H5Tset_strpad(dtype_id, H5T_STR_NULLTERM);
+  if (status < 0) return TREXIO_FAILURE;
+
+  const hid_t dspace_id = H5Screate(H5S_SCALAR);
+  if (dspace_id <= 0) return TREXIO_INVALID_ID;
+  
+  /* Create the $group_str$ attribute of $group$ group */
+  const hid_t str_id = H5Acreate(f->$group$_group, $GROUP_STR$_NAME, dtype_id, dspace_id,
+                       H5P_DEFAULT, H5P_DEFAULT);
+
+  if (str_id <= 0) {
+    H5Sclose(dspace_id);
+    H5Tclose(dtype_id);
+    return TREXIO_INVALID_ID;
+  }
+  
+  status = H5Awrite(str_id, dtype_id, str);
+  if (status < 0) {
+    H5Aclose(str_id);
+    H5Sclose(dspace_id);
+    H5Tclose(dtype_id);
+    return TREXIO_FAILURE;
+  }
+  
+  H5Aclose(str_id);
+  H5Sclose(dspace_id);
+  H5Tclose(dtype_id);
+  return TREXIO_SUCCESS;
+
+}
+    #+end_src
+
+  #+begin_src c :tangle has_attr_str_hdf5.c
+trexio_exit_code
+trexio_hdf5_has_$group_str$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  htri_t status = H5Aexists(f->$group$_group, $GROUP_STR$_NAME);
+  /* H5Aexists returns positive value if attribute exists, 0 if does not, negative if error */
+  if (status > 0){
+    return TREXIO_SUCCESS;
+  } else if (status == 0) {
+    return TREXIO_HAS_NOT;
+  } else {
+    return TREXIO_FAILURE;
+  }
+
+}
+    #+end_src
 * Constant file suffixes (not used by the generator)               :noexport:
 
   #+begin_src c :tangle suffix_hdf5.h

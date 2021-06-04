@@ -688,29 +688,6 @@ interface
 end interface
     #+end_src
 
-** C helper functions
-
-    #+begin_src c :tangle prefix_front.c
-trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_num, uint32_t str_max_len){
-
-  if (dest == NULL)  return TREXIO_INVALID_ARG_1;
-  assert (str_max_num > 0);
-  assert (str_max_len > 0);
-
-  char* tmp_str = (char*)calloc(str_max_num*(str_max_len+1)+1,sizeof(char));
-
-  for (int i=0; i<str_max_num; i++){
-    dest[i] = tmp_str;
-    strncpy(tmp_str, src[i], str_max_len);
-    tmp_str += str_max_len + 1;
-  }
-
-  /*tmp_str cannot be freed here but it is taken case of when pointer to dest is deallocated */
-
-  return TREXIO_SUCCESS;
-}
-    #+end_src
-
 * Templates for front end
 ** Description
 
@@ -779,7 +756,7 @@ trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_
    *read* and *write* functionality.  TREXIO supports I/O with single
    or double precision for integer and floating point numbers.
 
-** Templates for front end has/read/write a dimension
+** Templates for front end has/read/write a single dimensioning variable
 
    This section concerns API calls related to dimensioning variables.
 
@@ -854,26 +831,23 @@ trexio_write_$group_num$_64 (trexio_t* const file, const int64_t num)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
-  trexio_exit_code rc = TREXIO_GROUP_WRITE_ERROR;
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_write_$group_num$(file, (int64_t) num);
+    return trexio_text_write_$group_num$(file, (int64_t) num);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_write_$group_num$(file, (int64_t) num);
+    return trexio_hdf5_write_$group_num$(file, (int64_t) num);
     break;
 /*
   case TREXIO_JSON:
-    rc = trexio_json_write_$group_num$(file, (int64_t) num);
+    return trexio_json_write_$group_num$(file, (int64_t) num);
     break;
 ,*/
   }
-  if (rc != TREXIO_SUCCESS) return rc;
 
-  return TREXIO_SUCCESS;
+  return TREXIO_FAILURE;
 }
      #+end_src
 
@@ -917,26 +891,23 @@ trexio_write_$group_num$_32 (trexio_t* const file, const int32_t num)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
 
-  trexio_exit_code rc = TREXIO_GROUP_WRITE_ERROR;
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_write_$group_num$(file, (int64_t) num);
+    return trexio_text_write_$group_num$(file, (int64_t) num);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_write_$group_num$(file, (int64_t) num);
+    return trexio_hdf5_write_$group_num$(file, (int64_t) num);
     break;
 /*
   case TREXIO_JSON:
-    rc = trexio_json_write_$group_num$(file, (int64_t) num);
+    return trexio_json_write_$group_num$(file, (int64_t) num);
     break;
 ,*/
   }
-  if (rc != TREXIO_SUCCESS) return rc;
 
-  return TREXIO_SUCCESS;
+  return TREXIO_FAILURE;
 }
      #+end_src
 
@@ -980,8 +951,8 @@ trexio_has_$group_num$ (trexio_t* const file)
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
 
+  return TREXIO_FAILURE;
 }
      #+end_src
 
@@ -1411,7 +1382,7 @@ end interface
      #+end_src
 
 ** Templates for front end has/read/write a dataset of strings
-
+*** Introduction
    This section concerns API calls related to datasets of strings.
 
    | Function name               | Description                         |
@@ -1619,6 +1590,145 @@ interface
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
+end interface
+     #+end_src
+
+** Templates for front end has/read/write a single string attribute
+*** Introduction
+
+   This section concerns API calls related to string attributes.
+
+   | Function name              | Description                                  |
+   |----------------------------+----------------------------------------------|
+   | ~trexio_has_$group_str$~   | Check if a string attribute exists in a file |
+   | ~trexio_read_$group_str$~  | Read a string attribute                      |
+   | ~trexio_write_$group_str$~ | Write a string attribute                     |
+
+*** C templates for front end
+
+     #+begin_src c :tangle hrw_attr_str_front.h :exports none
+trexio_exit_code trexio_has_$group_str$(trexio_t* const file);
+trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str);
+trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str);
+     #+end_src
+
+     #+begin_src c :tangle read_attr_str_front.c
+trexio_exit_code
+trexio_read_$group_str$ (trexio_t* const file, char* const str)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    //return trexio_text_read_$group_str$(file, str);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_$group_str$(file, str);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_$group_str$(file, str);
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+     #+begin_src c :tangle write_attr_str_front.c
+trexio_exit_code
+trexio_write_$group_str$ (trexio_t* const file, const char* str)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    //return trexio_text_write_$group_str$(file, str);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_$group_str$(file, str);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_$group_str$(file, str);
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+   
+     #+begin_src c :tangle has_attr_str_front.c
+trexio_exit_code
+trexio_has_$group_str$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    //return trexio_text_has_$group_str$(file);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_has_$group_str$(file);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_$group_str$(file);
+    break;
+,*/
+  }
+  return TREXIO_FAILURE;
+
+}
+     #+end_src
+
+*** Fortran templates for front end
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+    
+     #+begin_src f90 :tangle write_attr_str_front_fortran.f90
+interface
+   integer function trexio_write_$group_str$ (trex_file, str) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     character, intent(in) :: str(*)
+   end function trexio_write_$group_str$
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle read_attr_str_front_fortran.f90
+interface
+   integer function trexio_read_$group_str$ (trex_file, str) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     character, intent(out) :: str(*)
+   end function trexio_read_$group_str$
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle has_attr_str_front_fortran.f90
+interface
+   integer function trexio_has_$group_str$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_has_$group_str$
 end interface
      #+end_src
 
