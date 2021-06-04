@@ -46,7 +46,6 @@ subroutine test_write()
 
   label_str=''
   do i = 1,num
-!    label_str=label_str//trim(label(i))//' '
     label_str=label_str//trim(label(i))//TREXIO_DELIM
   enddo
 
@@ -146,7 +145,7 @@ subroutine test_read()
   rc = trexio_read_nucleus_label(trex_file, label_str, 4)
 
   ! --------------------------------------------------
-  ! dummy parser of big string with space delimeters
+  ! dummy parser of big string with TREXIO_DELIM delimeters
   ! --------------------------------------------------
   ind=1
   offset=1
