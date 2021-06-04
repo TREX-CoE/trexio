@@ -87,7 +87,7 @@ tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDADD   = src/libtrexio.la
 tests_test_f_LDFLAGS = -no-install
 
-$(test_trexio_f):
+$(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
 
 clean-local:
