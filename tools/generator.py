@@ -19,6 +19,7 @@ print('Strings I/O currently not supported')
 # -------------------- GET ATTRIBUTES FROM THE CONFIGURATION ---------------- #
 group_dict = get_group_dict(trex_config)
 detailed_nums = get_detailed_num_dict(trex_config)
+detailed_strs = get_detailed_str_dict(trex_config)
 # helper dictionaries that contain names of groups, nums or dsets as keys
 dsets = get_dset_dict(trex_config)
 detailed_dsets_nostr, detailed_dsets_str = split_dset_dict_detailed(dsets)
@@ -42,11 +43,15 @@ files_todo = get_files_todo(source_files)
 
 # populate files with iterative scheme, i.e. for unique functions
 for fname in files_todo['auxiliary']:
-    iterative_populate_file(fname, template_paths, group_dict, detailed_dsets, detailed_nums)
+    iterative_populate_file(fname, template_paths, group_dict, detailed_dsets, detailed_nums, detailed_strs)
 
 # populate has/read/write_num functions with recursive scheme
 for fname in files_todo['num']:
     recursive_populate_file(fname, template_paths, detailed_nums)
+
+# populate has/read/write_str functions with recursive scheme
+for fname in files_todo['attr_str']:
+    recursive_populate_file(fname, template_paths, detailed_strs)
 
 # populate has/read/write_dset (numerical) functions with recursive scheme 
 for fname in files_todo['dset_data']:

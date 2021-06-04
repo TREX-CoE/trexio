@@ -39,7 +39,7 @@ def get_files_todo(source_files: dict) -> dict:
     files_todo = {}       
     #files_todo['all'] = list(filter(lambda x: 'read' in x or 'write' in x or 'has' in x or 'hrw' in x or 'flush' in x or 'free' in x, all_files))
     files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f]
-    for key in ['dset_data', 'dset_str', 'num', 'group']:
+    for key in ['dset_data', 'dset_str', 'num', 'attr_str', 'group']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
@@ -104,7 +104,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
                 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
-                'group_dset', 'group_num', 'group']
+                'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
         with open(join(templ_path,fname), 'r') as f_in :
@@ -168,7 +168,7 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
     return output_line
 
 
-def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict) -> None:
+def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict, strings: dict) -> None:
     """ 
     Iteratively populate files with unique functions that contain templated variables.
 
@@ -178,12 +178,13 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                     groups (dict)           : dictionary of groups
                     datasets (dict)         : dictionary of datasets with substitution details
                     numbers (dict)          : dictionary of numbers with substitution details
+                    strings (dict)          : dictionary of strings with substitution details
 
             Returns:
                     None
     """
     add_trigger = 'rc = trexio_text_free_$group$'
-    triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
+    triggers = [add_trigger, '$group_dset$', '$group_num$', '$group_str$', '$group$']
 
     templ_path = get_template_path(filename, paths)
     filename_out = join('populated',f'pop_{filename}')
@@ -197,7 +198,7 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                 if id == 0:
                     # special case for proper error handling when deallocting text groups
                     error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
-                    populated_line = iterative_replace_line(line, triggers[3], groups, add_line=error_handler)
+                    populated_line = iterative_replace_line(line, '$group$', groups, add_line=error_handler)
                     f_out.write(populated_line)
                 elif id == 1:
                     populated_line = iterative_replace_line(line, triggers[id], datasets, None)
@@ -206,6 +207,9 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                     populated_line = iterative_replace_line(line, triggers[id], numbers, None)
                     f_out.write(populated_line)
                 elif id == 3:
+                    populated_line = iterative_replace_line(line, triggers[id], strings, None)
+                    f_out.write(populated_line)
+                elif id == 4:
                     populated_line = iterative_replace_line(line, triggers[id], groups, None)
                     f_out.write(populated_line)
                 else:
@@ -418,6 +422,31 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     num_dict[tmp_num] = tmp_dict
 
     return num_dict
+
+
+def get_detailed_str_dict (configuration: dict) -> dict:
+    """
+    Returns the dictionary of all `str`-like attributes.
+    Keys are names, values are subdictionaries containing corresponding group and group_str names.
+
+            Parameters:
+                    configuration (dict) : configuration from `trex.json`
+
+            Returns:
+                    str_dict (dict) : dictionary of string attributes
+    """
+    str_dict = {}
+    for k1,v1 in configuration.items():
+        for k2,v2 in v1.items():
+            if len(v2[1]) == 0:
+                tmp_str = f'{k1}_{k2}'
+                if 'str' in v2[0]:
+                    tmp_dict = {}
+                    tmp_dict['group'] = k1
+                    tmp_dict['group_str'] = tmp_str
+                    str_dict[tmp_str] = tmp_dict
+
+    return str_dict
 
 
 def get_dset_dict (configuration: dict) -> dict:
