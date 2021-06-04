@@ -75,12 +75,14 @@ src_libtrexio_la_SOURCES = $(SOURCES)
 TESTS = tests/test_c tests/test_f
 check_PROGRAMS = $(TESTS)
 
+tests_test_c_DEPENDENCIES = $(trexio_h)
 tests_test_c_SOURCES = tests/test.c $(trexio_h)
 tests_test_c_LDADD   = src/libtrexio.la
 tests_test_c_LDFLAGS = -no-install
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
+tests_test_f_DEPENDENCIES = $(test_trexio_f)
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDADD   = src/libtrexio.la
 tests_test_f_LDFLAGS = -no-install
@@ -95,14 +97,13 @@ if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
-BUILT_SOURCES = $(SOURCES) $(trexio_f) $(trexio_h)
+BUILT_SOURCES = $(SOURCES) $(trexio_f) $(test_trexio_f)
 
+$(SOURCES): $(trexio_f)
 src/trexio.c: $(trexio_h)
 
-$(trexio_h): $(ORG_FILES)
+$(trexio_f): $(ORG_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
-
-$(trexio_f): $(trexio_h)
 
 cppcheck: cppcheck.out
 	cat cppcheck.out
