@@ -23,6 +23,7 @@ subroutine test_write()
   double precision :: coord(3,12)
 
   character(len=:), allocatable :: label_str
+  character(len=:), allocatable :: sym_str
   character(len=4):: label(12)
 
   ! parameters to be written
@@ -44,12 +45,12 @@ subroutine test_write()
 
   label = [character(len=4) :: 'C', 'Na','C', 'C', 'C','C', 'H', 'H', 'H', 'Ru',  'H', 'H' ]
 
-  label_str=''
+  label_str = ''
   do i = 1,num
-    label_str=label_str//trim(label(i))//TREXIO_DELIM
+    label_str = label_str // trim(label(i)) // TREXIO_DELIM
   enddo
 
-
+  sym_str = 'B3U with some juice' // c_null_char
 ! ================= START OF TEST ===================== !
 
 !  trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT)
@@ -72,6 +73,10 @@ subroutine test_write()
   rc = trexio_write_nucleus_label(trex_file, label_str, 4)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE LABEL'
   deallocate(label_str)
+
+  rc = trexio_write_nucleus_symmetry(trex_file, sym_str)
+  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE SYMMETRY'
+  deallocate(sym_str)
 
   rc = trexio_has_nucleus_num(trex_file)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS HAS 1'
@@ -117,9 +122,12 @@ subroutine test_read()
 
   double precision :: charge(12)
   double precision :: coord(3,12)
+
   character :: label_str(128)
   character(len=4) :: tmp_str
   character(len=4) :: label(12)
+
+  character(len=32) :: sym_str
 
   character*(128) :: str
 
@@ -167,7 +175,11 @@ subroutine test_read()
   write(*,*) label
   ! --------------------------------------------------
 
-  if (rc == TREXIO_SUCCESS .and. (trim(label(2)) == 'Na' )) write(*,*) 'SUCCESS READ LABEL'
+  if (rc == TREXIO_SUCCESS .and. (trim(label(2)) == 'Na') ) write(*,*) 'SUCCESS READ LABEL'
+
+  rc = trexio_read_nucleus_symmetry(trex_file, sym_str)
+  write(*,*) sym_str
+  if (rc == TREXIO_SUCCESS .and. (trim(sym_str) == 'B3U') ) write(*,*) 'SUCCESS READ SYMMETRY'
 
   rc = trexio_close(trex_file)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE'

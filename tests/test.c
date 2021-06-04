@@ -70,6 +70,7 @@ int test_h5write() {
     strcat(labelxxx,TREXIO_DELIM);
   }
 
+  const char* sym = "B3U";
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
@@ -93,12 +94,16 @@ int test_h5write() {
   rc = trexio_write_nucleus_label(file,labelxxx, 4);
   assert (rc == TREXIO_SUCCESS);
 
+  rc = trexio_write_nucleus_symmetry(file, sym);
+  assert (rc == TREXIO_SUCCESS);
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_has_nucleus_coord(file);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_has_nucleus_label(file);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_has_nucleus_symmetry(file);
   assert (rc == TREXIO_SUCCESS);
 
   // should not work: try to overwrite the nucleus_num
@@ -144,6 +149,7 @@ int test_h5read() {
   double* coord;
   char** label;
   char* labelxxx;
+  char* symmetry;
 
 /*================= START OF TEST ==================*/
 
@@ -171,7 +177,7 @@ int test_h5read() {
     label[i] = (char*) malloc(max_str_len*sizeof(char));
   }
 
-  labelxxx = (char*) malloc(num*4*sizeof(char*));
+  labelxxx = (char*) malloc(num*4*sizeof(char));
 
   rc = trexio_read_nucleus_label(file,labelxxx, 4);
   //rc = trexio_read_nucleus_label(file,label);
@@ -184,6 +190,14 @@ int test_h5read() {
   assert( strcmp(pch, "C") == 0 );
   pch = strtok(NULL, TREXIO_DELIM);
   assert( strcmp(pch, "Na") == 0 );
+
+  symmetry = (char*) malloc(32*sizeof(char));
+
+  rc = trexio_read_nucleus_symmetry(file, symmetry);
+  assert (rc == TREXIO_SUCCESS);
+
+  assert( strcmp(symmetry, "B3U") == 0 );
+  free(symmetry);
 
   // close current session
   rc = trexio_close(file);
