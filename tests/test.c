@@ -92,7 +92,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_label(file,labelxxx, 4);
   assert (rc == TREXIO_SUCCESS);
 
-  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_symmetry(file, sym);
+  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(file, sym);
   assert (rc == TREXIO_SUCCESS);
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
@@ -101,7 +101,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   if (backend == TREXIO_HDF5) rc = trexio_has_nucleus_label(file);
   assert (rc == TREXIO_SUCCESS);
-  if (backend == TREXIO_HDF5) rc = trexio_has_nucleus_symmetry(file);
+  if (backend == TREXIO_HDF5) rc = trexio_has_nucleus_point_group(file);
   assert (rc == TREXIO_SUCCESS);
 
   // should not work: try to overwrite the num variable
@@ -146,7 +146,7 @@ int test_read(const char* file_name, const back_end_t backend) {
   double* coord;
   char** label;
   char* labelxxx;
-  char* symmetry;
+  char* point_group;
 
 /*================= START OF TEST ==================*/
 
@@ -189,13 +189,13 @@ int test_read(const char* file_name, const back_end_t backend) {
   pch = strtok(NULL, TREXIO_DELIM);
   assert( strcmp(pch, "Na") == 0 );
 
-  symmetry = (char*) malloc(32*sizeof(char));
+  point_group = (char*) malloc(32*sizeof(char));
 
-  rc = trexio_read_nucleus_symmetry(file, symmetry);
+  rc = trexio_read_nucleus_point_group(file, point_group);
   assert (rc == TREXIO_SUCCESS);
 
-  assert( strcmp(symmetry, "B3U") == 0 );
-  free(symmetry);
+  assert( strcmp(point_group, "B3U") == 0 );
+  free(point_group);
 
   for (int i=0; i<num; i++){
     free(label[i]);

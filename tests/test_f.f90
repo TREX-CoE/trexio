@@ -74,7 +74,7 @@ subroutine test_write()
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE LABEL'
   deallocate(label_str)
 
-  rc = trexio_write_nucleus_symmetry(trex_file, sym_str)
+  rc = trexio_write_nucleus_point_group(trex_file, sym_str)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS WRITE SYMMETRY'
   deallocate(sym_str)
 
@@ -85,23 +85,6 @@ subroutine test_write()
 
   rc = trexio_close(trex_file)
   if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE'
-
-! ---------------------------------- !
-! to modify fiels of existing file:
-! text backend -> open with 'w'
-! hdf5 backend -> open with 'a'
-! ---------------------------------- !
-
-!!  trex_file = trexio_open('trexio_test_fort', 'w', TREXIO_TEXT);
-!!  trex_file = trexio_open('test_hdf5_fort.h5', 'a', TREXIO_HDF5)
-
-!  coord(1) = 666.666
-
-!  rc = trexio_write_nucleus_coord(trex_file,coord)
-!  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS MODIFY COORD'
-
-!  rc = trexio_close(trex_file)
-!  if (rc == TREXIO_SUCCESS) write(*,*) 'SUCCESS CLOSE'
 
 ! ================= END OF TEST ===================== !
 
@@ -177,7 +160,7 @@ subroutine test_read()
 
   if (rc == TREXIO_SUCCESS .and. (trim(label(2)) == 'Na') ) write(*,*) 'SUCCESS READ LABEL'
 
-  rc = trexio_read_nucleus_symmetry(trex_file, sym_str)
+  rc = trexio_read_nucleus_point_group(trex_file, sym_str)
   write(*,*) sym_str
   if (rc == TREXIO_SUCCESS .and. (trim(sym_str) == 'B3U') ) write(*,*) 'SUCCESS READ SYMMETRY'
 
