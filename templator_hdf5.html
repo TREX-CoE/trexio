@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2021-05-28 Fri 10:17 -->
+<!-- 2021-06-04 Fri 12:15 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HDF5 back end</title>
@@ -311,25 +311,25 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgda092bd">1. HDF5 back end</a>
+<li><a href="#org78c864e">1. HDF5 back end</a>
 <ul>
-<li><a href="#orgf865f94">1.1. Template for HDF5 definitions</a></li>
-<li><a href="#orgb61a42e">1.2. Template for HDF5 structures</a></li>
-<li><a href="#org883a2b1">1.3. Template for HDF5 init/deinit</a></li>
-<li><a href="#org322fdc9">1.4. Template for HDF5 has/read/write a number</a></li>
-<li><a href="#org87b63e3">1.5. Template for HDF5 has/read/write a dataset</a></li>
+<li><a href="#org3893fc8">1.1. Template for HDF5 definitions</a></li>
+<li><a href="#org1771dad">1.2. Template for HDF5 structures</a></li>
+<li><a href="#org6f1c985">1.3. Template for HDF5 init/deinit</a></li>
+<li><a href="#orgd1089e4">1.4. Template for HDF5 has/read/write a number</a></li>
+<li><a href="#org12d3dea">1.5. Template for HDF5 has/read/write a dataset</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgda092bd" class="outline-2">
-<h2 id="orgda092bd"><span class="section-number-2">1</span> HDF5 back end</h2>
+<div id="outline-container-org78c864e" class="outline-2">
+<h2 id="org78c864e"><span class="section-number-2">1</span> HDF5 back end</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-orgf865f94" class="outline-3">
-<h3 id="orgf865f94"><span class="section-number-3">1.1</span> Template for HDF5 definitions</h3>
+<div id="outline-container-org3893fc8" class="outline-3">
+<h3 id="org3893fc8"><span class="section-number-3">1.1</span> Template for HDF5 definitions</h3>
 <div class="outline-text-3" id="text-1-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #483d8b;">#define</span> $GROUP$_GROUP_NAME          <span style="color: #8b2252;">"$group$"</span>
@@ -340,8 +340,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-orgb61a42e" class="outline-3">
-<h3 id="orgb61a42e"><span class="section-number-3">1.2</span> Template for HDF5 structures</h3>
+<div id="outline-container-org1771dad" class="outline-3">
+<h3 id="org1771dad"><span class="section-number-3">1.2</span> Template for HDF5 structures</h3>
 <div class="outline-text-3" id="text-1-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_hdf5_s</span> {
@@ -356,8 +356,8 @@ for the JavaScript code in this tag.
 </div>
 
 
-<div id="outline-container-org883a2b1" class="outline-3">
-<h3 id="org883a2b1"><span class="section-number-3">1.3</span> Template for HDF5 init/deinit</h3>
+<div id="outline-container-org6f1c985" class="outline-3">
+<h3 id="org6f1c985"><span class="section-number-3">1.3</span> Template for HDF5 init/deinit</h3>
 <div class="outline-text-3" id="text-1-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -379,13 +379,9 @@ for the JavaScript code in this tag.
       // <span style="color: #b22222;">reading the existing file -&gt; open as RDONLY</span>
       f-&gt;file_id = H5Fopen(file-&gt;file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
       <span style="color: #a020f0;">break</span>;
-    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'a'</span>:
-      // <span style="color: #b22222;">appending the existing file -&gt; open as RDWR</span>
-      f-&gt;file_id = H5Fopen(file-&gt;file_name, H5F_ACC_RDWR, H5P_DEFAULT);
-      <span style="color: #a020f0;">break</span>;
     <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'w'</span>:
-      // <span style="color: #b22222;">writing the existing file -&gt; overwrite it (_TRUNC) [_EXCL | H5F_ACC_DEBUG as an alternative]</span>
-      f-&gt;file_id = H5Fcreate(file-&gt;file_name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+      // <span style="color: #b22222;">writing the existing file -&gt; open as RDWRITE</span>
+      f-&gt;file_id = H5Fopen(file-&gt;file_name, H5F_ACC_RDWR, H5P_DEFAULT);
       <span style="color: #a020f0;">break</span>;
     }
 
@@ -393,8 +389,7 @@ for the JavaScript code in this tag.
 
     <span style="color: #a020f0;">switch</span> (file-&gt;mode) {
     <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'r'</span>:
-    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'a'</span>:
-      // <span style="color: #b22222;">reading or appending non-existing file -&gt; error</span>
+      // <span style="color: #b22222;">reading non-existing file -&gt; error</span>
       <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
     <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'w'</span>:
       // <span style="color: #b22222;">writing non-existing file -&gt; create it</span>
@@ -406,13 +401,15 @@ for the JavaScript code in this tag.
 
   /* <span style="color: #b22222;">Create or open groups in the hdf5 file assuming that they exist if file exists </span>*/
   <span style="color: #a020f0;">switch</span> (file-&gt;mode) {
-    // <span style="color: #b22222;">the switch for 'r'/'a' is reached only if file exists</span>
     <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'r'</span>:
-    <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'a'</span>:
       f-&gt;$group$_group = H5Gopen(f-&gt;file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
       <span style="color: #a020f0;">break</span>;
     <span style="color: #a020f0;">case</span> <span style="color: #8b2252;">'w'</span>:
-      f-&gt;$group$_group = H5Gcreate(f-&gt;file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      <span style="color: #a020f0;">if</span> (f_exists == 1) {
+        f-&gt;$group$_group = H5Gopen(f-&gt;file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+      } <span style="color: #a020f0;">else</span> {
+        f-&gt;$group$_group = H5Gcreate(f-&gt;file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      }
       <span style="color: #a020f0;">break</span>;
   }
   <span style="color: #a020f0;">if</span> (f-&gt;$group$_group &lt;= 0L) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ID;
@@ -440,8 +437,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org322fdc9" class="outline-3">
-<h3 id="org322fdc9"><span class="section-number-3">1.4</span> Template for HDF5 has/read/write a number</h3>
+<div id="outline-container-orgd1089e4" class="outline-3">
+<h3 id="orgd1089e4"><span class="section-number-3">1.4</span> Template for HDF5 has/read/write a number</h3>
 <div class="outline-text-3" id="text-1-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -563,8 +560,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org87b63e3" class="outline-3">
-<h3 id="org87b63e3"><span class="section-number-3">1.5</span> Template for HDF5 has/read/write a dataset</h3>
+<div id="outline-container-org12d3dea" class="outline-3">
+<h3 id="org12d3dea"><span class="section-number-3">1.5</span> Template for HDF5 has/read/write a dataset</h3>
 <div class="outline-text-3" id="text-1-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -698,7 +695,7 @@ for the JavaScript code in this tag.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2021-05-28 Fri 10:17</p>
+<p class="date">Created: 2021-06-04 Fri 12:15</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
