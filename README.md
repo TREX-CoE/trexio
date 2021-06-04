@@ -21,27 +21,25 @@ TREX library fo efficient I/O.
 7. `sudo make install`
 
 
-**Note: on systems with no `sudo` rights access, one can replace `./configure` with `./configure prefix=${PWD}` in order to execite `make install/uninstall` commands without `sudo`. This will enable the installation in the root directory of the library.**
+**Note: on systems with no `sudo` rights access, one can replace `./configure` with `./configure prefix=${PWD}` in order to execute `make install/uninstall` commands without `sudo`. This will enable the installation in the root directory of the library.**
 
 
 ## Additional requirements (for developers):
 
 - Automake
 - python3 	(>=3.6)
-- emacs		(>=26.0)
+- Emacs		(>=26.0)
 
 
 ## Installation procedure from the GitHub repo clone (for developers):
 
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio`
-3. `cd tools && ./build_trexio.sh && cd ..`
-4. `autoreconf`
-5. `automake --add-missing --copy`
-6. `./configure`
-7. `make`
-8. `make check`
-9. `sudo make install`
+3. `./autogen.sh`
+4. `./configure`
+5. `make`
+6. `make check`
+7. `sudo make install`
 
 
 ## Tutorial
