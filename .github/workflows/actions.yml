@@ -11,7 +11,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -19,17 +19,19 @@ jobs:
       - name: install-dependencies    
         run: |
           sudo add-apt-repository ppa:kelleyk/emacs
-          sudo apt-get install libhdf5-dev emacs27
+          sudo apt-get install libhdf5-dev emacs26
         
-      - name: generate-trexio
-        run: cd src && source build_trex.sh
+      - name: autotools-config
+        run: |
+          ./autogen.sh
+          TREXIO_DEVEL=1 ./configure
         
-      - name: make_c
-        run: cd src && make
+      - name: compile-trexio
+        run: make
         
-      - name: make_f
-        run: cd src && make fortran
+      - name: check-trexio
+        run: make check
         
-      - name: test
-        run: cd src && make test
+      - name: clean
+        run: make clean
         
