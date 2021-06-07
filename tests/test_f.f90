@@ -28,7 +28,7 @@ subroutine test_write(file_name, back_end)
   implicit none
 
   character*(*), intent(in) :: file_name
-  integer(trexio_backend), intent(in) :: back_end
+  integer, intent(in) :: back_end
 
   integer(8) :: trex_file
 
@@ -120,7 +120,7 @@ subroutine test_write(file_name, back_end)
     call exit(1)
   endif
 
-  rc = trexio_write_nucleus_label(trex_file, label_str, 4)
+  if (back_end == TREXIO_HDF5) rc = trexio_write_nucleus_label(trex_file, label_str, 4)
   deallocate(label_str)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS WRITE LABEL'
@@ -130,7 +130,7 @@ subroutine test_write(file_name, back_end)
     call exit(1)
   endif
 
-  rc = trexio_write_nucleus_point_group(trex_file, sym_str)
+  if (back_end == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(trex_file, sym_str)
   deallocate(sym_str)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS WRITE POINT GROUP'
@@ -182,7 +182,7 @@ subroutine test_read(file_name, back_end)
   implicit none
 
   character*(*), intent(in) :: file_name
-  integer(trexio_backend), intent(in) :: back_end
+  integer, intent(in) :: back_end
 
   integer(8) :: trex_file
 
@@ -238,6 +238,8 @@ subroutine test_read(file_name, back_end)
     call exit(-1)
   endif
 
+  if (back_end == TREXIO_HDF5) then 
+  
   rc = trexio_read_nucleus_label(trex_file, label_str, 4)
 
   ! --------------------------------------------------
@@ -272,13 +274,15 @@ subroutine test_read(file_name, back_end)
   endif
 
   rc = trexio_read_nucleus_point_group(trex_file, sym_str)
-  write(*,*) sym_str
-  if (rc == TREXIO_SUCCESS .and. (trim(sym_str) == 'B3U') ) then
+  write(*,*) sym_str(1:3)
+  if (rc == TREXIO_SUCCESS .and. (sym_str(1:3) == 'B3U') ) then
     write(*,*) 'SUCCESS READ POINT GROUP'
   else
     call trexio_string_of_error(TREXIO_READONLY,str)
     print *, trim(str)
     call exit(-1)
+  endif
+
   endif
 
   rc = trexio_close(trex_file)
