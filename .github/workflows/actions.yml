@@ -1,0 +1,63 @@
+name: TREXIO CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  
+jobs:
+  trexio_ubuntu:
+
+    runs-on: ubuntu-latest
+    name: x86 Ubuntu latest
+
+    steps:
+      - uses: actions/checkout@v2
+    
+      - name: install dependencies    
+        run: |
+          sudo add-apt-repository ppa:kelleyk/emacs
+          sudo apt-get install libhdf5-dev emacs26
+        
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          TREXIO_DEVEL=1 ./configure --enable-silent-rules
+        
+      - name: compile TREXIO
+        run: make -j 2
+        
+      - name: check TREXIO
+        run: make check
+        
+      - name: clean
+        run: make clean
+
+  trexio_macos:
+
+    runs-on: macos-latest
+    name: x86 MacOS latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: install dependencies
+        run: |
+          brew install emacs
+          brew install hdf5
+          brew install automake
+        
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          TREXIO_DEVEL=1 ./configure FC=gfortran-10 --enable-silent-rules
+        
+      - name: compile TREXIO
+        run: make -j 2
+        
+      - name: check TREXIO
+        run: make check
+        
+      - name: clean
+        run: make clean
