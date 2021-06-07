@@ -5,31 +5,30 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
   
 jobs:
-  build:
+  trexio_ubuntu:
 
     runs-on: ubuntu-latest
+    name: x86 Ubuntu latest
 
     steps:
       - uses: actions/checkout@v2
     
-      - name: install-dependencies    
+      - name: install dependencies    
         run: |
           sudo add-apt-repository ppa:kelleyk/emacs
           sudo apt-get install libhdf5-dev emacs26
         
-      - name: autotools-config
+      - name: configure with autotools
         run: |
           ./autogen.sh
           TREXIO_DEVEL=1 ./configure
         
-      - name: compile-trexio
-        run: make
+      - name: compile TREXIO
+        run: make -j 4
         
-      - name: check-trexio
+      - name: check TREXIO
         run: make check
         
       - name: clean
