@@ -17,6 +17,7 @@ jobs:
     
       - name: install dependencies    
         run: |
+          sudo add-apt-repository ppa:kelleyk/emacs
           sudo apt-get install libhdf5-dev emacs26
         
       - name: configure with autotools
@@ -43,17 +44,14 @@ jobs:
       
       - name: install dependencies
         run: |
-          brew update
           brew install emacs
           brew install hdf5
           brew install automake
-          brew link gcc
         
       - name: configure with autotools
         run: |
-          ls /usr/local/bin
           ./autogen.sh
-          TREXIO_DEVEL=1 ./configure --enable-silent-rules
+          TREXIO_DEVEL=1 ./configure FC=gfortran-10 --enable-silent-rules
         
       - name: compile TREXIO
         run: make -j 2
