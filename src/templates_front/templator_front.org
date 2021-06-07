@@ -25,11 +25,12 @@ module trexio
   implicit none
 
   integer, parameter :: trexio_exit_code = 4
+  integer, parameter :: trexio_backend = 4
 
-  integer, parameter :: TREXIO_HDF5 = 0
-  integer, parameter :: TREXIO_TEXT = 1
-! integer, parameter :: TREXIO_JSON = 2
-  integer, parameter :: TREXIO_INVALID_BACK_END = 2
+  integer(trexio_backend), parameter :: TREXIO_HDF5 = 0
+  integer(trexio_backend), parameter :: TREXIO_TEXT = 1
+! integer(trexio_backend), parameter :: TREXIO_JSON = 2
+  integer(trexio_backend), parameter :: TREXIO_INVALID_BACK_END = 2
 
   character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
    #+end_src
@@ -591,9 +592,10 @@ trexio_open(const char* file_name, const char mode,
 interface
    integer(8) function trexio_open_c (filename, mode, backend) bind(C, name="trexio_open")
      use, intrinsic :: iso_c_binding
-     character(kind=c_char), dimension(*)  :: filename
-     character, intent(in), value          :: mode
-     integer, intent(in), value            :: backend
+     import
+     character(kind=c_char), dimension(*)       :: filename
+     character, intent(in), value               :: mode
+     integer(trexio_backend), intent(in), value :: backend
    end function trexio_open_c
 end interface
    #+end_src
@@ -1867,7 +1869,7 @@ contains
      implicit none
      character(len=*)      :: filename
      character, intent(in), value :: mode
-     integer, intent(in), value   :: backend
+     integer(trexio_backend), intent(in), value   :: backend
      character(len=len_trim(filename)+1) :: filename_c
 
      filename_c = trim(filename) // c_null_char
