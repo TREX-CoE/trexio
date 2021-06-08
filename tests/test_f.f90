@@ -14,7 +14,7 @@ program test_trexio
   call test_write('test_write_f.h5', TREXIO_HDF5)
   print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
   call test_read('test_write_f.h5', TREXIO_HDF5)
-  call system('rm -rf test_write_f.h5')
+!  call system('rm -rf test_write_f.h5')
 
 end program test_trexio
 
@@ -62,12 +62,13 @@ subroutine test_write(file_name, back_end)
                        0.00000000d0,  2.47304151d0 ,  0.00000000d0 /), &
                        shape(coord) )
 
-  label = [character(len=4) :: 'C', 'Na','C', 'C', 'C','C', 'H', 'H', 'H', 'Ru',  'H', 'H' ]
+  label = [character(len=8) :: 'C', 'Na','C', 'C 66', 'C','C', 'H 99', 'Ru', 'H', 'H',  'H', 'H' ]
 
   label_str = ''
   do i = 1,num
     label_str = label_str // trim(label(i)) // TREXIO_DELIM
   enddo
+  label_str = label_str // c_null_char
 
   sym_str = 'B3U with some juice' // c_null_char
 ! ================= START OF TEST ===================== !
@@ -120,7 +121,7 @@ subroutine test_write(file_name, back_end)
     call exit(1)
   endif
 
-  if (back_end == TREXIO_HDF5) rc = trexio_write_nucleus_label(trex_file, label_str, 4)
+  if (back_end == TREXIO_HDF5) rc = trexio_write_nucleus_label(trex_file, label_str, 8)
   deallocate(label_str)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS WRITE LABEL'
@@ -193,7 +194,7 @@ subroutine test_read(file_name, back_end)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
-  character :: label_str(128)
+  character        :: label_str(128)
   character(len=4) :: tmp_str
   character(len=4) :: label(12)
 
@@ -240,8 +241,9 @@ subroutine test_read(file_name, back_end)
 
   if (back_end == TREXIO_HDF5) then 
   
-  rc = trexio_read_nucleus_label(trex_file, label_str, 4)
+  rc = trexio_read_nucleus_label(trex_file, label_str, 2)
 
+  ! write(*,*) label_str
   ! --------------------------------------------------
   ! dummy parser of big string with TREXIO_DELIM delimeters
   ! --------------------------------------------------
@@ -260,9 +262,10 @@ subroutine test_read(file_name, back_end)
       k = k + 1
     enddo
     label(i)=tmp_str
+    write(*,*) label(i)
     offset=ind
   enddo
-  write(*,*) label
+
   ! --------------------------------------------------
 
   if (rc == TREXIO_SUCCESS .and. (trim(label(2)) == 'Na') ) then
@@ -274,7 +277,7 @@ subroutine test_read(file_name, back_end)
   endif
 
   rc = trexio_read_nucleus_point_group(trex_file, sym_str, 32)
-  write(*,*) sym_str(1:3)
+
   if (rc == TREXIO_SUCCESS .and. (sym_str(1:3) == 'B3U') ) then
     write(*,*) 'SUCCESS READ POINT GROUP'
   else

@@ -179,7 +179,7 @@ int test_read(const char* file_name, const back_end_t backend) {
     label[i] = (char*) malloc(max_str_len*sizeof(char));
   }
 
-  labelxxx = (char*) malloc(num*4*sizeof(char));
+  labelxxx = (char*) malloc(num*32*sizeof(char));
 
   rc = trexio_read_nucleus_label(file,labelxxx, 2);
   assert (rc == TREXIO_SUCCESS);
