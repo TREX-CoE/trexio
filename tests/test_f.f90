@@ -130,7 +130,7 @@ subroutine test_write(file_name, back_end)
     call exit(1)
   endif
 
-  if (back_end == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(trex_file, sym_str)
+  if (back_end == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(trex_file, sym_str, 32)
   deallocate(sym_str)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS WRITE POINT GROUP'
@@ -273,7 +273,7 @@ subroutine test_read(file_name, back_end)
     call exit(-1)
   endif
 
-  rc = trexio_read_nucleus_point_group(trex_file, sym_str)
+  rc = trexio_read_nucleus_point_group(trex_file, sym_str, 32)
   write(*,*) sym_str(1:3)
   if (rc == TREXIO_SUCCESS .and. (sym_str(1:3) == 'B3U') ) then
     write(*,*) 'SUCCESS READ POINT GROUP'

@@ -75,7 +75,7 @@ int test_write(const char* file_name, const back_end_t backend) {
     strcat(labelxxx,TREXIO_DELIM);
   }
 
-  const char* sym = "B3U";
+  const char* sym = "B3U and some stuff";
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
@@ -96,7 +96,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_label(file,labelxxx, 4);
   assert (rc == TREXIO_SUCCESS);
 
-  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(file, sym);
+  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(file, sym, 32);
   assert (rc == TREXIO_SUCCESS);
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
@@ -195,10 +195,15 @@ int test_read(const char* file_name, const back_end_t backend) {
 
   point_group = (char*) malloc(32*sizeof(char));
 
-  rc = trexio_read_nucleus_point_group(file, point_group);
+  rc = trexio_read_nucleus_point_group(file, point_group, 6);
   assert (rc == TREXIO_SUCCESS);
+  pch = strtok(point_group, " ");
+  assert( strcmp(pch, "B3U") == 0 );
 
+  rc = trexio_read_nucleus_point_group(file, point_group, 3);
+  assert (rc == TREXIO_SUCCESS);
   assert( strcmp(point_group, "B3U") == 0 );
+
   free(point_group);
 
   for (int i=0; i<num; i++){
