@@ -1546,24 +1546,21 @@ trexio_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
-  rc = TREXIO_FAILURE;
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    //rc = return trexio_text_read_$group_dset$(file, dset_str, rank, dims);
+    //return trexio_text_read_$group_dset$(file, dset_str, rank, dims);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_read_$group_dset$(file, dset, rank, dims, max_str_len);
+    return trexio_hdf5_read_$group_dset$(file, dset, rank, dims, max_str_len);
     break;
 /*
   case TREXIO_JSON:
-    rc = trexio_json_read_$group_dset$(file, dset, rank, dims);
+    return trexio_json_read_$group_dset$(file, dset, rank, dims);
     break;
 ,*/
   }
-
-  return rc;
 
 }
      #+end_src
@@ -1730,26 +1727,29 @@ end interface
 
      #+begin_src c :tangle hrw_attr_str_front.h :exports none
 trexio_exit_code trexio_has_$group_str$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str);
-trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str);
+trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str, const uint32_t max_str_len);
+trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str, const uint32_t max_str_len);
      #+end_src
 
      #+begin_src c :tangle read_attr_str_front.c
 trexio_exit_code
-trexio_read_$group_str$ (trexio_t* const file, char* const str)
+trexio_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (str  == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    //return trexio_text_read_$group_str$(file, str);
+    //rc = trexio_text_read_$group_str$(file, str);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_str$(file, str);
+    rc = trexio_hdf5_read_$group_str$(file, str);
     break;
 /*
   case TREXIO_JSON:
@@ -1758,18 +1758,31 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str)
 ,*/
   }
 
-  return TREXIO_FAILURE;
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  size_t len_read = strlen(str);
+  if (max_str_len < len_read) {
+    for(size_t i=max_str_len; i<len_read; i++) {
+      str[i] = '\0';
+    }
+  }
+
+  return TREXIO_SUCCESS;
 }
      #+end_src
 
      #+begin_src c :tangle write_attr_str_front.c
 trexio_exit_code
-trexio_write_$group_str$ (trexio_t* const file, const char* str)
+trexio_write_$group_str$ (trexio_t* const file, const char* str, const uint32_t max_str_len)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (str  == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
   if (trexio_has_$group_str$(file) == TREXIO_SUCCESS) return TREXIO_NUM_ALREADY_EXISTS;
+
+  size_t len_write = strlen(str);
+  if (max_str_len < len_write) return TREXIO_INVALID_ARG_3;  
 
   switch (file->back_end) {
 
@@ -1815,8 +1828,8 @@ trexio_has_$group_str$ (trexio_t* const file)
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
 
+  return TREXIO_FAILURE;
 }
      #+end_src
 
@@ -1828,20 +1841,22 @@ trexio_has_$group_str$ (trexio_t* const file)
     
      #+begin_src f90 :tangle write_attr_str_front_fortran.f90
 interface
-   integer function trexio_write_$group_str$ (trex_file, str) bind(C)
+   integer function trexio_write_$group_str$ (trex_file, str, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
      character, intent(in) :: str(*)
+     integer(4), intent(in) :: max_str_len
    end function trexio_write_$group_str$
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_attr_str_front_fortran.f90
 interface
-   integer function trexio_read_$group_str$ (trex_file, str) bind(C)
+   integer function trexio_read_$group_str$ (trex_file, str, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
      character, intent(out) :: str(*)
+     integer(4), intent(in) :: max_str_len
    end function trexio_read_$group_str$
 end interface
      #+end_src
