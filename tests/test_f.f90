@@ -2,19 +2,19 @@ program test_trexio
   use trexio
   implicit none
 
-  call system('rm -rf trexio_test_fort')
-  print *, 'call test_write(''trexio_test_fort'', TREXIO_TEXT)'
-  call test_write('trexio_test_fort', TREXIO_TEXT)
-  print *, 'call test_read(''trexio_test_fort'', TREXIO_TEXT)'
-  call test_read('trexio_test_fort', TREXIO_TEXT)
-  call system('rm -rf trexio_test_fort')
+  call system('rm -rf test_write_f.dir')
+  print *, 'call test_write(''test_write_f.dir'', TREXIO_TEXT)'
+  call test_write('test_write_f.dir', TREXIO_TEXT)
+  print *, 'call test_read(''test_write_f.dir'', TREXIO_TEXT)'
+  call test_read('test_write_f.dir', TREXIO_TEXT)
+  call system('rm -rf test_write_f.dir')
 
-  call system('rm -rf trexio_test_fort')
-  print *, 'call test_write(''trexio_test_fort.h5'', TREXIO_HDF5)'
-  call test_write('trexio_test_fort.h5', TREXIO_HDF5)
-  print *, 'call test_read(''trexio_test_fort.h5'', TREXIO_HDF5)'
-  call test_read('trexio_test_fort.h5', TREXIO_HDF5)
-  call system('rm -rf trexio_test_fort.h5')
+  call system('rm -rf test_write_f.h5')
+  print *, 'call test_write(''test_write_f.h5'', TREXIO_HDF5)'
+  call test_write('test_write_f.h5', TREXIO_HDF5)
+  print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
+  call test_read('test_write_f.h5', TREXIO_HDF5)
+  call system('rm -rf test_write_f.h5')
 
 end program test_trexio
 
