@@ -57,14 +57,14 @@ int test_write(const char* file_name, const back_end_t backend) {
 
   const char* label[] = {"C" ,
                          "Na",
-  	                 "C" ,
+  	                 "C asdasdasdas" ,
         	         "C" ,
-                	 "C" ,
+                	 "C 666" ,
 	                 "C" ,
         	         "H" ,
                 	 "Ru",
 	                 "H" ,
-        	         "H" ,
+        	         "H 999asdasd" ,
                 	 "H" ,
 	                 "H" };
   
@@ -93,7 +93,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_coord(file,coord);
   assert (rc == TREXIO_SUCCESS);
-  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_label(file,labelxxx, 4);
+  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_label(file,labelxxx, 32);
   assert (rc == TREXIO_SUCCESS);
 
   if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(file, sym, 32);
@@ -181,12 +181,10 @@ int test_read(const char* file_name, const back_end_t backend) {
 
   labelxxx = (char*) malloc(num*4*sizeof(char));
 
-  rc = trexio_read_nucleus_label(file,labelxxx, 4);
-  //rc = trexio_read_nucleus_label(file,label);
+  rc = trexio_read_nucleus_label(file,labelxxx, 2);
   assert (rc == TREXIO_SUCCESS);
 
   printf("%s\n", labelxxx);
-  //assert( strcmp(label[1], "Na") == 0 );
   char * pch;
   pch = strtok(labelxxx, TREXIO_DELIM);
   assert( strcmp(pch, "C") == 0 );
