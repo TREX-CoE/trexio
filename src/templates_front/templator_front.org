@@ -1546,17 +1546,14 @@ trexio_read_$group_dset$ (trexio_t* const file, char* dset, const uint32_t max_s
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
-  char*  tmp_str  = CALLOC(dims[0]*(128+1)+1, char);
-  if (tmp_str == NULL) return TREXIO_ALLOCATION_FAILED;
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    //rc = trexio_text_read_$group_dset$(file, dset_str, rank, dims);
+    //return trexio_text_read_$group_dset$(file, dset_str, rank, dims);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_read_$group_dset$(file, tmp_str, rank, dims);
+    return trexio_hdf5_read_$group_dset$(file, dset, rank, dims, max_str_len);
     break;
 /*
   case TREXIO_JSON:
@@ -1565,51 +1562,6 @@ trexio_read_$group_dset$ (trexio_t* const file, char* dset, const uint32_t max_s
 ,*/
   }
 
-  if (rc != TREXIO_SUCCESS) {
-    FREE(tmp_str);
-    return rc;
-  }
-
-  size_t len_read;
-  size_t len_accum = 0;
-  char * pch;
-  char buf[32];
-
-  printf("%s\n", tmp_str);
-
-  strcpy(dset, "");
-  for(uint64_t i=0; i<dims[0]; i++) {
-    
-    //pch = i == 0 ? strtok(dset, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
-    if(i==0) {
-      pch = strtok(tmp_str, TREXIO_DELIM);
-    } else {      
-      pch = strtok(NULL, TREXIO_DELIM);
-    }
-
-    len_read = strlen(pch);
-    //printf("Len [%ld] = %ld\n", i, len_read);
-
-    if (max_str_len < len_read) {
-      /*for(size_t i = len_accum + max_str_len; i < len_accum + len_read; i++) {
-        tmp_str[i] = '\0';
-      }*/
-      for(size_t i = len_accum; i < len_accum + max_str_len; i++) {
-        buf[i-len_accum] = tmp_str[i];
-      }
-      strcat(dset, buf);
-    } else {
-      strcat(dset, pch);
-    }
-      
-    strcat(dset, TREXIO_DELIM);
-    len_accum += len_read + 1;
-    
-  }
-  
-  FREE(tmp_str);
- 
-  return TREXIO_SUCCESS;
 }
      #+end_src
 
@@ -1646,11 +1598,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const char* dset, const uint32_
   /* parse the string using strtok */
   for(uint64_t i=0; i<dims[0]; i++) {
 
-    if(i==0) {
-      pch = strtok( (char*) dset, TREXIO_DELIM);
-    } else {      
-      pch = strtok(NULL, TREXIO_DELIM);
-    }
+    pch = i == 0 ? strtok( (char*) dset, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
 
     if (pch == NULL) {
       FREE(dset_str[0]);
