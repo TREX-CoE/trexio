@@ -91,7 +91,7 @@ $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
 
 clean-local:
-	-rm -rf -- test_write.dir/ test_write_f.dir/ test_write.h5
+	-rm -rf -- test_write.dir/ test_write_f.dir/ test_write.h5 test_write_f.h5
 
 if TREXIO_DEVEL
 
