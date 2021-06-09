@@ -1129,6 +1129,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+  if (rc != TREXIO_SUCCESS) return rc;
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
@@ -1137,22 +1138,36 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  rc = TREXIO_FAILURE;
   switch (file->back_end) {
-
+    
   case TREXIO_TEXT:
-    return trexio_text_read_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_text_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_hdf5_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_json_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
+  if (rc != TREXIO_SUCCESS) return rc;
+  
+  /* Handle index type */
+  if ($is_index$) {
+    uint64_t dim_size = 1;
+    for (uint32_t i=0; i<rank; ++i){
+        dim_size *= dims[i];
+    }
+    for (uint64_t i=0; i<dim_size; ++i){
+       $group_dset$[i] += ($group_dset_dtype_single$) 1;
+    }
+  }
+  
+  return TREXIO_SUCCESS;
 }
      #+end_src
 
@@ -1170,30 +1185,56 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+  if (rc != TREXIO_SUCCESS) return rc;
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
+  $group_dset_dtype_double$* $group_dset$_p = $group_dset$;
+
+  /* Handle index type */
+  if ($is_index$) {
+
+    uint64_t dim_size = 1;
+    for (uint32_t i=0; i<rank; ++i){
+        dim_size *= dims[i];
+    }
+
+    $group_dset$_p = CALLOC(dim_size, $group_dset_dtype_double$);
+    if ($group_dset$_p == NULL) return TREXIO_ALLOCATION_FAILED;
+
+    for (uint64_t i=0; i<dim_size; ++i){
+       $group_dset$_p[i] = $group_dset$_p[i] - ($group_dset_dtype_single$) 1;
+    }
+  }
+
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  rc = TREXIO_FAILURE;
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_text_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_write_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_hdf5_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_json_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
+
+  /* Handle index type */
+  if ($is_index$) {
+    FREE($group_dset$_p);
+  }
+
+  return rc;
 }
      #+end_src
 
@@ -1217,7 +1258,7 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<rank; ++i){
+  for (uint32_t i=0; i<rank; ++i){
     dim_size *= dims[i];
   }
 
@@ -1249,8 +1290,14 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
     return rc;
   }
 
-  for (uint64_t i=0; i<dim_size; ++i){
-    $group_dset$[i] = ($group_dset_dtype_single$) $group_dset$_64[i];
+  if ($is_index$) {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$[i] = ($group_dset_dtype_single$) $group_dset$_64[i] + ($group_dset_dtype_single$) 1;
+    }
+  } else {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$[i] = ($group_dset_dtype_single$) $group_dset$_64[i];
+    }
   }
 
   FREE($group_dset$_64);
@@ -1279,7 +1326,7 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<rank; ++i){
+  for (uint32_t i=0; i<rank; ++i){
     dim_size *= dims[i];
   }
 
@@ -1287,8 +1334,14 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
   if ($group_dset$_64 == NULL) return TREXIO_ALLOCATION_FAILED;
 
   /* A type conversion from single precision to double reqired since back end only accepts 64-bit data */
-  for (uint64_t i=0; i<dim_size; ++i){
-    $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i];
+  if ($is_index$) {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i] - ($group_dset_dtype_double$) 1;
+    }
+  } else {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i];
+    }
   }
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
