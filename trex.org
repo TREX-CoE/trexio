@@ -162,8 +162,8 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
 * Basis set
 
   We consider here basis functions centered on nuclei. Hence, we enable
-  the possibility to define \emph{dummy atoms} to place basis functions
-  in random positions.
+  the possibility to define /dummy atoms/ to place basis functions in
+  random positions.
 
   The atomic basis set is defined as a list of shells. Each shell $s$ is
   centered on a center $A$, possesses a given angular momentum $l$ and a
@@ -189,25 +189,28 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   Some codes assume that the contraction coefficients are for a linear
   combination of /normalized/ primitives. This implies that a normalization
   constant for the primitive $ks$ needs to be computed and stored. If
-  this normalization factor is not required, set $f_{ks}$ to one.
+  this normalization factor is not required, $f_{ks}=1$.
   
   Some codes assume that the basis function are normalized. This
   implies the computation of an extra normalization factor, $\mathcal{N}_s$.
-  If the the basis function is not normalized, set $\mathcal{N}_s=1$.
+  If the the basis function is not considered normalized, $\mathcal{N}_s=1$.
 
+
+  All the basis set parameters are stored in one-dimensional arrays:
 
   #+NAME: basis
-  | ~type~           | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"                |
-  | ~shell_num~      | ~int~   |                     | Total Number of shells                                   |
-  | ~shell_center~   | ~index~ | ~(basis.shell_num)~ | Nucleus on which the shell is centered ($A$)             |
-  | ~shell_ang_mom~  | ~int~   | ~(basis.shell_num)~ | Angular momentum ~0:S, 1:P, 2:D, ...~                    |
-  | ~shell_prim_num~ | ~int~   | ~(basis.shell_num)~ | Number of primitives in the shell ($N_{\text{prim}}$)    |
-  | ~shell_factor~   | ~float~ | ~(basis.shell_num)~ | Normalization factor of the shell ($\mathcal{N}_s$)      |
-  | ~prim_index~     | ~index~ | ~(basis.shell_num)~ | Index of the first primitive in the complete list        |
-  | ~prim_num~       | ~int~   |                     | Total number of primitives                               |
-  | ~exponent~       | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives ($\gamma_{ks})               |
-  | ~coefficient~    | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives ($a_{ks}$)                |
-  | ~prim_factor~    | ~float~ | ~(basis.prim_num)~  | Normalization coefficients for the primitives ($f_{ks}$) |
+  | ~type~              | ~str~   |                    | Type of basis set: "Gaussian" or "Slater"                |
+  | ~num~               | ~int~   |                    | Total Number of shells                                   |
+  | ~prim_num~          | ~int~   |                    | Total number of primitives                               |
+  | ~nucleus_index~     | ~index~ | ~(nucleus.num)~    | Index of the first shell of each nucleus ($A$)           |
+  | ~nucleus_shell_num~ | ~int~   | ~(nucleus.num)~    | Number of shells for each nucleus                        |
+  | ~shell_ang_mom~     | ~int~   | ~(basis.num)~      | Angular momentum ~0:S, 1:P, 2:D, ...~                    |
+  | ~shell_prim_num~    | ~int~   | ~(basis.num)~      | Number of primitives in the shell ($N_{\text{prim}}$)    |
+  | ~shell_factor~      | ~float~ | ~(basis.num)~      | Normalization factor of the shell ($\mathcal{N}_s$)      |
+  | ~shell_prim_index~  | ~index~ | ~(basis.num)~      | Index of the first primitive in the complete list        |
+  | ~exponent~          | ~float~ | ~(basis.prim_num)~ | Exponents of the primitives ($\gamma_{ks})               |
+  | ~coefficient~       | ~float~ | ~(basis.prim_num)~ | Coefficients of the primitives ($a_{ks}$)                |
+  | ~prim_factor~       | ~float~ | ~(basis.prim_num)~ | Normalization coefficients for the primitives ($f_{ks}$) |
     
   #+CALL: json(data=basis, title="basis")
 
@@ -215,20 +218,77 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   :results:
   #+begin_src python :tangle trex.json
       "basis": {
-                    "type" : [ "str"  , []                    ]
-        ,      "shell_num" : [ "int"  , []                    ]
-        ,   "shell_center" : [ "index", [ "basis.shell_num" ] ]
-        ,  "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ] ]
-        , "shell_prim_num" : [ "int"  , [ "basis.shell_num" ] ]
-        ,   "shell_factor" : [ "float", [ "basis.shell_num" ] ]
-        ,     "prim_index" : [ "index", [ "basis.shell_num" ] ]
-        ,       "prim_num" : [ "int"  , []                    ]
-        ,       "exponent" : [ "float", [ "basis.prim_num" ]  ]
-        ,    "coefficient" : [ "float", [ "basis.prim_num" ]  ]
-        ,    "prim_factor" : [ "float", [ "basis.prim_num" ]  ]
+                       "type" : [ "str"  , []                   ]
+        ,               "num" : [ "int"  , []                   ]
+        ,          "prim_num" : [ "int"  , []                   ]
+        ,     "nucleus_index" : [ "index"  , [ "nucleus.num" ]    ]
+        , "nucleus_shell_num" : [ "int"  , [ "nucleus.num" ]    ]
+        ,     "shell_ang_mom" : [ "int"  , [ "basis.num" ]      ]
+        ,    "shell_prim_num" : [ "int"  , [ "basis.num" ]      ]
+        ,      "shell_factor" : [ "float", [ "basis.num" ]      ]
+        ,  "shell_prim_index" : [ "index"  , [ "basis.num" ]      ]
+        ,          "exponent" : [ "float", [ "basis.prim_num" ] ]
+        ,       "coefficient" : [ "float", [ "basis.prim_num" ] ]
+        ,       "prim_factor" : [ "float", [ "basis.prim_num" ] ]
       } ,
   #+end_src
   :end:
+
+  For example, consider H_2 with the following basis set (in GAMESS
+  format), where both the AOs and primitives are considered normalized:
+
+   #+BEGIN_EXAMPLE
+HYDROGEN
+S   5
+1         3.387000E+01           6.068000E-03
+2         5.095000E+00           4.530800E-02
+3         1.159000E+00           2.028220E-01
+4         3.258000E-01           5.039030E-01
+5         1.027000E-01           3.834210E-01
+S   1
+1         3.258000E-01           1.000000E+00
+S   1
+1         1.027000E-01           1.000000E+00
+P   1
+1         1.407000E+00           1.000000E+00
+P   1
+1         3.880000E-01           1.000000E+00
+D   1
+1         1.057000E+00           1.0000000
+   #+END_EXAMPLE
+
+   we have:
+
+   #+BEGIN_EXAMPLE
+type     = "Gaussian"
+num      = 12
+prim_num = 20
+
+nucleus_index    = [0 , 6]
+shell_ang_mom    = [0 , 0 , 0 , 1 , 1 , 2 , 0 , 0 , 0 , 1 , 1 , 2 ]
+shell_prim_num   = [5 , 1 , 1 , 1 , 1 , 1 , 5 , 1 , 1 , 1 , 1 , 1 ]
+shell_prim_index = [0 , 5 , 6 , 7 , 8 , 9 , 10, 15, 16, 17, 18, 19]
+shell_factor     = [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]
+
+exponent =
+[ 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407,
+  0.388, 1.057, 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407,
+  0.388, 1.057]
+
+coefficient =
+[ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0,
+  1.0, 1.0, 1.0, 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0,
+  1.0, 1.0, 1.0]
+
+prim_factor =
+[ 1.0006253235944540e+01, 2.4169531573445120e+00, 7.9610924849766440e-01
+  3.0734305383061117e-01, 1.2929684417481876e-01, 3.0734305383061117e-01,
+  1.2929684417481876e-01, 2.1842769845268308e+00, 4.3649547399719840e-01,
+  1.8135965626177861e+00, 1.0006253235944540e+01, 2.4169531573445120e+00,
+  7.9610924849766440e-01, 3.0734305383061117e-01, 1.2929684417481876e-01,
+  3.0734305383061117e-01, 1.2929684417481876e-01, 2.1842769845268308e+00,
+  4.3649547399719840e-01, 1.8135965626177861e+00 ]
+   #+END_EXAMPLE
 
 * Atomic orbitals
 
@@ -254,7 +314,8 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   \chi_i (\mathbf{r}) = \mathcal{N}_i\, P_{\eta(i)}(\mathbf{r})\, R_{\theta(i)} (\mathbf{r})
   \]
 
-  where $i$ is the atomic orbital index, $P$ encodes for either the
+  where $i$ is the atomic orbital index,
+  $P$ encodes for either the
   polynomials or the spherical harmonics, $\theta(i)$ returns the
   shell on which the AO is expanded, and $\eta(i)$ denotes which
   angular function is chosen.
