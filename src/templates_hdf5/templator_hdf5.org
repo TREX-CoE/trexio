@@ -39,7 +39,7 @@
 #include <sys/stat.h>
 
 #include "hdf5.h"
-#include "hdf5_hl.h" // needed for high-level APIs like H5LT, requires additional linking in Makefile
+#include "hdf5_hl.h"
 
   #+end_src
 
@@ -501,10 +501,13 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, char* const $group_dset$, c
     strcat($group_dset$, TREXIO_DELIM);
   }
 
-  // this function is introduced in HDF5 v.1.12.0
-  //status = H5Treclaim (memtype, dspace, H5P_DEFAULT, rdata);
-  // this function is deprecated but used in v.<1.12.0
-  status = H5Dvlen_reclaim (memtype, dspace, H5P_DEFAULT, rdata);
+  // H5Dvlen_reclaim is deprecated and replaced by H5Treclaim in HDF5 v.1.12.0
+  #if (H5_VERS_MAJOR <= 1 && H5_VERS_MINOR < 12)
+    status = H5Dvlen_reclaim(memtype, dspace, H5P_DEFAULT, rdata);
+  #else
+    status = H5Treclaim(memtype, dspace, H5P_DEFAULT, rdata);
+  #endif
+
   if (status < 0) {
     FREE(rdata);
     H5Dclose(dset_id);
