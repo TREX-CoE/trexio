@@ -669,15 +669,34 @@ trexio_text_has_$group_dset$ (trexio_t* const file)
 
    #+begin_src c :tangle hrw_dset_str_text.h :exports none
 trexio_exit_code trexio_text_has_$group_dset$ (trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$, const uint32_t rank, const uint64_t* dims);
-trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_text_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32_t rank, const uint64_t* dims);
    #+end_src
 
    #+begin_src c :tangle read_dset_str_text.c
 trexio_exit_code
-trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$,
-			       const uint32_t rank, const uint64_t* dims)
+trexio_text_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t rank, const uint64_t* dims)
 {
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if (rank != $group$->rank_$group_dset$) return TREXIO_INVALID_ARG_3;
+
+  for (unsigned int i=0 ; i<rank ; ++i) {
+    if (dims[i] != $group$->dims_$group_dset$[i]) return TREXIO_INVALID_ARG_4;
+  }
+
+  /* REDO ! */
+  strcpy(dset, "");
+  for (uint64_t i=0 ; i<dims[0] ; ++i) {
+    strcat(dset, $group$->$group_dset$[i]);
+    strcat(dset, TREXIO_DELIM);
+  }
+  /* REDO ! */
 
   return TREXIO_SUCCESS;
 
@@ -686,9 +705,45 @@ trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
 
    #+begin_src c :tangle write_dset_str_text.c
 trexio_exit_code
-trexio_text_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* $group_dset$,
-				const uint32_t rank, const uint64_t* dims)
+trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32_t rank, const uint64_t* dims)
 {
+
+  if (file  == NULL)  return TREXIO_INVALID_ARG_1;
+  if (dset == NULL)  return TREXIO_INVALID_ARG_2;
+
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if ($group$->$group_dset$ != NULL) {
+    FREE($group$->$group_dset$[0]);
+    FREE($group$->$group_dset$);
+  }
+
+  $group$->rank_$group_dset$ = rank;
+
+  uint64_t dim_size = 1;
+  for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
+    $group$->dims_$group_dset$[i] = dims[i];
+    dim_size *= dims[i];
+  }
+
+  /* REDO ! */
+  $group$->$group_dset$ = CALLOC(dims[0], char*);
+
+  char* tmp_str = CALLOC(dims[0]*32 + 1, char);
+  size_t tmp_len = 0;
+  for (uint64_t i=0 ; i<dims[0] ; ++i) {
+    tmp_len = strlen(dset[i]);
+    $group$->$group_dset$[i] = tmp_str;
+    strncpy(tmp_str, dset[i], tmp_len);
+    tmp_str += tmp_len + 1; 
+    printf("%s\n", $group$->$group_dset$[i]);
+  }
+  /* REDO ! */
+
+  $group$->to_flush = 1;
 
   return TREXIO_SUCCESS;
 
@@ -700,7 +755,16 @@ trexio_exit_code
 trexio_text_has_$group_dset$ (trexio_t* const file)
 {
 
-  return TREXIO_SUCCESS;
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if ($group$->rank_$group_dset$ > 0){
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
 
 }
    #+end_src

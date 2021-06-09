@@ -43,7 +43,7 @@ def get_files_todo(source_files: dict) -> dict:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
-    # files that correspond to todo1 group (e.g. only iterative population within the function body)
+    # files that correspond to iterative population (e.g. the code is repeated within the function body but the function itself is unique)
     files_todo['auxiliary'] = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.h', 'struct_text_group.h'] 
 
     return files_todo

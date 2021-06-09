@@ -23,7 +23,7 @@ int main() {
   assert (rc == 0);
   test_write("test_write.dir", TREXIO_TEXT);
   test_read ("test_write.dir", TREXIO_TEXT);
-  rc = system("rm -rf test_write.dir");
+//  rc = system("rm -rf test_write.dir");
   assert (rc == 0);
 
   return 0;
@@ -93,11 +93,21 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_coord(file,coord);
   assert (rc == TREXIO_SUCCESS);
-  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_label(file,labelxxx, 32);
+  rc = trexio_write_nucleus_label(file,labelxxx, 32);
   assert (rc == TREXIO_SUCCESS);
-
   if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(file, sym, 32);
   assert (rc == TREXIO_SUCCESS);
+  
+  // close current session
+  rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+
+  /*
+  // open file in 'write' mode
+  file = trexio_open(file_name, 'w', backend);
+  assert (file != NULL);
+
+
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
   assert (rc == TREXIO_SUCCESS);
@@ -133,6 +143,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
+  */
 
 /*================= END OF TEST ==================*/
 
