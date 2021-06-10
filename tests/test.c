@@ -57,7 +57,7 @@ int test_write(const char* file_name, const back_end_t backend) {
 
   const char* label[] = {"C" ,
                          "Na",
-  	                 "C asdasdasdas" ,
+  	                 "ClH asdasdasdas" ,
         	         "C" ,
                 	 "C 666" ,
 	                 "C" ,
@@ -182,17 +182,10 @@ int test_read(const char* file_name, const back_end_t backend) {
   double x = coord[30] - 2.14171677;
   assert( x*x < 1.e-14);
 
-  if (backend == TREXIO_HDF5) {
   // read nucleus_label
-  size_t max_str_len = 16;
-  label = (char**) malloc(num*sizeof(char*));
-  for (int i=0; i<num; i++){
-    label[i] = (char*) malloc(max_str_len*sizeof(char));
-  }
-
   labelxxx = (char*) malloc(num*32*sizeof(char));
-
   rc = trexio_read_nucleus_label(file,labelxxx, 2);
+  //printf("%s\n", trexio_string_of_error(rc));
   assert (rc == TREXIO_SUCCESS);
 
   printf("%s\n", labelxxx);
@@ -202,6 +195,7 @@ int test_read(const char* file_name, const back_end_t backend) {
   pch = strtok(NULL, TREXIO_DELIM);
   assert( strcmp(pch, "Na") == 0 );
 
+  if (backend == TREXIO_HDF5) {
   point_group = (char*) malloc(32*sizeof(char));
 
   rc = trexio_read_nucleus_point_group(file, point_group, 6);
@@ -215,14 +209,9 @@ int test_read(const char* file_name, const back_end_t backend) {
 
   free(point_group);
 
-  for (int i=0; i<num; i++){
-    free(label[i]);
   }
-  free(label);
 
   free(labelxxx);
-
-  }
 
   // close current session
   rc = trexio_close(file);
