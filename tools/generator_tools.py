@@ -306,6 +306,11 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                             if group != detailed_dset[dset]['group']: 
                                 continue
 
+                            if ('REPEAT GROUP_DSET_STR' in line) and (detailed_dset[dset]['dtype'] != 'char*'):
+                                continue
+                            if ('REPEAT GROUP_DSET_NUM' in line) and (detailed_dset[dset]['dtype'] == 'char*'):
+                                continue
+
                             dset_allocated.append(dset)
 
                             if 'FREE($group$->$group_dset$)' in loop_body:
@@ -313,7 +318,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                                 for dset_alloc in dset_allocated:
                                     tmp_string += f'FREE({group}->{dset_alloc});\n        '
 
-                                tmp_body = loop_body.replace('FREE($group$->$group_dset$);',tmp_string)
+                                tmp_body = loop_body.replace('FREE($group$->$group_dset$);', tmp_string)
 
                                 populated_body = recursive_replace_line(tmp_body, triggers, detailed_dset[dset])
                                 f_out.write(populated_body)
