@@ -427,14 +427,15 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
     ,  BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
     ,*/
-    char* tmp_$group_dset$ = CALLOC(size_$group_dset$*32 + 1);
+    char* tmp_$group_dset$;
+    if(size_$group_dset$ != 0) tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
     tmp_len = 0;
     for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
       $group$->$group_dset$[i] = tmp_$group_dset$;
       /* conventional fcanf with "%s" only return the string before the first space character 
        ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
        ,* Q: depending on what ? */
-      rc = fscanf(f, " %[^\n]", tmp_$group_dset$);
+      rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
       assert(!(rc != 1));
       if (rc != 1) {
 	FREE(buffer);
@@ -551,7 +552,7 @@ trexio_text_free_$group$ (trexio_text_t* const file)
 
   // START REPEAT GROUP_DSET_STR
   if ($group$->$group_dset$ != NULL) {
-      if($group$->$group_dset$[0] != NULL) FREE ($group$->$group_dset$[0]);
+    if($group$->rank_$group_dset$ != 0) FREE ($group$->$group_dset$[0]);
     FREE ($group$->$group_dset$);
   }
   // END REPEAT GROUP_DSET_STR
