@@ -261,7 +261,7 @@ def check_triggers (input_line: str, triggers: list) -> int:
     return out_id
 
 
-def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict) -> None:
+def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict, detailed_strings: dict) -> None:
     """ 
     Special population for group-related functions in the TEXT back end.
 
@@ -271,6 +271,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                     group_dict (dict)       : dictionary of groups
                     detailed_dset (dict)    : dictionary of datasets with substitution details
                     detailed_numbers (dict) : dictionary of numbers with substitution details
+                    detailed_strings (dict) : dictionary of string attributes with substitution details
 
             Returns:
                     None
@@ -279,7 +280,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
     templ_path = get_template_path(fname, paths)
 
     triggers = ['group_dset_dtype', 'group_dset_std_dtype_out', 'group_dset_std_dtype_in',
-                'group_dset', 'group_num', 'group']
+                'group_dset', 'group_num', 'group_str', 'group']
 
     for group in group_dict.keys():
 
@@ -290,13 +291,15 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                 subloop_num = False
                 loop_body = ''
                 dset_allocated = []
+                str_allocated = []
 
                 for line in f_in :
 
                     if 'START REPEAT GROUP_DSET' in line:
                         subloop_dset = True
                         continue
-                    elif 'START REPEAT GROUP_NUM' in line:
+                    # this can be merged in one later using something like START REPEAT GROUP_ATTR in line
+                    elif 'START REPEAT GROUP_NUM' in line or 'START REPEAT GROUP_ATTR_STR' in line:
                         subloop_num = True
                         continue
                     
@@ -345,6 +348,33 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                         loop_body = ''
                         continue
 
+                    elif 'END REPEAT GROUP_ATTR_STR' in line:
+                        for str in detailed_strings.keys():
+                            if group != detailed_strings[str]['group']: 
+                                continue
+
+                            str_allocated.append(str)
+
+                            if 'FREE($group$->$group_str$)' in loop_body:
+                                tmp_string = ''
+                                for str_alloc in str_allocated:
+                                    tmp_string += f'FREE({group}->{str_alloc});\n        '
+
+                                tmp_body = loop_body.replace('FREE($group$->$group_str$);', tmp_string)
+
+                                populated_body = recursive_replace_line(tmp_body, triggers, detailed_strings[str])
+                                f_out.write(populated_body)
+                            else:
+                                save_body = loop_body
+                                populated_body = recursive_replace_line(save_body, triggers, detailed_strings[str])
+                                f_out.write(populated_body)
+
+                        subloop_num = False
+                        loop_body = ''
+                        str_allocated = []
+
+                        continue
+
                     if not subloop_num and not subloop_dset:
                         # NORMAL CASE WITHOUT SUBLOOPS 
                         if '$group_dset' in line:
@@ -352,6 +382,12 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                                 if group != detailed_dset[dset]['group']: 
                                     continue
                                 populated_line = recursive_replace_line(line, triggers, detailed_dset[dset])
+                                f_out.write(populated_line)
+                        elif '$group_str' in line:
+                            for str in detailed_strings.keys():
+                                if group != detailed_strings[str]['group']: 
+                                    continue
+                                populated_line = recursive_replace_line(line, triggers, detailed_strings[str])
                                 f_out.write(populated_line)
                         elif '$group_num$' in line:
                             for dim in detailed_numbers.keys():

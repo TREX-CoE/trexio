@@ -63,6 +63,6 @@ for fname in files_todo['dset_str']:
 
 # populate group-related functions with mixed (iterative+recursive) scheme [text backend]
 for fname in files_todo['group']:
-    special_populate_text_group(fname, template_paths, group_dict, detailed_dsets, detailed_nums)
+    special_populate_text_group(fname, template_paths, group_dict, detailed_dsets, detailed_nums, detailed_strs)
 
 # --------------------------------------------------------------------------- #
