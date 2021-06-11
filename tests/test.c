@@ -23,7 +23,7 @@ int main() {
   assert (rc == 0);
   test_write("test_write.dir", TREXIO_TEXT);
   test_read ("test_write.dir", TREXIO_TEXT);
-//  rc = system("rm -rf test_write.dir");
+  rc = system("rm -rf test_write.dir");
   assert (rc == 0);
 
   return 0;
@@ -95,27 +95,25 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_label(file,labelxxx, 32);
   assert (rc == TREXIO_SUCCESS);
-  if (backend == TREXIO_HDF5) rc = trexio_write_nucleus_point_group(file, sym, 32);
+  rc = trexio_write_nucleus_point_group(file, sym, 32);
   assert (rc == TREXIO_SUCCESS);
   
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
-
-  /*
-  // open file in 'write' mode
+ 
+  // reopen file in 'write' mode
   file = trexio_open(file_name, 'w', backend);
   assert (file != NULL);
-
 
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_has_nucleus_coord(file);
   assert (rc == TREXIO_SUCCESS);
-  if (backend == TREXIO_HDF5) rc = trexio_has_nucleus_label(file);
+  rc = trexio_has_nucleus_label(file);
   assert (rc == TREXIO_SUCCESS);
-  if (backend == TREXIO_HDF5) rc = trexio_has_nucleus_point_group(file);
+  rc = trexio_has_nucleus_point_group(file);
   assert (rc == TREXIO_SUCCESS);
 
   // should not work: try to overwrite the num variable
@@ -143,7 +141,6 @@ int test_write(const char* file_name, const back_end_t backend) {
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
-  */
 
 /*================= END OF TEST ==================*/
 
@@ -186,30 +183,28 @@ int test_read(const char* file_name, const back_end_t backend) {
   labelxxx = (char*) malloc(num*32*sizeof(char));
   rc = trexio_read_nucleus_label(file,labelxxx, 2);
   //printf("%s\n", trexio_string_of_error(rc));
+  //printf("%s\n", labelxxx);
   assert (rc == TREXIO_SUCCESS);
 
-  printf("%s\n", labelxxx);
   char * pch;
   pch = strtok(labelxxx, TREXIO_DELIM);
   assert( strcmp(pch, "C") == 0 );
   pch = strtok(NULL, TREXIO_DELIM);
   assert( strcmp(pch, "Na") == 0 );
 
-  if (backend == TREXIO_HDF5) {
   point_group = (char*) malloc(32*sizeof(char));
 
   rc = trexio_read_nucleus_point_group(file, point_group, 6);
   assert (rc == TREXIO_SUCCESS);
+  //printf("%s\n", point_group);
   pch = strtok(point_group, " ");
   assert( strcmp(pch, "B3U") == 0 );
-
-  rc = trexio_read_nucleus_point_group(file, point_group, 3);
+  // alternative test when 3 symbols are read from the file to point_group
+  /*rc = trexio_read_nucleus_point_group(file, point_group, 3);
   assert (rc == TREXIO_SUCCESS);
-  assert( strcmp(point_group, "B3U") == 0 );
+  assert( strcmp(point_group, "B3U") == 0 );*/
 
   free(point_group);
-
-  }
 
   free(labelxxx);
 
