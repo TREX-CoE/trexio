@@ -1878,7 +1878,7 @@ contains
    integer(8) function trexio_open (filename, mode, backend)
      use, intrinsic :: iso_c_binding
      implicit none
-     character(len=*)      :: filename
+     character(len=*), intent(in) :: filename
      character, intent(in), value :: mode
      integer(trexio_backend), intent(in), value   :: backend
      character(len=len_trim(filename)+1) :: filename_c
@@ -1887,6 +1887,55 @@ contains
      trexio_open = trexio_open_c(filename_c, mode, backend)
    end function trexio_open
   #+end_src
+
+  The subroutine below transforms an array of Fortran strings into one big string using ~TREXIO_DELIM~ symbol 
+  as a delimeter and adds ~NULL~ character in the end in order to properly pass the desired string to 
+  C API. This is needed due to the fact that strings in C are terminated by ~NULL~ character ~\0~.
+
+  #+begin_src f90 :tangle suffix_fortran.f90
+   subroutine trexio_strarray2str(str_array, max_num_str, max_len_str, str_res)
+     use, intrinsic :: iso_c_binding, only : c_null_char
+     implicit none
+
+     integer, intent(in), value   :: max_num_str  ! number of elements in strign array
+     integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
+     character(len=max_len_str), intent(in)  :: str_array(*)
+     character(len=:), allocatable, intent(out) :: str_res
+     integer :: i
+
+     str_res = ''
+     do i = 1, max_num_str
+       str_res = str_res // trim(str_array(i)) // TREXIO_DELIM
+     enddo
+     str_res = str_res // c_null_char
+
+   end subroutine trexio_strarray2str
+     #+end_src
+
+  The subroutine is a Fortran analogue of ~assert~ in C. It check that the the return code of the
+  TREXIO API call is equal to a given return code. It can optionally print a success message if the
+  two code are identical, i.e. if the ~assert~ statement pass.
+
+  #+begin_src f90 :tangle suffix_fortran.f90
+   subroutine trexio_assert(trexio_rc, check_rc, success_message)
+     implicit none
+
+     integer, intent(in), value   :: trexio_rc
+     integer, intent(in), value   :: check_rc
+     character(len=*), intent(in), optional  :: success_message
+
+     character*(128) :: str
+
+     if (trexio_rc == check_rc) then
+       if (present(success_message)) write(*,*) success_message
+     else
+       call trexio_string_of_error(trexio_rc, str)
+       print *, trim(str)
+       call exit(1)
+     endif
+
+   end subroutine trexio_assert
+     #+end_src
 
 * File suffixes                                                     :noexport:
 
