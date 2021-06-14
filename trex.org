@@ -7,6 +7,10 @@ column-major order (as in Fortran), and the ordering of the dimensions
 is reversed in the produces JSON configuration file as the library is
 written in C.
 
+In Fortran, the arrays are 1-based and in most other languages the
+arrays are 0-base. Hence, we introduce the ~index~ type which is an
+1-based ~int~ in the Fortran interface and 0-based otherwise.
+
   #+begin_src python :tangle trex.json 
 {
   #+end_src
@@ -198,12 +202,12 @@ written in C.
   | ~type~              | ~str~   |                    | Type of basis set: "Gaussian" or "Slater"                |
   | ~num~               | ~int~   |                    | Total Number of shells                                   |
   | ~prim_num~          | ~int~   |                    | Total number of primitives                               |
-  | ~nucleus_index~     | ~int~   | ~(nucleus.num)~    | Index of the first shell of each nucleus ($A$)           |
+  | ~nucleus_index~     | ~index~ | ~(nucleus.num)~    | Index of the first shell of each nucleus ($A$)           |
   | ~nucleus_shell_num~ | ~int~   | ~(nucleus.num)~    | Number of shells for each nucleus                        |
   | ~shell_ang_mom~     | ~int~   | ~(basis.num)~      | Angular momentum ~0:S, 1:P, 2:D, ...~                    |
   | ~shell_prim_num~    | ~int~   | ~(basis.num)~      | Number of primitives in the shell ($N_{\text{prim}}$)    |
   | ~shell_factor~      | ~float~ | ~(basis.num)~      | Normalization factor of the shell ($\mathcal{N}_s$)      |
-  | ~shell_prim_index~  | ~int~   | ~(basis.num)~      | Index of the first primitive in the complete list        |
+  | ~shell_prim_index~  | ~index~ | ~(basis.num)~      | Index of the first primitive in the complete list        |
   | ~exponent~          | ~float~ | ~(basis.prim_num)~ | Exponents of the primitives ($\gamma_{ks})               |
   | ~coefficient~       | ~float~ | ~(basis.prim_num)~ | Coefficients of the primitives ($a_{ks}$)                |
   | ~prim_factor~       | ~float~ | ~(basis.prim_num)~ | Normalization coefficients for the primitives ($f_{ks}$) |
@@ -217,12 +221,12 @@ written in C.
                        "type" : [ "str"  , []                   ]
         ,               "num" : [ "int"  , []                   ]
         ,          "prim_num" : [ "int"  , []                   ]
-        ,     "nucleus_index" : [ "int"  , [ "nucleus.num" ]    ]
+        ,     "nucleus_index" : [ "index"  , [ "nucleus.num" ]    ]
         , "nucleus_shell_num" : [ "int"  , [ "nucleus.num" ]    ]
         ,     "shell_ang_mom" : [ "int"  , [ "basis.num" ]      ]
         ,    "shell_prim_num" : [ "int"  , [ "basis.num" ]      ]
         ,      "shell_factor" : [ "float", [ "basis.num" ]      ]
-        ,  "shell_prim_index" : [ "int"  , [ "basis.num" ]      ]
+        ,  "shell_prim_index" : [ "index"  , [ "basis.num" ]      ]
         ,          "exponent" : [ "float", [ "basis.prim_num" ] ]
         ,       "coefficient" : [ "float", [ "basis.prim_num" ] ]
         ,       "prim_factor" : [ "float", [ "basis.prim_num" ] ]
@@ -333,7 +337,7 @@ prim_factor =
   #+NAME: ao
   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false           |
   | ~num~           | ~int~   |            | Total number of atomic orbitals |
-  | ~shell~         | ~int~   | ~(ao.num)~ | basis set shell for each AO     |
+  | ~shell~         | ~index~ | ~(ao.num)~ | basis set shell for each AO     |
   | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factors           |
 
   #+CALL: json(data=ao, title="ao")
@@ -344,7 +348,7 @@ prim_factor =
       "ao": {
               "cartesian" : [ "int"  , []           ]
         ,           "num" : [ "int"  , []           ]
-        ,         "shell" : [ "int"  , [ "ao.num" ] ]
+        ,         "shell" : [ "index", [ "ao.num" ] ]
         , "normalization" : [ "float", [ "ao.num" ] ]
       } ,
   #+end_src

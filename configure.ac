@@ -56,7 +56,7 @@ AC_PROG_LN_S
 ## ---------
 
 # Checks for basic header files.
-AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd.h])
 
 
 ### HDF5

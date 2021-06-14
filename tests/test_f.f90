@@ -35,6 +35,7 @@ subroutine test_write(file_name, back_end)
   character*(128) :: str
 
 
+  integer :: basis_nucleus_index(12)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
@@ -55,6 +56,8 @@ subroutine test_write(file_name, back_end)
                        0.00000000d0,  2.47304151d0 ,  0.00000000d0 /), &
                        shape(coord) )
 
+  basis_nucleus_index = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
+
 ! ================= START OF TEST ===================== !
 
   trex_file = trexio_open(file_name, 'w', back_end)
@@ -63,7 +66,7 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_HAS_NOT) then
     write(*,*) 'SUCCESS HAS NOT 1'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -72,7 +75,7 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_HAS_NOT) then
     write(*,*) 'SUCCESS HAS NOT 2'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -82,7 +85,7 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS WRITE NUM'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -91,7 +94,7 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS WRITE CHARGE'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -100,7 +103,7 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS WRITE COORD'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -109,7 +112,7 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS HAS 1'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -118,7 +121,16 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS HAS 2'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
+    print *, trim(str)
+    call exit(1)
+  endif
+
+  rc = trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index)
+  if (rc == TREXIO_SUCCESS) then
+    write(*,*) 'SUCCESS WRITE INDEX'
+  else
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -127,7 +139,7 @@ subroutine test_write(file_name, back_end)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS CLOSE'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -172,6 +184,7 @@ subroutine test_read(file_name, back_end)
   integer :: rc = 1
   integer :: num, num_read
 
+  integer :: basis_nucleus_index(12)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
@@ -188,7 +201,7 @@ subroutine test_read(file_name, back_end)
   if (rc == TREXIO_SUCCESS .and. num_read == num) then
     write(*,*) 'SUCCESS READ NUM'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
@@ -199,7 +212,7 @@ subroutine test_read(file_name, back_end)
   if (rc == TREXIO_SUCCESS .and. (dabs(charge(11) - 1.d0) < 1.0D-8) ) then
     write(*,*) 'SUCCESS READ CHARGE'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(-1)
   endif
@@ -209,16 +222,26 @@ subroutine test_read(file_name, back_end)
   if (rc == TREXIO_SUCCESS .and. (dabs(coord(2,1) - 1.39250319d0) < 1.0D-8) ) then
     write(*,*) 'SUCCESS READ COORD'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(-1)
   endif
+
+  rc = trexio_read_basis_nucleus_index(trex_file, basis_nucleus_index)
+  if (rc == TREXIO_SUCCESS .and. (basis_nucleus_index(12) == 12) ) then
+    write(*,*) 'SUCCESS READ INDEX'
+  else
+    call trexio_string_of_error(rc,str)
+    print *, trim(str)
+    call exit(-1)
+  endif
+
 
   rc = trexio_close(trex_file)
   if (rc == TREXIO_SUCCESS) then
     write(*,*) 'SUCCESS CLOSE'
   else
-    call trexio_string_of_error(TREXIO_READONLY,str)
+    call trexio_string_of_error(rc,str)
     print *, trim(str)
     call exit(1)
   endif
