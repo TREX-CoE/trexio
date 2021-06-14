@@ -1583,7 +1583,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset, const uint32_t max_
 
   if (dset_dim == 0L) return TREXIO_INVALID_NUM;
 
-  char* str_compiled = CALLOC(dset_dim*max_str_len + 1, char);
+  char* str_compiled = CALLOC(dset_dim*(max_str_len+1) + 1, char);
   if (str_compiled == NULL) return TREXIO_ALLOCATION_FAILED;
 
   rc = trexio_read_$group_dset$_low(file, str_compiled, max_str_len);
@@ -1601,7 +1601,8 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset, const uint32_t max_
       return TREXIO_FAILURE;
     }
 
-    strncpy(dset[i], pch, max_str_len+1);
+    strcpy(dset[i], "");
+    strcat(dset[i], pch);
 
   }
 
