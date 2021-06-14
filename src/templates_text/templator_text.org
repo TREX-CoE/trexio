@@ -889,13 +889,13 @@ trexio_text_has_$group_dset$ (trexio_t* const file)
 
    #+begin_src c :tangle hrw_attr_str_text.h :exports none
 trexio_exit_code trexio_text_has_$group_str$ (trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_str$ (trexio_t* const file, char* const str);
+trexio_exit_code trexio_text_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len);
 trexio_exit_code trexio_text_write_$group_str$ (trexio_t* const file, const char* str);
    #+end_src
 
    #+begin_src c :tangle read_attr_str_text.c
 trexio_exit_code
-trexio_text_read_$group_str$ (trexio_t* const file, char* const str)
+trexio_text_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -904,7 +904,7 @@ trexio_text_read_$group_str$ (trexio_t* const file, char* const str)
   $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
   if ($group$ == NULL) return TREXIO_FAILURE;
 
-  strcpy(str, $group$->$group_str$);
+  strncpy(str, $group$->$group_str$, max_str_len);
 
   return TREXIO_SUCCESS;
 

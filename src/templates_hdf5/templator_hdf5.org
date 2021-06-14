@@ -619,14 +619,14 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 
   #+begin_src c :tangle hrw_attr_str_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_str$ (trexio_t* const file);
-trexio_exit_code trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str);
+trexio_exit_code trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len);
 trexio_exit_code trexio_hdf5_write_$group_str$(trexio_t* const file, const char* str);
   #+end_src
 
 
   #+begin_src c :tangle read_attr_str_hdf5.c
 trexio_exit_code
-trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str)
+trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -650,7 +650,7 @@ trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str)
   if (mem_id <= 0) return TREXIO_INVALID_ID;
 
   herr_t status;
-  status = H5Tset_size(mem_id, sdim);
+  status = (max_str_len+1) > sdim ? H5Tset_size(mem_id, sdim) : H5Tset_size(mem_id, max_str_len+1) ;
   if (status < 0) return TREXIO_FAILURE;
 
   status = H5Aread(str_id, mem_id, str);

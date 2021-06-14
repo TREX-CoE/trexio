@@ -1611,10 +1611,10 @@ trexio_write_$group_dset$ (trexio_t* const file, const char* dset, const uint32_
     if (pch_len > max_str_len) {
       FREE(dset_str[0]);
       FREE(dset_str);
-      return TREXIO_INVALID_ARG_3;
+      return TREXIO_INVALID_STR_LEN;
     }
 
-    dset_str[i]=tmp_str;
+    dset_str[i] = tmp_str;
     strncpy(tmp_str, pch, pch_len);
     tmp_str += pch_len + 1;
   }
@@ -1741,11 +1741,11 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t m
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_read_$group_str$(file, str);
+    return trexio_text_read_$group_str$(file, str, max_str_len);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_read_$group_str$(file, str);
+    return trexio_hdf5_read_$group_str$(file, str, max_str_len);
     break;
 /*
   case TREXIO_JSON:
@@ -1754,16 +1754,6 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t m
 ,*/
   }
 
-  if (rc != TREXIO_SUCCESS) return rc;
-
-  size_t len_read = strlen(str);
-  if (max_str_len < len_read) {
-    for(size_t i=max_str_len; i<len_read; i++) {
-      str[i] = '\0';
-    }
-  }
-
-  return TREXIO_SUCCESS;
 }
      #+end_src
 
@@ -1778,7 +1768,7 @@ trexio_write_$group_str$ (trexio_t* const file, const char* str, const uint32_t 
   if (trexio_has_$group_str$(file) == TREXIO_SUCCESS) return TREXIO_NUM_ALREADY_EXISTS;
 
   size_t len_write = strlen(str);
-  if (max_str_len < len_write) return TREXIO_INVALID_ARG_3;  
+  if (max_str_len < len_write) return TREXIO_INVALID_STR_LEN;  
 
   switch (file->back_end) {
 
@@ -1796,7 +1786,6 @@ trexio_write_$group_str$ (trexio_t* const file, const char* str, const uint32_t 
 ,*/
   }
 
-  return TREXIO_FAILURE;
 }
      #+end_src
    
