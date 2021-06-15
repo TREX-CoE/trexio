@@ -119,7 +119,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                                 if not dim.isdigit() and not dim in num_written:
                                     num_written.append(dim)
                                     templine = line.replace('$group_dset_dim$', dim)
-                                    if '_read' in templine: 
+                                    if '_read' in templine and (not 'fortran' in fname):
                                             line_toadd = indentlevel*" " + rc_line
                                             templine += line_toadd
 

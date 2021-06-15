@@ -16,14 +16,14 @@ int main() {
   assert (rc == 0);
   test_write("test_write.h5", TREXIO_HDF5);
   test_read ("test_write.h5", TREXIO_HDF5);
-//  rc = system("rm -rf test_write.h5");
+  rc = system("rm -rf test_write.h5");
   assert (rc == 0);
 
   rc = system("rm -rf test_write.dir");
   assert (rc == 0);
   test_write("test_write.dir", TREXIO_TEXT);
   test_read ("test_write.dir", TREXIO_TEXT);
-//  rc = system("rm -rf test_write.dir");
+  rc = system("rm -rf test_write.dir");
   assert (rc == 0);
 
   return 0;

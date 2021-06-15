@@ -38,9 +38,8 @@ subroutine test_write(file_name, back_end)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
-  character(len=:), allocatable :: label_str
   character(len=:), allocatable :: sym_str
-  character(len=4):: label(12)
+  character(len=:), allocatable :: label(:)
 
   ! parameters to be written
   num = 12
@@ -60,8 +59,6 @@ subroutine test_write(file_name, back_end)
                        shape(coord) )
 
   label = [character(len=8) :: 'C', 'Na','C', 'C 66', 'C','C', 'H 99', 'Ru', 'H', 'H',  'H', 'H' ]
-
-  call trexio_strarray2str(label, num, 4, label_str)
 
   sym_str = 'B3U with some comments' // c_null_char
 
@@ -84,8 +81,7 @@ subroutine test_write(file_name, back_end)
   rc = trexio_write_nucleus_coord(trex_file, coord)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE COORD')
 
-  rc = trexio_write_nucleus_label(trex_file, label_str, 5)
-  deallocate(label_str)
+  rc = trexio_write_nucleus_label(trex_file, label, 5)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE LABEL')
 
   rc = trexio_write_nucleus_point_group(trex_file, sym_str, 32)
@@ -127,7 +123,7 @@ subroutine test_read(file_name, back_end)
 
   character        :: label_str(128)
   character(len=4) :: tmp_str
-  character(len=4) :: label(12)
+  character(len=4) :: label(12) ! also works with allocatable arrays
 
   character(len=32) :: sym_str
 
@@ -170,30 +166,8 @@ subroutine test_read(file_name, back_end)
   endif
 
   
-  rc = trexio_read_nucleus_label(trex_file, label_str, 2)
+  rc = trexio_read_nucleus_label(trex_file, label, 2)
   call trexio_assert(rc, TREXIO_SUCCESS)
-  ! --------------------------------------------------
-  ! dummy parser of big string with TREXIO_DELIM delimeters
-  ! --------------------------------------------------
-  ind=1
-  offset=1
-  do i=1,num
-    k = 1
-    tmp_str=''
-    do j=ind,128
-
-      if ( (label_str(j)==TREXIO_DELIM) ) then
-	ind=j+1
-	exit
-      endif
-      tmp_str(k:k) = label_str(j) 
-      k = k + 1
-    enddo
-    label(i)=tmp_str
-    write(*,*) label(i)
-    offset=ind
-  enddo
-  ! --------------------------------------------------
   if (trim(label(2)) == 'Na') then
     write(*,*) 'SUCCESS READ LABEL'
   else

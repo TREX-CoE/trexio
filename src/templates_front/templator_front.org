@@ -1762,23 +1762,23 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_str_front_fortran.f90
 interface
-   integer function trexio_write_$group_dset$ (trex_file, dset, max_str_len) bind(C, name="trexio_write_$group_dset$_low")
+   integer function trexio_write_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
      character, intent(in) :: dset(*)
      integer(4), intent(in), value :: max_str_len
-   end function trexio_write_$group_dset$
+   end function trexio_write_$group_dset$_low
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_dset_str_front_fortran.f90
 interface
-   integer function trexio_read_$group_dset$ (trex_file, dset, max_str_len) bind(C, name="trexio_read_$group_dset$_low")
+   integer function trexio_read_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
      character, intent(out) :: dset(*)
      integer(4), intent(in), value :: max_str_len
-   end function trexio_read_$group_dset$
+   end function trexio_read_$group_dset$_low
 end interface
      #+end_src
 
@@ -1790,6 +1790,59 @@ interface
    end function trexio_has_$group_dset$
 end interface
      #+end_src
+
+  #+begin_src f90 :tangle helper_read_dset_str_front_fortran.fh_90
+   integer function trexio_read_$group_dset$ (trex_file, dset, max_str_len)
+     use, intrinsic :: iso_c_binding
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character(len=*), intent(inout) :: dset(*)
+
+     character, allocatable :: str_compiled(:)
+     integer(8) :: $group_dset_dim$
+     integer :: rc
+     
+     rc = trexio_read_$group_dset_dim$_64(trex_file, $group_dset_dim$)
+     if (rc /= TREXIO_SUCCESS) trexio_read_$group_dset$ = rc
+
+     allocate(str_compiled($group_dset_dim$*(max_str_len+1)+1))
+     
+     rc = trexio_read_$group_dset$_low(trex_file, str_compiled, max_str_len)
+     if (rc /= TREXIO_SUCCESS) then 
+       deallocate(str_compiled)
+       trexio_read_$group_dset$ = rc
+     else
+       call trexio_str2strarray(str_compiled, $group_dset_dim$, max_str_len, dset)
+       deallocate(str_compiled)
+       trexio_read_$group_dset$ = TREXIO_SUCCESS
+     endif
+
+   end function trexio_read_$group_dset$
+  #+end_src
+
+  #+begin_src f90 :tangle helper_write_dset_str_front_fortran.fh_90
+   integer function trexio_write_$group_dset$ (trex_file, dset, max_str_len)
+     use, intrinsic :: iso_c_binding
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character(len=*), intent(in) :: dset(*)
+
+     character(len=:), allocatable :: str_compiled
+     integer(8) :: $group_dset_dim$
+     integer :: rc
+     
+     rc = trexio_read_$group_dset_dim$_64(trex_file, $group_dset_dim$)
+     if (rc /= TREXIO_SUCCESS) then
+       trexio_write_$group_dset$ = rc
+     else
+       call trexio_strarray2str(dset, $group_dset_dim$, max_str_len, str_compiled)
+       trexio_write_$group_dset$ = trexio_write_$group_dset$_low(trex_file, str_compiled, max_str_len)
+     endif
+
+   end function trexio_write_$group_dset$
+  #+end_src
 
 ** Templates for front end has/read/write a single string attribute
 *** Introduction
@@ -1945,7 +1998,7 @@ end interface
   unlike strings in Fortran.
   Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
 
-  #+begin_src f90 :tangle suffix_fortran.f90
+  #+begin_src f90 :tangle helper_fortran.f90
 contains
    integer(8) function trexio_open (filename, mode, backend)
      use, intrinsic :: iso_c_binding
@@ -1964,14 +2017,14 @@ contains
   as a delimeter and adds ~NULL~ character in the end in order to properly pass the desired string to 
   C API. This is needed due to the fact that strings in C are terminated by ~NULL~ character ~\0~.
 
-  #+begin_src f90 :tangle suffix_fortran.f90
+  #+begin_src f90 :tangle helper_fortran.f90
    subroutine trexio_strarray2str(str_array, max_num_str, max_len_str, str_res)
      use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
 
-     integer, intent(in), value   :: max_num_str  ! number of elements in strign array
+     integer(8), intent(in), value   :: max_num_str  ! number of elements in strign array
      integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
-     character(len=max_len_str), intent(in)  :: str_array(*)
+     character(len=*), intent(in)  :: str_array(*)
      character(len=:), allocatable, intent(out) :: str_res
      integer :: i
 
@@ -1984,11 +2037,51 @@ contains
    end subroutine trexio_strarray2str
      #+end_src
 
+  The subroutine below does the reverse tranformation from one big string with delimeters into an array of Fortran strings.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+   subroutine trexio_str2strarray(str_flat, max_num_str, max_len_str, str_array)
+     use, intrinsic :: iso_c_binding, only : c_null_char
+     implicit none
+
+     integer(8), intent(in), value   :: max_num_str  ! number of elements in strign array
+     integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
+     character, intent(in) :: str_flat(*)
+     character(len=*), intent(inout)  :: str_array(*)
+     
+     character(len=max_len_str)  :: tmp_str
+     integer :: i, j, k, ind, offset
+     integer(8) :: len_flat
+
+     len_flat = (max_len_str+1)*max_num_str + 1
+    
+     ind=1
+     offset=1
+     do i=1,max_num_str
+       k = 1
+       tmp_str=''
+       do j=ind,len_flat
+         if ( str_flat(j)==TREXIO_DELIM ) then
+           ind=j+1
+           exit
+         endif
+         tmp_str(k:k) = str_flat(j)
+         k = k + 1
+       enddo
+       str_array(i)=tmp_str
+       !write(*,*) str_array(i)
+       offset=ind
+     enddo
+
+   end subroutine trexio_str2strarray
+     #+end_src
+
+
   The subroutine is a Fortran analogue of ~assert~ in C. It check that the the return code of the
   TREXIO API call is equal to a given return code. It can optionally print a success message if the
   two code are identical, i.e. if the ~assert~ statement pass.
 
-  #+begin_src f90 :tangle suffix_fortran.f90
+  #+begin_src f90 :tangle helper_fortran.f90
    subroutine trexio_assert(trexio_rc, check_rc, success_message)
      implicit none
 
