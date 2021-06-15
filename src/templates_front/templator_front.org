@@ -52,11 +52,12 @@ typedef int32_t trexio_exit_code;
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "trexio.h"
-#include "trexio_s.h"
 #include "trexio_private.h"
+#include "trexio_s.h"
 #include "trexio_text.h"
 #include "trexio_hdf5.h"
 /*
@@ -73,6 +74,7 @@ typedef int32_t trexio_exit_code;
 #include "trexio.h"
 #include <pthread.h>
 #include <assert.h>
+#include <stdbool.h>
   #+end_src
 
 * Coding conventions
@@ -429,11 +431,12 @@ typedef struct trexio_s trexio_t;
 
    #+begin_src c :tangle prefix_s_front.h
 struct trexio_s {
-  char*             file_name;
+  char              file_name[TREXIO_MAX_FILENAME_LENGTH];
   pthread_mutex_t   thread_lock;
   back_end_t        back_end;
   char              mode;
-  char              padding[7];   /* Ensures the proper alignment of back ends */
+  bool              one_based;
+  char              padding[6];   /* Ensures the proper alignment of back ends */
 };
    #+end_src
 ** Polymorphism of the file handle
@@ -466,11 +469,13 @@ struct trexio_back_end_s {
    output:
      ~trexio_t~ file handle
 
-   Note: the ~file_name~ in TEXT back end actually corresponds to the name of the folder where ~.txt~
-   data files are stored. The actual name of each ~.txt~ file corresponds to the group name provided in
-   ~trex.config~ (e.g. ~nucleus.txt~ for nuclei-related data).
-   These names are populated by the generator.py (i.e. they are hard-coded), which is why the user
-   should tend to avoid renaming the ~.txt~ data files.
+   Note: the ~file_name~ in TEXT back end actually corresponds to the
+   name of the directory where ~.txt~ data files are stored. The
+   actual name of each ~.txt~ file corresponds to the group name
+   provided in ~trex.config~ (e.g. ~nucleus.txt~ for nuclei-related
+   data).  These names are populated by the generator.py (i.e. they
+   are hard-coded), which is why the user should tend to avoid
+   renaming the ~.txt~ data files.
 
    #+begin_src c :tangle prefix_front.h :exports none
 trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end);
@@ -517,16 +522,15 @@ trexio_open(const char* file_name, const char mode,
 
   /* Data for the parent type */
 
-  result->file_name   = CALLOC(TREXIO_MAX_FILENAME_LENGTH, char);
   strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH);
   if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
-    free(result->file_name);
     free(result);
     return NULL;
   }
 
   result->back_end    = back_end;
   result->mode        = mode;
+  result->one_based   = false;  // Need to be flipped in Fortran interface
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
   assert (irc == 0);
 
@@ -553,7 +557,6 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
-    free(result->file_name);
     free(result);
     return NULL;
   }
@@ -579,7 +582,6 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
-    free(result->file_name);
     free(result);
     return NULL;
   }
@@ -599,7 +601,35 @@ interface
    end function trexio_open_c
 end interface
    #+end_src
- 
+
+   Because arrays are zero-based in Fortran, we need to set a flag to
+   know if we need to shift by 1 arrays of indices.
+
+   #+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_set_one_based(trexio_t* file);
+   #+end_src
+
+   #+begin_src c :tangle prefix_front.c
+trexio_exit_code trexio_set_one_based(trexio_t* file)
+{
+  if (file == NULL)
+    return TREXIO_FILE_ERROR;
+
+  file->one_based = true;
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer function trexio_set_one_based(trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_set_one_based
+end interface
+   #+end_src
+
 ** File closing
 
     ~trexio_close~ closes an existing ~trexio_t~ file.
@@ -643,7 +673,6 @@ trexio_close (trexio_t* file)
   }
 
   if (rc != TREXIO_SUCCESS) {
-    FREE(file->file_name);
     FREE(file);
     return rc;
   }
@@ -669,8 +698,6 @@ trexio_close (trexio_t* file)
   }
 
   /* Terminate front end */
-
-  FREE(file->file_name);
 
   int irc = pthread_mutex_destroy( &(file->thread_lock) );
 
@@ -1081,6 +1108,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+  if (rc != TREXIO_SUCCESS) return rc;
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
@@ -1089,22 +1117,36 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  rc = TREXIO_FAILURE;
   switch (file->back_end) {
-
+    
   case TREXIO_TEXT:
-    return trexio_text_read_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_text_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_hdf5_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_json_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
+  if (rc != TREXIO_SUCCESS) return rc;
+  
+  /* Handle index type */
+  if ($is_index$) {
+    uint64_t dim_size = 1;
+    for (uint32_t i=0; i<rank; ++i){
+        dim_size *= dims[i];
+    }
+    for (uint64_t i=0; i<dim_size; ++i){
+       $group_dset$[i] += ($group_dset_dtype_single$) 1;
+    }
+  }
+  
+  return TREXIO_SUCCESS;
 }
      #+end_src
 
@@ -1122,30 +1164,56 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+  if (rc != TREXIO_SUCCESS) return rc;
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
   uint32_t rank = $group_dset_rank$;
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
+  $group_dset_dtype_double$* $group_dset$_p = $group_dset$;
+
+  /* Handle index type */
+  if ($is_index$) {
+
+    uint64_t dim_size = 1;
+    for (uint32_t i=0; i<rank; ++i){
+        dim_size *= dims[i];
+    }
+
+    $group_dset$_p = CALLOC(dim_size, $group_dset_dtype_double$);
+    if ($group_dset$_p == NULL) return TREXIO_ALLOCATION_FAILED;
+
+    for (uint64_t i=0; i<dim_size; ++i){
+       $group_dset$_p[i] = $group_dset$_p[i] - ($group_dset_dtype_single$) 1;
+    }
+  }
+
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  rc = TREXIO_FAILURE;
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_text_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_write_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_hdf5_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_dset$(file, $group_dset$, rank, dims);
+    rc = trexio_json_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
+
+  /* Handle index type */
+  if ($is_index$) {
+    FREE($group_dset$_p);
+  }
+
+  return rc;
 }
      #+end_src
 
@@ -1169,7 +1237,7 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<rank; ++i){
+  for (uint32_t i=0; i<rank; ++i){
     dim_size *= dims[i];
   }
 
@@ -1201,8 +1269,14 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
     return rc;
   }
 
-  for (uint64_t i=0; i<dim_size; ++i){
-    $group_dset$[i] = ($group_dset_dtype_single$) $group_dset$_64[i];
+  if ($is_index$) {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$[i] = ($group_dset_dtype_single$) $group_dset$_64[i] + ($group_dset_dtype_single$) 1;
+    }
+  } else {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$[i] = ($group_dset_dtype_single$) $group_dset$_64[i];
+    }
   }
 
   FREE($group_dset$_64);
@@ -1231,7 +1305,7 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<rank; ++i){
+  for (uint32_t i=0; i<rank; ++i){
     dim_size *= dims[i];
   }
 
@@ -1239,8 +1313,14 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
   if ($group_dset$_64 == NULL) return TREXIO_ALLOCATION_FAILED;
 
   /* A type conversion from single precision to double reqired since back end only accepts 64-bit data */
-  for (uint64_t i=0; i<dim_size; ++i){
-    $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i];
+  if ($is_index$) {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i] - ($group_dset_dtype_double$) 1;
+    }
+  } else {
+    for (uint64_t i=0; i<dim_size; ++i){
+      $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i];
+    }
   }
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
@@ -2032,13 +2112,22 @@ contains
    integer(8) function trexio_open (filename, mode, backend)
      use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
-     character(len=*), intent(in) :: filename
-     character, intent(in), value :: mode
+     character(len=*), intent(in)                 :: filename
+     character, intent(in), value                 :: mode
      integer(trexio_backend), intent(in), value   :: backend
      character(len=len_trim(filename)+1) :: filename_c
+     integer :: rc
 
      filename_c = trim(filename) // c_null_char
      trexio_open = trexio_open_c(filename_c, mode, backend)
+     if (trexio_open == 0_8) then
+       return
+     endif
+     rc = trexio_set_one_based(trexio_open)
+     if (rc /= TREXIO_SUCCESS) then
+        rc = trexio_close(trexio_open)
+        trexio_open = 0_8
+     endif
    end function trexio_open
   #+end_src
 

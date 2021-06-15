@@ -100,7 +100,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
-    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'default_prec',
+    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index', 
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
                 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
@@ -542,7 +542,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             default_prec   = '64'
             group_dset_std_dtype_out = '24.16e'
             group_dset_std_dtype_in = 'lf'
-        elif v[0] == 'int':
+        elif v[0] in ['int', 'index']:
             datatype = 'int64_t'
             group_dset_h5_dtype = 'native_int64'
             group_dset_f_dtype_default= 'integer(4)'
@@ -564,6 +564,11 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         
         # add the dset name for templates
         tmp_dict['group_dset'] = k
+        # add flag to detect index types
+        if 'index' == v[0]:
+            tmp_dict['is_index'] = 'file->one_based'
+        else:
+            tmp_dict['is_index'] = 'false'
         # add the datatypes for templates
         tmp_dict['dtype'] = datatype
         tmp_dict['group_dset_dtype'] = datatype

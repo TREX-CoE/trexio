@@ -35,6 +35,8 @@ subroutine test_write(file_name, back_end)
   integer :: rc = 1
 
   integer :: num
+
+  integer :: basis_nucleus_index(12)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
@@ -57,6 +59,8 @@ subroutine test_write(file_name, back_end)
                        2.14171677d0,  1.23652075d0 ,  0.00000000d0 , &
                        0.00000000d0,  2.47304151d0 ,  0.00000000d0 /), &
                        shape(coord) )
+
+  basis_nucleus_index = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
 
   label = [character(len=8) :: 'C', 'Na','C', 'C 66', 'C','C', 'H 99', 'Ru', 'H', 'H',  'H', 'H' ]
 
@@ -89,6 +93,11 @@ subroutine test_write(file_name, back_end)
   deallocate(sym_str)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE POINT GROUP')
 
+
+  rc = trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX')
+
+
   rc = trexio_has_nucleus_num(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 1')
 
@@ -119,6 +128,7 @@ subroutine test_read(file_name, back_end)
   integer :: rc = 1
   integer :: num, num_read
 
+  integer :: basis_nucleus_index(12)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
@@ -177,6 +187,16 @@ subroutine test_read(file_name, back_end)
   endif
 
 
+  rc = trexio_read_basis_nucleus_index(trex_file, basis_nucleus_index)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+  if (basis_nucleus_index(12) == 12) then
+    write(*,*) 'SUCCESS READ INDEX'
+  else
+    print *, 'FAILURE INDEX CHECK'
+    call exit(-1)
+  endif
+
+
   rc = trexio_read_nucleus_point_group(trex_file, sym_str, 10)
   call trexio_assert(rc, TREXIO_SUCCESS)
   if (sym_str(1:3) == 'B3U') then
@@ -185,6 +205,7 @@ subroutine test_read(file_name, back_end)
     print *, 'FAILURE POINT GROUP CHECK'
     call exit(-1)
   endif
+
 
   rc = trexio_close(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS)

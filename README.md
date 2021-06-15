@@ -5,9 +5,10 @@ TREX library fo efficient I/O.
 
 ## Minimal requirements (for users):
 
-- Autoconf
-- C compiler		(gcc/icc/clang)
-- Fortran compiler 	(gfortran/ifort/flang)
+- Autotools             (autoconf, automake, libtool)
+- C compiler            (gcc/icc/clang)
+- Fortran compiler      (gfortran/ifort)
+- HDF5 library          (>= 1.8)
 
 
 ## Installation procedure from the tarball (for users):
@@ -26,9 +27,8 @@ TREX library fo efficient I/O.
 
 ## Additional requirements (for developers):
 
-- Automake
-- python3 	(>=3.6)
-- Emacs		(>=26.0)
+- python3       (>= 3.6)
+- Emacs         (>= 26.0)
 
 
 ## Installation procedure from the GitHub repo clone (for developers):
@@ -36,7 +36,7 @@ TREX library fo efficient I/O.
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio`
 3. `./autogen.sh`
-4. `./configure`
+4. `TREXIO_DEVEL=1 ./configure`
 5. `make`
 6. `make check`
 7. `sudo make install`
