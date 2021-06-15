@@ -1793,7 +1793,6 @@ end interface
 
   #+begin_src f90 :tangle helper_read_dset_str_front_fortran.fh_90
    integer function trexio_read_$group_dset$ (trex_file, dset, max_str_len)
-     use, intrinsic :: iso_c_binding
      implicit none
      integer(8), intent(in), value :: trex_file
      integer(4), intent(in), value :: max_str_len
@@ -1823,7 +1822,6 @@ end interface
 
   #+begin_src f90 :tangle helper_write_dset_str_front_fortran.fh_90
    integer function trexio_write_$group_dset$ (trex_file, dset, max_str_len)
-     use, intrinsic :: iso_c_binding
      implicit none
      integer(8), intent(in), value :: trex_file
      integer(4), intent(in), value :: max_str_len
@@ -1962,23 +1960,25 @@ trexio_has_$group_str$ (trexio_t* const file)
     
      #+begin_src f90 :tangle write_attr_str_front_fortran.f90
 interface
-   integer function trexio_write_$group_str$ (trex_file, str, max_str_len) bind(C)
+   integer function trexio_write_$group_str$_c (trex_file, str, max_str_len) &
+           bind(C, name="trexio_write_$group_str$")
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
      character, intent(in) :: str(*)
      integer(4), intent(in), value :: max_str_len
-   end function trexio_write_$group_str$
+   end function trexio_write_$group_str$_c
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_attr_str_front_fortran.f90
 interface
-   integer function trexio_read_$group_str$ (trex_file, str, max_str_len) bind(C)
+   integer function trexio_read_$group_str$_c (trex_file, str, max_str_len) &
+           bind(C, name="trexio_read_$group_str$")
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
      character, intent(out) :: str(*)
      integer(4), intent(in), value :: max_str_len
-   end function trexio_read_$group_str$
+   end function trexio_read_$group_str$_c
 end interface
      #+end_src
 
@@ -1991,6 +1991,35 @@ interface
 end interface
      #+end_src
 
+  #+begin_src f90 :tangle helper_read_attr_str_front_fortran.fh_90
+   integer function trexio_read_$group_str$ (trex_file, str, max_str_len)
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character, intent(out) :: str(*)
+ 
+     trexio_read_$group_str$ = trexio_read_$group_str$_c(trex_file, str, max_str_len)
+
+   end function trexio_read_$group_str$
+  #+end_src
+
+  #+begin_src f90 :tangle helper_write_attr_str_front_fortran.fh_90
+   integer function trexio_write_$group_str$ (trex_file, str, max_str_len)
+     use, intrinsic :: iso_c_binding, only : c_null_char
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character(len=*), intent(in) :: str
+
+     character(len=len_trim(str)+1) :: str_c
+
+     str_c = trim(str) // c_null_char
+
+     trexio_write_$group_str$ = trexio_write_$group_str$_c(trex_file, str_c, max_str_len)
+
+   end function trexio_write_$group_str$
+  #+end_src
+
 * Fortran helper/wrapper functions
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.
@@ -2001,7 +2030,7 @@ end interface
   #+begin_src f90 :tangle helper_fortran.f90
 contains
    integer(8) function trexio_open (filename, mode, backend)
-     use, intrinsic :: iso_c_binding
+     use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
      character(len=*), intent(in) :: filename
      character, intent(in), value :: mode
@@ -2041,7 +2070,6 @@ contains
 
   #+begin_src f90 :tangle helper_fortran.f90
    subroutine trexio_str2strarray(str_flat, max_num_str, max_len_str, str_array)
-     use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
 
      integer(8), intent(in), value   :: max_num_str  ! number of elements in strign array
@@ -2061,7 +2089,7 @@ contains
        k = 1
        tmp_str=''
        do j=ind,len_flat
-         if ( str_flat(j)==TREXIO_DELIM ) then
+         if (str_flat(j) == TREXIO_DELIM) then
            ind=j+1
            exit
          endif
@@ -2069,7 +2097,6 @@ contains
          k = k + 1
        enddo
        str_array(i)=tmp_str
-       !write(*,*) str_array(i)
        offset=ind
      enddo
 
