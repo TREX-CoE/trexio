@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([trexio], [0.3.0], [https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio], [0.2.0], [https://github.com/TREX-CoE/trexio/issues])
 AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
 LT_INIT
@@ -167,8 +167,8 @@ LDFLAGS .......:  ${LDFLAGS}
 LIBS ..........:  ${LIBS}
 
 Package features:
-  Compilation with HDF5...:  ${with_hdf5}
-  HDF5 version............:  ${HDF5_VERSION}
+  Compilation with HDF5 ..:  ${with_hdf5}
+  HDF5 version ...........:  ${HDF5_VERSION}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
