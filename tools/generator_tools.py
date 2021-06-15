@@ -556,9 +556,14 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             group_dset_std_dtype_in  = '" SCNd64 "' 
         elif v[0] == 'str':
             datatype = 'char*'
-            group_dset_h5_dtype = 'c_s1'
-            group_dset_f_dtype_default = 'character(len=*)'
+            group_dset_h5_dtype = ''
+            group_dset_f_dtype_default = ''
+            group_dset_f_dtype_double = ''
+            group_dset_f_dtype_single = ''
             group_dset_dtype_default = 'char*'
+            group_dset_dtype_double = ''
+            group_dset_dtype_single = ''
+            default_prec   = ''
             group_dset_std_dtype_out = 's'
             group_dset_std_dtype_in  = 's' 
         

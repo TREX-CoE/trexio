@@ -7,13 +7,8 @@ trex_config = read_json(config_file)
 # --------------------------------------------------------------------------- #
 
 # -------------------------------- [WIP] ------------------------------------ #
-print('Metadata I/O currently not supported')
-# TODO, for now remove metadata-related stuff
-del trex_config['metadata']
 # for now remove rdm from config because it functions are hardcoded
 del trex_config['rdm']
-# TODO, for now remove char-related stuff
-print('Strings I/O currently not supported')
 # --------------------------------------------------------------------------- #
 
 # -------------------- GET ATTRIBUTES FROM THE CONFIGURATION ---------------- #
