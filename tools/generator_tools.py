@@ -39,11 +39,11 @@ def get_files_todo(source_files: dict) -> dict:
     files_todo = {}       
     #files_todo['all'] = list(filter(lambda x: 'read' in x or 'write' in x or 'has' in x or 'hrw' in x or 'flush' in x or 'free' in x, all_files))
     files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f]
-    for key in ['dset', 'num', 'group']:
+    for key in ['dset_data', 'dset_str', 'num', 'attr_str', 'group']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
-    # files that correspond to todo1 group (e.g. only iterative population within the function body)
+    # files that correspond to iterative population (e.g. the code is repeated within the function body but the function itself is unique)
     files_todo['auxiliary'] = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.h', 'struct_text_group.h'] 
 
     return files_todo
@@ -104,7 +104,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
                 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
-                'group_dset', 'group_num', 'group']
+                'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
         with open(join(templ_path,fname), 'r') as f_in :
@@ -119,7 +119,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                                 if not dim.isdigit() and not dim in num_written:
                                     num_written.append(dim)
                                     templine = line.replace('$group_dset_dim$', dim)
-                                    if '_read' in templine: 
+                                    if '_read' in templine and (not 'fortran' in fname):
                                             line_toadd = indentlevel*" " + rc_line
                                             templine += line_toadd
 
@@ -168,7 +168,7 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
     return output_line
 
 
-def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict) -> None:
+def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict, strings: dict) -> None:
     """ 
     Iteratively populate files with unique functions that contain templated variables.
 
@@ -178,12 +178,13 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                     groups (dict)           : dictionary of groups
                     datasets (dict)         : dictionary of datasets with substitution details
                     numbers (dict)          : dictionary of numbers with substitution details
+                    strings (dict)          : dictionary of strings with substitution details
 
             Returns:
                     None
     """
     add_trigger = 'rc = trexio_text_free_$group$'
-    triggers = [add_trigger, '$group_dset$', '$group_num$', '$group$']
+    triggers = [add_trigger, '$group_dset$', '$group_num$', '$group_str$', '$group$']
 
     templ_path = get_template_path(filename, paths)
     filename_out = join('populated',f'pop_{filename}')
@@ -197,7 +198,7 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                 if id == 0:
                     # special case for proper error handling when deallocting text groups
                     error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
-                    populated_line = iterative_replace_line(line, triggers[3], groups, add_line=error_handler)
+                    populated_line = iterative_replace_line(line, '$group$', groups, add_line=error_handler)
                     f_out.write(populated_line)
                 elif id == 1:
                     populated_line = iterative_replace_line(line, triggers[id], datasets, None)
@@ -206,6 +207,9 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                     populated_line = iterative_replace_line(line, triggers[id], numbers, None)
                     f_out.write(populated_line)
                 elif id == 3:
+                    populated_line = iterative_replace_line(line, triggers[id], strings, None)
+                    f_out.write(populated_line)
+                elif id == 4:
                     populated_line = iterative_replace_line(line, triggers[id], groups, None)
                     f_out.write(populated_line)
                 else:
@@ -257,7 +261,7 @@ def check_triggers (input_line: str, triggers: list) -> int:
     return out_id
 
 
-def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict) -> None:
+def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detailed_dset: dict, detailed_numbers: dict, detailed_strings: dict) -> None:
     """ 
     Special population for group-related functions in the TEXT back end.
 
@@ -267,6 +271,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                     group_dict (dict)       : dictionary of groups
                     detailed_dset (dict)    : dictionary of datasets with substitution details
                     detailed_numbers (dict) : dictionary of numbers with substitution details
+                    detailed_strings (dict) : dictionary of string attributes with substitution details
 
             Returns:
                     None
@@ -275,7 +280,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
     templ_path = get_template_path(fname, paths)
 
     triggers = ['group_dset_dtype', 'group_dset_std_dtype_out', 'group_dset_std_dtype_in',
-                'group_dset', 'group_num', 'group']
+                'group_dset', 'group_num', 'group_str', 'group']
 
     for group in group_dict.keys():
 
@@ -286,13 +291,15 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                 subloop_num = False
                 loop_body = ''
                 dset_allocated = []
+                str_allocated = []
 
                 for line in f_in :
 
                     if 'START REPEAT GROUP_DSET' in line:
                         subloop_dset = True
                         continue
-                    elif 'START REPEAT GROUP_NUM' in line:
+                    # this can be merged in one later using something like START REPEAT GROUP_ATTR in line
+                    elif 'START REPEAT GROUP_NUM' in line or 'START REPEAT GROUP_ATTR_STR' in line:
                         subloop_num = True
                         continue
                     
@@ -302,6 +309,11 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                             if group != detailed_dset[dset]['group']: 
                                 continue
 
+                            if ('REPEAT GROUP_DSET_STR' in line) and (detailed_dset[dset]['dtype'] != 'char*'):
+                                continue
+                            if ('REPEAT GROUP_DSET_NUM' in line) and (detailed_dset[dset]['dtype'] == 'char*'):
+                                continue
+
                             dset_allocated.append(dset)
 
                             if 'FREE($group$->$group_dset$)' in loop_body:
@@ -309,7 +321,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                                 for dset_alloc in dset_allocated:
                                     tmp_string += f'FREE({group}->{dset_alloc});\n        '
 
-                                tmp_body = loop_body.replace('FREE($group$->$group_dset$);',tmp_string)
+                                tmp_body = loop_body.replace('FREE($group$->$group_dset$);', tmp_string)
 
                                 populated_body = recursive_replace_line(tmp_body, triggers, detailed_dset[dset])
                                 f_out.write(populated_body)
@@ -336,6 +348,33 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                         loop_body = ''
                         continue
 
+                    elif 'END REPEAT GROUP_ATTR_STR' in line:
+                        for str in detailed_strings.keys():
+                            if group != detailed_strings[str]['group']: 
+                                continue
+
+                            str_allocated.append(str)
+
+                            if 'FREE($group$->$group_str$)' in loop_body:
+                                tmp_string = ''
+                                for str_alloc in str_allocated:
+                                    tmp_string += f'FREE({group}->{str_alloc});\n        '
+
+                                tmp_body = loop_body.replace('FREE($group$->$group_str$);', tmp_string)
+
+                                populated_body = recursive_replace_line(tmp_body, triggers, detailed_strings[str])
+                                f_out.write(populated_body)
+                            else:
+                                save_body = loop_body
+                                populated_body = recursive_replace_line(save_body, triggers, detailed_strings[str])
+                                f_out.write(populated_body)
+
+                        subloop_num = False
+                        loop_body = ''
+                        str_allocated = []
+
+                        continue
+
                     if not subloop_num and not subloop_dset:
                         # NORMAL CASE WITHOUT SUBLOOPS 
                         if '$group_dset' in line:
@@ -343,6 +382,12 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                                 if group != detailed_dset[dset]['group']: 
                                     continue
                                 populated_line = recursive_replace_line(line, triggers, detailed_dset[dset])
+                                f_out.write(populated_line)
+                        elif '$group_str' in line:
+                            for str in detailed_strings.keys():
+                                if group != detailed_strings[str]['group']: 
+                                    continue
+                                populated_line = recursive_replace_line(line, triggers, detailed_strings[str])
                                 f_out.write(populated_line)
                         elif '$group_num$' in line:
                             for dim in detailed_numbers.keys():
@@ -420,6 +465,31 @@ def get_detailed_num_dict (configuration: dict) -> dict:
     return num_dict
 
 
+def get_detailed_str_dict (configuration: dict) -> dict:
+    """
+    Returns the dictionary of all `str`-like attributes.
+    Keys are names, values are subdictionaries containing corresponding group and group_str names.
+
+            Parameters:
+                    configuration (dict) : configuration from `trex.json`
+
+            Returns:
+                    str_dict (dict) : dictionary of string attributes
+    """
+    str_dict = {}
+    for k1,v1 in configuration.items():
+        for k2,v2 in v1.items():
+            if len(v2[1]) == 0:
+                tmp_str = f'{k1}_{k2}'
+                if 'str' in v2[0]:
+                    tmp_dict = {}
+                    tmp_dict['group'] = k1
+                    tmp_dict['group_str'] = tmp_str
+                    str_dict[tmp_str] = tmp_dict
+
+    return str_dict
+
+
 def get_dset_dict (configuration: dict) -> dict:
     """ 
     Returns the dictionary of datasets. 
@@ -485,8 +555,12 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             group_dset_std_dtype_out = '" PRId64 "'
             group_dset_std_dtype_in  = '" SCNd64 "' 
         elif v[0] == 'str':
-            # TODO
-            datatype = 'string'
+            datatype = 'char*'
+            group_dset_h5_dtype = 'c_s1'
+            group_dset_f_dtype_default = 'character(len=*)'
+            group_dset_dtype_default = 'char*'
+            group_dset_std_dtype_out = 's'
+            group_dset_std_dtype_in  = 's' 
         
         # add the dset name for templates
         tmp_dict['group_dset'] = k
@@ -532,7 +606,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group'] = v[2]
 
         # split datasets in numeric- and string- based
-        if (datatype == 'string'):
+        if (datatype == 'char*'):
             dset_string_dict[k] = tmp_dict
         else:
             dset_numeric_dict[k] = tmp_dict

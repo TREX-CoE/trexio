@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int test_write(const char* file_name, const back_end_t backend);
 int test_read(const char* file_name, const back_end_t backend);
@@ -54,6 +55,20 @@ int test_write(const char* file_name, const back_end_t backend) {
   0.00000000 ,  2.47304151 ,  0.00000000 ,
   };
 
+  const char* label[] = {"C" ,
+                         "Na",
+  	                 "ClH asdasdasdas" ,
+        	         "C" ,
+                	 "C 666" ,
+	                 "C" ,
+        	         "H" ,
+                	 "Ru",
+	                 "H" ,
+        	         "H 999asdasd" ,
+                	 "H" ,
+	                 "H" };
+  
+  const char* sym = "B3U and some stuff";
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
@@ -72,10 +87,27 @@ int test_write(const char* file_name, const back_end_t backend) {
   rc = trexio_write_nucleus_coord(file,coord);
   assert (rc == TREXIO_SUCCESS);
 
+  rc = trexio_write_nucleus_label(file, label, 32);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_write_nucleus_point_group(file, sym, 32);
+  assert (rc == TREXIO_SUCCESS);
+  
+  // close current session
+  rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+ 
+  // reopen file in 'write' mode
+  file = trexio_open(file_name, 'w', backend);
+  assert (file != NULL);
+
   // check if the written data exists in the file
   rc = trexio_has_nucleus_num(file);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_has_nucleus_coord(file);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_has_nucleus_label(file);
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_has_nucleus_point_group(file);
   assert (rc == TREXIO_SUCCESS);
 
   // should not work: try to overwrite the num variable
@@ -118,6 +150,8 @@ int test_read(const char* file_name, const back_end_t backend) {
 
   int num;
   double* coord;
+  char** label;
+  char* point_group;
 
 /*================= START OF TEST ==================*/
 
@@ -137,6 +171,37 @@ int test_read(const char* file_name, const back_end_t backend) {
 
   double x = coord[30] - 2.14171677;
   assert( x*x < 1.e-14);
+  free(coord);
+
+  // read nucleus_label
+  label = (char**) malloc(num*sizeof(char*));
+  for (int i=0; i<num; i++){
+    label[i] = (char*) malloc(32*sizeof(char));
+  }
+
+  rc = trexio_read_nucleus_label(file, label, 2);
+  assert (rc == TREXIO_SUCCESS);
+  assert (strcmp(label[0], "C")  == 0);
+  assert (strcmp(label[1], "Na") == 0);
+  
+  for (int i=0; i<num; i++){
+    free(label[i]);
+  }
+  free(label);
+
+  point_group = (char*) malloc(32*sizeof(char));
+
+  rc = trexio_read_nucleus_point_group(file, point_group, 6);
+  assert (rc == TREXIO_SUCCESS);
+
+  char * pch;
+  pch = strtok(point_group, " ");
+  assert (strcmp(pch, "B3U") == 0);
+  /* alternative test when 3 symbols are read from the file to point_group */
+  /*rc = trexio_read_nucleus_point_group(file, point_group, 3);
+  assert (rc == TREXIO_SUCCESS);
+  assert (strcmp(point_group, "B3U") == 0 );*/
+  free(point_group);
 
   // close current session
   rc = trexio_close(file);
@@ -150,8 +215,7 @@ int test_read(const char* file_name, const back_end_t backend) {
   assert (file2 == NULL);
 
 /*================= END OF TEST =====================*/
-
-  free(coord);
+ 
   return 0;
 }
 

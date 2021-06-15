@@ -31,6 +31,8 @@ module trexio
   integer(trexio_backend), parameter :: TREXIO_TEXT = 1
 ! integer(trexio_backend), parameter :: TREXIO_JSON = 2
   integer(trexio_backend), parameter :: TREXIO_INVALID_BACK_END = 2
+
+  character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
    #+end_src
 
   #+end_src
@@ -144,6 +146,7 @@ typedef int32_t trexio_exit_code;
    | ~TREXIO_GROUP_WRITE_ERROR~   |   20 | 'Error writing group'                  |
    | ~TREXIO_ELEM_READ_ERROR~     |   21 | 'Error reading element'                |
    | ~TREXIO_ELEM_WRITE_ERROR~    |   22 | 'Error writing element'                |
+   | ~TREXIO_INVALID_STR_LEN~     |   30 | 'Invalid max_str_len'                  |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -174,7 +177,7 @@ return '\n'.join(result)
 
    #+RESULTS:
    :results:
-   #+begin_src c :tangle prefix_front.h :exports none
+   #+begin_src c :tangle prefix_front.h
    #define  TREXIO_FAILURE                 ((trexio_exit_code) -1)
    #define  TREXIO_SUCCESS                 ((trexio_exit_code) 0)
    #define  TREXIO_INVALID_ARG_1           ((trexio_exit_code) 1)
@@ -199,9 +202,10 @@ return '\n'.join(result)
    #define  TREXIO_GROUP_WRITE_ERROR       ((trexio_exit_code) 20)
    #define  TREXIO_ELEM_READ_ERROR         ((trexio_exit_code) 21)
    #define  TREXIO_ELEM_WRITE_ERROR        ((trexio_exit_code) 22)
+   #define  TREXIO_INVALID_STR_LEN         ((trexio_exit_code) 30)
    #+end_src
 
-   #+begin_src f90 :tangle prefix_fortran.f90 :exports none
+   #+begin_src f90 :tangle prefix_fortran.f90
       integer(trexio_exit_code), parameter :: TREXIO_FAILURE                 = -1
       integer(trexio_exit_code), parameter :: TREXIO_SUCCESS                 = 0
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_1           = 1
@@ -226,6 +230,7 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_GROUP_WRITE_ERROR       = 20
       integer(trexio_exit_code), parameter :: TREXIO_ELEM_READ_ERROR         = 21
       integer(trexio_exit_code), parameter :: TREXIO_ELEM_WRITE_ERROR        = 22
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_STR_LEN         = 30
    #+end_src
    :end:
 
@@ -388,6 +393,8 @@ typedef int32_t back_end_t;
 #define TREXIO_TEXT             ( (back_end_t) 1 )
 /*#define TREXIO_JSON             ( (back_end_t) 2 )*/
 #define TREXIO_INVALID_BACK_END ( (back_end_t) 2 )
+
+#define TREXIO_DELIM            "\n"
    #+end_src
 ** Read/write behavior
 
@@ -712,30 +719,8 @@ interface
 end interface
     #+end_src
 
-** C helper functions
-
-    #+begin_src c :tangle prefix_front.c
-trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_num, uint32_t str_max_len){
-
-  if (dest == NULL)  return TREXIO_INVALID_ARG_1;
-  assert (str_max_num > 0);
-  assert (str_max_len > 0);
-
-  char* tmp_str = (char*)calloc(str_max_num*(str_max_len+1)+1,sizeof(char));
-
-  for (int i=0; i<str_max_num; i++){
-    dest[i] = tmp_str;
-    strncpy(tmp_str, src[i], str_max_len);
-    tmp_str += str_max_len + 1;
-  }
-
-  /*tmp_str cannot be freed here but it is taken case of when pointer to dest is deallocated */
-
-  return TREXIO_SUCCESS;
-}
-    #+end_src c
-
 * Templates for front end
+** Description
 
   Consider the following block of =trex.json=:
 
@@ -801,7 +786,7 @@ trexio_exit_code transform_str (char** dest, const char** src, uint64_t str_max_
    *read* and *write* functionality.  TREXIO supports I/O with single
    or double precision for integer and floating point numbers.
 
-** Templates for front end has/read/write a dimension
+** Templates for front end has/read/write a single dimensioning variable
 
    This section concerns API calls related to dimensioning variables.
 
@@ -877,26 +862,23 @@ trexio_write_$group_num$_64 (trexio_t* const file, const int64_t num)
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS) return TREXIO_NUM_ALREADY_EXISTS;
 
-  trexio_exit_code rc = TREXIO_GROUP_WRITE_ERROR;
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_write_$group_num$(file, (int64_t) num);
+    return trexio_text_write_$group_num$(file, (int64_t) num);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_write_$group_num$(file, (int64_t) num);
+    return trexio_hdf5_write_$group_num$(file, (int64_t) num);
     break;
 /*
   case TREXIO_JSON:
-    rc = trexio_json_write_$group_num$(file, (int64_t) num);
+    return trexio_json_write_$group_num$(file, (int64_t) num);
     break;
 ,*/
   }
-  if (rc != TREXIO_SUCCESS) return rc;
 
-  return TREXIO_SUCCESS;
+  return TREXIO_FAILURE;
 }
      #+end_src
 
@@ -941,26 +923,23 @@ trexio_write_$group_num$_32 (trexio_t* const file, const int32_t num)
   if (num  <  0   ) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS) return TREXIO_NUM_ALREADY_EXISTS;
 
-  trexio_exit_code rc = TREXIO_GROUP_WRITE_ERROR;
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_write_$group_num$(file, (int64_t) num);
+    return trexio_text_write_$group_num$(file, (int64_t) num);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_write_$group_num$(file, (int64_t) num);
+    return trexio_hdf5_write_$group_num$(file, (int64_t) num);
     break;
 /*
   case TREXIO_JSON:
-    rc = trexio_json_write_$group_num$(file, (int64_t) num);
+    return trexio_json_write_$group_num$(file, (int64_t) num);
     break;
 ,*/
   }
-  if (rc != TREXIO_SUCCESS) return rc;
 
-  return TREXIO_SUCCESS;
+  return TREXIO_FAILURE;
 }
      #+end_src
 
@@ -1004,8 +983,8 @@ trexio_has_$group_num$ (trexio_t* const file)
     break;
 ,*/
   }
-  return TREXIO_FAILURE;
 
+  return TREXIO_FAILURE;
 }
      #+end_src
 
@@ -1083,7 +1062,7 @@ interface
 end interface
      #+end_src
 
-** Templates for front end has/read/write a dataset
+** Templates for front end has/read/write a dataset of numerical data
 
    This section concerns API calls related to datasets.
 
@@ -1106,7 +1085,7 @@ end interface
    The basic (non-suffixed) API call on datasets deals with double precision (see Table above).
 
 
-     #+begin_src c :tangle hrw_dset_front.h :exports none
+     #+begin_src c :tangle hrw_dset_data_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const $group_dset$);
 trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const $group_dset_dtype_default$* $group_dset$);
@@ -1116,7 +1095,7 @@ trexio_exit_code trexio_read_$group_dset$_64(trexio_t* const file, $group_dset_d
 trexio_exit_code trexio_write_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$);
      #+end_src
 
-     #+begin_src c :tangle read_dset_64_front.c
+     #+begin_src c :tangle read_dset_data_64_front.c
 trexio_exit_code
 trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* const $group_dset$)
 {
@@ -1171,7 +1150,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 }
      #+end_src
 
-     #+begin_src c :tangle write_dset_64_front.c
+     #+begin_src c :tangle write_dset_data_64_front.c
 trexio_exit_code
 trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$)
 {
@@ -1192,7 +1171,7 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
   uint32_t rank = $group_dset_rank$;
   uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
 
-  $group_dset_dtype_double$* $group_dset$_p = $group_dset$;
+  $group_dset_dtype_double$* $group_dset$_p = ($group_dset_dtype_double$*) $group_dset$;
 
   /* Handle index type */
   if ($is_index$) {
@@ -1238,7 +1217,7 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 }
      #+end_src
 
-     #+begin_src c :tangle read_dset_32_front.c
+     #+begin_src c :tangle read_dset_data_32_front.c
 trexio_exit_code
 trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* const $group_dset$)
 {
@@ -1305,7 +1284,7 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
 }
      #+end_src
 
-     #+begin_src c :tangle write_dset_32_front.c
+     #+begin_src c :tangle write_dset_data_32_front.c
 trexio_exit_code
 trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_single$* $group_dset$)
 {
@@ -1371,7 +1350,7 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
 }
      #+end_src
 
-     #+begin_src c :tangle read_dset_def_front.c
+     #+begin_src c :tangle read_dset_data_def_front.c
 trexio_exit_code
 trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* const $group_dset$)
 {
@@ -1379,7 +1358,7 @@ trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* cons
 }
      #+end_src
 
-     #+begin_src c :tangle write_dset_def_front.c
+     #+begin_src c :tangle write_dset_data_def_front.c
 trexio_exit_code
 trexio_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default$* $group_dset$)
 {
@@ -1387,7 +1366,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default
 }
      #+end_src
 
-     #+begin_src c :tangle has_dset_front.c
+     #+begin_src c :tangle has_dset_data_front.c
 trexio_exit_code
 trexio_has_$group_dset$ (trexio_t* const file)
 {
@@ -1420,7 +1399,7 @@ trexio_has_$group_dset$ (trexio_t* const file)
     The ~Fortran~ templates that provide an access to the ~C~ API calls from ~Fortran~.
     These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
 
-     #+begin_src f90 :tangle write_dset_64_front_fortran.f90
+     #+begin_src f90 :tangle write_dset_data_64_front_fortran.f90
 interface
    integer function trexio_write_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1430,7 +1409,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_dset_64_front_fortran.f90
+     #+begin_src f90 :tangle read_dset_data_64_front_fortran.f90
 interface
    integer function trexio_read_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1440,7 +1419,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle write_dset_32_front_fortran.f90
+     #+begin_src f90 :tangle write_dset_data_32_front_fortran.f90
 interface
    integer function trexio_write_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1450,7 +1429,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_dset_32_front_fortran.f90
+     #+begin_src f90 :tangle read_dset_data_32_front_fortran.f90
 interface
    integer function trexio_read_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1460,7 +1439,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle write_dset_def_front_fortran.f90
+     #+begin_src f90 :tangle write_dset_data_def_front_fortran.f90
 interface
    integer function trexio_write_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1470,7 +1449,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_dset_def_front_fortran.f90
+     #+begin_src f90 :tangle read_dset_data_def_front_fortran.f90
 interface
    integer function trexio_read_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1480,7 +1459,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle has_dset_front_fortran.f90
+     #+begin_src f90 :tangle has_dset_data_front_fortran.f90
 interface
    integer function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1603,6 +1582,524 @@ trexio_read_chunk_ao_2e_int_eri_value_64(trexio_t* const file,
 }
   #+END_SRC
 
+** Templates for front end has/read/write a dataset of strings
+*** Introduction
+   This section concerns API calls related to datasets of strings.
+
+   | Function name               | Description                         |
+   |-----------------------------+-------------------------------------|
+   | ~trexio_has_$group_dset$~   | Check if a dataset exists in a file |
+   | ~trexio_read_$group_dset$~  | Read  a dataset                     |
+   | ~trexio_write_$group_dset$~ | Write a dataset                     |
+
+*** C templates for front end
+
+   First parameter is the ~TREXIO~ file handle. Second parameter is the variable to be written/read
+   to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
+
+
+     #+begin_src c :tangle hrw_dset_str_front.h :exports none
+trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_read_$group_dset$_low(trexio_t* const file, char* dset, const uint32_t max_str_len);
+trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, const char* dset, const uint32_t max_str_len);
+trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** dset, const uint32_t max_str_len);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset, const uint32_t max_str_len);
+     #+end_src
+
+     #+begin_src c :tangle read_dset_str_front.c
+trexio_exit_code
+trexio_read_$group_dset$_low (trexio_t* const file, char* dset, const uint32_t max_str_len)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc;
+  int64_t $group_dset_dim$ = 0;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+
+  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = $group_dset_rank$;
+  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_$group_dset$(file, dset, rank, dims, max_str_len);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_$group_dset$(file, dset, rank, dims, max_str_len);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_$group_dset$(file, dset, rank, dims);
+    break;
+,*/
+  }
+
+}
+
+trexio_exit_code
+trexio_read_$group_dset$ (trexio_t* const file, char** dset, const uint32_t max_str_len)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  trexio_exit_code rc;
+  int64_t dset_dim = 0;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_read_$group_dset_dim$_64(file, &(dset_dim));
+
+  if (dset_dim == 0L) return TREXIO_INVALID_NUM;
+
+  char* str_compiled = CALLOC(dset_dim*(max_str_len+1) + 1, char);
+  if (str_compiled == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  rc = trexio_read_$group_dset$_low(file, str_compiled, max_str_len);
+  if (rc != TREXIO_SUCCESS) {
+    FREE(str_compiled);
+    return rc;
+  }
+
+  char * pch;
+  for (uint64_t i=0; i < dset_dim; i++) {
+
+    pch = i == 0 ? strtok(str_compiled, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
+    if (pch == NULL) {
+      FREE(str_compiled);
+      return TREXIO_FAILURE;
+    }
+
+    strcpy(dset[i], "");
+    strcat(dset[i], pch);
+
+  }
+
+  FREE(str_compiled);
+  return TREXIO_SUCCESS;
+
+}
+     #+end_src
+
+     #+begin_src c :tangle write_dset_str_front.c
+trexio_exit_code
+trexio_write_$group_dset$_low (trexio_t* const file, const char* dset, const uint32_t max_str_len)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+  if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS) return TREXIO_DSET_ALREADY_EXISTS;
+
+  trexio_exit_code rc;
+  int64_t $group_dset_dim$ = 0;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+
+  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = $group_dset_rank$;
+  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  char*  tmp_str  = CALLOC(dims[0]*(max_str_len+1), char);
+  if (tmp_str == NULL) return TREXIO_ALLOCATION_FAILED;
+  char** dset_str = CALLOC(dims[0], char*);
+  if (dset_str == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  char* pch;
+  size_t pch_len;
+  /* parse the string using strtok */
+  for(uint64_t i=0; i<dims[0]; i++) {
+
+    pch = i == 0 ? strtok( (char*) dset, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
+
+    if (pch == NULL) {
+      FREE(dset_str[0]);
+      FREE(dset_str);
+      return TREXIO_FAILURE;
+    }
+
+    pch_len = strlen(pch);
+
+    if (pch_len > max_str_len) {
+      FREE(dset_str[0]);
+      FREE(dset_str);
+      return TREXIO_INVALID_STR_LEN;
+    }
+
+    dset_str[i] = tmp_str;
+    strncpy(tmp_str, pch, pch_len);
+    tmp_str += pch_len + 1;
+  }
+
+  rc = TREXIO_FAILURE;  
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_write_$group_dset$(file, (const char**) dset_str, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+    rc = trexio_hdf5_write_$group_dset$(file, (const char**) dset_str, rank, dims);
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_write_$group_dset$(file, dset, rank, dims);
+    break;
+,*/
+  }
+
+  FREE(dset_str[0]);
+  FREE(dset_str);
+    
+  return rc;
+
+}
+
+trexio_exit_code
+trexio_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32_t max_str_len)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+  if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS) return TREXIO_DSET_ALREADY_EXISTS;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  trexio_exit_code rc;
+  int64_t dset_dim = 0;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_read_$group_dset_dim$_64(file, &(dset_dim));
+
+  if (dset_dim == 0L) return TREXIO_INVALID_NUM;
+
+  char* str_compiled = CALLOC(dset_dim*max_str_len + 1, char);
+  if (str_compiled == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  strcpy(str_compiled, "");
+  for (uint64_t i=0; i < dset_dim; i++) {
+    strcat(str_compiled, dset[i]);
+    strcat(str_compiled, TREXIO_DELIM);
+  }
+
+  rc = trexio_write_$group_dset$_low(file, str_compiled, max_str_len);
+
+  FREE(str_compiled);
+
+  return rc;
+
+}
+     #+end_src
+
+     #+begin_src c :tangle has_dset_str_front.c
+trexio_exit_code
+trexio_has_$group_dset$ (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_$group_dset$(file);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_has_$group_dset$(file);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_$group_dset$(file);
+    break;
+,*/
+  }
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+*** Fortran templates for front end
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from ~Fortran~.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+     #+begin_src f90 :tangle write_dset_str_front_fortran.f90
+interface
+   integer function trexio_write_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     character, intent(in) :: dset(*)
+     integer(4), intent(in), value :: max_str_len
+   end function trexio_write_$group_dset$_low
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle read_dset_str_front_fortran.f90
+interface
+   integer function trexio_read_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     character, intent(out) :: dset(*)
+     integer(4), intent(in), value :: max_str_len
+   end function trexio_read_$group_dset$_low
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle has_dset_str_front_fortran.f90
+interface
+   integer function trexio_has_$group_dset$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_has_$group_dset$
+end interface
+     #+end_src
+
+  #+begin_src f90 :tangle helper_read_dset_str_front_fortran.fh_90
+   integer function trexio_read_$group_dset$ (trex_file, dset, max_str_len)
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character(len=*), intent(inout) :: dset(*)
+
+     character, allocatable :: str_compiled(:)
+     integer(8) :: $group_dset_dim$
+     integer :: rc
+     
+     rc = trexio_read_$group_dset_dim$_64(trex_file, $group_dset_dim$)
+     if (rc /= TREXIO_SUCCESS) trexio_read_$group_dset$ = rc
+
+     allocate(str_compiled($group_dset_dim$*(max_str_len+1)+1))
+     
+     rc = trexio_read_$group_dset$_low(trex_file, str_compiled, max_str_len)
+     if (rc /= TREXIO_SUCCESS) then 
+       deallocate(str_compiled)
+       trexio_read_$group_dset$ = rc
+     else
+       call trexio_str2strarray(str_compiled, $group_dset_dim$, max_str_len, dset)
+       deallocate(str_compiled)
+       trexio_read_$group_dset$ = TREXIO_SUCCESS
+     endif
+
+   end function trexio_read_$group_dset$
+  #+end_src
+
+  #+begin_src f90 :tangle helper_write_dset_str_front_fortran.fh_90
+   integer function trexio_write_$group_dset$ (trex_file, dset, max_str_len)
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character(len=*), intent(in) :: dset(*)
+
+     character(len=:), allocatable :: str_compiled
+     integer(8) :: $group_dset_dim$
+     integer :: rc
+     
+     rc = trexio_read_$group_dset_dim$_64(trex_file, $group_dset_dim$)
+     if (rc /= TREXIO_SUCCESS) then
+       trexio_write_$group_dset$ = rc
+     else
+       call trexio_strarray2str(dset, $group_dset_dim$, max_str_len, str_compiled)
+       trexio_write_$group_dset$ = trexio_write_$group_dset$_low(trex_file, str_compiled, max_str_len)
+     endif
+
+   end function trexio_write_$group_dset$
+  #+end_src
+
+** Templates for front end has/read/write a single string attribute
+*** Introduction
+
+   This section concerns API calls related to string attributes.
+
+   | Function name              | Description                                  |
+   |----------------------------+----------------------------------------------|
+   | ~trexio_has_$group_str$~   | Check if a string attribute exists in a file |
+   | ~trexio_read_$group_str$~  | Read a string attribute                      |
+   | ~trexio_write_$group_str$~ | Write a string attribute                     |
+
+*** C templates for front end
+
+     #+begin_src c :tangle hrw_attr_str_front.h :exports none
+trexio_exit_code trexio_has_$group_str$(trexio_t* const file);
+trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str, const uint32_t max_str_len);
+trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str, const uint32_t max_str_len);
+     #+end_src
+
+     #+begin_src c :tangle read_attr_str_front.c
+trexio_exit_code
+trexio_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_$group_str$(file, str, max_str_len);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_read_$group_str$(file, str, max_str_len);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_$group_str$(file, str);
+    break;
+,*/
+  }
+
+}
+     #+end_src
+
+     #+begin_src c :tangle write_attr_str_front.c
+trexio_exit_code
+trexio_write_$group_str$ (trexio_t* const file, const char* str, const uint32_t max_str_len)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+  if (trexio_has_$group_str$(file) == TREXIO_SUCCESS) return TREXIO_NUM_ALREADY_EXISTS;
+
+  size_t len_write = strlen(str);
+  if (max_str_len < len_write) return TREXIO_INVALID_STR_LEN;  
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_$group_str$(file, str);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_write_$group_str$(file, str);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_$group_str$(file, str);
+    break;
+,*/
+  }
+
+}
+     #+end_src
+   
+     #+begin_src c :tangle has_attr_str_front.c
+trexio_exit_code
+trexio_has_$group_str$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_$group_str$(file);
+    break;
+
+  case TREXIO_HDF5:
+    return trexio_hdf5_has_$group_str$(file);
+    break;
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_$group_str$(file);
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+*** Fortran templates for front end
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+    
+     #+begin_src f90 :tangle write_attr_str_front_fortran.f90
+interface
+   integer function trexio_write_$group_str$_c (trex_file, str, max_str_len) &
+           bind(C, name="trexio_write_$group_str$")
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     character, intent(in) :: str(*)
+     integer(4), intent(in), value :: max_str_len
+   end function trexio_write_$group_str$_c
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle read_attr_str_front_fortran.f90
+interface
+   integer function trexio_read_$group_str$_c (trex_file, str, max_str_len) &
+           bind(C, name="trexio_read_$group_str$")
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     character, intent(out) :: str(*)
+     integer(4), intent(in), value :: max_str_len
+   end function trexio_read_$group_str$_c
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle has_attr_str_front_fortran.f90
+interface
+   integer function trexio_has_$group_str$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+   end function trexio_has_$group_str$
+end interface
+     #+end_src
+
+  #+begin_src f90 :tangle helper_read_attr_str_front_fortran.fh_90
+   integer function trexio_read_$group_str$ (trex_file, str, max_str_len)
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character, intent(out) :: str(*)
+ 
+     trexio_read_$group_str$ = trexio_read_$group_str$_c(trex_file, str, max_str_len)
+
+   end function trexio_read_$group_str$
+  #+end_src
+
+  #+begin_src f90 :tangle helper_write_attr_str_front_fortran.fh_90
+   integer function trexio_write_$group_str$ (trex_file, str, max_str_len)
+     use, intrinsic :: iso_c_binding, only : c_null_char
+     implicit none
+     integer(8), intent(in), value :: trex_file
+     integer(4), intent(in), value :: max_str_len
+     character(len=*), intent(in) :: str
+
+     character(len=len_trim(str)+1) :: str_c
+
+     str_c = trim(str) // c_null_char
+
+     trexio_write_$group_str$ = trexio_write_$group_str$_c(trex_file, str_c, max_str_len)
+
+   end function trexio_write_$group_str$
+  #+end_src
+
 * Fortran helper/wrapper functions
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.
@@ -1610,12 +2107,12 @@ trexio_read_chunk_ao_2e_int_eri_value_64(trexio_t* const file,
   unlike strings in Fortran.
   Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
 
-  #+begin_src f90 :tangle suffix_fortran.f90
+  #+begin_src f90 :tangle helper_fortran.f90
 contains
    integer(8) function trexio_open (filename, mode, backend)
-     use, intrinsic :: iso_c_binding
+     use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
-     character(len=*)                             :: filename
+     character(len=*), intent(in)                 :: filename
      character, intent(in), value                 :: mode
      integer(trexio_backend), intent(in), value   :: backend
      character(len=len_trim(filename)+1) :: filename_c
@@ -1633,6 +2130,93 @@ contains
      endif
    end function trexio_open
   #+end_src
+
+  The subroutine below transforms an array of Fortran strings into one big string using ~TREXIO_DELIM~ symbol 
+  as a delimeter and adds ~NULL~ character in the end in order to properly pass the desired string to 
+  C API. This is needed due to the fact that strings in C are terminated by ~NULL~ character ~\0~.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+   subroutine trexio_strarray2str(str_array, max_num_str, max_len_str, str_res)
+     use, intrinsic :: iso_c_binding, only : c_null_char
+     implicit none
+
+     integer(8), intent(in), value   :: max_num_str  ! number of elements in strign array
+     integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
+     character(len=*), intent(in)  :: str_array(*)
+     character(len=:), allocatable, intent(out) :: str_res
+     integer :: i
+
+     str_res = ''
+     do i = 1, max_num_str
+       str_res = str_res // trim(str_array(i)) // TREXIO_DELIM
+     enddo
+     str_res = str_res // c_null_char
+
+   end subroutine trexio_strarray2str
+     #+end_src
+
+  The subroutine below does the reverse tranformation from one big string with delimeters into an array of Fortran strings.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+   subroutine trexio_str2strarray(str_flat, max_num_str, max_len_str, str_array)
+     implicit none
+
+     integer(8), intent(in), value   :: max_num_str  ! number of elements in strign array
+     integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
+     character, intent(in) :: str_flat(*)
+     character(len=*), intent(inout)  :: str_array(*)
+     
+     character(len=max_len_str)  :: tmp_str
+     integer :: i, j, k, ind, offset
+     integer(8) :: len_flat
+
+     len_flat = (max_len_str+1)*max_num_str + 1
+    
+     ind=1
+     offset=1
+     do i=1,max_num_str
+       k = 1
+       tmp_str=''
+       do j=ind,len_flat
+         if (str_flat(j) == TREXIO_DELIM) then
+           ind=j+1
+           exit
+         endif
+         tmp_str(k:k) = str_flat(j)
+         k = k + 1
+       enddo
+       str_array(i)=tmp_str
+       offset=ind
+     enddo
+
+   end subroutine trexio_str2strarray
+     #+end_src
+
+
+  The subroutine is a Fortran analogue of ~assert~ in C. It check that the the return code of the
+  TREXIO API call is equal to a given return code. It can optionally print a success message if the
+  two code are identical, i.e. if the ~assert~ statement pass.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+   subroutine trexio_assert(trexio_rc, check_rc, success_message)
+     implicit none
+
+     integer, intent(in), value   :: trexio_rc
+     integer, intent(in), value   :: check_rc
+     character(len=*), intent(in), optional  :: success_message
+
+     character*(128) :: str
+
+     if (trexio_rc == check_rc) then
+       if (present(success_message)) write(*,*) success_message
+     else
+       call trexio_string_of_error(trexio_rc, str)
+       print *, trim(str)
+       call exit(1)
+     endif
+
+   end subroutine trexio_assert
+     #+end_src
 
 * File suffixes                                                     :noexport:
 

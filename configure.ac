@@ -21,7 +21,6 @@ AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_PATCH])
 
 
-
 ## -------------------
 ## Checks for programs 
 ## -------------------
@@ -88,8 +87,7 @@ CPPFLAGS="${HDF5_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${HDF5_LDFLAGS} ${LDFLAGS}"
 LIBS="${HDF5_LIBS} ${LIBS}"
 
-
-# Check if hdf5 if available with pkg-config
+# Check if HDF5 if available with pkg-config
 
 PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8], [
     PKG_HDF5="hdf5"
@@ -169,7 +167,8 @@ LDFLAGS .......:  ${LDFLAGS}
 LIBS ..........:  ${LIBS}
 
 Package features:
-  Compilation with HDF5: ${with_hdf5}
+  Compilation with HDF5...:  ${with_hdf5}
+  HDF5 version............:  ${HDF5_VERSION}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:

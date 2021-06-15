@@ -83,6 +83,8 @@ typedef struct $group$_s {
   uint32_t rank_$group_dset$;
   uint32_t to_flush;
   uint64_t dims_$group_dset$[16];
+  uint64_t len_$group_str$;
+  char*    $group_str$;
   char     file_name[TREXIO_MAX_FILENAME_LENGTH];
 } $group$_t;
     #+end_src
@@ -298,7 +300,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
     /* Read the dimensioning variables */
     int rc;
-    // START REPEAT GROUP_DSET
+    // START REPEAT GROUP_DSET_ALL
     rc = fscanf(f, "%1023s", buffer);
     if ((rc != 1) || (strcmp(buffer, "rank_$group_dset$") != 0)) {
       FREE(buffer);
@@ -319,9 +321,9 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     uint64_t size_$group_dset$ = 0;
     if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
 
-    for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
+    for (uint32_t i=0; i<$group$->rank_$group_dset$; ++i){
 
-      unsigned int j=0;
+      uint32_t j=0;
 
       rc = fscanf(f, "%1023s %u", buffer, &j);
       if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
@@ -342,7 +344,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
       size_$group_dset$ *= $group$->dims_$group_dset$[i];
     }
-    // END REPEAT GROUP_DSET
+    // END REPEAT GROUP_DSET_ALL
 
     // START REPEAT GROUP_NUM
     /* Read data */
@@ -365,13 +367,68 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
     // END REPEAT GROUP_NUM
 
-    // START REPEAT GROUP_DSET
+    // START REPEAT GROUP_ATTR_STR
+    rc = fscanf(f, "%1023s", buffer);
+    assert(!((rc != 1) || (strcmp(buffer, "len_$group_str$") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "len_$group_str$") != 0)) {
+      FREE(buffer);
+      fclose(f);
+      FREE($group$);
+      return NULL;
+    }
+
+    rc = fscanf(f, "%" SCNu64 "", &($group$->len_$group_str$));
+    assert(!(rc != 1));
+    if (rc != 1) {
+      FREE(buffer);
+      fclose(f);
+      FREE($group$);
+      return NULL;
+    }
+
+    rc = fscanf(f, "%1023s", buffer);
+    assert(!((rc != 1) || (strcmp(buffer, "$group_str$") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "$group_str$") != 0)) {
+      FREE(buffer);
+      fclose(f);
+      FREE($group$->$group_str$);
+      FREE($group$);
+      return NULL;
+    }
+
+    if ($group$->len_$group_str$ != 0) {
+
+      $group$->$group_str$ = CALLOC($group$->len_$group_str$, char);
+      assert (!($group$->$group_str$ == NULL));
+      if ($group$->$group_str$ == NULL) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$->$group_str$);
+        FREE($group$);
+        return NULL;
+      }
+
+      rc = fscanf(f, " %1023[^\n]", $group$->$group_str$);
+      assert(!(rc != 1));
+      if (rc != 1) {
+	FREE(buffer);
+	fclose(f);
+	FREE($group$->$group_str$);
+	FREE($group$);
+	return NULL;
+      }
+
+    }
+    // END REPEAT GROUP_ATTR_STR
+
+    // START REPEAT GROUP_DSET_NUM
     /* Allocate arrays */
     $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
     assert (!($group$->$group_dset$ == NULL));
     if ($group$->$group_dset$ == NULL) {
       FREE(buffer);
       fclose(f);
+      FREE($group$->$group_dset$);
       FREE($group$);
       return NULL;
     }
@@ -397,7 +454,57 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 	return NULL;
       }
     }
-    // END REPEAT GROUP_DSET
+    // END REPEAT GROUP_DSET_NUM
+
+    size_t tmp_len;
+
+    // START REPEAT GROUP_DSET_STR
+    /* Allocate arrays */
+    $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
+    assert (!($group$->$group_dset$ == NULL));
+    if ($group$->$group_dset$ == NULL) {
+      FREE(buffer);
+      fclose(f);
+      FREE($group$->$group_dset$);
+      FREE($group$);
+      return NULL;
+    }
+
+    rc = fscanf(f, "%1023s", buffer);
+    assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
+	FREE(buffer);
+	fclose(f);
+	FREE($group$->$group_dset$);
+	FREE($group$);
+	return NULL;
+    }
+
+    /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
+    ,  BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+    ,*/
+    char* tmp_$group_dset$;
+    if(size_$group_dset$ != 0) tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
+    tmp_len = 0;
+    for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
+      $group$->$group_dset$[i] = tmp_$group_dset$;
+      /* conventional fcanf with "%s" only return the string before the first space character 
+       ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
+       ,* Q: depending on what ? */
+      rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
+      assert(!(rc != 1));
+      if (rc != 1) {
+	FREE(buffer);
+	fclose(f);
+	FREE($group$->$group_dset$);
+	FREE($group$);
+	return NULL;
+      }
+
+      tmp_len = strlen($group$->$group_dset$[i]);
+      tmp_$group_dset$ += tmp_len + 1;
+    }
+    // END REPEAT GROUP_DSET_STR
 
     FREE(buffer);
     fclose(f);
@@ -437,7 +544,7 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
   if (f == NULL) return TREXIO_INVALID_ARG_1;
 
   /* Write the dimensioning variables */
-  // START REPEAT GROUP_DSET
+  // START REPEAT GROUP_DSET_ALL
   fprintf(f, "rank_$group_dset$ %u\n", $group$->rank_$group_dset$);
   // workaround for the case of missing blocks in the file
   uint64_t size_$group_dset$ = 0;
@@ -447,21 +554,26 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
     fprintf(f, "dims_$group_dset$ %u %" PRIu64 "\n", i, $group$->dims_$group_dset$[i]);
     size_$group_dset$ *= $group$->dims_$group_dset$[i];
   }
-
-  // END REPEAT GROUP_DSET
+  // END REPEAT GROUP_DSET_ALL
 
   // START REPEAT GROUP_NUM
   fprintf(f, "$group_num$ %" PRIu64 "\n", $group$->$group_num$);
   // END REPEAT GROUP_NUM
 
+  // START REPEAT GROUP_ATTR_STR
+  fprintf(f, "len_$group_str$ %" PRIu64 "\n", $group$->len_$group_str$);
+  fprintf(f, "$group_str$\n");
+  if ($group$->len_$group_str$ != 0) fprintf(f, "%s\n", $group$->$group_str$);
+  // END REPEAT GROUP_ATTR_STR
+
   /* Write arrays */
-  // START REPEAT GROUP_DSET
+  // START REPEAT GROUP_DSET_ALL
 
   fprintf(f, "$group_dset$\n");
   for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
     fprintf(f, "%$group_dset_std_dtype_out$\n", $group$->$group_dset$[i]);
   }
-  // END REPEAT GROUP_DSET
+  // END REPEAT GROUP_DSET_ALL
 
   fclose(f);
   $group$->to_flush = 0;
@@ -493,11 +605,20 @@ trexio_text_free_$group$ (trexio_text_t* const file)
   $group$_t* $group$ = file->$group$;
   if ($group$ == NULL) return TREXIO_SUCCESS;
 
-  // START REPEAT GROUP_DSET
+  // START REPEAT GROUP_DSET_NUM
+  if ($group$->$group_dset$ != NULL) FREE ($group$->$group_dset$);
+  // END REPEAT GROUP_DSET_NUM
+
+  // START REPEAT GROUP_DSET_STR
   if ($group$->$group_dset$ != NULL) {
+    if($group$->rank_$group_dset$ != 0) FREE ($group$->$group_dset$[0]);
     FREE ($group$->$group_dset$);
   }
-  // END REPEAT GROUP_DSET
+  // END REPEAT GROUP_DSET_STR
+
+  // START REPEAT GROUP_ATTR_STR
+  if ($group$->$group_str$ != NULL) FREE ($group$->$group_str$);
+  // END REPEAT GROUP_ATTR_STR
 
   FREE ($group$);
   return TREXIO_SUCCESS;
@@ -505,7 +626,7 @@ trexio_text_free_$group$ (trexio_text_t* const file)
 }
     #+end_src
 
-** Template for has/read/write the ~$group_num$~ attribute
+** Template for has/read/write the num attribute
 
     #+begin_src c :tangle hrw_num_text.h :exports none
 trexio_exit_code trexio_text_has_$group_num$ (trexio_t* const file);
@@ -568,17 +689,17 @@ trexio_text_has_$group_num$ (trexio_t* const file)
 }
    #+end_src
 
-** Template for has/read/write the ~$group_dset$~ dataset
+** Template for has/read/write the dataset of numerical data
 
      The ~group_dset~ array is assumed allocated with the appropriate size.
 
-   #+begin_src c :tangle hrw_dset_text.h :exports none
+   #+begin_src c :tangle hrw_dset_data_text.h :exports none
 trexio_exit_code trexio_text_has_$group_dset$ (trexio_t* const file);
 trexio_exit_code trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$, const uint32_t rank, const uint64_t* dims);
 trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const $group_dset_dtype$* $group_dset$, const uint32_t rank, const uint64_t* dims);
    #+end_src
 
-   #+begin_src c :tangle read_dset_text.c
+   #+begin_src c :tangle read_dset_data_text.c
 trexio_exit_code
 trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$,
 			       const uint32_t rank, const uint64_t* dims)
@@ -593,7 +714,7 @@ trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
   if (rank != $group$->rank_$group_dset$) return TREXIO_INVALID_ARG_3;
 
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<rank; ++i){
+  for (uint32_t i=0; i<rank; ++i){
     if (dims[i] != $group$->dims_$group_dset$[i]) return TREXIO_INVALID_ARG_4;
     dim_size *= dims[i];
   }
@@ -607,7 +728,7 @@ trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
 }
    #+end_src
 
-   #+begin_src c :tangle write_dset_text.c
+   #+begin_src c :tangle write_dset_data_text.c
 trexio_exit_code
 trexio_text_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* $group_dset$,
 				const uint32_t rank, const uint64_t* dims)
@@ -628,7 +749,7 @@ trexio_text_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
   $group$->rank_$group_dset$ = rank;
 
   uint64_t dim_size = 1;
-  for (unsigned int i=0; i<$group$->rank_$group_dset$; ++i){
+  for (uint32_t i=0; i<$group$->rank_$group_dset$; ++i){
     $group$->dims_$group_dset$[i] = dims[i];
     dim_size *= dims[i];
   }
@@ -645,7 +766,7 @@ trexio_text_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
 }
    #+end_src
 
-   #+begin_src c :tangle has_dset_text.c
+   #+begin_src c :tangle has_dset_data_text.c
 trexio_exit_code
 trexio_text_has_$group_dset$ (trexio_t* const file)
 {
@@ -663,7 +784,182 @@ trexio_text_has_$group_dset$ (trexio_t* const file)
 
 }
    #+end_src
+** Template for has/read/write the dataset of strings
 
+     The ~group_dset~ array is assumed allocated with the appropriate size.
+
+   #+begin_src c :tangle hrw_dset_str_text.h :exports none
+trexio_exit_code trexio_text_has_$group_dset$ (trexio_t* const file);
+trexio_exit_code trexio_text_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t rank, const uint64_t* dims, const uint32_t max_str_len);
+trexio_exit_code trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32_t rank, const uint64_t* dims);
+   #+end_src
+
+   #+begin_src c :tangle read_dset_str_text.c
+trexio_exit_code
+trexio_text_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t rank, const uint64_t* dims, const uint32_t max_str_len)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if (rank != $group$->rank_$group_dset$) return TREXIO_INVALID_ARG_3;
+
+  for (uint32_t i=0 ; i<rank ; ++i) {
+    if (dims[i] != $group$->dims_$group_dset$[i]) return TREXIO_INVALID_ARG_4;
+  }
+
+  strcpy(dset, "");
+  for (uint64_t i=0 ; i<dims[0] ; ++i) {
+    strncat(dset, $group$->$group_dset$[i], max_str_len);
+    strcat(dset, TREXIO_DELIM);
+  }
+
+  return TREXIO_SUCCESS;
+
+}
+   #+end_src
+
+   #+begin_src c :tangle write_dset_str_text.c
+trexio_exit_code
+trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32_t rank, const uint64_t* dims)
+{
+
+  if (file  == NULL)  return TREXIO_INVALID_ARG_1;
+  if (dset == NULL)  return TREXIO_INVALID_ARG_2;
+
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if ($group$->$group_dset$ != NULL) {
+    if ($group$->rank_$group_dset$ != 0) FREE($group$->$group_dset$[0]);
+    FREE($group$->$group_dset$);
+  }
+
+  $group$->rank_$group_dset$ = rank;
+
+  for (uint32_t i=0; i<$group$->rank_$group_dset$; ++i){
+    $group$->dims_$group_dset$[i] = dims[i];
+  }
+
+  $group$->$group_dset$ = CALLOC(dims[0], char*);
+  if ($group$->$group_dset$ == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  char* tmp_str = CALLOC(dims[0]*32 + 1, char);
+  if (tmp_str == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  size_t tmp_len = 0;
+  for (uint64_t i=0 ; i<dims[0] ; ++i) {
+    tmp_len = strlen(dset[i]);
+    $group$->$group_dset$[i] = tmp_str;
+    strncpy(tmp_str, dset[i], tmp_len);
+    tmp_str += tmp_len + 1; 
+  }
+
+  $group$->to_flush = 1;
+
+  return TREXIO_SUCCESS;
+
+}
+   #+end_src
+
+   #+begin_src c :tangle has_dset_str_text.c
+trexio_exit_code
+trexio_text_has_$group_dset$ (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if ($group$->rank_$group_dset$ > 0){
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
+
+}
+   #+end_src
+** Template for has/read/write the string attribute
+
+   #+begin_src c :tangle hrw_attr_str_text.h :exports none
+trexio_exit_code trexio_text_has_$group_str$ (trexio_t* const file);
+trexio_exit_code trexio_text_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len);
+trexio_exit_code trexio_text_write_$group_str$ (trexio_t* const file, const char* str);
+   #+end_src
+
+   #+begin_src c :tangle read_attr_str_text.c
+trexio_exit_code
+trexio_text_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (str == NULL) return TREXIO_INVALID_ARG_2;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  strncpy(str, $group$->$group_str$, max_str_len);
+
+  return TREXIO_SUCCESS;
+
+}
+   #+end_src
+
+   #+begin_src c :tangle write_attr_str_text.c
+trexio_exit_code
+trexio_text_write_$group_str$ (trexio_t* const file, const char *str)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if ($group$->$group_str$ != NULL) FREE($group$->$group_str$);
+
+  size_t tmp_len = strlen(str);
+
+  $group$->$group_str$ = CALLOC(tmp_len + 1, char);
+  if ($group$->$group_str$ == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  $group$->len_$group_str$ = tmp_len + 1;
+
+  strncpy($group$->$group_str$, str, tmp_len + 1);
+
+  $group$->to_flush = 1;
+
+  return TREXIO_SUCCESS;
+
+}
+   #+end_src
+
+   #+begin_src c :tangle has_attr_str_text.c
+trexio_exit_code
+trexio_text_has_$group_str$ (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  if ($group$->len_$group_str$ > 0){
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
+
+}
+   #+end_src
 ** RDM struct (hard-coded)
 *** Read the complete struct
 
