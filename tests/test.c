@@ -68,13 +68,6 @@ int test_write(const char* file_name, const back_end_t backend) {
                 	 "H" ,
 	                 "H" };
   
-  //char labelxxx[] = "C C C Na C C H H H Ru H H";
-  /*char labelxxx[128] = "";
-  for (int i=0; i<num; i++){
-    strcat(labelxxx,label[i]);
-    strcat(labelxxx,TREXIO_DELIM);
-  }*/
-
   const char* sym = "B3U and some stuff";
 /*================= START OF TEST ==================*/
 
@@ -93,7 +86,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_coord(file,coord);
   assert (rc == TREXIO_SUCCESS);
-  //rc = trexio_write_nucleus_label(file,labelxxx, 32);
+
   rc = trexio_write_nucleus_label(file, label, 32);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_point_group(file, sym, 32);
@@ -158,7 +151,6 @@ int test_read(const char* file_name, const back_end_t backend) {
   int num;
   double* coord;
   char** label;
-  char* labelxxx;
   char* point_group;
 
 /*================= START OF TEST ==================*/
@@ -179,49 +171,37 @@ int test_read(const char* file_name, const back_end_t backend) {
 
   double x = coord[30] - 2.14171677;
   assert( x*x < 1.e-14);
+  free(coord);
 
   // read nucleus_label
-  /*labelxxx = (char*) malloc(num*32*sizeof(char));
-  rc = trexio_read_nucleus_label(file,labelxxx, 2);*/
   label = (char**) malloc(num*sizeof(char*));
   for (int i=0; i<num; i++){
     label[i] = (char*) malloc(32*sizeof(char));
   }
-  rc = trexio_read_nucleus_label(file, label, 2);
-  //printf("%s\n", trexio_string_of_error(rc));
-  //printf("%s\n", labelxxx);
-  for (int i=0; i<num; i++){
-    printf("%s\n", label[i]);
-  }
-  assert (rc == TREXIO_SUCCESS);
-  assert( strcmp(label[0], "C") == 0 );
-  assert( strcmp(label[1], "Na") == 0 );
 
-  char * pch;
-  /*pch = strtok(labelxxx, TREXIO_DELIM);
-  assert( strcmp(pch, "C") == 0 );
-  pch = strtok(NULL, TREXIO_DELIM);
-  assert( strcmp(pch, "Na") == 0 );*/
+  rc = trexio_read_nucleus_label(file, label, 2);
+  assert (rc == TREXIO_SUCCESS);
+  assert (strcmp(label[0], "C")  == 0);
+  assert (strcmp(label[1], "Na") == 0);
+  
+  for (int i=0; i<num; i++){
+    free(label[i]);
+  }
+  free(label);
 
   point_group = (char*) malloc(32*sizeof(char));
 
   rc = trexio_read_nucleus_point_group(file, point_group, 6);
   assert (rc == TREXIO_SUCCESS);
-  //printf("%s\n", point_group);
+
+  char * pch;
   pch = strtok(point_group, " ");
-  assert( strcmp(pch, "B3U") == 0 );
-  // alternative test when 3 symbols are read from the file to point_group
+  assert (strcmp(pch, "B3U") == 0);
+  /* alternative test when 3 symbols are read from the file to point_group */
   /*rc = trexio_read_nucleus_point_group(file, point_group, 3);
   assert (rc == TREXIO_SUCCESS);
-  assert( strcmp(point_group, "B3U") == 0 );*/
-
+  assert (strcmp(point_group, "B3U") == 0 );*/
   free(point_group);
-
-  for (int i=0; i<num; i++){
-    free(label[i]);
-  }
-  free(label);
-  //free(labelxxx);
 
   // close current session
   rc = trexio_close(file);
@@ -235,8 +215,6 @@ int test_read(const char* file_name, const back_end_t backend) {
   assert (file2 == NULL);
 
 /*================= END OF TEST =====================*/
-
-  free(coord);
  
   return 0;
 }
