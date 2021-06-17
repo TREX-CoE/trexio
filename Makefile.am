@@ -72,26 +72,37 @@ ORG_FILES = \
 
 src_libtrexio_la_SOURCES = $(SOURCES)
 
-TESTS = tests/test_c tests/test_f
+# section related to tests
+
+TESTS_C = \
+  tests/io_all \
+  tests/io_num_hdf5 \
+  tests/io_num_text 
+
+TESTS_F = \
+  tests/test_f
+
+TESTS_ALL = $(TESTS_C) $(TESTS_F)
+
+TESTS = $(TESTS_ALL)
 check_PROGRAMS = $(TESTS)
 
-tests_test_c_DEPENDENCIES = $(trexio_h)
-tests_test_c_SOURCES = tests/test.c $(trexio_h)
-tests_test_c_LDADD   = src/libtrexio.la
-tests_test_c_LDFLAGS = -no-install
+# specify common options for all tests
+LDADD = src/libtrexio.la
+
+# in principal, specifying -no-install (see example below) for each test provides better 
+# and faster (?) `make check` but becomes tedious as the number of tests increases
+
+#tests_io_all_LDFLAGS = -no-install
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
-
-tests_test_f_DEPENDENCIES = $(test_trexio_f)
-tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
-tests_test_f_LDADD   = src/libtrexio.la
-tests_test_f_LDFLAGS = -no-install
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
 
-clean-local:
-	-rm -rf -- test_write.dir/ test_write_f.dir/ test_write.h5 test_write_f.h5
+
+tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
+
 
 if TREXIO_DEVEL
 
@@ -118,3 +129,7 @@ cppcheck.out: $(trexio_h)
 .PHONY: cppcheck
 
 endif
+
+clean-local:
+	-rm -rf -- *.dir/ *.h5
+
