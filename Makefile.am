@@ -87,6 +87,23 @@ tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDADD   = src/libtrexio.la
 tests_test_f_LDFLAGS = -no-install
 
+HTML_FILES =  docs/trexio.css            \
+              docs/index.html            \
+              docs/Sparse.html           \
+              docs/templator_hdf5.html   \
+              docs/trex.html             \
+              docs/README.html           \
+              docs/templator_front.html  \
+              docs/templator_text.html
+
+htmldir = $(docdir)
+dist_html_DATA = $(HTML_FILES)
+
+docs/index.html: $(SOURCES) src/README.org
+	cd tools && ./build_doc.sh
+
+$(HTML_FILES): docs/index.html
+
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
 
@@ -98,6 +115,7 @@ if TREXIO_DEVEL
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
 BUILT_SOURCES = $(SOURCES) $(trexio_f) $(test_trexio_f)
+
 
 $(SOURCES): $(trexio_f)
 src/trexio.c: $(trexio_h)
