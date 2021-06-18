@@ -6,9 +6,8 @@
 <!-- 2021-06-18 Fri 10:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TREXIO source code documentation</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="TREX-CoE" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -180,79 +179,6 @@
   .org-svg { width: 90%; }
   /*]]>*/-->
 </style>
-<link rel="stylesheet" title="Standard" href="trexio.css" type="text/css" />
-
-<script type="text/javascript" src="org-info.js">
-/**
- *
- * @source: org-info.js
- *
- * @licstart  The following is the entire license notice for the
- *  JavaScript code in org-info.js.
- *
- * Copyright (C) 2012-2019 Free Software Foundation, Inc.
- *
- *
- * The JavaScript code in this tag is free software: you can
- * redistribute it and/or modify it under the terms of the GNU
- * General Public License (GNU GPL) as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version.  The code is distributed WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
- *
- * As additional permission under GNU GPL version 3 section 7, you
- * may distribute non-source (e.g., minimized or compacted) forms of
- * that code without the copy of the GNU GPL normally required by
- * section 4, provided you include this license notice and a URL
- * through which recipients can access the Corresponding Source.
- *
- * @licend  The above is the entire license notice
- * for the JavaScript code in org-info.js.
- *
- */
-</script>
-
-<script type="text/javascript">
-
-/*
-@licstart  The following is the entire license notice for the
-JavaScript code in this tag.
-
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
-
-The JavaScript code in this tag is free software: you can
-redistribute it and/or modify it under the terms of the GNU
-General Public License (GNU GPL) as published by the Free Software
-Foundation, either version 3 of the License, or (at your option)
-any later version.  The code is distributed WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-
-As additional permission under GNU GPL version 3 section 7, you
-may distribute non-source (e.g., minimized or compacted) forms of
-that code without the copy of the GNU GPL normally required by
-section 4, provided you include this license notice and a URL
-through which recipients can access the Corresponding Source.
-
-
-@licend  The above is the entire license notice
-for the JavaScript code in this tag.
-*/
-
-<!--/*--><![CDATA[/*><!--*/
-org_html_manager.set("TOC_DEPTH", "4");
-org_html_manager.set("LINK_HOME", "index.html");
-org_html_manager.set("LINK_UP", "");
-org_html_manager.set("LOCAL_TOC", "1");
-org_html_manager.set("VIEW_BUTTONS", "0");
-org_html_manager.set("MOUSE_HINT", "underline");
-org_html_manager.set("FIXED_TOC", "0");
-org_html_manager.set("TOC", "1");
-org_html_manager.set("VIEW", "info");
-org_html_manager.setup();  // activate after the parameters are set
-/*]]>*///-->
-</script>
 <script type="text/javascript">
 /*
 @licstart  The following is the entire license notice for the
@@ -301,47 +227,57 @@ for the JavaScript code in this tag.
 </script>
 </head>
 <body>
-<div id="org-div-home-and-up">
- <a accesskey="h" href=""> UP </a>
- |
- <a accesskey="H" href="index.html"> HOME </a>
-</div><div id="content">
-<h1 class="title">TREXIO source code documentation</h1>
-<hr />
-
-<ul class="org-ul">
-<li><a href="./trex.html">Data stored with TREXIO</a></li>
-<li><a href="./templator_front.html">Front end API</a></li>
-<li><a href="./templator_hdf5.html">HDF5 back end</a></li>
-<li><a href="./templator_text.html">TEXT back end</a></li>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org2e23bc7">1. Text back end</a></li>
+<li><a href="#org1c4e22a">2. HDF5 Back end</a></li>
 </ul>
-
-
-<hr />
-
-
+</div>
+</div>
 <p>
-The ultimate goal of the TREXIO library is to provide a high-performance
-implementation  of  basic I/O functionality for users within and beyond
-the TREX-CoE.
+See templator<sub>front.org</sub>
 </p>
 
-
+<div id="outline-container-org2e23bc7" class="outline-2">
+<h2 id="org2e23bc7"><span class="section-number-2">1</span> Text back end</h2>
+<div class="outline-text-2" id="text-1">
 <p>
-The source code of the library is available at
-<a href="https://github.com/trex-coe/trexio">https://github.com/trex-coe/trexio</a>
-and bug reports should be submitted at
-<a href="https://github.com/trex-coe/trexio/issues">https://github.com/trex-coe/trexio/issues</a>.
-</p>
-
-<hr />
-
-<p>
-<img src="https://trex-coe.eu/sites/default/files/inline-images/euflag.jpg" alt="euflag.jpg" /> <a href="https://trex-coe.eu">TREX: Targeting Real Chemical Accuracy at the Exascale</a> project has received funding from the European Union’s Horizon 2020 - Research and Innovation program - under grant agreement no. 952165. The content of this document does not represent the opinion of the European Union, and the European Union is not responsible for any use that might be made of such content.
+As the size of the dataset should be extensible, the simplest
+solution is to use one file for each sparse data set, and store a
+the name of this file in the group.
+Each integral can be a line in the file:
+i  j  k  l  x
+which can be read with "%10ld %10ld %10ld %10ld %24.16e".
+The offset can be used with <code>fseek(69L*offset, SEEK_SET)</code>
 </p>
 </div>
+</div>
+
+<div id="outline-container-org1c4e22a" class="outline-2">
+<h2 id="org1c4e22a"><span class="section-number-2">2</span> HDF5 Back end</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+We need to declare the number of rows of the dataset as
+<code>UNLIMITED</code>. This requires to use the <code>Chunked</code> storage, and the
+chunks should absolutely not be larger than 1MB.
+</p>
+
+<p>
+To extend the storage, see :
+<a href="https://support.hdfgroup.org/HDF5/doc1.6/UG/10_Datasets.html">https://support.hdfgroup.org/HDF5/doc1.6/UG/10_Datasets.html</a>
+(figure 17)
+</p>
+
+<p>
+If the offset+num &gt; nmax, we need to extend the dataset.
+</p>
+</div>
+</div>
+</div>
 <div id="postamble" class="status">
-<p class="author">Author: TREX-CoE</p>
 <p class="date">Created: 2021-06-18 Fri 10:05</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
