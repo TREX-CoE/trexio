@@ -12,18 +12,18 @@ int main() {
 /*============== Main test launcher ================*/
 
   int rc;
-  rc = system("rm -rf test_write.h5");
+  rc = system("rm -rf test_all.h5");
   assert (rc == 0);
-  test_write("test_write.h5", TREXIO_HDF5);
-  test_read ("test_write.h5", TREXIO_HDF5);
-  rc = system("rm -rf test_write.h5");
+  test_write("test_all.h5", TREXIO_HDF5);
+  test_read ("test_all.h5", TREXIO_HDF5);
+  rc = system("rm -rf test_all.h5");
   assert (rc == 0);
 
-  rc = system("rm -rf test_write.dir");
+  rc = system("rm -rf test_all.dir");
   assert (rc == 0);
-  test_write("test_write.dir", TREXIO_TEXT);
-  test_read ("test_write.dir", TREXIO_TEXT);
-  rc = system("rm -rf test_write.dir");
+  test_write("test_all.dir", TREXIO_TEXT);
+  test_read ("test_all.dir", TREXIO_TEXT);
+  rc = system("rm -rf test_all.dir");
   assert (rc == 0);
 
   return 0;
@@ -68,7 +68,7 @@ int test_write(const char* file_name, const back_end_t backend) {
                 	 "H" ,
 	                 "H" };
   
-  const char* sym = "B3U and some stuff";
+  const char* sym = "B3U with some comments";
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
@@ -113,7 +113,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   // should not work: try to overwrite the num variable
   rc = trexio_write_nucleus_num(file,25);
   printf("Test error message: %s\n", trexio_string_of_error(rc));
-  assert (rc == TREXIO_NUM_ALREADY_EXISTS);
+  assert (rc == TREXIO_ATTR_ALREADY_EXISTS);
 
   // should not work: try to overwrite the dset
   coord[0] = 666.666;

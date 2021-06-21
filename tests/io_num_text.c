@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define TEST_BACKEND 	TREXIO_TEXT
-#define TREXIO_FILE 	"test_num.dir"
+#define TREXIO_FILE 	"test.dir"
 #define RM_COMMAND 	"rm -rf " TREXIO_FILE
 
 static int test_write_num (const char* file_name, const back_end_t backend) {
@@ -46,7 +46,7 @@ static int test_has_num (const char* file_name, const back_end_t backend) {
 
 /*================= START OF TEST ==================*/
 
-  // open file in 'write' mode
+  // open file
   file = trexio_open(file_name, 'r', backend);
   assert (file != NULL);
 
@@ -80,8 +80,8 @@ static int test_read_num (const char* file_name, const back_end_t backend) {
 
 /*================= START OF TEST ==================*/
 
-  // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  // open file in 'read' mode
+  file = trexio_open(file_name, 'r', backend);
   assert (file != NULL);
 
   // read numerical attribute from the file
