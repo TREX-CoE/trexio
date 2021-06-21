@@ -75,9 +75,19 @@ src_libtrexio_la_SOURCES = $(SOURCES)
 # section related to tests
 
 TESTS_C = \
-  tests/io_all \
   tests/io_num_hdf5 \
-  tests/io_num_text 
+  tests/io_num_text \
+  tests/io_dset_float_hdf5 \
+  tests/io_dset_float_text \
+  tests/io_dset_int_hdf5 \
+  tests/io_dset_int_text \
+  tests/io_str_hdf5 \
+  tests/io_str_text \
+  tests/io_dset_str_hdf5 \
+  tests/io_dset_str_text \
+  tests/overwrite_all_hdf5 \
+  tests/overwrite_all_text \
+  tests/io_all
 
 TESTS_F = \
   tests/test_f
@@ -89,19 +99,29 @@ check_PROGRAMS = $(TESTS)
 
 # specify common options for all tests
 LDADD = src/libtrexio.la
-
-# in principal, specifying -no-install (see example below) for each test provides better 
-# and faster (?) `make check` but becomes tedious as the number of tests increases
-
-#tests_io_all_LDFLAGS = -no-install
+# in principal, specifying -no-install (see example below) is not mandatory
+# for the tests to compile and pass, but the compilations itself differs
+tests_io_num_hdf5_LDFLAGS = -no-install
+tests_io_num_text_LDFLAGS = -no-install
+tests_io_dset_float_hdf5_LDFLAGS = -no-install
+tests_io_dset_float_text_LDFLAGS = -no-install
+tests_io_dset_int_hdf5_LDFLAGS = -no-install
+tests_io_dset_int_text_LDFLAGS = -no-install
+tests_io_str_hdf5_LDFLAGS = -no-install
+tests_io_str_text_LDFLAGS = -no-install
+tests_io_dset_str_hdf5_LDFLAGS = -no-install
+tests_io_dset_str_text_LDFLAGS = -no-install
+tests_overwrite_all_hdf5_LDFLAGS = -no-install
+tests_overwrite_all_text_LDFLAGS = -no-install
+tests_io_all_LDFLAGS = -no-install
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
 
-
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
+tests_test_f_LDFLAGS = -no-install
 
 
 if TREXIO_DEVEL
