@@ -87,6 +87,7 @@ static int test_read_num (const char* file_name, const back_end_t backend) {
   // read numerical attribute from the file
   rc = trexio_read_nucleus_num(file, &num);
   assert (rc == TREXIO_SUCCESS);
+  assert (num == 12);
 
   // close current session
   rc = trexio_close(file);
