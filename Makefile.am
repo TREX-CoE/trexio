@@ -34,6 +34,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
+BUILT_SOURCES = trexio.mod
 
 VERSION_MAJOR   = @VERSION_MAJOR@
 VERSION_MINOR   = @VERSION_MINOR@
@@ -100,7 +101,7 @@ TESTS_F = \
 TESTS = $(TESTS_C) $(TESTS_F)
 check_PROGRAMS = $(TESTS)
 
-# specify common options for all tests
+# specify common LDADD options for all tests
 LDADD = src/libtrexio.la
 
 # in principal, specifying -no-install (see below) is not mandatory
@@ -125,6 +126,8 @@ test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
+
+trexio.mod: tests/trexio_f.o
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDFLAGS = -no-install
@@ -154,7 +157,7 @@ if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
-BUILT_SOURCES = $(SOURCES) $(trexio_f) $(test_trexio_f)
+BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
 
 
 $(SOURCES): $(trexio_f)
