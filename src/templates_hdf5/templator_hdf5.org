@@ -298,15 +298,6 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
-  herr_t status;
-  int rrank;
-  // get the rank of the dataset in a file
-  status = H5LTget_dataset_ndims (f->$group$_group, $GROUP_DSET$_NAME, &rrank);
-
-  if (status < 0) return TREXIO_FAILURE;
-
-  if (rrank != (int) rank) return TREXIO_INVALID_ARG_3;
-
   // open the dataset to get its dimensions
   hid_t dset_id = H5Dopen(f->$group$_group, $GROUP_DSET$_NAME, H5P_DEFAULT);
   if (dset_id <= 0) return TREXIO_INVALID_ID;
@@ -315,28 +306,37 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
   hsize_t* ddims = CALLOC( (int) rank, hsize_t);
   if (ddims == NULL) return TREXIO_FAILURE;
 
-  // read dimensions from the existing dataset
-  status = H5LDget_dset_dims(dset_id, ddims);
+  // get the dataspace of the dataset
+  hid_t dspace_id = H5Dget_space(dset_id);
+  // get the rank and dimensions of the dataset
+  int rrank = H5Sget_simple_extent_dims(dspace_id, ddims, NULL);
 
-  H5Dclose(dset_id);
-  if (status < 0) {
+  // check that dimensions are consistent
+  if (rrank != (int) rank) {
     FREE(ddims);
-    return TREXIO_FAILURE;
+    H5Sclose(dspace_id);
+    H5Dclose(dset_id);
+    return TREXIO_INVALID_ARG_3;
   }
 
   for (uint32_t i=0; i<rank; ++i){
     if (ddims[i] != dims[i]) {
       FREE(ddims);
+      H5Sclose(dspace_id);
+      H5Dclose(dset_id);
       return TREXIO_INVALID_ARG_4;
     }
   }
+
   FREE(ddims);
+  H5Sclose(dspace_id);
+  H5Dclose(dset_id);
 
   /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  status = H5LTread_dataset(f->$group$_group,
-			    $GROUP_DSET$_NAME,
-			    H5T_$GROUP_DSET_H5_DTYPE$,
-			    $group_dset$);
+  herr_t status = H5LTread_dataset(f->$group$_group,
+			           $GROUP_DSET$_NAME,
+			           H5T_$GROUP_DSET_H5_DTYPE$,
+			           $group_dset$);
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
