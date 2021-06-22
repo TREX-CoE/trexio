@@ -30,6 +30,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# =============== SETTINGS =============== #
+
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
 
@@ -42,6 +44,7 @@ SUBDIRS =
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pkgconfig/trexio.pc
 
+# =============== BUILD =============== #
 
 trexio_h = $(srcdir)/include/trexio.h
 trexio_f = $(srcdir)/include/trexio_f.f90
@@ -54,14 +57,14 @@ lib_LTLIBRARIES = src/libtrexio.la
 
 
 SOURCES = \
- $(trexio_h) \
- src/trexio.c \
- src/trexio_private.h \
- src/trexio_s.h \
- src/trexio_hdf5.c \
- src/trexio_hdf5.h \
- src/trexio_text.c \
- src/trexio_text.h
+  $(trexio_h) \
+  src/trexio.c \
+  src/trexio_private.h \
+  src/trexio_s.h \
+  src/trexio_hdf5.c \
+  src/trexio_hdf5.h \
+  src/trexio_text.c \
+  src/trexio_text.h
 
 ORG_FILES = \
   src/templates_front/templator_front.org \
@@ -72,9 +75,11 @@ ORG_FILES = \
 
 src_libtrexio_la_SOURCES = $(SOURCES)
 
-# section related to tests
+# =============== TESTS =============== #
 
 TESTS_C = \
+  tests/open_hdf5 \
+  tests/open_text \
   tests/io_num_hdf5 \
   tests/io_num_text \
   tests/io_dset_float_hdf5 \
@@ -92,16 +97,16 @@ TESTS_C = \
 TESTS_F = \
   tests/test_f
 
-TESTS_ALL = $(TESTS_C) $(TESTS_F)
-
-TESTS = $(TESTS_ALL)
+TESTS = $(TESTS_C) $(TESTS_F)
 check_PROGRAMS = $(TESTS)
 
 # specify common options for all tests
 LDADD = src/libtrexio.la
 
-# in principal, specifying -no-install (see example below) is not mandatory
-# for the tests to compile and pass, but the compilations itself differs
+# in principal, specifying -no-install (see below) is not mandatory
+# for the tests to compile and pass, but the produced test binaries differ 
+tests_open_hdf5_LDFLAGS = -no-install
+tests_open_text_LDFLAGS = -no-install
 tests_io_num_hdf5_LDFLAGS = -no-install
 tests_io_num_text_LDFLAGS = -no-install
 tests_io_dset_float_hdf5_LDFLAGS = -no-install
@@ -124,6 +129,10 @@ $(test_trexio_f): $(trexio_f)
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDFLAGS = -no-install
 
+clean-local:
+	-rm -rf -- *.dir/ *.h5
+
+# =============== DOCUMENTATION =============== #
 
 HTML_FILES =  docs/trexio.css            \
               docs/index.html            \
@@ -139,6 +148,7 @@ dist_html_DATA = $(HTML_FILES)
 
 $(HTML_FILES): docs/index.html
 
+# =============== DEVELOPER MODE =============== #
 
 if TREXIO_DEVEL
 
@@ -153,7 +163,7 @@ src/trexio.c: $(trexio_h)
 $(trexio_f): $(ORG_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
-docs/index.html: $(SOURCES) $(srcdir)/src/README.org
+docs/index.html: $(ORG_FILES) $(srcdir)/src/README.org
 	cd $(srcdir)/tools && ./build_doc.sh
 
 cppcheck: cppcheck.out
@@ -169,7 +179,4 @@ cppcheck.out: $(trexio_h)
 .PHONY: cppcheck
 
 endif
-
-clean-local:
-	-rm -rf -- *.dir/ *.h5
 
