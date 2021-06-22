@@ -55,13 +55,13 @@ lib_LTLIBRARIES = src/libtrexio.la
 
 SOURCES = \
  $(trexio_h) \
- $(srcdir)/src/trexio.c \
- $(srcdir)/src/trexio_private.h \
- $(srcdir)/src/trexio_s.h \
- $(srcdir)/src/trexio_hdf5.c \
- $(srcdir)/src/trexio_hdf5.h \
- $(srcdir)/src/trexio_text.c \
- $(srcdir)/src/trexio_text.h
+ src/trexio.c \
+ src/trexio_private.h \
+ src/trexio_s.h \
+ src/trexio_hdf5.c \
+ src/trexio_hdf5.h \
+ src/trexio_text.c \
+ src/trexio_text.h
 
 ORG_FILES = \
   src/templates_front/templator_front.org \
@@ -99,9 +99,6 @@ HTML_FILES =  docs/trexio.css            \
 htmldir = $(docdir)
 dist_html_DATA = $(HTML_FILES)
 
-docs/index.html: $(SOURCES) src/README.org
-	cd tools && ./build_doc.sh
-
 $(HTML_FILES): docs/index.html
 
 $(test_trexio_f): $(trexio_f)
@@ -122,6 +119,9 @@ src/trexio.c: $(trexio_h)
 
 $(trexio_f): $(ORG_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
+
+docs/index.html: $(SOURCES) $(srcdir)/src/README.org
+	cd $(srcdir)/tools && ./build_doc.sh
 
 cppcheck: cppcheck.out
 	cat cppcheck.out
