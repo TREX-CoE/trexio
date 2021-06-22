@@ -30,8 +30,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# =============== SETTINGS =============== #
+
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
+BUILT_SOURCES = trexio.mod
 
 VERSION_MAJOR   = @VERSION_MAJOR@
 VERSION_MINOR   = @VERSION_MINOR@
@@ -42,6 +45,7 @@ SUBDIRS =
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pkgconfig/trexio.pc
 
+# =============== BUILD =============== #
 
 trexio_h = $(srcdir)/include/trexio.h
 trexio_f = $(srcdir)/include/trexio_f.f90
@@ -54,14 +58,14 @@ lib_LTLIBRARIES = src/libtrexio.la
 
 
 SOURCES = \
- $(trexio_h) \
- src/trexio.c \
- src/trexio_private.h \
- src/trexio_s.h \
- src/trexio_hdf5.c \
- src/trexio_hdf5.h \
- src/trexio_text.c \
- src/trexio_text.h
+  $(trexio_h) \
+  src/trexio.c \
+  src/trexio_private.h \
+  src/trexio_s.h \
+  src/trexio_hdf5.c \
+  src/trexio_hdf5.h \
+  src/trexio_text.c \
+  src/trexio_text.h
 
 ORG_FILES = \
   src/templates_front/templator_front.org \
@@ -72,20 +76,66 @@ ORG_FILES = \
 
 src_libtrexio_la_SOURCES = $(SOURCES)
 
-TESTS = tests/test_c tests/test_f
+# =============== TESTS =============== #
+
+TESTS_C = \
+  tests/open_hdf5 \
+  tests/open_text \
+  tests/io_num_hdf5 \
+  tests/io_num_text \
+  tests/io_dset_float_hdf5 \
+  tests/io_dset_float_text \
+  tests/io_dset_int_hdf5 \
+  tests/io_dset_int_text \
+  tests/io_str_hdf5 \
+  tests/io_str_text \
+  tests/io_dset_str_hdf5 \
+  tests/io_dset_str_text \
+  tests/overwrite_all_hdf5 \
+  tests/overwrite_all_text \
+  tests/io_all
+
+TESTS_F = \
+  tests/test_f
+
+TESTS = $(TESTS_C) $(TESTS_F)
 check_PROGRAMS = $(TESTS)
 
-tests_test_c_DEPENDENCIES = $(trexio_h)
-tests_test_c_SOURCES = tests/test.c $(trexio_h)
-tests_test_c_LDADD   = src/libtrexio.la
-tests_test_c_LDFLAGS = -no-install
+# specify common LDADD options for all tests
+LDADD = src/libtrexio.la
+
+# in principal, specifying -no-install (see below) is not mandatory
+# for the tests to compile and pass, but the produced test binaries differ 
+tests_open_hdf5_LDFLAGS = -no-install
+tests_open_text_LDFLAGS = -no-install
+tests_io_num_hdf5_LDFLAGS = -no-install
+tests_io_num_text_LDFLAGS = -no-install
+tests_io_dset_float_hdf5_LDFLAGS = -no-install
+tests_io_dset_float_text_LDFLAGS = -no-install
+tests_io_dset_int_hdf5_LDFLAGS = -no-install
+tests_io_dset_int_text_LDFLAGS = -no-install
+tests_io_str_hdf5_LDFLAGS = -no-install
+tests_io_str_text_LDFLAGS = -no-install
+tests_io_dset_str_hdf5_LDFLAGS = -no-install
+tests_io_dset_str_text_LDFLAGS = -no-install
+tests_overwrite_all_hdf5_LDFLAGS = -no-install
+tests_overwrite_all_text_LDFLAGS = -no-install
+tests_io_all_LDFLAGS = -no-install
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
-tests_test_f_DEPENDENCIES = $(test_trexio_f)
+$(test_trexio_f): $(trexio_f)
+	cp $(trexio_f) $(test_trexio_f)
+
+trexio.mod: tests/trexio_f.o
+
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
-tests_test_f_LDADD   = src/libtrexio.la
 tests_test_f_LDFLAGS = -no-install
+
+clean-local:
+	-rm -rf -- *.dir/ *.h5
+
+# =============== DOCUMENTATION =============== #
 
 HTML_FILES =  docs/trexio.css            \
               docs/index.html            \
@@ -101,17 +151,13 @@ dist_html_DATA = $(HTML_FILES)
 
 $(HTML_FILES): docs/index.html
 
-$(test_trexio_f): $(trexio_f)
-	cp $(trexio_f) $(test_trexio_f)
-
-clean-local:
-	-rm -rf -- test_write.dir/ test_write_f.dir/ test_write.h5 test_write_f.h5
+# =============== DEVELOPER MODE =============== #
 
 if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
-BUILT_SOURCES = $(SOURCES) $(trexio_f) $(test_trexio_f)
+BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
 
 
 $(SOURCES): $(trexio_f)
@@ -120,7 +166,7 @@ src/trexio.c: $(trexio_h)
 $(trexio_f): $(ORG_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
-docs/index.html: $(SOURCES) $(srcdir)/src/README.org
+docs/index.html: $(ORG_FILES) $(srcdir)/src/README.org
 	cd $(srcdir)/tools && ./build_doc.sh
 
 cppcheck: cppcheck.out
@@ -136,3 +182,4 @@ cppcheck.out: $(trexio_h)
 .PHONY: cppcheck
 
 endif
+
