@@ -55,13 +55,13 @@ lib_LTLIBRARIES = src/libtrexio.la
 
 SOURCES = \
  $(trexio_h) \
- $(srcdir)/src/trexio.c \
- $(srcdir)/src/trexio_private.h \
- $(srcdir)/src/trexio_s.h \
- $(srcdir)/src/trexio_hdf5.c \
- $(srcdir)/src/trexio_hdf5.h \
- $(srcdir)/src/trexio_text.c \
- $(srcdir)/src/trexio_text.h
+ src/trexio.c \
+ src/trexio_private.h \
+ src/trexio_s.h \
+ src/trexio_hdf5.c \
+ src/trexio_hdf5.h \
+ src/trexio_text.c \
+ src/trexio_text.h
 
 ORG_FILES = \
   src/templates_front/templator_front.org \
@@ -99,6 +99,7 @@ check_PROGRAMS = $(TESTS)
 
 # specify common options for all tests
 LDADD = src/libtrexio.la
+
 # in principal, specifying -no-install (see example below) is not mandatory
 # for the tests to compile and pass, but the compilations itself differs
 tests_io_num_hdf5_LDFLAGS = -no-install
@@ -124,17 +125,36 @@ tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDFLAGS = -no-install
 
 
+HTML_FILES =  docs/trexio.css            \
+              docs/index.html            \
+              docs/Sparse.html           \
+              docs/templator_hdf5.html   \
+              docs/trex.html             \
+              docs/README.html           \
+              docs/templator_front.html  \
+              docs/templator_text.html
+
+htmldir = $(docdir)
+dist_html_DATA = $(HTML_FILES)
+
+$(HTML_FILES): docs/index.html
+
+
 if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
 BUILT_SOURCES = $(SOURCES) $(trexio_f) $(test_trexio_f)
 
+
 $(SOURCES): $(trexio_f)
 src/trexio.c: $(trexio_h)
 
 $(trexio_f): $(ORG_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
+
+docs/index.html: $(SOURCES) $(srcdir)/src/README.org
+	cd $(srcdir)/tools && ./build_doc.sh
 
 cppcheck: cppcheck.out
 	cat cppcheck.out

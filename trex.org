@@ -1,5 +1,7 @@
 #+TITLE: TREX Configuration file
 #+STARTUP: latexpreview
+#+SETUPFILE: docs/theme.setup
+
 
 All the quantities are saved in atomic units.
 The dimensions of the arrays in the tables below are given in
@@ -11,12 +13,12 @@ In Fortran, the arrays are 1-based and in most other languages the
 arrays are 0-base. Hence, we introduce the ~index~ type which is an
 1-based ~int~ in the Fortran interface and 0-based otherwise.
 
-  #+begin_src python :tangle trex.json 
+  #+begin_src python :tangle trex.json
 {
   #+end_src
 
 * Metadata
-  
+
   As we expect our files to be archived in open-data repositories, we
   need to give the possibility to the users to store some metadata
   inside the files. We propose to store the list of names of the codes
@@ -175,7 +177,7 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   R_s(\mathbf{r}) = \mathcal{N}_s \vert\mathbf{r}-\mathbf{R}_A\vert^{n_s}
   \sum_{k=1}^{N_{\text{prim}}} a_{ks}\, f_{ks}(\gamma_{ks},p)\,
   \exp \left( - \gamma_{ks}
-  \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right). 
+  \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right).
   \]
 
   In the case of Gaussian functions, $n_s$ is always zero.
@@ -190,7 +192,7 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   combination of /normalized/ primitives. This implies that a normalization
   constant for the primitive $ks$ needs to be computed and stored. If
   this normalization factor is not required, $f_{ks}=1$.
-  
+
   Some codes assume that the basis function are normalized. This
   implies the computation of an extra normalization factor, $\mathcal{N}_s$.
   If the the basis function is not considered normalized, $\mathcal{N}_s=1$.
@@ -208,10 +210,10 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   | ~shell_prim_num~    | ~int~   | ~(basis.num)~      | Number of primitives in the shell ($N_{\text{prim}}$)    |
   | ~shell_factor~      | ~float~ | ~(basis.num)~      | Normalization factor of the shell ($\mathcal{N}_s$)      |
   | ~shell_prim_index~  | ~index~ | ~(basis.num)~      | Index of the first primitive in the complete list        |
-  | ~exponent~          | ~float~ | ~(basis.prim_num)~ | Exponents of the primitives ($\gamma_{ks})               |
+  | ~exponent~          | ~float~ | ~(basis.prim_num)~ | Exponents of the primitives ($\gamma_{ks}$)               |
   | ~coefficient~       | ~float~ | ~(basis.prim_num)~ | Coefficients of the primitives ($a_{ks}$)                |
   | ~prim_factor~       | ~float~ | ~(basis.prim_num)~ | Normalization coefficients for the primitives ($f_{ks}$) |
-    
+
   #+CALL: json(data=basis, title="basis")
 
   #+RESULTS:
@@ -221,12 +223,12 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
                        "type" : [ "str"  , []                   ]
         ,               "num" : [ "int"  , []                   ]
         ,          "prim_num" : [ "int"  , []                   ]
-        ,     "nucleus_index" : [ "index"  , [ "nucleus.num" ]    ]
+        ,     "nucleus_index" : [ "index", [ "nucleus.num" ]    ]
         , "nucleus_shell_num" : [ "int"  , [ "nucleus.num" ]    ]
         ,     "shell_ang_mom" : [ "int"  , [ "basis.num" ]      ]
         ,    "shell_prim_num" : [ "int"  , [ "basis.num" ]      ]
         ,      "shell_factor" : [ "float", [ "basis.num" ]      ]
-        ,  "shell_prim_index" : [ "index"  , [ "basis.num" ]      ]
+        ,  "shell_prim_index" : [ "index", [ "basis.num" ]      ]
         ,          "exponent" : [ "float", [ "basis.prim_num" ] ]
         ,       "coefficient" : [ "float", [ "basis.prim_num" ] ]
         ,       "prim_factor" : [ "float", [ "basis.prim_num" ] ]
@@ -324,9 +326,9 @@ prim_factor =
   shell, as in the GAMESS convention where
   $\mathcal{N}_{x^2} \ne \mathcal{N}_{xy}$ because
   \[ \left[ \iiint \left(x-X_A \right)^2 R_{\theta(i)}
-  (\mathbf{r}) dx\, dy\, dz \right]^{-1/2} \ne 
+  (\mathbf{r}) dx\, dy\, dz \right]^{-1/2} \ne
    \left[ \iiint \left( x-X_A \right) \left( y-Y_A \right) R_{\theta(i)}
-  (\mathbf{r}) dx\, dy\, dz \right]^{-1/2}.  \] 
+  (\mathbf{r}) dx\, dy\, dz \right]^{-1/2}.  \]
 
   In such a case, one should set the normalization of the shell (in
   the [[Basis set][Basis set]] section) to $\mathcal{N}_{z^2}$, which is the
@@ -353,7 +355,7 @@ prim_factor =
       } ,
   #+end_src
   :end:
-    
+
 ** One-electron integrals
    :PROPERTIES:
    :CUSTOM_ID: ao_one_e
@@ -362,7 +364,7 @@ prim_factor =
    - \[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
      \sum_{i=1}^{N_\text{elec}} \frac{-Z_A }{\vert \mathbf{R}_A -
      \mathbf{r}_i \vert} \] : electron-nucleus attractive potential,
-   - \[ \hat{T}_{\text{e}} = 
+   - \[ \hat{T}_{\text{e}} =
      \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy
    - $\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} +
      \hat{V}_\text{ecp,l} + \hat{V}_\text{ecp,nl}$ : core electronic Hamiltonian
@@ -375,8 +377,8 @@ prim_factor =
    | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                              |
    | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$              |
    | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$    |
-   | ~ecp_local~        | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,l} \vert q \rangle$  |
-   | ~ecp_non_local~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,nl} \vert q \rangle$ |
+   | ~ecp_local~        | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,l}} \vert q \rangle$  |
+   | ~ecp_non_local~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,nl}} \vert q \rangle$ |
    | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                |
 
    #+CALL: json(data=ao_1e_int, title="ao_1e_int")
@@ -409,7 +411,7 @@ prim_factor =
    notation.
 
    # TODO: Physicist / Chemist functions
-  
+
    - \[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.
    - \[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
      \sum_{j=1}^{i-1} \frac{\text{erf}(\vert \mathbf{r}_i -
@@ -460,15 +462,15 @@ prim_factor =
 ** One-electron integrals
 
    The operators as the same as those defined in the
-   [[ao_one_e][AO one-electron integrals section]]. Here, the integrals are given in
+   [[#ao_one_e][AO one-electron integrals section]]. Here, the integrals are given in
    the basis of molecular orbitals.
-   
+
    #+NAME: mo_1e_int
    | ~overlap~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                              |
    | ~kinetic~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$              |
    | ~potential_n_e~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$    |
-   | ~ecp_local~        | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,l} \vert j \rangle$  |
-   | ~ecp_non_local~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,nl} \vert j \rangle$ |
+   | ~ecp_local~        | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,l}} \vert j \rangle$  |
+   | ~ecp_non_local~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,nl}} \vert j \rangle$ |
    | ~core_hamiltonian~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$                |
 
    #+CALL: json(data=mo_1e_int, title="mo_1e_int")
@@ -490,7 +492,7 @@ prim_factor =
 ** Two-electron integrals
 
    The operators as the same as those defined in the
-   [[ao_two_e][AO two-electron integrals section]]. Here, the integrals are given in
+   [[#ao_one_e][AO one-electron integrals section]]. Here, the integrals are given in
    the basis of molecular orbitals.
 
    #+NAME: mo_2e_int
@@ -511,7 +513,7 @@ prim_factor =
 
 * TODO Slater determinants
 * TODO Reduced density matrices
-  
+
   #+NAME: rdm
   | ~one_e~    | ~float~        | ~(mo.num, mo.num)~                |
   | ~one_e_up~ | ~float~        | ~(mo.num, mo.num)~                |
@@ -532,12 +534,12 @@ prim_factor =
   #+end_src
   :end:
 
-* Appendix                                                         :noexport:
+* Appendix
 ** Python script from table to json
 
  #+NAME: json
- #+begin_src python :var data=nucleus title="nucleus" last=0 :results output drawer 
-print("""#+begin_src python :tangle trex.json""") 
+ #+begin_src python :var data=nucleus title="nucleus" last=0 :results output drawer
+print("""#+begin_src python :tangle trex.json""")
 print("""    "%s": {"""%(title))
 indent = "        "
 f1 = 0 ; f2 = 0 ; f3 = 0

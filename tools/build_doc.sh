@@ -99,10 +99,11 @@ function main() {
     # Create documentation
     cd ${SRC} 
 
-    for dir in ${SRC}/templates_*/
+    for dir in ${SRC}/templates_*/ ${TREXIO_ROOT}/
     do
 	dir=${dir%*/}
 	echo ${dir}
+        OLDPWD=$PWD
 	cd ${dir}
     	for i in *.org
     	do
@@ -110,7 +111,7 @@ function main() {
         	echo "=======  ${i} ======="
         	extract_doc ${i} ${dir}
     	done
-	cd ..
+	cd $OLDPWD
     done
 
     echo
