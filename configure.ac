@@ -72,7 +72,7 @@ AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd
 
 
 PKG_HDF5=""
-AX_LIB_HDF5([serial])
+AX_LIB_HDF5()
 
 if test "x${with_hdf5}" = xno; then
   AC_MSG_WARN([
