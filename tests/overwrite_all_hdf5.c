@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define TEST_BACKEND 	TREXIO_HDF5
-#define TREXIO_FILE 	"test.h5"
+#define TREXIO_FILE 	"test_over.h5"
 #define RM_COMMAND 	"rm -rf " TREXIO_FILE
 
 static int test_write (const char* file_name, const back_end_t backend) {

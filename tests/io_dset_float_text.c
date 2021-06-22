@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define TEST_BACKEND 	TREXIO_TEXT
-#define TREXIO_FILE 	"test.dir"
+#define TREXIO_FILE 	"test_dset_f.dir"
 #define RM_COMMAND 	"rm -rf " TREXIO_FILE
 
 static int test_write_dset (const char* file_name, const back_end_t backend) {

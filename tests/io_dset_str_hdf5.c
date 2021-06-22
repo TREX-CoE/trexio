@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define TEST_BACKEND 	TREXIO_HDF5
-#define TREXIO_FILE 	"test.h5"
+#define TREXIO_FILE 	"test_dset_s.h5"
 #define RM_COMMAND 	"rm -rf " TREXIO_FILE
 
 static int test_write_dset_str (const char* file_name, const back_end_t backend) {

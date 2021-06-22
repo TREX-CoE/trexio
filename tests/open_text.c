@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define TEST_BACKEND 	TREXIO_TEXT
-#define TREXIO_FILE 	"test.dir"
+#define TREXIO_FILE 	"test_open.dir"
 #define TREXIO_VOID 	"non_existing_" TREXIO_FILE
 #define RM_COMMAND 	"rm -rf " TREXIO_FILE
 
