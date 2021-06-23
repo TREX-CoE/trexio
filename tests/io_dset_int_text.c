@@ -16,7 +16,7 @@ static int test_write_dset (const char* file_name, const back_end_t backend) {
 
   // parameters to be written
   int num = 12;
-  int nucl_index[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  int nucl_index[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
 /*================= START OF TEST ==================*/
 
@@ -99,7 +99,7 @@ static int test_read_dset (const char* file_name, const back_end_t backend) {
   nucl_index = (int*) calloc(num, sizeof(int));
   rc = trexio_read_basis_nucleus_index(file, nucl_index);
   assert (rc == TREXIO_SUCCESS);
-  assert ( nucl_index[num-1] == num );
+  assert (nucl_index[num-1] == num-1);
 
   free(nucl_index);
 
