@@ -2,22 +2,29 @@
 #+STARTUP: latexpreview
 #+SETUPFILE: docs/theme.setup
 
+This page contains information about the general structure of the 
+TREXIO library. The source code of the library can be automatically 
+generated based on the contents of the ~trex.json~ file, which is 
+compiled from different sections (groups) presented below.
 
-All the quantities are saved in atomic units.
+For more information about the automatic generation on the source code 
+or regarding possible modifications, please contact the TREXIO developers.
+
+All quantities are saved in TREXIO file in atomic units.
 The dimensions of the arrays in the tables below are given in
 column-major order (as in Fortran), and the ordering of the dimensions
-is reversed in the produces JSON configuration file as the library is
+is reversed in the produced JSON configuration file as the library is
 written in C.
 
 In Fortran, the arrays are 1-based and in most other languages the
-arrays are 0-base. Hence, we introduce the ~index~ type which is an
+arrays are 0-based. Hence, we introduce the ~index~ type which is an
 1-based ~int~ in the Fortran interface and 0-based otherwise.
 
-  #+begin_src python :tangle trex.json
+  #+begin_src python :tangle trex.json :exports none
 {
   #+end_src
 
-* Metadata
+* Metadata (metadata group)
 
   As we expect our files to be archived in open-data repositories, we
   need to give the possibility to the users to store some metadata
@@ -26,6 +33,8 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   authors of the file, and a textual description.
 
   #+NAME: metadata
+  | Variable      | Type  | Dimensions (for arrays) | Description                              |
+  |---------------+-------+-------------------------+------------------------------------------|
   | ~code_num~    | ~int~ |                         | Number of codes used to produce the file |
   | ~code~        | ~str~ | ~(metadata.code_num)~   | Names of the codes used                  |
   | ~author_num~  | ~int~ |                         | Number of authors of the file            |
@@ -46,14 +55,16 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   #+end_src
   :end:
 
-* Electron
+* Electron (electron group)
 
    We consider wave functions expressed in the spin-free formalism, where
    the number of \uparrow and \downarrow electrons is fixed.
 
   #+NAME:electron
-  | ~up_num~ | ~int~ |   | Number of \uparrow-spin electrons   |
-  | ~dn_num~ | ~int~ |   | Number of \downarrow-spin electrons |
+  | Variable | Type  | Dimensions | Description                         |
+  |----------+-------+------------+-------------------------------------|
+  | ~up_num~ | ~int~ |            | Number of \uparrow-spin electrons   |
+  | ~dn_num~ | ~int~ |            | Number of \downarrow-spin electrons |
 
   #+CALL: json(data=electron, title="electron")
   #+RESULTS:
@@ -66,12 +77,14 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   #+end_src
   :end:
 
-* Nucleus
+* Nucleus (nucleus group)i
 
   The nuclei are considered as fixed point charges. Coordinates are
   given in Cartesian $(x,y,z)$ format.
 
   #+NAME: nucleus
+  | Variable      | Type    | Dimensions        | Description              |
+  |---------------+---------+-------------------+--------------------------|
   | ~num~         | ~int~   |                   | Number of nuclei         |
   | ~charge~      | ~float~ | ~(nucleus.num)~   | Charges of the nuclei    |
   | ~coord~       | ~float~ | ~(3,nucleus.num)~ | Coordinates of the atoms |
@@ -92,7 +105,7 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   #+end_src
   :end:
 
-* TODO Effective core potentials
+* TODO Effective core potentials (ecp group)
 
   An effective core potential (ECP) $V_A^{\text{pp}}$ replacing the
   core electrons of atom $A$ is the sum of a local component
@@ -126,6 +139,8 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   - $\hat{V}_\text{ecp,nl} = \sum_A \hat{V}_A^{\text{nl}}$ : non-local component
 
   #+NAME: ecp
+  | Variable              | Type    | Dimensions                               | Description                |
+  |-----------------------+---------+------------------------------------------+----------------------------|
   | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $l_{\max} + 1$             |
   | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove          |
   | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local function   |
@@ -161,7 +176,7 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   #+end_src
   :end:
 
-* Basis set
+* Basis set (basis group)
 
   We consider here basis functions centered on nuclei. Hence, we enable
   the possibility to define /dummy atoms/ to place basis functions in
@@ -201,6 +216,8 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   All the basis set parameters are stored in one-dimensional arrays:
 
   #+NAME: basis
+  | Variable            | Type    | Dimensions         | Description                                              |
+  |---------------------+---------+--------------------+----------------------------------------------------------|
   | ~type~              | ~str~   |                    | Type of basis set: "Gaussian" or "Slater"                |
   | ~num~               | ~int~   |                    | Total Number of shells                                   |
   | ~prim_num~          | ~int~   |                    | Total number of primitives                               |
@@ -210,7 +227,7 @@ arrays are 0-base. Hence, we introduce the ~index~ type which is an
   | ~shell_prim_num~    | ~int~   | ~(basis.num)~      | Number of primitives in the shell ($N_{\text{prim}}$)    |
   | ~shell_factor~      | ~float~ | ~(basis.num)~      | Normalization factor of the shell ($\mathcal{N}_s$)      |
   | ~shell_prim_index~  | ~index~ | ~(basis.num)~      | Index of the first primitive in the complete list        |
-  | ~exponent~          | ~float~ | ~(basis.prim_num)~ | Exponents of the primitives ($\gamma_{ks}$)               |
+  | ~exponent~          | ~float~ | ~(basis.prim_num)~ | Exponents of the primitives ($\gamma_{ks}$)              |
   | ~coefficient~       | ~float~ | ~(basis.prim_num)~ | Coefficients of the primitives ($a_{ks}$)                |
   | ~prim_factor~       | ~float~ | ~(basis.prim_num)~ | Normalization coefficients for the primitives ($f_{ks}$) |
 
@@ -292,7 +309,7 @@ prim_factor =
   4.3649547399719840e-01, 1.8135965626177861e+00 ]
    #+END_EXAMPLE
 
-* Atomic orbitals
+* Atomic orbitals (ao group)
 
   Going from the atomic basis set to AOs implies a systematic
   construction of all the angular functions of each shell.  We
@@ -337,6 +354,8 @@ prim_factor =
   introduced here should be $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
 
   #+NAME: ao
+  | Variable        | Type    | Dimensions | Description                     |
+  |-----------------+---------+------------+---------------------------------|
   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false           |
   | ~num~           | ~int~   |            | Total number of atomic orbitals |
   | ~shell~         | ~index~ | ~(ao.num)~ | basis set shell for each AO     |
@@ -356,7 +375,7 @@ prim_factor =
   #+end_src
   :end:
 
-** One-electron integrals
+** One-electron integrals (ao_1e_int group)
    :PROPERTIES:
    :CUSTOM_ID: ao_one_e
    :END:
@@ -374,12 +393,14 @@ prim_factor =
    over atomic orbitals.
 
    #+NAME: ao_1e_int
-   | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                              |
-   | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$              |
-   | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$    |
-   | ~ecp_local~        | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,l}} \vert q \rangle$  |
-   | ~ecp_non_local~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,nl}} \vert q \rangle$ |
-   | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                |
+  | Variable           | Type    | Dimensions         | Description                                               |
+  |--------------------+---------+--------------------+-----------------------------------------------------------|
+  | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                               |
+  | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$               |
+  | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$     |
+  | ~ecp_local~        | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,l}} \vert q \rangle$  |
+  | ~ecp_non_local~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp,nl}} \vert q \rangle$ |
+  | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                 |
 
    #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -397,7 +418,7 @@ prim_factor =
    #+end_src
    :end:
 
-** Two-electron integrals
+** Two-electron integrals (ao_2e_int group)
    :PROPERTIES:
    :CUSTOM_ID: ao_two_e
    :END:
@@ -418,8 +439,10 @@ prim_factor =
      \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential
 
    #+NAME: ao_2e_int
-   | ~eri~    | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Electron repulsion integrals            |
-   | ~eri_lr~ | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Long-range Electron repulsion integrals |
+  | Variable | Type           | Dimensions                         | Description                             |
+  |----------+----------------+------------------------------------+-----------------------------------------|
+  | ~eri~    | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Electron repulsion integrals            |
+  | ~eri_lr~ | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Long-range Electron repulsion integrals |
 
    #+CALL: json(data=ao_2e_int, title="ao_2e_int")
 
@@ -433,9 +456,11 @@ prim_factor =
    #+end_src
    :end:
 
-* Molecular orbitals
+* Molecular orbitals (mo group)
 
   #+NAME: mo
+  | Variable      | Type    | Dimensions         | Description                              |
+  |---------------+---------+--------------------+------------------------------------------|
   | ~type~        | ~str~   |                    | String identify the set of MOs           |
   | ~num~         | ~int~   |                    | Number of MOs                            |
   | ~coefficient~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                          |
@@ -459,19 +484,21 @@ prim_factor =
   #+end_src
   :end:
 
-** One-electron integrals
+** One-electron integrals (mo_1e_int group)
 
    The operators as the same as those defined in the
    [[#ao_one_e][AO one-electron integrals section]]. Here, the integrals are given in
    the basis of molecular orbitals.
 
    #+NAME: mo_1e_int
-   | ~overlap~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                              |
-   | ~kinetic~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$              |
-   | ~potential_n_e~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$    |
-   | ~ecp_local~        | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,l}} \vert j \rangle$  |
-   | ~ecp_non_local~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,nl}} \vert j \rangle$ |
-   | ~core_hamiltonian~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$                |
+  | Variable           | Type    | Dimensions         | Description                                               |
+  |--------------------+---------+--------------------+-----------------------------------------------------------|
+  | ~overlap~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                               |
+  | ~kinetic~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$               |
+  | ~potential_n_e~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$     |
+  | ~ecp_local~        | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,l}} \vert j \rangle$  |
+  | ~ecp_non_local~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ecp,nl}} \vert j \rangle$ |
+  | ~core_hamiltonian~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$                 |
 
    #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
@@ -489,15 +516,17 @@ prim_factor =
    #+end_src
    :end:
 
-** Two-electron integrals
+** Two-electron integrals (mo_2e_int group)
 
    The operators as the same as those defined in the
    [[#ao_one_e][AO one-electron integrals section]]. Here, the integrals are given in
    the basis of molecular orbitals.
 
    #+NAME: mo_2e_int
-   | ~eri~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Electron repulsion integrals            |
-   | ~eri_lr~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Long-range Electron repulsion integrals |
+  | Variable | Type           | Dimensions                         | Description                             |
+  |----------+----------------+------------------------------------+-----------------------------------------|
+  | ~eri~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Electron repulsion integrals            |
+  | ~eri_lr~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Long-range Electron repulsion integrals |
 
    #+CALL: json(data=mo_2e_int, title="mo_2e_int")
 
@@ -512,13 +541,15 @@ prim_factor =
    :end:
 
 * TODO Slater determinants
-* TODO Reduced density matrices
+* TODO Reduced density matrices (rdm group)
 
   #+NAME: rdm
-  | ~one_e~    | ~float~        | ~(mo.num, mo.num)~                |
-  | ~one_e_up~ | ~float~        | ~(mo.num, mo.num)~                |
-  | ~one_e_dn~ | ~float~        | ~(mo.num, mo.num)~                |
-  | ~two_e~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ |
+  | Variable   | Type           | Dimensions                         | Description |
+  |------------+----------------+------------------------------------+-------------|
+  | ~one_e~    | ~float~        | ~(mo.num, mo.num)~                 |             |
+  | ~one_e_up~ | ~float~        | ~(mo.num, mo.num)~                 |             |
+  | ~one_e_dn~ | ~float~        | ~(mo.num, mo.num)~                 |             |
+  | ~two_e~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ |             |
 
   #+CALL: json(data=rdm, title="rdm", last=1)
 
@@ -587,6 +618,6 @@ print("""#+end_src""")
  #+end_src
 
 
-  #+begin_src python :tangle trex.json :results output drawer
+  #+begin_src python :tangle trex.json :results output drawer :exports none
 }
   #+end_src
