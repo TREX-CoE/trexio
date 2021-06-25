@@ -1,7 +1,8 @@
-[![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
 # TREXIO
+
+[![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
 TREX library fo efficient I/O.
 
@@ -19,13 +20,13 @@ TREX library fo efficient I/O.
 1. Download the `trexio-<version>.tar.gz` file
 2. `gzip -cd trexio-<version>.tar.gz | tar xvf -`
 3. `cd trexio-<version>`
-4. `./configure`
+4. `./configure --enable-silent-rules`
 5. `make`
 6. `make check`
 7. `sudo make install`
 
 
-**Note: on systems with no `sudo` rights access, one can replace `./configure` with `./configure prefix=${PWD}` in order to execute `make install/uninstall` commands without `sudo`. This will enable the installation in the root directory of the library.**
+**Note: on systems with no `sudo` access, one can replace `./configure` with `./configure prefix=${PWD}/_install` in order to execute `make install/uninstall` commands without `sudo` privileges.**
 
 
 ## Additional requirements (for developers):
@@ -39,7 +40,7 @@ TREX library fo efficient I/O.
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio`
 3. `./autogen.sh`
-4. `TREXIO_DEVEL=1 ./configure`
+4. `TREXIO_DEVEL=1 ./configure --enable-maintainer-mode`
 5. `make`
 6. `make check`
 7. `sudo make install`
@@ -52,7 +53,7 @@ TREX library fo efficient I/O.
 
 ## Technical documentation
 
-[Documentation generated from TREXIO org-mode files](https://trex-coe.github.io/trexio/)
+[Documentation generated from TREXIO org-mode files.](https://trex-coe.github.io/trexio/)
 
 
 ### Miscellaneous
