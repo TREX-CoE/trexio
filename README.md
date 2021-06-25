@@ -46,6 +46,24 @@ TREX library fo efficient I/O.
 7. `sudo make install`
 
 
+## Naming convention
+
+The primary TREXIO API is composed of the following functions:
+
+- `trexio_open`
+- `trexio_write_[group]_[variable]`
+- `trexio_read_[group]_[variable]`
+- `trexio_has_[group]_[variable]`
+- `trexio_close`
+
+where `[group]` and `[variable]` substitutions correspond to the contents of the `trex.json` configuration file (for more details, see the corresponding [documentation](https://trex-coe.github.io/trexio/trex.html) page).
+For example, consider the `coord` variable (array), which belongs to the `nucleus` group. The TREXIO user can write or read it using `trexio_write_nucleus_coord` or `trexio_read_nucleus_coord` functions, respectively.
+
+Note: the `[variable]` names have to be unique only within the corresponding parent `[group]`. 
+There is no naming conflict when, for example, `num` variable exists both in the `nucleus` group (i.e. the number of nuclei) and in the `mo` group (i.e. the number of molecular orbitals). 
+These quantities can be accessed using the corresponding `trexio_[has|read|write]_nucleus_num` and `trexio_[has|read|write]_mo_num`, respectively.
+
+
 ## Tutorial
 
 **TODO**
