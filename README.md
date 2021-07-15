@@ -80,3 +80,9 @@ Note: The code should be compliant with the C99 [CERT C coding
 standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf). This can be checked with the `cppcheck` tool.
 
 
+
+-----------------
+![European flag](https://trex-coe.eu/sites/default/files/inline-images/euflag.jpg)
+[TREX: Targeting Real Chemical Accuracy at the Exascale](https://trex-coe.eu) project has received funding from the European Union’s Horizon 2020 - Research and Innovation program - under grant agreement no. 952165. The content of this document does not represent the opinion of the European Union, and the European Union is not responsible for any use that might be made of such content.
+
+
