@@ -179,6 +179,16 @@ cppcheck.out: $(trexio_h)
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
 
+
+python: $(ORG_FILES) src/pytrexio.i 
+	cd src/ && \
+	swig -python -o pytrexio_wrap.c pytrexio.i && \
+	$(CC) $(CPPFLAGS) -I/usr/include/python3.8 \
+		-fPIC -c trexio.c trexio_hdf5.c trexio_text.c pytrexio_wrap.c && \
+	$(CC) -shared trexio.o trexio_hdf5.o trexio_text.o pytrexio_wrap.o \
+		-L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl -o _pytrexio.so
+
+
 .PHONY: cppcheck
 
 endif
