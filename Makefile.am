@@ -180,13 +180,15 @@ cppcheck.out: $(trexio_h)
 	  -I../include *.c *.h 2>../$@
 
 
-python: $(ORG_FILES) src/pytrexio.i 
+python: $(ORG_FILES) $(trexio_h) src/pytrexio.i
+	cp $(trexio_h) src/
 	cd src/ && \
 	swig -python -o pytrexio_wrap.c pytrexio.i && \
-	$(CC) $(CPPFLAGS) -I/usr/include/python3.8 \
-		-fPIC -c trexio.c trexio_hdf5.c trexio_text.c pytrexio_wrap.c && \
+	$(CC) $(CPPFLAGS) -I/usr/include/python3.8 -fPIC -Wno-discarded-qualifiers \
+		-c trexio.c trexio_hdf5.c trexio_text.c pytrexio_wrap.c && \
 	$(CC) -shared trexio.o trexio_hdf5.o trexio_text.o pytrexio_wrap.o \
-		-L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lz -lm -lhdf5 -lhdf5_hl -o _pytrexio.so
+		$(LDFLAGS) $(LIBS) -o _pytrexio.so
+	rm -f -- src/trexio.h
 
 
 .PHONY: cppcheck
