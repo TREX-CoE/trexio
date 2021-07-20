@@ -180,7 +180,13 @@ cppcheck.out: $(trexio_h)
 	  -I../include *.c *.h 2>../$@
 
 
-python: $(ORG_FILES) $(trexio_h) src/pytrexio.i
+python: src/_pytrexio.so
+
+python-test: src/test.py src/_pytrexio.so
+	cd src/ && python3 test.py
+	$(RM) -r -- src/__pycache__
+
+src/_pytrexio.so: $(ORG_FILES) $(trexio_h) src/pytrexio.i
 	cp $(trexio_h) src/
 	cd src/ && \
 	swig -python -o pytrexio_wrap.c pytrexio.i && \
@@ -188,10 +194,12 @@ python: $(ORG_FILES) $(trexio_h) src/pytrexio.i
 		-c trexio.c trexio_hdf5.c trexio_text.c pytrexio_wrap.c && \
 	$(CC) -shared trexio.o trexio_hdf5.o trexio_text.o pytrexio_wrap.o \
 		$(LDFLAGS) $(LIBS) -o _pytrexio.so
-	rm -f -- src/trexio.h
+	$(RM) -- src/trexio.h
 
 
-.PHONY: cppcheck
+CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py src/_pytrexio.so 
+
+.PHONY: cppcheck python python-test
 
 endif
 
