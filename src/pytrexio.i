@@ -3,11 +3,8 @@
 #define SWIGWORDSIZE64
 %{
 /* Include the headers in the wrapper code */
-#include "trexio.h"
 #include "trexio_s.h"
-#include "trexio_private.h"
-#include "trexio_text.h"
-#include "trexio_hdf5.h"
+#include "trexio.h"
 %}
 
 /* Include stdint to recognize types from stdint.h */
@@ -80,8 +77,5 @@ int print_args(char ** argv) {
 }
 %}*/
 /* Parse the header files to generate wrappers */
-%include "trexio.h"
 %include "trexio_s.h"
-%include "trexio_private.h"
-%include "trexio_text.h"
-%include "trexio_hdf5.h"
+%include "trexio.h"
