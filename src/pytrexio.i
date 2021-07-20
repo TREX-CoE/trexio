@@ -32,12 +32,14 @@
 /* Does not work for arrays (SIGSEGV)
 %apply double *OUTPUT { double* const dataset };
 */
-/* TREXIO back ends and exit codes can be redefines in the SWIG target language using %constant. 
-   TREXIO back ends and exit codes can be redefines in the SWIG target languageProbably not a good idea since this overwrite existing macros definitions.
+/* TREXIO back ends and exit codes can be redefined in the SWIG target language using %ignore and further #define statements
+   (instead of disabling the type cast in the trexio.h file)
 */
 /*
-%constant int TREXIO_HDF5 = 0;
-%constant int TREXIO_TEXT = 1;
+%ignore TREXIO_HDF5;       // Ignore a macro in the header file
+%ignore TREXIO_TEST;       // Ignore a macro in the header file
+#define TREXIO_HDF5 0
+#define TREXIO_TEXT 0
 */
 /* This tells SWIG to treat char ** as a special case */
 %typemap(in) char ** {
