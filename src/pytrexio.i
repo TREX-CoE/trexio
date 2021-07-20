@@ -32,17 +32,13 @@
 /* Does not work for arrays (SIGSEGV)
 %apply double *OUTPUT { double* const dataset };
 */
-/* TODO: Redefine trexio_exit_code and back_end_t types to gain access to the list 
-   of back ends and exit codes. Currently: hard-coded back ends
+/* TREXIO back ends and exit codes can be redefines in the SWIG target language using %constant. 
+   TREXIO back ends and exit codes can be redefines in the SWIG target languageProbably not a good idea since this overwrite existing macros definitions.
 */
-/*%typemap(out) back_end_t {
-  // $1 is what we got from our C or C++ call
-  $result = PyInt_FromLong((long) $1);
-  // $result is what gets given back to Python and we are responsible for setting it
-}*/
+/*
 %constant int TREXIO_HDF5 = 0;
 %constant int TREXIO_TEXT = 1;
-
+*/
 /* This tells SWIG to treat char ** as a special case */
 %typemap(in) char ** {
   /* Check if is a list */
