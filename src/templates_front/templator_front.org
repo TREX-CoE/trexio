@@ -438,6 +438,7 @@ typedef struct trexio_s trexio_t;
    #+begin_src c :tangle prefix_s_front.h
 struct trexio_s {
   char              file_name[TREXIO_MAX_FILENAME_LENGTH];
+  char              version[16];
   pthread_mutex_t   thread_lock;
   back_end_t        back_end;
   char              mode;
@@ -534,6 +535,12 @@ trexio_open(const char* file_name, const char mode,
     return NULL;
   }
 
+  strncpy(result->version, PACKAGE_VERSION, 16);
+  if (result->version[15] != '\0') {
+    free(result);
+    return NULL;
+  }
+
   result->back_end    = back_end;
   result->mode        = mode;
   result->one_based   = false;  // Need to be flipped in Fortran interface
@@ -566,6 +573,36 @@ trexio_open(const char* file_name, const char mode,
     free(result);
     return NULL;
   }
+
+  rc = trexio_has_metadata_package_version(result);
+  if (rc == TREXIO_FAILURE) {
+    free(result);
+    return NULL;
+  }
+ 
+  if (rc == TREXIO_HAS_NOT) {
+    switch (back_end) {
+
+    case TREXIO_TEXT:
+      rc = trexio_text_write_metadata_package_version(result, PACKAGE_VERSION);
+      break;
+
+    case TREXIO_HDF5:
+      rc = trexio_hdf5_write_metadata_package_version(result, PACKAGE_VERSION);
+      break;
+/*
+    case TREXIO_JSON:
+      rc = trexio_json_write_metadata_package_version(result, PACKAGE_VERSION);
+      break;
+,*/
+    }
+  }
+
+  if (rc != TREXIO_SUCCESS) {
+    free(result);
+    return NULL;
+  }
+
 
   /* File locking */
 

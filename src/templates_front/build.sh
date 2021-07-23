@@ -3,6 +3,11 @@
 # prefixes
 cat prefix_front.c   > trexio.c
 cat prefix_front.h   > trexio.h
+# grep some usefull constants from the config.h
+echo "" >> trexio.h
+grep "_VERSION" ../../include/config.h >> trexio.h
+echo "" >> trexio.h
+
 cat prefix_s_front.h > trexio_s.h
 cat prefix_fortran.f90   > trexio_f.f90
 
