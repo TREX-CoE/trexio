@@ -21,6 +21,11 @@ AC_SUBST([VERSION_MAJOR])
 AC_SUBST([VERSION_MINOR])
 AC_SUBST([VERSION_PATCH])
 
+## Save system information, e.g. user name
+
+UNAME=`echo ${USER}`
+AC_DEFINE_UNQUOTED(TREXIO_USER_NAME, ["${UNAME}"], [user name])
+AC_SUBST([UNAME])
 
 ## -------------------
 ## Checks for programs 
@@ -49,6 +54,7 @@ PKG_CFLAGS=""
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
+AC_PROG_GREP
 
 
 ## ---------
