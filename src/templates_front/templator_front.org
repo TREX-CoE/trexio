@@ -1643,19 +1643,19 @@ trexio_read_chunk_ao_2e_int_eri_value_64(trexio_t* const file,
 
      #+begin_src c :tangle hrw_dset_str_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_dset$_low(trexio_t* const file, char* dset, const uint32_t max_str_len);
-trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, const char* dset, const uint32_t max_str_len);
-trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** dset, const uint32_t max_str_len);
-trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset, const uint32_t max_str_len);
+trexio_exit_code trexio_read_$group_dset$_low(trexio_t* const file, char* dset_out, const uint32_t max_str_len);
+trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, const char* dset_in, const uint32_t max_str_len);
+trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** dset_out, const uint32_t max_str_len);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset_in, const uint32_t max_str_len);
      #+end_src
 
      #+begin_src c :tangle read_dset_str_front.c
 trexio_exit_code
-trexio_read_$group_dset$_low (trexio_t* const file, char* dset, const uint32_t max_str_len)
+trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const uint32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
 
   trexio_exit_code rc;
@@ -1673,15 +1673,15 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset, const uint32_t m
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_dset$(file, dset, rank, dims, max_str_len);
+    return trexio_text_read_$group_dset$(file, dset_out, rank, dims, max_str_len);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_dset$(file, dset, rank, dims, max_str_len);
+    return trexio_hdf5_read_$group_dset$(file, dset_out, rank, dims, max_str_len);
     break;
 /*
   case TREXIO_JSON:
-    rc = trexio_json_read_$group_dset$(file, dset, rank, dims);
+    rc = trexio_json_read_$group_dset$(file, dset_out, rank, dims);
     break;
 ,*/
   }
@@ -1690,11 +1690,11 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset, const uint32_t m
 }
 
 trexio_exit_code
-trexio_read_$group_dset$ (trexio_t* const file, char** dset, const uint32_t max_str_len)
+trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const uint32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
@@ -1725,8 +1725,8 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset, const uint32_t max_
       return TREXIO_FAILURE;
     }
 
-    strcpy(dset[i], "");
-    strcat(dset[i], pch);
+    strcpy(dset_out[i], "");
+    strcat(dset_out[i], pch);
 
   }
 
@@ -1738,11 +1738,11 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset, const uint32_t max_
 
      #+begin_src c :tangle write_dset_str_front.c
 trexio_exit_code
-trexio_write_$group_dset$_low (trexio_t* const file, const char* dset, const uint32_t max_str_len)
+trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const uint32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (dset_in == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
   if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS) return TREXIO_DSET_ALREADY_EXISTS;
 
@@ -1769,7 +1769,7 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset, const uin
   /* parse the string using strtok */
   for(uint64_t i=0; i<dims[0]; i++) {
 
-    pch = i == 0 ? strtok( (char*) dset, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
+    pch = i == 0 ? strtok( (char*) dset_in, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
 
     if (pch == NULL) {
       FREE(dset_str[0]);
@@ -1815,11 +1815,11 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset, const uin
 }
 
 trexio_exit_code
-trexio_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32_t max_str_len)
+trexio_write_$group_dset$ (trexio_t* const file, const char** dset_in, const uint32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (dset_in == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
   if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS) return TREXIO_DSET_ALREADY_EXISTS;
 
@@ -1838,7 +1838,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32
 
   strcpy(str_compiled, "");
   for (uint64_t i=0; i < dset_dim; i++) {
-    strcat(str_compiled, dset[i]);
+    strcat(str_compiled, dset_in[i]);
     strcat(str_compiled, TREXIO_DELIM);
   }
 

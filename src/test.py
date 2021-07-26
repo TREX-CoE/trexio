@@ -27,7 +27,7 @@ try:
     if TEST_TREXIO_BACKEND == 1:
         shutil.rmtree(output_filename)
 except:
-    print (f'Test file {OUTPUT_FILENAME} does not exist')
+    print (f'Test file {output_filename} does not exist')
 
 #=========================================================#
 #============ WRITE THE DATA IN THE TEST FILE ============#
@@ -95,13 +95,16 @@ assert rc==0
 for i in range(nucleus_num):
     assert charges2[i]==charges[i]
 
-labels2 = ['' for i in range(nucleus_num)]
-print(labels2)
-rc = trexio_read_nucleus_label(test_file2, labels2, 10)
-print(labels2)
+# [WIP]: ideally, the list of strings should be returned as below
+#rc, label_2d = trexio_read_nucleus_label(test_file2, 10)
+# [WIP]: currently only low-level routines (return one long string instead of an array of strings) work
+rc, labels_1d = trexio_read_nucleus_label_low(test_file2, 10)
 assert rc==0
+
+labels_2d = [label for label in labels_1d.split('\n') if label]
+print(labels_2d)
 for i in range(nucleus_num):
-    assert labels2[i]==labels[i]
+    assert labels_2d[i]==labels[i]
 
 rc = trexio_close(test_file2)
 assert rc==0
