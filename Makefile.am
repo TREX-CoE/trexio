@@ -180,24 +180,37 @@ cppcheck.out: $(trexio_h)
 	  -I../include *.c *.h 2>../$@
 
 
-python: src/_pytrexio.so
+python: src/_pytrexio*.so
 
-python-test: src/test.py src/_pytrexio.so
+python-test: src/test.py src/_pytrexio*.so
 	cd src/ && python3 test.py
 	$(RM) -r -- src/__pycache__
 
-src/_pytrexio.so: $(ORG_FILES) $(trexio_h) src/pytrexio.i
+# Advanced compilation using Python-native distutils
+#
+# swig -python -threads pytrexio.i ----> Add thread support for all the interface
+# 
+src/_pytrexio*.so:  $(ORG_FILES) $(trexio_h) src/pytrexio.i
 	cp $(trexio_h) src/
 	cd src/ && \
-	swig -python -o pytrexio_wrap.c pytrexio.i && \
-	$(CC) $(CPPFLAGS) -I/usr/include/python3.8 -fPIC -Wno-discarded-qualifiers \
-		-c trexio.c trexio_hdf5.c trexio_text.c pytrexio_wrap.c && \
-	$(CC) -shared trexio.o trexio_hdf5.o trexio_text.o pytrexio_wrap.o \
-		$(LDFLAGS) $(LIBS) -o _pytrexio.so
+	swig -python -py3 -o pytrexio_wrap.c pytrexio.i && \
+	python3 setup.py build_ext --inplace --swig-opts="-modern"
 	$(RM) -- src/trexio.h
 
+# Manual compilation of Python module
+#
+#src/_pytrexio.so: $(ORG_FILES) $(trexio_h) src/pytrexio.i
+#       cp $(trexio_h) src/
+#       cd src/ && \
+#       swig -python -py3 -o pytrexio_wrap.c pytrexio.i && \
+#       $(CC) $(CPPFLAGS) -I/usr/include/python3.8 -fPIC -Wno-discarded-qualifiers \
+#       	-c trexio.c trexio_hdf5.c trexio_text.c pytrexio_wrap.c && \
+#       $(CC) -shared trexio.o trexio_hdf5.o trexio_text.o pytrexio_wrap.o \
+#       	$(LDFLAGS) $(LIBS) -o _pytrexio.so
+#       $(RM) -- src/trexio.h
+#
 
-CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py src/_pytrexio.so 
+CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py src/_pytrexio*.so 
 
 .PHONY: cppcheck python python-test
 
