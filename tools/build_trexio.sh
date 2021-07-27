@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Check that script is executed from tools directory
 if [[ $(basename $PWD) != "tools" ]] ; then
@@ -17,11 +18,12 @@ function tangle()
 {
   local command="(org-babel-tangle-file \"$1\")"
   emacs --batch \
-        --eval "(require 'org)" \
-        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \
-        --eval "(setq org-confirm-babel-evaluate nil)" \
+        --load=${TOOLS}/emacs/config_tangle.el \
         --eval "$command"
 }
+#        --eval "(require 'org)" \
+#        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \
+#        --eval "(setq org-confirm-babel-evaluate nil)" \
 
 # Create trex.json file
 cd ${TREXIO_ROOT}

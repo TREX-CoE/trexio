@@ -14,6 +14,7 @@
 ;(setq org-latex-listings t)
 ;(add-to-list 'org-latex-packages-alist '("" "listings"))
 ;(add-to-list 'org-latex-packages-alist '("" "color"))
+(setq org-babel-python-command "python3")
 
 
 (require 'subr-x) ;; for `when-let'
