@@ -456,8 +456,6 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
     // END REPEAT GROUP_DSET_NUM
 
-    size_t tmp_len;
-
     // START REPEAT GROUP_DSET_STR
     /* Allocate arrays */
     $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
@@ -485,7 +483,8 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     ,*/
     char* tmp_$group_dset$;
     if(size_$group_dset$ != 0) tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
-    tmp_len = 0;
+    
+    size_t tmp_$group_dset$_len = 0;
     for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
       $group$->$group_dset$[i] = tmp_$group_dset$;
       /* conventional fcanf with "%s" only return the string before the first space character 
@@ -501,8 +500,8 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 	return NULL;
       }
 
-      tmp_len = strlen($group$->$group_dset$[i]);
-      tmp_$group_dset$ += tmp_len + 1;
+      tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
+      tmp_$group_dset$ += tmp_$group_dset$_len + 1;
     }
     // END REPEAT GROUP_DSET_STR
 

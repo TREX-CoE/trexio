@@ -12,7 +12,7 @@ pytrexio_module = Extension('_pytrexio',
                            include_dirs=['/usr/include/hdf5/serial'],
                            #runtime_library_dirs=['/usr/lib/x86_64-linux-gnu/hdf5/serial'],
                            libraries=['hdf5', 'hdf5_hl'],
-                           #extra_compile_args=['-I/usr/include/hdf5/serial'],
+                           extra_compile_args=['-Wno-discarded-qualifiers'],
                            extra_link_args=['-L/usr/lib/x86_64-linux-gnu/hdf5/serial']
                            )
 
