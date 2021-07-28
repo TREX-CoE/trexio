@@ -152,6 +152,7 @@ typedef int32_t trexio_exit_code;
    | ~TREXIO_GROUP_WRITE_ERROR~   |   20 | 'Error writing group'                |
    | ~TREXIO_ELEM_READ_ERROR~     |   21 | 'Error reading element'              |
    | ~TREXIO_ELEM_WRITE_ERROR~    |   22 | 'Error writing element'              |
+   | ~TREXIO_UNSAFE_ARRAY_DIM~    |   23 | 'Access to memory beyond allocated'  |
    | ~TREXIO_INVALID_STR_LEN~     |   30 | 'Invalid max_str_len'                |
 
    # We need to force Emacs not to indent the Python code:
@@ -165,7 +166,7 @@ typedef int32_t trexio_exit_code;
 result = [ "#+begin_src c :tangle prefix_front.h :exports none" ]
 for (text, code,_) in table:
   text=text.replace("~","")
-  result += [ f"#define  {text:30s} {code:d} //((trexio_exit_code) {code:d})" ]
+  result += [ f"#define {text:30s} {code:d} //((trexio_exit_code) {code:d})" ]
 result += [ "#+end_src" ]
 
 result += [ "" ]
@@ -182,36 +183,37 @@ return '\n'.join(result)
 
 
    #+RESULTS:
-   :results:
-   #+begin_src c :tangle prefix_front.h
-   #define  TREXIO_FAILURE                 -1  //((trexio_exit_code) -1)
-   #define  TREXIO_SUCCESS                 0   //((trexio_exit_code) 0)
-   #define  TREXIO_INVALID_ARG_1           1   //((trexio_exit_code) 1)
-   #define  TREXIO_INVALID_ARG_2           2   //((trexio_exit_code) 2)
-   #define  TREXIO_INVALID_ARG_3           3   //((trexio_exit_code) 3)
-   #define  TREXIO_INVALID_ARG_4           4   //((trexio_exit_code) 4)
-   #define  TREXIO_INVALID_ARG_5           5   //((trexio_exit_code) 5)
-   #define  TREXIO_END                     6   //((trexio_exit_code) 6)
-   #define  TREXIO_READONLY                7   //((trexio_exit_code) 7)
-   #define  TREXIO_ERRNO                   8   //((trexio_exit_code) 8)
-   #define  TREXIO_INVALID_ID              9   //((trexio_exit_code) 9)
-   #define  TREXIO_ALLOCATION_FAILED       10  //((trexio_exit_code) 10)
-   #define  TREXIO_HAS_NOT                 11  //((trexio_exit_code) 11)
-   #define  TREXIO_INVALID_NUM             12  //((trexio_exit_code) 12)
-   #define  TREXIO_ATTR_ALREADY_EXISTS     13  //((trexio_exit_code) 13)
-   #define  TREXIO_DSET_ALREADY_EXISTS     14  //((trexio_exit_code) 14)
-   #define  TREXIO_OPEN_ERROR              15  //((trexio_exit_code) 15)
-   #define  TREXIO_LOCK_ERROR              16  //((trexio_exit_code) 16)
-   #define  TREXIO_UNLOCK_ERROR            17  //((trexio_exit_code) 17)
-   #define  TREXIO_FILE_ERROR              18  //((trexio_exit_code) 18)
-   #define  TREXIO_GROUP_READ_ERROR        19  //((trexio_exit_code) 19)
-   #define  TREXIO_GROUP_WRITE_ERROR       20  //((trexio_exit_code) 20)
-   #define  TREXIO_ELEM_READ_ERROR         21  //((trexio_exit_code) 21)
-   #define  TREXIO_ELEM_WRITE_ERROR        22  //((trexio_exit_code) 22)
-   #define  TREXIO_INVALID_STR_LEN         30  //((trexio_exit_code) 30)
+   :RESULTS:
+   #+begin_src c :tangle prefix_front.h :exports none
+   #define TREXIO_FAILURE                 -1 //((trexio_exit_code) -1)
+   #define TREXIO_SUCCESS                 0 //((trexio_exit_code) 0)
+   #define TREXIO_INVALID_ARG_1           1 //((trexio_exit_code) 1)
+   #define TREXIO_INVALID_ARG_2           2 //((trexio_exit_code) 2)
+   #define TREXIO_INVALID_ARG_3           3 //((trexio_exit_code) 3)
+   #define TREXIO_INVALID_ARG_4           4 //((trexio_exit_code) 4)
+   #define TREXIO_INVALID_ARG_5           5 //((trexio_exit_code) 5)
+   #define TREXIO_END                     6 //((trexio_exit_code) 6)
+   #define TREXIO_READONLY                7 //((trexio_exit_code) 7)
+   #define TREXIO_ERRNO                   8 //((trexio_exit_code) 8)
+   #define TREXIO_INVALID_ID              9 //((trexio_exit_code) 9)
+   #define TREXIO_ALLOCATION_FAILED       10 //((trexio_exit_code) 10)
+   #define TREXIO_HAS_NOT                 11 //((trexio_exit_code) 11)
+   #define TREXIO_INVALID_NUM             12 //((trexio_exit_code) 12)
+   #define TREXIO_ATTR_ALREADY_EXISTS     13 //((trexio_exit_code) 13)
+   #define TREXIO_DSET_ALREADY_EXISTS     14 //((trexio_exit_code) 14)
+   #define TREXIO_OPEN_ERROR              15 //((trexio_exit_code) 15)
+   #define TREXIO_LOCK_ERROR              16 //((trexio_exit_code) 16)
+   #define TREXIO_UNLOCK_ERROR            17 //((trexio_exit_code) 17)
+   #define TREXIO_FILE_ERROR              18 //((trexio_exit_code) 18)
+   #define TREXIO_GROUP_READ_ERROR        19 //((trexio_exit_code) 19)
+   #define TREXIO_GROUP_WRITE_ERROR       20 //((trexio_exit_code) 20)
+   #define TREXIO_ELEM_READ_ERROR         21 //((trexio_exit_code) 21)
+   #define TREXIO_ELEM_WRITE_ERROR        22 //((trexio_exit_code) 22)
+   #define TREXIO_UNSAFE_ARRAY_DIM        23 //((trexio_exit_code) 23)
+   #define TREXIO_INVALID_STR_LEN         30 //((trexio_exit_code) 30)
    #+end_src
 
-   #+begin_src f90 :tangle prefix_fortran.f90
+   #+begin_src f90 :tangle prefix_fortran.f90 :exports none
       integer(trexio_exit_code), parameter :: TREXIO_FAILURE                 = -1
       integer(trexio_exit_code), parameter :: TREXIO_SUCCESS                 = 0
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_1           = 1
@@ -236,9 +238,10 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_GROUP_WRITE_ERROR       = 20
       integer(trexio_exit_code), parameter :: TREXIO_ELEM_READ_ERROR         = 21
       integer(trexio_exit_code), parameter :: TREXIO_ELEM_WRITE_ERROR        = 22
+      integer(trexio_exit_code), parameter :: TREXIO_UNSAFE_ARRAY_DIM        = 23
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_STR_LEN         = 30
    #+end_src
-   :end:
+   :END:
 
    The ~trexio_string_of_error~ converts an exit code into a string. The
    string is assumed to be large enough to contain the error message
@@ -269,9 +272,7 @@ result = []
 for (text, code, message) in table:
   text = text.replace("~","")
   message = message.replace("'",'"')
-  result += [ f"""case {text}:
-  return {message};
-  break;""" ]
+  result += [ f"""case {text}:\n  return {message};\n  break;""" ]
 return '\n'.join(result)
 
    #+end_src
@@ -320,8 +321,11 @@ return '\n'.join(result)
    case TREXIO_INVALID_NUM:
      return "Invalid dimensions";
      break;
-   case TREXIO_NUM_ALREADY_EXISTS:
-     return "Variable already exists";
+   case TREXIO_ATTR_ALREADY_EXISTS:
+     return "Attribute (num/str) already exists";
+     break;
+   case TREXIO_DSET_ALREADY_EXISTS:
+     return "Dataset already exists";
      break;
    case TREXIO_OPEN_ERROR:
      return "Error opening file";
@@ -346,6 +350,12 @@ return '\n'.join(result)
      break;
    case TREXIO_ELEM_WRITE_ERROR:
      return "Error writing element";
+     break;
+   case TREXIO_UNSAFE_ARRAY_DIM:
+     return "Access to memory beyond allocated";
+     break;
+   case TREXIO_INVALID_STR_LEN:
+     return "Invalid max_str_len";
      break;
    #+end_example
 
@@ -1113,15 +1123,17 @@ end interface
 
    This section concerns API calls related to datasets.
 
-   | Function name                  | Description                         | Precision |
-   |--------------------------------+-------------------------------------+-----------|
-   | ~trexio_has_$group_dset$~      | Check if a dataset exists in a file | ---       |
-   | ~trexio_read_$group_dset$~     | Read  a dataset                     | Double    |
-   | ~trexio_write_$group_dset$~    | Write a dataset                     | Double    |
-   | ~trexio_read_$group_dset$_32~  | Read  a dataset                     | Single    |
-   | ~trexio_write_$group_dset$_32~ | Write a dataset                     | Single    |
-   | ~trexio_read_$group_dset$_64~  | Read  a dataset                     | Double    |
-   | ~trexio_write_$group_dset$_64~ | Write a dataset                     | Double    |
+   | Function name                    | Description                          | Precision                   |
+   |----------------------------------+--------------------------------------+-----------------------------|
+   | ~trexio_has_$group_dset$~        | Check if a dataset exists in a file  | ---                         |
+   | ~trexio_read_$group_dset$~       | Read  a dataset in default precision | Double/Single for float/int |
+   | ~trexio_write_$group_dset$~      | Write a dataset in default precision | Double/Single for float/int |
+   | ~trexio_read_safe_$group_dset$~  | Read  a bounded dataset              | Double                      |
+   | ~trexio_write_safe_$group_dset$~ | Write a bounded dataset              | Double                      |
+   | ~trexio_read_$group_dset$_32~    | Read  a dataset in single precision  | Single                      |
+   | ~trexio_write_$group_dset$_32~   | Write a dataset in single precision  | Single                      |
+   | ~trexio_read_$group_dset$_64~    | Read  a dataset in double precision  | Double                      |
+   | ~trexio_write_$group_dset$_64~   | Write a dataset in double precision  | Double                      |
 
 *** C templates for front end
 
@@ -1130,6 +1142,8 @@ end interface
    to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
    Suffixes ~_32~ and ~_64~ correspond to API calls dealing with single and double precision, respectively.
    The basic (non-suffixed) API call on datasets deals with double precision (see Table above).
+
+**** Function declarations
 
 
      #+begin_src c :tangle hrw_dset_data_front.h :exports none
@@ -1140,7 +1154,12 @@ trexio_exit_code trexio_read_$group_dset$_32(trexio_t* const file, $group_dset_d
 trexio_exit_code trexio_write_$group_dset$_32(trexio_t* const file, const $group_dset_dtype_single$* $group_dset$);
 trexio_exit_code trexio_read_$group_dset$_64(trexio_t* const file, $group_dset_dtype_double$* const $group_dset$);
 trexio_exit_code trexio_write_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$);
+trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const dset_out, const uint64_t dim_out);
+trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file, const $group_dset_dtype_default$* dset_in, const uint64_t dim_in);
      #+end_src
+
+**** Source code for double precision functions
+
 
      #+begin_src c :tangle read_dset_data_64_front.c
 trexio_exit_code
@@ -1155,7 +1174,6 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
-  if (rc != TREXIO_SUCCESS) return rc;
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
@@ -1197,6 +1215,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 }
      #+end_src
 
+
      #+begin_src c :tangle write_dset_data_64_front.c
 trexio_exit_code
 trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$)
@@ -1211,7 +1230,6 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
-  if (rc != TREXIO_SUCCESS) return rc;
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
@@ -1263,6 +1281,9 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
   return rc;
 }
      #+end_src
+
+**** Source code for single precision functions
+
 
      #+begin_src c :tangle read_dset_data_32_front.c
 trexio_exit_code
@@ -1331,6 +1352,7 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
 }
      #+end_src
 
+
      #+begin_src c :tangle write_dset_data_32_front.c
 trexio_exit_code
 trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_single$* $group_dset$)
@@ -1397,6 +1419,77 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
 }
      #+end_src
 
+**** Source code for memory-safe functions
+
+     #+begin_src c :tangle read_dset_data_safe_front.c
+trexio_exit_code
+trexio_read_safe_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* const dset_out, const uint64_t dim_out)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  int64_t $group_dset_dim$ = 0;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+
+  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = $group_dset_rank$;
+  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  /* The block below is specific to safe API as it checks the boundaries */
+  uint64_t dim_size = 1;
+  for (uint32_t i=0; i<rank; ++i){
+      dim_size *= dims[i];
+  }
+
+  if (dim_out > dim_size) return TREXIO_UNSAFE_ARRAY_DIM;
+  /* */
+
+  return trexio_read_$group_dset$_$default_prec$(file, dset_out);
+}
+     #+end_src
+
+
+     #+begin_src c :tangle write_dset_data_safe_front.c
+trexio_exit_code
+trexio_write_safe_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default$* dset_in, const uint64_t dim_in)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS) return TREXIO_DSET_ALREADY_EXISTS;
+
+  trexio_exit_code rc;
+  int64_t $group_dset_dim$ = 0;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+
+  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = $group_dset_rank$;
+  uint64_t dims[$group_dset_rank$] = {$group_dset_dim_list$};
+
+  /* The block below is specific to safe API as it checks the boundaries */
+  uint64_t dim_size = 1;
+  for (uint32_t i=0; i<rank; ++i){
+      dim_size *= dims[i];
+  }
+
+  if (dim_in > dim_size) return TREXIO_UNSAFE_ARRAY_DIM;
+  /* */
+
+  return trexio_write_$group_dset$_$default_prec$(file, dset_in);
+
+}
+     #+end_src
+
+**** Source code for default functions
+
      #+begin_src c :tangle read_dset_data_def_front.c
 trexio_exit_code
 trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* const $group_dset$)
@@ -1405,6 +1498,7 @@ trexio_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* cons
 }
      #+end_src
 
+
      #+begin_src c :tangle write_dset_data_def_front.c
 trexio_exit_code
 trexio_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default$* $group_dset$)
@@ -1412,6 +1506,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default
   return trexio_write_$group_dset$_$default_prec$(file, $group_dset$);
 }
      #+end_src
+
 
      #+begin_src c :tangle has_dset_data_front.c
 trexio_exit_code
