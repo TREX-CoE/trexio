@@ -190,6 +190,12 @@ python-test: src/test.py src/_pytrexio*.so
 	cd src/ && python3 test.py
 	$(RM) -r -- src/__pycache__
 
+python-build: pyproject.toml setup.cfg
+	python3 -m build
+
+python-release: pyproject.toml setup.cfg
+	python3 -m twine upload --repository testpypi dist/*
+
 # Advanced compilation using Python-native distutils
 #
 # swig -python -threads pytrexio.i ----> Add thread support for all the interface
@@ -216,7 +222,7 @@ src/_pytrexio*.so:  $(ORG_FILES) $(trexio_h) src/pytrexio.i
 
 CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py src/_pytrexio*.so 
 
-.PHONY: cppcheck python python-test
+.PHONY: cppcheck python python-build python-test
 
 endif
 
