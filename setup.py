@@ -40,9 +40,9 @@ setup(name             = 'pytrexio',
       packages         = find_packages(),
       classifiers=[
          "Programming Language :: Python :: 3",
-         "Programming Language :: C"
-         "License :: OSI Approved :: BSD",
-         "Operating System :: POSIX :: Linux",
+         "Programming Language :: C",
+         "License :: OSI Approved :: BSD License",
+         "Operating System :: POSIX :: Linux"
       ],
       install_requires = ['h5py']
       )
