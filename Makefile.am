@@ -184,26 +184,29 @@ cppcheck.out: $(trexio_h)
 	  -I../include *.c *.h 2>../$@
 
 
-python: src/_pytrexio*.so
+python: _pytrexio*.so
 
-python-test: src/test.py src/_pytrexio*.so
-	cd src/ && python3 test.py
-	$(RM) -r -- src/__pycache__
+python-test: test.py _pytrexio*.so
+	python3 test.py
+	$(RM) -r -- __pycache__
 
-python-build: pyproject.toml setup.cfg
+python-sdist: setup.py
+	python3 setup.py sdist
+
+
+python-build: pyproject.toml setup.py setup.cfg MANIFEST.in
 	python3 -m build
 
-python-release: pyproject.toml setup.cfg
+python-release: pyproject.toml setup.py setup.cfg MANIFEST.in
 	python3 -m twine upload --repository testpypi dist/*
 
 # Advanced compilation using Python-native distutils
 #
 # swig -python -threads pytrexio.i ----> Add thread support for all the interface
 # 
-src/_pytrexio*.so:  $(ORG_FILES) $(trexio_h) src/pytrexio.i
+_pytrexio*.so:  $(ORG_FILES) $(trexio_h) src/pytrexio.i
 	cp $(trexio_h) src/
-	cd src/ && \
-	swig -python -py3 -o pytrexio_wrap.c pytrexio.i && \
+	cd src/ && swig -python -py3 -o pytrexio_wrap.c pytrexio.i
 	python3 setup.py build_ext --inplace --swig-opts="-modern"
 	$(RM) -- src/trexio.h
 
@@ -220,7 +223,7 @@ src/_pytrexio*.so:  $(ORG_FILES) $(trexio_h) src/pytrexio.i
 #       $(RM) -- src/trexio.h
 #
 
-CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py src/_pytrexio*.so 
+CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py _pytrexio*.so 
 
 .PHONY: cppcheck python python-build python-test
 
