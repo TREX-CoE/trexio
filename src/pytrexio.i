@@ -46,6 +46,22 @@
 #define TREXIO_HDF5 0
 #define TREXIO_TEXT 0
 */
+
+/* This is an attempt to make SWIG treat double * dset_out, const uint64_t dim_out pattern 
+   as a special case in order to return the NumPy array to Python from C pointer to array
+   provided by trexio_read_safe_[dset_num] function.
+   NOTE: numpy.i is currently not part of SWIG but included in the numpy distribution (under numpy/tools/swig/numpy.i)
+         This means that the interface file have to be provided to SWIG upon compilation either by 
+         copying it to the local working directory or by providing -l/path/to/numpy.i flag upon SWIG compilation
+*/
+%include "numpy.i"
+
+%init %{
+import_array();
+%}
+
+%apply (double* ARGOUT_ARRAY1, int DIM1) {(double * const dset_out, const uint64_t dim_out)};
+
 /* This tells SWIG to treat char ** dset_in pattern as a special case 
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.
    by converting input list of strings from Python into char ** of C
@@ -79,7 +95,7 @@
 
 /* [WIP] This is an attempt to make SWIG treat char ** dset_out as a special case 
    In order to return list of string to Python from C-native char ** dset_out,
-   which is modified (but not allocated) within the trexio_[...}read_dset_str function
+   which is modified (but not allocated) within the trexio_[...]_read_dset_str function
 */
 %typemap(in, numinputs=0) char ** dset_out (char * temp) {
   /*temp = (char *) malloc(1028*sizeof(char));*/

@@ -1,5 +1,6 @@
 import os
 import shutil
+#import numpy as np
 
 from pytrexio import *
 
@@ -95,9 +96,26 @@ assert rc==TREXIO_SUCCESS
 for i in range(nucleus_num):
     assert charges2[i]==charges[i]
 
+#charge_numpy = np.zeros(nucleus_num, dtype=np.float64) 
+#print(charge_numpy)
+
+rc, charge_numpy = trexio_read_safe_nucleus_charge(test_file2, 12)
+
+print(charge_numpy)
+print(charge_numpy[11])
+assert rc==TREXIO_SUCCESS
+
+# unsafe call to read_safe should not only have return code = TREXIO_UNSAFE_ARRAY_DIM
+# but also should not return numpy array filled with garbage
+rc, charge_numpy = trexio_read_safe_nucleus_charge(test_file2, 12*5)
+
+#print(charge_numpy)
+assert rc==TREXIO_UNSAFE_ARRAY_DIM
+
 # [WIP]: ideally, the list of strings should be returned as below
 #rc, label_2d = trexio_read_nucleus_label(test_file2, 10)
 # [WIP]: currently only low-level routines (return one long string instead of an array of strings) work
+
 rc, labels_1d = trexio_read_nucleus_label_low(test_file2, 10)
 assert rc==TREXIO_SUCCESS
 
@@ -108,6 +126,14 @@ for i in range(nucleus_num):
 
 rc = trexio_close(test_file2)
 assert rc==TREXIO_SUCCESS
+
+try:
+    if TEST_TREXIO_BACKEND == TREXIO_HDF5:
+        os.remove(output_filename)
+    elif TEST_TREXIO_BACKEND == TREXIO_TEXT:
+        shutil.rmtree(output_filename)
+except:
+    print (f'No output file {output_filename} has been produced')
 
 #==========================================================#
 
