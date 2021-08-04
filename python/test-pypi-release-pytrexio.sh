@@ -15,7 +15,9 @@ python3 -m pip install dist/pytrexio-0.1-cp38-cp38-linux_x86_64.whl
 #      Binary wheel 'pytrexio-0.1-cp38-cp38-linux_x86_64.whl' has an unsupported platform tag 'linux_x86_64'.
 # when uploading the wheel instead of the tar.gz file to testpypi
 # This is a well-known issue, see https://stackoverflow.com/questions/59451069/binary-wheel-cant-be-uploaded-on-pypi-using-twine
- 
-python3 -m twine upload --repository testpypi dist/pytrexio-0.1.tar.gz
+
+# TODO: see how SQLite does things since it-s similar to out problem in a way that the have src/ directory with C source and header files and they have master setup.py script to compile and ship it
+
+#python3 -m twine upload --repository testpypi dist/pytrexio-0.1.tar.gz
 
 rm -rf build dist pytrexio.egg-info
