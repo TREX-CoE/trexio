@@ -11,6 +11,7 @@ import os
 rootpath = os.path.dirname(os.path.abspath(__file__))
 srcpath = os.path.join(rootpath, 'src')
 c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
+h_files = ['trexio.h', 'trexio_hdf5.h', 'trexio_text.h', 'trexio_s.h', 'trexio_private.h']
 
 
 with open("README.md", "r") as fh:
@@ -19,7 +20,7 @@ with open("README.md", "r") as fh:
 
 pytrexio_module = Extension('_pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
-                            include_dirs = ['/usr/include/hdf5/serial', 'srcpath'],
+                            include_dirs = ['/usr/include/hdf5/serial', srcpath],
                             libraries = ['hdf5', 'hdf5_hl'],
                             extra_compile_args = ['-Wno-discarded-qualifiers'],
                             extra_link_args = ['-L/usr/lib/x86_64-linux-gnu/hdf5/serial']
@@ -28,13 +29,14 @@ pytrexio_module = Extension('_pytrexio',
 
 setup(name             = 'pytrexio',
       version          = '0.1',
-      author           = "Evgeny Posenitskiy",
+      author           = "TREX-CoE",
       author_email     = "posenitskiy@irsamc.ups-tlse.fr",
       description      = """Python API of the TREXIO library""",
       long_description = long_description,
-      long_description_content_type="text/markdown",
+      long_description_content_type = "text/markdown",
       ext_modules      = [pytrexio_module],
       py_modules       = ["pytrexio"],
+      scripts          = ["tests/test_py.py"],
       url              = 'https://github.com/TREX-CoE/trexio',
       license          = 'BSD',
       packages         = find_packages(),

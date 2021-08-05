@@ -184,29 +184,41 @@ cppcheck.out: $(trexio_h)
 	  -I../include *.c *.h 2>../$@
 
 
+setup_py  = $(srcdir)/setup.py
+setup_cfg = $(srcdir)/setup.cfg
+pytrexio_py = $(srcdir)/src/pytrexio.py
+pytrexio_c = $(srcdir)/src/pytrexio_wrap.c
+pytrexio_i = $(srcdir)/src/pytrexio.i
+TESTS_PY  = $(srcdir)/tests/test_py.py
+
+#python-prepare: 
+#	cp include/trexio.h src/*.c src/*.h python/src/
+
 python: _pytrexio*.so
 
-python-test: test.py _pytrexio*.so
-	python3 test.py
-	$(RM) -r -- __pycache__
+python-test: $(TESTS_PY) $(pytrexio_py)
+	cp $(pytrexio_py) .
+	python3 $(TESTS_PY)
+	$(RM) -r -- __pycache__ pytrexio.py
 
-python-sdist: setup.py
+python-sdist: $(setup_py) $(pytrexio_py)
 	python3 setup.py sdist
 
-
-python-build: pyproject.toml setup.py setup.cfg MANIFEST.in
+python-build: $(setup_py) $(pytrexio_py) pyproject.toml
 	python3 -m build
 
-python-release: pyproject.toml setup.py setup.cfg MANIFEST.in
+python-release: $(setup_py) $(pytrexio_py) pyproject.toml
 	python3 -m twine upload --repository testpypi dist/*
 
 # Advanced compilation using Python-native distutils
 #
 # swig -python -threads pytrexio.i ----> Add thread support for all the interface
 # 
-_pytrexio*.so:  $(ORG_FILES) $(trexio_h) src/pytrexio.i
+$(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i)
 	cp $(trexio_h) src/
 	cd src/ && swig -python -py3 -o pytrexio_wrap.c pytrexio.i
+
+_pytrexio*.so: $(pytrexio_c) $(setup_py)
 	python3 setup.py build_ext --inplace --swig-opts="-modern"
 	$(RM) -- src/trexio.h
 
@@ -225,7 +237,7 @@ _pytrexio*.so:  $(ORG_FILES) $(trexio_h) src/pytrexio.i
 
 CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py _pytrexio*.so 
 
-.PHONY: cppcheck python python-build python-test
+.PHONY: cppcheck python python-build python-test python-release
 
 endif
 
