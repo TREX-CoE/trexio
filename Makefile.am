@@ -137,7 +137,7 @@ tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDFLAGS = -no-install
 
 clean-local:
-	-rm -rf -- *.dir/ *.h5
+	-rm -rf -- *.dir/ *.h5 __pycache__/
 
 # =============== DOCUMENTATION =============== #
 
@@ -184,60 +184,43 @@ cppcheck.out: $(trexio_h)
 	  -I../include *.c *.h 2>../$@
 
 
-setup_py  = $(srcdir)/setup.py
-setup_cfg = $(srcdir)/setup.cfg
-pytrexio_py = $(srcdir)/src/pytrexio.py
-pytrexio_c = $(srcdir)/src/pytrexio_wrap.c
-pytrexio_i = $(srcdir)/src/pytrexio.i
-TESTS_PY  = $(srcdir)/tests/test_py.py
+setup_py    = $(srcdir)/python/setup.py
+setup_cfg   = $(srcdir)/python/setup.cfg
+pytrexio_py = $(srcdir)/python/pytrexio.py
+TESTS_PY    = $(srcdir)/python/test/test_py.py
+pytrexio_c  = $(srcdir)/src/pytrexio_wrap.c
+pytrexio_i  = $(srcdir)/src/pytrexio.i
+numpy_i     = $(srcdir)/src/numpy.i
 
-#python-prepare: 
-#	cp include/trexio.h src/*.c src/*.h python/src/
 
-python: _pytrexio*.so
-
-python-test: $(TESTS_PY) $(pytrexio_py)
-	cp $(pytrexio_py) .
+python-test: $(pytrexio_py) $(TESTS_PY)
 	python3 $(TESTS_PY)
-	$(RM) -r -- __pycache__ pytrexio.py
+	$(RM) -r -- __pycache__
 
-python-sdist: $(setup_py) $(pytrexio_py)
-	python3 setup.py sdist
+python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
+	cd python && ./install_pytrexio.sh
 
-python-build: $(setup_py) $(pytrexio_py) pyproject.toml
-	python3 -m build
+$(pytrexio_py): $(pytrexio_c) 
+	cd tools && ./prepare_python.sh
 
-python-release: $(setup_py) $(pytrexio_py) pyproject.toml
-	python3 -m twine upload --repository testpypi dist/*
-
-# Advanced compilation using Python-native distutils
-#
-# swig -python -threads pytrexio.i ----> Add thread support for all the interface
-# 
-$(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i)
+# Build Python module and C wrapper code for TREXIO using SWIG
+# [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
+$(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	cp $(trexio_h) src/
 	cd src/ && swig -python -py3 -o pytrexio_wrap.c pytrexio.i
-
-_pytrexio*.so: $(pytrexio_c) $(setup_py)
-	python3 setup.py build_ext --inplace --swig-opts="-modern"
 	$(RM) -- src/trexio.h
 
-# Manual compilation of Python module
-#
-#src/_pytrexio.so: $(ORG_FILES) $(trexio_h) src/pytrexio.i
-#       cp $(trexio_h) src/
-#       cd src/ && \
-#       swig -python -py3 -o pytrexio_wrap.c pytrexio.i && \
-#       $(CC) $(CPPFLAGS) -I/usr/include/python3.8 -fPIC -Wno-discarded-qualifiers \
-#       	-c trexio.c trexio_hdf5.c trexio_text.c pytrexio_wrap.c && \
-#       $(CC) -shared trexio.o trexio_hdf5.o trexio_text.o pytrexio_wrap.o \
-#       	$(LDFLAGS) $(LIBS) -o _pytrexio.so
-#       $(RM) -- src/trexio.h
-#
+$(numpy_i):
+	wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/numpy.i -O $(numpy_i) 
 
-CLEANFILES += src/pytrexio_wrap.c src/pytrexio.py _pytrexio*.so 
 
-.PHONY: cppcheck python python-build python-test python-release
+CLEANFILES += src/pytrexio_wrap.c \
+	      src/pytrexio.py \
+	      python/pytrexio.py \
+	      python/src/*.c \
+	      python/src/*.h
+
+.PHONY: cppcheck python-test python-install
 
 endif
 
