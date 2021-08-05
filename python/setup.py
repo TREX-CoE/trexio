@@ -4,16 +4,12 @@
 setup.py file for pytrexio
 """
 
-#from distutils.core import setup, Extension
 from setuptools import setup, Extension, find_packages
 import os
 
 rootpath = os.path.dirname(os.path.abspath(__file__))
 srcpath = os.path.join(rootpath, 'src')
 c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
-h_files = ['trexio.h', 'trexio_hdf5.h', 'trexio_text.h', 'trexio_s.h', 'trexio_private.h']
-
-# setup.py does not copy all
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
