@@ -13,6 +13,7 @@ srcpath = os.path.join(rootpath, 'src')
 c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
 h_files = ['trexio.h', 'trexio_hdf5.h', 'trexio_text.h', 'trexio_s.h', 'trexio_private.h']
 
+# setup.py does not copy all
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -36,7 +37,6 @@ setup(name             = 'pytrexio',
       long_description_content_type = "text/markdown",
       ext_modules      = [pytrexio_module],
       py_modules       = ["pytrexio"],
-      scripts          = ["tests/test_py.py"],
       url              = 'https://github.com/TREX-CoE/trexio',
       license          = 'BSD',
       packages         = find_packages(),
