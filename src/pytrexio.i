@@ -60,7 +60,7 @@
 import_array();
 %}
 
-%apply (double* ARGOUT_ARRAY1, int DIM1) {(double * const dset_out, const uint64_t dim_out)};
+%apply (double* ARGOUT_ARRAY1, int DIM1) {(double * const dset_out, const int64_t dim_out)};
 
 /* This tells SWIG to treat char ** dset_in pattern as a special case 
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.

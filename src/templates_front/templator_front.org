@@ -539,7 +539,7 @@ trexio_open(const char* file_name, const char mode,
 
   /* Data for the parent type */
 
-  strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH);
+  strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH-1);
   if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
     free(result);
     return NULL;
@@ -1154,8 +1154,8 @@ trexio_exit_code trexio_read_$group_dset$_32(trexio_t* const file, $group_dset_d
 trexio_exit_code trexio_write_$group_dset$_32(trexio_t* const file, const $group_dset_dtype_single$* $group_dset$);
 trexio_exit_code trexio_read_$group_dset$_64(trexio_t* const file, $group_dset_dtype_double$* const $group_dset$);
 trexio_exit_code trexio_write_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$);
-trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const dset_out, const uint64_t dim_out);
-trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file, const $group_dset_dtype_default$* dset_in, const uint64_t dim_in);
+trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const dset_out, const int64_t dim_out);
+trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file, const $group_dset_dtype_default$* dset_in, const int64_t dim_in);
      #+end_src
 
 **** Source code for double precision functions
@@ -1423,7 +1423,7 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
 
      #+begin_src c :tangle read_dset_data_safe_front.c
 trexio_exit_code
-trexio_read_safe_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* const dset_out, const uint64_t dim_out)
+trexio_read_safe_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$* const dset_out, const int64_t dim_out)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -1446,7 +1446,7 @@ trexio_read_safe_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$*
       dim_size *= dims[i];
   }
 
-  if (dim_out > dim_size) return TREXIO_UNSAFE_ARRAY_DIM;
+  if (dim_out > (int64_t) dim_size) return TREXIO_UNSAFE_ARRAY_DIM;
   /* */
 
   return trexio_read_$group_dset$_$default_prec$(file, dset_out);
@@ -1456,7 +1456,7 @@ trexio_read_safe_$group_dset$ (trexio_t* const file, $group_dset_dtype_default$*
 
      #+begin_src c :tangle write_dset_data_safe_front.c
 trexio_exit_code
-trexio_write_safe_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default$* dset_in, const uint64_t dim_in)
+trexio_write_safe_$group_dset$ (trexio_t* const file, const $group_dset_dtype_default$* dset_in, const int64_t dim_in)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -1480,7 +1480,7 @@ trexio_write_safe_$group_dset$ (trexio_t* const file, const $group_dset_dtype_de
       dim_size *= dims[i];
   }
 
-  if (dim_in > dim_size) return TREXIO_UNSAFE_ARRAY_DIM;
+  if (dim_in > (int64_t) dim_size) return TREXIO_UNSAFE_ARRAY_DIM;
   /* */
 
   return trexio_write_$group_dset$_$default_prec$(file, dset_in);
