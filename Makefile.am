@@ -213,6 +213,8 @@ $(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 $(numpy_i):
 	wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/numpy.i -O $(numpy_i) 
 
+check-numpy:
+	cd tools && ./check_numpy_i.sh
 
 CLEANFILES += src/pytrexio_wrap.c \
 	      src/pytrexio.py \
@@ -220,7 +222,7 @@ CLEANFILES += src/pytrexio_wrap.c \
 	      python/src/*.c \
 	      python/src/*.h
 
-.PHONY: cppcheck python-test python-install
+.PHONY: cppcheck python-test python-install check-numpy
 
 endif
 
