@@ -2289,27 +2289,27 @@ def read_$group_dset$(trexio_file):
 
      #+begin_src c :tangle hrw_attr_str_front.h :exports none
 trexio_exit_code trexio_has_$group_str$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str, const uint32_t max_str_len);
+trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str_out, const uint32_t max_str_len);
 trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str, const uint32_t max_str_len);
      #+end_src
 
      #+begin_src c :tangle read_attr_str_front.c
 trexio_exit_code
-trexio_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len)
+trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const uint32_t max_str_len)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (str  == NULL) return TREXIO_INVALID_ARG_2;
+  if (str_out  == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_str$(file, str, max_str_len);
+    return trexio_text_read_$group_str$(file, str_out, max_str_len);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_str$(file, str, max_str_len);
+    return trexio_hdf5_read_$group_str$(file, str_out, max_str_len);
     break;
 /*
   case TREXIO_JSON:

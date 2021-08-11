@@ -34,13 +34,19 @@
 */
 %apply int *OUTPUT { int32_t* const num};
 %apply int *OUTPUT { int64_t* const num};
+
 /* Does not work for arrays (SIGSEGV) */
 
 /* This enables access to trexio_[...]_read_dset_str_low set of functions
    in order to return one long string with TREXIO_DELIM delimeter as 2-nd argument of output tuple
    */
 %include <cstring.i>
+/* This enables read of long strings with TREXIO_DELIM delimeters that can be further converted into an array of string */
 %cstring_bounded_output(char* dset_out, 4096);
+/* This enables read of single string attributes with pre-defined max_str_len 
+   for Python we pre-define max_str_len = PYTREXIO_MAX_STR_LENGTH everywhere for simplicity
+*/
+%cstring_output_maxsize(char* const str_out, const uint32_t max_str_len);
 
 /* [WIP] TREXIO back ends and exit codes can be redefined in the SWIG target language 
    using %ignore and further #define statements (instead of disabling the type cast in the trexio.h file)
