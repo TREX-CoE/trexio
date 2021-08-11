@@ -12,13 +12,29 @@
   #+NAME:header
   #+begin_src c
 /* This file was generated from the templator_front.org org-mode file.
-   To generate it, open trexio.org in Emacs and execute
+   To generate it, open templator_front.org in Emacs and execute
    M-x org-babel-tangle
 */
 
   #+end_src
 
-  #+begin_src f90 :tangle prefix_fortran.f90 :noweb yes
+** Python
+  #+begin_src python :tangle prefix_python.py
+
+# define TREXIO back ends
+TREXIO_HDF5 = 0
+TREXIO_TEXT = 1
+#TREXIO_JSON = 2
+TREXIO_INVALID_BACK_END = 2
+
+# define max length of string item when reading arrays of strings
+# this is needed for the low-level C routines
+PYTREXIO_MAX_STR_LENGTH = 2048
+
+  #+end_src
+
+** Fortran
+  #+begin_src f90 :tangle prefix_fortran.f90
 module trexio
 
   use, intrinsic :: iso_c_binding
@@ -33,10 +49,10 @@ module trexio
   integer(trexio_backend), parameter :: TREXIO_INVALID_BACK_END = 2
 
   character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
-   #+end_src
 
   #+end_src
 
+** C
   #+begin_src c :tangle prefix_front.h :noweb yes
 <<header>>
 #ifndef TREXIO_H
@@ -119,7 +135,7 @@ typedef int32_t trexio_exit_code;
    #+end_src
 
 * Front end
-
+  
   All calls to TREXIO are thread-safe.
   TREXIO front end is modular, which simplifies implementation of new back ends.
 
@@ -175,6 +191,15 @@ result += [ "#+begin_src f90 :tangle prefix_fortran.f90 :exports none" ]
 for (text, code,_) in table:
   text=text.replace("~","")
   result += [ f"   integer(trexio_exit_code), parameter :: {text:30s} = {code:d}" ]
+result += [ "#+end_src" ]
+
+result += [ "" ]
+
+result += [ "#+begin_src python :tangle prefix_python.py :exports none" ]
+result += [ "# define TREXIO exit codes" ]
+for (text, code,_) in table:
+  text=text.replace("~","")
+  result += [ f"{text:30s} = {code:d}" ]
 result += [ "#+end_src" ]
 
 return '\n'.join(result)
@@ -241,13 +266,43 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_UNSAFE_ARRAY_DIM        = 23
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_STR_LEN         = 30
    #+end_src
+
+   #+begin_src python :tangle prefix_python.py :exports none
+   TREXIO_FAILURE                 = -1
+   TREXIO_SUCCESS                 = 0
+   TREXIO_INVALID_ARG_1           = 1
+   TREXIO_INVALID_ARG_2           = 2
+   TREXIO_INVALID_ARG_3           = 3
+   TREXIO_INVALID_ARG_4           = 4
+   TREXIO_INVALID_ARG_5           = 5
+   TREXIO_END                     = 6
+   TREXIO_READONLY                = 7
+   TREXIO_ERRNO                   = 8
+   TREXIO_INVALID_ID              = 9
+   TREXIO_ALLOCATION_FAILED       = 10
+   TREXIO_HAS_NOT                 = 11
+   TREXIO_INVALID_NUM             = 12
+   TREXIO_ATTR_ALREADY_EXISTS     = 13
+   TREXIO_DSET_ALREADY_EXISTS     = 14
+   TREXIO_OPEN_ERROR              = 15
+   TREXIO_LOCK_ERROR              = 16
+   TREXIO_UNLOCK_ERROR            = 17
+   TREXIO_FILE_ERROR              = 18
+   TREXIO_GROUP_READ_ERROR        = 19
+   TREXIO_GROUP_WRITE_ERROR       = 20
+   TREXIO_ELEM_READ_ERROR         = 21
+   TREXIO_ELEM_WRITE_ERROR        = 22
+   TREXIO_UNSAFE_ARRAY_DIM        = 23
+   TREXIO_INVALID_STR_LEN         = 30
+   #+end_src
    :END:
+
+   
+*** Decoding errors
 
    The ~trexio_string_of_error~ converts an exit code into a string. The
    string is assumed to be large enough to contain the error message
    (typically 128 characters).
-
-◉ Decoding errors
 
    To decode the error messages, ~trexio_string_of_error~ converts an
    error code into a string.
@@ -659,6 +714,22 @@ interface
 end interface
    #+end_src
 
+   #+begin_src c :tangle prefix_python.py
+def open(file_name: str, mode: str, back_end: int):
+    try:
+        from pytrexio import trexio_open
+    except ImportError:
+        raise
+
+    try:
+        trexio_file = trexio_open(file_name, mode, back_end)
+    except:
+        raise 
+
+    return trexio_file
+
+   #+end_src
+
    Because arrays are zero-based in Fortran, we need to set a flag to
    know if we need to shift by 1 arrays of indices.
 
@@ -775,6 +846,21 @@ interface
    end function trexio_close
 end interface
     #+end_src
+
+   #+begin_src c :tangle prefix_python.py
+def close(trexio_file):
+    try:
+        from pytrexio import trexio_close, trexio_string_of_error, TREXIO_SUCCESS
+    except ImportError:
+        raise
+
+    try:
+        rc = trexio_close(trexio_file)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+
+   #+end_src
 
 * Templates for front end
 ** Description
@@ -1117,6 +1203,43 @@ interface
      integer(8), intent(in), value :: trex_file
    end function trexio_has_$group_num$
 end interface
+     #+end_src
+
+*** Python templates for front end
+
+     #+begin_src python :tangle write_num_front.py
+def write_$group_num$(trexio_file, num_w) -> None: 
+    try:
+        from pytrexio import trexio_write_$group_num$, trexio_string_of_error, TREXIO_SUCCESS
+    except ImportError:
+        raise
+
+    try:
+        rc = trexio_write_$group_num$(trexio_file, num_w)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+     #+end_src
+
+     #+begin_src python :tangle read_num_front.py
+def read_$group_num$(trexio_file): 
+    try:
+        from pytrexio import trexio_read_$group_num$, trexio_string_of_error, TREXIO_SUCCESS
+    except ImportError:
+        raise
+
+    try:
+        rc, num_r = trexio_read_$group_num$(trexio_file)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+    return num_r
      #+end_src
 
 ** Templates for front end has/read/write a dataset of numerical data
@@ -1610,6 +1733,42 @@ interface
 end interface
      #+end_src
 
+*** Python templates for front end
+
+     #+begin_src python :tangle write_dset_data_front.py
+def write_$group_dset$(trexio_file, dset_w) -> None: 
+    try:
+        from pytrexio import trexio_write_$group_dset$, trexio_string_of_error, TREXIO_SUCCESS
+    except ImportError:
+        raise
+
+    try:
+        rc = trexio_write_$group_dset$(trexio_file, dset_w)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+     #+end_src
+
+     #+begin_src python :tangle read_dset_data_front.py
+def read_$group_dset$(trexio_file): 
+    try:
+        from pytrexio import trexio_read_$group_dset$, trexio_string_of_error, TREXIO_SUCCESS
+    except ImportError:
+        raise
+
+    try:
+        rc, dset_r = trexio_read_$group_dset$(trexio_file)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+    return dset_r
+     #+end_src
 ** Sparse data structures
 
    Sparse data structures are used typically for large tensors such as
@@ -2065,6 +2224,56 @@ end interface
    end function trexio_write_$group_dset$
   #+end_src
 
+*** Python templates for front end
+
+     #+begin_src python :tangle write_dset_str_front.py
+def write_$group_dset$(trexio_file, dset_w) -> None: 
+    try:
+        from pytrexio import (trexio_write_$group_dset$, 
+                              trexio_string_of_error, 
+                              TREXIO_SUCCESS
+                              )
+    except ImportError:
+        raise
+
+    max_str_length = len(max(dset_w, key=len)) + 1
+
+    try:
+        rc = trexio_write_$group_dset$(trexio_file, dset_w, max_str_length)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+     #+end_src
+
+     #+begin_src python :tangle read_dset_str_front.py
+def read_$group_dset$(trexio_file): 
+    try:
+        from pytrexio import (trexio_read_$group_dset$, 
+                              trexio_string_of_error, 
+                              TREXIO_DELIM
+                              )
+    except ImportError:
+        raise
+
+    try:
+        rc, dset_1d_r = trexio_read_$group_dset$_low(trexio_file, PYTREXIO_MAX_STR_LENGTH)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+    try:
+        dset_2d_r = [item for item in dset_1d_r.split(TREXIO_DELIM) if item]
+        assert dset_2d_r
+    except AssertionError:
+        raise TypeError(f"Output of {read_$group_dset$.__name__} function cannot be an empty list.")
+
+    return dset_2d_r
+     #+end_src
 ** Templates for front end has/read/write a single string attribute
 *** Introduction
 
@@ -2243,6 +2452,50 @@ end interface
    end function trexio_write_$group_str$
   #+end_src
 
+*** Python templates for front end
+
+     #+begin_src python :tangle write_attr_str_front.py
+def write_$group_str$(trexio_file, str_w) -> None: 
+    try:
+        from pytrexio import (trexio_write_$group_str$, 
+                              trexio_string_of_error, 
+                              TREXIO_SUCCESS
+                              )
+    except ImportError:
+        raise
+
+    max_str_length = len(str_w) + 1
+
+    try:
+        rc = trexio_write_$group_str$(trexio_file, str_w, max_str_length)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+     #+end_src
+
+     #+begin_src python :tangle read_attr_str_front.py
+def read_$group_str$(trexio_file): 
+    try:
+        from pytrexio import (trexio_read_$group_str$, 
+                              trexio_string_of_error, 
+                              PYTREXIO_MAX_STR_LENGTH
+                              )
+    except ImportError:
+        raise
+
+    try:
+        rc, str_r = trexio_read_$group_str$(trexio_file, PYTREXIO_MAX_STR_LENGTH)
+        assert rc==TREXIO_SUCCESS
+    except AssertionError:
+        raise Exception(trexio_string_of_error(rc))
+    except:
+        raise    
+
+    return str_r
+     #+end_src
 * Fortran helper/wrapper functions
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.
