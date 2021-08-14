@@ -174,7 +174,7 @@ typedef int32_t trexio_exit_code;
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
 
-   #+begin_src python :var table=table-exit-codes :results drawer :exports none
+   #+begin_src python :var table=table-exit-codes :results drawer
 """ This script generates the C and Fortran constants for the error
     codes from the org-mode table.
 """
@@ -182,7 +182,7 @@ typedef int32_t trexio_exit_code;
 result = [ "#+begin_src c :tangle prefix_front.h :exports none" ]
 for (text, code,_) in table:
   text=text.replace("~","")
-  result += [ f"#define {text:30s} {code:d} //((trexio_exit_code) {code:d})" ]
+  result += [ f"#define {text:30s} ((trexio_exit_code) {code:d})" ]
 result += [ "#+end_src" ]
 
 result += [ "" ]
@@ -210,32 +210,32 @@ return '\n'.join(result)
    #+RESULTS:
    :RESULTS:
    #+begin_src c :tangle prefix_front.h :exports none
-   #define TREXIO_FAILURE                 -1 //((trexio_exit_code) -1)
-   #define TREXIO_SUCCESS                 0 //((trexio_exit_code) 0)
-   #define TREXIO_INVALID_ARG_1           1 //((trexio_exit_code) 1)
-   #define TREXIO_INVALID_ARG_2           2 //((trexio_exit_code) 2)
-   #define TREXIO_INVALID_ARG_3           3 //((trexio_exit_code) 3)
-   #define TREXIO_INVALID_ARG_4           4 //((trexio_exit_code) 4)
-   #define TREXIO_INVALID_ARG_5           5 //((trexio_exit_code) 5)
-   #define TREXIO_END                     6 //((trexio_exit_code) 6)
-   #define TREXIO_READONLY                7 //((trexio_exit_code) 7)
-   #define TREXIO_ERRNO                   8 //((trexio_exit_code) 8)
-   #define TREXIO_INVALID_ID              9 //((trexio_exit_code) 9)
-   #define TREXIO_ALLOCATION_FAILED       10 //((trexio_exit_code) 10)
-   #define TREXIO_HAS_NOT                 11 //((trexio_exit_code) 11)
-   #define TREXIO_INVALID_NUM             12 //((trexio_exit_code) 12)
-   #define TREXIO_ATTR_ALREADY_EXISTS     13 //((trexio_exit_code) 13)
-   #define TREXIO_DSET_ALREADY_EXISTS     14 //((trexio_exit_code) 14)
-   #define TREXIO_OPEN_ERROR              15 //((trexio_exit_code) 15)
-   #define TREXIO_LOCK_ERROR              16 //((trexio_exit_code) 16)
-   #define TREXIO_UNLOCK_ERROR            17 //((trexio_exit_code) 17)
-   #define TREXIO_FILE_ERROR              18 //((trexio_exit_code) 18)
-   #define TREXIO_GROUP_READ_ERROR        19 //((trexio_exit_code) 19)
-   #define TREXIO_GROUP_WRITE_ERROR       20 //((trexio_exit_code) 20)
-   #define TREXIO_ELEM_READ_ERROR         21 //((trexio_exit_code) 21)
-   #define TREXIO_ELEM_WRITE_ERROR        22 //((trexio_exit_code) 22)
-   #define TREXIO_UNSAFE_ARRAY_DIM        23 //((trexio_exit_code) 23)
-   #define TREXIO_INVALID_STR_LEN         30 //((trexio_exit_code) 30)
+   #define TREXIO_FAILURE                 ((trexio_exit_code) -1)
+   #define TREXIO_SUCCESS                 ((trexio_exit_code) 0)
+   #define TREXIO_INVALID_ARG_1           ((trexio_exit_code) 1)
+   #define TREXIO_INVALID_ARG_2           ((trexio_exit_code) 2)
+   #define TREXIO_INVALID_ARG_3           ((trexio_exit_code) 3)
+   #define TREXIO_INVALID_ARG_4           ((trexio_exit_code) 4)
+   #define TREXIO_INVALID_ARG_5           ((trexio_exit_code) 5)
+   #define TREXIO_END                     ((trexio_exit_code) 6)
+   #define TREXIO_READONLY                ((trexio_exit_code) 7)
+   #define TREXIO_ERRNO                   ((trexio_exit_code) 8)
+   #define TREXIO_INVALID_ID              ((trexio_exit_code) 9)
+   #define TREXIO_ALLOCATION_FAILED       ((trexio_exit_code) 10)
+   #define TREXIO_HAS_NOT                 ((trexio_exit_code) 11)
+   #define TREXIO_INVALID_NUM             ((trexio_exit_code) 12)
+   #define TREXIO_ATTR_ALREADY_EXISTS     ((trexio_exit_code) 13)
+   #define TREXIO_DSET_ALREADY_EXISTS     ((trexio_exit_code) 14)
+   #define TREXIO_OPEN_ERROR              ((trexio_exit_code) 15)
+   #define TREXIO_LOCK_ERROR              ((trexio_exit_code) 16)
+   #define TREXIO_UNLOCK_ERROR            ((trexio_exit_code) 17)
+   #define TREXIO_FILE_ERROR              ((trexio_exit_code) 18)
+   #define TREXIO_GROUP_READ_ERROR        ((trexio_exit_code) 19)
+   #define TREXIO_GROUP_WRITE_ERROR       ((trexio_exit_code) 20)
+   #define TREXIO_ELEM_READ_ERROR         ((trexio_exit_code) 21)
+   #define TREXIO_ELEM_WRITE_ERROR        ((trexio_exit_code) 22)
+   #define TREXIO_UNSAFE_ARRAY_DIM        ((trexio_exit_code) 23)
+   #define TREXIO_INVALID_STR_LEN         ((trexio_exit_code) 30)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -268,6 +268,7 @@ return '\n'.join(result)
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
+   # define TREXIO exit codes
    TREXIO_FAILURE                 = -1
    TREXIO_SUCCESS                 = 0
    TREXIO_INVALID_ARG_1           = 1
@@ -296,8 +297,7 @@ return '\n'.join(result)
    TREXIO_INVALID_STR_LEN         = 30
    #+end_src
    :END:
-
-   
+ 
 *** Decoding errors
 
    The ~trexio_string_of_error~ converts an exit code into a string. The
@@ -414,7 +414,8 @@ return '\n'.join(result)
      break;
    #+end_example
 
-   # Source
+**** C source code
+
    #+begin_src c :tangle prefix_front.c :noweb yes
 const char*
 trexio_string_of_error (const trexio_exit_code error)
@@ -432,7 +433,8 @@ trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING
 }
    #+end_src
 
-  # Fortran interface
+**** Fortran interface
+
   #+begin_src f90 :tangle prefix_fortran.f90 :noexport :noweb yes
 interface
    subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
@@ -442,6 +444,23 @@ interface
      character, intent(out) :: string(<<MAX_STRING_LENGTH()>>)
    end subroutine trexio_string_of_error
 end interface
+  #+end_src
+
+**** Python interface
+
+  #+begin_src python :tangle prefix_python.py :noexport
+def string_of_error(return_code: int) -> str:
+    try:
+        from pytrexio import trexio_string_of_error
+    except ImportError:
+        raise
+
+    try:
+        error_str = trexio_string_of_error(trexio_return_code)
+    except:
+        raise 
+
+    return error_str
   #+end_src
 
 ** Back ends
@@ -460,10 +479,10 @@ end interface
    #+begin_src c :tangle prefix_front.h
 typedef int32_t back_end_t;
 
-#define TREXIO_HDF5             0   //( (back_end_t) 0 )
-#define TREXIO_TEXT             1   //( (back_end_t) 1 )
+#define TREXIO_HDF5             ( (back_end_t) 0 )
+#define TREXIO_TEXT             ( (back_end_t) 1 )
 /*#define TREXIO_JSON             ( (back_end_t) 2 )*/
-#define TREXIO_INVALID_BACK_END 2   //( (back_end_t) 2 )
+#define TREXIO_INVALID_BACK_END ( (back_end_t) 2 )
 
 #define TREXIO_DELIM            "\n"
    #+end_src
@@ -2480,8 +2499,7 @@ def write_$group_str$(trexio_file, str_w) -> None:
 def read_$group_str$(trexio_file): 
     try:
         from pytrexio import (trexio_read_$group_str$, 
-                              trexio_string_of_error, 
-                              PYTREXIO_MAX_STR_LENGTH
+                              trexio_string_of_error 
                               )
     except ImportError:
         raise
