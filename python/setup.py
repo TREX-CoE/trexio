@@ -15,7 +15,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 
-pytrexio_module = Extension('trexio._pytrexio',
+pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = ['/usr/include/hdf5/serial', srcpath],
                             libraries = ['hdf5', 'hdf5_hl'],
@@ -32,7 +32,8 @@ setup(name             = 'trexio',
       long_description = long_description,
       long_description_content_type = "text/markdown",
       ext_modules      = [pytrexio_module],
-      packages         = ['trexio'],
+      py_modules       = ['trexio'],
+      packages         = ['pytrexio'],
       url              = 'https://github.com/TREX-CoE/trexio',
       license          = 'BSD',
       classifiers=[

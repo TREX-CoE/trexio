@@ -186,8 +186,8 @@ cppcheck.out: $(trexio_h)
 
 setup_py      = $(srcdir)/python/setup.py
 setup_cfg     = $(srcdir)/python/setup.cfg
-pytrexio_py   = $(srcdir)/python/trexio/pytrexio.py
-trexio_api_py = $(srcdir)/python/trexio/trexio_api.py
+pytrexio_py   = $(srcdir)/python/pytrexio/pytrexio.py
+trexio_py     = $(srcdir)/python/trexio.py
 TEST_PY       = $(srcdir)/python/test/test_api.py
 pytrexio_c    = $(srcdir)/src/pytrexio_wrap.c
 pytrexio_i    = $(srcdir)/src/pytrexio.i
@@ -219,7 +219,7 @@ check-numpy:
 
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
-              $(trexio_api_py) \
+              $(trexio_py) \
               python/src/*.c \
               python/src/*.h
 
