@@ -20,6 +20,11 @@
 
 ** Python
   #+begin_src python :tangle prefix_python.py
+try:
+    from trexio.pytrexio import *
+except ImportError:
+    raise Exception("Could not import pytrexio module from trexio package")
+
 
 # define TREXIO back ends
 TREXIO_HDF5 = 0
@@ -450,10 +455,10 @@ end interface
 
   #+begin_src python :tangle prefix_python.py :noexport
 def string_of_error(return_code: int) -> str:
-    try:
-        from pytrexio import trexio_string_of_error
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import trexio_string_of_error
+   #except ImportError:
+   #    raise
 
     try:
         error_str = trexio_string_of_error(trexio_return_code)
@@ -735,10 +740,10 @@ end interface
 
    #+begin_src c :tangle prefix_python.py
 def open(file_name: str, mode: str, back_end: int):
-    try:
-        from pytrexio import trexio_open
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import trexio_open
+   #except ImportError:
+   #    raise
 
     try:
         trexio_file = trexio_open(file_name, mode, back_end)
@@ -868,10 +873,10 @@ end interface
 
    #+begin_src c :tangle prefix_python.py
 def close(trexio_file):
-    try:
-        from pytrexio import trexio_close, trexio_string_of_error, TREXIO_SUCCESS
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import trexio_close, trexio_string_of_error
+   #except ImportError:
+   #    raise
 
     try:
         rc = trexio_close(trexio_file)
@@ -1228,10 +1233,10 @@ end interface
 
      #+begin_src python :tangle write_num_front.py
 def write_$group_num$(trexio_file, num_w) -> None: 
-    try:
-        from pytrexio import trexio_write_$group_num$, trexio_string_of_error, TREXIO_SUCCESS
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import trexio_write_$group_num$, trexio_string_of_error
+   #except ImportError:
+   #    raise
 
     try:
         rc = trexio_write_$group_num$(trexio_file, num_w)
@@ -1245,10 +1250,10 @@ def write_$group_num$(trexio_file, num_w) -> None:
 
      #+begin_src python :tangle read_num_front.py
 def read_$group_num$(trexio_file): 
-    try:
-        from pytrexio import trexio_read_$group_num$, trexio_string_of_error, TREXIO_SUCCESS
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import trexio_read_$group_num$, trexio_string_of_error
+   #except ImportError:
+   #    raise
 
     try:
         rc, num_r = trexio_read_$group_num$(trexio_file)
@@ -1755,14 +1760,14 @@ end interface
 *** Python templates for front end
 
      #+begin_src python :tangle write_dset_data_front.py
-def write_$group_dset$(trexio_file, dset_w) -> None: 
-    try:
-        from pytrexio import trexio_write_$group_dset$, trexio_string_of_error, TREXIO_SUCCESS
-    except ImportError:
-        raise
+def write_safe_$group_dset$(trexio_file, dset_w) -> None: 
+   #try:
+   #    from trexio.pytrexio import trexio_write_safe_$group_dset$, trexio_string_of_error
+   #except ImportError:
+   #    raise
 
     try:
-        rc = trexio_write_$group_dset$(trexio_file, dset_w)
+        rc = trexio_write_safe_$group_dset$(trexio_file, dset_w)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
         raise Exception(trexio_string_of_error(rc))
@@ -1772,19 +1777,21 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_data_front.py
-def read_$group_dset$(trexio_file): 
-    try:
-        from pytrexio import trexio_read_$group_dset$, trexio_string_of_error, TREXIO_SUCCESS
-    except ImportError:
-        raise
+def read_safe_$group_dset$(trexio_file, dim): 
+   #try:
+   #    from trexio.pytrexio import trexio_read_safe_$group_dset$, trexio_string_of_error
+   #except ImportError:
+   #    raise
 
     try:
-        rc, dset_r = trexio_read_$group_dset$(trexio_file)
+        rc, dset_r = trexio_read_safe_$group_dset$(trexio_file, dim)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
         raise Exception(trexio_string_of_error(rc))
     except:
         raise    
+
+    # additional assert can be added here to check that read_safe functions returns numpy array of proper dimension
 
     return dset_r
      #+end_src
@@ -2247,13 +2254,12 @@ end interface
 
      #+begin_src python :tangle write_dset_str_front.py
 def write_$group_dset$(trexio_file, dset_w) -> None: 
-    try:
-        from pytrexio import (trexio_write_$group_dset$, 
-                              trexio_string_of_error, 
-                              TREXIO_SUCCESS
-                              )
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import (trexio_write_$group_dset$, 
+   #                          trexio_string_of_error
+   #                          )
+   #except ImportError:
+   #    raise
 
     max_str_length = len(max(dset_w, key=len)) + 1
 
@@ -2269,13 +2275,13 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
 
      #+begin_src python :tangle read_dset_str_front.py
 def read_$group_dset$(trexio_file): 
-    try:
-        from pytrexio import (trexio_read_$group_dset$, 
-                              trexio_string_of_error, 
-                              TREXIO_DELIM
-                              )
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import (trexio_read_$group_dset$_low, 
+   #                          trexio_string_of_error, 
+   #                          TREXIO_DELIM
+   #                          )
+   #except ImportError:
+   #    raise
 
     try:
         rc, dset_1d_r = trexio_read_$group_dset$_low(trexio_file, PYTREXIO_MAX_STR_LENGTH)
@@ -2475,13 +2481,12 @@ end interface
 
      #+begin_src python :tangle write_attr_str_front.py
 def write_$group_str$(trexio_file, str_w) -> None: 
-    try:
-        from pytrexio import (trexio_write_$group_str$, 
-                              trexio_string_of_error, 
-                              TREXIO_SUCCESS
-                              )
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import (trexio_write_$group_str$, 
+   #                          trexio_string_of_error, 
+   #                          )
+   #except ImportError:
+   #    raise
 
     max_str_length = len(str_w) + 1
 
@@ -2497,12 +2502,12 @@ def write_$group_str$(trexio_file, str_w) -> None:
 
      #+begin_src python :tangle read_attr_str_front.py
 def read_$group_str$(trexio_file): 
-    try:
-        from pytrexio import (trexio_read_$group_str$, 
-                              trexio_string_of_error 
-                              )
-    except ImportError:
-        raise
+   #try:
+   #    from trexio.pytrexio import (trexio_read_$group_str$, 
+   #                          trexio_string_of_error 
+   #                          )
+   #except ImportError:
+   #    raise
 
     try:
         rc, str_r = trexio_read_$group_str$(trexio_file, PYTREXIO_MAX_STR_LENGTH)
