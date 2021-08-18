@@ -23,6 +23,7 @@ cat helper_fortran.f90 >> trexio_f.f90
 cat populated/pop_*.fh_90 >> trexio_f.f90
 
 # python front end
+cat basic_python.py >> trexio.py
 cat populated/pop_*.py >> trexio.py
 
 # suffixes
