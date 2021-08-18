@@ -10,7 +10,7 @@ echo "" >> trexio.h
 
 cat prefix_s_front.h > trexio_s.h
 cat prefix_fortran.f90   > trexio_f.f90
-cat prefix_python.py   > trexio.py
+cat prefix_python.py   > trexio_api.py
 
 # c front end
 cat populated/pop_*.c >> trexio.c
@@ -23,7 +23,7 @@ cat helper_fortran.f90 >> trexio_f.f90
 cat populated/pop_*.fh_90 >> trexio_f.f90
 
 # python front end
-cat populated/pop_*.py >> trexio.py
+cat populated/pop_*.py >> trexio_api.py
 
 # suffixes
 cat suffix_s_front.h >> trexio_s.h

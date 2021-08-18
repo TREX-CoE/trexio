@@ -13,15 +13,18 @@ readonly SRC=${TREXIO_ROOT}/src
 readonly INCLUDIR=${TREXIO_ROOT}/include
 readonly TOOLS=${TREXIO_ROOT}/tools
 readonly PYDIR=${TREXIO_ROOT}/python
+readonly PYTREXIODIR=${PYDIR}/trexio
 
 # We want the script to crash on the 1st error:
 set -e
 
-# Create src directory in the python folder if not yet done
+# Create src and trexio directories in the python folder if not yet done
 mkdir -p ${PYDIR}/src
+mkdir -p ${PYTREXIODIR}
 
 # Copy all the source code and header files in the corresponding python directory
-cp ${SRC}/*.py ${PYDIR}
+mv ${SRC}/pytrexio.py ${PYTREXIODIR}
+mv ${SRC}/trexio_api.py ${PYTREXIODIR}
 cp ${SRC}/*.c ${PYDIR}/src
 cp ${SRC}/*.h ${PYDIR}/src
 cp ${INCLUDIR}/trexio.h ${PYDIR}/src 
