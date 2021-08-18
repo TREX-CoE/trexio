@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-setup.py file for pytrexio
+setup.py file for TREXIO Python package
 """
 
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 import os
 
 rootpath = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +15,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 
-pytrexio_module = Extension('_pytrexio',
+pytrexio_module = Extension('trexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = ['/usr/include/hdf5/serial', srcpath],
                             libraries = ['hdf5', 'hdf5_hl'],
@@ -24,7 +24,7 @@ pytrexio_module = Extension('_pytrexio',
                             )
 
 
-setup(name             = 'pytrexio',
+setup(name             = 'trexio',
       version          = '0.1',
       author           = "TREX-CoE",
       author_email     = "posenitskiy@irsamc.ups-tlse.fr",
@@ -32,10 +32,9 @@ setup(name             = 'pytrexio',
       long_description = long_description,
       long_description_content_type = "text/markdown",
       ext_modules      = [pytrexio_module],
-      py_modules       = ["pytrexio"],
+      packages         = ['trexio'],
       url              = 'https://github.com/TREX-CoE/trexio',
       license          = 'BSD',
-      packages         = find_packages(),
       classifiers=[
          "Programming Language :: Python :: 3",
          "Programming Language :: C",
