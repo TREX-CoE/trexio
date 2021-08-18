@@ -184,16 +184,17 @@ cppcheck.out: $(trexio_h)
 	  -I../include *.c *.h 2>../$@
 
 
-setup_py    = $(srcdir)/python/setup.py
-setup_cfg   = $(srcdir)/python/setup.cfg
-pytrexio_py = $(srcdir)/python/trexio/pytrexio.py
-TEST_PY     = $(srcdir)/python/test/test_full.py
-pytrexio_c  = $(srcdir)/src/pytrexio_wrap.c
-pytrexio_i  = $(srcdir)/src/pytrexio.i
-numpy_i     = $(srcdir)/src/numpy.i
+setup_py      = $(srcdir)/python/setup.py
+setup_cfg     = $(srcdir)/python/setup.cfg
+pytrexio_py   = $(srcdir)/python/trexio/pytrexio.py
+trexio_api_py = $(srcdir)/python/trexio/trexio_api.py
+TEST_PY       = $(srcdir)/python/test/test_api.py
+pytrexio_c    = $(srcdir)/src/pytrexio_wrap.c
+pytrexio_i    = $(srcdir)/src/pytrexio.i
+numpy_i       = $(srcdir)/src/numpy.i
 
 
-python-test: $(pytrexio_py) $(TEST_PY)
+python-test: $(TEST_PY)
 	python3 $(TEST_PY)
 	$(RM) -r -- __pycache__
 
@@ -216,12 +217,11 @@ $(numpy_i):
 check-numpy:
 	cd tools && ./check_numpy_i.sh
 
-CLEANFILES += src/pytrexio_wrap.c \
-	      src/pytrexio.py \
-	      python/trexio/pytrexio.py \
-	      python/trexio/trexio.py \
-	      python/src/*.c \
-	      python/src/*.h
+CLEANFILES += $(pytrexio_c) \
+              $(pytrexio_py) \
+              $(trexio_api_py) \
+              python/src/*.c \
+              python/src/*.h
 
 .PHONY: cppcheck python-test python-install check-numpy
 
