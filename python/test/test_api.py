@@ -2,7 +2,7 @@ import os
 import shutil
 import numpy as np
 
-import trexio.trexio_api as tr
+import trexio as tr
 
 #=========================================================#
 #======== SETUP THE BACK END AND OUTPUT FILE NAME ========#
@@ -41,8 +41,6 @@ print(test_file)
 nucleus_num = 12
 
 tr.write_nucleus_num(test_file, nucleus_num)
-#rc = pytr.trexio_write_nucleus_num(test_file, nucleus_num)
-#assert rc==tr.TREXIO_SUCCESS
 
 # initialize charge arrays as a list and convert it to numpy array
 charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
@@ -81,7 +79,7 @@ labels = [
 
 tr.write_nucleus_label(test_file,labels)
 
-rc = tr.close(test_file)
+tr.close(test_file)
 
 #==========================================================#
 #============ READ THE DATA FROM THE TEST FILE ============#
@@ -97,10 +95,11 @@ rcharges_np = tr.read_safe_nucleus_charge(test_file2, nucleus_num)
 assert rcharges_np.dtype is np.dtype(np.float64)
 np.testing.assert_array_almost_equal(rcharges_np, charges_np, decimal=8)
 
-# unsafe call to read_safe should not only have return code = TREXIO_UNSAFE_ARRAY_DIM
-# TODO: it should not return numpy array filled with garbage
-# rc, rcharges_fail = tr.read_safe_nucleus_charge(test_file2, nucleus_num*5)
-# assert rc==TREXIO_UNSAFE_ARRAY_DIM
+# unsafe call to read_safe should fail with error message corresponding to TREXIO_UNSAFE_ARRAY_DIM
+try:
+    rcharges_fail = tr.read_safe_nucleus_charge(test_file2, nucleus_num*5)
+except Exception:
+    print("Unsafe call to safe API: successful")
 
 # safe call to read_safe array of int values
 rindices_np = tr.read_safe_basis_nucleus_index(test_file2, nucleus_num)
