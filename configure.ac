@@ -94,18 +94,31 @@ CPPFLAGS="${HDF5_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${HDF5_LDFLAGS} ${LDFLAGS}"
 LIBS="${HDF5_LIBS} ${LIBS}"
 
-# Check if HDF5 if available with pkg-config
+# Check if HDF5 is available with pkg-config.
+# First argument has to be named differently than HDF5 (e.g. HDF5_MOD) because for pkg FOO 
+# PKG_CHECK_MODULES(FOO,...) sets FOO_LIBS but we have already used HDF5_LIBS above.
 
-PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8], [
+PKG_CHECK_MODULES([HDF5_MOD], [hdf5 >= 1.8], [
     PKG_HDF5="hdf5"
     ],[
     PKG_HDF5=""
    ])
-    PKG_CFLAGS="${PKG_CFLAGS}"
+PKG_CFLAGS="${HDF5_MOD_CFLAGS}"
+PKG_LIBS="${HDF5_MOD_LIBS}"
 
 AC_SUBST([PKG_HDF5])
 AC_SUBST([PKG_CFLAGS])
+AC_SUBST([PKG_LIBS])
 
+# The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
+# It is only needed to manually build Python API because setup.py depends on HDF5.
+
+if test "$HDF5_LDFLAGS" = "" || "$HDF5_CFLAGS" = ""; then
+  HDF5_LDFLAGS="${PKG_LIBS}"
+  HDF5_CFLAGS="${PKG_CFLAGS}"
+  AC_SUBST([HDF5_CFLAGS])
+  AC_SUBST([HDF5_LDFLAGS])
+fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT32_T
