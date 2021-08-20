@@ -3,8 +3,8 @@
 set -x
 set -e
 
-H5_LDFLAGS_LOCAL=$1
-H5_CFLAGS_LOCAL=$2
+H5_CFLAGS_LOCAL=$1
+H5_LDFLAGS_LOCAL=$2
 
 # This script should update the version of the Python package
 #source version.py

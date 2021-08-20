@@ -203,7 +203,7 @@ python-test: $(TEST_PY)
 
 python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
-		./install_pytrexio.sh $(HDF5_LDFLAGS) $(HDF5_CFLAGS)
+		./install_pytrexio.sh $(HDF5_CFLAGS) $(HDF5_LDFLAGS)
 
 $(pytrexio_py): $(pytrexio_c) 
 	cd tools && ./prepare_python.sh
