@@ -14,13 +14,16 @@ c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+h5_ldflags = str(os.environ.get("H5_LDFLAGS", None ))
+h5_cflags_withI  = str(os.environ.get("H5_CFLAGS", None ))
+h5_cflags = h5_cflags_withI.replace("-I","")
 
 pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
-                            include_dirs = ['/usr/include/hdf5/serial', srcpath],
+                            include_dirs = [h5_cflags, srcpath],
                             libraries = ['hdf5', 'hdf5_hl'],
                             extra_compile_args = ['-Wno-discarded-qualifiers'],
-                            extra_link_args = ['-L/usr/lib/x86_64-linux-gnu/hdf5/serial']
+                            extra_link_args = [h5_ldflags]
                             )
 
 

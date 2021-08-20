@@ -3,6 +3,9 @@
 set -x
 set -e
 
+H5_LDFLAGS_LOCAL=$1
+H5_CFLAGS_LOCAL=$2
+
 # This script should update the version of the Python package
 #source version.py
 
@@ -11,7 +14,7 @@ python3 -m pip install --upgrade setuptools wheel twine
 
 # Create build directory and compile extension files (*.c)
 # --no-user-cfg disables custom .cfg files of the user machine, so that only setup.cfg is used
-python3 -s setup.py --no-user-cfg build 
+H5_LDFLAGS=${H5_LDFLAGS_LOCAL} H5_CFLAGS=${H5_CFLAGS_LOCAL} python3 -s setup.py --no-user-cfg build 
 
 # Local inplace build of the .so module with SWIG-produced pytrexio_wrap.c (from the SWIG documentation)
 #python3 setup.py build_ext --inplace --swig-opts="-modern"

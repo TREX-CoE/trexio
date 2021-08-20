@@ -157,6 +157,10 @@ $(HTML_FILES): docs/index.html
 
 # =============== DEVELOPER MODE =============== #
 
+SWIG          = @SWIG@ 
+HDF5_LDFLAGS  = @HDF5_LDFLAGS@ 
+HDF5_CFLAGS   = @HDF5_CFLAGS@ 
+
 if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
@@ -183,7 +187,6 @@ cppcheck.out: $(trexio_h)
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
 
-
 setup_py      = $(srcdir)/python/setup.py
 setup_cfg     = $(srcdir)/python/setup.cfg
 pytrexio_py   = $(srcdir)/python/pytrexio/pytrexio.py
@@ -199,7 +202,8 @@ python-test: $(TEST_PY)
 	$(RM) -r -- __pycache__
 
 python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
-	cd python && ./install_pytrexio.sh
+	cd python && \
+		./install_pytrexio.sh $(HDF5_LDFLAGS) $(HDF5_CFLAGS)
 
 $(pytrexio_py): $(pytrexio_c) 
 	cd tools && ./prepare_python.sh
@@ -208,7 +212,8 @@ $(pytrexio_py): $(pytrexio_c)
 # [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
 $(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	cp $(trexio_h) src/
-	cd src/ && swig -python -py3 -o pytrexio_wrap.c pytrexio.i
+	cd src/ && \
+		$(SWIG) -python -py3 -o pytrexio_wrap.c pytrexio.i
 	$(RM) -- src/trexio.h
 
 $(numpy_i):
