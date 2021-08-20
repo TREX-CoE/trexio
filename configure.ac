@@ -126,6 +126,10 @@ if test "x${TREXIO_DEVEL}" != "x"; then
   AC_PROG_AWK
   AM_PATH_PYTHON([3.0])
 
+  AX_PKG_SWIG(4.0.0, [], AC_MSG_WARN([SWIG is required to build Python API.]) )
+  # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
+  #AX_SWIG_PYTHON
+
   AC_CHECK_PROGS([EMACS],[emacs26 emacs],[no])
   if test x${EMACS} == xno ; then
     AC_MSG_ERROR([
