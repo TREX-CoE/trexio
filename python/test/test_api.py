@@ -48,7 +48,7 @@ charges_np = np.array(charges, dtype=np.float64)
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemaps from numpy.i
-rc = tr.write_safe_nucleus_charge(test_file, charges_np)
+rc = tr.write_nucleus_charge(test_file, charges_np)
 
 # initialize arrays of nuclear indices as a list and convert it to numpy array
 indices = [i for i in range(nucleus_num)]
@@ -57,7 +57,7 @@ indices_np = np.array(indices, dtype=np.int32)
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemacs from numpy.i
-tr.write_safe_basis_nucleus_index(test_file, indices_np)
+tr.write_basis_nucleus_index(test_file, indices_np)
 
 point_group = 'B3U'
 
@@ -91,23 +91,23 @@ rnum = tr.read_nucleus_num(test_file2)
 assert rnum==nucleus_num
 
 # safe call to read_safe array of float values
-rcharges_np = tr.read_safe_nucleus_charge(test_file2, nucleus_num)
+rcharges_np = tr.read_nucleus_charge(test_file2, dim=nucleus_num)
 assert rcharges_np.dtype is np.dtype(np.float64)
 np.testing.assert_array_almost_equal(rcharges_np, charges_np, decimal=8)
 
 # unsafe call to read_safe should fail with error message corresponding to TREXIO_UNSAFE_ARRAY_DIM
 try:
-    rcharges_fail = tr.read_safe_nucleus_charge(test_file2, nucleus_num*5)
+    rcharges_fail = tr.read_nucleus_charge(test_file2, dim=nucleus_num*5)
 except Exception:
     print("Unsafe call to safe API: successful")
 
 # safe call to read_safe array of int values
-rindices_np = tr.read_safe_basis_nucleus_index(test_file2, nucleus_num)
+rindices_np = tr.read_basis_nucleus_index(test_file2, dim=nucleus_num)
 assert rindices_np.dtype is np.dtype(np.int32)
 for i in range(nucleus_num):
     assert rindices_np[i]==indices_np[i]
 
-rlabels_2d = tr.read_nucleus_label(test_file2)
+rlabels_2d = tr.read_nucleus_label(test_file2, dim=nucleus_num)
 print(rlabels_2d)
 for i in range(nucleus_num):
     assert rlabels_2d[i]==labels[i]

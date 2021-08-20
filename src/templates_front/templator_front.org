@@ -1749,7 +1749,7 @@ end interface
 *** Python templates for front end
 
      #+begin_src python :tangle write_dset_data_front.py
-def write_safe_$group_dset$(trexio_file, dset_w) -> None: 
+def write_$group_dset$(trexio_file, dset_w) -> None: 
 
     try:
         rc = trexio_write_safe_$group_dset$(trexio_file, dset_w)
@@ -1762,7 +1762,7 @@ def write_safe_$group_dset$(trexio_file, dset_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_data_front.py
-def read_safe_$group_dset$(trexio_file, dim): 
+def read_$group_dset$(trexio_file, dim): 
 
     try:
         rc, dset_r = trexio_read_safe_$group_dset$(trexio_file, dim)
@@ -2249,7 +2249,7 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_str_front.py
-def read_$group_dset$(trexio_file): 
+def read_$group_dset$(trexio_file, dim): 
 
     try:
         rc, dset_1d_r = trexio_read_$group_dset$_low(trexio_file, PYTREXIO_MAX_STR_LENGTH)
@@ -2260,7 +2260,8 @@ def read_$group_dset$(trexio_file):
         raise    
 
     try:
-        dset_2d_r = [item for item in dset_1d_r.split(TREXIO_DELIM) if item]
+        dset_full = dset_1d_r.split(TREXIO_DELIM)
+        dset_2d_r = [dset_full[i] for i in range(dim) if dset_full[i]]
         assert dset_2d_r
     except AssertionError:
         raise TypeError(f"Output of {read_$group_dset$.__name__} function cannot be an empty list.")
