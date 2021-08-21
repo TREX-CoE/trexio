@@ -17,45 +17,9 @@
 */
 
   #+end_src
-
-** Python
-  #+begin_src python :tangle prefix_python.py
-try:
-    from pytrexio.pytrexio import *
-except ImportError:
-    raise Exception("Could not import pytrexio module from trexio package")
-
-# define TREXIO back ends
-TREXIO_HDF5 = 0
-TREXIO_TEXT = 1
-#TREXIO_JSON = 2
-TREXIO_INVALID_BACK_END = 2
-
-# define max length of string item when reading arrays of strings
-# this is needed for the low-level C routines
-PYTREXIO_MAX_STR_LENGTH = 2048
-  #+end_src
-
-** Fortran
-  #+begin_src f90 :tangle prefix_fortran.f90
-module trexio
-
-  use, intrinsic :: iso_c_binding
-  implicit none
-
-  integer, parameter :: trexio_exit_code = 4
-  integer, parameter :: trexio_backend = 4
-
-  integer(trexio_backend), parameter :: TREXIO_HDF5 = 0
-  integer(trexio_backend), parameter :: TREXIO_TEXT = 1
-! integer(trexio_backend), parameter :: TREXIO_JSON = 2
-  integer(trexio_backend), parameter :: TREXIO_INVALID_BACK_END = 2
-
-  character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
-
-  #+end_src
-
+  
 ** C
+
   #+begin_src c :tangle prefix_front.h :noweb yes
 <<header>>
 #ifndef TREXIO_H
@@ -100,6 +64,40 @@ typedef int32_t trexio_exit_code;
 <<header>>
 #ifndef _TREXIO_PRIVATE_H
 #define _TREXIO_PRIVATE_H
+  #+end_src
+
+** Fortran
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+module trexio
+
+  use, intrinsic :: iso_c_binding
+  implicit none
+
+  integer, parameter :: trexio_exit_code = 4
+  integer, parameter :: trexio_backend = 4
+
+  character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
+  #+end_src
+
+** Python
+
+  #+begin_src python :tangle prefix_python.py
+"""The Python API of the TREXIO library. 
+
+This module contains wrappers of the pytrexio.py module produced by SWIG.
+Top-level wrapper like this allows to extend functionality of SWIG-generated codes.
+Moreover, exception handling becomes trivial thanks to the use of TREXIO exit codes.
+"""
+
+
+try:
+    from pytrexio.pytrexio import *
+except ImportError:
+    raise Exception("Could not import pytrexio module from trexio package")
+
+# define max length of a string to be read, required for the low-level C routines
+PYTREXIO_MAX_STR_LENGTH = 2048
   #+end_src
 
 * Coding conventions
@@ -479,6 +477,10 @@ def string_of_error(return_code: int) -> str:
    Then the corresponding back-end ~has/read/write~ functions has to be implemented. For example, see the commented
    lines that correspond to the ~TREXIO_JSON~ back end (not implemented yet).
 
+   _Note_: It is important to increment the value of TREXIO_INVALID_BACK_END when a new back end is added. Otherwise, it will not be available. 
+
+*** C
+
    #+begin_src c :tangle prefix_front.h
 typedef int32_t back_end_t;
 
@@ -489,6 +491,26 @@ typedef int32_t back_end_t;
 
 #define TREXIO_DELIM            "\n"
    #+end_src
+
+*** Fortran
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+  integer(trexio_backend), parameter :: TREXIO_HDF5 = 0
+  integer(trexio_backend), parameter :: TREXIO_TEXT = 1
+! integer(trexio_backend), parameter :: TREXIO_JSON = 2
+  integer(trexio_backend), parameter :: TREXIO_INVALID_BACK_END = 2
+  #+end_src
+
+*** Python
+
+  #+begin_src python :tangle prefix_python.py
+# define TREXIO back ends
+TREXIO_HDF5 = 0
+TREXIO_TEXT = 1
+#TREXIO_JSON = 2
+TREXIO_INVALID_BACK_END = 2
+  #+end_src
+
 ** Read/write behavior
 
    Every time a reading function is called, the data is read from the
@@ -727,6 +749,7 @@ trexio_open(const char* file_name, const char mode,
    #+end_src
 
 *** Fortran
+
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(8) function trexio_open_c (filename, mode, backend) bind(C, name="trexio_open")
@@ -740,8 +763,30 @@ end interface
    #+end_src
 
 *** Python
+
    #+begin_src c :tangle basic_python.py
 def open(file_name: str, mode: str, back_end: int):
+    """Create TREXIO file or open existing one.
+
+    Parameters:
+
+    file_name: str
+        Name of the TREXIO file
+
+    mode: str
+        One of the currently supported ~open~ modes (e.g. 'w', 'r')
+
+    back_end: int
+        One of the currently supported TREXIO back ends (e.g. TREXIO_HDF5, TREXIO_TEXT)    
+
+    Return: 
+        SWIG object of type trexio_s.
+
+    Examples:
+    >>> from trexio import open as tr_open
+    >>> trex_file = tr_open("example.h5", "w", TREXIO_HDF5)    
+    """
+
 
     try:
         trexio_file = trexio_open(file_name, mode, back_end)
@@ -791,6 +836,7 @@ end interface
       ~trexio_exit_code~ exit code.
 
 *** C
+
     #+begin_src c :tangle prefix_front.h :exports none
 trexio_exit_code trexio_close(trexio_t* file);
     #+end_src
@@ -862,6 +908,7 @@ trexio_close (trexio_t* file)
     #+end_src
 
 *** Fortran
+
     #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer function trexio_close (trex_file) bind(C)
@@ -872,15 +919,20 @@ end interface
     #+end_src
 
 *** Python
+
    #+begin_src c :tangle basic_python.py
 def close(trexio_file):
+    """Close TREXIO file.
+
+    Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
+    """
+
 
     try:
         rc = trexio_close(trexio_file)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
         raise Exception(trexio_string_of_error(rc))
-
    #+end_src
 
 * Templates for front end
@@ -1230,6 +1282,21 @@ end interface
 
      #+begin_src python :tangle write_num_front.py
 def write_$group_num$(trexio_file, num_w) -> None: 
+    """Write the $group_num$ variable in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO file handle.
+
+    num_w: int
+        Value of the $group_num$ variable to be written.
+    
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
 
     try:
         rc = trexio_write_$group_num$(trexio_file, num_w)
@@ -1243,6 +1310,19 @@ def write_$group_num$(trexio_file, num_w) -> None:
 
      #+begin_src python :tangle read_num_front.py
 def read_$group_num$(trexio_file): 
+    """Read the $group_num$ variable from the TREXIO file.
+
+    Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
+
+    Returns:
+        ~num_r~: int
+        Integer value of $group_num$ variable read from ~trexio_file~.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
 
     try:
         rc, num_r = trexio_read_$group_num$(trexio_file)
@@ -1750,6 +1830,21 @@ end interface
 
      #+begin_src python :tangle write_dset_data_front.py
 def write_$group_dset$(trexio_file, dset_w) -> None: 
+    """Write the $group_dset$ array of numbers in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO file handle.
+
+    dset_w: list OR numpy.ndarray
+        Array of $group_dset$ values to be written.
+    
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
 
     try:
         rc = trexio_write_safe_$group_dset$(trexio_file, dset_w)
@@ -1762,7 +1857,26 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_data_front.py
-def read_$group_dset$(trexio_file, dim): 
+def read_$group_dset$(trexio_file, dim: int): 
+    """Read the $group_dset$ array of numbers from the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO file handle.
+
+    dim: int
+        Size of the block to be read from the file (i.e. how many items of $group_dset$ will be returned)
+
+    Returns:
+        ~dset_r~: numpy.ndarray
+        1D NumPy array with ~dim~ elements corresponding to $group_dset$ values read from the TREXIO file.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
 
     try:
         rc, dset_r = trexio_read_safe_$group_dset$(trexio_file, dim)
@@ -2234,7 +2348,22 @@ end interface
 *** Python templates for front end
 
      #+begin_src python :tangle write_dset_str_front.py
-def write_$group_dset$(trexio_file, dset_w) -> None: 
+def write_$group_dset$(trexio_file, dset_w: list) -> None: 
+    """Write the $group_dset$ array of strings in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO file handle.
+
+    dset_w: list
+        Array of $group_dset$ strings to be written.
+    
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
 
     max_str_length = len(max(dset_w, key=len)) + 1
 
@@ -2249,7 +2378,25 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_str_front.py
-def read_$group_dset$(trexio_file, dim): 
+def read_$group_dset$(trexio_file, dim: int) -> list: 
+    """Read the $group_dset$ array of strings from the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO file handle.
+
+    dim: int
+        Size of the block to be read from the file (i.e. how many items of $group_dset$ will be returned)
+
+    Returns:
+        ~dset_r~: list
+        1D list with ~dim~ elements corresponding to $group_dset$ strings read from the TREXIO file.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
 
     try:
         rc, dset_1d_r = trexio_read_$group_dset$_low(trexio_file, PYTREXIO_MAX_STR_LENGTH)
@@ -2449,7 +2596,22 @@ end interface
 *** Python templates for front end
 
      #+begin_src python :tangle write_attr_str_front.py
-def write_$group_str$(trexio_file, str_w) -> None: 
+def write_$group_str$(trexio_file, str_w: str) -> None: 
+    """Write the $group_str$ variable in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO file handle.
+
+    str_w: str
+        String corresponding to the $group_str$ variable to be written.
+    
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
 
     max_str_length = len(str_w) + 1
 
@@ -2460,11 +2622,23 @@ def write_$group_str$(trexio_file, str_w) -> None:
         raise Exception(trexio_string_of_error(rc))
     except:
         raise    
-
      #+end_src
 
      #+begin_src python :tangle read_attr_str_front.py
-def read_$group_str$(trexio_file): 
+def read_$group_str$(trexio_file) -> str: 
+    """Read the $group_str$ variable from the TREXIO file.
+
+    Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
+
+    Returns:
+        ~str_r~: str
+        String corresponding to the $group_str$ variable read from ~trexio_file~.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
 
     try:
         rc, str_r = trexio_read_$group_str$(trexio_file, PYTREXIO_MAX_STR_LENGTH)
@@ -2476,6 +2650,7 @@ def read_$group_str$(trexio_file):
 
     return str_r
      #+end_src
+
 * Fortran helper/wrapper functions
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.
