@@ -451,10 +451,13 @@ end interface
 
   #+begin_src python :tangle prefix_python.py :noexport
 def string_of_error(return_code: int) -> str:
-   #try:
-   #    from trexio.pytrexio import trexio_string_of_error
-   #except ImportError:
-   #    raise
+    """Decode the TREXIO exit code.
+
+    Argument is an integer return code that correspond to one of the TREXIO errors.
+
+    Returns string that contains description of TREXIO ~return_code~.
+    """
+
 
     try:
         error_str = trexio_string_of_error(trexio_return_code)
@@ -1281,7 +1284,7 @@ end interface
 *** Python templates for front end
 
      #+begin_src python :tangle write_num_front.py
-def write_$group_num$(trexio_file, num_w) -> None: 
+def write_$group_num$(trexio_file, num_w: int) -> None: 
     """Write the $group_num$ variable in the TREXIO file.
 
     Parameters:
@@ -1309,7 +1312,7 @@ def write_$group_num$(trexio_file, num_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_num_front.py
-def read_$group_num$(trexio_file): 
+def read_$group_num$(trexio_file) -> int: 
     """Read the $group_num$ variable from the TREXIO file.
 
     Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
