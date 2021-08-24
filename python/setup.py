@@ -14,10 +14,37 @@ c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-h5_ldflags = str(os.environ.get("H5_LDFLAGS", None ))
-h5_cflags_withI  = str(os.environ.get("H5_CFLAGS", None ))
-h5_cflags = h5_cflags_withI.replace("-I","")
+# =========================== Start of the HDF5 block =========================== #
+# The block below is needed to derive additional flags related to the HDF5 library,
+# which is required to build pytrexio extension module during the setup.py execution
 
+h5_ldflags_withl = os.environ.get("H5_LDFLAGS", None)
+h5_cflags_withI  = os.environ.get("H5_CFLAGS", None)
+
+h5_ldflags_isUndefined = h5_ldflags_withl is None or h5_ldflags_withl==""
+h5_cflags_isUndefined = h5_cflags_withI is None or h5_cflags_withI==""
+
+if h5_ldflags_isUndefined or h5_cflags_isUndefined:
+
+    try:
+        import pkgconfig as pk
+    except ImportError:
+        raise Exception("pkgconfig Python package has not been found")
+
+    try:
+        assert pk.exists('hdf5')
+    except AssertionError:
+        raise Exception("pkg-config could not locate HDF5")
+
+    h5_cflags_withI = pk.cflags('hdf5')
+    h5_ldflags_withl = pk.libs('hdf5')
+
+h5_cflags = h5_cflags_withI.replace("-I","").split(" ")[0]
+h5_ldflags = h5_ldflags_withl.split(" ")[0]
+
+# ============================ End of the HDF5 block ============================ #
+
+# Define pytrexio extension module based on TREXIO source codes + SWIG-generated wrapper
 pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [h5_cflags, srcpath],
