@@ -23,8 +23,8 @@ mkdir -p ${PYDIR}/src
 mkdir -p ${PYTREXIODIR}
 
 # Copy all the source code and header files in the corresponding python directory
-mv ${SRC}/pytrexio.py ${PYTREXIODIR}/pytrexio.py
-mv ${SRC}/trexio.py ${PYDIR}/trexio.py
+cp ${SRC}/pytrexio.py ${PYTREXIODIR}/pytrexio.py
+cp ${SRC}/trexio.py ${PYDIR}/trexio.py
 cp ${SRC}/*.c ${PYDIR}/src
 cp ${SRC}/*.h ${PYDIR}/src
 cp ${INCLUDIR}/trexio.h ${PYDIR}/src 
