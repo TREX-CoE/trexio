@@ -4,7 +4,7 @@
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
-TREX library fo efficient I/O.
+TREX library for efficient I/O.
 
 
 ## Minimal requirements (for users):
@@ -33,7 +33,7 @@ TREX library fo efficient I/O.
 
 - python3       (>= 3.6)
 - Emacs         (>= 26.0)
-
+- SWIG          (>= 4.0)
 
 ## Installation procedure from the GitHub repo clone (for developers):
 
