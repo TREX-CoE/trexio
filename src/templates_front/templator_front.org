@@ -1860,7 +1860,7 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_data_front.py
-def read_$group_dset$(trexio_file, dim: int): 
+def read_$group_dset$(trexio_file, dim = None): 
     """Read the $group_dset$ array of numbers from the TREXIO file.
 
     Parameters:
@@ -1868,8 +1868,9 @@ def read_$group_dset$(trexio_file, dim: int):
     trexio_file:
         TREXIO file handle.
 
-    dim: int
+    dim (Optional): int
         Size of the block to be read from the file (i.e. how many items of $group_dset$ will be returned)
+        If None, the function will read all necessary array dimensions from the file.
 
     Returns:
         ~dset_r~: numpy.ndarray
@@ -1880,6 +1881,16 @@ def read_$group_dset$(trexio_file, dim: int):
         - Exception from some other error (e.g. RuntimeError).
     """
 
+    
+    # if dim is not specified, read dimensions from the TREXIO file
+    if dim is None:
+        $group_dset_dim$ = read_$group_dset_dim$(trexio_file) 
+        
+        dims_list = [$group_dset_dim_list$]
+        dim = 1
+        for i in range($group_dset_rank$):
+            dim *= dims_list[i]
+    
 
     try:
         rc, dset_r = trexio_read_safe_$group_dset$(trexio_file, dim)
@@ -2381,7 +2392,7 @@ def write_$group_dset$(trexio_file, dset_w: list) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_str_front.py
-def read_$group_dset$(trexio_file, dim: int) -> list: 
+def read_$group_dset$(trexio_file, dim = None) -> list: 
     """Read the $group_dset$ array of strings from the TREXIO file.
 
     Parameters:
@@ -2389,8 +2400,9 @@ def read_$group_dset$(trexio_file, dim: int) -> list:
     trexio_file:
         TREXIO file handle.
 
-    dim: int
+    dim (Optional): int
         Size of the block to be read from the file (i.e. how many items of $group_dset$ will be returned)
+        If None, the function will read all necessary array dimensions from the file.
 
     Returns:
         ~dset_r~: list
@@ -2401,6 +2413,17 @@ def read_$group_dset$(trexio_file, dim: int) -> list:
         - Exception from some other error (e.g. RuntimeError).
     """
 
+
+    # if dim is not specified, read dimensions from the TREXIO file
+    if dim is None:
+        $group_dset_dim$ = read_$group_dset_dim$(trexio_file) 
+        
+        dims_list = [$group_dset_dim_list$]
+        dim = 1
+        for i in range($group_dset_rank$):
+            dim *= dims_list[i]
+
+
     try:
         rc, dset_1d_r = trexio_read_$group_dset$_low(trexio_file, PYTREXIO_MAX_STR_LENGTH)
         assert rc==TREXIO_SUCCESS
@@ -2408,6 +2431,7 @@ def read_$group_dset$(trexio_file, dim: int) -> list:
         raise Exception(trexio_string_of_error(rc))
     except:
         raise    
+
 
     try:
         dset_full = dset_1d_r.split(TREXIO_DELIM)

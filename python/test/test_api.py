@@ -53,7 +53,7 @@ charges_np = np.array(charges, dtype=np.float64)
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemaps from numpy.i
-rc = tr.write_nucleus_charge(test_file, charges_np)
+tr.write_nucleus_charge(test_file, charges_np)
 
 # initialize arrays of nuclear indices as a list and convert it to numpy array
 indices = [i for i in range(nucleus_num)]
@@ -63,6 +63,25 @@ indices_np = np.array(indices, dtype=np.int32)
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemacs from numpy.i
 tr.write_basis_nucleus_index(test_file, indices_np)
+
+# initialize a list of nuclear coordinates
+coords = [
+  0.00000000 ,  1.39250319 ,  0.00000000 ,
+ -1.20594314 ,  0.69625160 ,  0.00000000 ,
+ -1.20594314 , -0.69625160 ,  0.00000000 ,
+  0.00000000 , -1.39250319 ,  0.00000000 ,
+  1.20594314 , -0.69625160 ,  0.00000000 ,
+  1.20594314 ,  0.69625160 ,  0.00000000 ,
+ -2.14171677 ,  1.23652075 ,  0.00000000 ,
+ -2.14171677 , -1.23652075 ,  0.00000000 ,
+  0.00000000 , -2.47304151 ,  0.00000000 ,
+  2.14171677 , -1.23652075 ,  0.00000000 ,
+  2.14171677 ,  1.23652075 ,  0.00000000 ,
+  0.00000000 ,  2.47304151 ,  0.00000000 ,
+  ]
+
+# write coordinates in the file
+tr.write_nucleus_coord(test_file, coords)
 
 point_group = 'B3U'
 
@@ -116,6 +135,10 @@ rindices_np = tr.read_basis_nucleus_index(test_file2, dim=nucleus_num)
 assert rindices_np.dtype is np.dtype(np.int32)
 for i in range(nucleus_num):
     assert rindices_np[i]==indices_np[i]
+
+# read nuclear coordinates without providing optional argument dim
+rcoords_np = tr.read_nucleus_coord(test_file2)
+assert rcoords_np.size==nucleus_num*3
 
 # read array of nuclear labels
 rlabels_2d = tr.read_nucleus_label(test_file2, dim=nucleus_num)
