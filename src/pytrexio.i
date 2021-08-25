@@ -73,13 +73,21 @@ import_array();
 
 /* Typemaps below change the type of numpy array dimensions from int to int64_t */
 %numpy_typemaps(double, NPY_DOUBLE, int64_t)
-%numpy_typemaps(int32_t, NPY_INT, int64_t)
+%numpy_typemaps(float, NPY_FLOAT, int64_t)
+%numpy_typemaps(int32_t, NPY_INT32, int64_t)
+%numpy_typemaps(int64_t, NPY_INT64, int64_t)
 /* Enable write|read_safe functions to convert numpy arrays from/to double arrays */
 %apply (double* ARGOUT_ARRAY1, int64_t DIM1) {(double * const dset_out, const int64_t dim_out)};
 %apply (double* IN_ARRAY1, int64_t DIM1) {(const double * dset_in, const int64_t dim_in)};
+/* Enable write|read_safe functions to convert numpy arrays from/to float arrays */
+%apply (float* ARGOUT_ARRAY1, int64_t DIM1) {(float * const dset_out, const int64_t dim_out)};
+%apply (float* IN_ARRAY1, int64_t DIM1) {(const float * dset_in, const int64_t dim_in)};
 /* Enable write|read_safe functions to convert numpy arrays from/to int32 arrays */
 %apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t * const dset_out, const int64_t dim_out)};
 %apply (int32_t* IN_ARRAY1, int64_t DIM1) {(const int32_t * dset_in, const int64_t dim_in)};
+/* Enable write|read_safe functions to convert numpy arrays from/to int64 arrays */
+%apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t * const dset_out, const int64_t dim_out)};
+%apply (int64_t* IN_ARRAY1, int64_t DIM1) {(const int64_t * dset_in, const int64_t dim_in)};
 
 /* This tells SWIG to treat char ** dset_in pattern as a special case 
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.

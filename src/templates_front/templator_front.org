@@ -787,14 +787,15 @@ def open(file_name: str, mode: str, back_end: int):
 
     Examples:
     >>> from trexio import open as tr_open
-    >>> trex_file = tr_open("example.h5", "w", TREXIO_HDF5)    
+    >>> trex_file = tr_open("example.h5", "w", TREXIO_HDF5)
     """
 
 
     try:
         trexio_file = trexio_open(file_name, mode, back_end)
-    except:
-        raise 
+        assert trexio_file is not None
+    except AssertionError:
+        raise Exception(f"Could not open TREXIO file {file_name} using trexio_open function. Please make sure that there are no typos in the file name.")
 
     return trexio_file
    #+end_src
@@ -1375,6 +1376,10 @@ trexio_exit_code trexio_read_$group_dset$_64(trexio_t* const file, $group_dset_d
 trexio_exit_code trexio_write_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* $group_dset$);
 trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const dset_out, const int64_t dim_out);
 trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file, const $group_dset_dtype_default$* dset_in, const int64_t dim_in);
+trexio_exit_code trexio_read_safe_$group_dset$_32(trexio_t* const file, $group_dset_dtype_single$* const dset_out, const int64_t dim_out);
+trexio_exit_code trexio_write_safe_$group_dset$_32(trexio_t* const file, const $group_dset_dtype_single$* dset_in, const int64_t dim_in);
+trexio_exit_code trexio_read_safe_$group_dset$_64(trexio_t* const file, $group_dset_dtype_double$* const dset_out, const int64_t dim_out);
+trexio_exit_code trexio_write_safe_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* dset_in, const int64_t dim_in);
      #+end_src
 
 **** Source code for double precision functions
