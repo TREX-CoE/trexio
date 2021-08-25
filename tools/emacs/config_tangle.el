@@ -18,17 +18,14 @@
 (setq org-confirm-babel-evaluate nil)
 (global-font-lock-mode t)
 (setq org-src-fontify-natively t)
+(require 'org)
 
 (org-babel-do-load-languages
  'org-babel-load-languages
  '(
    (emacs-lisp . t)
-   (shell . t)
    (python . t)
-   (fortran . t)
-   (C . t)
    (org . t)
-   (makefile . t)
    ))
 
 (setq org-babel-python-command "python3 -q")
