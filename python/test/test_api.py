@@ -9,7 +9,7 @@ import trexio as tr
 #=========================================================#
 
 # 0: TREXIO_HDF5 ; 1: TREXIO_TEXT
-TEST_TREXIO_BACKEND = tr.TREXIO_HDF5
+TEST_TREXIO_BACKEND = tr.TREXIO_TEXT
 OUTPUT_FILENAME_TEXT = 'test_py_swig.dir'
 OUTPUT_FILENAME_HDF5 = 'test_py_swig.h5'
 
@@ -37,7 +37,8 @@ except:
 #=========================================================#
 
 # create TREXIO file and open it for writing
-test_file = tr.open(output_filename, 'w', TEST_TREXIO_BACKEND)
+#test_file = tr.open(output_filename, 'w', TEST_TREXIO_BACKEND)
+test_file = tr.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND)
 
 # Print docstring of the tr.open function
 #print(tr.open.__doc__)
@@ -107,15 +108,19 @@ labels = [
 tr.write_nucleus_label(test_file,labels)
 
 # close TREXIO file 
-tr.close(test_file)
-
+# [TODO:] this functional call is no longer needed as we introduced TREXIO_File class which has a desctructor that closes the file
+#tr.close(test_file)
+# [TODO:] without calling destructor on test_file the TREXIO_FILE is not getting created and the data is not written when using TEXT back end. This, the user still has to explicitly call destructor on test_file object instead 
+# tr.close function. This is only an issue when the data is getting written and read in the same session (e.g. in Jupyter notebook)
+del test_file
 
 #==========================================================#
 #============ READ THE DATA FROM THE TEST FILE ============#
 #==========================================================#
 
 # open previously created TREXIO file, now in 'read' mode
-test_file2 = tr.open(output_filename, 'r', TEST_TREXIO_BACKEND)
+#test_file2 = tr.open(output_filename, 'r', TEST_TREXIO_BACKEND)
+test_file2 = tr.File(output_filename, 'r', TEST_TREXIO_BACKEND)
 
 # read nucleus_num from file
 rnum = tr.read_nucleus_num(test_file2)
@@ -164,7 +169,7 @@ rpoint_group = tr.read_nucleus_point_group(test_file2)
 assert rpoint_group==point_group 
 
 # close TREXIO file
-tr.close(test_file2)
+#tr.close(test_file2)
 
 # cleaning (remove the TREXIO file)
 try:

@@ -92,7 +92,7 @@ Moreover, exception handling becomes trivial thanks to the use of TREXIO exit co
 
 
 try:
-    from pytrexio.pytrexio import *
+    import pytrexio.pytrexio as pytr
 except ImportError:
     raise Exception("Could not import pytrexio module from trexio package")
 
@@ -558,6 +558,76 @@ struct trexio_s {
   char              padding[6];   /* Ensures the proper alignment of back ends */
 };
    #+end_src
+
+*** TREXIO_File Python class
+
+   #+begin_src python :tangle basic_python.py
+class File:
+    """TREXIO File object.
+
+    General information about the TREXIO file.
+
+    Parameters:
+
+    filename: str
+        Is a name of the full path to the TREXIO file.
+    back_end: int
+        One of the currently supported TREXIO back ends.
+        For example, TREXIO_HDF5 (0) or TREXIO_TEXT (1).
+    mode: str
+        One of the currently supported TREXIO open modes.
+        For example, 'r' or 'w'.
+    isOpen: bool
+        Flag indicating whether the current object is still open for I/O
+    pytrexio_s:
+        A PyObject corresponding to SWIG proxy of the trexio_s struct in C.
+        This argument is in fact a TREXIO file handle, which is required for
+        communicating with the C back end. 
+    info: dict
+        Dictionary of key-value pairs with additional information about the file.
+    """
+
+
+    def __init__(self, filename, mode='r', back_end=TREXIO_HDF5,
+                 pytrexio_s=None, info=None):
+        """This is a TREXIO File constructor."""
+
+        self.filename = filename
+        self.mode = mode
+        self.back_end = back_end
+       
+        self.isOpen = False 
+        if pytrexio_s is None:
+            self.pytrexio_s = open(filename, mode, back_end)
+            self.isOpen = True
+        else:
+            self.pytrexio_s = pytrexio_s
+            self.isOpen = None
+
+        self.info = info
+
+
+    def close(self):
+        """Close a TREXIO File."""
+
+        if self.isOpen:
+            close(self.pytrexio_s)
+            self.isOpen = False
+        else:
+            raise Exception("TREXIO File object has not been opened.")
+
+
+    def __del__(self):
+        """This is a TREXIO File destructor."""
+
+        if self.isOpen:
+            close(self.pytrexio_s)
+        elif self.isOpen is None:
+            raise Exception("[WIP]: TREXIO file handle provided but what if the file is already closed?")
+        else:
+            pass 
+   #+end_src
+
 ** Polymorphism of the file handle
 
    Polymorphism of the ~trexio_t~ type is handled by ensuring that the
@@ -767,7 +837,7 @@ end interface
 
 *** Python
 
-   #+begin_src c :tangle basic_python.py
+   #+begin_src python :tangle basic_python.py
 def open(file_name: str, mode: str, back_end: int):
     """Create TREXIO file or open existing one.
 
@@ -790,9 +860,8 @@ def open(file_name: str, mode: str, back_end: int):
     >>> trex_file = tr_open("example.h5", "w", TREXIO_HDF5)
     """
 
-
     try:
-        trexio_file = trexio_open(file_name, mode, back_end)
+        trexio_file = pytr.trexio_open(file_name, mode, back_end)
         assert trexio_file is not None
     except AssertionError:
         raise Exception(f"Could not open TREXIO file {file_name} using trexio_open function. Please make sure that there are no typos in the file name.")
@@ -924,19 +993,18 @@ end interface
 
 *** Python
 
-   #+begin_src c :tangle basic_python.py
+   #+begin_src python :tangle basic_python.py
 def close(trexio_file):
     """Close TREXIO file.
 
     Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
     """
 
-
     try:
-        rc = trexio_close(trexio_file)
+        rc = pytr.trexio_close(trexio_file)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
    #+end_src
 
 * Templates for front end
@@ -1292,7 +1360,7 @@ def write_$group_num$(trexio_file, num_w: int) -> None:
     Parameters:
 
     trexio_file:
-        TREXIO file handle.
+        TREXIO File object.
 
     num_w: int
         Value of the $group_num$ variable to be written.
@@ -1302,12 +1370,11 @@ def write_$group_num$(trexio_file, num_w: int) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-
     try:
-        rc = trexio_write_$group_num$(trexio_file, num_w)
+        rc = pytr.trexio_write_$group_num$(trexio_file.pytrexio_s, num_w)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise    
 
@@ -1317,7 +1384,7 @@ def write_$group_num$(trexio_file, num_w: int) -> None:
 def read_$group_num$(trexio_file) -> int: 
     """Read the $group_num$ variable from the TREXIO file.
 
-    Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~num_r~: int
@@ -1328,12 +1395,11 @@ def read_$group_num$(trexio_file) -> int:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-
     try:
-        rc, num_r = trexio_read_$group_num$(trexio_file)
+        rc, num_r = pytr.trexio_read_$group_num$(trexio_file.pytrexio_s)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise    
 
@@ -1884,7 +1950,7 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
     Parameters:
 
     trexio_file:
-        TREXIO file handle.
+        TREXIO File object.
 
     dset_w: list OR numpy.ndarray
         Array of $group_dset$ values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
@@ -1894,9 +1960,8 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-
     cutPrecision = False
-    if not isinstance(dset_w, list):
+    if not isinstance(dset_w, (list, tuple)):
        try:
            import numpy as np
        except ImportError:
@@ -1908,7 +1973,6 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
 
     if cutPrecision:
        try:
-       # TODO: we have to make sure that this conversion does not introduce any noise in the data.
            dset_64 = np.$group_dset_py_dtype$64(dset_w)
        except:
            raise
@@ -1916,13 +1980,13 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
 
     try:
         if cutPrecision:
-            rc = trexio_write_safe_$group_dset$_64(trexio_file, dset_64)
+            rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_64)
         else:
-            rc = trexio_write_safe_$group_dset$_64(trexio_file, dset_w)
+            rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_w)
 
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise    
 
@@ -1935,7 +1999,7 @@ def read_$group_dset$(trexio_file, dim = None, dtype = None):
     Parameters:
 
     trexio_file:
-        TREXIO file handle.
+        TREXIO File object.
 
     dim (Optional): int
         Size of the block to be read from the file (i.e. how many items of $group_dset$ will be returned)
@@ -1952,7 +2016,6 @@ def read_$group_dset$(trexio_file, dim = None, dtype = None):
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
-
     
     # if dim is not specified, read dimensions from the TREXIO file
     if dim is None:
@@ -1965,10 +2028,10 @@ def read_$group_dset$(trexio_file, dim = None, dtype = None):
     
 
     try:
-        rc, dset_64 = trexio_read_safe_$group_dset$_64(trexio_file, dim)
+        rc, dset_64 = pytr.trexio_read_safe_$group_dset$_64(trexio_file.pytrexio_s, dim)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise
 
@@ -2465,7 +2528,7 @@ def write_$group_dset$(trexio_file, dset_w: list) -> None:
     Parameters:
 
     trexio_file:
-        TREXIO file handle.
+        TREXIO File object.
 
     dset_w: list
         Array of $group_dset$ strings to be written.
@@ -2475,14 +2538,13 @@ def write_$group_dset$(trexio_file, dset_w: list) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-
     max_str_length = len(max(dset_w, key=len)) + 1
 
     try:
-        rc = trexio_write_$group_dset$(trexio_file, dset_w, max_str_length)
+        rc = pytr.trexio_write_$group_dset$(trexio_file.pytrexio_s, dset_w, max_str_length)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise    
 
@@ -2495,7 +2557,7 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
     Parameters:
 
     trexio_file:
-        TREXIO file handle.
+        TREXIO File object.
 
     dim (Optional): int
         Size of the block to be read from the file (i.e. how many items of $group_dset$ will be returned)
@@ -2510,7 +2572,6 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-
     # if dim is not specified, read dimensions from the TREXIO file
     if dim is None:
         $group_dset_dim$ = read_$group_dset_dim$(trexio_file) 
@@ -2522,16 +2583,16 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
 
 
     try:
-        rc, dset_1d_r = trexio_read_$group_dset$_low(trexio_file, PYTREXIO_MAX_STR_LENGTH)
+        rc, dset_1d_r = pytr.trexio_read_$group_dset$_low(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise    
 
 
     try:
-        dset_full = dset_1d_r.split(TREXIO_DELIM)
+        dset_full = dset_1d_r.split(pytr.TREXIO_DELIM)
         dset_2d_r = [dset_full[i] for i in range(dim) if dset_full[i]]
         assert dset_2d_r
     except AssertionError:
@@ -2726,7 +2787,7 @@ def write_$group_str$(trexio_file, str_w: str) -> None:
     Parameters:
 
     trexio_file:
-        TREXIO file handle.
+        TREXIO File object.
 
     str_w: str
         String corresponding to the $group_str$ variable to be written.
@@ -2736,14 +2797,13 @@ def write_$group_str$(trexio_file, str_w: str) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-
     max_str_length = len(str_w) + 1
 
     try:
-        rc = trexio_write_$group_str$(trexio_file, str_w, max_str_length)
+        rc = pytr.trexio_write_$group_str$(trexio_file.pytrexio_s, str_w, max_str_length)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise    
      #+end_src
@@ -2752,7 +2812,7 @@ def write_$group_str$(trexio_file, str_w: str) -> None:
 def read_$group_str$(trexio_file) -> str: 
     """Read the $group_str$ variable from the TREXIO file.
 
-    Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~str_r~: str
@@ -2763,12 +2823,11 @@ def read_$group_str$(trexio_file) -> str:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-
     try:
-        rc, str_r = trexio_read_$group_str$(trexio_file, PYTREXIO_MAX_STR_LENGTH)
+        rc, str_r = pytr.trexio_read_$group_str$(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
-        raise Exception(trexio_string_of_error(rc))
+        raise Exception(pytr.trexio_string_of_error(rc))
     except:
         raise    
 
