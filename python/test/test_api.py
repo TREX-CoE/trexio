@@ -9,7 +9,7 @@ import trexio as tr
 #=========================================================#
 
 # 0: TREXIO_HDF5 ; 1: TREXIO_TEXT
-TEST_TREXIO_BACKEND = tr.TREXIO_TEXT
+TEST_TREXIO_BACKEND = tr.TREXIO_HDF5
 OUTPUT_FILENAME_TEXT = 'test_py_swig.dir'
 OUTPUT_FILENAME_HDF5 = 'test_py_swig.h5'
 
@@ -49,7 +49,8 @@ tr.write_nucleus_num(test_file, nucleus_num)
 
 # initialize charge arrays as a list and convert it to numpy array
 charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
-charges_np = np.array(charges, dtype=np.float64)
+#charges_np = np.array(charges, dtype=np.float32)
+charges_np = np.array(charges, dtype=np.int32)
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemaps from numpy.i
@@ -58,7 +59,7 @@ tr.write_nucleus_charge(test_file, charges_np)
 # initialize arrays of nuclear indices as a list and convert it to numpy array
 indices = [i for i in range(nucleus_num)]
 # type cast is important here because by default numpy transforms a list of integers into int64 array
-indices_np = np.array(indices, dtype=np.int32)
+indices_np = np.array(indices, dtype=np.int64)
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemacs from numpy.i
@@ -108,6 +109,7 @@ tr.write_nucleus_label(test_file,labels)
 # close TREXIO file 
 tr.close(test_file)
 
+
 #==========================================================#
 #============ READ THE DATA FROM THE TEST FILE ============#
 #==========================================================#
@@ -131,10 +133,21 @@ except Exception:
     print("Unsafe call to safe API: checked")
 
 # safe call to read array of int values (nuclear indices)
-rindices_np = tr.read_basis_nucleus_index(test_file2, dim=nucleus_num)
-assert rindices_np.dtype is np.dtype(np.int32)
+rindices_np_16 = tr.read_basis_nucleus_index(test_file2, dim=nucleus_num, dtype=np.int16)
+assert rindices_np_16.dtype is np.dtype(np.int16)
 for i in range(nucleus_num):
-    assert rindices_np[i]==indices_np[i]
+    assert rindices_np_16[i]==indices_np[i]
+
+rindices_np_32 = tr.read_basis_nucleus_index(test_file2, dim=nucleus_num, dtype=np.int32)
+assert rindices_np_32.dtype is np.dtype(np.int32)
+for i in range(nucleus_num):
+    assert rindices_np_32[i]==indices_np[i]
+
+rindices_np_64 = tr.read_basis_nucleus_index(test_file2)
+assert rindices_np_64.dtype is np.dtype(np.int64)
+assert rindices_np_64.size==nucleus_num
+for i in range(nucleus_num):
+    assert rindices_np_64[i]==indices_np[i]
 
 # read nuclear coordinates without providing optional argument dim
 rcoords_np = tr.read_nucleus_coord(test_file2)

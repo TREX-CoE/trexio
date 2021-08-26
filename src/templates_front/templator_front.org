@@ -987,6 +987,7 @@ def close(trexio_file):
    | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(4)/integer(4)~ |
    | ~$group_dset_f_dtype_double$~  | Double precision datatype of the dataset [Fortran]  | ~real(8)/integer(8)~ |
    | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~              |
+   | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~          |
 
 
    Note: parent group name is always added to the child objects upon
@@ -1886,7 +1887,7 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         TREXIO file handle.
 
     dset_w: list OR numpy.ndarray
-        Array of $group_dset$ values to be written.
+        Array of $group_dset$ values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
     
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
@@ -1894,8 +1895,31 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
     """
 
 
+    cutPrecision = False
+    if not isinstance(dset_w, list):
+       try:
+           import numpy as np
+       except ImportError:
+           raise Exception("NumPy cannot be imported.")
+       
+       if isinstance(dset_w, np.ndarray) and (not dset_w.dtype==np.int64 or not dset_w.dtype==np.float64):
+           cutPrecision = True
+
+
+    if cutPrecision:
+       try:
+       # TODO: we have to make sure that this conversion does not introduce any noise in the data.
+           dset_64 = np.$group_dset_py_dtype$64(dset_w)
+       except:
+           raise
+    
+
     try:
-        rc = trexio_write_safe_$group_dset$(trexio_file, dset_w)
+        if cutPrecision:
+            rc = trexio_write_safe_$group_dset$_64(trexio_file, dset_64)
+        else:
+            rc = trexio_write_safe_$group_dset$_64(trexio_file, dset_w)
+
         assert rc==TREXIO_SUCCESS
     except AssertionError:
         raise Exception(trexio_string_of_error(rc))
@@ -1905,7 +1929,7 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
      #+end_src
 
      #+begin_src python :tangle read_dset_data_front.py
-def read_$group_dset$(trexio_file, dim = None): 
+def read_$group_dset$(trexio_file, dim = None, dtype = None): 
     """Read the $group_dset$ array of numbers from the TREXIO file.
 
     Parameters:
@@ -1917,8 +1941,11 @@ def read_$group_dset$(trexio_file, dim = None):
         Size of the block to be read from the file (i.e. how many items of $group_dset$ will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
+    dtype (Optional): type
+        NumPy data type of the output (e.g. np.int32|int16 or np.float32|float16). If specified, the output array will be converted from the default double precision.
+
     Returns:
-        ~dset_r~: numpy.ndarray
+        ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray 
         1D NumPy array with ~dim~ elements corresponding to $group_dset$ values read from the TREXIO file.
 
     Raises:
@@ -1938,16 +1965,41 @@ def read_$group_dset$(trexio_file, dim = None):
     
 
     try:
-        rc, dset_r = trexio_read_safe_$group_dset$(trexio_file, dim)
+        rc, dset_64 = trexio_read_safe_$group_dset$_64(trexio_file, dim)
         assert rc==TREXIO_SUCCESS
     except AssertionError:
         raise Exception(trexio_string_of_error(rc))
     except:
-        raise    
+        raise
+
+
+    isConverted = False
+    dset_converted = None
+    if dtype is not None:
+        try:
+            import numpy as np
+        except ImportError:
+            raise Exception("NumPy cannot be imported.")
+        
+        try:
+            assert isinstance(dtype, type)
+        except AssertionError:
+            raise TypeError("dtype argument has to be an instance of the type class (e.g. np.float32).")
+
+
+        if not dtype==np.int64 or not dtype==np.float64:
+            try:
+                dset_converted = np.array(dset_64, dtype=dtype)
+            except:
+                raise
+                
+            isConverted = True
 
     # additional assert can be added here to check that read_safe functions returns numpy array of proper dimension
-
-    return dset_r
+    if isConverted:
+        return dset_converted
+    else:
+        return dset_64
      #+end_src
 ** Sparse data structures
 
