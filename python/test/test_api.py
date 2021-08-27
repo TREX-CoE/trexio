@@ -9,7 +9,7 @@ import trexio as tr
 #=========================================================#
 
 # 0: TREXIO_HDF5 ; 1: TREXIO_TEXT
-TEST_TREXIO_BACKEND = tr.TREXIO_TEXT
+TEST_TREXIO_BACKEND = 0
 OUTPUT_FILENAME_TEXT = 'test_py_swig.dir'
 OUTPUT_FILENAME_HDF5 = 'test_py_swig.h5'
 
@@ -35,6 +35,8 @@ except:
 #=========================================================#
 #============ WRITE THE DATA IN THE TEST FILE ============#
 #=========================================================#
+
+
 
 # create TREXIO file and open it for writing
 #test_file = tr.open(output_filename, 'w', TEST_TREXIO_BACKEND)
@@ -114,6 +116,8 @@ tr.write_nucleus_label(test_file,labels)
 # tr.close function. This is only an issue when the data is getting written and read in the same session (e.g. in Jupyter notebook)
 del test_file
 
+
+
 #==========================================================#
 #============ READ THE DATA FROM THE TEST FILE ============#
 #==========================================================#
@@ -156,7 +160,12 @@ for i in range(nucleus_num):
 
 # read nuclear coordinates without providing optional argument dim
 rcoords_np = tr.read_nucleus_coord(test_file2)
+
 assert rcoords_np.size==nucleus_num*3
+np.testing.assert_array_almost_equal(rcoords_np, np.array(coords).reshape(nucleus_num,3), decimal=8)
+
+# set doReshape to False to get a flat 1D array (e.g. when reading matrices like nuclear coordinates)
+#rcoords_reshaped_2 = tr.read_nucleus_coord(test_file2, doReshape=False)
 
 # read array of nuclear labels
 rlabels_2d = tr.read_nucleus_label(test_file2, dim=nucleus_num)
