@@ -113,7 +113,7 @@ np.testing.assert_array_almost_equal(rcharges_np, charges_np, decimal=8)
 # unsafe call to read_safe should not only have return code = TREXIO_UNSAFE_ARRAY_DIM
 # TODO: it should not return numpy array filled with garbage
 rc, rcharges_fail = trexio_read_safe_nucleus_charge(test_file2, nucleus_num*5)
-assert rc==TREXIO_UNSAFE_ARRAY_DIM
+assert rc==23
 
 # less Python-ic way to read/write arrays using Array classes (probably more portable to other languages)
 #charges2 = doubleArray(nucleus_num)
