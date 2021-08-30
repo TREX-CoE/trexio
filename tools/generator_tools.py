@@ -111,25 +111,27 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
             with open(join(templ_path,fname_new), 'a') as f_out :
                 num_written = []
                 for line in f_in :
-                        # special case to add error handling for read/write of dimensioning variables
-                        if '$group_dset_dim$' in line:
-                            rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
-                            indentlevel = len(line) - len(line.lstrip())
-                            for dim in detailed_source[item]['dims']:
-                                if not dim.isdigit() and not dim in num_written:
-                                    num_written.append(dim)
-                                    templine = line.replace('$group_dset_dim$', dim)
-                                    if '_read' in templine and (not 'fortran' in fname):
-                                            line_toadd = indentlevel*" " + rc_line
-                                            templine += line_toadd
+                    # special case to add error handling for read/write of dimensioning variables
+                    if '$group_dset_dim$' in line:
+                        rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
+                        indentlevel = len(line) - len(line.lstrip())
+                        for dim in detailed_source[item]['dims']:
+                            if not dim.isdigit() and not dim in num_written:
+                                num_written.append(dim)
+                                templine = line.replace('$group_dset_dim$', dim)
+                                if '_read' in templine and (not 'fortran' in fname):
+                                        line_toadd = indentlevel*" " + rc_line
+                                        templine += line_toadd
 
-                                    f_out.write(templine)
-                            num_written = []
-                            continue
-                        # general case of recursive replacement of inline triggers 
-                        else:
-                            populated_line = recursive_replace_line(line, triggers, detailed_source[item])
-                            f_out.write(populated_line)
+                                f_out.write(templine)
+                        num_written = []
+                        continue
+                    # general case of recursive replacement of inline triggers 
+                    else:
+                        populated_line = recursive_replace_line(line, triggers, detailed_source[item])
+                        f_out.write(populated_line)
+
+                f_out.write("\n")
 
 
 def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
@@ -214,6 +216,8 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                     f_out.write(populated_line)
                 else:
                     f_out.write(line)
+                    
+            f_out.write("\n")
 
 
 def iterative_replace_line (input_line: str, case: str, source: dict, add_line: str) -> str:
@@ -402,6 +406,8 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                             f_out.write(line)
                     else:
                         loop_body += line
+
+                f_out.write("\n")
 
 
 def get_template_path (filename: str, path_dict: dict) -> str:
