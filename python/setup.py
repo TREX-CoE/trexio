@@ -14,6 +14,17 @@ c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+VERSIONFILE = "pytrexio/_version.py"
+try:
+    exec(open(VERSIONFILE).read())
+except:
+    raise IOError(f"Could not open the version file {VERSIONFILE}.")
+
+version_r = __version__
+if not version_r:
+    raise RuntimeError(f"Unable to find a version string in {VERSIONFILE}.")
+
+
 # =========================== Start of the HDF5 block =========================== #
 # The block below is needed to derive additional flags related to the HDF5 library,
 # which is required to build pytrexio extension module during the setup.py execution
@@ -55,7 +66,7 @@ pytrexio_module = Extension('pytrexio._pytrexio',
 
 
 setup(name             = 'trexio',
-      version          = '0.1',
+      version          = version_r,
       author           = "TREX-CoE",
       author_email     = "posenitskiy@irsamc.ups-tlse.fr",
       description      = """Python API of the TREXIO library""",
