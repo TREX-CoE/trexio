@@ -450,6 +450,21 @@ end interface
 **** Python interface
 
   #+begin_src python :tangle prefix_python.py :noexport
+class Error(Exception):
+    """Base class for TREXIO errors.
+
+    Attributes:
+       error: int -- exit code returned by the call to TREXIO library;
+       message: str -- decoded string corresponding to trexio_exit_code.
+
+    """
+
+    def __init__(self, trexio_return_code):
+        self.error = trexio_return_code
+        self.message = string_of_error(trexio_return_code)
+        super().__init__(self.message)
+
+
 def string_of_error(return_code: int) -> str:
     """Decode the TREXIO exit code.
 
@@ -458,9 +473,8 @@ def string_of_error(return_code: int) -> str:
     Returns string that contains description of TREXIO ~return_code~.
     """
 
-
     try:
-        error_str = trexio_string_of_error(trexio_return_code)
+        error_str = pytr.trexio_string_of_error(return_code)
     except:
         raise 
 
@@ -1002,9 +1016,10 @@ def close(trexio_file):
 
     try:
         rc = pytr.trexio_close(trexio_file)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
+    except:
+        raise
    #+end_src
 
 * Templates for front end
@@ -1372,9 +1387,8 @@ def write_$group_num$(trexio_file, num_w: int) -> None:
 
     try:
         rc = pytr.trexio_write_$group_num$(trexio_file.pytrexio_s, num_w)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise    
 
@@ -1397,9 +1411,8 @@ def read_$group_num$(trexio_file) -> int:
 
     try:
         rc, num_r = pytr.trexio_read_$group_num$(trexio_file.pytrexio_s)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise    
 
@@ -1984,9 +1997,8 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         else:
             rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_w)
 
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise    
 
@@ -2046,9 +2058,9 @@ def read_$group_dset$(trexio_file, dim = None, doReshape = None, dtype = None):
 
     try:
         rc, dset_64 = pytr.trexio_read_safe_$group_dset$_64(trexio_file.pytrexio_s, dim)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise
 
@@ -2568,9 +2580,9 @@ def write_$group_dset$(trexio_file, dset_w: list) -> None:
 
     try:
         rc = pytr.trexio_write_$group_dset$(trexio_file.pytrexio_s, dset_w, max_str_length)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise    
 
@@ -2610,9 +2622,9 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
 
     try:
         rc, dset_1d_r = pytr.trexio_read_$group_dset$_low(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise    
 
@@ -2620,9 +2632,10 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
     try:
         dset_full = dset_1d_r.split(pytr.TREXIO_DELIM)
         dset_2d_r = [dset_full[i] for i in range(dim) if dset_full[i]]
-        assert dset_2d_r
-    except AssertionError:
-        raise TypeError(f"Output of {read_$group_dset$.__name__} function cannot be an empty list.")
+        if not dset_2d_r:
+            raise ValueError(f"Output of {read_$group_dset$.__name__} function cannot be an empty list.")
+    except:
+        raise
 
     return dset_2d_r
      #+end_src
@@ -2827,9 +2840,9 @@ def write_$group_str$(trexio_file, str_w: str) -> None:
 
     try:
         rc = pytr.trexio_write_$group_str$(trexio_file.pytrexio_s, str_w, max_str_length)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise    
      #+end_src
@@ -2851,9 +2864,9 @@ def read_$group_str$(trexio_file) -> str:
 
     try:
         rc, str_r = pytr.trexio_read_$group_str$(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
-        assert rc==TREXIO_SUCCESS
-    except AssertionError:
-        raise Exception(pytr.trexio_string_of_error(rc))
+
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
     except:
         raise    
 
