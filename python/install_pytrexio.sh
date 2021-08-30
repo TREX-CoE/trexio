@@ -27,7 +27,7 @@ python3 setup.py sdist bdist_wheel
 # Install pytrexio in the current environment from the aforementioned wheel
 # --force-reinstall is needed here because build-system pre-installs pytrexio in the environment 
 #                   but does not install things in the corresponding site-packages directory
-python3 -m pip install dist/trexio-0.1-*.whl --force-reinstall
+python3 -m pip install dist/trexio-*.whl --force-reinstall
 
 # Run the command below in the root directory to install the package in 'editable' (-e) mode without dependencies (--no-deps)
 #python -m pip install -e . --no-deps
