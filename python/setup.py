@@ -18,11 +18,11 @@ VERSIONFILE = "pytrexio/_version.py"
 try:
     exec(open(VERSIONFILE).read())
 except:
-    raise IOError(f"Could not open the version file {VERSIONFILE}.")
+    raise IOError("Could not open the version file %s." % (VERSIONFILE, ))
 
 version_r = __version__
 if not version_r:
-    raise RuntimeError(f"Unable to find a version string in {VERSIONFILE}.")
+    raise RuntimeError("Unable to find a version string in %s." % (VERSIONFILE, ))
 
 
 # =========================== Start of the HDF5 block =========================== #
@@ -55,10 +55,16 @@ h5_ldflags = h5_ldflags_withl.split(" ")[0]
 
 # ============================ End of the HDF5 block ============================ #
 
+# we need to explicitly provide an include path to the numpy headers in some environments (e.g. in Docker containers)
+try:
+    from numpy import get_include as np_get_include
+except ImportError:
+    raise Exception("numpy Python package has not been found")
+
 # Define pytrexio extension module based on TREXIO source codes + SWIG-generated wrapper
 pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
-                            include_dirs = [h5_cflags, srcpath],
+                            include_dirs = [h5_cflags, srcpath, np_get_include()],
                             libraries = ['hdf5', 'hdf5_hl'],
                             extra_compile_args = ['-Wno-discarded-qualifiers'],
                             extra_link_args = [h5_ldflags]
@@ -72,6 +78,7 @@ setup(name             = 'trexio',
       description      = """Python API of the TREXIO library""",
       long_description = long_description,
       long_description_content_type = "text/markdown",
+      install_requires = ['numpy'],
       ext_modules      = [pytrexio_module],
       py_modules       = ['trexio'],
       packages         = ['pytrexio'],
@@ -82,7 +89,6 @@ setup(name             = 'trexio',
          "Programming Language :: C",
          "License :: OSI Approved :: BSD License",
          "Operating System :: POSIX :: Linux"
-      ],
-      install_requires = ['h5py']
+      ]
       )
 
