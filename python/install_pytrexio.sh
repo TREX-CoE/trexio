@@ -11,6 +11,7 @@ H5_LDFLAGS_LOCAL=$2
 
 # Install/upgrade packages required for the installation
 python3 -m pip install --upgrade setuptools wheel twine
+python3 -m pip install -r requirements.txt
 
 # Create build directory and compile extension files (*.c)
 # --no-user-cfg disables custom .cfg files of the user machine, so that only setup.cfg is used
