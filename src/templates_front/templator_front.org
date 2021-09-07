@@ -1973,35 +1973,48 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    cutPrecision = False
-    if not isinstance(dset_w, (list, tuple)):
-       try:
-           import numpy as np
-       except ImportError:
-           raise Exception("NumPy cannot be imported.")
-       
-       if isinstance(dset_w, np.ndarray) and (not dset_w.dtype==np.int64 or not dset_w.dtype==np.float64):
-           cutPrecision = True
-
-
-    if cutPrecision:
-       try:
-           dset_64 = np.$group_dset_py_dtype$64(dset_w)
-       except:
-           raise
-    
-
     try:
-        if cutPrecision:
-            rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_64)
-        else:
-            rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_w)
+        import numpy as np
+    except ImportError:
+        raise Exception("NumPy cannot be imported.")
 
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise    
+    doConversion = False
+    doFlatten = False
+    if not isinstance(dset_w, (list, tuple)):
+       # if input array is not a list or tuple then it is probably a numpy array
+       if isinstance(dset_w, np.ndarray) and (not dset_w.dtype==np.int64 or not dset_w.dtype==np.float64):
+           doConversion = True
 
+       if len(dset_w.shape) > 1:
+           doFlatten = True
+           if doConversion:
+               dset_64 = np.$group_dset_py_dtype$64(dset_w).flatten()
+           else:
+               dset_flat = np.array(dset_w, dtype=np.$group_dset_py_dtype$64).flatten()
+       else:
+           if doConversion:
+               dset_64 = np.$group_dset_py_dtype$64(dset_w)
+           
+    else:
+       # if input array is a multidimensional list or tuple, we have to convert it
+       try:
+           doFlatten = True
+           ncol = len(dset_w[0])
+           dset_flat = np.array(dset_w, dtype=np.$group_dset_py_dtype$64).flatten()
+       except TypeError:
+           doFlatten = False
+           pass
+
+
+    if doConversion:
+        rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_64)
+    elif doFlatten:
+        rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_flat)
+    else:
+        rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_w)
+    
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
      #+end_src
 
      #+begin_src python :tangle read_dset_data_front.py
