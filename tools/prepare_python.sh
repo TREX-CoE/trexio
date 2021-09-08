@@ -30,5 +30,5 @@ cp ${SRC}/*.h ${PYDIR}/src
 cp ${INCLUDIR}/trexio.h ${PYDIR}/src 
 
 # Copy additional info
-cp ${TREXIO_ROOT}/AUTHORS ${TREXIO_ROOT}/LICENSE ${TREXIO_ROOT}/README.md ${PYDIR}
+cp ${TREXIO_ROOT}/AUTHORS ${TREXIO_ROOT}/LICENSE ${PYDIR}
 

@@ -9,7 +9,7 @@ TREX library for efficient I/O.
 
 ## Minimal requirements (for users):
 
-- Autotools             (autoconf, automake, libtool)
+- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2)
 - C compiler            (gcc/icc/clang)
 - Fortran compiler      (gfortran/ifort)
 - HDF5 library          (>= 1.8)
@@ -62,6 +62,11 @@ For example, consider the `coord` variable (array), which belongs to the `nucleu
 Note: the `[variable]` names have to be unique only within the corresponding parent `[group]`. 
 There is no naming conflict when, for example, `num` variable exists both in the `nucleus` group (i.e. the number of nuclei) and in the `mo` group (i.e. the number of molecular orbitals). 
 These quantities can be accessed using the corresponding `trexio_[has|read|write]_nucleus_num` and `trexio_[has|read|write]_mo_num`, respectively.
+
+
+## Python API
+
+For more details regarding the installation and usage of the TREXIO Python API, see [this page](python/README.md).
 
 
 ## Tutorial
