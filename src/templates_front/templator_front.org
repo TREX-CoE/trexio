@@ -85,9 +85,7 @@ module trexio
   #+begin_src python :tangle prefix_python.py
 """The Python API of the TREXIO library. 
 
-This module contains wrappers of the pytrexio.py module produced by SWIG.
-Top-level wrapper like this allows to extend functionality of SWIG-generated codes.
-Moreover, exception handling becomes trivial thanks to the use of TREXIO exit codes.
+This package is a top-level wrapper of the SWIG-generated pytrexio module.
 """
 
 
@@ -98,6 +96,13 @@ except ImportError:
 
 # define max length of a string to be read, required for the low-level C routines
 PYTREXIO_MAX_STR_LENGTH = 2048
+
+# setuptools do not assign __version__ variable to the trexio package, so we set it manually
+from os import path
+__trexio_path__ = path.dirname(path.abspath(__file__))
+__pytrexio_path__ = path.join(__trexio_path__, 'pytrexio')
+with open(path.join(__pytrexio_path__, '_version.py')) as version_file:
+    __version__ = version_file.read().split('"')[1]
   #+end_src
 
 * Coding conventions
