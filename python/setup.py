@@ -1,15 +1,15 @@
-#!/usr/bin/env python
-
 """
 setup.py file for TREXIO Python package
 """
-
+from distutils.sysconfig import get_python_inc
 from setuptools import setup, Extension
 import os
 
 rootpath = os.path.dirname(os.path.abspath(__file__))
 srcpath = os.path.join(rootpath, 'src')
 c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
+
+numpy_includedir = os.path.join(get_python_inc(plat_specific=1), 'numpy')
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -55,16 +55,10 @@ h5_ldflags = h5_ldflags_withl.split(" ")[0]
 
 # ============================ End of the HDF5 block ============================ #
 
-# we need to explicitly provide an include path to the numpy headers in some environments (e.g. in Docker containers)
-try:
-    from numpy import get_include as np_get_include
-except ImportError:
-    raise Exception("numpy Python package has not been found")
-
 # Define pytrexio extension module based on TREXIO source codes + SWIG-generated wrapper
 pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
-                            include_dirs = [h5_cflags, srcpath, np_get_include()],
+                            include_dirs = [h5_cflags, srcpath, numpy_includedir],
                             libraries = ['hdf5', 'hdf5_hl'],
                             extra_compile_args = ['-Wno-discarded-qualifiers'],
                             extra_link_args = [h5_ldflags]
@@ -78,17 +72,25 @@ setup(name             = 'trexio',
       description      = """Python API of the TREXIO library""",
       long_description = long_description,
       long_description_content_type = "text/markdown",
-      install_requires = ['numpy'],
       ext_modules      = [pytrexio_module],
       py_modules       = ['trexio'],
       packages         = ['pytrexio'],
       url              = 'https://github.com/TREX-CoE/trexio',
       license          = 'BSD',
       classifiers=[
-         "Programming Language :: Python :: 3",
+         "Intended Audience :: Science/Research",
+         "Intended Audience :: Developers",
+         "Topic :: Scientific/Engineering",
          "Programming Language :: C",
+         "Programming Language :: Python",
+         "Programming Language :: Python :: 3",
+         "Programming Language :: Python :: 3 :: Only",
+         "Programming Language :: Python :: Implementation :: CPython",
          "License :: OSI Approved :: BSD License",
-         "Operating System :: POSIX :: Linux"
-      ]
+         "Operating System :: POSIX",
+         "Operating System :: Unix",
+         "Operating System :: MacOS"
+      ],
+      install_requires = ['numpy']
       )
 
