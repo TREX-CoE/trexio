@@ -1,0 +1,45 @@
+First, make sure to place the source code distribution (suffixed with .tar.gz) of the TREXIO Python API in this directory.
+
+TODO: the scripts have to be adapted for an arbitrary version of TREXIO and Python !
+
+Outside Docker image:
+
+# Build containers with hdf5 inside:
+
+# for manylinux2014_x86_64
+sudo docker build -t hdf5_1_12_on_2014_x86_64 . -f Dockerfile_2014_x86_64
+
+# for manylinux_2_24_x86_64
+sudo docker build -t hdf5_1_12_on_2_24_x86_64 . -f Dockerfile_2_24_x86_64
+
+# (create an image using HDF5 containers, see https://github.com/h5py/hdf5-manylinux)
+# -t hdf5_1_12_on_${PLATFORM} builds an image with a custom name (hdf5_1_12_1)
+
+# Run one of the produced containers in the interactive mode
+
+# for manylinux2014_x86_64
+sudo docker run --rm -it -e PLAT=manylinux2014_x86_64 -v `pwd`:/tmp hdf5_1_12_on_2014_x86_64 /bin/bash
+
+# for manylinux_2_24_x86_64
+sudo docker run --rm -it -e PLAT=manylinux_2_24_x86_64 -v `pwd`:/tmp hdf5_1_12_on_2_24_x86_64 /bin/bash
+
+#(PLAT specifies the base platform tag for manilinux)
+#-i (run docker container interactively)
+#-t f8e4232fa208 (run an image using ID if the image is not named)
+#/bin/bash (a binary to run inside a container environment)
+
+In the Docker image:
+
+cd tmp && ./build_manylinux_wheels_py_36_37_38.sh
+# (creates virtual environments, installs things with pip, produces conventional wheels and repairs them with auditwheel)
+
+# auditwheel repair trexio-0.1.0/dist/trexio-0.1.0-cp37-cp37m-linux_x86_64.whl
+# (repairs wheel and produces manylinux one)
+
+After Docker container execution:
+
+# the produced manylinux wheels are in trexio-0.1.0/wheelhouse directory
+
+# ALTERNATIVELY: one can copy the produced manylinux wheel from the container back to the host system
+sudo docker cp $CONTAINER_ID:/tmp/trexio-0.1.0/wheelhouse/MANYLINUX_NAME.whl directory-on-the-user-machine/
+
