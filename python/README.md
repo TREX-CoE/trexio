@@ -31,8 +31,12 @@ For more details, see the corresponding part of the [Python documentation](https
 1. Download the latest source code distribution (in `.tar.gz` format) of the TREXIO Python API
 2. Unpack and `cd` in the output directory
 3. Run `pip3 install -r requirements.txt` (this installs all python dependencies)
-4. Run `pip3 install .` (this installs `trexio` in your environment)
-5. Run `cd test && python3 test_api.py` (this executes several tests that verify the installation)
+4. Export custom environment variables needed for the installation. Steps 1 and 2 can be skipped if HDF5 is properly configured for `pkg-config` (i.e. if executing `pkg-config --libs hdf5` returns a list of options).
+   1. `export H5_CFLAGS=-I/path/to/hdf5/include`
+   2. `export H5_LDFLAGS=-L/path/to/hdf5/lib`
+   3. `source tools/set_NUMPY_INCLUDEDIR.sh`
+5. Run `pip3 install .` (this installs `trexio` in your environment)
+6. Run `cd test && python3 test_api.py` (this executes several tests that verify the installation)
 
 You are ready to go!
 
@@ -54,8 +58,9 @@ The example notebook can be launched using the following command:
 
 #### Additional steps needed to run a custom virtual environment in Jupyter notebooks
 
-If you have installed `trexio` in a virtual environemnt called, e.g. `myvenv`, but would like to use your system-wide Jupyter installation, this is also possible.
-This requires `ipykernel` python package to be installed, which usually comes together with the Jupyter installation. If this is not the case, run `pip install ipykernel`. 
+In some cases, it may happen that the Jupyter kernels in the activated virtual environment (e.g. `myvenv`) still point to the system-wide python binaries and not to the environment ones.
+This will result in `ImportError` when importing `trexio` in the notebook cell. In order to avoid this, the `myvenv` has to be installed as an additional kernel.
+This requires `ipykernel` python package, which usually comes together with the Jupyter installation. If this is not the case, run `pip install ipykernel`. 
 You can install `myvenv` as a kernel by executing the following command:
 
 `python3 -m ipykernel install --user --name=myvenv`
