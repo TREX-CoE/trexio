@@ -205,6 +205,10 @@ python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
 		./install_pytrexio.sh $(HDF5_CFLAGS) $(HDF5_LDFLAGS)
 
+python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
+	cd python && \
+		python setup.py sdist
+
 $(pytrexio_py): $(pytrexio_c) 
 	cd tools && ./prepare_python.sh
 
@@ -228,7 +232,7 @@ CLEANFILES += $(pytrexio_c) \
               python/src/*.c \
               python/src/*.h
 
-.PHONY: cppcheck python-test python-install check-numpy
+.PHONY: cppcheck python-test python-install python-sdist check-numpy
 
 endif
 
