@@ -1,15 +1,36 @@
+#!/usr/bin/env python3
 """
 setup.py file for TREXIO Python package
 """
-from distutils.sysconfig import get_python_inc
-from setuptools import setup, Extension
+
+
 import os
+from setuptools import setup, Extension
+
+# this was recommended to solve the problem of the missing numpy header files
+# bit it causes `pip install .` to fail with numpy module not found error
+#try:
+#    import numpy
+#except ImportError:
+#    raise Exception("numpy Python package cannot be imported.")
+#numpy_includedir = numpy.get_include()
+
+# this does not cause aforementioned issue but the includedir points to system-wide numpy and not to venv-wide
+#from distutils.sysconfig import get_python_inc
+#numpy_includedir = os.path.join(get_python_inc(plat_specific=1), 'numpy')
+
+# dirty workaround: get numpy includedir from the environment variable that can be pre-set using set_NUMPY_INCLUDEDIR.sh
+numpy_includedir = os.environ.get("NUMPY_INCLUDEDIR", None)
+numpy_isUndefined = numpy_includedir is None or numpy_includedir==""
+
+if numpy_isUndefined:
+    raise Exception("NUMPY_INCLUDEDIR environment variable is not specified. Please do it manually or execute set_NUMPY_INCLUDEDIR.sh script.")
+
 
 rootpath = os.path.dirname(os.path.abspath(__file__))
 srcpath = os.path.join(rootpath, 'src')
 c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
 
-numpy_includedir = os.path.join(get_python_inc(plat_specific=1), 'numpy')
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -40,7 +61,7 @@ if h5_ldflags_isUndefined or h5_cflags_isUndefined:
     try:
         import pkgconfig as pk
     except ImportError:
-        raise Exception("pkgconfig Python package has not been found")
+        raise Exception("pkgconfig Python package cannot be imported.")
 
     try:
         assert pk.exists('hdf5')
@@ -91,6 +112,8 @@ setup(name             = 'trexio',
          "Operating System :: Unix",
          "Operating System :: MacOS"
       ],
+      python_requires = ">=3.6",
+      setup_requires = ['numpy', 'pkgconfig'],
       install_requires = ['numpy']
       )
 
