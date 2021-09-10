@@ -148,34 +148,36 @@ with open(path.join(__pytrexio_path__, '_version.py')) as version_file:
 ** Error handling
 
       #+NAME: table-exit-codes
-   | Macro                        | Code | Description                          |
-   |------------------------------+------+--------------------------------------|
-   | ~TREXIO_FAILURE~             |   -1 | 'Unknown failure'                    |
-   | ~TREXIO_SUCCESS~             |    0 | 'Success'                            |
-   | ~TREXIO_INVALID_ARG_1~       |    1 | 'Invalid argument 1'                 |
-   | ~TREXIO_INVALID_ARG_2~       |    2 | 'Invalid argument 2'                 |
-   | ~TREXIO_INVALID_ARG_3~       |    3 | 'Invalid argument 3'                 |
-   | ~TREXIO_INVALID_ARG_4~       |    4 | 'Invalid argument 4'                 |
-   | ~TREXIO_INVALID_ARG_5~       |    5 | 'Invalid argument 5'                 |
-   | ~TREXIO_END~                 |    6 | 'End of file'                        |
-   | ~TREXIO_READONLY~            |    7 | 'Read-only file'                     |
-   | ~TREXIO_ERRNO~               |    8 | strerror(errno)                      |
-   | ~TREXIO_INVALID_ID~          |    9 | 'Invalid ID'                         |
-   | ~TREXIO_ALLOCATION_FAILED~   |   10 | 'Allocation failed'                  |
-   | ~TREXIO_HAS_NOT~             |   11 | 'Element absent'                     |
-   | ~TREXIO_INVALID_NUM~         |   12 | 'Invalid dimensions'                 |
-   | ~TREXIO_ATTR_ALREADY_EXISTS~ |   13 | 'Attribute (num/str) already exists' |
-   | ~TREXIO_DSET_ALREADY_EXISTS~ |   14 | 'Dataset already exists'             |
-   | ~TREXIO_OPEN_ERROR~          |   15 | 'Error opening file'                 |
-   | ~TREXIO_LOCK_ERROR~          |   16 | 'Error locking file'                 |
-   | ~TREXIO_UNLOCK_ERROR~        |   17 | 'Error unlocking file'               |
-   | ~TREXIO_FILE_ERROR~          |   18 | 'Invalid file handle'                |
-   | ~TREXIO_GROUP_READ_ERROR~    |   19 | 'Error reading group'                |
-   | ~TREXIO_GROUP_WRITE_ERROR~   |   20 | 'Error writing group'                |
-   | ~TREXIO_ELEM_READ_ERROR~     |   21 | 'Error reading element'              |
-   | ~TREXIO_ELEM_WRITE_ERROR~    |   22 | 'Error writing element'              |
-   | ~TREXIO_UNSAFE_ARRAY_DIM~    |   23 | 'Access to memory beyond allocated'  |
-   | ~TREXIO_INVALID_STR_LEN~     |   30 | 'Invalid max_str_len'                |
+   | Macro                        | Code | Description                            |
+   |------------------------------+------+----------------------------------------|
+   | ~TREXIO_FAILURE~             |   -1 | 'Unknown failure'                      |
+   | ~TREXIO_SUCCESS~             |    0 | 'Success'                              |
+   | ~TREXIO_INVALID_ARG_1~       |    1 | 'Invalid argument 1'                   |
+   | ~TREXIO_INVALID_ARG_2~       |    2 | 'Invalid argument 2'                   |
+   | ~TREXIO_INVALID_ARG_3~       |    3 | 'Invalid argument 3'                   |
+   | ~TREXIO_INVALID_ARG_4~       |    4 | 'Invalid argument 4'                   |
+   | ~TREXIO_INVALID_ARG_5~       |    5 | 'Invalid argument 5'                   |
+   | ~TREXIO_END~                 |    6 | 'End of file'                          |
+   | ~TREXIO_READONLY~            |    7 | 'Read-only file'                       |
+   | ~TREXIO_ERRNO~               |    8 | strerror(errno)                        |
+   | ~TREXIO_INVALID_ID~          |    9 | 'Invalid ID'                           |
+   | ~TREXIO_ALLOCATION_FAILED~   |   10 | 'Allocation failed'                    |
+   | ~TREXIO_HAS_NOT~             |   11 | 'Element absent'                       |
+   | ~TREXIO_INVALID_NUM~         |   12 | 'Invalid dimensions'                   |
+   | ~TREXIO_ATTR_ALREADY_EXISTS~ |   13 | 'Attribute already exists'             |
+   | ~TREXIO_DSET_ALREADY_EXISTS~ |   14 | 'Dataset already exists'               |
+   | ~TREXIO_OPEN_ERROR~          |   15 | 'Error opening file'                   |
+   | ~TREXIO_LOCK_ERROR~          |   16 | 'Error locking file'                   |
+   | ~TREXIO_UNLOCK_ERROR~        |   17 | 'Error unlocking file'                 |
+   | ~TREXIO_FILE_ERROR~          |   18 | 'Invalid file handle'                  |
+   | ~TREXIO_GROUP_READ_ERROR~    |   19 | 'Error reading group'                  |
+   | ~TREXIO_GROUP_WRITE_ERROR~   |   20 | 'Error writing group'                  |
+   | ~TREXIO_ELEM_READ_ERROR~     |   21 | 'Error reading element'                |
+   | ~TREXIO_ELEM_WRITE_ERROR~    |   22 | 'Error writing element'                |
+   | ~TREXIO_UNSAFE_ARRAY_DIM~    |   23 | 'Access to memory beyond allocated'    |
+   | ~TREXIO_ATTR_MISSING~        |   24 | 'Attribute does not exist in the file' |
+   | ~TREXIO_DSET_MISSING~        |   25 | 'Dataset does not exist in the file'   |
+   | ~TREXIO_INVALID_STR_LEN~     |   30 | 'Invalid max_str_len'                  |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -241,6 +243,8 @@ return '\n'.join(result)
    #define TREXIO_ELEM_READ_ERROR         ((trexio_exit_code) 21)
    #define TREXIO_ELEM_WRITE_ERROR        ((trexio_exit_code) 22)
    #define TREXIO_UNSAFE_ARRAY_DIM        ((trexio_exit_code) 23)
+   #define TREXIO_ATTR_MISSING            ((trexio_exit_code) 24)
+   #define TREXIO_DSET_MISSING            ((trexio_exit_code) 25)
    #define TREXIO_INVALID_STR_LEN         ((trexio_exit_code) 30)
    #+end_src
 
@@ -270,6 +274,8 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_ELEM_READ_ERROR         = 21
       integer(trexio_exit_code), parameter :: TREXIO_ELEM_WRITE_ERROR        = 22
       integer(trexio_exit_code), parameter :: TREXIO_UNSAFE_ARRAY_DIM        = 23
+      integer(trexio_exit_code), parameter :: TREXIO_ATTR_MISSING            = 24
+      integer(trexio_exit_code), parameter :: TREXIO_DSET_MISSING            = 25
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_STR_LEN         = 30
    #+end_src
 
@@ -300,6 +306,8 @@ return '\n'.join(result)
    TREXIO_ELEM_READ_ERROR         = 21
    TREXIO_ELEM_WRITE_ERROR        = 22
    TREXIO_UNSAFE_ARRAY_DIM        = 23
+   TREXIO_ATTR_MISSING            = 24
+   TREXIO_DSET_MISSING            = 25
    TREXIO_INVALID_STR_LEN         = 30
    #+end_src
    :END:
@@ -1136,6 +1144,7 @@ trexio_exit_code
 trexio_read_$group_num$_64 (trexio_t* const file, int64_t* const num)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (trexio_has_$group_num$(file) != TREXIO_SUCCESS) return TREXIO_ATTR_MISSING;
 
   uint64_t u_num = 0;
   trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
@@ -1196,6 +1205,7 @@ trexio_exit_code
 trexio_read_$group_num$_32 (trexio_t* const file, int32_t* const num)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (trexio_has_$group_num$(file) != TREXIO_SUCCESS) return TREXIO_ATTR_MISSING;
 
   uint64_t u_num = 0;
   trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
@@ -1477,6 +1487,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
@@ -1601,6 +1612,7 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
@@ -1758,6 +1770,7 @@ trexio_read_safe_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
 <<dimCheck>>
   
@@ -1792,6 +1805,7 @@ trexio_read_safe_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
 <<dimCheck>>
   
@@ -2266,6 +2280,7 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const uint32
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
@@ -2305,6 +2320,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const uint32_t 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
@@ -2684,6 +2700,7 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const uint32
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (str_out  == NULL) return TREXIO_INVALID_ARG_2;
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
+  if (trexio_has_$group_str$(file) != TREXIO_SUCCESS) return TREXIO_ATTR_MISSING;
 
   switch (file->back_end) {
 
