@@ -160,6 +160,7 @@ $(HTML_FILES): docs/index.html
 SWIG          = @SWIG@ 
 HDF5_LDFLAGS  = @HDF5_LDFLAGS@ 
 HDF5_CFLAGS   = @HDF5_CFLAGS@ 
+HDF5_CPPFLAGS = @HDF5_CPPFLAGS@ 
 
 if TREXIO_DEVEL
 
@@ -203,7 +204,7 @@ python-test: $(TEST_PY)
 
 python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
-		./install_pytrexio.sh $(HDF5_CFLAGS) $(HDF5_LDFLAGS)
+		./install_pytrexio.sh $(HDF5_CFLAGS) $(HDF5_CPPFLAGS) $(HDF5_LDFLAGS)
 
 python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \

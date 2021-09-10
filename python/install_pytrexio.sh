@@ -3,17 +3,40 @@
 set -x
 set -e
 
-H5_CFLAGS_LOCAL=$1
-H5_LDFLAGS_LOCAL=$2
+# the parser below is needed when ./configure outputs several HDF5-related flags, which are then provided as input arguments to this script
+for arg in "$@"
+do
+    if [[ $arg == "-L"* ]] && [[ $arg == *"hdf5"* ]]; then
+        H5_LDFLAGS_LOCAL=$arg
+    elif [[ $arg == "-I"* ]] && [[ $arg == *"hdf5"* ]]; then
+        H5_CFLAGS_LOCAL=$arg
+    fi
+done
 
+# check that both variables are set
+if [[ -z ${H5_LDFLAGS_LOCAL} ]] || [[ -z ${H5_CFLAGS_LOCAL} ]]; then
+    echo "Paths to the HDF5 installation are not found. pkgconfig Python package will try to detect them."
+else
+    # additional explicit export was needed on MacOS
+    export H5_LDFLAGS=${H5_LDFLAGS_LOCAL}
+    export H5_CFLAGS=${H5_CFLAGS_LOCAL}
+fi
 
 # Install/upgrade packages required for the installation
 python3 -m pip install --upgrade setuptools wheel twine
 python3 -m pip install -r requirements.txt
 
+# export NUMPY_INCLUDEDIR environment variable needed for the proper setup
+source tools/set_NUMPY_INCLUDEDIR.sh
+
+if [[ -z ${NUMPY_INCLUDEDIR} ]] ; then
+    echo "NUMPY_INCLUDEDIR is not set. Check that numpy is installed (e.g. call pip freeze)."
+    exit 1
+fi
+
 # Create build directory and compile extension files (*.c)
 # --no-user-cfg disables custom .cfg files of the user machine, so that only setup.cfg is used
-H5_LDFLAGS=${H5_LDFLAGS_LOCAL} H5_CFLAGS=${H5_CFLAGS_LOCAL} python3 -s setup.py --no-user-cfg build 
+python3 -s setup.py --no-user-cfg build 
 
 # Local inplace build of the .so module with SWIG-produced pytrexio_wrap.c (from the SWIG documentation)
 #python3 setup.py build_ext --inplace --swig-opts="-modern"
