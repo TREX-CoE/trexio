@@ -15,9 +15,12 @@ done
 
 # check that both variables are set
 if [[ -z ${H5_LDFLAGS_LOCAL} ]] || [[ -z ${H5_CFLAGS_LOCAL} ]]; then
-    echo "Paths to the HDF5 installation are not found. pkgconfig Python package will try to detect them."
+    if [[ -z ${H5_LDFLAGS} ]] || [[ -z ${H5_CFLAGS} ]]; then
+        echo "Paths to the HDF5 installation are not provided. pkgconfig will try to detect them."
+    else
+        echo "Using exported H5_LDFLAGS and H5_CFLAGS environment variables."
+    fi
 else
-    # additional explicit export was needed on MacOS
     export H5_LDFLAGS=${H5_LDFLAGS_LOCAL}
     export H5_CFLAGS=${H5_CFLAGS_LOCAL}
 fi
