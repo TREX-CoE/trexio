@@ -2387,10 +2387,12 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
   char*  tmp_str  = CALLOC(dims[0]*(max_str_len+1), char);
   if (tmp_str == NULL) return TREXIO_ALLOCATION_FAILED;
   char** dset_str = CALLOC(dims[0], char*);
-  if (dset_str == NULL) return TREXIO_ALLOCATION_FAILED;
+  if (dset_str == NULL) {
+    FREE(tmp_str);
+    return TREXIO_ALLOCATION_FAILED;
+  }
 
   char* pch;
-  size_t pch_len;
   /* parse the string using strtok */
   for(uint64_t i=0; i<dims[0]; i++) {
 
@@ -2402,7 +2404,7 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
       return TREXIO_FAILURE;
     }
 
-    pch_len = strlen(pch) + 1;
+    size_t pch_len = strlen(pch) + 1;
 
     if (pch_len > max_str_len) {
       FREE(dset_str[0]);
