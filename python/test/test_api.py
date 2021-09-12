@@ -60,10 +60,12 @@ try:
 except:
     raise
 
+import warnings
+warnings.filterwarnings("error")
 try:
     trexio.write_nucleus_num(test_file, nucleus_num*2)
-except trexio.Error:
-    print("Attempt to overwrite nucleus_num: checked.")
+except UserWarning:
+    print("Attemp to overwrite nucleus_num: checked.")
 
 # initialize charge arrays as a list and convert it to numpy array
 charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]

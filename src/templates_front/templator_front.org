@@ -392,7 +392,7 @@ return '\n'.join(result)
      return "Invalid dimensions";
      break;
    case TREXIO_ATTR_ALREADY_EXISTS:
-     return "Attribute (num/str) already exists";
+     return "Attribute already exists";
      break;
    case TREXIO_DSET_ALREADY_EXISTS:
      return "Dataset already exists";
@@ -423,6 +423,12 @@ return '\n'.join(result)
      break;
    case TREXIO_UNSAFE_ARRAY_DIM:
      return "Access to memory beyond allocated";
+     break;
+   case TREXIO_ATTR_MISSING:
+     return "Attribute does not exist in the file";
+     break;
+   case TREXIO_DSET_MISSING:
+     return "Dataset does not exist in the file";
      break;
    case TREXIO_INVALID_STR_LEN:
      return "Invalid max_str_len";
@@ -1404,10 +1410,13 @@ def write_$group_num$(trexio_file, num_w: int) -> None:
     try:
         rc = pytr.trexio_write_$group_num$(trexio_file.pytrexio_s, num_w)
         if rc != TREXIO_SUCCESS:
-            raise Error(rc)
+            if rc == TREXIO_ATTR_ALREADY_EXISTS:
+                import warnings
+                warnings.warn(string_of_error(rc))
+            else:
+                raise Error(rc)
     except:
         raise    
-
      #+end_src
 
      #+begin_src python :tangle read_num_front.py
@@ -2034,7 +2043,11 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         rc = pytr.trexio_write_safe_$group_dset$_64(trexio_file.pytrexio_s, dset_w)
     
     if rc != TREXIO_SUCCESS:
-        raise Error(rc)
+        if rc == TREXIO_DSET_ALREADY_EXISTS:
+            import warnings
+            warnings.warn(string_of_error(rc))
+        else:
+            raise Error(rc)
      #+end_src
 
      #+begin_src python :tangle read_dset_data_front.py
@@ -2619,7 +2632,11 @@ def write_$group_dset$(trexio_file, dset_w: list) -> None:
         rc = pytr.trexio_write_$group_dset$(trexio_file.pytrexio_s, dset_w, max_str_length)
 
         if rc != TREXIO_SUCCESS:
-            raise Error(rc)
+            if rc == TREXIO_DSET_ALREADY_EXISTS:
+                import warnings
+                warnings.warn(string_of_error(rc))
+            else:
+                raise Error(rc)
     except:
         raise    
 
@@ -2880,7 +2897,11 @@ def write_$group_str$(trexio_file, str_w: str) -> None:
         rc = pytr.trexio_write_$group_str$(trexio_file.pytrexio_s, str_w, max_str_length)
 
         if rc != TREXIO_SUCCESS:
-            raise Error(rc)
+            if rc == TREXIO_ATTR_ALREADY_EXISTS:
+                import warnings
+                warnings.warn(string_of_error(rc))
+            else:
+                raise Error(rc)
     except:
         raise    
      #+end_src
