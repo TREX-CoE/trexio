@@ -3,6 +3,7 @@
 
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD)
 
 TREX library for efficient I/O.
 
@@ -71,7 +72,9 @@ For more details regarding the installation and usage of the TREXIO Python API, 
 
 ## Tutorial
 
-**TODO**
+TREXIO tutorials in Jupyter notebook format can be found in the 
+[corresponding GitHub repository](https://github.com/TREX-CoE/trexio-tutorials)
+or on [Binder](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD).
 
 
 ## Technical documentation
