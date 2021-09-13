@@ -46,7 +46,7 @@
 /* This enables read of single string attributes with pre-defined max_str_len 
    for Python we pre-define max_str_len = PYTREXIO_MAX_STR_LENGTH everywhere for simplicity
 */
-%cstring_output_maxsize(char* const str_out, const uint32_t max_str_len);
+%cstring_output_maxsize(char* const str_out, const int32_t max_str_len);
 
 /* [WIP] TREXIO back ends and exit codes can be redefined in the SWIG target language 
    using %ignore and further #define statements (instead of disabling the type cast in the trexio.h file)

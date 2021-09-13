@@ -2327,15 +2327,15 @@ trexio_read_chunk_ao_2e_int_eri_value_64(trexio_t* const file,
 
      #+begin_src c :tangle hrw_dset_str_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_dset$_low(trexio_t* const file, char* dset_out, const uint32_t max_str_len);
-trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, const char* dset_in, const uint32_t max_str_len);
-trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** dset_out, const uint32_t max_str_len);
-trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset_in, const uint32_t max_str_len);
+trexio_exit_code trexio_read_$group_dset$_low(trexio_t* const file, char* dset_out, const int32_t max_str_len);
+trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, const char* dset_in, const int32_t max_str_len);
+trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** dset_out, const int32_t max_str_len);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset_in, const int32_t max_str_len);
      #+end_src
 
      #+begin_src c :tangle read_dset_str_front.c
 trexio_exit_code
-trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const uint32_t max_str_len)
+trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const int32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -2358,11 +2358,11 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const uint32
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_dset$(file, dset_out, rank, dims, max_str_len);
+    return trexio_text_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_dset$(file, dset_out, rank, dims, max_str_len);
+    return trexio_hdf5_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
     break;
 /*
   case TREXIO_JSON:
@@ -2375,7 +2375,7 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const uint32
 }
 
 trexio_exit_code
-trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const uint32_t max_str_len)
+trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const int32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -2402,9 +2402,9 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const uint32_t 
     return rc;
   }
 
-  char * pch;
   for (uint64_t i=0; i < (uint64_t) dset_dim; i++) {
 
+    char * pch;
     pch = i == 0 ? strtok(str_compiled, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
     if (pch == NULL) {
       FREE(str_compiled);
@@ -2424,7 +2424,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const uint32_t 
 
      #+begin_src c :tangle write_dset_str_front.c
 trexio_exit_code
-trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const uint32_t max_str_len)
+trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const int32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -2453,10 +2453,10 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
     return TREXIO_ALLOCATION_FAILED;
   }
 
-  char* pch;
   /* parse the string using strtok */
   for(uint64_t i=0; i<dims[0]; i++) {
 
+    char* pch;
     pch = i == 0 ? strtok( (char*) dset_in, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
 
     if (pch == NULL) {
@@ -2467,7 +2467,7 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
 
     size_t pch_len = strlen(pch) + 1;
 
-    if (pch_len > max_str_len) {
+    if (pch_len > (size_t) max_str_len) {
       FREE(dset_str[0]);
       FREE(dset_str);
       return TREXIO_INVALID_STR_LEN;
@@ -2503,7 +2503,7 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
 }
 
 trexio_exit_code
-trexio_write_$group_dset$ (trexio_t* const file, const char** dset_in, const uint32_t max_str_len)
+trexio_write_$group_dset$ (trexio_t* const file, const char** dset_in, const int32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -2779,13 +2779,13 @@ def has_$group_dset$(trexio_file) -> bool:
 
      #+begin_src c :tangle hrw_attr_str_front.h :exports none
 trexio_exit_code trexio_has_$group_str$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str_out, const uint32_t max_str_len);
-trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str, const uint32_t max_str_len);
+trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str_out, const int32_t max_str_len);
+trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str, const int32_t max_str_len);
      #+end_src
 
      #+begin_src c :tangle read_attr_str_front.c
 trexio_exit_code
-trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const uint32_t max_str_len)
+trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const int32_t max_str_len)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -2796,11 +2796,11 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const uint32
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_str$(file, str_out, max_str_len);
+    return trexio_text_read_$group_str$(file, str_out, (uint32_t) max_str_len);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_$group_str$(file, str_out, max_str_len);
+    return trexio_hdf5_read_$group_str$(file, str_out, (uint32_t) max_str_len);
     break;
 /*
   case TREXIO_JSON:
@@ -2815,7 +2815,7 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const uint32
 
      #+begin_src c :tangle write_attr_str_front.c
 trexio_exit_code
-trexio_write_$group_str$ (trexio_t* const file, const char* str, const uint32_t max_str_len)
+trexio_write_$group_str$ (trexio_t* const file, const char* str, const int32_t max_str_len)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -2824,7 +2824,7 @@ trexio_write_$group_str$ (trexio_t* const file, const char* str, const uint32_t 
   if (trexio_has_$group_str$(file) == TREXIO_SUCCESS) return TREXIO_ATTR_ALREADY_EXISTS;
 
   size_t len_write = strlen(str);
-  if (max_str_len < len_write) return TREXIO_INVALID_STR_LEN;  
+  if ((size_t) max_str_len < len_write) return TREXIO_INVALID_STR_LEN;  
 
   switch (file->back_end) {
 
