@@ -41,7 +41,6 @@ except:
 
 
 # create TREXIO file and open it for writing
-#test_file = trexio.open(output_filename, 'w', TEST_TREXIO_BACKEND)
 test_file = trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND)
 
 # Print docstring of the trexio.open function
@@ -65,7 +64,7 @@ warnings.filterwarnings("error")
 try:
     trexio.write_nucleus_num(test_file, nucleus_num*2)
 except UserWarning:
-    print("Attemp to overwrite nucleus_num: checked.")
+    print("Attempt to overwrite nucleus_num: checked.")
 
 # initialize charge arrays as a list and convert it to numpy array
 charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
@@ -127,12 +126,12 @@ labels = [
 trexio.write_nucleus_label(test_file,labels)
 
 # close TREXIO file 
-# [TODO:] this functional call is no longer needed as we introduced TREXIO_File class which has a desctructor that closes the file
+# this call is no longer needed as we introduced TREXIO_File class which has a desctructor that closes the file
 #trexio.close(test_file)
-# [TODO:] without calling destructor on test_file the TREXIO_FILE is not getting created and the data is not written when using TEXT back end. This, the user still has to explicitly call destructor on test_file object instead 
-# trexio.close function. This is only an issue when the data is getting written and read in the same session (e.g. in Jupyter notebook)
+# without calling destructor on test_file the TREXIO_FILE is not getting created and the data is not written when using TEXT back end. 
+# This, the user still has to explicitly call destructor on test_file object instead of the trexio.close function. 
+# This is only an issue when the data is getting written and read in the same session (e.g. in Jupyter notebook)
 del test_file
-
 
 
 #==========================================================#
@@ -140,8 +139,14 @@ del test_file
 #==========================================================#
 
 # open previously created TREXIO file, now in 'read' mode
-#test_file2 = trexio.open(output_filename, 'r', TEST_TREXIO_BACKEND)
 test_file2 = trexio.File(output_filename, 'r', TEST_TREXIO_BACKEND)
+
+# check for existence of some of the previously written variables
+assert trexio.has_nucleus_num
+assert trexio.has_nucleus_charge
+assert trexio.has_nucleus_coord
+assert trexio.has_nucleus_label
+assert trexio.has_nucleus_point_group
 
 # read nucleus_num from file
 rnum = trexio.read_nucleus_num(test_file2)
@@ -193,6 +198,12 @@ for i in range(nucleus_num):
 # read a string corresponding to nuclear point group
 rpoint_group = trexio.read_nucleus_point_group(test_file2)
 assert rpoint_group==point_group 
+
+# another way to read only if the variable exists
+if trexio.has_mo_num(test_file2):
+    rmo_num = trexio.read_mo_num(test_file2)
+else:
+    print("Not reading the non-existing variable mo_num.")
 
 # close TREXIO file
 #trexio.close(test_file2)
