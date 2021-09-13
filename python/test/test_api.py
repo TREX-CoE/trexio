@@ -38,8 +38,6 @@ except:
 #============ WRITE THE DATA IN THE TEST FILE ============#
 #=========================================================#
 
-
-
 # create TREXIO file and open it for writing
 test_file = trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND)
 
@@ -59,11 +57,9 @@ try:
 except:
     raise
 
-import warnings
-warnings.filterwarnings("error")
 try:
     trexio.write_nucleus_num(test_file, nucleus_num*2)
-except UserWarning:
+except trexio.Error:
     print("Attempt to overwrite nucleus_num: checked.")
 
 # initialize charge arrays as a list and convert it to numpy array
@@ -160,7 +156,7 @@ np.testing.assert_array_almost_equal(rcharges_np, charges_np, decimal=8)
 # unsafe call to read_safe should fail with error message corresponding to TREXIO_UNSAFE_ARRAY_DIM
 try:
     rcharges_fail = trexio.read_nucleus_charge(test_file2, dim=nucleus_num*5)
-except Exception:
+except trexio.Error:
     print("Unsafe call to safe API: checked")
 
 # safe call to read array of int values (nuclear indices)
