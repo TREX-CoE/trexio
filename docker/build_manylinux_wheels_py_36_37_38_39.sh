@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -x
 set -e 
 
@@ -37,9 +39,24 @@ export H5_CFLAGS=-I/usr/local/include
 # alternatively: build wheel directly from developer-provided .tar.gz of TREXIO (generated with `python setup.py sdist`)
 # note: trexio-VERSION.tar.gz has to be in the root directory of the host machine
 
+# process input: first argument is the name of the .tar.gz with the source code of the Python API
+if [[ -z "$1" ]]; then
+    echo "Please specify the name of the TREXIO source code distribution (with .tar.gz suffix)"
+    exit 1
+fi
+
+TREXIO_SOURCE=${1}
+
+# remove prefix that ends with "-"
+tmp=${TREXIO_SOURCE#*-}
+# remove suffix that ends with ".tar.gz"
+TR_VERSION=${tmp%.tar.gz*}
+
+echo "TREXIO VERSION:" ${TR_VERSION}
+
 # unzip and enter the folder with TREXIO Python API
-gzip -cd /tmp/trexio-0.1.0.tar.gz | tar xvf -
-cd trexio-0.1.0
+gzip -cd /tmp/trexio-${TR_VERSION}.tar.gz | tar xvf -
+cd trexio-${TR_VERSION}
 
 # create and activate a virtual environment based on CPython version 3.6
 /opt/python/cp36-cp36m/bin/python3 -m venv --clear trexio-manylinux-py36
@@ -58,10 +75,10 @@ source tools/set_NUMPY_INCLUDEDIR.sh
 python3 setup.py bdist_wheel
 
 # use auditwheel from PyPA to repair all wheels and make them manylinux-compatible
-auditwheel repair dist/trexio-0.1.0-cp36-cp36m-*.whl
+auditwheel repair dist/trexio-${TR_VERSION}-cp36-cp36m-*.whl
 
 # install the produced manylinux wheel in the virtual environment
-python3 -m pip install wheelhouse/trexio-0.1.0-cp36-cp36m-manylinux*.whl
+python3 -m pip install wheelhouse/trexio-${TR_VERSION}-cp36-cp36m-manylinux*.whl
 
 # run test script
 cd test && python3 test_api.py && cd ..
@@ -89,10 +106,10 @@ source tools/set_NUMPY_INCLUDEDIR.sh
 python3 setup.py bdist_wheel
 
 # use auditwheel from PyPA to repair all wheels and make them manylinux-compatible
-auditwheel repair dist/trexio-0.1.0-cp37-cp37m-*.whl
+auditwheel repair dist/trexio-${TR_VERSION}-cp37-cp37m-*.whl
 
 # install the produced manylinux wheel in the virtual environment
-python3 -m pip install wheelhouse/trexio-0.1.0-cp37-cp37m-manylinux*.whl
+python3 -m pip install wheelhouse/trexio-${TR_VERSION}-cp37-cp37m-manylinux*.whl
 
 # run test script
 cd test && python3 test_api.py && cd ..
@@ -121,10 +138,10 @@ source tools/set_NUMPY_INCLUDEDIR.sh
 python3 setup.py bdist_wheel
 
 # use auditwheel from PyPA to repair all wheels and make them manylinux-compatible
-auditwheel repair dist/trexio-0.1.0-cp38-cp38-*.whl
+auditwheel repair dist/trexio-${TR_VERSION}-cp38-cp38-*.whl
 
 # install the produced manylinux wheel in the virtual environment
-python3 -m pip install wheelhouse/trexio-0.1.0-cp38-cp38-manylinux*.whl
+python3 -m pip install wheelhouse/trexio-${TR_VERSION}-cp38-cp38-manylinux*.whl
 
 # run test script
 cd test && python3 test_api.py && cd ..
@@ -149,10 +166,10 @@ pip3 install --upgrade setuptools wheel auditwheel numpy
 python3 setup.py bdist_wheel
 
 # use auditwheel from PyPA to repair all wheels and make them manylinux-compatible
-auditwheel repair dist/trexio-0.1.0-cp39-cp39-*.whl
+auditwheel repair dist/trexio-${TR_VERSION}-cp39-cp39-*.whl
 
 # install the produced manylinux wheel in the virtual environment
-python3 -m pip install wheelhouse/trexio-0.1.0-cp39-cp39-manylinux*.whl
+python3 -m pip install wheelhouse/trexio-${TR_VERSION}-cp39-cp39-manylinux*.whl
 
 # run test script
 cd test && python3 test_api.py && cd ..
@@ -162,4 +179,10 @@ rm -rf -- dist/ build/ trexio.egg-info/
 
 # deactivate the current environment
 deactivate
+
+# remove all virtual environments used to produce the wheels
+rm -rf -- trexio-manylinux-py39 \
+	  trexio-manylinux-py38 \
+	  trexio-manylinux-py37 \
+	  trexio-manylinux-py36 
 
