@@ -1,7 +1,7 @@
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD)
-
 # TREXIO Python API
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD)
 
 TREXIO provides a Python API, which enables interactive calls to the library.
 It facilitates the development of interfaces between different codes and 
