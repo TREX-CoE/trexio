@@ -50,6 +50,7 @@ AC_FC_LIBRARY_LDFLAGS
 # pkg-config
 PKG_PROG_PKG_CONFIG()
 PKG_CFLAGS=""
+PKG_LIBS=""
 
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
@@ -94,18 +95,29 @@ CPPFLAGS="${HDF5_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${HDF5_LDFLAGS} ${LDFLAGS}"
 LIBS="${HDF5_LIBS} ${LIBS}"
 
-# Check if HDF5 if available with pkg-config
+# Check if HDF5 is available with pkg-config.
 
 PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8], [
     PKG_HDF5="hdf5"
     ],[
     PKG_HDF5=""
    ])
-    PKG_CFLAGS="${PKG_CFLAGS}"
+PKG_CFLAGS="${HDF5_CFLAGS}"
+PKG_LIBS="${HDF5_LIBS}"
 
 AC_SUBST([PKG_HDF5])
 AC_SUBST([PKG_CFLAGS])
+AC_SUBST([PKG_LIBS])
 
+# The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
+# It is only needed to manually build Python API because setup.py depends on HDF5.
+
+if test "$HDF5_LDFLAGS" = "" || "$HDF5_CFLAGS" = ""; then
+  HDF5_LDFLAGS="${PKG_LIBS}"
+  HDF5_CFLAGS="${PKG_CFLAGS}"
+  AC_SUBST([HDF5_CFLAGS])
+  AC_SUBST([HDF5_LDFLAGS])
+fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT32_T
@@ -125,6 +137,10 @@ if test "x${TREXIO_DEVEL}" != "x"; then
   TREXIO_DEVEL=" -- Developer mode"
   AC_PROG_AWK
   AM_PATH_PYTHON([3.0])
+
+  AX_PKG_SWIG(4.0.0, [], AC_MSG_WARN([SWIG is required to build Python API.]) )
+  # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
+  #AX_SWIG_PYTHON
 
   AC_CHECK_PROGS([EMACS],[emacs26 emacs],[no])
   if test x${EMACS} == xno ; then

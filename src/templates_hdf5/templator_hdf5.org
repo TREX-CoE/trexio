@@ -64,9 +64,8 @@
   #+begin_src c :tangle struct_hdf5.h
 typedef struct trexio_hdf5_s {
   trexio_t     parent ;
-  hid_t      file_id;
-  hid_t      $group$_group;
-  const char* file_name;
+  hid_t        file_id;
+  hid_t        $group$_group;
 } trexio_hdf5_t;
   #+end_src
 
@@ -537,15 +536,22 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const char** $group_dset$,
 
   /* we are going to write variable-length strings */
   hid_t memtype = H5Tcopy (H5T_C_S1);
+  if (memtype <= 0) return TREXIO_INVALID_ID;
+
   status = H5Tset_size (memtype, H5T_VARIABLE);
+  if (status < 0) return TREXIO_FAILURE;
 
   if ( H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME) != 1 ) {
 
     /* code to create dataset */   
     hid_t filetype = H5Tcopy (H5T_FORTRAN_S1);
+    if (filetype <= 0) return TREXIO_INVALID_ID;
+
     status = H5Tset_size (filetype, H5T_VARIABLE);
+    if (status < 0) return TREXIO_FAILURE;
 
     hid_t dspace = H5Screate_simple( (int) rank, (const hsize_t*) dims, NULL);
+    if (dspace <= 0) return TREXIO_INVALID_ID;
 
     dset_id = H5Dcreate (f->$group$_group, $GROUP_DSET$_NAME, filetype, dspace,
                          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);

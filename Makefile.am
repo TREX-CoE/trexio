@@ -87,6 +87,8 @@ TESTS_C = \
   tests/io_dset_float_text \
   tests/io_dset_int_hdf5 \
   tests/io_dset_int_text \
+  tests/io_safe_dset_float_hdf5 \
+  tests/io_safe_dset_float_text \
   tests/io_str_hdf5 \
   tests/io_str_text \
   tests/io_dset_str_hdf5 \
@@ -114,6 +116,8 @@ tests_io_dset_float_hdf5_LDFLAGS = -no-install
 tests_io_dset_float_text_LDFLAGS = -no-install
 tests_io_dset_int_hdf5_LDFLAGS = -no-install
 tests_io_dset_int_text_LDFLAGS = -no-install
+tests_io_safe_dset_float_hdf5_LDFLAGS = -no-install
+tests_io_safe_dset_float_text_LDFLAGS = -no-install
 tests_io_str_hdf5_LDFLAGS = -no-install
 tests_io_str_text_LDFLAGS = -no-install
 tests_io_dset_str_hdf5_LDFLAGS = -no-install
@@ -133,7 +137,7 @@ tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 tests_test_f_LDFLAGS = -no-install
 
 clean-local:
-	-rm -rf -- *.dir/ *.h5
+	-rm -rf -- *.dir/ *.h5 __pycache__/
 
 # =============== DOCUMENTATION =============== #
 
@@ -152,6 +156,11 @@ dist_html_DATA = $(HTML_FILES)
 $(HTML_FILES): docs/index.html
 
 # =============== DEVELOPER MODE =============== #
+
+SWIG          = @SWIG@ 
+HDF5_LDFLAGS  = @HDF5_LDFLAGS@ 
+HDF5_CFLAGS   = @HDF5_CFLAGS@ 
+HDF5_CPPFLAGS = @HDF5_CPPFLAGS@ 
 
 if TREXIO_DEVEL
 
@@ -179,7 +188,52 @@ cppcheck.out: $(trexio_h)
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
 
-.PHONY: cppcheck
+setup_py      = $(srcdir)/python/setup.py
+setup_cfg     = $(srcdir)/python/setup.cfg
+pytrexio_py   = $(srcdir)/python/pytrexio/pytrexio.py
+trexio_py     = $(srcdir)/python/trexio.py
+TEST_PY       = python/test/test_api.py
+pytrexio_c    = $(srcdir)/src/pytrexio_wrap.c
+pytrexio_i    = $(srcdir)/src/pytrexio.i
+numpy_i       = $(srcdir)/src/numpy.i
+
+
+python-test: $(TEST_PY)
+	python3 $(TEST_PY)
+	$(RM) -r -- __pycache__
+
+python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
+	cd python && \
+		./install_pytrexio.sh $(HDF5_CFLAGS) $(HDF5_CPPFLAGS) $(HDF5_LDFLAGS)
+
+python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
+	cd python && \
+		python setup.py sdist
+
+$(pytrexio_py): $(pytrexio_c) 
+	cd tools && ./prepare_python.sh
+
+# Build Python module and C wrapper code for TREXIO using SWIG
+# [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
+$(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
+	cp $(trexio_h) src/
+	cd src/ && \
+		$(SWIG) -python -py3 -o pytrexio_wrap.c pytrexio.i
+	$(RM) -- src/trexio.h
+
+$(numpy_i):
+	wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/numpy.i -O $(numpy_i) 
+
+check-numpy:
+	cd tools && ./check_numpy_i.sh
+
+CLEANFILES += $(pytrexio_c) \
+              $(pytrexio_py) \
+              $(trexio_py) \
+              python/src/*.c \
+              python/src/*.h
+
+.PHONY: cppcheck python-test python-install python-sdist check-numpy
 
 endif
 

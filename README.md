@@ -4,12 +4,12 @@
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
-TREX library fo efficient I/O.
+TREX library for efficient I/O.
 
 
 ## Minimal requirements (for users):
 
-- Autotools             (autoconf, automake, libtool)
+- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2)
 - C compiler            (gcc/icc/clang)
 - Fortran compiler      (gfortran/ifort)
 - HDF5 library          (>= 1.8)
@@ -33,7 +33,7 @@ TREX library fo efficient I/O.
 
 - python3       (>= 3.6)
 - Emacs         (>= 26.0)
-
+- SWIG          (>= 4.0)
 
 ## Installation procedure from the GitHub repo clone (for developers):
 
@@ -56,7 +56,8 @@ The primary TREXIO API is composed of the following functions:
 - `trexio_has_[group]_[variable]`
 - `trexio_close`
 
-where `[group]` and `[variable]` substitutions correspond to the contents of the `trex.json` configuration file (for more details, see the corresponding [documentation](https://trex-coe.github.io/trexio/trex.html) page).
+where `[group]` and `[variable]` substitutions correspond to the contents of the `trex.json` configuration file 
+(for more details, see the corresponding [documentation](https://trex-coe.github.io/trexio/trex.html) page).
 For example, consider the `coord` variable (array), which belongs to the `nucleus` group. The TREXIO user can write or read it using `trexio_write_nucleus_coord` or `trexio_read_nucleus_coord` functions, respectively.
 
 Note: the `[variable]` names have to be unique only within the corresponding parent `[group]`. 
@@ -64,9 +65,20 @@ There is no naming conflict when, for example, `num` variable exists both in the
 These quantities can be accessed using the corresponding `trexio_[has|read|write]_nucleus_num` and `trexio_[has|read|write]_mo_num`, respectively.
 
 
+## Python API
+
+For more details regarding the installation and usage of the TREXIO Python API, 
+see [this page](python/README.md).
+
+
 ## Tutorial
 
-**TODO**
+TREXIO tutorials in Jupyter notebook format can be found in the 
+[corresponding GitHub repository](https://github.com/TREX-CoE/trexio-tutorials)
+or on [Binder](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD).
+
+For example, the tutorial covering TREXIO basics using benzene molecule as an example can be viewed and executed online by clicking on this badge: 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD?filepath=notebooks%2Ftutorial_benzene.ipynb)
 
 
 ## Technical documentation
@@ -76,8 +88,9 @@ These quantities can be accessed using the corresponding `trexio_[has|read|write
 
 ### Miscellaneous
 
-Note: The code should be compliant with the C99 [CERT C coding
-standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf). This can be checked with the `cppcheck` tool.
+Note: The code should be compliant with the C99 
+[CERT C coding standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf). 
+This can be checked with the `cppcheck` tool.
 
 
 

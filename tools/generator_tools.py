@@ -100,7 +100,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
-    triggers = ['group_dset_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index', 
+    triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index', 
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
                 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
@@ -111,25 +111,27 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
             with open(join(templ_path,fname_new), 'a') as f_out :
                 num_written = []
                 for line in f_in :
-                        # special case to add error handling for read/write of dimensioning variables
-                        if '$group_dset_dim$' in line:
-                            rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
-                            indentlevel = len(line) - len(line.lstrip())
-                            for dim in detailed_source[item]['dims']:
-                                if not dim.isdigit() and not dim in num_written:
-                                    num_written.append(dim)
-                                    templine = line.replace('$group_dset_dim$', dim)
-                                    if '_read' in templine and (not 'fortran' in fname):
-                                            line_toadd = indentlevel*" " + rc_line
-                                            templine += line_toadd
+                    # special case to add error handling for read/write of dimensioning variables
+                    if '$group_dset_dim$' in line:
+                        rc_line = 'if (rc != TREXIO_SUCCESS) return rc;\n'
+                        indentlevel = len(line) - len(line.lstrip())
+                        for dim in detailed_source[item]['dims']:
+                            if not dim.isdigit() and not dim in num_written:
+                                num_written.append(dim)
+                                templine = line.replace('$group_dset_dim$', dim)
+                                if '_read' in templine and (not 'fortran' in fname):
+                                        line_toadd = indentlevel*" " + rc_line
+                                        templine += line_toadd
 
-                                    f_out.write(templine)
-                            num_written = []
-                            continue
-                        # general case of recursive replacement of inline triggers 
-                        else:
-                            populated_line = recursive_replace_line(line, triggers, detailed_source[item])
-                            f_out.write(populated_line)
+                                f_out.write(templine)
+                        num_written = []
+                        continue
+                    # general case of recursive replacement of inline triggers 
+                    else:
+                        populated_line = recursive_replace_line(line, triggers, detailed_source[item])
+                        f_out.write(populated_line)
+
+                f_out.write("\n")
 
 
 def recursive_replace_line (input_line: str, triggers: list, source: dict) -> str:
@@ -214,6 +216,8 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                     f_out.write(populated_line)
                 else:
                     f_out.write(line)
+                    
+            f_out.write("\n")
 
 
 def iterative_replace_line (input_line: str, case: str, source: dict, add_line: str) -> str:
@@ -403,6 +407,8 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                     else:
                         loop_body += line
 
+                f_out.write("\n")
+
 
 def get_template_path (filename: str, path_dict: dict) -> str:
     """ 
@@ -542,6 +548,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             default_prec   = '64'
             group_dset_std_dtype_out = '24.16e'
             group_dset_std_dtype_in = 'lf'
+            group_dset_py_dtype = 'float'
         elif v[0] in ['int', 'index']:
             datatype = 'int64_t'
             group_dset_h5_dtype = 'native_int64'
@@ -554,6 +561,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             default_prec   = '32'
             group_dset_std_dtype_out = '" PRId64 "'
             group_dset_std_dtype_in  = '" SCNd64 "' 
+            group_dset_py_dtype = 'int'
         elif v[0] == 'str':
             datatype = 'char*'
             group_dset_h5_dtype = ''
@@ -566,6 +574,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             default_prec   = ''
             group_dset_std_dtype_out = 's'
             group_dset_std_dtype_in  = 's' 
+            group_dset_py_dtype = 'str'
         
         # add the dset name for templates
         tmp_dict['group_dset'] = k
@@ -587,6 +596,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['default_prec'] = default_prec
         tmp_dict['group_dset_std_dtype_in'] = group_dset_std_dtype_in
         tmp_dict['group_dset_std_dtype_out'] = group_dset_std_dtype_out
+        tmp_dict['group_dset_py_dtype'] = group_dset_py_dtype
         # add the rank
         tmp_dict['rank'] = len(v[1])
         tmp_dict['group_dset_rank'] = str(tmp_dict['rank'])
