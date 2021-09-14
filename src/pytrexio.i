@@ -48,22 +48,11 @@
 */
 %cstring_output_maxsize(char* const str_out, const int32_t max_str_len);
 
-/* [WIP] TREXIO back ends and exit codes can be redefined in the SWIG target language 
-   using %ignore and further #define statements (instead of disabling the type cast in the trexio.h file)
-*/
-/*
-%ignore TREXIO_HDF5;       // Ignore a macro in the header file
-%ignore TREXIO_TEST;       // Ignore a macro in the header file
-#define TREXIO_HDF5 0
-#define TREXIO_TEXT 0
-*/
 
-/* This is an attempt to make SWIG treat double * dset_out|_in, int64_t dim_out|_in pattern 
+/* This block is needed make SWIG treat (double * dset_out|_in, int64_t dim_out|_in) pattern 
    as a special case in order to return the NumPy array to Python from C pointer to array
    provided by trexio_read_safe_[dset_num] function.
    NOTE: numpy.i is currently not part of SWIG but included in the numpy distribution (under numpy/tools/swig/numpy.i)
-         This means that the interface file have to be provided to SWIG during compilation either by 
-         copying it to the local working directory or by providing -l/path/to/numpy.i flag upon SWIG compilation
 */
 %include "numpy.i"
 
