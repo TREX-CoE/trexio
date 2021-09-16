@@ -107,54 +107,43 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   #+end_src
   :end:
 
-* TODO Effective core potentials (ecp group)
+* Effective core potentials (ecp group)
 
-  An effective core potential (ECP) $V_A^{\text{pp}}$ replacing the
-  core electrons of atom $A$ is the sum of a local component
-  $V_A^{\text{l}}$ and a non-local component $V_A^{\text{nl}}$.
-  The local component is given by
-
+  An effective core potential (ECP) $V_A^{\text{ECP}}$ replacing the
+  core electrons of atom $A$ is expressed as
   \[
-  \hat{V}_A^{\text{l}}(r) = -\frac{Z_A^{\text{eff}}}{r} +
-  \frac{Z_A^{\text{eff}}}{r}\, \exp\left( -\alpha_A\, r^2\right) +
-  Z_{\text{eff}}\, \alpha_A\, r\, \exp\left( -\beta_A\, r^2\right) +
-  \gamma_A \exp\left( -\delta_A\, r^2\right),
+  V_A^{\text{ECP}} =
+  V_{A \ell_{\max}} +
+  \sum_{\ell=0}^{\ell_{\max} -1}
+  \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
+  V_{A \ell} - V_{A \ell_{\max}} \right] \langle Y_{\ell m} | 
   \]
 
-  and the component obtained after localizing the non-local operator is
-
+  The functions $V_{A\ell}$ are parameterized as:
   \[
-  \hat{V}_A^{\text{nl}}(r) =
-  \zeta_A\, \exp\left( -\eta_A\, r^2\right) |0\rangle \langle 0| +
-  \mu_A \,  \exp\left( -\nu_A \, r^2\right) |1\rangle \langle 1|
+  V_{A \ell}(\mathbf{r}) =
+  \sum_{q=1}^{N_{q \ell}}
+  \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
+  e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
   \]
-
-  where $r=|\mathbf{r-R}_A|$ is the distance to the nucleus on which the
-  potential is centered, $Z_A^{\text{eff}}$ is the effective charge
-  due to the removed electrons, $|0\rangle \langle 0|$
-  and $|1\rangle \langle 1|$ are projections over zero and one principal angular
-  momenta, respectively (generalization to higher angular momenta is
-  straightforward),  and all the parameters labeled by Greek
-  letters are parameters.
-
-  - $\hat{V}_\text{ecp,l} = \sum_A \hat{V}_A^{\text{l}}$ : local component
-  - $\hat{V}_\text{ecp,nl} = \sum_A \hat{V}_A^{\text{nl}}$ : non-local component
-
+  
+  See http://dx.doi.org/10.1063/1.4984046 for more info.
+  
   #+NAME: ecp
-  | Variable              | Type    | Dimensions                               | Description                |
-  |-----------------------+---------+------------------------------------------+----------------------------|
-  | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $l_{\max} + 1$             |
-  | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove          |
-  | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local function   |
-  | ~local_num_n_max~     | ~int~   |                                          | Maximum value of ~local_n~ |
-  | ~local_exponent~      | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     |                            |
-  | ~local_coef~          | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     |                            |
-  | ~local_power~         | ~int~   | ~(ecp.local_num_n_max, nucleus.num)~     |                            |
-  | ~non_local_n~         | ~int~   | ~(nucleus.num)~                          |                            |
-  | ~non_local_num_n_max~ | ~int~   |                                          |                            |
-  | ~non_local_exponent~  | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ |                            |
-  | ~non_local_coef~      | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ |                            |
-  | ~non_local_power~     | ~int~   | ~(ecp.non_local_num_n_max, nucleus.num)~ |                            |
+  | Variable              | Type    | Dimensions                               | Description                                                                                  |
+  |-----------------------+---------+------------------------------------------+----------------------------------------------------------------------------------------------|
+  | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $\ell_{\max} + 1$, one higher than the maximum angular momentum in the removed core orbitals |
+  | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove                                                                            |
+  | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local functions $N_{q \ell}$                                                       |
+  | ~local_num_n_max~     | ~int~   |                                          | Maximum value of ~local_n~, used for dimensioning arrays                                     |
+  | ~local_exponent~      | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\alpha_{A q \ell_{\max}}$                                                                  |
+  | ~local_coef~          | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\beta_{A q \ell_{\max}}$                                                                   |
+  | ~local_power~         | ~int~   | ~(ecp.local_num_n_max, nucleus.num)~     | $n_{A q \ell_{\max}}$                                                                        |
+  | ~non_local_n~         | ~int~   | ~(nucleus.num)~                          | $N_{q \ell_{\max}}$                                                                          |
+  | ~non_local_num_n_max~ | ~int~   |                                          | Maximum value of ~non_local_n~, used for dimensioning arrays                                 |
+  | ~non_local_exponent~  | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\alpha_{A q \ell}$                                                                          |
+  | ~non_local_coef~      | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\beta_{A q \ell}$                                                                           |
+  | ~non_local_power~     | ~int~   | ~(ecp.non_local_num_n_max, nucleus.num)~ | $n_{A q \ell}$                                                                               |
 
   #+CALL: json(data=ecp, title="ecp")
 
@@ -461,14 +450,14 @@ prim_factor =
 * Molecular orbitals (mo group)
 
   #+NAME: mo
-  | Variable      | Type    | Dimensions         | Description                              |
-  |---------------+---------+--------------------+------------------------------------------|
-  | ~type~        | ~str~   |                    | String identify the set of MOs           |
-  | ~num~         | ~int~   |                    | Number of MOs                            |
-  | ~coefficient~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                          |
-  | ~class~       | ~str~   | ~(mo.num)~         | Core, Inactive, Active, Virtual, Deleted |
-  | ~symmetry~    | ~str~   | ~(mo.num)~         | Symmetry in the point group              |
-  | ~occupation~  | ~float~ | ~(mo.num)~         | Occupation number                        |
+  | Variable      | Type    | Dimensions         | Description                                                              |
+  |---------------+---------+--------------------+--------------------------------------------------------------------------|
+  | ~type~        | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
+  | ~num~         | ~int~   |                    | Number of MOs                                                            |
+  | ~coefficient~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                                                          |
+  | ~class~       | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
+  | ~symmetry~    | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
+  | ~occupation~  | ~float~ | ~(mo.num)~         | Occupation number                                                        |
 
   #+CALL: json(data=mo, title="mo")
 
