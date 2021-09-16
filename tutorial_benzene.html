@@ -1,0 +1,176 @@
+<h1 id="trexio-tutorial">TREXIO Tutorial</h1>
+<p>This interactive Tutorial covers some basic use cases of the TREXIO library based on the Python API. At this point, it is assumed that the TREXIO Python package has been sucessfully installed on the user machine or in the virtual environment. If this is not the case, feel free to follow the <a href="https://github.com/TREX-CoE/trexio/blob/master/python/README.md">installation guide</a>.</p>
+<h2 id="importing-trexio">Importing TREXIO</h2>
+<p>First of all, let’s import the TREXIO package.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" title="1"><span class="cf">try</span>:</a>
+<a class="sourceLine" id="cb1-2" title="2">    <span class="im">import</span> trexio</a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="cf">except</span> <span class="pp">ImportError</span>:</a>
+<a class="sourceLine" id="cb1-4" title="4">    <span class="cf">raise</span> <span class="pp">Exception</span>(<span class="st">&quot;Unable to import trexio. Please check that trexio is properly instaled.&quot;</span>)</a></code></pre></div>
+<p>If no error occurs, then it means that the TREXIO package has been sucessfully imported. Within the current import, TREXIO attributes can be accessed using the corresponding <code>trexio.attribute</code> notation. If you prefer to bound a shorter name to the imported module (as commonly done by the NumPy users with <code>import numpy as np</code>), this is also possible. To do so, replace <code>import trexio</code> with <code>import trexio as tr</code> for example. To learn more about importing modules, see the corresponding page of the <a href="https://docs.python.org/3/tutorial/modules.html#more-on-modules">Python documentation</a>.</p>
+<h2 id="creating-a-new-trexio-file">Creating a new TREXIO file</h2>
+<p>TREXIO currently supports two back ends for file I/O:</p>
+<ol type="1">
+<li><p><code>TREXIO_HDF5</code>, which relies on extensive use of the <a href="https://portal.hdfgroup.org/display/HDF5/HDF5">HDF5 library</a> and the associated binary file format. This back end is optimized for high performance but it requires HDF5 to be installed on the user machine.</p></li>
+<li><p><code>TREXIO_TEXT</code>, which relies on basic I/O operations that are available in the standard C library. This back end is not optimized for performance but it is supposed to work “out-of-the-box” since there are no external dependencies.</p></li>
+</ol>
+<p>Armed with these new definitions, let’s proceed with the tutorial. The first task is to create a TREXIO file called <code>benzene_demo.h5</code>. But first we have to remove the file if it exists in the current directory</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" title="1">filename <span class="op">=</span> <span class="st">&#39;benzene_demo.h5&#39;</span></a>
+<a class="sourceLine" id="cb2-2" title="2"></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="im">import</span> os</a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="cf">try</span>:</a>
+<a class="sourceLine" id="cb2-5" title="5">    os.remove(filename)</a>
+<a class="sourceLine" id="cb2-6" title="6"><span class="cf">except</span>:</a>
+<a class="sourceLine" id="cb2-7" title="7">    <span class="bu">print</span>(<span class="ss">f&quot;File </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss"> does not exist.&quot;</span>)</a></code></pre></div>
+<pre><code>File benzene_demo.h5 does not exist.</code></pre>
+<p>We are now ready to create a new TREXIO file:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" title="1">demo_file <span class="op">=</span> trexio.File(filename, mode<span class="op">=</span><span class="st">&#39;w&#39;</span>, back_end<span class="op">=</span>trexio.TREXIO_HDF5)</a></code></pre></div>
+<p>This creates an instance of the <code>trexio.File</code> class, which we refer to as <code>demo_file</code> in this tutorial. You can check that the corresponding file called <code>benzene_demo.h5</code> exists in the root directory. It is now open for writing as indicated by the user-supplied argument <code>mode='w'</code>. The file has been initiated using <code>TREXIO_HDF5</code> back end and will be accessed accordingly from now on. The information about back end is stored internally by TREXIO, which means that there is no need to specify it every time the I/O operation is performed. If the file named <code>benzene_demo.h5</code> already exists, then it is re-opened for writing (and not truncated to prevent data loss).</p>
+<h2 id="writing-data-in-the-trexio-file">Writing data in the TREXIO file</h2>
+<p>Prior to any work with TREXIO library, we highly recommend users to read about <a href="https://trex-coe.github.io/trexio/trex.html">TREXIO internal configuration</a>, which explains the structure of the wavefunction file. The reason is that TREXIO API has a naming convention, which is based on the groups and variables names that are pre-defined by the developers. In this Tutorial, we will only cover contents of the <code>nucleus</code> group. Note that custom groups and variables can be added to the TREXIO API.</p>
+<p>In this Tutorial, we consider benzene molecule (C6H6) as an example. Since benzene has 12 atoms, let’s specify it in the previously created <code>demo_file</code>. In order to do so, one has to call <code>trexio.write_nucleus_num</code> function, which accepts an instance of the <code>trexio.File</code> class as a first argument and an <code>int</code> value corresponding to the number of nuclei as a second argument.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" title="1">nucleus_num <span class="op">=</span> <span class="dv">12</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb6-1" title="1">trexio.write_nucleus_num(demo_file, nucleus_num)</a></code></pre></div>
+<p>In fact, all API functions that contain <code>write_</code> prefix can be used in a similar way. Variables that contain <code>_num</code> suffix are important part of the TREXIO file because some of them define dimensions of arrays. For example, <code>nucleus_num</code> variable corresponds to the number of atoms, which will be internally used to write/read the <code>nucleus_coord</code> array of nuclear coordinates. In order for TREXIO files to be self-consistent, overwriting num-suffixed variables is currently disabled.</p>
+<p>The number of atoms is not sufficient to define a molecule. Let’s first create a list of nuclear charges, which correspond to benzene.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" title="1">charges <span class="op">=</span> [<span class="fl">6.</span>, <span class="fl">6.</span>, <span class="fl">6.</span>, <span class="fl">6.</span>, <span class="fl">6.</span>, <span class="fl">6.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>]</a></code></pre></div>
+<p>According to the TREX configuration file, there is a <code>charge</code> attribute of the <code>nucleus</code> group, which has <code>float</code> type and <code>[nucleus_num]</code> dimension. The <code>charges</code> list defined above fits nicely in the description and can be written as follows</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" title="1">trexio.write_nucleus_charge(demo_file, charges)</a></code></pre></div>
+<p><strong>Note: TREXIO function names only contain parts in singular form.</strong> This means that, both <code>write_nucleus_charges</code> and <code>write_nuclear_charges</code> are invalid API calls. These functions simply do not exist in the <code>trexio</code> Python package and the corresponding error message should appear.</p>
+<p>Alternatively, one can provide a list of nuclear labels (chemical elements from the periodic table) that correspond to the aforementioned charges. There is a <code>label</code> attribute of the <code>nucleus</code> group, which has <code>str</code> type and <code>[nucleus_num]</code> dimension. Let’s create a list of 12 strings, which correspond to 6 carbon and 6 hydrogen atoms:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb9-1" title="1">labels <span class="op">=</span> [</a>
+<a class="sourceLine" id="cb9-2" title="2">    <span class="st">&#39;C&#39;</span>,</a>
+<a class="sourceLine" id="cb9-3" title="3">    <span class="st">&#39;C&#39;</span>,</a>
+<a class="sourceLine" id="cb9-4" title="4">    <span class="st">&#39;C&#39;</span>,</a>
+<a class="sourceLine" id="cb9-5" title="5">    <span class="st">&#39;C&#39;</span>,</a>
+<a class="sourceLine" id="cb9-6" title="6">    <span class="st">&#39;C&#39;</span>,</a>
+<a class="sourceLine" id="cb9-7" title="7">    <span class="st">&#39;C&#39;</span>,</a>
+<a class="sourceLine" id="cb9-8" title="8">    <span class="st">&#39;H&#39;</span>,</a>
+<a class="sourceLine" id="cb9-9" title="9">    <span class="st">&#39;H&#39;</span>,</a>
+<a class="sourceLine" id="cb9-10" title="10">    <span class="st">&#39;H&#39;</span>,</a>
+<a class="sourceLine" id="cb9-11" title="11">    <span class="st">&#39;H&#39;</span>,</a>
+<a class="sourceLine" id="cb9-12" title="12">    <span class="st">&#39;H&#39;</span>,</a>
+<a class="sourceLine" id="cb9-13" title="13">    <span class="st">&#39;H&#39;</span>]</a></code></pre></div>
+<p>This can now be written using the corresponding <code>trexio.write_nucleus_label</code> function:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" title="1">trexio.write_nucleus_label(demo_file, labels)</a></code></pre></div>
+<p>Two examples above demonstrate how to write arrays of numbers or strings in the file. TREXIO also supports I/O operations on single numerical or string attributes. In fact, in this Tutorial you have already written one numerical attribute: <code>nucleus_num</code>. Let’s now write a string <code>'D6h'</code>, which indicates a point group of benzene molecule. According to the TREX configuration file, <code>point_group</code> is a <code>str</code> attribute of the <code>nucleus</code> group, thus it can be written in the <code>demo_file</code> as follows</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" title="1">point_group <span class="op">=</span> <span class="st">&#39;D6h&#39;</span></a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" title="1">trexio.write_nucleus_point_group(demo_file, point_group)</a></code></pre></div>
+<h3 id="writing-numpy-arrays-float-or-int-types">Writing NumPy arrays (float or int types)</h3>
+<p>The aforementioned examples cover the majority of the currently implemented functionality related to writing data in the file. It is worth mentioning that I/O of numerical arrays in TREXIO Python API relies on extensive use of the <a href="https://numpy.org/">NumPy package</a>. This will be discussed in more details in the <a href="#Reading-data-from-the-TREXIO-file">section about reading data</a>. However, TREXIO <code>write_</code> functions that work with numerical arrays also accept <code>numpy.ndarray</code> objects. For example, consider a <code>coords</code> list of nuclear coordinates that correspond to benzene molecule</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb13-1" title="1">coords <span class="op">=</span> [</a>
+<a class="sourceLine" id="cb13-2" title="2">    [<span class="fl">0.00000000</span>  ,  <span class="fl">1.39250319</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-3" title="3">    [<span class="op">-</span><span class="fl">1.20594314</span> ,  <span class="fl">0.69625160</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-4" title="4">    [<span class="op">-</span><span class="fl">1.20594314</span> , <span class="fl">-0.69625160</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-5" title="5">    [<span class="fl">0.00000000</span>  , <span class="fl">-1.39250319</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-6" title="6">    [<span class="fl">1.20594314</span>  , <span class="fl">-0.69625160</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-7" title="7">    [<span class="fl">1.20594314</span>  ,  <span class="fl">0.69625160</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-8" title="8">    [<span class="op">-</span><span class="fl">2.14171677</span> ,  <span class="fl">1.23652075</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-9" title="9">    [<span class="op">-</span><span class="fl">2.14171677</span> , <span class="fl">-1.23652075</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-10" title="10">    [<span class="fl">0.00000000</span>  , <span class="fl">-2.47304151</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-11" title="11">    [<span class="fl">2.14171677</span>  , <span class="fl">-1.23652075</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-12" title="12">    [<span class="fl">2.14171677</span>  ,  <span class="fl">1.23652075</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-13" title="13">    [<span class="fl">0.00000000</span>  ,  <span class="fl">2.47304151</span> ,  <span class="fl">0.00000000</span> ],</a>
+<a class="sourceLine" id="cb13-14" title="14">    ]</a></code></pre></div>
+<p>Let’s take advantage of using NumPy arrays with fixed precision for floating point numbers. But first, try to import the <code>numpy</code> package</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb14-1" title="1"><span class="cf">try</span>:</a>
+<a class="sourceLine" id="cb14-2" title="2">    <span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb14-3" title="3"><span class="cf">except</span> <span class="pp">ImportError</span>:</a>
+<a class="sourceLine" id="cb14-4" title="4">    <span class="cf">raise</span> <span class="pp">Exception</span>(<span class="st">&quot;Unable to import numpy. Please check that numpy is properly instaled.&quot;</span>)</a></code></pre></div>
+<p>You can now convert the previously defined <code>coords</code> list into a numpy array with fixed <code>float64</code> type as follows</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb15-1" title="1">coords_np <span class="op">=</span> np.array(coords, dtype<span class="op">=</span>np.float64)</a></code></pre></div>
+<p>TREXIO functions that write numerical arrays accept both lists and numpy arrays as a second argument. That is, both <code>trexio.write_nucleus_coord(demo_file, coords)</code> and <code>trexio.write_nucleus_coord(demo_file, coords_np)</code> are valid API calls. Let’s use the latter and see if it works</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb16-1" title="1">trexio.write_nucleus_coord(demo_file, coords_np)</a></code></pre></div>
+<p>Congratulations, you have just completed the <code>nucleus</code> section of the TREXIO file for benzene molecule! Note that TREXIO API is rather permissive and do not impose any strict ordering on the I/O operations. The only requirement is that dimensioning (<code>_num</code> suffixed) variables have to be written in the file <strong>before</strong> writing arrays that depend on these variables. For example, attempting to write <code>nucleus_charge</code> or <code>nucleus_coord</code> fails if <code>nucleus_num</code> has not been written.</p>
+<h3 id="trexio-error-handling">TREXIO error handling</h3>
+<p>TREXIO Python API provides the <code>trexio.Error</code> class which simplifies exception handling in the Python scripts. This class wraps up TREXIO return codes and propagates them all the way from the C back end to the Python front end. Let’s try to write a negative number of basis set shells <code>basis_num</code> in the TREXIO file.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb17-1" title="1"><span class="cf">try</span>:</a>
+<a class="sourceLine" id="cb17-2" title="2">    trexio.write_basis_num(demo_file, <span class="dv">-256</span>)</a>
+<a class="sourceLine" id="cb17-3" title="3"><span class="cf">except</span> trexio.Error <span class="im">as</span> e:</a>
+<a class="sourceLine" id="cb17-4" title="4">    <span class="bu">print</span>(<span class="ss">f&quot;TREXIO error message: </span><span class="sc">{e.</span>message<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>TREXIO error message: Invalid argument 2</code></pre>
+<p>The error message says <strong>Invalid argument 2</strong>, which indicates that the user-provided value <code>-256</code> is not valid.</p>
+<p>As mentioned before, <code>_num</code>-suffixed variables cannot be overwritten in the file. But what happens if you accidentally attempt to do so? Let’s have a look at the <code>write_nucleus_num</code> function as an example:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb19-1" title="1"><span class="cf">try</span>:</a>
+<a class="sourceLine" id="cb19-2" title="2">    trexio.write_nucleus_num(demo_file, <span class="dv">24</span>)</a>
+<a class="sourceLine" id="cb19-3" title="3"><span class="cf">except</span> trexio.Error <span class="im">as</span> e:</a>
+<a class="sourceLine" id="cb19-4" title="4">    <span class="bu">print</span>(<span class="ss">f&quot;TREXIO error message: </span><span class="sc">{e.</span>message<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>TREXIO error message: Attribute already exists</code></pre>
+<p>The API rightfully complains that the target attribute already exists and cannot be overwritten.</p>
+<p>Alternatively, the aforementioned case can be handled using <code>trexio.has_nucleus_num</code> function as follows</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb21-1" title="1"><span class="cf">if</span> <span class="kw">not</span> trexio.has_nucleus_num:</a>
+<a class="sourceLine" id="cb21-2" title="2">    trexio.write_nucleus_num(demo_file, <span class="dv">24</span>)</a></code></pre></div>
+<p>TREXIO functions with <code>has_</code> prefix return <code>True</code> if the corresponding variable exists and <code>False</code> otherwise.</p>
+<p>What about writing arrays? Let’s try to write an list of 48 nuclear indices instead of 12</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb22-1" title="1">indices <span class="op">=</span> [i <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(nucleus_num<span class="op">*</span><span class="dv">4</span>)]</a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb23-1" title="1"><span class="cf">try</span>:</a>
+<a class="sourceLine" id="cb23-2" title="2">    trexio.write_basis_nucleus_index(demo_file, indices)</a>
+<a class="sourceLine" id="cb23-3" title="3"><span class="cf">except</span> trexio.Error <span class="im">as</span> e:</a>
+<a class="sourceLine" id="cb23-4" title="4">    <span class="bu">print</span>(<span class="ss">f&quot;TREXIO error message: </span><span class="sc">{e.</span>message<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>TREXIO error message: Access to memory beyond allocated</code></pre>
+<p>According to the TREX configuration file, <code>nucleus_index</code> attribute of a <code>basis</code> group is supposed to have <code>[nucleus_num]</code> elements. In the example above, we have tried to write 4 times more elements, which might lead to memory and/or file corruption. Luckily, TREXIO internally checks the array dimensions and returns an error in case of inconsistency.</p>
+<h2 id="closing-the-trexio-file">Closing the TREXIO file</h2>
+<p>It is good practice to close the TREXIO file at the end of the session. In fact, <code>trexio.File</code> class has a destructor, which normally takes care of that. However, if you intend to re-open the TREXIO file, it has to be closed explicitly before. This can be done using the <code>close</code> method, i.e.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb25-1" title="1">demo_file.close()</a></code></pre></div>
+<p>Good! You are now ready to inspect the contents of the <code>benzene_demo.h5</code> file using the reading functionality of TREXIO.</p>
+<h2 id="reading-data-from-the-trexio-file">Reading data from the TREXIO file</h2>
+<p>First, let’s try to open an existing TREXIO file in read-only mode. This can be done by creating a new instance of the <code>trexio.File</code> class but this time with <code>mode='r'</code> argument. Back end has to be specified as well.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb26-1" title="1">demo_file_r <span class="op">=</span> trexio.File(filename, mode<span class="op">=</span><span class="st">&#39;r&#39;</span>, back_end<span class="op">=</span>trexio.TREXIO_HDF5)</a></code></pre></div>
+<p>When reading data from the TREXIO file, the only required argument is a previously created instance of <code>trexio.File</code> class. In our case, it is <code>demo_file_r</code>. TREXIO functions with <code>read_</code> prefix return the desired variable as an output. For example, <code>nucleus_num</code> value can be read from the file as follows</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb27-1" title="1">nucleus_num_r <span class="op">=</span> trexio.read_nucleus_num(demo_file_r)</a></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb28-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;nucleus_num from </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss"> file ---&gt; </span><span class="sc">{</span>nucleus_num_r<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>nucleus_num from benzene_demo.h5 file ---&gt; 12</code></pre>
+<p>The function call assigns <code>nucleus_num_r</code> to 12, which is consistent with the number of atoms in benzene that we wrote in the previous section.</p>
+<p>All calls to functions that read data can be done in a very similar way. The key point here is a function name, which in turn defines the output format. Hopefully by now you got used to the TREXIO naming convention and the contents of the <code>nucleus</code> group. Which function would you call to read a <code>point_group</code> attribute of the <code>nucleus</code> group? What type does it return? See the answer below:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb30-1" title="1">point_group_r <span class="op">=</span> trexio.read_nucleus_point_group(demo_file_r)</a></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb31-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;nucleus_point_group from </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss"> TREXIO file ---&gt; </span><span class="sc">{</span>point_group_r<span class="sc">}</span><span class="ch">\n</span><span class="ss">&quot;</span>)</a>
+<a class="sourceLine" id="cb31-2" title="2"><span class="bu">print</span>(<span class="ss">f&quot;Is return type of read_nucleus_point_group a string? ---&gt; </span><span class="sc">{</span><span class="bu">isinstance</span>(point_group_r, <span class="bu">str</span>)<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>nucleus_point_group from benzene_demo.h5 TREXIO file ---&gt; D6h
+
+Is return type of read_nucleus_point_group a string? ---&gt; True</code></pre>
+<p>The <code>trexio.read_nucleus_point_group</code> function call returns a string <code>D6h</code>, which is exactly what we provided in the previous section. Now, let’s read nuclear charges and labels.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb33-1" title="1">labels_r <span class="op">=</span> trexio.read_nucleus_label(demo_file_r)</a></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb34-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;nucleus_label from </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss"> file </span><span class="ch">\n</span><span class="ss">---&gt; </span><span class="sc">{</span>labels_r<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>nucleus_label from benzene_demo.h5 file 
+---&gt; [&#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;C&#39;, &#39;H&#39;, &#39;H&#39;, &#39;H&#39;, &#39;H&#39;, &#39;H&#39;, &#39;H&#39;]</code></pre>
+<div class="sourceCode" id="cb36"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb36-1" title="1">charges_r <span class="op">=</span> trexio.read_nucleus_charge(demo_file_r)</a></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb37-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;nucleus_charge from </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss"> file </span><span class="ch">\n</span><span class="ss">---&gt; </span><span class="sc">{</span>charges_r<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>nucleus_charge from benzene_demo.h5 file 
+---&gt; [6. 6. 6. 6. 6. 6. 1. 1. 1. 1. 1. 1.]</code></pre>
+<p>The values are consistent with each other and with the previously written data. Not bad. What about the format of the output?</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb39-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;nucleus_label return type: </span><span class="sc">{</span><span class="bu">type</span>(labels_r)<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>nucleus_label return type: &lt;class &#39;list&#39;&gt;</code></pre>
+<p>This makes sense, isn’t it? We have written a <code>list</code> of nuclear labels and have received back a <code>list</code> of values from the file. What about nuclear charges?</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb41-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;nucleus_charge return type: </span><span class="sc">{</span><span class="bu">type</span>(charges_r)<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>nucleus_charge return type: &lt;class &#39;numpy.ndarray&#39;&gt;</code></pre>
+<p>Looks like <code>trexio.read_nucleus_charge</code> function returns a <code>numpy.ndarray</code> even though we have provided a python-ic <code>list</code> to <code>trexio.write_nucleus_charge</code> in the previous section. Why is it so? As has been mentioned before, TREXIO Python API internally relies on the use of the NumPy package to communicate arrays of <code>float</code>-like or <code>int</code>-like values. This prevents some memory leaks and grants additional flexibility to the API. What kind of flexibility? Check this out:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb43-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;return dtype in NumPy notation: ---&gt; </span><span class="sc">{</span>charges_r<span class="sc">.</span>dtype<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>return dtype in NumPy notation: ---&gt; float64</code></pre>
+<p>It means that the default precision of the TREXIO output is double (<code>np.float64</code>) for arrays of floating point numbers like <code>nucleus_charge</code>. But what if you do not need this extra precision and would like to read nuclear charges in single (<code>np.float32</code>) or even reduced (e.g. <code>np.float16</code>) precision? TREXIO Python API provides an additional (optional) argument for this. This argument is called <code>dtype</code> and accepts one of the <a href="https://numpy.org/doc/stable/user/basics.types.html">NumPy data types</a>. For example,</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb45-1" title="1">charges_np <span class="op">=</span> trexio.read_nucleus_charge(demo_file_r, dtype<span class="op">=</span>np.float32)</a></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb46-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;return dtype in NumPy notation: ---&gt; </span><span class="sc">{</span>charges_np<span class="sc">.</span>dtype<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>return dtype in NumPy notation: ---&gt; float32</code></pre>
+<h3 id="reading-multidimensional-arrays">Reading multidimensional arrays</h3>
+<p>So far, we have only read flat 1D arrays. However, we have also written a 2D array of nuclear coordinates. Let’s now read it back from the file:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb48-1" title="1">coords_r <span class="op">=</span> trexio.read_nucleus_coord(demo_file_r)</a></code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb49-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;nucleus_coord from </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss"> TREXIO file: </span><span class="ch">\n</span><span class="sc">{</span>coords_r<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>nucleus_coord from benzene_demo.h5 TREXIO file: 
+[[ 0.          1.39250319  0.        ]
+ [-1.20594314  0.6962516   0.        ]
+ [-1.20594314 -0.6962516   0.        ]
+ [ 0.         -1.39250319  0.        ]
+ [ 1.20594314 -0.6962516   0.        ]
+ [ 1.20594314  0.6962516   0.        ]
+ [-2.14171677  1.23652075  0.        ]
+ [-2.14171677 -1.23652075  0.        ]
+ [ 0.         -2.47304151  0.        ]
+ [ 2.14171677 -1.23652075  0.        ]
+ [ 2.14171677  1.23652075  0.        ]
+ [ 0.          2.47304151  0.        ]]</code></pre>
+<div class="sourceCode" id="cb51"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb51-1" title="1"><span class="bu">print</span>(<span class="ss">f&quot;return shape: ---&gt; </span><span class="sc">{</span>coords_r<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">&quot;</span>)</a></code></pre></div>
+<pre><code>return shape: ---&gt; (12, 3)</code></pre>
+<p>We can see that TREXIO returns a 2D array with 12 rows and 3 columns, which is consistent with the <code>nucleus_coord</code> dimensions <code>[nucleus_num, 3]</code>. What this means is that <strong>by default TREXIO reshapes the output flat array into a multidimensional one</strong> whenever applicable. This is done based on the shape specified in the TREX configuration file.</p>
+<p>In some cases, it might be a good idea to explicitly check that the data exists in the file before reading it. This can be achieved using <code>has_</code>-suffixed functions of the API. For example,</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb53-1" title="1"><span class="cf">if</span> trexio.has_nucleus_coord(demo_file_r):</a>
+<a class="sourceLine" id="cb53-2" title="2">    coords_safer <span class="op">=</span> trexio.read_nucleus_coord(demo_file_r)</a></code></pre></div>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this Tutorial, you have created a TREXIO file using HDF5 back end and have written the number of atoms, point group, nuclear charges, labels and coordinates, which correspond to benzene molecule. You have also learned how to read this data back from the TREXIO file and how to handle some TREXIO errors.</p>
