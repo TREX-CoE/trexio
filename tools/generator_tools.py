@@ -129,6 +129,12 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                                 f_out.write(templine)
                         num_written = []
                         continue
+                    # special case to uncomment check for positive dimensioning variables in templates
+                    elif 'uncommented by the generator for dimensioning' in line:
+                        # only uncomment and write the line if `num` is in the name
+                        if 'num' in item:
+                            templine = line.replace('//', '') 
+                            f_out.write(templine)
                     # general case of recursive replacement of inline triggers 
                     else:
                         populated_line = recursive_replace_line(line, triggers, detailed_source[item])
