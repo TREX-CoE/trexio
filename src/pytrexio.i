@@ -28,12 +28,15 @@
    Useful when working with C pointers
 */
 %include typemaps.i
-/* Redefine the int32_t* and int64_t* num to be output 
+/* Redefine the [int32_t*, int64_t*, float*, double*] num 
+   pattern to be appended to the output tuple.
    Useful for TREXIO read_num functions where the 
    num variable is modified by address
 */
 %apply int *OUTPUT { int32_t* const num};
 %apply int *OUTPUT { int64_t* const num};
+%apply float *OUTPUT { float* const num};
+%apply float *OUTPUT { double* const num};
 
 /* Does not work for arrays (SIGSEGV) */
 
