@@ -78,7 +78,7 @@
 
     #+begin_src c :tangle struct_text_group_dset.h
 typedef struct $group$_s {
-  uint64_t $group_num$;
+  $group_num_dtype_double$ $group_num$;
   $group_dset_dtype$*  $group_dset$;
   uint32_t rank_$group_dset$;
   uint32_t to_flush;
@@ -357,7 +357,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       return NULL;
     }
 
-    rc = fscanf(f, "%" SCNu64 "", &($group$->$group_num$));
+    rc = fscanf(f, "%$group_num_std_dtype_in$", &($group$->$group_num$));
     assert(!(rc != 1));
     if (rc != 1) {
       FREE(buffer);
@@ -555,7 +555,7 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
   // END REPEAT GROUP_DSET_ALL
 
   // START REPEAT GROUP_NUM
-  fprintf(f, "$group_num$ %" PRIu64 "\n", $group$->$group_num$);
+  fprintf(f, "$group_num$ %$group_num_std_dtype_out$ \n", $group$->$group_num$);
   // END REPEAT GROUP_NUM
 
   // START REPEAT GROUP_ATTR_STR
@@ -628,13 +628,13 @@ trexio_text_free_$group$ (trexio_text_t* const file)
 
     #+begin_src c :tangle hrw_num_text.h :exports none
 trexio_exit_code trexio_text_has_$group_num$ (trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_num$ (trexio_t* const file, uint64_t* const num);
-trexio_exit_code trexio_text_write_$group_num$(trexio_t* const file, const uint64_t num);
+trexio_exit_code trexio_text_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$ * const num);
+trexio_exit_code trexio_text_write_$group_num$(trexio_t* const file, const $group_num_dtype_double$ num);
    #+end_src
 
     #+begin_src c :tangle read_num_text.c
 trexio_exit_code
-trexio_text_read_$group_num$ (trexio_t* const file, uint64_t* const num)
+trexio_text_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$ * const num)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -652,7 +652,7 @@ trexio_text_read_$group_num$ (trexio_t* const file, uint64_t* const num)
 
    #+begin_src c :tangle write_num_text.c
 trexio_exit_code
-trexio_text_write_$group_num$ (trexio_t* const file, const uint64_t num)
+trexio_text_write_$group_num$ (trexio_t* const file, const $group_num_dtype_double$ num)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
