@@ -1135,70 +1135,39 @@ def close(trexio_file):
    (non-suffixed) API call on dimensioning variables deals with single
    precision (see Table above).
 
+**** Function declarations
 
      #+begin_src c :tangle hrw_num_front.h :exports none
 trexio_exit_code trexio_has_$group_num$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_num$(trexio_t* const file, int32_t* const num);
-trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const int32_t num);
-trexio_exit_code trexio_read_$group_num$_32(trexio_t* const file, int32_t* const num);
-trexio_exit_code trexio_write_$group_num$_32(trexio_t* const file, const int32_t num);
-trexio_exit_code trexio_read_$group_num$_64(trexio_t* const file, int64_t* const num);
-trexio_exit_code trexio_write_$group_num$_64(trexio_t* const file, const int64_t num);
+trexio_exit_code trexio_read_$group_num$(trexio_t* const file, $group_num_dtype_default$* const num);
+trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const $group_num_dtype_default$ num);
+trexio_exit_code trexio_read_$group_num$_32(trexio_t* const file, $group_num_dtype_single$* const num);
+trexio_exit_code trexio_write_$group_num$_32(trexio_t* const file, const $group_num_dtype_single$ num);
+trexio_exit_code trexio_read_$group_num$_64(trexio_t* const file, $group_num_dtype_double$* const num);
+trexio_exit_code trexio_write_$group_num$_64(trexio_t* const file, const $group_num_dtype_double$ num);
      #+end_src
+
+**** Source code for double precision functions
 
      #+begin_src c :tangle read_num_64_front.c
 trexio_exit_code
-trexio_read_$group_num$_64 (trexio_t* const file, int64_t* const num)
+trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* const num)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (trexio_has_$group_num$(file) != TREXIO_SUCCESS) return TREXIO_ATTR_MISSING;
 
-  uint64_t u_num = 0;
-  trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_read_$group_num$(file, &u_num);
+    return trexio_text_read_$group_num$(file, num);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_read_$group_num$(file, &u_num);
+    return trexio_hdf5_read_$group_num$(file, num);
     break;
 /*
   case TREXIO_JSON:
-    rc =trexio_json_read_$group_num$(file, &u_num);
-    break;
-,*/
-  }
-
-  if (rc != TREXIO_SUCCESS) return rc;
-
-  *num = (int64_t) u_num;
-  return TREXIO_SUCCESS;
-}
-     #+end_src
-
-     #+begin_src c :tangle write_num_64_front.c
-trexio_exit_code
-trexio_write_$group_num$_64 (trexio_t* const file, const int64_t num)
-{
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (num  <  0   ) return TREXIO_INVALID_ARG_2;
-  if (trexio_has_$group_num$(file) == TREXIO_SUCCESS) return TREXIO_ATTR_ALREADY_EXISTS;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_write_$group_num$(file, (int64_t) num);
-    break;
-
-  case TREXIO_HDF5:
-    return trexio_hdf5_write_$group_num$(file, (int64_t) num);
-    break;
-/*
-  case TREXIO_JSON:
-    return trexio_json_write_$group_num$(file, (int64_t) num);
+    return trexio_json_read_$group_num$(file, num);
     break;
 ,*/
   }
@@ -1207,60 +1176,89 @@ trexio_write_$group_num$_64 (trexio_t* const file, const int64_t num)
 }
      #+end_src
 
+     #+begin_src c :tangle write_num_64_front.c
+trexio_exit_code
+trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double$ num)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (trexio_has_$group_num$(file) == TREXIO_SUCCESS) return TREXIO_ATTR_ALREADY_EXISTS;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_$group_num$(file, num);
+    break;				       
+					       
+  case TREXIO_HDF5:			       
+    return trexio_hdf5_write_$group_num$(file, num);
+    break;				       
+/*					       
+  case TREXIO_JSON:			       
+    return trexio_json_write_$group_num$(file, num);
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+**** Source code for single precision functions
+
      #+begin_src c :tangle read_num_32_front.c
 trexio_exit_code
-trexio_read_$group_num$_32 (trexio_t* const file, int32_t* const num)
+trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* const num)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (trexio_has_$group_num$(file) != TREXIO_SUCCESS) return TREXIO_ATTR_MISSING;
 
-  uint64_t u_num = 0;
+  $group_num_dtype_double$ num_64 = 0;
   trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_read_$group_num$(file, &u_num);
+    rc = trexio_text_read_$group_num$(file, &num_64);
     break;
 
   case TREXIO_HDF5:
-    rc = trexio_hdf5_read_$group_num$(file, &u_num);
+    rc = trexio_hdf5_read_$group_num$(file, &num_64);
     break;
 /*
   case TREXIO_JSON:
-    rc =trexio_json_read_$group_num$(file, &u_num);
+    rc =trexio_json_read_$group_num$(file, &num_64);
     break;
 ,*/
   }
 
   if (rc != TREXIO_SUCCESS) return rc;
 
-  *num = (int32_t) u_num;
+  *num = ($group_num_dtype_single$) num_64;
   return TREXIO_SUCCESS;
 }
      #+end_src
 
      #+begin_src c :tangle write_num_32_front.c
 trexio_exit_code
-trexio_write_$group_num$_32 (trexio_t* const file, const int32_t num)
+trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single$ num)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (num  <  0   ) return TREXIO_INVALID_ARG_2;
+  //if (num  <  0   ) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS) return TREXIO_ATTR_ALREADY_EXISTS;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_num$(file, (int64_t) num);
-    break;
-
-  case TREXIO_HDF5:
-    return trexio_hdf5_write_$group_num$(file, (int64_t) num);
-    break;
-/*
-  case TREXIO_JSON:
-    return trexio_json_write_$group_num$(file, (int64_t) num);
+    return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num);
+    break;					       
+						       
+  case TREXIO_HDF5:				       
+    return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num);
+    break;					       
+/*						       
+  case TREXIO_JSON:				       
+    return trexio_json_write_$group_num$(file, ($group_num_dtype_double$) num);
     break;
 ,*/
   }
@@ -1269,19 +1267,21 @@ trexio_write_$group_num$_32 (trexio_t* const file, const int32_t num)
 }
      #+end_src
 
+**** Source code for default functions
+
      #+begin_src c :tangle read_num_def_front.c
 trexio_exit_code
-trexio_read_$group_num$ (trexio_t* const file, int32_t* const num)
+trexio_read_$group_num$ (trexio_t* const file, $group_num_dtype_default$ * const num)
 {
-  return trexio_read_$group_num$_32(file, num);
+  return trexio_read_$group_num$_$default_prec$(file, num);
 }
      #+end_src
 
      #+begin_src c :tangle write_num_def_front.c
 trexio_exit_code
-trexio_write_$group_num$ (trexio_t* const file, const int32_t num)
+trexio_write_$group_num$ (trexio_t* const file, const $group_num_dtype_default$ num)
 {
-  return trexio_write_$group_num$_32(file, num);
+  return trexio_write_$group_num$_$default_prec$(file, num);
 }
      #+end_src
 
@@ -1324,7 +1324,7 @@ interface
    integer function trexio_write_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     integer(8), intent(in), value :: num
+     $group_num_f_dtype_double$, intent(in), value :: num
    end function trexio_write_$group_num$_64
 end interface
      #+end_src
@@ -1334,7 +1334,7 @@ interface
    integer function trexio_read_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     integer(8), intent(out) :: num
+     $group_num_f_dtype_double$, intent(out) :: num
    end function trexio_read_$group_num$_64
 end interface
      #+end_src
@@ -1344,7 +1344,7 @@ interface
    integer function trexio_write_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     integer(4), intent(in), value :: num
+     $group_num_f_dtype_single$, intent(in), value :: num
    end function trexio_write_$group_num$_32
 end interface
      #+end_src
@@ -1354,7 +1354,7 @@ interface
    integer function trexio_read_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     integer(4), intent(out) :: num
+     $group_num_f_dtype_single$, intent(out) :: num
    end function trexio_read_$group_num$_32
 end interface
      #+end_src
@@ -1364,7 +1364,7 @@ interface
    integer function trexio_write_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     integer(4), intent(in), value :: num
+     $group_num_f_dtype_default$, intent(in), value :: num
    end function trexio_write_$group_num$
 end interface
      #+end_src
@@ -1374,7 +1374,7 @@ interface
    integer function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-     integer(4), intent(out) :: num
+     $group_num_f_dtype_default$, intent(out) :: num
    end function trexio_read_$group_num$
 end interface
      #+end_src
@@ -1391,7 +1391,7 @@ end interface
 *** Python templates for front end
 
      #+begin_src python :tangle write_num_front.py
-def write_$group_num$(trexio_file, num_w: int) -> None: 
+def write_$group_num$(trexio_file, num_w: $group_num_py_dtype$) -> None: 
     """Write the $group_num$ variable in the TREXIO file.
 
     Parameters:
@@ -1416,7 +1416,7 @@ def write_$group_num$(trexio_file, num_w: int) -> None:
      #+end_src
 
      #+begin_src python :tangle read_num_front.py
-def read_$group_num$(trexio_file) -> int: 
+def read_$group_num$(trexio_file) -> $group_num_py_dtype$: 
     """Read the $group_num$ variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.

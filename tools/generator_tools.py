@@ -103,7 +103,9 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index', 
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
-                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims', 
+                'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single', 
+                'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single', 'group_num_py_dtype', 
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
@@ -467,6 +469,34 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     tmp_dict['group'] = k1
                     tmp_dict['group_num'] = tmp_num
                     num_dict[tmp_num] = tmp_dict
+
+                    # TODO the line below is the same as for group_dset and can be exported from somewhere
+                    if v2[0] == 'float':
+                        tmp_dict['datatype'] = 'double'
+                        tmp_dict['group_num_h5_dtype']       = 'native_double'
+                        tmp_dict['group_num_f_dtype_default']= 'real(8)'
+                        tmp_dict['group_num_f_dtype_double'] = 'real(8)'
+                        tmp_dict['group_num_f_dtype_single'] = 'real(4)'
+                        tmp_dict['group_num_dtype_default']= 'double'
+                        tmp_dict['group_num_dtype_double'] = 'double'
+                        tmp_dict['group_num_dtype_single'] = 'float'
+                        tmp_dict['default_prec']   = '64'
+                        tmp_dict['group_num_std_dtype_out'] = '24.16e'
+                        tmp_dict['group_num_std_dtype_in'] = 'lf'
+                        tmp_dict['group_num_py_dtype'] = 'float'
+                    elif v2[0] in ['int']:
+                        tmp_dict['datatype'] = 'int64_t'
+                        tmp_dict['group_num_h5_dtype'] = 'native_int64'
+                        tmp_dict['group_num_f_dtype_default']= 'integer(4)'
+                        tmp_dict['group_num_f_dtype_double'] = 'integer(8)'
+                        tmp_dict['group_num_f_dtype_single'] = 'integer(4)'
+                        tmp_dict['group_num_dtype_default']= 'int32_t'
+                        tmp_dict['group_num_dtype_double'] = 'int64_t'
+                        tmp_dict['group_num_dtype_single'] = 'int32_t'
+                        tmp_dict['default_prec']   = '32'
+                        tmp_dict['group_num_std_dtype_out'] = '" PRId64 "'
+                        tmp_dict['group_num_std_dtype_in']  = '" SCNd64 "' 
+                        tmp_dict['group_num_py_dtype'] = 'int'
 
     return num_dict
 
