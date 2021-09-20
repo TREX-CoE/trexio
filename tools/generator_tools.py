@@ -100,12 +100,13 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
-    triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index', 
-                'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
-                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
-                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims', 
-                'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single', 
-                'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single', 'group_num_py_dtype', 
+    triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index',
+                'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single',
+                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single',
+                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
+                'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
+                'group_num_h5_dtype', 'group_num_py_dtype',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
@@ -286,6 +287,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
     templ_path = get_template_path(fname, paths)
 
     triggers = ['group_dset_dtype', 'group_dset_std_dtype_out', 'group_dset_std_dtype_in',
+                'group_num_dtype_double', 'group_num_std_dtype_out', 'group_num_std_dtype_in',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for group in group_dict.keys():
