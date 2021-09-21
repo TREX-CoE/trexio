@@ -483,49 +483,51 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
     // START REPEAT GROUP_DSET_STR
     /* Allocate arrays */
-    $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
-    assert (!($group$->$group_dset$ == NULL));
-    if ($group$->$group_dset$ == NULL) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$->$group_dset$);
-      FREE($group$);
-      return NULL;
-    }
-
-    rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$->$group_dset$);
-	FREE($group$);
-	return NULL;
-    }
-
-    /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
-    ,  BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
-    ,*/
-    char* tmp_$group_dset$;
-    if(size_$group_dset$ != 0) tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
-    
-    for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-      $group$->$group_dset$[i] = tmp_$group_dset$;
-      /* conventional fcanf with "%s" only return the string before the first space character 
-       ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
-       ,* Q: depending on what ? */
-      rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
-      assert(!(rc != 1));
-      if (rc != 1) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$->$group_dset$);
-	FREE($group$);
-	return NULL;
+    if(size_$group_dset$ != 0) {
+      $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
+      assert (!($group$->$group_dset$ == NULL));
+      if ($group$->$group_dset$ == NULL) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$->$group_dset$);
+        FREE($group$);
+        return NULL;
       }
-
-      size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
-      tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+      
+      rc = fscanf(f, "%1023s", buffer);
+      assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
+      if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$->$group_dset$);
+        FREE($group$);
+        return NULL;
+      }
+      
+      /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
+      ,  BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+      ,*/
+      char* tmp_$group_dset$;
+      tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
+      
+      for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
+        $group$->$group_dset$[i] = tmp_$group_dset$;
+        /* conventional fcanf with "%s" only return the string before the first space character 
+         ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
+         ,* Q: depending on what ? */
+        rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
+        assert(!(rc != 1));
+        if (rc != 1) {
+          FREE(buffer);
+          fclose(f);
+          FREE($group$->$group_dset$);
+          FREE($group$);
+          return NULL;
+        }
+      
+        size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
+        tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+      }
     }
     // END REPEAT GROUP_DSET_STR
 
