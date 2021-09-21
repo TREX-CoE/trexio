@@ -46,6 +46,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
   #+end_src
 
@@ -79,6 +80,7 @@
     #+begin_src c :tangle struct_text_group_dset.h
 typedef struct $group$_s {
   $group_num_dtype_double$ $group_num$;
+  bool $group_num$_isSet;
   $group_dset_dtype$*  $group_dset$;
   uint32_t rank_$group_dset$;
   uint32_t to_flush;
@@ -346,24 +348,47 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
     // END REPEAT GROUP_DSET_ALL
 
+    unsigned int local_isSet;
     // START REPEAT GROUP_NUM
     /* Read data */
     rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
+    assert(!((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)) {
       FREE(buffer);
       fclose(f);
       FREE($group$);
       return NULL;
     }
-
-    rc = fscanf(f, "%$group_num_std_dtype_in$", &($group$->$group_num$));
+    
+    /* additional parameter local_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
+    rc = fscanf(f, "%u", &(local_isSet));
+    $group$->$group_num$_isSet = (bool) local_isSet;
     assert(!(rc != 1));
     if (rc != 1) {
       FREE(buffer);
       fclose(f);
       FREE($group$);
       return NULL;
+    }
+
+    if ($group$->$group_num$_isSet == true) { 
+      rc = fscanf(f, "%1023s", buffer);
+      assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
+      if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$);
+        return NULL;
+      }
+      
+      rc = fscanf(f, "%$group_num_std_dtype_in$", &($group$->$group_num$));
+      assert(!(rc != 1));
+      if (rc != 1) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$);
+        return NULL;
+      }
     }
     // END REPEAT GROUP_NUM
 
@@ -555,7 +580,8 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
   // END REPEAT GROUP_DSET_ALL
 
   // START REPEAT GROUP_NUM
-  fprintf(f, "$group_num$ %$group_num_std_dtype_out$ \n", $group$->$group_num$);
+  fprintf(f, "$group_num$_isSet %u \n", $group$->$group_num$_isSet);
+  if ($group$->$group_num$_isSet == true) fprintf(f, "$group_num$ %$group_num_std_dtype_out$ \n", $group$->$group_num$);
   // END REPEAT GROUP_NUM
 
   // START REPEAT GROUP_ATTR_STR
@@ -662,6 +688,7 @@ trexio_text_write_$group_num$ (trexio_t* const file, const $group_num_dtype_doub
   if ($group$ == NULL) return TREXIO_FAILURE;
 
   $group$->$group_num$ = num;
+  $group$->$group_num$_isSet = true;
   $group$->to_flush = 1;
 
   return TREXIO_SUCCESS;
@@ -678,7 +705,7 @@ trexio_text_has_$group_num$ (trexio_t* const file)
   $group$_t* $group$ = trexio_text_read_$group$((trexio_text_t*) file);
   if ($group$ == NULL) return TREXIO_FAILURE;
 
-  if ($group$->$group_num$ > 0L){
+  if ($group$->$group_num$_isSet == true){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
