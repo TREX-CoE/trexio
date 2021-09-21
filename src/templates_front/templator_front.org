@@ -1054,6 +1054,7 @@ def close(trexio_file):
       , "charge"             : [ "float", [ "nucleus.num"       ] ]
       , "coord"              : [ "float", [ "nucleus.num", "3"  ] ]
       , "label"              : [ "str" ,  [ "nucleus.num"       ] ]
+      , "point_group"        : [ "str"  , [                     ] ]
     }
   }
    #+end_src
@@ -1066,31 +1067,32 @@ def close(trexio_file):
 
   All templates presented below use the ~$var$~ notation to indicate
   the variable, which will be replaced by the
-  ~generator.py~. Sometimes the upper case is used, i.e.  ~$VAR$~ (for
+  ~generator.py~. Sometimes the upper case is used, i.e. ~$VAR$~ (for
   example, in ~#define~ statements).  More detailed description of
   each variable can be found below:
 
-   | Template variable              | Description                                         | Example              |
-   |--------------------------------+-----------------------------------------------------+----------------------|
-   | ~$group$~                      | Name of the group                                   | ~nucleus~            |
-   | ~$group_num$~                  | Name of the dimensioning variable (scalar)          | ~nucleus_num~        |
-   | ~$group_dset$~                 | Name of the dataset (vector/matrix/tensor)          | ~nucleus_coord~      |
-   | ~$group_dset_rank$~            | Rank of the dataset                                 | ~2~                  |
-   | ~$group_dset_dim$~             | Selected dimension of the dataset                   | ~nucleus_num~        |
-   | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~   |
-   | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~              |
-   | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~             |
-   | ~$group_dset_std_dtype_in$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                |
-   | ~$group_dset_std_dtype_out$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~            |
-   | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~     |
-   | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~      |
-   | ~$group_dset_dtype_double$~    | Double precision datatype of the dataset [C]        | ~double/int64_t~     |
-   | ~$default_prec$~               | Default precision for read/write without suffix [C] | ~64/32~              |
-   | ~$group_dset_f_dtype_default$~ | Default datatype of the dataset [Fortran]           | ~real(8)/integer(4)~ |
-   | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(4)/integer(4)~ |
-   | ~$group_dset_f_dtype_double$~  | Double precision datatype of the dataset [Fortran]  | ~real(8)/integer(8)~ |
-   | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~              |
-   | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~          |
+   | Template variable              | Description                                         | Example               |
+   |--------------------------------+-----------------------------------------------------+-----------------------|
+   | ~$group$~                      | Name of the group                                   | ~nucleus~             |
+   | ~$group_num$~                  | Name of the numerical attribute (scalar)            | ~nucleus_num~         |
+   | ~$group_str$~                  | Name of the string attribute (scalar)               | ~nucleus_point_group~ |
+   | ~$group_dset$~                 | Name of the dataset (vector/matrix/tensor)          | ~nucleus_coord~       |
+   | ~$group_dset_rank$~            | Rank of the dataset                                 | ~2~                   |
+   | ~$group_dset_dim$~             | Selected dimension of the dataset                   | ~nucleus_num~         |
+   | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~    |
+   | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~               |
+   | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~              |
+   | ~$group_dset_std_dtype_in$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                 |
+   | ~$group_dset_std_dtype_out$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~             |
+   | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~      |
+   | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~       |
+   | ~$group_dset_dtype_double$~    | Double precision datatype of the dataset [C]        | ~double/int64_t~      |
+   | ~$default_prec$~               | Default precision for read/write without suffix [C] | ~64/32~               |
+   | ~$group_dset_f_dtype_default$~ | Default datatype of the dataset [Fortran]           | ~real(8)/integer(4)~  |
+   | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(4)/integer(4)~  |
+   | ~$group_dset_f_dtype_double$~  | Double precision datatype of the dataset [Fortran]  | ~real(8)/integer(8)~  |
+   | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~               |
+   | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~           |
 
 
    Note: parent group name is always added to the child objects upon
@@ -1110,19 +1112,21 @@ def close(trexio_file):
    *read* and *write* functionality.  TREXIO supports I/O with single
    or double precision for integer and floating point numbers.
 
-** Templates for front end has/read/write a single dimensioning variable
+** Templates for front end has/read/write a single numerical attribute
+*** Introduction
 
-   This section concerns API calls related to dimensioning variables.
+   This section concerns API calls related to numerical attributes,
+   namely single value of int/float types.
 
-   | Function name                 | Description                                       | Precision |
-   |-------------------------------+---------------------------------------------------+-----------|
-   | ~trexio_has_$group_num$~      | Check if a dimensioning variable exists in a file | ---       |
-   | ~trexio_read_$group_num$~     | Read a dimensioning variable                      | Single    |
-   | ~trexio_write_$group_num$~    | Write a dimensioning variable                     | Single    |
-   | ~trexio_read_$group_num$_32~  | Read a dimensioning variable                      | Single    |
-   | ~trexio_write_$group_num$_32~ | Write a dimensioning variable                     | Single    |
-   | ~trexio_read_$group_num$_64~  | Read a dimensioning variable                      | Double    |
-   | ~trexio_write_$group_num$_64~ | Write a dimensioning variable                     | Double    |
+   | Function name                 | Description                            | Precision |
+   |-------------------------------+----------------------------------------+-----------|
+   | ~trexio_has_$group_num$~      | Check if an attribute exists in a file | ---       |
+   | ~trexio_read_$group_num$~     | Read a attribute                       | Single    |
+   | ~trexio_write_$group_num$~    | Write a attribute                      | Single    |
+   | ~trexio_read_$group_num$_32~  | Read a attribute                       | Single    |
+   | ~trexio_write_$group_num$_32~ | Write a attribute                      | Single    |
+   | ~trexio_read_$group_num$_64~  | Read a attribute                       | Double    |
+   | ~trexio_write_$group_num$_64~ | Write a attribute                      | Double    |
 
 *** C templates for front end
 
@@ -1137,7 +1141,7 @@ def close(trexio_file):
 
 **** Function declarations
 
-     #+begin_src c :tangle hrw_num_front.h :exports none
+     #+begin_src c :tangle hrw_attr_num_front.h :exports none
 trexio_exit_code trexio_has_$group_num$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_num$(trexio_t* const file, $group_num_dtype_default$* const num);
 trexio_exit_code trexio_write_$group_num$(trexio_t* const file, const $group_num_dtype_default$ num);
@@ -1149,7 +1153,7 @@ trexio_exit_code trexio_write_$group_num$_64(trexio_t* const file, const $group_
 
 **** Source code for double precision functions
 
-     #+begin_src c :tangle read_num_64_front.c
+     #+begin_src c :tangle read_attr_num_64_front.c
 trexio_exit_code
 trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* const num)
 {
@@ -1176,7 +1180,7 @@ trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* cons
 }
      #+end_src
 
-     #+begin_src c :tangle write_num_64_front.c
+     #+begin_src c :tangle write_attr_num_64_front.c
 trexio_exit_code
 trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double$ num)
 {
@@ -1206,7 +1210,7 @@ trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double
 
 **** Source code for single precision functions
 
-     #+begin_src c :tangle read_num_32_front.c
+     #+begin_src c :tangle read_attr_num_32_front.c
 trexio_exit_code
 trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* const num)
 {
@@ -1239,7 +1243,7 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
 }
      #+end_src
 
-     #+begin_src c :tangle write_num_32_front.c
+     #+begin_src c :tangle write_attr_num_32_front.c
 trexio_exit_code
 trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single$ num)
 {
@@ -1270,7 +1274,7 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
 
 **** Source code for default functions
 
-     #+begin_src c :tangle read_num_def_front.c
+     #+begin_src c :tangle read_attr_num_def_front.c
 trexio_exit_code
 trexio_read_$group_num$ (trexio_t* const file, $group_num_dtype_default$ * const num)
 {
@@ -1278,7 +1282,7 @@ trexio_read_$group_num$ (trexio_t* const file, $group_num_dtype_default$ * const
 }
      #+end_src
 
-     #+begin_src c :tangle write_num_def_front.c
+     #+begin_src c :tangle write_attr_num_def_front.c
 trexio_exit_code
 trexio_write_$group_num$ (trexio_t* const file, const $group_num_dtype_default$ num)
 {
@@ -1286,7 +1290,7 @@ trexio_write_$group_num$ (trexio_t* const file, const $group_num_dtype_default$ 
 }
      #+end_src
 
-     #+begin_src c :tangle has_num_front.c
+     #+begin_src c :tangle has_attr_num_front.c
 trexio_exit_code
 trexio_has_$group_num$ (trexio_t* const file)
 {
@@ -1320,7 +1324,7 @@ trexio_has_$group_num$ (trexio_t* const file)
     The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
     These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
 
-     #+begin_src f90 :tangle write_num_64_front_fortran.f90
+     #+begin_src f90 :tangle write_attr_num_64_front_fortran.f90
 interface
    integer function trexio_write_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1330,7 +1334,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_num_64_front_fortran.f90
+     #+begin_src f90 :tangle read_attr_num_64_front_fortran.f90
 interface
    integer function trexio_read_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1340,7 +1344,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle write_num_32_front_fortran.f90
+     #+begin_src f90 :tangle write_attr_num_32_front_fortran.f90
 interface
    integer function trexio_write_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1350,7 +1354,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_num_32_front_fortran.f90
+     #+begin_src f90 :tangle read_attr_num_32_front_fortran.f90
 interface
    integer function trexio_read_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1360,7 +1364,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle write_num_def_front_fortran.f90
+     #+begin_src f90 :tangle write_attr_num_def_front_fortran.f90
 interface
    integer function trexio_write_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1370,7 +1374,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle read_num_def_front_fortran.f90
+     #+begin_src f90 :tangle read_attr_num_def_front_fortran.f90
 interface
    integer function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1380,7 +1384,7 @@ interface
 end interface
      #+end_src
 
-     #+begin_src f90 :tangle has_num_front_fortran.f90
+     #+begin_src f90 :tangle has_attr_num_front_fortran.f90
 interface
    integer function trexio_has_$group_num$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
@@ -1391,7 +1395,7 @@ end interface
 
 *** Python templates for front end
 
-     #+begin_src python :tangle write_num_front.py
+     #+begin_src python :tangle write_attr_num_front.py
 def write_$group_num$(trexio_file, num_w: $group_num_py_dtype$) -> None: 
     """Write the $group_num$ variable in the TREXIO file.
 
@@ -1416,7 +1420,7 @@ def write_$group_num$(trexio_file, num_w: $group_num_py_dtype$) -> None:
         raise    
      #+end_src
 
-     #+begin_src python :tangle read_num_front.py
+     #+begin_src python :tangle read_attr_num_front.py
 def read_$group_num$(trexio_file) -> $group_num_py_dtype$: 
     """Read the $group_num$ variable from the TREXIO file.
 
@@ -1441,7 +1445,7 @@ def read_$group_num$(trexio_file) -> $group_num_py_dtype$:
     return num_r
      #+end_src
 
-     #+begin_src python :tangle has_num_front.py
+     #+begin_src python :tangle has_attr_num_front.py
 def has_$group_num$(trexio_file) -> bool: 
     """Check that $group_num$ variable exists in the TREXIO file.
 
@@ -1469,6 +1473,7 @@ def has_$group_num$(trexio_file) -> bool:
      #+end_src
 
 ** Templates for front end has/read/write a dataset of numerical data
+*** Introduction
 
    This section concerns API calls related to datasets.
 
@@ -2325,6 +2330,7 @@ trexio_read_chunk_ao_2e_int_eri_value_64(trexio_t* const file,
    First parameter is the ~TREXIO~ file handle. Second parameter is the variable to be written/read
    to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
 
+**** Function declarations
 
      #+begin_src c :tangle hrw_dset_str_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
@@ -2333,6 +2339,8 @@ trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, const char*
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** dset_out, const int32_t max_str_len);
 trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset_in, const int32_t max_str_len);
      #+end_src
+
+**** Source code for default functions
 
      #+begin_src c :tangle read_dset_str_front.c
 trexio_exit_code
@@ -2777,12 +2785,15 @@ def has_$group_dset$(trexio_file) -> bool:
    | ~trexio_write_$group_str$~ | Write a string attribute                     |
 
 *** C templates for front end
+**** Function declarations
 
      #+begin_src c :tangle hrw_attr_str_front.h :exports none
 trexio_exit_code trexio_has_$group_str$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_str$(trexio_t* const file, char* const str_out, const int32_t max_str_len);
 trexio_exit_code trexio_write_$group_str$(trexio_t* const file, const char* str, const int32_t max_str_len);
      #+end_src
+
+**** Source code for default functions
 
      #+begin_src c :tangle read_attr_str_front.c
 trexio_exit_code

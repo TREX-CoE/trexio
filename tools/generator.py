@@ -41,7 +41,7 @@ for fname in files_todo['auxiliary']:
     iterative_populate_file(fname, template_paths, group_dict, detailed_dsets, detailed_nums, detailed_strs)
 
 # populate has/read/write_num functions with recursive scheme
-for fname in files_todo['num']:
+for fname in files_todo['attr_num']:
     recursive_populate_file(fname, template_paths, detailed_nums)
 
 # populate has/read/write_str functions with recursive scheme
