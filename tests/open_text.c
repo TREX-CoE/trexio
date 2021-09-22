@@ -19,8 +19,9 @@ static int test_open_w (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
 
   // close current session
   rc = trexio_close(file);
@@ -42,8 +43,9 @@ static int test_open_r (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
 
   // close current session
   rc = trexio_close(file);
@@ -65,8 +67,9 @@ static int test_open_void (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'read' mode
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file == NULL);
+  fprintf(stderr, "%s \n", trexio_string_of_error(rc));
 
 /*================= END OF TEST ==================*/
 

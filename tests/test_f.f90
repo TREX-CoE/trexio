@@ -9,12 +9,16 @@ program test_trexio
   call test_read('test_write_f.dir', TREXIO_TEXT)
   call system('rm -rf test_write_f.dir')
 
+  call test_read_void('test_write_f.dir', TREXIO_TEXT)
+
   call system('rm -rf test_write_f.h5')
   print *, 'call test_write(''test_write_f.h5'', TREXIO_HDF5)'
   call test_write('test_write_f.h5', TREXIO_HDF5)
   print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
   call test_read('test_write_f.h5', TREXIO_HDF5)
   call system('rm -rf test_write_f.h5')
+  
+  call test_read_void('test_write_f.h5', TREXIO_HDF5)
 
 end program test_trexio
 
@@ -68,7 +72,8 @@ subroutine test_write(file_name, back_end)
 
 ! ================= START OF TEST ===================== !
 
-  trex_file = trexio_open(file_name, 'w', back_end)
+  trex_file = trexio_open(file_name, 'w', back_end, rc)
+  call trexio_assert(rc, TREXIO_SUCCESS)
 
   rc = trexio_has_nucleus_num(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 1')
@@ -144,8 +149,8 @@ subroutine test_read(file_name, back_end)
 
 ! ================= START OF TEST ===================== !
 
-  trex_file = trexio_open(file_name, 'r', back_end)
-
+  trex_file = trexio_open(file_name, 'r', back_end, rc)
+  call trexio_assert(rc, TREXIO_SUCCESS)
 
   rc = trexio_read_nucleus_num(trex_file, num_read)
   call trexio_assert(rc, TREXIO_SUCCESS)
@@ -213,4 +218,30 @@ subroutine test_read(file_name, back_end)
 ! ================= END OF TEST ===================== !
 
 end subroutine test_read
+
+subroutine test_read_void(file_name, back_end)
+
+! ============ Test read of non-existing file =============== !
+
+  use trexio
+  implicit none
+
+  character*(*), intent(in) :: file_name
+  integer, intent(in) :: back_end
+
+  integer(8) :: trex_file
+  integer :: rc = 1
+  character(128) :: str
+
+! ================= START OF TEST ===================== !
+
+  trex_file = trexio_open(file_name, 'r', back_end, rc)
+  call trexio_assert(rc, TREXIO_OPEN_ERROR)
+
+  call trexio_string_of_error(rc, str)
+  print *, trim(str)
+
+! ================= END OF TEST ===================== !
+
+end subroutine test_read_void
 

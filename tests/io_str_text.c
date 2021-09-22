@@ -21,7 +21,7 @@ static int test_write_str (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
 
   // write string attribute in an empty file
@@ -49,7 +49,7 @@ static int test_has_str (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
 
   // check that the previously written string attribute exists
@@ -83,7 +83,7 @@ static int test_read_str (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'read' mode
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
 
   // read string attribute from the file

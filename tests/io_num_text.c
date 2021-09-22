@@ -20,7 +20,7 @@ static int test_write_num (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
 
   // write numerical attribute in an empty file
@@ -55,7 +55,7 @@ static int test_has_num (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
 
   // check that the previously written num variable exists
@@ -90,7 +90,7 @@ static int test_read_num (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'read' mode
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
 
   // read numerical attribute from the file

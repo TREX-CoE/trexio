@@ -72,7 +72,7 @@ int test_write(const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
 
   // check that certain data does not exist in the file
@@ -97,7 +97,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
  
   // reopen file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
 
   // check if the written data exists in the file
@@ -125,7 +125,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
 
   // open file again in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
 
   // write some missing blocks (e.g. if forgot last time)
@@ -156,7 +156,7 @@ int test_read(const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open existing file on 'read' mode [created by test_write]
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
 
   // read nucleus_num
@@ -211,7 +211,7 @@ int test_read(const char* file_name, const back_end_t backend) {
   const char* file_name2 = "test_nonexisting";
   trexio_t* file2 = NULL;
 
-  file2 = trexio_open(file_name2, 'r', backend);
+  file2 = trexio_open(file_name2, 'r', backend, &rc);
   assert (file2 == NULL);
 
 /*================= END OF TEST =====================*/
