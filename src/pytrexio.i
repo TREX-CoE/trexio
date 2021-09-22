@@ -37,6 +37,7 @@
 %apply int *OUTPUT { int64_t* const num};
 %apply float *OUTPUT { float* const num};
 %apply float *OUTPUT { double* const num};
+%apply int *OUTPUT { trexio_exit_code* const rc_open};
 
 /* Does not work for arrays (SIGSEGV) */
 

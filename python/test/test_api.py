@@ -49,7 +49,7 @@ nucleus_num = 12
 try:
     trexio.write_nucleus_num(test_file, -100)
 except trexio.Error:
-    print("Writing negative nucleus_num: checked.")
+    print("Raise error for an attempt to write negative nucleus_num: checked.")
 
 # write nucleus_num in the file
 try:
@@ -60,7 +60,7 @@ except:
 try:
     trexio.write_nucleus_num(test_file, nucleus_num*2)
 except trexio.Error:
-    print("Attempt to overwrite nucleus_num: checked.")
+    print("Raise error for an attempt to overwrite nucleus_num: checked.")
 
 # initialize charge arrays as a list and convert it to numpy array
 charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
@@ -199,7 +199,7 @@ assert rpoint_group==point_group
 if trexio.has_mo_num(test_file2):
     rmo_num = trexio.read_mo_num(test_file2)
 else:
-    print("Not reading the non-existing variable mo_num.")
+    print("Pass on reading the non-existing variable mo_num: checked")
 
 # close TREXIO file
 #trexio.close(test_file2)
@@ -215,3 +215,16 @@ except:
 
 #==========================================================#
 
+#==========================================================#
+#======= OPEN NON-EXISTING FILE TO TEST TREXIO.OPEN =======#
+#==========================================================#
+
+try:
+    void_file = trexio.File('non_existing.file', 'r', TEST_TREXIO_BACKEND)
+except trexio.Error as e:
+    if e.error == trexio.TREXIO_OPEN_ERROR:
+        print("Opening non-existing file returns TREXIO_OPEN_ERROR: checked")
+    else:
+        raise ValueError("[DEV]: error handling of trexio_open function has changed; check the consistency")
+
+#==========================================================#

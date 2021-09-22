@@ -911,11 +911,22 @@ def open(file_name: str, mode: str, back_end: int):
     >>> trex_file = tr_open("example.h5", "w", TREXIO_HDF5)
     """
 
+    # The new trexio_open function is capable of returning error code which SWIG can append to the output trexio_s file struct
+    # However, if trexio_s* == NULL, then SWIG returns only an error code rc_open instead of a list [trexio_s, rc_open]
+    # Thus, the following try/except sequence is needed
     try:
-        trexio_file = pytr.trexio_open(file_name, mode, back_end)
-        assert trexio_file is not None
+        return_obj = pytr.trexio_open(file_name, mode, back_end)
+        assert return_obj is not None
+        if isinstance(return_obj, int):
+            raise Error(return_obj)
+        else:
+            rc_open = return_obj[1]
+            # this is a sanity check in case the code evolves and SWIG issue is patched
+            if rc_open == TREXIO_SUCCESS:
+                trexio_file = return_obj[0]
+                assert trexio_file is not None
     except AssertionError:
-        raise Exception(f"Could not open TREXIO file {file_name} using trexio_open function. Please make sure that there are no typos in the file name.")
+        raise Exception(f"Could not open TREXIO file {file_name} using trexio_open function. The return value is None (NULL pointer).")
 
     return trexio_file
    #+end_src
