@@ -29,7 +29,7 @@ static int test_write_num (const char* file_name, const back_end_t backend) {
 
   // attempt to write 0 as dimensioning variable in an empty file; should FAIL and return TREXIO_INVALID_ARG_2
   rc = trexio_write_mo_num(file, 0);
-  assert (rc == TREXIO_INVALID_ARG_2);
+  assert (rc == TREXIO_INVALID_NUM);
 
   // write numerical attribute ao_cartesian as 0
   rc = trexio_write_ao_cartesian(file, 0);
