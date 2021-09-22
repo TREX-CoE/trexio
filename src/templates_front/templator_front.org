@@ -164,7 +164,7 @@ __trexio_path__ = None
    | ~TREXIO_INVALID_ID~          |    9 | 'Invalid ID'                           |
    | ~TREXIO_ALLOCATION_FAILED~   |   10 | 'Allocation failed'                    |
    | ~TREXIO_HAS_NOT~             |   11 | 'Element absent'                       |
-   | ~TREXIO_INVALID_NUM~         |   12 | 'Invalid dimensions'                   |
+   | ~TREXIO_INVALID_NUM~         |   12 | 'Invalid (negative or 0) dimension'    |
    | ~TREXIO_ATTR_ALREADY_EXISTS~ |   13 | 'Attribute already exists'             |
    | ~TREXIO_DSET_ALREADY_EXISTS~ |   14 | 'Dataset already exists'               |
    | ~TREXIO_OPEN_ERROR~          |   15 | 'Error opening file'                   |
@@ -389,7 +389,7 @@ return '\n'.join(result)
      return "Element absent";
      break;
    case TREXIO_INVALID_NUM:
-     return "Invalid dimensions";
+     return "Invalid (negative or 0) dimension";
      break;
    case TREXIO_ATTR_ALREADY_EXISTS:
      return "Attribute already exists";
@@ -1194,7 +1194,7 @@ trexio_exit_code
 trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double$ num)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  //if (num <= 0L) return TREXIO_INVALID_ARG_2; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
+  //if (num <= 0L) return TREXIO_INVALID_NUM; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS) return TREXIO_ATTR_ALREADY_EXISTS;
 
   switch (file->back_end) {
@@ -1258,7 +1258,7 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  //if (num <= 0) return TREXIO_INVALID_ARG_2; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
+  //if (num <= 0) return TREXIO_INVALID_NUM; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS) return TREXIO_ATTR_ALREADY_EXISTS;
 
   switch (file->back_end) {
