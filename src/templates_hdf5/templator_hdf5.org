@@ -152,18 +152,18 @@ trexio_hdf5_deinit (trexio_t* const file)
 }
   #+end_src
 
-** Template for HDF5 has/read/write a single dimensioning variable
+** Template for HDF5 has/read/write the numerical attribute
 
-  #+begin_src c :tangle hrw_num_hdf5.h :exports none
+  #+begin_src c :tangle hrw_attr_num_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_num$ (trexio_t* const file);
-trexio_exit_code trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num);
-trexio_exit_code trexio_hdf5_write_$group_num$(trexio_t* const file, const uint64_t num);
+trexio_exit_code trexio_hdf5_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$* const num);
+trexio_exit_code trexio_hdf5_write_$group_num$(trexio_t* const file, const $group_num_dtype_double$ num);
   #+end_src
 
 
-  #+begin_src c :tangle read_num_hdf5.c
+  #+begin_src c :tangle read_attr_num_hdf5.c
 trexio_exit_code
-trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num)
+trexio_hdf5_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$* const num)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -177,7 +177,7 @@ trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num)
   const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
   if (num_id <= 0) return TREXIO_INVALID_ID;
 
-  const herr_t status = H5Aread(num_id, H5T_NATIVE_UINT64, num);
+  const herr_t status = H5Aread(num_id, H5T_$GROUP_NUM_H5_DTYPE$, num);
 
   H5Aclose(num_id);
 
@@ -189,66 +189,44 @@ trexio_hdf5_read_$group_num$ (trexio_t* const file, uint64_t* const num)
    #+end_src
 
 
-  #+begin_src c :tangle write_num_hdf5.c
+  #+begin_src c :tangle write_attr_num_hdf5.c
 trexio_exit_code
-trexio_hdf5_write_$group_num$ (trexio_t* const file, const uint64_t num)
+trexio_hdf5_write_$group_num$ (trexio_t* const file, const $group_num_dtype_double$ num)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (num  == 0L  ) return TREXIO_INVALID_ARG_2;
 
   trexio_hdf5_t* const f = (trexio_hdf5_t*) file;
 
-  if (H5Aexists(f->$group$_group, $GROUP_NUM$_NAME) == 0) {
-
-    /* Write the dimensioning variables */
-    const hid_t dtype = H5Tcopy(H5T_NATIVE_UINT64);
-    const hid_t dspace = H5Screate(H5S_SCALAR);
-
-    const hid_t num_id = H5Acreate(f->$group$_group, $GROUP_NUM$_NAME, dtype, dspace,
-		     H5P_DEFAULT, H5P_DEFAULT);
-    if (num_id <= 0) {
-      H5Sclose(dspace);
-      H5Tclose(dtype);
-      return TREXIO_INVALID_ID;
-    }
-
-    const herr_t status = H5Awrite(num_id, dtype, &(num));
-    if (status < 0) {
-      H5Aclose(num_id);
-      H5Sclose(dspace);
-      H5Tclose(dtype);
-      return TREXIO_FAILURE;
-    }
-
+  /* Write the dimensioning variables */
+  const hid_t dtype = H5Tcopy(H5T_$GROUP_NUM_H5_DTYPE$);
+  const hid_t dspace = H5Screate(H5S_SCALAR);
+  
+  const hid_t num_id = H5Acreate(f->$group$_group, $GROUP_NUM$_NAME, 
+                                 dtype, dspace, H5P_DEFAULT, H5P_DEFAULT);
+  if (num_id <= 0) {
     H5Sclose(dspace);
-    H5Aclose(num_id);
     H5Tclose(dtype);
-    return TREXIO_SUCCESS;
-
-  } else {
-
-    uint64_t infile_num;
-    trexio_exit_code rc = trexio_hdf5_read_$group_num$(file, &(infile_num));
-    if (rc != TREXIO_SUCCESS) return rc;
-
-    const hid_t dtype = H5Tcopy(H5T_NATIVE_UINT64);
-    const hid_t num_id = H5Aopen(f->$group$_group, $GROUP_NUM$_NAME, H5P_DEFAULT);
-    if (num_id <= 0) return TREXIO_INVALID_ID;
-    
-    const herr_t status = H5Awrite(num_id, dtype, &(num));
-    if (status < 0) return TREXIO_FAILURE;
-    
-    H5Aclose(num_id);
-    H5Tclose(dtype);
-
-    return TREXIO_SUCCESS;
+    return TREXIO_INVALID_ID;
   }
+  
+  const herr_t status = H5Awrite(num_id, dtype, &(num));
+  if (status < 0) {
+    H5Aclose(num_id);
+    H5Sclose(dspace);
+    H5Tclose(dtype);
+    return TREXIO_FAILURE;
+  }
+  
+  H5Sclose(dspace);
+  H5Aclose(num_id);
+  H5Tclose(dtype);
 
+  return TREXIO_SUCCESS;
 }
     #+end_src
 
-  #+begin_src c :tangle has_num_hdf5.c
+  #+begin_src c :tangle has_attr_num_hdf5.c
 trexio_exit_code
 trexio_hdf5_has_$group_num$ (trexio_t* const file)
 {
@@ -270,7 +248,7 @@ trexio_hdf5_has_$group_num$ (trexio_t* const file)
 }
     #+end_src
 
-** Template for HDF5 has/read/write a dataset of numerical data
+** Template for HDF5 has/read/write the dataset of numerical data
 
    #+begin_src c :tangle hrw_dset_data_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file);
@@ -341,12 +319,6 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$  == NULL) return TREXIO_INVALID_ARG_2;
 
-  trexio_exit_code rc;
-  uint64_t $group_dset_dim$;
-  // error handling for rc is added by the generator
-  rc = trexio_hdf5_read_$group_dset_dim$(file, &($group_dset_dim$));
-  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
-
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   if ( H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME) != 1 ) {
@@ -400,7 +372,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 }
    #+end_src
 
-** Template for HDF5 has/read/write a dataset of strings
+** Template for HDF5 has/read/write the dataset of strings
 
    #+begin_src c :tangle hrw_dset_str_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file);
@@ -523,12 +495,6 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const char** $group_dset$,
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$  == NULL) return TREXIO_INVALID_ARG_2;
 
-  trexio_exit_code rc;
-  uint64_t $group_dset_dim$;
-  // error handling for rc is added by the generator
-  rc = trexio_hdf5_read_$group_dset_dim$(file, &($group_dset_dim$));
-  if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
-
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   herr_t status;
@@ -612,7 +578,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 }
    #+end_src
    
-** Template for HDF5 has/read/write a single string attribute
+** Template for HDF5 has/read/write the string attribute
 
   #+begin_src c :tangle hrw_attr_str_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_str$ (trexio_t* const file);

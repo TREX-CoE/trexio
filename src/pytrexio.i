@@ -28,12 +28,15 @@
    Useful when working with C pointers
 */
 %include typemaps.i
-/* Redefine the int32_t* and int64_t* num to be output 
+/* Redefine the [int32_t*, int64_t*, float*, double*] num 
+   pattern to be appended to the output tuple.
    Useful for TREXIO read_num functions where the 
    num variable is modified by address
 */
 %apply int *OUTPUT { int32_t* const num};
 %apply int *OUTPUT { int64_t* const num};
+%apply float *OUTPUT { float* const num};
+%apply float *OUTPUT { double* const num};
 
 /* Does not work for arrays (SIGSEGV) */
 
@@ -66,23 +69,23 @@ import_array();
 %numpy_typemaps(int32_t, NPY_INT32, int64_t)
 %numpy_typemaps(int64_t, NPY_INT64, int64_t)
 /* Enable write|read_safe functions to convert numpy arrays from/to double arrays */
-%apply (double* ARGOUT_ARRAY1, int64_t DIM1) {(double * const dset_out, const int64_t dim_out)};
-%apply (double* IN_ARRAY1, int64_t DIM1) {(const double * dset_in, const int64_t dim_in)};
+%apply (double* ARGOUT_ARRAY1, int64_t DIM1) {(double* const dset_out, const int64_t dim_out)};
+%apply (double* IN_ARRAY1, int64_t DIM1) {(const double* dset_in, const int64_t dim_in)};
 /* Enable write|read_safe functions to convert numpy arrays from/to float arrays */
-%apply (float* ARGOUT_ARRAY1, int64_t DIM1) {(float * const dset_out, const int64_t dim_out)};
-%apply (float* IN_ARRAY1, int64_t DIM1) {(const float * dset_in, const int64_t dim_in)};
+%apply (float* ARGOUT_ARRAY1, int64_t DIM1) {(float* const dset_out, const int64_t dim_out)};
+%apply (float* IN_ARRAY1, int64_t DIM1) {(const float* dset_in, const int64_t dim_in)};
 /* Enable write|read_safe functions to convert numpy arrays from/to int32 arrays */
-%apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t * const dset_out, const int64_t dim_out)};
-%apply (int32_t* IN_ARRAY1, int64_t DIM1) {(const int32_t * dset_in, const int64_t dim_in)};
+%apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const dset_out, const int64_t dim_out)};
+%apply (int32_t* IN_ARRAY1, int64_t DIM1) {(const int32_t* dset_in, const int64_t dim_in)};
 /* Enable write|read_safe functions to convert numpy arrays from/to int64 arrays */
-%apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t * const dset_out, const int64_t dim_out)};
-%apply (int64_t* IN_ARRAY1, int64_t DIM1) {(const int64_t * dset_in, const int64_t dim_in)};
+%apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t* const dset_out, const int64_t dim_out)};
+%apply (int64_t* IN_ARRAY1, int64_t DIM1) {(const int64_t* dset_in, const int64_t dim_in)};
 
 /* This tells SWIG to treat char ** dset_in pattern as a special case 
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.
    by converting input list of strings from Python into char ** of C
 */
-%typemap(in) char ** dset_in {
+%typemap(in) char** dset_in {
   /* Check if is a list */
   if (PyList_Check($input)) {
     int size = PyList_Size($input);
@@ -105,7 +108,7 @@ import_array();
   }
 }
 /* This cleans up the char ** array we malloc-ed before */
-%typemap(freearg) char ** dset_in {
+%typemap(freearg) char** dset_in {
   free((char *) $1);
 }
 

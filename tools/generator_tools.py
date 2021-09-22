@@ -39,7 +39,7 @@ def get_files_todo(source_files: dict) -> dict:
     files_todo = {}       
     #files_todo['all'] = list(filter(lambda x: 'read' in x or 'write' in x or 'has' in x or 'hrw' in x or 'flush' in x or 'free' in x, all_files))
     files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f]
-    for key in ['dset_data', 'dset_str', 'num', 'attr_str', 'group']:
+    for key in ['dset_data', 'dset_str', 'attr_num', 'attr_str', 'group']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
@@ -100,10 +100,13 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
-    triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index', 
-                'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single', 
-                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single', 
+    triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index',
+                'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single',
+                'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single',
                 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
+                'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
+                'group_num_h5_dtype', 'group_num_py_dtype',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
@@ -126,6 +129,12 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                                 f_out.write(templine)
                         num_written = []
                         continue
+                    # special case to uncomment check for positive dimensioning variables in templates
+                    elif 'uncommented by the generator for dimensioning' in line:
+                        # only uncomment and write the line if `num` is in the name
+                        if 'dim' in detailed_source[item]['trex_json_int_type']:
+                            templine = line.replace('//', '') 
+                            f_out.write(templine)
                     # general case of recursive replacement of inline triggers 
                     else:
                         populated_line = recursive_replace_line(line, triggers, detailed_source[item])
@@ -284,6 +293,7 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
     templ_path = get_template_path(fname, paths)
 
     triggers = ['group_dset_dtype', 'group_dset_std_dtype_out', 'group_dset_std_dtype_in',
+                'group_num_dtype_double', 'group_num_std_dtype_out', 'group_num_std_dtype_in',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for group in group_dict.keys():
@@ -455,7 +465,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     configuration (dict) : configuration from `trex.json`
 
             Returns:
-                    num_dict (dict) : dictionary of num-suffixed variables
+                    num_dict (dict) : dictionary of all numerical attributes (of types int, float, dim)
     """
     num_dict = {}
     for k1,v1 in configuration.items():
@@ -467,6 +477,35 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     tmp_dict['group'] = k1
                     tmp_dict['group_num'] = tmp_num
                     num_dict[tmp_num] = tmp_dict
+
+                    # TODO the arguments below are almost the same as for group_dset (except for trex_json_int_type) and can be exported from somewhere
+                    if v2[0] == 'float':
+                        tmp_dict['datatype'] = 'double'
+                        tmp_dict['group_num_h5_dtype']       = 'native_double'
+                        tmp_dict['group_num_f_dtype_default']= 'real(8)'
+                        tmp_dict['group_num_f_dtype_double'] = 'real(8)'
+                        tmp_dict['group_num_f_dtype_single'] = 'real(4)'
+                        tmp_dict['group_num_dtype_default']= 'double'
+                        tmp_dict['group_num_dtype_double'] = 'double'
+                        tmp_dict['group_num_dtype_single'] = 'float'
+                        tmp_dict['default_prec']   = '64'
+                        tmp_dict['group_num_std_dtype_out'] = '24.16e'
+                        tmp_dict['group_num_std_dtype_in'] = 'lf'
+                        tmp_dict['group_num_py_dtype'] = 'float'
+                    elif v2[0] in ['int', 'dim']:
+                        tmp_dict['datatype'] = 'int64_t'
+                        tmp_dict['group_num_h5_dtype'] = 'native_int64'
+                        tmp_dict['group_num_f_dtype_default']= 'integer(4)'
+                        tmp_dict['group_num_f_dtype_double'] = 'integer(8)'
+                        tmp_dict['group_num_f_dtype_single'] = 'integer(4)'
+                        tmp_dict['group_num_dtype_default']= 'int32_t'
+                        tmp_dict['group_num_dtype_double'] = 'int64_t'
+                        tmp_dict['group_num_dtype_single'] = 'int32_t'
+                        tmp_dict['default_prec']   = '32'
+                        tmp_dict['group_num_std_dtype_out'] = '" PRId64 "'
+                        tmp_dict['group_num_std_dtype_in']  = '" SCNd64 "' 
+                        tmp_dict['group_num_py_dtype'] = 'int'
+                        tmp_dict['trex_json_int_type'] = v2[0]
 
     return num_dict
 
@@ -634,7 +673,7 @@ def check_dim_consistency(num: dict, dset: dict) -> None:
     Consistency check to make sure that each dimensioning variable exists as a num attribute of some group. 
 
             Parameters:
-                    num (dict)  : dictionary of num-suffixed variables
+                    num (dict)  : dictionary of numerical attributes
                     dset (dict) : dictionary of datasets
 
             Returns:
@@ -647,6 +686,8 @@ def check_dim_consistency(num: dict, dset: dict) -> None:
             if dim not in dim_tocheck:
                 dim_tocheck.append(dim)
 
+    num_onlyDim = [attr_name for attr_name, specs in num.items() if specs['trex_json_int_type']=='dim']
+
     for dim in dim_tocheck:
-        if not dim in num.keys():
+        if not dim in num_onlyDim:
             raise ValueError(f"Dimensioning variable {dim} is not a num attribute of any group.\n")

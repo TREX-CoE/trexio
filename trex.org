@@ -16,6 +16,14 @@ column-major order (as in Fortran), and the ordering of the dimensions
 is reversed in the produced ~trex.json~ configuration file as the library is
 written in C.
 
+TREXIO currently supports ~int~, ~float~ and ~str~ types for both single attributes and arrays.
+Note, that some attributes might have ~dim~ type (e.g. ~num~ of the ~nucleus~ group).
+This type is treated exactly the same as ~int~ with the only difference that ~dim~ variables
+cannot be negative or zero. This additional constraint is required because ~dim~ attributes 
+are used internally to allocate memory and to check array boundaries in the memory-safe API.
+Most of the times, the ~dim~ variables contain ~num~ suffix.
+
+
 In Fortran, the arrays are 1-based and in most other languages the
 arrays are 0-based. Hence, we introduce the ~index~ type which is an
 1-based ~int~ in the Fortran interface and 0-based otherwise.
@@ -35,9 +43,9 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   #+NAME: metadata
   | Variable          | Type  | Dimensions (for arrays) | Description                              |
   |-------------------+-------+-------------------------+------------------------------------------|
-  | ~code_num~        | ~int~ |                         | Number of codes used to produce the file |
+  | ~code_num~        | ~dim~ |                         | Number of codes used to produce the file |
   | ~code~            | ~str~ | ~(metadata.code_num)~   | Names of the codes used                  |
-  | ~author_num~      | ~int~ |                         | Number of authors of the file            |
+  | ~author_num~      | ~dim~ |                         | Number of authors of the file            |
   | ~author~          | ~str~ | ~(metadata.author_num)~ | Names of the authors of the file         |
   | ~package_version~ | ~str~ |                         | TREXIO version used to produce the file  |
   | ~description~     | ~str~ |                         | Text describing the content of file      |
@@ -47,9 +55,9 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   :RESULTS:
   #+begin_src python :tangle trex.json
       "metadata": {
-		 "code_num" : [ "int", []                        ]
+		 "code_num" : [ "dim", []                        ]
 	,            "code" : [ "str", [ "metadata.code_num" ]   ]
-	,      "author_num" : [ "int", []                        ]
+	,      "author_num" : [ "dim", []                        ]
 	,          "author" : [ "str", [ "metadata.author_num" ] ]
 	, "package_version" : [ "str", []                        ]
 	,     "description" : [ "str", []                        ]
@@ -65,19 +73,19 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   #+NAME:electron
   | Variable | Type  | Dimensions | Description                         |
   |----------+-------+------------+-------------------------------------|
-  | ~up_num~ | ~int~ |            | Number of \uparrow-spin electrons   |
-  | ~dn_num~ | ~int~ |            | Number of \downarrow-spin electrons |
+  | ~up_num~ | ~dim~ |            | Number of \uparrow-spin electrons   |
+  | ~dn_num~ | ~dim~ |            | Number of \downarrow-spin electrons |
 
   #+CALL: json(data=electron, title="electron")
   #+RESULTS:
-  :results:
+  :RESULTS:
   #+begin_src python :tangle trex.json
       "electron": {
-          "up_num" : [ "int", []  ]
-        , "dn_num" : [ "int", []  ]
+	  "up_num" : [ "dim", []  ]
+	, "dn_num" : [ "dim", []  ]
       } ,
   #+end_src
-  :end:
+  :END:
 
 * Nucleus (nucleus group)
 
@@ -87,7 +95,7 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   #+NAME: nucleus
   | Variable      | Type    | Dimensions        | Description              |
   |---------------+---------+-------------------+--------------------------|
-  | ~num~         | ~int~   |                   | Number of nuclei         |
+  | ~num~         | ~dim~   |                   | Number of nuclei         |
   | ~charge~      | ~float~ | ~(nucleus.num)~   | Charges of the nuclei    |
   | ~coord~       | ~float~ | ~(3,nucleus.num)~ | Coordinates of the atoms |
   | ~label~       | ~str~   | ~(nucleus.num)~   | Atom labels              |
@@ -95,17 +103,17 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
 
   #+CALL: json(data=nucleus, title="nucleus")
   #+RESULTS:
-  :results:
+  :RESULTS:
   #+begin_src python :tangle trex.json
       "nucleus": {
-                  "num" : [ "int"  , []                     ]
-        ,      "charge" : [ "float", [ "nucleus.num" ]      ]
-        ,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
-        ,       "label" : [ "str"  , [ "nucleus.num" ]      ]
-        , "point_group" : [ "str"  , []                     ]
+		  "num" : [ "dim"  , []                     ]
+	,      "charge" : [ "float", [ "nucleus.num" ]      ]
+	,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
+	,       "label" : [ "str"  , [ "nucleus.num" ]      ]
+	, "point_group" : [ "str"  , []                     ]
       } ,
   #+end_src
-  :end:
+  :END:
 
 * Effective core potentials (ecp group)
 
@@ -135,12 +143,12 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $\ell_{\max} + 1$, one higher than the maximum angular momentum in the removed core orbitals |
   | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove                                                                            |
   | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local functions $N_{q \ell}$                                                       |
-  | ~local_num_n_max~     | ~int~   |                                          | Maximum value of ~local_n~, used for dimensioning arrays                                     |
-  | ~local_exponent~      | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\alpha_{A q \ell_{\max}}$                                                                  |
-  | ~local_coef~          | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\beta_{A q \ell_{\max}}$                                                                   |
+  | ~local_num_n_max~     | ~dim~   |                                          | Maximum value of ~local_n~, used for dimensioning arrays                                     |
+  | ~local_exponent~      | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\alpha_{A q \ell_{\max}}$                                                                   |
+  | ~local_coef~          | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\beta_{A q \ell_{\max}}$                                                                    |
   | ~local_power~         | ~int~   | ~(ecp.local_num_n_max, nucleus.num)~     | $n_{A q \ell_{\max}}$                                                                        |
   | ~non_local_n~         | ~int~   | ~(nucleus.num)~                          | $N_{q \ell_{\max}}$                                                                          |
-  | ~non_local_num_n_max~ | ~int~   |                                          | Maximum value of ~non_local_n~, used for dimensioning arrays                                 |
+  | ~non_local_num_n_max~ | ~dim~   |                                          | Maximum value of ~non_local_n~, used for dimensioning arrays                                 |
   | ~non_local_exponent~  | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\alpha_{A q \ell}$                                                                          |
   | ~non_local_coef~      | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\beta_{A q \ell}$                                                                           |
   | ~non_local_power~     | ~int~   | ~(ecp.non_local_num_n_max, nucleus.num)~ | $n_{A q \ell}$                                                                               |
@@ -148,24 +156,24 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   #+CALL: json(data=ecp, title="ecp")
 
   #+RESULTS:
-  :results:
+  :RESULTS:
   #+begin_src python :tangle trex.json
       "ecp": {
-                  "lmax_plus_1" : [ "int"  , [ "nucleus.num" ]                            ]
-        ,              "z_core" : [ "float", [ "nucleus.num" ]                            ]
-        ,             "local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-        ,     "local_num_n_max" : [ "int"  , []                                           ]
-        ,      "local_exponent" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-        ,          "local_coef" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-        ,         "local_power" : [ "int"  , [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-        ,         "non_local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-        , "non_local_num_n_max" : [ "int"  , []                                           ]
-        ,  "non_local_exponent" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-        ,      "non_local_coef" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-        ,     "non_local_power" : [ "int"  , [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+		  "lmax_plus_1" : [ "int"  , [ "nucleus.num" ]                            ]
+	,              "z_core" : [ "float", [ "nucleus.num" ]                            ]
+	,             "local_n" : [ "int"  , [ "nucleus.num" ]                            ]
+	,     "local_num_n_max" : [ "dim"  , []                                           ]
+	,      "local_exponent" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+	,          "local_coef" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+	,         "local_power" : [ "int"  , [ "nucleus.num", "ecp.local_num_n_max" ]     ]
+	,         "non_local_n" : [ "int"  , [ "nucleus.num" ]                            ]
+	, "non_local_num_n_max" : [ "dim"  , []                                           ]
+	,  "non_local_exponent" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+	,      "non_local_coef" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+	,     "non_local_power" : [ "int"  , [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
       } ,
   #+end_src
-  :end:
+  :END:
 
 * Basis set (basis group)
 
@@ -210,8 +218,8 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   | Variable            | Type    | Dimensions         | Description                                              |
   |---------------------+---------+--------------------+----------------------------------------------------------|
   | ~type~              | ~str~   |                    | Type of basis set: "Gaussian" or "Slater"                |
-  | ~num~               | ~int~   |                    | Total Number of shells                                   |
-  | ~prim_num~          | ~int~   |                    | Total number of primitives                               |
+  | ~num~               | ~dim~   |                    | Total Number of shells                                   |
+  | ~prim_num~          | ~dim~   |                    | Total number of primitives                               |
   | ~nucleus_index~     | ~index~ | ~(nucleus.num)~    | Index of the first shell of each nucleus ($A$)           |
   | ~nucleus_shell_num~ | ~int~   | ~(nucleus.num)~    | Number of shells for each nucleus                        |
   | ~shell_ang_mom~     | ~int~   | ~(basis.num)~      | Angular momentum ~0:S, 1:P, 2:D, ...~                    |
@@ -225,24 +233,24 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   #+CALL: json(data=basis, title="basis")
 
   #+RESULTS:
-  :results:
+  :RESULTS:
   #+begin_src python :tangle trex.json
       "basis": {
-                       "type" : [ "str"  , []                   ]
-        ,               "num" : [ "int"  , []                   ]
-        ,          "prim_num" : [ "int"  , []                   ]
-        ,     "nucleus_index" : [ "index", [ "nucleus.num" ]    ]
-        , "nucleus_shell_num" : [ "int"  , [ "nucleus.num" ]    ]
-        ,     "shell_ang_mom" : [ "int"  , [ "basis.num" ]      ]
-        ,    "shell_prim_num" : [ "int"  , [ "basis.num" ]      ]
-        ,      "shell_factor" : [ "float", [ "basis.num" ]      ]
-        ,  "shell_prim_index" : [ "index", [ "basis.num" ]      ]
-        ,          "exponent" : [ "float", [ "basis.prim_num" ] ]
-        ,       "coefficient" : [ "float", [ "basis.prim_num" ] ]
-        ,       "prim_factor" : [ "float", [ "basis.prim_num" ] ]
+		       "type" : [ "str"  , []                   ]
+	,               "num" : [ "dim"  , []                   ]
+	,          "prim_num" : [ "dim"  , []                   ]
+	,     "nucleus_index" : [ "index", [ "nucleus.num" ]    ]
+	, "nucleus_shell_num" : [ "int"  , [ "nucleus.num" ]    ]
+	,     "shell_ang_mom" : [ "int"  , [ "basis.num" ]      ]
+	,    "shell_prim_num" : [ "int"  , [ "basis.num" ]      ]
+	,      "shell_factor" : [ "float", [ "basis.num" ]      ]
+	,  "shell_prim_index" : [ "index", [ "basis.num" ]      ]
+	,          "exponent" : [ "float", [ "basis.prim_num" ] ]
+	,       "coefficient" : [ "float", [ "basis.prim_num" ] ]
+	,       "prim_factor" : [ "float", [ "basis.prim_num" ] ]
       } ,
   #+end_src
-  :end:
+  :END:
 
   For example, consider H_2 with the following basis set (in GAMESS
   format), where both the AOs and primitives are considered normalized:
@@ -348,23 +356,23 @@ prim_factor =
   | Variable        | Type    | Dimensions | Description                     |
   |-----------------+---------+------------+---------------------------------|
   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false           |
-  | ~num~           | ~int~   |            | Total number of atomic orbitals |
+  | ~num~           | ~dim~   |            | Total number of atomic orbitals |
   | ~shell~         | ~index~ | ~(ao.num)~ | basis set shell for each AO     |
   | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factors           |
 
   #+CALL: json(data=ao, title="ao")
 
   #+RESULTS:
-  :results:
+  :RESULTS:
   #+begin_src python :tangle trex.json
       "ao": {
-              "cartesian" : [ "int"  , []           ]
-        ,           "num" : [ "int"  , []           ]
-        ,         "shell" : [ "index", [ "ao.num" ] ]
-        , "normalization" : [ "float", [ "ao.num" ] ]
+	      "cartesian" : [ "int"  , []           ]
+	,           "num" : [ "dim"  , []           ]
+	,         "shell" : [ "index", [ "ao.num" ] ]
+	, "normalization" : [ "float", [ "ao.num" ] ]
       } ,
   #+end_src
-  :end:
+  :END:
 
 ** One-electron integrals (~ao_1e_int~ group)
    :PROPERTIES:
@@ -453,7 +461,7 @@ prim_factor =
   | Variable      | Type    | Dimensions         | Description                                                              |
   |---------------+---------+--------------------+--------------------------------------------------------------------------|
   | ~type~        | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
-  | ~num~         | ~int~   |                    | Number of MOs                                                            |
+  | ~num~         | ~dim~   |                    | Number of MOs                                                            |
   | ~coefficient~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                                                          |
   | ~class~       | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
   | ~symmetry~    | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
@@ -462,18 +470,18 @@ prim_factor =
   #+CALL: json(data=mo, title="mo")
 
   #+RESULTS:
-  :results:
+  :RESULTS:
   #+begin_src python :tangle trex.json
       "mo": {
-                 "type" : [ "str"  , []                     ]
-        ,         "num" : [ "int"  , []                     ]
-        , "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
-        ,       "class" : [ "str"  , [ "mo.num" ]           ]
-        ,    "symmetry" : [ "str"  , [ "mo.num" ]           ]
-        ,  "occupation" : [ "float", [ "mo.num" ]           ]
+		 "type" : [ "str"  , []                     ]
+	,         "num" : [ "dim"  , []                     ]
+	, "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
+	,       "class" : [ "str"  , [ "mo.num" ]           ]
+	,    "symmetry" : [ "str"  , [ "mo.num" ]           ]
+	,  "occupation" : [ "float", [ "mo.num" ]           ]
       } ,
   #+end_src
-  :end:
+  :END:
 
 ** One-electron integrals (~mo_1e_int~ group)
 

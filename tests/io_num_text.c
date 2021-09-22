@@ -27,6 +27,14 @@ static int test_write_num (const char* file_name, const back_end_t backend) {
   rc = trexio_write_nucleus_num(file, num);
   assert (rc == TREXIO_SUCCESS);
 
+  // attempt to write 0 as dimensioning variable in an empty file; should FAIL and return TREXIO_INVALID_ARG_2
+  rc = trexio_write_mo_num(file, 0);
+  assert (rc == TREXIO_INVALID_NUM);
+
+  // write numerical attribute ao_cartesian as 0
+  rc = trexio_write_ao_cartesian(file, 0);
+  assert (rc == TREXIO_SUCCESS);
+
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
@@ -77,6 +85,7 @@ static int test_read_num (const char* file_name, const back_end_t backend) {
 
   // parameters to be read
   int num;
+  int cartesian;
 
 /*================= START OF TEST ==================*/
 
@@ -88,6 +97,15 @@ static int test_read_num (const char* file_name, const back_end_t backend) {
   rc = trexio_read_nucleus_num(file, &num);
   assert (rc == TREXIO_SUCCESS);
   assert (num == 12);
+
+  // read non-existing numerical attribute from the file
+  rc = trexio_read_mo_num(file, &num);
+  assert (rc == TREXIO_ATTR_MISSING);
+
+  // read ao_cartesian (zero) value from the file
+  rc = trexio_read_ao_cartesian(file, &cartesian);
+  assert (rc == TREXIO_SUCCESS);
+  assert (cartesian == 0);
 
   // close current session
   rc = trexio_close(file);

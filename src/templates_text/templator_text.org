@@ -46,6 +46,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
   #+end_src
 
@@ -78,7 +79,8 @@
 
     #+begin_src c :tangle struct_text_group_dset.h
 typedef struct $group$_s {
-  uint64_t $group_num$;
+  $group_num_dtype_double$ $group_num$;
+  bool $group_num$_isSet;
   $group_dset_dtype$*  $group_dset$;
   uint32_t rank_$group_dset$;
   uint32_t to_flush;
@@ -346,24 +348,47 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
     // END REPEAT GROUP_DSET_ALL
 
+    unsigned int local_isSet;
     // START REPEAT GROUP_NUM
     /* Read data */
     rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
+    assert(!((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)) {
       FREE(buffer);
       fclose(f);
       FREE($group$);
       return NULL;
     }
-
-    rc = fscanf(f, "%" SCNu64 "", &($group$->$group_num$));
+    
+    /* additional parameter local_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
+    rc = fscanf(f, "%u", &(local_isSet));
+    $group$->$group_num$_isSet = (bool) local_isSet;
     assert(!(rc != 1));
     if (rc != 1) {
       FREE(buffer);
       fclose(f);
       FREE($group$);
       return NULL;
+    }
+
+    if ($group$->$group_num$_isSet == true) { 
+      rc = fscanf(f, "%1023s", buffer);
+      assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
+      if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$);
+        return NULL;
+      }
+      
+      rc = fscanf(f, "%$group_num_std_dtype_in$", &($group$->$group_num$));
+      assert(!(rc != 1));
+      if (rc != 1) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$);
+        return NULL;
+      }
     }
     // END REPEAT GROUP_NUM
 
@@ -458,49 +483,51 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
     // START REPEAT GROUP_DSET_STR
     /* Allocate arrays */
-    $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
-    assert (!($group$->$group_dset$ == NULL));
-    if ($group$->$group_dset$ == NULL) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$->$group_dset$);
-      FREE($group$);
-      return NULL;
-    }
-
-    rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$->$group_dset$);
-	FREE($group$);
-	return NULL;
-    }
-
-    /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
-    ,  BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
-    ,*/
-    char* tmp_$group_dset$;
-    if(size_$group_dset$ != 0) tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
-    
-    for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-      $group$->$group_dset$[i] = tmp_$group_dset$;
-      /* conventional fcanf with "%s" only return the string before the first space character 
-       ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
-       ,* Q: depending on what ? */
-      rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
-      assert(!(rc != 1));
-      if (rc != 1) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$->$group_dset$);
-	FREE($group$);
-	return NULL;
+    if(size_$group_dset$ != 0) {
+      $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
+      assert (!($group$->$group_dset$ == NULL));
+      if ($group$->$group_dset$ == NULL) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$->$group_dset$);
+        FREE($group$);
+        return NULL;
       }
-
-      size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
-      tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+      
+      rc = fscanf(f, "%1023s", buffer);
+      assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
+      if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
+        FREE(buffer);
+        fclose(f);
+        FREE($group$->$group_dset$);
+        FREE($group$);
+        return NULL;
+      }
+      
+      /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
+      ,  BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+      ,*/
+      char* tmp_$group_dset$;
+      tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
+      
+      for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
+        $group$->$group_dset$[i] = tmp_$group_dset$;
+        /* conventional fcanf with "%s" only return the string before the first space character 
+         ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
+         ,* Q: depending on what ? */
+        rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
+        assert(!(rc != 1));
+        if (rc != 1) {
+          FREE(buffer);
+          fclose(f);
+          FREE($group$->$group_dset$);
+          FREE($group$);
+          return NULL;
+        }
+      
+        size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
+        tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+      }
     }
     // END REPEAT GROUP_DSET_STR
 
@@ -555,7 +582,8 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
   // END REPEAT GROUP_DSET_ALL
 
   // START REPEAT GROUP_NUM
-  fprintf(f, "$group_num$ %" PRIu64 "\n", $group$->$group_num$);
+  fprintf(f, "$group_num$_isSet %u \n", $group$->$group_num$_isSet);
+  if ($group$->$group_num$_isSet == true) fprintf(f, "$group_num$ %$group_num_std_dtype_out$ \n", $group$->$group_num$);
   // END REPEAT GROUP_NUM
 
   // START REPEAT GROUP_ATTR_STR
@@ -624,17 +652,17 @@ trexio_text_free_$group$ (trexio_text_t* const file)
 }
     #+end_src
 
-** Template for has/read/write the num attribute
+** Template for has/read/write the numerical attribute
 
-    #+begin_src c :tangle hrw_num_text.h :exports none
+    #+begin_src c :tangle hrw_attr_num_text.h :exports none
 trexio_exit_code trexio_text_has_$group_num$ (trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_num$ (trexio_t* const file, uint64_t* const num);
-trexio_exit_code trexio_text_write_$group_num$(trexio_t* const file, const uint64_t num);
+trexio_exit_code trexio_text_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$* const num);
+trexio_exit_code trexio_text_write_$group_num$(trexio_t* const file, const $group_num_dtype_double$ num);
    #+end_src
 
-    #+begin_src c :tangle read_num_text.c
+    #+begin_src c :tangle read_attr_num_text.c
 trexio_exit_code
-trexio_text_read_$group_num$ (trexio_t* const file, uint64_t* const num)
+trexio_text_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$* const num)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -650,9 +678,9 @@ trexio_text_read_$group_num$ (trexio_t* const file, uint64_t* const num)
 }
    #+end_src
 
-   #+begin_src c :tangle write_num_text.c
+   #+begin_src c :tangle write_attr_num_text.c
 trexio_exit_code
-trexio_text_write_$group_num$ (trexio_t* const file, const uint64_t num)
+trexio_text_write_$group_num$ (trexio_t* const file, const $group_num_dtype_double$ num)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -662,6 +690,7 @@ trexio_text_write_$group_num$ (trexio_t* const file, const uint64_t num)
   if ($group$ == NULL) return TREXIO_FAILURE;
 
   $group$->$group_num$ = num;
+  $group$->$group_num$_isSet = true;
   $group$->to_flush = 1;
 
   return TREXIO_SUCCESS;
@@ -669,7 +698,7 @@ trexio_text_write_$group_num$ (trexio_t* const file, const uint64_t num)
 }
      #+end_src
 
-    #+begin_src c :tangle has_num_text.c
+    #+begin_src c :tangle has_attr_num_text.c
 trexio_exit_code
 trexio_text_has_$group_num$ (trexio_t* const file)
 {
@@ -678,7 +707,7 @@ trexio_text_has_$group_num$ (trexio_t* const file)
   $group$_t* $group$ = trexio_text_read_$group$((trexio_text_t*) file);
   if ($group$ == NULL) return TREXIO_FAILURE;
 
-  if ($group$->$group_num$ > 0L){
+  if ($group$->$group_num$_isSet == true){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
