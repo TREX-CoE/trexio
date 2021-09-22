@@ -465,7 +465,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     configuration (dict) : configuration from `trex.json`
 
             Returns:
-                    num_dict (dict) : dictionary of num-suffixed variables
+                    num_dict (dict) : dictionary of all numerical attributes (of types int, float, dim)
     """
     num_dict = {}
     for k1,v1 in configuration.items():
@@ -673,7 +673,7 @@ def check_dim_consistency(num: dict, dset: dict) -> None:
     Consistency check to make sure that each dimensioning variable exists as a num attribute of some group. 
 
             Parameters:
-                    num (dict)  : dictionary of num-suffixed variables
+                    num (dict)  : dictionary of numerical attributes
                     dset (dict) : dictionary of datasets
 
             Returns:
@@ -686,6 +686,8 @@ def check_dim_consistency(num: dict, dset: dict) -> None:
             if dim not in dim_tocheck:
                 dim_tocheck.append(dim)
 
+    num_onlyDim = [attr_name for attr_name, specs in num.items() if specs['trex_json_int_type']=='dim']
+
     for dim in dim_tocheck:
-        if not dim in num.keys():
+        if not dim in num_onlyDim:
             raise ValueError(f"Dimensioning variable {dim} is not a num attribute of any group.\n")
