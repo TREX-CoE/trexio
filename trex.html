@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2021-09-16 Thu 14:47 -->
+<!-- 2021-09-22 Wed 11:34 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TREX Configuration file</title>
@@ -333,28 +333,28 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgf01cc8b">1. Metadata (metadata group)</a></li>
-<li><a href="#org6e07d76">2. Electron (electron group)</a></li>
-<li><a href="#orga389cc4">3. Nucleus (nucleus group)</a></li>
-<li><a href="#orge373450">4. Effective core potentials (ecp group)</a></li>
-<li><a href="#org9b59ff1">5. Basis set (basis group)</a></li>
-<li><a href="#orged437c1">6. Atomic orbitals (ao group)</a>
+<li><a href="#orgc291cc2">1. Metadata (metadata group)</a></li>
+<li><a href="#org73e1250">2. Electron (electron group)</a></li>
+<li><a href="#org597fcf8">3. Nucleus (nucleus group)</a></li>
+<li><a href="#org87488df">4. Effective core potentials (ecp group)</a></li>
+<li><a href="#org0791ffe">5. Basis set (basis group)</a></li>
+<li><a href="#org4666864">6. Atomic orbitals (ao group)</a>
 <ul>
 <li><a href="#ao_one_e">6.1. One-electron integrals (<code>ao_1e_int</code> group)</a></li>
 <li><a href="#ao_two_e">6.2. Two-electron integrals (<code>ao_2e_int</code> group)</a></li>
 </ul>
 </li>
-<li><a href="#orgbb85665">7. Molecular orbitals (mo group)</a>
+<li><a href="#orgc2e724a">7. Molecular orbitals (mo group)</a>
 <ul>
-<li><a href="#orgff9b4c2">7.1. One-electron integrals (<code>mo_1e_int</code> group)</a></li>
-<li><a href="#org6aedef6">7.2. Two-electron integrals (<code>mo_2e_int</code> group)</a></li>
+<li><a href="#org7dae4a0">7.1. One-electron integrals (<code>mo_1e_int</code> group)</a></li>
+<li><a href="#org68387d3">7.2. Two-electron integrals (<code>mo_2e_int</code> group)</a></li>
 </ul>
 </li>
-<li><a href="#orgd7378f6">8. <span class="todo TODO">TODO</span> Slater determinants</a></li>
-<li><a href="#orgb3124cb">9. <span class="todo TODO">TODO</span> Reduced density matrices (rdm group)</a></li>
-<li><a href="#org951d21b">10. Appendix</a>
+<li><a href="#org7a75fad">8. <span class="todo TODO">TODO</span> Slater determinants</a></li>
+<li><a href="#orgf1a2f70">9. <span class="todo TODO">TODO</span> Reduced density matrices (rdm group)</a></li>
+<li><a href="#orgf5c229e">10. Appendix</a>
 <ul>
-<li><a href="#orgbd76282">10.1. Python script from table to json</a></li>
+<li><a href="#orgf7576f4">10.1. Python script from table to json</a></li>
 </ul>
 </li>
 </ul>
@@ -381,13 +381,23 @@ written in C.
 </p>
 
 <p>
+TREXIO currently supports <code>int</code>, <code>float</code> and <code>str</code> types for both single attributes and arrays.
+Note, that some attributes might have <code>dim</code> type (e.g. <code>num</code> of the <code>nucleus</code> group).
+This type is treated exactly the same as <code>int</code> with the only difference that <code>dim</code> variables
+cannot be negative or zero. This additional constraint is required because <code>dim</code> attributes 
+are used internally to allocate memory and to check array boundaries in the memory-safe API.
+Most of the times, the <code>dim</code> variables contain <code>num</code> suffix.
+</p>
+
+
+<p>
 In Fortran, the arrays are 1-based and in most other languages the
 arrays are 0-based. Hence, we introduce the <code>index</code> type which is an
 1-based <code>int</code> in the Fortran interface and 0-based otherwise.
 </p>
 
-<div id="outline-container-orgf01cc8b" class="outline-2">
-<h2 id="orgf01cc8b"><span class="section-number-2">1</span> Metadata (metadata group)</h2>
+<div id="outline-container-orgc291cc2" class="outline-2">
+<h2 id="orgc291cc2"><span class="section-number-2">1</span> Metadata (metadata group)</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 As we expect our files to be archived in open-data repositories, we
@@ -397,7 +407,7 @@ which have participated to the creation of the file, a list of
 authors of the file, and a textual description.
 </p>
 
-<table id="orgae2a71e" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org96a99b2" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -420,7 +430,7 @@ authors of the file, and a textual description.
 <tbody>
 <tr>
 <td class="org-left"><code>code_num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Number of codes used to produce the file</td>
 </tr>
@@ -434,7 +444,7 @@ authors of the file, and a textual description.
 
 <tr>
 <td class="org-left"><code>author_num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Number of authors of the file</td>
 </tr>
@@ -464,15 +474,15 @@ authors of the file, and a textual description.
 </div>
 </div>
 
-<div id="outline-container-org6e07d76" class="outline-2">
-<h2 id="org6e07d76"><span class="section-number-2">2</span> Electron (electron group)</h2>
+<div id="outline-container-org73e1250" class="outline-2">
+<h2 id="org73e1250"><span class="section-number-2">2</span> Electron (electron group)</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 We consider wave functions expressed in the spin-free formalism, where
 the number of &uarr; and &darr; electrons is fixed.
 </p>
 
-<table id="orgbaec19d" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="orgcf1029a" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -495,14 +505,14 @@ the number of &uarr; and &darr; electrons is fixed.
 <tbody>
 <tr>
 <td class="org-left"><code>up_num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Number of &uarr;-spin electrons</td>
 </tr>
 
 <tr>
 <td class="org-left"><code>dn_num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Number of &darr;-spin electrons</td>
 </tr>
@@ -511,15 +521,15 @@ the number of &uarr; and &darr; electrons is fixed.
 </div>
 </div>
 
-<div id="outline-container-orga389cc4" class="outline-2">
-<h2 id="orga389cc4"><span class="section-number-2">3</span> Nucleus (nucleus group)</h2>
+<div id="outline-container-org597fcf8" class="outline-2">
+<h2 id="org597fcf8"><span class="section-number-2">3</span> Nucleus (nucleus group)</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 The nuclei are considered as fixed point charges. Coordinates are
 given in Cartesian \((x,y,z)\) format.
 </p>
 
-<table id="org4271e24" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="orgc14b8fe" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -542,7 +552,7 @@ given in Cartesian \((x,y,z)\) format.
 <tbody>
 <tr>
 <td class="org-left"><code>num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Number of nuclei</td>
 </tr>
@@ -579,8 +589,8 @@ given in Cartesian \((x,y,z)\) format.
 </div>
 </div>
 
-<div id="outline-container-orge373450" class="outline-2">
-<h2 id="orge373450"><span class="section-number-2">4</span> Effective core potentials (ecp group)</h2>
+<div id="outline-container-org87488df" class="outline-2">
+<h2 id="org87488df"><span class="section-number-2">4</span> Effective core potentials (ecp group)</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 An effective core potential (ECP) \(V_A^{\text{ECP}}\) replacing the
@@ -608,7 +618,7 @@ The functions \(V_{A\ell}\) are parameterized as:
 See <a href="http://dx.doi.org/10.1063/1.4984046">http://dx.doi.org/10.1063/1.4984046</a> for more info.
 </p>
 
-<table id="org3e82be2" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="orgfd7506b" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -652,7 +662,7 @@ See <a href="http://dx.doi.org/10.1063/1.4984046">http://dx.doi.org/10.1063/1.49
 
 <tr>
 <td class="org-left"><code>local_num_n_max</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Maximum value of <code>local_n</code>, used for dimensioning arrays</td>
 </tr>
@@ -687,7 +697,7 @@ See <a href="http://dx.doi.org/10.1063/1.4984046">http://dx.doi.org/10.1063/1.49
 
 <tr>
 <td class="org-left"><code>non_local_num_n_max</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Maximum value of <code>non_local_n</code>, used for dimensioning arrays</td>
 </tr>
@@ -717,8 +727,8 @@ See <a href="http://dx.doi.org/10.1063/1.4984046">http://dx.doi.org/10.1063/1.49
 </div>
 </div>
 
-<div id="outline-container-org9b59ff1" class="outline-2">
-<h2 id="org9b59ff1"><span class="section-number-2">5</span> Basis set (basis group)</h2>
+<div id="outline-container-org0791ffe" class="outline-2">
+<h2 id="org0791ffe"><span class="section-number-2">5</span> Basis set (basis group)</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 We consider here basis functions centered on nuclei. Hence, we enable
@@ -771,7 +781,7 @@ If the the basis function is not considered normalized, \(\mathcal{N}_s=1\).
 All the basis set parameters are stored in one-dimensional arrays:
 </p>
 
-<table id="org7bbfbca" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org8a64b8c" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -801,14 +811,14 @@ All the basis set parameters are stored in one-dimensional arrays:
 
 <tr>
 <td class="org-left"><code>num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Total Number of shells</td>
 </tr>
 
 <tr>
 <td class="org-left"><code>prim_num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Total number of primitives</td>
 </tr>
@@ -940,8 +950,8 @@ prim_factor =
 </div>
 </div>
 
-<div id="outline-container-orged437c1" class="outline-2">
-<h2 id="orged437c1"><span class="section-number-2">6</span> Atomic orbitals (ao group)</h2>
+<div id="outline-container-org4666864" class="outline-2">
+<h2 id="org4666864"><span class="section-number-2">6</span> Atomic orbitals (ao group)</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 Going from the atomic basis set to AOs implies a systematic
@@ -989,13 +999,13 @@ shell, as in the GAMESS convention where
 
 <p>
 In such a case, one should set the normalization of the shell (in
-the <a href="#org9b59ff1">Basis set</a> section) to \(\mathcal{N}_{z^2}\), which is the
+the <a href="#org0791ffe">Basis set</a> section) to \(\mathcal{N}_{z^2}\), which is the
 normalization factor of the atomic orbitals in spherical coordinates.
 The normalization factor of the \(xy\) function which should be
 introduced here should be \(\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}\).
 </p>
 
-<table id="orge2b99d5" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="orgfdf45f4" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -1025,7 +1035,7 @@ introduced here should be \(\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}\).
 
 <tr>
 <td class="org-left"><code>num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Total number of atomic orbitals</td>
 </tr>
@@ -1047,8 +1057,8 @@ introduced here should be \(\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}\).
 </table>
 </div>
 
-<div id="outline-container-orgcaa1ff2" class="outline-3">
-<h3 id="ao_one_e"><a id="orgcaa1ff2"></a><span class="section-number-3">6.1</span> One-electron integrals (<code>ao_1e_int</code> group)</h3>
+<div id="outline-container-org15c6107" class="outline-3">
+<h3 id="ao_one_e"><a id="org15c6107"></a><span class="section-number-3">6.1</span> One-electron integrals (<code>ao_1e_int</code> group)</h3>
 <div class="outline-text-3" id="text-ao_one_e">
 <ul class="org-ul">
 <li>\[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
@@ -1066,7 +1076,7 @@ The one-electron integrals for a one-electron operator \(\hat{O}\) are
 over atomic orbitals.
 </p>
 
-<table id="org508a477" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org3bc1d9c" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -1133,8 +1143,8 @@ over atomic orbitals.
 </div>
 </div>
 
-<div id="outline-container-org19a3d73" class="outline-3">
-<h3 id="ao_two_e"><a id="org19a3d73"></a><span class="section-number-3">6.2</span> Two-electron integrals (<code>ao_2e_int</code> group)</h3>
+<div id="outline-container-orgdf4e873" class="outline-3">
+<h3 id="ao_two_e"><a id="orgdf4e873"></a><span class="section-number-3">6.2</span> Two-electron integrals (<code>ao_2e_int</code> group)</h3>
 <div class="outline-text-3" id="text-ao_two_e">
 <p>
 The two-electron integrals for a two-electron operator \(\hat{O}\) are
@@ -1155,7 +1165,7 @@ notation.
      \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential</li>
 </ul>
 
-<table id="org095dd51" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="orgc46ab51" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -1195,10 +1205,10 @@ notation.
 </div>
 </div>
 
-<div id="outline-container-orgbb85665" class="outline-2">
-<h2 id="orgbb85665"><span class="section-number-2">7</span> Molecular orbitals (mo group)</h2>
+<div id="outline-container-orgc2e724a" class="outline-2">
+<h2 id="orgc2e724a"><span class="section-number-2">7</span> Molecular orbitals (mo group)</h2>
 <div class="outline-text-2" id="text-7">
-<table id="orgad0e1ed" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="orgf858b0b" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -1228,7 +1238,7 @@ notation.
 
 <tr>
 <td class="org-left"><code>num</code></td>
-<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>dim</code></td>
 <td class="org-left">&#xa0;</td>
 <td class="org-left">Number of MOs</td>
 </tr>
@@ -1264,8 +1274,8 @@ notation.
 </table>
 </div>
 
-<div id="outline-container-orgff9b4c2" class="outline-3">
-<h3 id="orgff9b4c2"><span class="section-number-3">7.1</span> One-electron integrals (<code>mo_1e_int</code> group)</h3>
+<div id="outline-container-org7dae4a0" class="outline-3">
+<h3 id="org7dae4a0"><span class="section-number-3">7.1</span> One-electron integrals (<code>mo_1e_int</code> group)</h3>
 <div class="outline-text-3" id="text-7-1">
 <p>
 The operators as the same as those defined in the
@@ -1273,7 +1283,7 @@ The operators as the same as those defined in the
 the basis of molecular orbitals.
 </p>
 
-<table id="org276731f" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org51eb58d" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -1340,8 +1350,8 @@ the basis of molecular orbitals.
 </div>
 </div>
 
-<div id="outline-container-org6aedef6" class="outline-3">
-<h3 id="org6aedef6"><span class="section-number-3">7.2</span> Two-electron integrals (<code>mo_2e_int</code> group)</h3>
+<div id="outline-container-org68387d3" class="outline-3">
+<h3 id="org68387d3"><span class="section-number-3">7.2</span> Two-electron integrals (<code>mo_2e_int</code> group)</h3>
 <div class="outline-text-3" id="text-7-2">
 <p>
 The operators as the same as those defined in the
@@ -1349,7 +1359,7 @@ The operators as the same as those defined in the
 the basis of molecular orbitals.
 </p>
 
-<table id="org91cfad3" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="orgb953cb5" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -1389,13 +1399,13 @@ the basis of molecular orbitals.
 </div>
 </div>
 
-<div id="outline-container-orgd7378f6" class="outline-2">
-<h2 id="orgd7378f6"><span class="section-number-2">8</span> <span class="todo TODO">TODO</span> Slater determinants</h2>
+<div id="outline-container-org7a75fad" class="outline-2">
+<h2 id="org7a75fad"><span class="section-number-2">8</span> <span class="todo TODO">TODO</span> Slater determinants</h2>
 </div>
-<div id="outline-container-orgb3124cb" class="outline-2">
-<h2 id="orgb3124cb"><span class="section-number-2">9</span> <span class="todo TODO">TODO</span> Reduced density matrices (rdm group)</h2>
+<div id="outline-container-orgf1a2f70" class="outline-2">
+<h2 id="orgf1a2f70"><span class="section-number-2">9</span> <span class="todo TODO">TODO</span> Reduced density matrices (rdm group)</h2>
 <div class="outline-text-2" id="text-9">
-<table id="orgf4ea161" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org7a1d0c4" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -1448,15 +1458,15 @@ the basis of molecular orbitals.
 </div>
 </div>
 
-<div id="outline-container-org951d21b" class="outline-2">
-<h2 id="org951d21b"><span class="section-number-2">10</span> Appendix</h2>
+<div id="outline-container-orgf5c229e" class="outline-2">
+<h2 id="orgf5c229e"><span class="section-number-2">10</span> Appendix</h2>
 <div class="outline-text-2" id="text-10">
 </div>
-<div id="outline-container-orgbd76282" class="outline-3">
-<h3 id="orgbd76282"><span class="section-number-3">10.1</span> Python script from table to json</h3>
+<div id="outline-container-orgf7576f4" class="outline-3">
+<h3 id="orgf7576f4"><span class="section-number-3">10.1</span> Python script from table to json</h3>
 <div class="outline-text-3" id="text-10-1">
 <div class="org-src-container">
-<pre class="src src-python" id="org55db609"><span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"""#+begin_src python :tangle trex.json"""</span>)
+<pre class="src src-python" id="org6318b64"><span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"""#+begin_src python :tangle trex.json"""</span>)
 <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"""    "%s": {"""</span>%(title))
 <span style="color: #a0522d;">indent</span> = <span style="color: #8b2252;">"        "</span>
 <span style="color: #a0522d;">f1</span> = 0 ; <span style="color: #a0522d;">f2</span> = 0 ; <span style="color: #a0522d;">f3</span> = 0
@@ -1509,7 +1519,7 @@ the basis of molecular orbitals.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2021-09-16 Thu 14:47</p>
+<p class="date">Created: 2021-09-22 Wed 11:34</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
