@@ -132,7 +132,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                     # special case to uncomment check for positive dimensioning variables in templates
                     elif 'uncommented by the generator for dimensioning' in line:
                         # only uncomment and write the line if `num` is in the name
-                        if 'num' in item:
+                        if 'dim' in detailed_source[item]['trex_json_int_type']:
                             templine = line.replace('//', '') 
                             f_out.write(templine)
                     # general case of recursive replacement of inline triggers 
@@ -478,7 +478,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     tmp_dict['group_num'] = tmp_num
                     num_dict[tmp_num] = tmp_dict
 
-                    # TODO the line below is the same as for group_dset and can be exported from somewhere
+                    # TODO the arguments below are almost the same as for group_dset (except for trex_json_int_type) and can be exported from somewhere
                     if v2[0] == 'float':
                         tmp_dict['datatype'] = 'double'
                         tmp_dict['group_num_h5_dtype']       = 'native_double'
@@ -492,7 +492,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                         tmp_dict['group_num_std_dtype_out'] = '24.16e'
                         tmp_dict['group_num_std_dtype_in'] = 'lf'
                         tmp_dict['group_num_py_dtype'] = 'float'
-                    elif v2[0] in ['int']:
+                    elif v2[0] in ['int', 'dim']:
                         tmp_dict['datatype'] = 'int64_t'
                         tmp_dict['group_num_h5_dtype'] = 'native_int64'
                         tmp_dict['group_num_f_dtype_default']= 'integer(4)'
@@ -505,6 +505,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                         tmp_dict['group_num_std_dtype_out'] = '" PRId64 "'
                         tmp_dict['group_num_std_dtype_in']  = '" SCNd64 "' 
                         tmp_dict['group_num_py_dtype'] = 'int'
+                        tmp_dict['trex_json_int_type'] = v2[0]
 
     return num_dict
 
