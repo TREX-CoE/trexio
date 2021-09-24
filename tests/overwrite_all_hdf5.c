@@ -47,7 +47,7 @@ static int test_write (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
 
   // write the data
@@ -95,7 +95,7 @@ static int test_overwrite (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
 
   // check that the previously written data cannot be overwritten

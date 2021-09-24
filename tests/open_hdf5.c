@@ -19,8 +19,9 @@ static int test_open_w (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'w', backend);
+  file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
 
   // close current session
   rc = trexio_close(file);
@@ -42,8 +43,9 @@ static int test_open_r (const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open file in 'write' mode
-  file = trexio_open(file_name, 'r', backend);
+  file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
 
   // close current session
   rc = trexio_close(file);
@@ -55,18 +57,38 @@ static int test_open_r (const char* file_name, const back_end_t backend) {
 }
 
 
-static int test_open_void (const char* file_name, const back_end_t backend) {
+static int test_open_errors (const back_end_t backend) {
 
-/* Try to open the non-existing TREXIO file in 'read' mode */
+/* Try to call trexio_open with bad arguments */
 
   trexio_t* file = NULL;
   trexio_exit_code rc;
 
 /*================= START OF TEST ==================*/
 
-  // open file in 'read' mode
-  file = trexio_open(file_name, 'r', backend);
+  // open non-existing file in 'r' (read) mode, should return TREXIO_OPEN_ERROR
+  file = trexio_open(TREXIO_VOID, 'r', backend, &rc);
   assert (file == NULL);
+  assert (rc == TREXIO_OPEN_ERROR);
+  fprintf(stderr, "%s \n", trexio_string_of_error(rc));
+
+  // open file with empty file name, should return TREXIO_INVALID_ARG_1
+  file = trexio_open("", 'w', backend, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_INVALID_ARG_1);
+  fprintf(stderr, "%s \n", trexio_string_of_error(rc));
+
+  // open existing file in non-supported I/O mode, should return TREXIO_INVALID_ARG_2
+  file = trexio_open(TREXIO_FILE, 'k', backend, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_INVALID_ARG_2);
+  fprintf(stderr, "%s \n", trexio_string_of_error(rc));
+
+  // open existing file with non-supported back end, should return TREXIO_INVALID_ARG_3
+  file = trexio_open(TREXIO_VOID, 'w', 666, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_INVALID_ARG_3);
+  fprintf(stderr, "%s \n", trexio_string_of_error(rc));
 
 /*================= END OF TEST ==================*/
 
@@ -84,7 +106,7 @@ int main(void) {
 
   test_open_w     (TREXIO_FILE, TEST_BACKEND);
   test_open_r     (TREXIO_FILE, TEST_BACKEND);
-  test_open_void  (TREXIO_VOID, TEST_BACKEND);
+  test_open_errors(TEST_BACKEND);
 
   rc = system(RM_COMMAND);
   assert (rc == 0);

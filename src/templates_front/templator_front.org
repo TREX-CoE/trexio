@@ -703,23 +703,31 @@ struct trexio_back_end_s {
 *** C
 
    #+begin_src c :tangle prefix_front.h :exports none
-trexio_t* trexio_open(const char* file_name, const char mode, const back_end_t back_end);
+trexio_t* trexio_open(const char* file_name, const char mode, 
+                      const back_end_t back_end, trexio_exit_code* const rc_open);
    #+end_src
 
    #+begin_src c :tangle prefix_front.c
 trexio_t*
 trexio_open(const char* file_name, const char mode,
-	    const back_end_t back_end)
+	    const back_end_t back_end, trexio_exit_code* const rc_open)
 {
 
-  if (file_name == NULL) return NULL;
-  if (file_name[0] == '\0') return NULL;
+  if (file_name == NULL || file_name[0] == '\0') {
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
+    return NULL;
+  }
   /* Check overflow in file_name */
 
-  if (back_end <  0) return NULL;
-  if (back_end >= TREXIO_INVALID_BACK_END) return NULL;
+  if (back_end <  0 || back_end >= TREXIO_INVALID_BACK_END) {
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
+    return NULL;
+  }
 
-  if (mode != 'r' && mode != 'w') return NULL;
+  if (mode != 'r' && mode != 'w') {
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
+    return NULL;
+  }
 
   trexio_t* result = NULL;
   void* result_tmp = NULL;
@@ -744,17 +752,18 @@ trexio_open(const char* file_name, const char mode,
 
   assert (result != NULL);    /* TODO: Error handling */
 
-
   /* Data for the parent type */
 
   strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH);
   if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
     free(result);
     return NULL;
   }
 
   strncpy(result->version, PACKAGE_VERSION, 16);
   if (result->version[15] != '\0') {
+    if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
     free(result);
     return NULL;
   }
@@ -792,12 +801,14 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
     free(result);
     return NULL;
   }
 
   rc = trexio_has_metadata_package_version(result);
   if (rc == TREXIO_FAILURE) {
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
     free(result);
     return NULL;
   }
@@ -821,6 +832,7 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
     free(result);
     return NULL;
   }
@@ -847,10 +859,12 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
+    if (rc_open != NULL) *rc_open = TREXIO_LOCK_ERROR;
     free(result);
     return NULL;
   }
 
+  if (rc_open != NULL) *rc_open = TREXIO_SUCCESS;
   return result;
 }
    #+end_src
@@ -859,12 +873,13 @@ trexio_open(const char* file_name, const char mode,
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(8) function trexio_open_c (filename, mode, backend) bind(C, name="trexio_open")
+   integer(8) function trexio_open_c (filename, mode, backend, rc_open) bind(C, name="trexio_open")
      use, intrinsic :: iso_c_binding
      import
      character(kind=c_char), dimension(*)       :: filename
      character, intent(in), value               :: mode
      integer(trexio_backend), intent(in), value :: backend
+     integer(trexio_exit_code), intent(out)     :: rc_open
    end function trexio_open_c
 end interface
    #+end_src
@@ -894,11 +909,22 @@ def open(file_name: str, mode: str, back_end: int):
     >>> trex_file = tr_open("example.h5", "w", TREXIO_HDF5)
     """
 
+    # The new trexio_open function is capable of returning error code which SWIG can append to the output trexio_s file struct
+    # However, if trexio_s* == NULL, then SWIG returns only an error code rc_open instead of a list [trexio_s, rc_open]
+    # Thus, the following try/except sequence is needed
     try:
-        trexio_file = pytr.trexio_open(file_name, mode, back_end)
-        assert trexio_file is not None
+        return_obj = pytr.trexio_open(file_name, mode, back_end)
+        assert return_obj is not None
+        if isinstance(return_obj, int):
+            raise Error(return_obj)
+        else:
+            rc_open = return_obj[1]
+            # this is a sanity check in case the code evolves and SWIG issue is patched
+            if rc_open == TREXIO_SUCCESS:
+                trexio_file = return_obj[0]
+                assert trexio_file is not None
     except AssertionError:
-        raise Exception(f"Could not open TREXIO file {file_name} using trexio_open function. Please make sure that there are no typos in the file name.")
+        raise Exception(f"Could not open TREXIO file {file_name} using trexio_open function. The return value is None (NULL pointer).")
 
     return trexio_file
    #+end_src
@@ -3056,18 +3082,19 @@ def has_$group_str$(trexio_file) -> bool:
 
   #+begin_src f90 :tangle helper_fortran.f90
 contains
-   integer(8) function trexio_open (filename, mode, backend)
+   integer(8) function trexio_open (filename, mode, backend, rc_open)
      use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
      character(len=*), intent(in)                 :: filename
      character, intent(in), value                 :: mode
      integer(trexio_backend), intent(in), value   :: backend
+     integer(trexio_exit_code), intent(out)       :: rc_open
      character(len=len_trim(filename)+1) :: filename_c
-     integer :: rc
+     integer(trexio_exit_code) :: rc
 
      filename_c = trim(filename) // c_null_char
-     trexio_open = trexio_open_c(filename_c, mode, backend)
-     if (trexio_open == 0_8) then
+     trexio_open = trexio_open_c(filename_c, mode, backend, rc_open)
+     if (trexio_open == 0_8 .or. rc_open /= TREXIO_SUCCESS) then
        return
      endif
      rc = trexio_set_one_based(trexio_open)
