@@ -714,22 +714,20 @@ trexio_open(const char* file_name, const char mode,
 {
 
   if (file_name == NULL || file_name[0] == '\0') {
-    *rc_open = TREXIO_INVALID_ARG_1;
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
     return NULL;
   }
   /* Check overflow in file_name */
 
   if (back_end <  0 || back_end >= TREXIO_INVALID_BACK_END) {
-    *rc_open = TREXIO_INVALID_ARG_3;
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
     return NULL;
   }
 
   if (mode != 'r' && mode != 'w') {
-    *rc_open = TREXIO_INVALID_ARG_2;
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
     return NULL;
   }
-
-  if (rc_open == NULL) return NULL;
 
   trexio_t* result = NULL;
   void* result_tmp = NULL;
@@ -758,14 +756,14 @@ trexio_open(const char* file_name, const char mode,
 
   strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH);
   if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
-    *rc_open = TREXIO_INVALID_ARG_1;
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
     free(result);
     return NULL;
   }
 
   strncpy(result->version, PACKAGE_VERSION, 16);
   if (result->version[15] != '\0') {
-    *rc_open = TREXIO_FAILURE;
+    if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
     free(result);
     return NULL;
   }
@@ -803,14 +801,14 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
-    *rc_open = TREXIO_OPEN_ERROR;
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
     free(result);
     return NULL;
   }
 
   rc = trexio_has_metadata_package_version(result);
   if (rc == TREXIO_FAILURE) {
-    *rc_open = TREXIO_OPEN_ERROR;
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
     free(result);
     return NULL;
   }
@@ -834,7 +832,7 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
-    *rc_open = TREXIO_OPEN_ERROR;
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
     free(result);
     return NULL;
   }
@@ -861,12 +859,12 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
-    *rc_open = TREXIO_LOCK_ERROR;
+    if (rc_open != NULL) *rc_open = TREXIO_LOCK_ERROR;
     free(result);
     return NULL;
   }
 
-  *rc_open = TREXIO_SUCCESS;
+  if (rc_open != NULL) *rc_open = TREXIO_SUCCESS;
   return result;
 }
    #+end_src
