@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+           submodules: true  
 
       - name: install extra repository
         run: sudo add-apt-repository ppa:kelleyk/emacs
@@ -21,8 +23,8 @@ jobs:
         run: sudo apt-get install emacs26
 
       # this step is needed to pull the git submodule org-html-themes
-      - name: initialize submodules
-        run: git submodule update --init
+      #- name: initialize submodules
+      #  run: git submodule update --init
 
       - name: make
         run: cd tools/ && ./build_doc.sh && cd ..
