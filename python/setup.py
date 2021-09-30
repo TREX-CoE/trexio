@@ -113,7 +113,6 @@ setup(name             = 'trexio',
          "Operating System :: MacOS"
       ],
       python_requires = ">=3.6",
-      setup_requires = ['numpy', 'pkgconfig'],
-      install_requires = ['numpy']
+      install_requires = ['numpy>=1.17.3']
       )
 
