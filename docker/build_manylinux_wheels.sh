@@ -58,7 +58,14 @@ function build_wheel_for_py()
    # upgrade pip, otherwise it complains that manylinux wheel is "...not supported wheel on this platform"
    pip install --upgrade pip 
    # install dependencies needed to build manylinux wheel
-   pip install --upgrade setuptools wheel auditwheel numpy
+   pip install --upgrade setuptools wheel auditwheel
+   if [ ${PYVERSION} -eq 36 ] || [ ${PYVERSION} -eq 37 ]; then
+       pip install numpy==1.17.3
+   elif [ ${PYVERSION} -eq 38 ]; then
+       pip install numpy==1.18.3
+   else
+       pip install numpy==1.19.3
+   fi
 
    # set an environment variable needed to locate numpy header files
    source tools/set_NUMPY_INCLUDEDIR.sh
