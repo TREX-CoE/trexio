@@ -51,6 +51,9 @@ The `docker run` command line arguments used here:
   - `hdf5_1_12_on_2014_x86_64` (name of the Docker image to run)
   - `/bin/bash` (which binary the container should execute)
 
+To run the ARM-based container (e.g. with `_aarch64` suffix) on Intel/AMD processor, just add the `--platform linux/arm64` to the
+`docker run` arguments. 
+
 Once the Docker container is launched and the corresponding prompt is switched to the container, run the following (example for release 0.2.0):
 
 `cd tmp/ && ./build_manylinux_wheels.sh trexio-0.2.0.tar.gz`
