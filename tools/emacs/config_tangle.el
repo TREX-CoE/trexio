@@ -29,4 +29,5 @@
    ))
 
 (setq org-babel-python-command "python3 -q")
+(setq python-indent-guess-indent-offset-verbose nil) ;; Remove warning : Can’t guess python-indent-offset 
 

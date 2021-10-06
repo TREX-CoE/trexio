@@ -9,6 +9,7 @@
 (setq org-confirm-babel-evaluate nil)
 (global-font-lock-mode t)
 (setq org-src-fontify-natively t)
+(setq python-indent-guess-indent-offset-verbose nil) ;; Remove warning : Can’t guess python-indent-offset 
 
 ;(require 'ox-latex)
 ;(setq org-latex-listings t)
