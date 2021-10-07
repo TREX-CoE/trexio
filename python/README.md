@@ -11,8 +11,7 @@ can be used to convert data from one input/output file format into another.
 ## Requirements
 
 - python3 	(>= 3.6)
-- numpy
-- C compiler 	(gcc/icc)
+- numpy		(>= 1.17.3)
 
 
 ## Installation from PyPI
@@ -31,6 +30,7 @@ For more details, see the corresponding part of the [Python documentation](https
 
 ## Additional requirements (for installation from source)
 
+- C compiler 	(gcc/icc)
 - HDF5 library	(>= 1.8)
 - pkgconfig     (Python package)
 
