@@ -26,7 +26,7 @@ else
 fi
 
 # Install/upgrade packages required for the installation
-python3 -m pip install --upgrade setuptools wheel twine
+python3 -m pip install --upgrade setuptools wheel pip
 python3 -m pip install -r requirements.txt
 
 # export NUMPY_INCLUDEDIR environment variable needed for the proper setup
@@ -59,6 +59,9 @@ python3 -m pip install dist/trexio-*.whl --force-reinstall
 
 # Uninstall pytrexio: this only works from the pytrexio root directory
 #python3 -m pip uninstall trexio
+
+# Install twine to upload things on PyPI
+#python3 -m pip install --upgrade twine
 
 # Test the current release by uploading to TestPyPI sandbox
 #python3 -m twine upload --repository testpypi dist/trexio-*.tar.gz
