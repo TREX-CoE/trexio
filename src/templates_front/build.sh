@@ -5,7 +5,10 @@ cat prefix_front.c   > trexio.c
 cat prefix_front.h   > trexio.h
 # grep some usefull constants from the config.h
 echo "" >> trexio.h
-grep "_VERSION" ../../include/config.h >> trexio.h
+grep "TREXIO_PACKAGE_VERSION" ../../include/config.h >> trexio.h
+grep "TREXIO_VERSION_MAJOR" ../../include/config.h >> trexio.h
+grep "TREXIO_VERSION_MINOR" ../../include/config.h >> trexio.h
+grep "TREXIO_VERSION_PATCH" ../../include/config.h >> trexio.h
 echo "" >> trexio.h
 
 cat prefix_s_front.h > trexio_s.h
