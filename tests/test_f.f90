@@ -2,6 +2,12 @@ program test_trexio
   use trexio
   implicit none
 
+  print *      , "============================================" 
+  print'(a,a)' , "         TREXIO VERSION STRING : ", TREXIO_PACKAGE_VERSION 
+  print'(a,i3)', "         TREXIO MAJOR VERSION  : ", TREXIO_VERSION_MAJOR
+  print'(a,i3)', "         TREXIO MINOR VERSION  : ", TREXIO_VERSION_MINOR
+  print *      , "============================================" 
+
   call system('rm -rf test_write_f.dir')
   print *, 'call test_write(''test_write_f.dir'', TREXIO_TEXT)'
   call test_write('test_write_f.dir', TREXIO_TEXT)
