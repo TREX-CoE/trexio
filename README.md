@@ -46,6 +46,22 @@ TREX library for efficient I/O.
 7. `sudo make install`
 
 
+## Linking to your program
+
+The `make install` command takes care of installing the TREXIO shared library on the user machine.
+Once installed, add `-ltrexio` to the list of compiler options.
+In some cases (e.g. when using custom `prefix` during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LIBRARY_PATH`.
+In order to link the program against TREXIO, the search paths in the current shell can be modified as follows: `export LIBRARY_PATH=$LIBRARY_PATH:<path_to_trexio>/lib` (same holds for `$LD_LIBRARY_PATH`). Do not forget to change `<path_to_trexio>`.
+If your compilation relies on some build tools (like Autotools or CMake), feel free to use the built-in functions to locate and link external dependencies automatically.
+
+In Fortran applications, make sure that the `trexio_f.f90` module file is included in the source tree.
+You might have to manually copy it into your program source directory.
+The `trexio_f.f90` module file can be found in the `include/` directory of the TREXIO source code distribution.
+
+**Note:** there is no need to include `trexio.h` header file during compilation of Fortran programs.
+Only the installed library and the Fortran module file are required.
+
+
 ## Naming convention
 
 The primary TREXIO API is composed of the following functions:
@@ -81,7 +97,7 @@ For example, the tutorial covering TREXIO basics using benzene molecule as an ex
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD?filepath=notebooks%2Ftutorial_benzene.ipynb)
 
 
-## Technical documentation
+## Documentation
 
 [Documentation generated from TREXIO org-mode files.](https://trex-coe.github.io/trexio/)
 

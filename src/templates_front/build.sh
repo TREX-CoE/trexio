@@ -3,6 +3,7 @@
 # prefixes
 cat prefix_front.c   > trexio.c
 cat prefix_front.h   > trexio.h
+
 # grep some usefull constants from the config.h
 echo "" >> trexio.h
 grep "TREXIO_PACKAGE_VERSION" ../../include/config.h >> trexio.h
@@ -11,9 +12,23 @@ grep "TREXIO_VERSION_MINOR" ../../include/config.h >> trexio.h
 grep "TREXIO_VERSION_PATCH" ../../include/config.h >> trexio.h
 echo "" >> trexio.h
 
+# parse the config-defined version attributes to pass them to Fortran module file
+VERSION_VAL=`grep "TREXIO_PACKAGE_VERSION" ../../include/config.h | cut -d " " -f 3`
+VERSION_MAJOR_VAL=`grep "TREXIO_VERSION_MAJOR" ../../include/config.h | cut -d " " -f 3`
+VERSION_MINOR_VAL=`grep "TREXIO_VERSION_MINOR" ../../include/config.h | cut -d " " -f 3`
+VERSION_PATCH_VAL=`grep "TREXIO_VERSION_PATCH" ../../include/config.h | cut -d " " -f 3`
+
 cat prefix_s_front.h > trexio_s.h
 cat prefix_fortran.f90   > trexio_f.f90
 cat prefix_python.py   > trexio.py
+
+# append version string and attributes to the Fortran module file
+echo "" >> trexio_f.f90
+echo "character(len = 12) :: TREXIO_PACKAGE_VERSION = ${VERSION_VAL}" >> trexio_f.f90
+echo "integer(4) :: TREXIO_VERSION_MAJOR = ${VERSION_MAJOR_VAL}" >> trexio_f.f90
+echo "integer(4) :: TREXIO_VERSION_MINOR = ${VERSION_MINOR_VAL}" >> trexio_f.f90
+echo "integer(4) :: TREXIO_VERSION_PATCH = ${VERSION_PATCH_VAL}" >> trexio_f.f90
+echo "" >> trexio_f.f90
 
 # c front end
 cat populated/pop_*.c >> trexio.c
