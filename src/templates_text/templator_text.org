@@ -172,7 +172,24 @@ trexio_text_init (trexio_t* const file)
   f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
 
   if (f->lock_file <= 0) {
-    return TREXIO_ERRNO;
+    if (file->mode != 'r') {
+      return TREXIO_ERRNO;
+    } else {
+      if (errno == EACCES) {
+        /* The directory is read-only and the lock file can't be written.
+          Create a dummy temporary file for dummy locking.
+        */
+        char dirname[TREXIO_MAX_FILENAME_LENGTH] = "/tmp/trexio.XXXXXX";
+        mkdtemp(dirname);
+        strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
+        strncat (file_name, lock_file_name, TREXIO_MAX_FILENAME_LENGTH-strlen(lock_file_name));
+        f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
+        remove(file_name);
+        rmdir(dirname);
+      } else {
+        return TREXIO_ERRNO;
+      }
+    }
   }
 
   return TREXIO_SUCCESS;
@@ -372,7 +389,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       FREE($group$);
       return NULL;
     }
-    
+
     /* additional parameter local_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
     rc = fscanf(f, "%u", &(local_isSet));
     $group$->$group_num$_isSet = (bool) local_isSet;
@@ -384,7 +401,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       return NULL;
     }
 
-    if ($group$->$group_num$_isSet == true) { 
+    if ($group$->$group_num$_isSet == true) {
       rc = fscanf(f, "%1023s", buffer);
       assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
       if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
@@ -393,7 +410,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         FREE($group$);
         return NULL;
       }
-      
+
       rc = fscanf(f, "%$group_num_std_dtype_in$", &($group$->$group_num$));
       assert(!(rc != 1));
       if (rc != 1) {
@@ -506,7 +523,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         FREE($group$);
         return NULL;
       }
-      
+
       rc = fscanf(f, "%1023s", buffer);
       assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
       if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
@@ -516,16 +533,16 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         FREE($group$);
         return NULL;
       }
-      
+
       /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
       ,  BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
       ,*/
       char* tmp_$group_dset$;
       tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
-      
+
       for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
         $group$->$group_dset$[i] = tmp_$group_dset$;
-        /* conventional fcanf with "%s" only return the string before the first space character 
+        /* conventional fcanf with "%s" only return the string before the first space character
          ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
          ,* Q: depending on what ? */
         rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
@@ -537,7 +554,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           FREE($group$);
           return NULL;
         }
-      
+
         size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
         tmp_$group_dset$ += tmp_$group_dset$_len + 1;
       }
@@ -896,7 +913,7 @@ trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const u
     size_t tmp_len = strlen(dset[i]);
     $group$->$group_dset$[i] = tmp_str;
     strncpy(tmp_str, dset[i], tmp_len);
-    tmp_str += tmp_len + 1; 
+    tmp_str += tmp_len + 1;
   }
 
   $group$->to_flush = 1;
