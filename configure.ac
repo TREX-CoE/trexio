@@ -157,6 +157,23 @@ if test "x${TREXIO_DEVEL}" != "x"; then
         HAS_CPPCHECK=1
   fi
 
+else
+
+  # Throw an error message if the user attempts to configure the GitHub repo clone not in the developer mode.
+  # Developer mode is required to generate the TREXIO source files from the org-mode templates.
+  TEST_IFEXISTS=".gitmodules"
+  AC_CHECK_FILE([$TEST_IFEXISTS],
+		[AC_MSG_ERROR([
+		 ----------------------------------------------------------------
+		 Installation with the current configuration is not possible.
+		 Activate developer mode: TREXIO_DEVEL=1 ./configure
+		 	| OR |
+		 Download the tarball with the source code distribution.
+		 ----------------------------------------------------------------
+		 ])],
+		 []
+		) 
+
 fi
 
 ## Libm
