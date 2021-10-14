@@ -180,7 +180,7 @@ trexio_text_init (trexio_t* const file)
           Create a dummy temporary file for dummy locking.
         */
         char dirname[TREXIO_MAX_FILENAME_LENGTH] = "/tmp/trexio.XXXXXX";
-        mkdtemp(dirname);
+        if (mkdtemp(dirname) == NULL) return TREXIO_ERRNO;
         strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
         strncat (file_name, lock_file_name, TREXIO_MAX_FILENAME_LENGTH-strlen(lock_file_name));
         f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
