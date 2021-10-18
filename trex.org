@@ -122,7 +122,7 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   \[
   V_A^{\text{ECP}} =
   V_{A \ell_{\max}} +
-  \sum_{\ell=0}^{\ell_{\max} -1}
+  \sum_{\ell=0}^{\ell_{\max}-1}
   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
   V_{A \ell} - V_{A \ell_{\max}} \right] \langle Y_{\ell m} | 
   \]
@@ -138,20 +138,24 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   See http://dx.doi.org/10.1063/1.4984046 for more info.
   
   #+NAME: ecp
-  | Variable              | Type    | Dimensions                               | Description                                                                                  |
-  |-----------------------+---------+------------------------------------------+----------------------------------------------------------------------------------------------|
-  | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $\ell_{\max} + 1$, one higher than the maximum angular momentum in the removed core orbitals |
-  | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove                                                                            |
-  | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local functions $N_{q \ell}$                                                       |
-  | ~local_num_n_max~     | ~dim~   |                                          | Maximum value of ~local_n~, used for dimensioning arrays                                     |
-  | ~local_exponent~      | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\alpha_{A q \ell_{\max}}$                                                                   |
-  | ~local_coef~          | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\beta_{A q \ell_{\max}}$                                                                    |
-  | ~local_power~         | ~int~   | ~(ecp.local_num_n_max, nucleus.num)~     | $n_{A q \ell_{\max}}$                                                                        |
-  | ~non_local_n~         | ~int~   | ~(nucleus.num)~                          | $N_{q \ell_{\max}}$                                                                          |
-  | ~non_local_num_n_max~ | ~dim~   |                                          | Maximum value of ~non_local_n~, used for dimensioning arrays                                 |
-  | ~non_local_exponent~  | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\alpha_{A q \ell}$                                                                          |
-  | ~non_local_coef~      | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\beta_{A q \ell}$                                                                           |
-  | ~non_local_power~     | ~int~   | ~(ecp.non_local_num_n_max, nucleus.num)~ | $n_{A q \ell}$                                                                               |
+  | Variable      | Type    | Dimensions      | Description                                                                 |
+  |---------------+---------+-----------------+-----------------------------------------------------------------------------|
+  | ~max_ang_mom~ | ~int~   | ~(nucleus.num)~ | $\ell_{\max}$ the maximum angular momentum in the removed core orbitals     |
+  | ~z_core~      | ~float~ | ~(nucleus.num)~ | Charges to remove                                                           |
+  | ~num~         | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$        |
+  | ~ang_mom~     | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$ |
+  | ~nucleus~     | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index              |
+  | ~exponent~    | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                       |
+  | ~coefficient~ | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                     |
+  | ~power~       | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                               |
+
+
+*Note for developers*: avoid having variables with similar prefix in their name. 
+HDF5 back end might cause issues due to the way `find_dataset` function works 
+in the H5LT module. For example, in the ECP group we use ~max_ang_mom~ and 
+~ang_mom_max~ due to this. 
+The latter causes issues when written before ~ang_mom~ in the TREXIO file.
+
 
   #+CALL: json(data=ecp, title="ecp")
 
@@ -159,21 +163,19 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   :RESULTS:
   #+begin_src python :tangle trex.json
       "ecp": {
-		  "lmax_plus_1" : [ "int"  , [ "nucleus.num" ]                            ]
-	,              "z_core" : [ "float", [ "nucleus.num" ]                            ]
-	,             "local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-	,     "local_num_n_max" : [ "dim"  , []                                           ]
-	,      "local_exponent" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-	,          "local_coef" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-	,         "local_power" : [ "int"  , [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-	,         "non_local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-	, "non_local_num_n_max" : [ "dim"  , []                                           ]
-	,  "non_local_exponent" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-	,      "non_local_coef" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-	,     "non_local_power" : [ "int"  , [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+	  "max_ang_mom" : [ "int"  , [ "nucleus.num" ] ]
+	,      "z_core" : [ "float", [ "nucleus.num" ] ]
+	,         "num" : [ "dim"  , []                ]
+	,     "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+	,     "nucleus" : [ "index", [ "ecp.num" ]     ]
+	,    "exponent" : [ "float", [ "ecp.num" ]     ]
+	, "coefficient" : [ "float", [ "ecp.num" ]     ]
+	,       "power" : [ "int"  , [ "ecp.num" ]     ]
       } ,
   #+end_src
   :END:
+
+
 
 * Basis set (basis group)
 
