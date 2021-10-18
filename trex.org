@@ -175,7 +175,60 @@ The latter causes issues when written before ~ang_mom~ in the TREXIO file.
   #+end_src
   :END:
 
+** Example
 
+  For example, consider H_2 molecule with the following 
+  [[https://pseudopotentiallibrary.org/recipes/H/ccECP/H.ccECP.gamess][effective core potential]] 
+  (in GAMESS input format for the H atom):
+
+   #+BEGIN_EXAMPLE
+H-ccECP GEN 0 1
+3
+1.00000000000000    1 21.24359508259891 
+21.24359508259891   3 21.24359508259891 
+-10.85192405303825  2 21.77696655044365 
+1
+0.00000000000000    2 1.000000000000000
+   #+END_EXAMPLE
+
+   In TREXIO representation this would be:
+
+   #+BEGIN_EXAMPLE
+ecp_num         = 8
+
+# max angular momentum per atom
+ecp_max_ang_mom = [ 1, 1 ]
+# number of core electrons to remove per atom
+ecp_zcore       = [ 0, 0 ]
+
+# first 4 ECP elements correspond to the first H atom, same for the second H atom
+ecp_nucleus = [
+  0, 0, 0, 0,
+  1, 1, 1, 1
+  ]
+
+# 3 first ECP elements correspond to l=1 of the first H atom, then 1 ECP for l=0; same for the second H atom 
+ecp_ang_mom = [
+  1, 1, 1, 0,
+  1, 1, 1, 0
+  ]
+
+# flat arrays with ECP quantities that can be parsed based on the aforementioned ecp_ang_mom and ecp_nucleus
+ecp_coefficient = [
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000,
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000
+  ]
+
+ecp_exponent = [ 
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000,
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000
+  ]
+
+ecp_power = [ 
+  -1, 1, 0, 0, 
+  -1, 1, 0, 0
+  ]
+   #+END_EXAMPLE
 
 * Basis set (basis group)
 
