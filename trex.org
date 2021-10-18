@@ -215,20 +215,17 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   All the basis set parameters are stored in one-dimensional arrays:
 
   #+NAME: basis
-  | Variable            | Type    | Dimensions         | Description                                              |
-  |---------------------+---------+--------------------+----------------------------------------------------------|
-  | ~type~              | ~str~   |                    | Type of basis set: "Gaussian" or "Slater"                |
-  | ~num~               | ~dim~   |                    | Total Number of shells                                   |
-  | ~prim_num~          | ~dim~   |                    | Total number of primitives                               |
-  | ~nucleus_index~     | ~index~ | ~(nucleus.num)~    | Index of the first shell of each nucleus ($A$)           |
-  | ~nucleus_shell_num~ | ~int~   | ~(nucleus.num)~    | Number of shells for each nucleus                        |
-  | ~shell_ang_mom~     | ~int~   | ~(basis.num)~      | Angular momentum ~0:S, 1:P, 2:D, ...~                    |
-  | ~shell_prim_num~    | ~int~   | ~(basis.num)~      | Number of primitives in the shell ($N_{\text{prim}}$)    |
-  | ~shell_factor~      | ~float~ | ~(basis.num)~      | Normalization factor of the shell ($\mathcal{N}_s$)      |
-  | ~shell_prim_index~  | ~index~ | ~(basis.num)~      | Index of the first primitive in the complete list        |
-  | ~exponent~          | ~float~ | ~(basis.prim_num)~ | Exponents of the primitives ($\gamma_{ks}$)              |
-  | ~coefficient~       | ~float~ | ~(basis.prim_num)~ | Coefficients of the primitives ($a_{ks}$)                |
-  | ~prim_factor~       | ~float~ | ~(basis.prim_num)~ | Normalization coefficients for the primitives ($f_{ks}$) |
+  | Variable        | Type    | Dimensions    | Description                                                      |
+  |-----------------+---------+---------------+------------------------------------------------------------------|
+  | ~type~          | ~str~   |               | Type of basis set: "Gaussian" or "Slater"                        |
+  | ~num~           | ~dim~   |               | Total number of primitives                                       |
+  | ~nucleus_index~ | ~index~ | ~(basis.num)~ | One-to-one correspondence between primitives and atomic indices  |
+  | ~ang_mom~       | ~int~   | ~(basis.num)~ | One-to-one correspondence between primitives and angular momenta |
+  | ~shell_index~   | ~index~ | ~(basis.num)~ | One-to-one correspondence between primitives and atomic shells   |
+  | ~shell_factor~  | ~float~ | ~(basis.num)~ | Normalization factor of the shell ($\mathcal{N}_s$)              |
+  | ~exponent~      | ~float~ | ~(basis.num)~ | Exponents of the primitives ($\gamma_{ks}$)                      |
+  | ~coefficient~   | ~float~ | ~(basis.num)~ | Coefficients of the primitives ($a_{ks}$)                        |
+  | ~prim_factor~   | ~float~ | ~(basis.num)~ | Normalization coefficients for the primitives ($f_{ks}$)         |
 
   #+CALL: json(data=basis, title="basis")
 
@@ -252,6 +249,8 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   #+end_src
   :END:
 
+** Example
+
   For example, consider H_2 with the following basis set (in GAMESS
   format), where both the AOs and primitives are considered normalized:
 
@@ -272,31 +271,43 @@ P   1
 P   1
 1         3.880000E-01           1.000000E+00
 D   1
-1         1.057000E+00           1.0000000
+1         1.057000E+00           1.000000E+00
    #+END_EXAMPLE
 
-   we have:
+   In TREXIO representaion we have:
 
    #+BEGIN_EXAMPLE
-type     = "Gaussian"
-num      = 12
-prim_num = 20
+type  = "Gaussian"
+num   = 20
 
-nucleus_index    = [0 , 6]
-shell_ang_mom    = [0 , 0 , 0 , 1 , 1 , 2 , 0 , 0 , 0 , 1 , 1 , 2 ]
-shell_prim_num   = [5 , 1 , 1 , 1 , 1 , 1 , 5 , 1 , 1 , 1 , 1 , 1 ]
-shell_prim_index = [0 , 5 , 6 , 7 , 8 , 9 , 10, 15, 16, 17, 18, 19]
-shell_factor     = [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]
+# 10 primitives per H atom
+nucleus_index = 
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ]
 
+# 7 primitives for S (l=0), 2 primitives for P (l=1), 1 primitive for D (l=2) shells
+ang_mom =
+[ 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 
+  0, 0, 0, 0, 0, 0, 0, 1, 1, 2 ]
+
+# 5 primitives for first S shell and then 1 primitive per remaining shells
+shell_index = 
+[ 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 
+  0, 0, 0, 0, 0, 1, 2, 3, 4, 5 ]
+
+# no need to normalize shells 
+shell_factor = 
+[ 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 
+  1., 1., 1., 1., 1., 1., 1., 1., 1., 1. ]
+
+# parameters of the primitives
 exponent =
-[ 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407,
-  0.388, 1.057, 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407,
-  0.388, 1.057]
+[ 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407, 0.388, 1.057, 
+  33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407, 0.388, 1.057 ]
 
 coefficient =
-[ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0,
-  1.0, 1.0, 1.0, 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0,
-  1.0, 1.0, 1.0]
+[ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0, 
+  0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
 prim_factor =
 [ 1.0006253235944540e+01, 2.4169531573445120e+00, 7.9610924849766440e-01
