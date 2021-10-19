@@ -144,7 +144,7 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   | Variable             | Type    | Dimensions      | Description                                                                            |
   |----------------------+---------+-----------------+----------------------------------------------------------------------------------------|
   | ~max_ang_mom_plus_1~ | ~int~   | ~(nucleus.num)~ | $\ell_{\max}+1$, one higher than the max angular momentum in the removed core orbitals |
-  | ~z_core~             | ~float~ | ~(nucleus.num)~ | Number of core electrons to remove per atom                                            |
+  | ~z_core~             | ~int~   | ~(nucleus.num)~ | Number of core electrons to remove per atom                                            |
   | ~num~                | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$                   |
   | ~ang_mom~            | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$            |
   | ~nucleus_index~      | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index                         |
@@ -174,7 +174,7 @@ The latter causes issues when written before ~ang_mom~ in the TREXIO file.
   #+begin_src python :tangle trex.json
       "ecp": {
 	  "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
-	,             "z_core" : [ "float", [ "nucleus.num" ] ]
+	,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
 	,                "num" : [ "dim"  , []                ]
 	,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
 	,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
@@ -212,13 +212,13 @@ max_ang_mom_plus_1 = [ 1, 1 ]
 # number of core electrons to remove per atom
 zcore = [ 0, 0 ]
 
-# first 4 ECP elements correspond to the first H atom; the remaining 4 elements are for the second H atom
+# first 4 ECP elements correspond to the first H atom ; the remaining 4 elements are for the second H atom
 nucleus_index = [
   0, 0, 0, 0,
   1, 1, 1, 1
   ]
 
-# 3 first ECP elements correspond to the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom 
+# 3 first ECP elements correspond to potential of the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom 
 ang_mom = [
   1, 1, 1, 0,
   1, 1, 1, 0
