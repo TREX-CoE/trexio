@@ -121,10 +121,10 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   core electrons of atom $A$ is expressed as
   \[
   V_A^{\text{ECP}} =
-  V_{A \ell_{\max}} +
-  \sum_{\ell=0}^{\ell_{\max}-1}
+  V_{A \ell_{\max}+1} +
+  \sum_{\ell=0}^{\ell_{\max}}
   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
-  V_{A \ell} - V_{A \ell_{\max}} \right] \langle Y_{\ell m} | 
+  V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} | 
   \]
 
   The functions $V_{A\ell}$ are parameterized as:
@@ -138,16 +138,16 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   See http://dx.doi.org/10.1063/1.4984046 for more info.
   
   #+NAME: ecp
-  | Variable        | Type    | Dimensions      | Description                                                                 |
-  |-----------------+---------+-----------------+-----------------------------------------------------------------------------|
-  | ~max_ang_mom~   | ~int~   | ~(nucleus.num)~ | $\ell_{\max}$ the maximum angular momentum in the removed core orbitals     |
-  | ~z_core~        | ~float~ | ~(nucleus.num)~ | Charges to remove                                                           |
-  | ~num~           | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$        |
-  | ~ang_mom~       | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$ |
-  | ~nucleus_index~ | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index              |
-  | ~exponent~      | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                       |
-  | ~coefficient~   | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                     |
-  | ~power~         | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                               |
+  | Variable             | Type    | Dimensions      | Description                                                                            |
+  |----------------------+---------+-----------------+----------------------------------------------------------------------------------------|
+  | ~max_ang_mom_plus_1~ | ~int~   | ~(nucleus.num)~ | $\ell_{\max}+1$, one higher than the max angular momentum in the removed core orbitals |
+  | ~z_core~             | ~float~ | ~(nucleus.num)~ | Charges to remove                                                                      |
+  | ~num~                | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$                   |
+  | ~ang_mom~            | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$            |
+  | ~nucleus_index~      | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index                         |
+  | ~exponent~           | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                                  |
+  | ~coefficient~        | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                                |
+  | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
 
 
 *Note for developers*: avoid having variables with similar prefix in their name. 
@@ -163,14 +163,14 @@ The latter causes issues when written before ~ang_mom~ in the TREXIO file.
   :RESULTS:
   #+begin_src python :tangle trex.json
       "ecp": {
-	    "max_ang_mom" : [ "int"  , [ "nucleus.num" ] ]
-	,        "z_core" : [ "float", [ "nucleus.num" ] ]
-	,           "num" : [ "dim"  , []                ]
-	,       "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
-	, "nucleus_index" : [ "index", [ "ecp.num" ]     ]
-	,      "exponent" : [ "float", [ "ecp.num" ]     ]
-	,   "coefficient" : [ "float", [ "ecp.num" ]     ]
-	,         "power" : [ "int"  , [ "ecp.num" ]     ]
+	  "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
+	,             "z_core" : [ "float", [ "nucleus.num" ] ]
+	,                "num" : [ "dim"  , []                ]
+	,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+	,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
+	,           "exponent" : [ "float", [ "ecp.num" ]     ]
+	,        "coefficient" : [ "float", [ "ecp.num" ]     ]
+	,              "power" : [ "int"  , [ "ecp.num" ]     ]
       } ,
   #+end_src
   :END:
@@ -196,10 +196,11 @@ H-ccECP GEN 0 1
    #+BEGIN_EXAMPLE
 num = 8
 
-# max angular momentum per atom
-max_ang_mom = [ 1, 1 ]
+# lmax+1 per atom
+max_ang_mom_plus_1 = [ 2, 2 ]
+
 # number of core electrons to remove per atom
-zcore       = [ 0, 0 ]
+zcore = [ 0, 0 ]
 
 # first 4 ECP elements correspond to the first H atom, same for the second H atom
 nucleus_index = [
