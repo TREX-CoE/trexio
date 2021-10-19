@@ -59,10 +59,15 @@ assert rc==0
 #        charges[i] = 1.
 #rc = trexio_write_nucleus_charge(test_file, charges)
 
+basis_num = 24
 # initialize arrays of nuclear indices as a list and convert it to numpy array
-indices = [i for i in range(nucleus_num)]
+indices = [i for i in range(basis_num)]
 # type cast is important here because by default numpy transforms a list of integers into int64 array
 indices_np = np.array(indices, dtype=np.int32)
+
+# first write basis_num because it is needed to check dimensions of basis_nucleus_index in TREXIO >= 2.0.0
+rc = trexio_write_basis_num(test_file, basis_num)
+assert rc==0
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemacs from numpy.i
@@ -124,8 +129,12 @@ assert rc==23
 #for i in range(nucleus_num):
 #    assert charges2[i]==charges[i]
 
+result_basis = trexio_read_basis_num(test_file2)
+assert result[0]==0
+assert result[1]==basis_num
+
 # safe call to read_safe array of int values
-rc, rindices_np = trexio_read_safe_basis_nucleus_index(test_file2, nucleus_num)
+rc, rindices_np = trexio_read_safe_basis_nucleus_index(test_file2, basis_num)
 assert rc==0
 assert rindices_np.dtype is np.dtype(np.int32)
 for i in range(nucleus_num):
