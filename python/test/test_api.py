@@ -71,10 +71,14 @@ charges_np = np.array(charges, dtype=np.int32)
 # from the size of the list/array by SWIG using typemaps from numpy.i
 trexio.write_nucleus_charge(test_file, charges_np)
 
+basis_shell_num = 24
 # initialize arrays of nuclear indices as a list and convert it to numpy array
-indices = [i for i in range(nucleus_num)]
+indices = [i for i in range(basis_shell_num)]
 # type cast is important here because by default numpy transforms a list of integers into int64 array
 indices_np = np.array(indices, dtype=np.int64)
+
+# first write basis_shell_num because it is needed to check dimensions of basis_nucleus_index in TREXIO >= 2.0.0
+trexio.write_basis_shell_num(test_file, basis_shell_num)
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
 # from the size of the list/array by SWIG using typemacs from numpy.i
@@ -160,20 +164,20 @@ except trexio.Error:
     print("Unsafe call to safe API: checked")
 
 # safe call to read array of int values (nuclear indices)
-rindices_np_16 = trexio.read_basis_nucleus_index(test_file2, dim=nucleus_num, dtype=np.int16)
+rindices_np_16 = trexio.read_basis_nucleus_index(test_file2, dim=basis_shell_num, dtype=np.int16)
 assert rindices_np_16.dtype is np.dtype(np.int16)
-for i in range(nucleus_num):
+for i in range(basis_shell_num):
     assert rindices_np_16[i]==indices_np[i]
 
-rindices_np_32 = trexio.read_basis_nucleus_index(test_file2, dim=nucleus_num, dtype=np.int32)
+rindices_np_32 = trexio.read_basis_nucleus_index(test_file2, dim=basis_shell_num, dtype=np.int32)
 assert rindices_np_32.dtype is np.dtype(np.int32)
-for i in range(nucleus_num):
+for i in range(basis_shell_num):
     assert rindices_np_32[i]==indices_np[i]
 
 rindices_np_64 = trexio.read_basis_nucleus_index(test_file2)
 assert rindices_np_64.dtype is np.dtype(np.int64)
-assert rindices_np_64.size==nucleus_num
-for i in range(nucleus_num):
+assert rindices_np_64.size==basis_shell_num
+for i in range(basis_shell_num):
     assert rindices_np_64[i]==indices_np[i]
 
 # read nuclear coordinates without providing optional argument dim
