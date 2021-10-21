@@ -25,7 +25,7 @@ static int test_write_dset (const char* file_name, const back_end_t backend) {
   assert (file != NULL);
 
   // write numerical attribute in an empty file
-  rc = trexio_write_basis_num(file, num);
+  rc = trexio_write_basis_shell_num(file, num);
   assert (rc == TREXIO_SUCCESS);
   
   // write numerical (integer) dataset in a file
@@ -91,7 +91,7 @@ static int test_read_dset (const char* file_name, const back_end_t backend) {
   assert (file != NULL);
 
   // read numerical attribute from the file
-  rc = trexio_read_basis_num(file, &num);
+  rc = trexio_read_basis_shell_num(file, &num);
   assert (rc == TREXIO_SUCCESS);
   assert (num == 12);
 

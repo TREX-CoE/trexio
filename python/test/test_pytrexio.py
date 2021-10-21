@@ -66,7 +66,7 @@ indices = [i for i in range(basis_num)]
 indices_np = np.array(indices, dtype=np.int32)
 
 # first write basis_num because it is needed to check dimensions of basis_nucleus_index in TREXIO >= 2.0.0
-rc = trexio_write_basis_num(test_file, basis_num)
+rc = trexio_write_basis_shell_num(test_file, basis_num)
 assert rc==0
 
 # function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
@@ -129,7 +129,7 @@ assert rc==23
 #for i in range(nucleus_num):
 #    assert charges2[i]==charges[i]
 
-result_basis = trexio_read_basis_num(test_file2)
+result_basis = trexio_read_basis_shell_num(test_file2)
 assert result[0]==0
 assert result[1]==basis_num
 

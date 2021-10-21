@@ -44,7 +44,7 @@ subroutine test_write(file_name, back_end)
 
   integer :: rc = 1
 
-  integer :: num, basis_num
+  integer :: num, basis_shell_num
 
   integer :: basis_nucleus_index(24)
   double precision :: charge(12)
@@ -70,7 +70,7 @@ subroutine test_write(file_name, back_end)
                        0.00000000d0,  2.47304151d0 ,  0.00000000d0 /), &
                        shape(coord) )
 
-  basis_num = 24
+  basis_shell_num = 24
   basis_nucleus_index = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 /)
 
   label = [character(len=8) :: 'C', 'Na','C', 'C 66', 'C','C', 'H 99', 'Ru', 'H', 'H',  'H', 'H' ]
@@ -105,7 +105,7 @@ subroutine test_write(file_name, back_end)
   deallocate(sym_str)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE POINT GROUP')
 
-  rc = trexio_write_basis_num(trex_file, basis_num)
+  rc = trexio_write_basis_shell_num(trex_file, basis_shell_num)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE BASIS NUM')
 
   rc = trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index)
@@ -140,7 +140,7 @@ subroutine test_read(file_name, back_end)
 
   integer :: i, j, k, ind, offset, flag
   integer :: rc = 1
-  integer :: num, num_read, basis_num
+  integer :: num, num_read, basis_shell_num
 
   integer :: basis_nucleus_index(24)
   double precision :: charge(12)
@@ -155,7 +155,7 @@ subroutine test_read(file_name, back_end)
   character*(128) :: str
 
   num = 12
-  basis_num = 24
+  basis_shell_num = 24
 
 ! ================= START OF TEST ===================== !
 
