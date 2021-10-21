@@ -118,14 +118,17 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
 * Effective core potentials (ecp group)
 
   An effective core potential (ECP) $V_A^{\text{ECP}}$ replacing the
-  core electrons of atom $A$ is expressed as
+  core electrons of atom $A$ can be expressed as
   \[
   V_A^{\text{ECP}} =
-  V_{A \ell_{\max}} +
-  \sum_{\ell=0}^{\ell_{\max} -1}
+  V_{A \ell_{\max}+1} +
+  \sum_{\ell=0}^{\ell_{\max}}
   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
-  V_{A \ell} - V_{A \ell_{\max}} \right] \langle Y_{\ell m} | 
+  V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} | 
   \]
+
+  The first term in the equation above is sometimes attributed to the local channel,
+  while the remaining terms correspond to the non-local channel projections.
 
   The functions $V_{A\ell}$ are parameterized as:
   \[
@@ -135,23 +138,34 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
   \]
   
-  See http://dx.doi.org/10.1063/1.4984046 for more info.
+  See http://dx.doi.org/10.1063/1.4984046 or https://doi.org/10.1063/1.5121006for more info.
   
   #+NAME: ecp
-  | Variable              | Type    | Dimensions                               | Description                                                                                  |
-  |-----------------------+---------+------------------------------------------+----------------------------------------------------------------------------------------------|
-  | ~lmax_plus_1~         | ~int~   | ~(nucleus.num)~                          | $\ell_{\max} + 1$, one higher than the maximum angular momentum in the removed core orbitals |
-  | ~z_core~              | ~float~ | ~(nucleus.num)~                          | Charges to remove                                                                            |
-  | ~local_n~             | ~int~   | ~(nucleus.num)~                          | Number of local functions $N_{q \ell}$                                                       |
-  | ~local_num_n_max~     | ~dim~   |                                          | Maximum value of ~local_n~, used for dimensioning arrays                                     |
-  | ~local_exponent~      | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\alpha_{A q \ell_{\max}}$                                                                   |
-  | ~local_coef~          | ~float~ | ~(ecp.local_num_n_max, nucleus.num)~     | $\beta_{A q \ell_{\max}}$                                                                    |
-  | ~local_power~         | ~int~   | ~(ecp.local_num_n_max, nucleus.num)~     | $n_{A q \ell_{\max}}$                                                                        |
-  | ~non_local_n~         | ~int~   | ~(nucleus.num)~                          | $N_{q \ell_{\max}}$                                                                          |
-  | ~non_local_num_n_max~ | ~dim~   |                                          | Maximum value of ~non_local_n~, used for dimensioning arrays                                 |
-  | ~non_local_exponent~  | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\alpha_{A q \ell}$                                                                          |
-  | ~non_local_coef~      | ~float~ | ~(ecp.non_local_num_n_max, nucleus.num)~ | $\beta_{A q \ell}$                                                                           |
-  | ~non_local_power~     | ~int~   | ~(ecp.non_local_num_n_max, nucleus.num)~ | $n_{A q \ell}$                                                                               |
+  | Variable             | Type    | Dimensions      | Description                                                                            |
+  |----------------------+---------+-----------------+----------------------------------------------------------------------------------------|
+  | ~max_ang_mom_plus_1~ | ~int~   | ~(nucleus.num)~ | $\ell_{\max}+1$, one higher than the max angular momentum in the removed core orbitals |
+  | ~z_core~             | ~int~   | ~(nucleus.num)~ | Number of core electrons to remove per atom                                            |
+  | ~num~                | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$                   |
+  | ~ang_mom~            | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$            |
+  | ~nucleus_index~      | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index                         |
+  | ~exponent~           | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                                  |
+  | ~coefficient~        | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                                |
+  | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
+
+
+There might be some confusion in the meaning of the $\ell_{\max}$. 
+It can be attributed to the maximum angular momentum occupied 
+in the core orbitals, which are removed by the ECP.
+On the other hand, it can be attributed to the maximum angular momentum of the 
+ECP that replaces the core electrons. 
+*Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
+
+
+*Note for developers*: avoid having variables with similar prefix in their name. 
+HDF5 back end might cause issues due to the way `find_dataset` function works.
+For example, in the ECP group we use ~max_ang_mom~ and not ~ang_mom_max~. 
+The latter causes issues when written before ~ang_mom~ in the TREXIO file.
+
 
   #+CALL: json(data=ecp, title="ecp")
 
@@ -159,21 +173,73 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   :RESULTS:
   #+begin_src python :tangle trex.json
       "ecp": {
-		  "lmax_plus_1" : [ "int"  , [ "nucleus.num" ]                            ]
-	,              "z_core" : [ "float", [ "nucleus.num" ]                            ]
-	,             "local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-	,     "local_num_n_max" : [ "dim"  , []                                           ]
-	,      "local_exponent" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-	,          "local_coef" : [ "float", [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-	,         "local_power" : [ "int"  , [ "nucleus.num", "ecp.local_num_n_max" ]     ]
-	,         "non_local_n" : [ "int"  , [ "nucleus.num" ]                            ]
-	, "non_local_num_n_max" : [ "dim"  , []                                           ]
-	,  "non_local_exponent" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-	,      "non_local_coef" : [ "float", [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
-	,     "non_local_power" : [ "int"  , [ "nucleus.num", "ecp.non_local_num_n_max" ] ]
+	  "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
+	,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
+	,                "num" : [ "dim"  , []                ]
+	,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+	,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
+	,           "exponent" : [ "float", [ "ecp.num" ]     ]
+	,        "coefficient" : [ "float", [ "ecp.num" ]     ]
+	,              "power" : [ "int"  , [ "ecp.num" ]     ]
       } ,
   #+end_src
   :END:
+
+** Example
+
+  For example, consider H_2 molecule with the following 
+  [[https://pseudopotentiallibrary.org/recipes/H/ccECP/H.ccECP.gamess][effective core potential]] 
+  (in GAMESS input format for the H atom):
+
+   #+BEGIN_EXAMPLE
+H-ccECP GEN 0 1
+3
+1.00000000000000    1 21.24359508259891 
+21.24359508259891   3 21.24359508259891 
+-10.85192405303825  2 21.77696655044365 
+1
+0.00000000000000    2 1.000000000000000
+   #+END_EXAMPLE
+
+   In TREXIO representation this would be:
+
+   #+BEGIN_EXAMPLE
+num = 8
+
+# lmax+1 per atom
+max_ang_mom_plus_1 = [ 1, 1 ]
+
+# number of core electrons to remove per atom
+zcore = [ 0, 0 ]
+
+# first 4 ECP elements correspond to the first H atom ; the remaining 4 elements are for the second H atom
+nucleus_index = [
+  0, 0, 0, 0,
+  1, 1, 1, 1
+  ]
+
+# 3 first ECP elements correspond to potential of the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom 
+ang_mom = [
+  1, 1, 1, 0,
+  1, 1, 1, 0
+  ]
+
+# ECP quantities that can be attributed to atoms and/or angular momenta based on the aforementioned ecp_nucleus and ecp_ang_mom arrays
+coefficient = [
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000,
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000
+  ]
+
+exponent = [ 
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000,
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000
+  ]
+
+power = [ 
+  -1, 1, 0, 0, 
+  -1, 1, 0, 0
+  ]
+   #+END_EXAMPLE
 
 * Basis set (basis group)
 
