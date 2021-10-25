@@ -50,9 +50,15 @@ TREX library for efficient I/O.
 
 The `make install` command takes care of installing the TREXIO shared library on the user machine.
 Once installed, add `-ltrexio` to the list of compiler options.
+
 In some cases (e.g. when using custom `prefix` during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LIBRARY_PATH`.
-In order to link the program against TREXIO, the search paths in the current shell can be modified as follows: `export LIBRARY_PATH=$LIBRARY_PATH:<path_to_trexio>/lib` (same holds for `$LD_LIBRARY_PATH`). Do not forget to change `<path_to_trexio>`.
-If your compilation relies on some build tools (like Autotools or CMake), feel free to use the built-in functions to locate and link external dependencies automatically.
+In order to link the program against TREXIO, the search paths can be modified as follows:
+
+`export LIBRARY_PATH=$LIBRARY_PATH:<path_to_trexio>/lib` 
+
+(same holds for `$LD_LIBRARY_PATH`). The `<path_to_trexio>` has to be replaced by the prefix used during the installation.
+
+If your compilation relies on some build tools (like Autotools or CMake), feel free to use the built-in solutions to locate and link external dependencies automatically.
 
 In Fortran applications, make sure that the `trexio_f.f90` module file is included in the source tree.
 You might have to manually copy it into your program source directory.
