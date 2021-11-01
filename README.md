@@ -20,7 +20,7 @@ TREX library for efficient I/O.
 1. Download the `trexio-<version>.tar.gz` file
 2. `gzip -cd trexio-<version>.tar.gz | tar xvf -`
 3. `cd trexio-<version>`
-4. `./configure --enable-silent-rules`
+4. `./configure`
 5. `make`
 6. `make check`
 7. `sudo make install`
@@ -40,7 +40,7 @@ TREX library for efficient I/O.
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio`
 3. `./autogen.sh`
-4. `./configure --enable-maintainer-mode`
+4. `./configure`
 5. `make`
 6. `make check`
 7. `sudo make install`
@@ -54,7 +54,7 @@ Once installed, add `-ltrexio` to the list of compiler options.
 In some cases (e.g. when using custom `prefix` during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LIBRARY_PATH`.
 In order to link the program against TREXIO, the search paths can be modified as follows:
 
-`export LIBRARY_PATH=$LIBRARY_PATH:<path_to_trexio>/lib` 
+`export LIBRARY_PATH=$LIBRARY_PATH:<path_to_trexio>/lib`
 
 (same holds for `$LD_LIBRARY_PATH`). The `<path_to_trexio>` has to be replaced by the prefix used during the installation.
 
@@ -78,28 +78,28 @@ The primary TREXIO API is composed of the following functions:
 - `trexio_has_[group]_[variable]`
 - `trexio_close`
 
-where `[group]` and `[variable]` substitutions correspond to the contents of the `trex.json` configuration file 
+where `[group]` and `[variable]` substitutions correspond to the contents of the `trex.json` configuration file
 (for more details, see the corresponding [documentation](https://trex-coe.github.io/trexio/trex.html) page).
 For example, consider the `coord` variable (array), which belongs to the `nucleus` group. The TREXIO user can write or read it using `trexio_write_nucleus_coord` or `trexio_read_nucleus_coord` functions, respectively.
 
-Note: the `[variable]` names have to be unique only within the corresponding parent `[group]`. 
-There is no naming conflict when, for example, `num` variable exists both in the `nucleus` group (i.e. the number of nuclei) and in the `mo` group (i.e. the number of molecular orbitals). 
+Note: the `[variable]` names have to be unique only within the corresponding parent `[group]`.
+There is no naming conflict when, for example, `num` variable exists both in the `nucleus` group (i.e. the number of nuclei) and in the `mo` group (i.e. the number of molecular orbitals).
 These quantities can be accessed using the corresponding `trexio_[has|read|write]_nucleus_num` and `trexio_[has|read|write]_mo_num`, respectively.
 
 
 ## Python API
 
-For more details regarding the installation and usage of the TREXIO Python API, 
+For more details regarding the installation and usage of the TREXIO Python API,
 see [this page](python/README.md).
 
 
 ## Tutorial
 
-TREXIO tutorials in Jupyter notebook format can be found in the 
+TREXIO tutorials in Jupyter notebook format can be found in the
 [corresponding GitHub repository](https://github.com/TREX-CoE/trexio-tutorials)
 or on [Binder](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD).
 
-For example, the tutorial covering TREXIO basics using benzene molecule as an example can be viewed and executed online by clicking on this badge: 
+For example, the tutorial covering TREXIO basics using benzene molecule as an example can be viewed and executed online by clicking on this badge:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD?filepath=notebooks%2Ftutorial_benzene.ipynb)
 
 
@@ -110,8 +110,8 @@ For example, the tutorial covering TREXIO basics using benzene molecule as an ex
 
 ### Miscellaneous
 
-Note: The code should be compliant with the C99 
-[CERT C coding standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf). 
+Note: The code should be compliant with the C99
+[CERT C coding standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf).
 This can be checked with the `cppcheck` tool.
 
 
