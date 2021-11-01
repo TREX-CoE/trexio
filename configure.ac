@@ -131,11 +131,16 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
+if test "x$enable_maintainer_mode" == "xyes"; then
+  TREXIO_DEVEL=" -- Developer mode"
+else
+  TREXIO_DEVEL=""
+fi
+
 AM_CONDITIONAL([TREXIO_DEVEL],[test "x$TREXIO_DEVEL" != x])
 
 if test "x${TREXIO_DEVEL}" != "x"; then
 
-  TREXIO_DEVEL=" -- Developer mode"
   AC_PROG_AWK
   AM_PATH_PYTHON([3.0])
 
@@ -166,7 +171,7 @@ else
 		[AC_MSG_ERROR([
 		 ----------------------------------------------------------------
 		 Installation with the current configuration is not possible.
-		 Activate developer mode: TREXIO_DEVEL=1 ./configure
+		 Activate developer mode: ./configure --enable-maintainer-mode
 		 	| OR |
 		 Download the tarball with the source code distribution.
 		 ----------------------------------------------------------------

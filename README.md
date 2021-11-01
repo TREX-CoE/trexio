@@ -40,7 +40,7 @@ TREX library for efficient I/O.
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio`
 3. `./autogen.sh`
-4. `TREXIO_DEVEL=1 ./configure --enable-maintainer-mode`
+4. `./configure --enable-maintainer-mode`
 5. `make`
 6. `make check`
 7. `sudo make install`
