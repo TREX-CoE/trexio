@@ -25,6 +25,10 @@
 #ifndef TREXIO_H
 #define TREXIO_H
 
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+
 #include <stdint.h>
 
 typedef int32_t trexio_exit_code;
@@ -528,10 +532,14 @@ def string_of_error(return_code: int) -> str:
    #+begin_src c :tangle prefix_front.h
 typedef int32_t back_end_t;
 
-#define TREXIO_HDF5             ( (back_end_t) 0 )
-#define TREXIO_TEXT             ( (back_end_t) 1 )
-/*#define TREXIO_JSON             ( (back_end_t) 2 )*/
+#define TREXIO_TEXT             ( (back_end_t) 0 )
+#ifdef HAVE_HDF5
+#define TREXIO_HDF5             ( (back_end_t) 1 )
 #define TREXIO_INVALID_BACK_END ( (back_end_t) 2 )
+#else
+#define TREXIO_INVALID_BACK_END ( (back_end_t) 1 )
+#endif
+/*#define TREXIO_JSON             ( (back_end_t) 2 )*/
 
 #define TREXIO_DELIM            "\n"
    #+end_src
@@ -539,8 +547,8 @@ typedef int32_t back_end_t;
 *** Fortran
 
   #+begin_src f90 :tangle prefix_fortran.f90
-  integer(trexio_backend), parameter :: TREXIO_HDF5 = 0
-  integer(trexio_backend), parameter :: TREXIO_TEXT = 1
+  integer(trexio_backend), parameter :: TREXIO_TEXT = 0
+  integer(trexio_backend), parameter :: TREXIO_HDF5 = 1
 ! integer(trexio_backend), parameter :: TREXIO_JSON = 2
   integer(trexio_backend), parameter :: TREXIO_INVALID_BACK_END = 2
   #+end_src
@@ -549,8 +557,8 @@ typedef int32_t back_end_t;
 
   #+begin_src python :tangle prefix_python.py
 # define TREXIO back ends
-TREXIO_HDF5 = 0
-TREXIO_TEXT = 1
+TREXIO_TEXT = 0
+TREXIO_HDF5 = 1
 #TREXIO_JSON = 2
 TREXIO_INVALID_BACK_END = 2
   #+end_src
