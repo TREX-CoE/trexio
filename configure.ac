@@ -5,6 +5,15 @@ AC_PREREQ([2.69])
 AC_INIT([trexio], [1.1.0], [https://github.com/TREX-CoE/trexio/issues])
 AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
+
+# Activate developer mode when the source is the git repository.
+# Otherwise, it is the source distribution and the developer mode should not be activated.
+TEST_IFEXISTS=".git"
+AC_CHECK_FILE([$TEST_IFEXISTS],
+        [enable_maintainer_mode="yes"],
+)
+
+AM_MAINTAINER_MODE()
 LT_PREREQ([2.2])
 LT_INIT
 AC_CONFIG_SRCDIR([Makefile.in])
@@ -29,7 +38,7 @@ AC_DEFINE_UNQUOTED(TREXIO_USER_NAME, ["${UNAME}"], [user name])
 AC_SUBST([UNAME])
 
 ## -------------------
-## Checks for programs 
+## Checks for programs
 ## -------------------
 
 AC_LANG(C)
@@ -162,23 +171,6 @@ if test "x${TREXIO_DEVEL}" != "x"; then
         HAS_CPPCHECK=1
   fi
 
-else
-
-  # Throw an error message if the user attempts to configure the GitHub repo clone not in the developer mode.
-  # Developer mode is required to generate the TREXIO source files from the org-mode templates.
-  TEST_IFEXISTS=".gitmodules"
-  AC_CHECK_FILE([$TEST_IFEXISTS],
-		[AC_MSG_ERROR([
-		 ----------------------------------------------------------------
-		 Installation with the current configuration is not possible.
-		 Activate developer mode: ./configure --enable-maintainer-mode
-		 	| OR |
-		 Download the tarball with the source code distribution.
-		 ----------------------------------------------------------------
-		 ])],
-		 []
-		) 
-
 fi
 
 ## Libm
@@ -219,7 +211,7 @@ Package features:
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
   all           - build C library and Fortran binding
-  check	        - run unit tests
-  install       - install the library 
+  check         - run unit tests
+  install       - install the library
 --------------------------------------------------"
 
