@@ -12,7 +12,7 @@ TREX library for efficient I/O.
 - Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2)
 - C compiler            (gcc/icc/clang)
 - Fortran compiler      (gfortran/ifort)
-- HDF5 library          (>= 1.8)
+- HDF5 library          (>= 1.8)	[optional, recommended for high performance]
 
 
 ## Installation procedure from the tarball (for users):
@@ -45,6 +45,13 @@ TREX library for efficient I/O.
 6. `make check`
 7. `sudo make install`
 
+## Compilation without the HDF5 library
+
+By default, the configuration step proceeds to search for the [HDF5 library](https://portal.hdfgroup.org/display/HDF5/HDF5).
+This search can be disabled if HDF5 is not present/installable on the user machine.
+To compile without HDF5, append `--without-hdf5` option to `configure` script. For example,
+
+`./configure --without-hdf5`
 
 ## Linking to your program
 
