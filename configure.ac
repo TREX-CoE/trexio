@@ -14,13 +14,9 @@ AC_CONFIG_MACRO_DIR([m4])
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
 VERSION_MINOR=`echo ${PACKAGE_VERSION} | cut -d. -f2`
 VERSION_PATCH=`echo ${PACKAGE_VERSION} | cut -d. -f3 | cut -d- -f1`
-AC_DEFINE_UNQUOTED(TREXIO_PACKAGE_VERSION, ["${PACKAGE_VERSION}"], [full version])
-AC_DEFINE_UNQUOTED(TREXIO_VERSION_MAJOR, [$VERSION_MAJOR], [major version])
-AC_DEFINE_UNQUOTED(TREXIO_VERSION_MINOR, [$VERSION_MINOR], [minor version])
-AC_DEFINE_UNQUOTED(TREXIO_VERSION_PATCH, [$VERSION_PATCH], [patch version])
-AC_SUBST([VERSION_MAJOR])
-AC_SUBST([VERSION_MINOR])
-AC_SUBST([VERSION_PATCH])
+AC_DEFINE_UNQUOTED(VERSION_MAJOR, [$VERSION_MAJOR], [major version])
+AC_DEFINE_UNQUOTED(VERSION_MINOR, [$VERSION_MINOR], [minor version])
+AC_DEFINE_UNQUOTED(VERSION_PATCH, [$VERSION_PATCH], [patch version])
 
 ## Save system information, e.g. user name
 
@@ -109,6 +105,8 @@ PKG_LIBS="${HDF5_LIBS}"
 AC_SUBST([PKG_HDF5])
 AC_SUBST([PKG_CFLAGS])
 AC_SUBST([PKG_LIBS])
+
+AM_CONDITIONAL([DO_HDF5],[test "$with_hdf5" = "yes"])
 
 # The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
 # It is only needed to manually build Python API because setup.py depends on HDF5.
@@ -203,7 +201,7 @@ CC ............:  ${CC}
 CPPFLAGS ......:  ${CPPFLAGS}
 CFLAGS ........:  ${CFLAGS}
 FC ............:  ${FC}
-FCLAGS ........:  ${FCFLAGS}
+FCFLAGS .......:  ${FCFLAGS}
 LDFLAGS .......:  ${LDFLAGS}
 LIBS ..........:  ${LIBS}
 

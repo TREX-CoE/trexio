@@ -32,6 +32,11 @@ typedef int32_t trexio_exit_code;
 
   #+begin_src c :tangle prefix_front.c :noweb yes
 <<header>>
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -42,7 +47,9 @@ typedef int32_t trexio_exit_code;
 #include "trexio_private.h"
 #include "trexio_s.h"
 #include "trexio_text.h"
-#include "trexio_hdf5.h"
+#ifdef HAVE_HDF5 
+  #include "trexio_hdf5.h"
+#endif
 /*
 #include "trexio_json.h"
 ,*/
@@ -739,9 +746,11 @@ trexio_open(const char* file_name, const char mode,
     result_tmp = malloc(sizeof(trexio_text_t));
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     result_tmp = malloc(sizeof(trexio_hdf5_t));
     break;
+#endif
 /*
   case TREXIO_JSON:
     result = (trexio_t*) malloc (sizeof(trexio_json_t));
@@ -790,9 +799,11 @@ trexio_open(const char* file_name, const char mode,
     rc = trexio_text_init(result);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_init(result);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_init(result);
@@ -820,9 +831,11 @@ trexio_open(const char* file_name, const char mode,
       rc = trexio_text_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
       break;
 
+#ifdef HAVE_HDF5 
     case TREXIO_HDF5:
       rc = trexio_hdf5_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
       break;
+#endif 
 /*
     case TREXIO_JSON:
       rc = trexio_json_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
@@ -848,9 +861,11 @@ trexio_open(const char* file_name, const char mode,
     rc = trexio_text_lock(result);
     break;
   /* HDF5 v.>=1.10 has file locking activated by default */
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = TREXIO_SUCCESS;
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_lock(result);
@@ -992,9 +1007,11 @@ trexio_close (trexio_t* file)
     rc = trexio_text_deinit(file);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_deinit(file);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_deinit(file);
@@ -1017,9 +1034,11 @@ trexio_close (trexio_t* file)
     rc = trexio_text_unlock(file);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = TREXIO_SUCCESS;
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_unlock(file);
@@ -1201,9 +1220,11 @@ trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* cons
     return trexio_text_read_$group_num$(file, num);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_read_$group_num$(file, num);
     break;
+#endif
 /*
   case TREXIO_JSON:
     return trexio_json_read_$group_num$(file, num);
@@ -1229,9 +1250,11 @@ trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double
     return trexio_text_write_$group_num$(file, num);
     break;				       
 					       
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:			       
     return trexio_hdf5_write_$group_num$(file, num);
-    break;				       
+    break;
+#endif
 /*					       
   case TREXIO_JSON:			       
     return trexio_json_write_$group_num$(file, num);
@@ -1261,9 +1284,11 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
     rc = trexio_text_read_$group_num$(file, &num_64);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_read_$group_num$(file, &num_64);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc =trexio_json_read_$group_num$(file, &num_64);
@@ -1293,9 +1318,11 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
     return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num);
     break;					       
 						       
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:				       
     return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num);
-    break;					       
+    break;
+#endif 
 /*						       
   case TREXIO_JSON:				       
     return trexio_json_write_$group_num$(file, ($group_num_dtype_double$) num);
@@ -1340,9 +1367,11 @@ trexio_has_$group_num$ (trexio_t* const file)
     return trexio_text_has_$group_num$(file);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_has_$group_num$(file);
     break;
+#endif
 /*
   case TREXIO_JSON:
     return trexio_json_has_$group_num$(file);
@@ -1583,9 +1612,11 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
     rc = trexio_text_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_read_$group_dset$(file, $group_dset$, rank, dims);
@@ -1657,9 +1688,11 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
     rc = trexio_text_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_write_$group_dset$(file, $group_dset$_p, rank, dims);
@@ -1717,9 +1750,11 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
     rc = trexio_text_read_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_read_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_read_$group_dset$(file, $group_dset$_64, rank, dims);
@@ -1796,9 +1831,11 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
     rc = trexio_text_write_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_write_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_write_$group_dset$(file, $group_dset$_64, rank, dims);
@@ -1960,9 +1997,11 @@ trexio_has_$group_dset$ (trexio_t* const file)
     return trexio_text_has_$group_dset$(file);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_has_$group_dset$(file);
     break;
+#endif
 /*
   case TREXIO_JSON:
     return trexio_json_has_$group_dset$(file);
@@ -2405,9 +2444,11 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const int32_
     return trexio_text_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_read_$group_dset$(file, dset_out, rank, dims);
@@ -2529,9 +2570,11 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
     rc = trexio_text_write_$group_dset$(file, (const char**) dset_str, rank, dims);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     rc = trexio_hdf5_write_$group_dset$(file, (const char**) dset_str, rank, dims);
     break;
+#endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_write_$group_dset$(file, dset, rank, dims);
@@ -2597,9 +2640,11 @@ trexio_has_$group_dset$ (trexio_t* const file)
     return trexio_text_has_$group_dset$(file);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_has_$group_dset$(file);
     break;
+#endif
 /*
   case TREXIO_JSON:
     return trexio_json_has_$group_dset$(file);
@@ -2846,9 +2891,11 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const int32_
     return trexio_text_read_$group_str$(file, str_out, (uint32_t) max_str_len);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_read_$group_str$(file, str_out, (uint32_t) max_str_len);
     break;
+#endif
 /*
   case TREXIO_JSON:
     return trexio_json_read_$group_str$(file, str);
@@ -2879,9 +2926,11 @@ trexio_write_$group_str$ (trexio_t* const file, const char* str, const int32_t m
     return trexio_text_write_$group_str$(file, str);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_write_$group_str$(file, str);
     break;
+#endif
 /*
   case TREXIO_JSON:
     return trexio_json_write_$group_str$(file, str);
@@ -2908,9 +2957,11 @@ trexio_has_$group_str$ (trexio_t* const file)
     return trexio_text_has_$group_str$(file);
     break;
 
+#ifdef HAVE_HDF5 
   case TREXIO_HDF5:
     return trexio_hdf5_has_$group_str$(file);
     break;
+#endif
 /*
   case TREXIO_JSON:
     return trexio_json_has_$group_str$(file);
