@@ -17,14 +17,16 @@ program test_trexio
 
   call test_read_void('test_write_f.dir', TREXIO_TEXT)
 
-  call system('rm -rf test_write_f.h5')
-  print *, 'call test_write(''test_write_f.h5'', TREXIO_HDF5)'
-  call test_write('test_write_f.h5', TREXIO_HDF5)
-  print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
-  call test_read('test_write_f.h5', TREXIO_HDF5)
-  call system('rm -rf test_write_f.h5')
-  
-  call test_read_void('test_write_f.h5', TREXIO_HDF5)
+  ! No way to conditionally check whether compilation was done with HDF5 
+  ! So temporarily disable the test for HDF5 back end at the moment
+! call system('rm -rf test_write_f.h5')
+! print *, 'call test_write(''test_write_f.h5'', TREXIO_HDF5)'
+! call test_write('test_write_f.h5', TREXIO_HDF5)
+! print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
+! call test_read('test_write_f.h5', TREXIO_HDF5)
+! call system('rm -rf test_write_f.h5')
+! 
+! call test_read_void('test_write_f.h5', TREXIO_HDF5)
 
 end program test_trexio
 

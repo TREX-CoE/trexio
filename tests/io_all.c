@@ -1,3 +1,7 @@
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
 #include "trexio.h"
 #include <assert.h>
 #include <stdio.h>
@@ -12,12 +16,14 @@ int main() {
 /*============== Main test launcher ================*/
 
   int rc;
-  rc = system("rm -rf test_all.h5");
+#ifdef HAVE_HDF5
+  rc = system("rm -f test_all.h5");
   assert (rc == 0);
   test_write("test_all.h5", TREXIO_HDF5);
   test_read ("test_all.h5", TREXIO_HDF5);
-  rc = system("rm -rf test_all.h5");
+  rc = system("rm -f test_all.h5");
   assert (rc == 0);
+#endif
 
   rc = system("rm -rf test_all.dir");
   assert (rc == 0);
