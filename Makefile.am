@@ -153,8 +153,6 @@ HTML_FILES =  docs/trexio.css            \
 htmldir = $(docdir)
 dist_html_DATA = $(HTML_FILES)
 
-$(HTML_FILES): docs/index.html
-
 # =============== DEVELOPER MODE =============== #
 
 SWIG          = @SWIG@ 
