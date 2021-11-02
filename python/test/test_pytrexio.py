@@ -9,7 +9,7 @@ from pytrexio.pytrexio import *
 #=========================================================#
 
 # 0: TREXIO_HDF5 ; 1: TREXIO_TEXT
-TEST_TREXIO_BACKEND = 1
+TEST_TREXIO_BACKEND = 0
 OUTPUT_FILENAME_TEXT = 'test_py_swig.dir'
 OUTPUT_FILENAME_HDF5 = 'test_py_swig.h5'
 
@@ -34,7 +34,16 @@ except:
 #============ WRITE THE DATA IN THE TEST FILE ============#
 #=========================================================#
 
-test_file = trexio_open(output_filename, 'w', TEST_TREXIO_BACKEND)
+return_obj = trexio_open(output_filename, 'w', TEST_TREXIO_BACKEND)
+assert return_obj is not None
+if isinstance(return_obj, int):
+    print(trexio_string_of_error(return_obj))
+    assert return_obj==0
+else:
+    rc_open = return_obj[1]
+    assert rc_open==0
+    test_file = return_obj[0]
+    assert test_file is not None
 
 nucleus_num = 12
 
@@ -103,7 +112,16 @@ assert rc==0
 #============ READ THE DATA FROM THE TEST FILE ============#
 #==========================================================#
 
-test_file2 = trexio_open(output_filename, 'r', TEST_TREXIO_BACKEND)
+return_obj = trexio_open(output_filename, 'r', TEST_TREXIO_BACKEND)
+assert return_obj is not None
+if isinstance(return_obj, int):
+    print(trexio_string_of_error(return_obj))
+    assert return_obj==0
+else:
+    rc_open = return_obj[1]
+    assert rc_open==0
+    test_file2 = return_obj[0]
+    assert test_file is not None
 
 result = trexio_read_nucleus_num(test_file2)
 assert result[0]==0
@@ -129,7 +147,7 @@ assert rc==23
 #for i in range(nucleus_num):
 #    assert charges2[i]==charges[i]
 
-result_basis = trexio_read_basis_shell_num(test_file2)
+result = trexio_read_basis_shell_num(test_file2)
 assert result[0]==0
 assert result[1]==basis_num
 
