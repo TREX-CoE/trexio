@@ -115,7 +115,7 @@ AC_SUBST([PKG_HDF5])
 AC_SUBST([PKG_CFLAGS])
 AC_SUBST([PKG_LIBS])
 
-AM_CONDITIONAL([DO_HDF5],[test "$with_hdf5" = "yes"])
+AM_CONDITIONAL([HAVE_HDF5],[test "$with_hdf5" = "yes"])
 
 # The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
 # It is only needed to manually build Python API because setup.py depends on HDF5.

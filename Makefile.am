@@ -61,11 +61,9 @@ SOURCES = \
   src/trexio_text.c \
   src/trexio_text.h
 
-if DO_HDF5 
-
+if HAVE_HDF5 
 SOURCES += src/trexio_hdf5.c \
            src/trexio_hdf5.h 
-
 endif
 
 ORG_FILES = \
@@ -90,8 +88,7 @@ TESTS_C = \
   tests/overwrite_all_text \
   tests/io_all
 
-if DO_HDF5 
-
+if HAVE_HDF5 
 TESTS_C += \
   tests/open_hdf5 \
   tests/io_num_hdf5 \
@@ -101,7 +98,6 @@ TESTS_C += \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
   tests/overwrite_all_hdf5 
-
 endif
 
 TESTS_F = \
@@ -125,8 +121,7 @@ tests_io_dset_str_text_LDFLAGS = -no-install
 tests_overwrite_all_text_LDFLAGS = -no-install
 tests_io_all_LDFLAGS = -no-install
 
-if DO_HDF5 
-
+if HAVE_HDF5
 tests_open_hdf5_LDFLAGS = -no-install
 tests_io_num_hdf5_LDFLAGS = -no-install
 tests_io_dset_float_hdf5_LDFLAGS = -no-install
@@ -135,7 +130,6 @@ tests_io_safe_dset_float_hdf5_LDFLAGS = -no-install
 tests_io_str_hdf5_LDFLAGS = -no-install
 tests_io_dset_str_hdf5_LDFLAGS = -no-install
 tests_overwrite_all_hdf5_LDFLAGS = -no-install
-
 endif
 
 
