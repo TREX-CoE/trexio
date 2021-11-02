@@ -1,6 +1,9 @@
 program test_trexio
   use trexio
+  use, intrinsic :: iso_c_binding
   implicit none
+  
+  logical :: have_hdf5
 
   print *      , "============================================" 
   print'(a,a)' , "         TREXIO VERSION STRING : ", TREXIO_PACKAGE_VERSION 
@@ -19,14 +22,17 @@ program test_trexio
 
   ! No way to conditionally check whether compilation was done with HDF5 
   ! So temporarily disable the test for HDF5 back end at the moment
-! call system('rm -rf test_write_f.h5')
-! print *, 'call test_write(''test_write_f.h5'', TREXIO_HDF5)'
-! call test_write('test_write_f.h5', TREXIO_HDF5)
-! print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
-! call test_read('test_write_f.h5', TREXIO_HDF5)
-! call system('rm -rf test_write_f.h5')
-! 
-! call test_read_void('test_write_f.h5', TREXIO_HDF5)
+  have_hdf5 = trexio_has_backend(TREXIO_HDF5)
+  if (have_hdf5) then
+    call system('rm -f -- test_write_f.h5')
+    print *, 'call test_write(''test_write_f.h5'', TREXIO_HDF5)'
+    call test_write('test_write_f.h5', TREXIO_HDF5)
+    print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
+    call test_read('test_write_f.h5', TREXIO_HDF5)
+    call system('rm -f -- test_write_f.h5')
+    
+    call test_read_void('test_write_f.h5', TREXIO_HDF5)
+  endif
 
 end program test_trexio
 
