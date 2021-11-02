@@ -36,10 +36,6 @@ ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
 BUILT_SOURCES = trexio.mod
 
-VERSION_MAJOR   = @VERSION_MAJOR@
-VERSION_MINOR   = @VERSION_MINOR@
-VERSION_PATCH   = @VERSION_PATCH@
-
 SUBDIRS = 
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -62,10 +58,13 @@ SOURCES = \
   src/trexio.c \
   src/trexio_private.h \
   src/trexio_s.h \
-  src/trexio_hdf5.c \
-  src/trexio_hdf5.h \
   src/trexio_text.c \
   src/trexio_text.h
+
+if HAVE_HDF5 
+SOURCES += src/trexio_hdf5.c \
+           src/trexio_hdf5.h 
+endif
 
 ORG_FILES = \
   src/templates_front/templator_front.org \
@@ -79,23 +78,27 @@ src_libtrexio_la_SOURCES = $(SOURCES)
 # =============== TESTS =============== #
 
 TESTS_C = \
-  tests/open_hdf5 \
   tests/open_text \
-  tests/io_num_hdf5 \
   tests/io_num_text \
-  tests/io_dset_float_hdf5 \
   tests/io_dset_float_text \
-  tests/io_dset_int_hdf5 \
   tests/io_dset_int_text \
-  tests/io_safe_dset_float_hdf5 \
   tests/io_safe_dset_float_text \
-  tests/io_str_hdf5 \
   tests/io_str_text \
-  tests/io_dset_str_hdf5 \
   tests/io_dset_str_text \
-  tests/overwrite_all_hdf5 \
   tests/overwrite_all_text \
   tests/io_all
+
+if HAVE_HDF5 
+TESTS_C += \
+  tests/open_hdf5 \
+  tests/io_num_hdf5 \
+  tests/io_dset_float_hdf5 \
+  tests/io_dset_int_hdf5 \
+  tests/io_safe_dset_float_hdf5 \
+  tests/io_str_hdf5 \
+  tests/io_dset_str_hdf5 \
+  tests/overwrite_all_hdf5 
+endif
 
 TESTS_F = \
   tests/test_f
@@ -108,23 +111,27 @@ LDADD = src/libtrexio.la
 
 # in principal, specifying -no-install (see below) is not mandatory
 # for the tests to compile and pass, but the produced test binaries differ 
-tests_open_hdf5_LDFLAGS = -no-install
 tests_open_text_LDFLAGS = -no-install
-tests_io_num_hdf5_LDFLAGS = -no-install
 tests_io_num_text_LDFLAGS = -no-install
-tests_io_dset_float_hdf5_LDFLAGS = -no-install
 tests_io_dset_float_text_LDFLAGS = -no-install
-tests_io_dset_int_hdf5_LDFLAGS = -no-install
 tests_io_dset_int_text_LDFLAGS = -no-install
-tests_io_safe_dset_float_hdf5_LDFLAGS = -no-install
 tests_io_safe_dset_float_text_LDFLAGS = -no-install
-tests_io_str_hdf5_LDFLAGS = -no-install
 tests_io_str_text_LDFLAGS = -no-install
-tests_io_dset_str_hdf5_LDFLAGS = -no-install
 tests_io_dset_str_text_LDFLAGS = -no-install
-tests_overwrite_all_hdf5_LDFLAGS = -no-install
 tests_overwrite_all_text_LDFLAGS = -no-install
 tests_io_all_LDFLAGS = -no-install
+
+if HAVE_HDF5
+tests_open_hdf5_LDFLAGS = -no-install
+tests_io_num_hdf5_LDFLAGS = -no-install
+tests_io_dset_float_hdf5_LDFLAGS = -no-install
+tests_io_dset_int_hdf5_LDFLAGS = -no-install
+tests_io_safe_dset_float_hdf5_LDFLAGS = -no-install
+tests_io_str_hdf5_LDFLAGS = -no-install
+tests_io_dset_str_hdf5_LDFLAGS = -no-install
+tests_overwrite_all_hdf5_LDFLAGS = -no-install
+endif
+
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
