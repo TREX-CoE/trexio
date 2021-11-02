@@ -25,6 +25,7 @@
 #ifndef TREXIO_H
 #define TREXIO_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef int32_t trexio_exit_code;
@@ -539,7 +540,30 @@ typedef int32_t back_end_t;
 
 #define TREXIO_DELIM            "\n"
    #+end_src
-   
+
+   The helper function ~trexio_has_backend~ returns ~true~ if TREXIO compilation includes a back end provided as an argument; ~false~ otherwise.
+   This is useful due to the fact that HDF5 back end can be disabled at configure step.
+
+   #+begin_src c :tangle prefix_front.h
+bool trexio_has_backend(back_end_t back_end);
+   #+end_src
+
+   #+begin_src c :tangle prefix_front.c
+bool trexio_has_backend(back_end_t back_end) {
+  switch (back_end) {
+    case TREXIO_TEXT:
+      return true;
+    case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+      return true;
+#else
+      return false;
+#endif
+  }
+  return false;
+}   
+   #+end_src
+ 
 *** Fortran
 
   #+begin_src f90 :tangle prefix_fortran.f90
@@ -547,6 +571,17 @@ typedef int32_t back_end_t;
   integer(trexio_backend), parameter :: TREXIO_TEXT = 1
 ! integer(trexio_backend), parameter :: TREXIO_JSON = 2
   integer(trexio_backend), parameter :: TREXIO_INVALID_BACK_END = 2
+  #+end_src
+
+  The function below is a Fortran interface for the aforementioned C-compatible ~trexio_has_backend~ function.
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   logical function trexio_has_backend (back_end) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(4), intent(in), value :: back_end
+   end function trexio_has_backend
+end interface
   #+end_src
 
 *** Python
