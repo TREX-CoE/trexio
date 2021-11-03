@@ -159,16 +159,15 @@ HTML_TANGLED = docs/index.html            \
 htmldir = $(docdir)
 # This $(htmlizer) file and the corresponding target rule allow to avoid circular dependency,
 # which was introduced before to force htmlization of org-mode files.
-# The circular dependency does not impose issues for GNU make but produces errors on bmake.
-# This workaround enables execution of bmake in serial but not in parallel (e.g. bmake -j4),
-# due to the following error: "cannot touch docs/.htmlized : No such file or directory"
-htmlizer = docs/.htmlized
+# The circular dependency did not impose issues on GNU make but produced errors on bmake.
+htmlizer = docs/.htmlizer
 
 CLEANFILES += $(HTML_TANGLED) $(htmlizer)
 
 HTML_FILES = $(HTML_TANGLED) \
              docs/trexio.css \
-             docs/tutorial_benzene.html
+             docs/tutorial_benzene.html \
+             $(htmlizer)
 
 dist_html_DATA = $(HTML_FILES)
 
@@ -195,8 +194,8 @@ $(trexio_f): $(ORG_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
-	cd $(srcdir)/tools && ./build_doc.sh
 	touch $(htmlizer)
+	cd $(srcdir)/tools && ./build_doc.sh
 
 cppcheck: cppcheck.out
 	cat cppcheck.out
