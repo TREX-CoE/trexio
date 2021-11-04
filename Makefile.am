@@ -173,6 +173,9 @@ dist_html_DATA = $(HTML_FILES)
 
 $(HTML_TANGLED): $(htmlizer)
 
+html: $(dist_html_DATA)
+doc: html
+
 # =============== DEVELOPER MODE =============== #
 
 SWIG          = @SWIG@ 
