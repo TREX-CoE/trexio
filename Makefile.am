@@ -187,8 +187,10 @@ CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
 BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
 
-.git_hash:
+.git_hash: FORCE
 	git log | head -1 | cut -d ' ' -f 2 > .git_hash
+
+all: .git_hash
 
 
 $(SOURCES): $(trexio_f)
@@ -260,3 +262,4 @@ CLEANFILES += $(pytrexio_c) \
 
 endif
 
+.PHONY: FORCE
