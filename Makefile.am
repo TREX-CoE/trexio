@@ -35,8 +35,9 @@
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
 BUILT_SOURCES = trexio.mod
+EXTRA_DIST = .git_hash
 
-SUBDIRS = 
+SUBDIRS =
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pkgconfig/trexio.pc
@@ -61,9 +62,9 @@ SOURCES = \
   src/trexio_text.c \
   src/trexio_text.h
 
-if HAVE_HDF5 
+if HAVE_HDF5
 SOURCES += src/trexio_hdf5.c \
-           src/trexio_hdf5.h 
+           src/trexio_hdf5.h
 endif
 
 ORG_FILES = \
@@ -88,7 +89,7 @@ TESTS_C = \
   tests/overwrite_all_text \
   tests/io_all
 
-if HAVE_HDF5 
+if HAVE_HDF5
 TESTS_C += \
   tests/open_hdf5 \
   tests/io_num_hdf5 \
@@ -97,7 +98,7 @@ TESTS_C += \
   tests/io_safe_dset_float_hdf5 \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
-  tests/overwrite_all_hdf5 
+  tests/overwrite_all_hdf5
 endif
 
 TESTS_F = \
@@ -110,7 +111,7 @@ check_PROGRAMS = $(TESTS)
 LDADD = src/libtrexio.la
 
 # in principal, specifying -no-install (see below) is not mandatory
-# for the tests to compile and pass, but the produced test binaries differ 
+# for the tests to compile and pass, but the produced test binaries differ
 tests_open_text_LDFLAGS = -no-install
 tests_io_num_text_LDFLAGS = -no-install
 tests_io_dset_float_text_LDFLAGS = -no-install
@@ -175,16 +176,19 @@ $(HTML_TANGLED): $(htmlizer)
 
 # =============== DEVELOPER MODE =============== #
 
-SWIG          = @SWIG@ 
-HDF5_LDFLAGS  = @HDF5_LDFLAGS@ 
-HDF5_CFLAGS   = @HDF5_CFLAGS@ 
-HDF5_CPPFLAGS = @HDF5_CPPFLAGS@ 
+SWIG          = @SWIG@
+HDF5_LDFLAGS  = @HDF5_LDFLAGS@
+HDF5_CFLAGS   = @HDF5_CFLAGS@
+HDF5_CPPFLAGS = @HDF5_CPPFLAGS@
 
 if TREXIO_DEVEL
 
 CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
 
 BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
+
+.git_hash:
+	git log | head -1 | cut -d ' ' -f 2 > .git_hash
 
 
 $(SOURCES): $(trexio_f)
@@ -229,7 +233,7 @@ python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
 		python setup.py sdist
 
-$(pytrexio_py): $(pytrexio_c) 
+$(pytrexio_py): $(pytrexio_c)
 	cd tools && ./prepare_python.sh
 
 # Build Python module and C wrapper code for TREXIO using SWIG
@@ -241,7 +245,7 @@ $(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	$(RM) -- src/trexio.h
 
 $(numpy_i):
-	wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/numpy.i -O $(numpy_i) 
+	wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/numpy.i -O $(numpy_i)
 
 check-numpy:
 	cd tools && ./check_numpy_i.sh

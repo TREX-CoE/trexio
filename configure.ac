@@ -169,7 +169,14 @@ if test "x${TREXIO_DEVEL}" != "x"; then
         HAS_CPPCHECK=1
   fi
 
+  GIT_HASH=`git log | head -1 | cut -d ' ' -f 2 | tee ${srcdir}/.git_hash`
+
+else
+
+  GIT_HASH=`cat ${srcdir}/.git_hash`
+
 fi
+AC_DEFINE_UNQUOTED(GIT_HASH, ["${GIT_HASH}"], [Git SHA1 Hash])
 
 ## Libm
 ## ----
@@ -191,7 +198,7 @@ AC_OUTPUT
 echo \
 "-------------------------------------------------
 
-${PACKAGE_NAME} Version ${PACKAGE_VERSION} ${TREXIO_DEVEL}
+${PACKAGE_NAME} Version ${PACKAGE_VERSION} ${GIT_HASH} ${TREXIO_DEVEL}
 
 Prefix ........:  ${prefix}
 CC ............:  ${CC}
