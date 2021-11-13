@@ -3,6 +3,12 @@
 
 AC_PREREQ([2.69])
 AC_INIT([trexio], [2.0.0], [https://github.com/TREX-CoE/trexio/issues])
+
+AC_CONFIG_SRCDIR([Makefile.in])
+AC_CONFIG_HEADERS([include/config.h])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-config])
+
 AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
 
@@ -13,12 +19,8 @@ AC_CHECK_FILE([$TEST_IFEXISTS],
         [enable_maintainer_mode="yes"],
 )
 
-AM_MAINTAINER_MODE()
 LT_PREREQ([2.2])
 LT_INIT
-AC_CONFIG_SRCDIR([Makefile.in])
-AC_CONFIG_HEADERS([include/config.h])
-AC_CONFIG_MACRO_DIR([m4])
 
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
 VERSION_MINOR=`echo ${PACKAGE_VERSION} | cut -d. -f2`
