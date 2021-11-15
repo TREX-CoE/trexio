@@ -57,8 +57,8 @@ include_directories(include)
 
 # ============= CONFIGURE HDF5 ============== 
 
-# By default TREXIO is configured with HDF5 support.
-# To change this, append -DENABLE-HDF5=OFF to the cmake call.
+# By defaulti, TREXIO is configured with the HDF5 support.
+# To change this, append -DENABLE_HDF5=OFF to the cmake call.
 option(ENABLE_HDF5 "Enable HDF5 support" ON)
 
 if(ENABLE_HDF5)
@@ -68,7 +68,6 @@ if(ENABLE_HDF5)
   if(HDF5_FOUND)
     message(STATUS "HDF5 version     :: ${HDF5_VERSION}")
     message(STATUS "HDF5 include dir :: ${HDF5_INCLUDE_DIRS}")
-    message(STATUS "HDF5 libraries   :: ${HDF5_C_LIBRARIES}")
   else()
     # Download and install HDF5 library using FetchContent
     # ...
@@ -77,11 +76,11 @@ if(ENABLE_HDF5)
   endif()
 
   # If HDF5 found:
-  # - append the trexio_hdf5.c source file with the HDF5 back end
+  # - append the trexio_hdf5.c source file with the HDF5 back end to target_sources
   target_sources(trexio PRIVATE src/trexio_hdf5.c)
-  # - define symbol HAVE_HDF5=1 (use to activate HDF5 back end in the preprocessor conditionals)
+  # - define symbol HAVE_HDF5=1 (used to activate HDF5 back end in the preprocessor conditionals)
   target_compile_definitions(trexio PUBLIC HAVE_HDF5=1)
-  # - include dirs with HDF5 header files
+  # - include directories with HDF5 header files
   target_include_directories(trexio PRIVATE ${HDF5_C_INCLUDE_DIRS})
   # - link to HDF5 C libraries
   target_link_libraries(trexio PRIVATE 
@@ -124,12 +123,30 @@ else()
   set(Tests ${Tests_text})
 endif()
 
-# Compile each TREXIO test as an executable and add them to CTest using add_test
+# Compile each TREXIO test as an executable and add them to CTest using add_test.
 foreach(test ${Tests})
   add_executable(${test} tests/${test}.c)
   target_link_libraries(${test} PRIVATE trexio)
   add_test(NAME ${test} COMMAND $<TARGET_FILE:${test}>)
 endforeach ()
+
+# ============= FORTRAN SUPPORT ==============
+
+include(FortranCInterface)
+# Check that C and Fortran compilers can talk to each other.
+FortranCInterface_VERIFY()
+
+set(TREXIO_MOD_FILE ${CMAKE_SOURCE_DIR}/include/trexio_f.f90)
+
+# Add TREXIO Fortran module as a library.
+add_library(trexio_f SHARED)
+target_sources(trexio_f PUBLIC ${TREXIO_MOD_FILE})
+target_link_libraries(trexio_f PUBLIC trexio)
+
+# Add Fortran test and link it with the aforementioned library.
+add_executable(test_f tests/test_f.f90)
+target_link_libraries(test_f PRIVATE trexio_f)
+add_test(NAME test_f COMMAND $<TARGET_FILE:test_f>)
 
 # ============= INSTALL TREXIO ============== 
 
@@ -140,6 +157,8 @@ install(TARGETS trexio
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
+# Also install trexio_f.f90 file with TREXIO Fortran module.
+install(FILES ${TREXIO_MOD_FILE} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # =========================================== 
 
