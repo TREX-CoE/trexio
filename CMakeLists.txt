@@ -13,6 +13,17 @@ project(Trexio
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+# Optional configure for developer mode to generate source code from org-mode files.
+option(TREXIO_DEVEL "TREXIO developer mode (for code generation)." OFF)
+
+if(EXISTS ".git/config")
+  set(TREXIO_DEVEL ON)
+  find_package(Python3)
+  if(Python3_FOUND)
+    message(STATUS "Python3 version :: ${Python3_VERSION}")
+  endif()
+endif()
+
 # By default, the shared TREXIO library is built (even without -DBUILD_SHARED_LIBS=ON).
 # To change this behaviour, append -DBUILD_STATIC_LIBS=ON to the cmake call.
 option(BUILD_SHARED_LIBS "Build the shared library" ON)
@@ -26,20 +37,21 @@ endif()
 
 # Set a list of TREXIO source files that are always compiled.
 set(TREXIO_SOURCES 
-	src/trexio.c
-	src/trexio_text.c
+	${CMAKE_SOURCE_DIR}/src/trexio.c
+	${CMAKE_SOURCE_DIR}/src/trexio_text.c
 	)
+set(TREXIO_HEADER ${CMAKE_SOURCE_DIR}/include/trexio.h)
 
 # Conditional SHARED/STATIC build for TREXIO library.
 if(BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
 
   message(STATUS "TREXIO :: shared C library will be built")
-  add_library(trexio SHARED ${TREXIO_SOURCES})
+  add_library(trexio SHARED)
 
 elseif(NOT BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
   
   message(STATUS "TREXIO :: static C library will be built")
-  add_library(trexio STATIC ${TREXIO_SOURCES})
+  add_library(trexio STATIC)
 
 else()
   message(FATAL_ERROR "Building both static and shared TREXIO simultaneously is not supported.")
@@ -48,7 +60,7 @@ endif()
 # Set TREXIO version and include files.
 set_target_properties(trexio PROPERTIES 
 	VERSION ${PROJECT_VERSION}
-	PUBLIC_HEADER include/trexio.h
+	PUBLIC_HEADER ${TREXIO_HEADER}
 	)
 
 # Set directories to be included at build time.
@@ -76,10 +88,11 @@ if(ENABLE_HDF5)
   endif()
 
   # If HDF5 found:
-  # - append the trexio_hdf5.c source file with the HDF5 back end to target_sources
-  target_sources(trexio PRIVATE src/trexio_hdf5.c)
+  # - append the trexio_hdf5.c source file with the HDF5 back end to the list TREXIO_SOURCES
+  set(TREXIO_HDF5_SOURCE ${CMAKE_SOURCE_DIR}/src/trexio_hdf5.c)
+  list(APPEND TREXIO_SOURCES ${TREXIO_HDF5_SOURCE})
   # - define symbol HAVE_HDF5=1 (used to activate HDF5 back end in the preprocessor conditionals)
-  target_compile_definitions(trexio PUBLIC HAVE_HDF5=1)
+  target_compile_definitions(trexio PUBLIC "HAVE_HDF5")
   # - include directories with HDF5 header files
   target_include_directories(trexio PRIVATE ${HDF5_C_INCLUDE_DIRS})
   # - link to HDF5 C libraries
@@ -87,6 +100,8 @@ if(ENABLE_HDF5)
 	  ${HDF5_C_HL_LIBRARIES} 
 	  ${HDF5_C_LIBRARIES})
 endif()
+
+target_sources(trexio PRIVATE ${TREXIO_SOURCES})
 
 # ================= TESTING ================= 
 
@@ -147,6 +162,28 @@ target_link_libraries(trexio_f PUBLIC trexio)
 add_executable(test_f tests/test_f.f90)
 target_link_libraries(test_f PRIVATE trexio_f)
 add_test(NAME test_f COMMAND $<TARGET_FILE:test_f>)
+
+# ====== CODE GENERATION FOR DEVEL MODE =====
+
+if(TREXIO_DEVEL)
+  set(ORG_FILES
+	src/templates_front/templator_front.org
+  	src/templates_text/templator_text.org
+	trex.org
+	)
+  if(ENABLE_HDF5)
+    list(APPEND ORG_FILES src/templates_hdf5/templator_hdf5.org)
+  endif()
+
+  add_custom_command(OUTPUT ${TREXIO_SOURCES}
+	  ${TREXIO_HEADER}
+	  ${TREXIO_MOD_FILE}
+      COMMAND ./build_trexio.sh
+      DEPENDS ${ORG_FILES}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools
+      COMMENT "Generating TREXIO source code from org-mode files."
+      VERBATIM)
+endif()
 
 # ============= INSTALL TREXIO ============== 
 
