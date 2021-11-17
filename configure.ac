@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([trexio], [2.0.0], [https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio],[2.0.0],[https://github.com/TREX-CoE/trexio/issues])
 AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
 
@@ -26,6 +26,7 @@ VERSION_PATCH=`echo ${PACKAGE_VERSION} | cut -d. -f3 | cut -d- -f1`
 AC_DEFINE_UNQUOTED(VERSION_MAJOR, [$VERSION_MAJOR], [major version])
 AC_DEFINE_UNQUOTED(VERSION_MINOR, [$VERSION_MINOR], [minor version])
 AC_DEFINE_UNQUOTED(VERSION_PATCH, [$VERSION_PATCH], [patch version])
+
 
 ## Save system information, e.g. user name
 
@@ -59,7 +60,8 @@ PKG_CFLAGS=""
 PKG_LIBS=""
 
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
+LT_INIT
+AM_PROG_AR
 AC_PROG_LN_S
 AC_PROG_GREP
 

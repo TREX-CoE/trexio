@@ -258,8 +258,7 @@ CLEANFILES += $(pytrexio_c) \
               python/src/*.c \
               python/src/*.h
 
-.PHONY: cppcheck python-test python-install python-sdist check-numpy
+.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE
 
 endif
 
-.PHONY: FORCE
