@@ -45,12 +45,17 @@ endif()
 
 # ========= DEFINE TREXIO C LIBRARY ========= 
 
-# Set a list of TREXIO source files that are always compiled.
+# Set a list of TREXIO source and header files that are always compiled.
 set(TREXIO_SOURCES 
 	${CMAKE_SOURCE_DIR}/src/trexio.c
 	${CMAKE_SOURCE_DIR}/src/trexio_text.c
 	)
-set(TREXIO_HEADER ${CMAKE_SOURCE_DIR}/include/trexio.h)
+set(TREXIO_PUBLIC_HEADERS ${CMAKE_SOURCE_DIR}/include/trexio.h)
+set(TREXIO_PRIVATE_HEADERS 
+	${CMAKE_SOURCE_DIR}/src/trexio_s.h
+	${CMAKE_SOURCE_DIR}/src/trexio_private.h
+	${CMAKE_SOURCE_DIR}/src/trexio_text.h
+	)
 
 # Conditional SHARED/STATIC build for TREXIO library.
 if(BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
@@ -70,11 +75,10 @@ endif()
 # Set TREXIO version and include files.
 set_target_properties(trexio PROPERTIES 
 	VERSION ${PROJECT_VERSION}
-	PUBLIC_HEADER ${TREXIO_HEADER}
+	PUBLIC_HEADER ${TREXIO_PUBLIC_HEADERS}
 	)
 
 # Set directories to be included at build time.
-target_include_directories(trexio PRIVATE src)
 include_directories(include)
 
 # ============= CONFIGURE HDF5 ============== 
@@ -99,8 +103,8 @@ if(ENABLE_HDF5)
 
   # If HDF5 found:
   # - append the trexio_hdf5.c source file with the HDF5 back end to the list TREXIO_SOURCES
-  set(TREXIO_HDF5_SOURCE ${CMAKE_SOURCE_DIR}/src/trexio_hdf5.c)
-  list(APPEND TREXIO_SOURCES ${TREXIO_HDF5_SOURCE})
+  list(APPEND TREXIO_SOURCES ${CMAKE_SOURCE_DIR}/src/trexio_hdf5.c)
+  list(APPEND TREXIO_PRIVATE_HEADERS ${CMAKE_SOURCE_DIR}/src/trexio_hdf5.h)
   # - define symbol HAVE_HDF5=1 (used to activate HDF5 back end in the preprocessor conditionals)
   target_compile_definitions(trexio PUBLIC "HAVE_HDF5")
   # - include directories with HDF5 header files
@@ -111,7 +115,9 @@ if(ENABLE_HDF5)
 	  ${HDF5_C_LIBRARIES})
 endif()
 
-target_sources(trexio PRIVATE ${TREXIO_SOURCES})
+# Private headers have to be listed as sources, otherwise they are installed
+# with public headers upon make install (when using PRIVATE_HEADER property).
+target_sources(trexio PRIVATE ${TREXIO_SOURCES} ${TREXIO_PRIVATE_HEADERS})
 
 # ================= TESTING ================= 
 
@@ -186,7 +192,8 @@ if(TREXIO_DEVEL)
   endif()
 
   add_custom_command(OUTPUT ${TREXIO_SOURCES}
-	  ${TREXIO_HEADER}
+	  ${TREXIO_PUBLIC_HEADERS}
+	  ${TREXIO_PRIVATE_HEADERS}
 	  ${TREXIO_MOD_FILE}
       COMMAND ./build_trexio.sh
       DEPENDS ${ORG_FILES}
@@ -201,9 +208,9 @@ include(GNUInstallDirs)
 # Use standard GNU directories for installation of TREXIO (e.g. /usr/local/lib|include).
 # The installation prefix can be modified using -DCMAKE_INSTALL_PREFIX=<custom/path> option of cmake.
 install(TARGETS trexio
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    )
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	)
 # Also install trexio_f.f90 file with TREXIO Fortran module.
 install(FILES ${TREXIO_MOD_FILE} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
