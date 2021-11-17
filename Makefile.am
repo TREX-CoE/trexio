@@ -174,6 +174,9 @@ dist_html_DATA = $(HTML_FILES)
 
 $(HTML_TANGLED): $(htmlizer)
 
+html: $(dist_html_DATA)
+doc: html
+
 # =============== DEVELOPER MODE =============== #
 
 SWIG          = @SWIG@
@@ -183,7 +186,7 @@ HDF5_CPPFLAGS = @HDF5_CPPFLAGS@
 
 if TREXIO_DEVEL
 
-CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h)
+CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h) .git_hash
 
 BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
 
