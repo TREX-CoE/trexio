@@ -78,8 +78,8 @@ src_libtrexio_la_SOURCES = $(SOURCES)
 
 # Include CMake-related files in the distribution.
 dist_data_DATA = CMakeLists.txt \
-		 tools/cmake_uninstall.cmake.in \
-		 tools/FindTREXIO.cmake
+		 cmake/cmake_uninstall.cmake.in \
+		 cmake/FindTREXIO.cmake
 
 # =============== TESTS =============== #
 
