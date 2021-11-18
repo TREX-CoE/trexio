@@ -181,8 +181,8 @@ dist_html_DATA = $(HTML_FILES)
 
 $(HTML_TANGLED): $(htmlizer)
 
-html: $(dist_html_DATA)
-doc: html
+html-local: $(dist_html_DATA)
+doc: html-local
 
 # =============== DEVELOPER MODE =============== #
 
