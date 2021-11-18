@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([trexio], [2.0.0], [https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio],[2.0.0],[https://github.com/TREX-CoE/trexio/issues])
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
@@ -11,6 +11,10 @@ AC_CONFIG_AUX_DIR([build-config])
 
 AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
+AM_PROG_AR
+
+LT_PREREQ([2.2])
+LT_INIT
 
 # Activate developer mode when the source is the git repository.
 # Otherwise, it is the source distribution and the developer mode should not be activated.
@@ -19,15 +23,13 @@ AC_CHECK_FILE([$TEST_IFEXISTS],
         [enable_maintainer_mode="yes"],
 )
 
-LT_PREREQ([2.2])
-LT_INIT
-
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
 VERSION_MINOR=`echo ${PACKAGE_VERSION} | cut -d. -f2`
 VERSION_PATCH=`echo ${PACKAGE_VERSION} | cut -d. -f3 | cut -d- -f1`
 AC_DEFINE_UNQUOTED(VERSION_MAJOR, [$VERSION_MAJOR], [major version])
 AC_DEFINE_UNQUOTED(VERSION_MINOR, [$VERSION_MINOR], [minor version])
 AC_DEFINE_UNQUOTED(VERSION_PATCH, [$VERSION_PATCH], [patch version])
+
 
 ## Save system information, e.g. user name
 
@@ -61,7 +63,6 @@ PKG_CFLAGS=""
 PKG_LIBS=""
 
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
 AC_PROG_LN_S
 AC_PROG_GREP
 

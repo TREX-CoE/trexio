@@ -1,5 +1,5 @@
 #!/bin/sh
 
-autoreconf -i
+autoreconf -i -Wall
 
 
