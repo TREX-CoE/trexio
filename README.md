@@ -9,7 +9,7 @@ TREX library for efficient I/O.
 
 ## Minimal requirements (for users):
 
-- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2)
+- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2)	or	CMake (>= 3.16)
 - C compiler            (gcc/icc/clang)
 - Fortran compiler      (gfortran/ifort)
 - HDF5 library          (>= 1.8)	[optional, recommended for high performance]
@@ -45,13 +45,25 @@ TREX library for efficient I/O.
 6. `make check`
 7. `sudo make install`
 
+## Installation procedure for CMake users (from the tarball or GitHub repo clone):
+
+The aforementioned instructions rely on [Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html) build system. 
+[CMake](https://cmake.org) users can achieve the same with the following steps (an example of out-of-source build):
+
+1. `cmake -S. -Bbuild`
+2. `cd build`
+3. `make`
+4. `ctest` (or `make test`)
+5. `sudo make install`
+
 ## Compilation without the HDF5 library
 
 By default, the configuration step proceeds to search for the [HDF5 library](https://portal.hdfgroup.org/display/HDF5/HDF5).
 This search can be disabled if HDF5 is not present/installable on the user machine.
-To compile without HDF5, append `--without-hdf5` option to `configure` script. For example,
+To build TREXIO without HDF5 back end, append `--without-hdf5` option to `configure` script or `-DENABLE_HDF5=OFF` option to `cmake`. For example,
 
-`./configure --without-hdf5`
+- `./configure --without-hdf5`
+- `cmake -S. -Bbuild -DENABLE_HDF5=OFF`
 
 ## Linking to your program
 
@@ -65,7 +77,9 @@ In order to link the program against TREXIO, the search paths can be modified as
 
 (same holds for `$LD_LIBRARY_PATH`). The `<path_to_trexio>` has to be replaced by the prefix used during the installation.
 
-If your compilation relies on some build tools (like Autotools or CMake), feel free to use the built-in solutions to locate and link external dependencies automatically.
+If your project relies on CMake build system, feel free to use the 
+[FindTREXIO.cmake](https://github.com/TREX-CoE/trexio/blob/master/cmake/FindTREXIO.cmake)
+module to find and link TREXIO library automatically.
 
 In Fortran applications, make sure that the `trexio_f.f90` module file is included in the source tree.
 You might have to manually copy it into your program source directory.
