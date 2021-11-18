@@ -76,6 +76,13 @@ ORG_FILES = \
 
 src_libtrexio_la_SOURCES = $(SOURCES)
 
+# Include CMake-related files in the distribution.
+dist_data_DATA = CMakeLists.txt \
+		 src/CMakeLists.txt \
+		 tests/CMakeLists.txt \
+		 cmake/cmake_uninstall.cmake.in \
+		 cmake/FindTREXIO.cmake
+
 # =============== TESTS =============== #
 
 TESTS_C = \
@@ -174,8 +181,8 @@ dist_html_DATA = $(HTML_FILES)
 
 $(HTML_TANGLED): $(htmlizer)
 
-html: $(dist_html_DATA)
-doc: html
+html-local: $(dist_html_DATA)
+doc: html-local
 
 # =============== DEVELOPER MODE =============== #
 

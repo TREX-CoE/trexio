@@ -3,8 +3,18 @@
 
 AC_PREREQ([2.69])
 AC_INIT([trexio],[2.0.0],[https://github.com/TREX-CoE/trexio/issues])
+
+AC_CONFIG_SRCDIR([Makefile.in])
+AC_CONFIG_HEADERS([include/config.h])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-config])
+
 AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
+AM_PROG_AR
+
+LT_PREREQ([2.2])
+LT_INIT
 
 # Activate developer mode when the source is the git repository.
 # Otherwise, it is the source distribution and the developer mode should not be activated.
@@ -12,13 +22,6 @@ TEST_IFEXISTS=".git"
 AC_CHECK_FILE([$TEST_IFEXISTS],
         [enable_maintainer_mode="yes"],
 )
-
-AM_MAINTAINER_MODE()
-LT_PREREQ([2.2])
-LT_INIT
-AC_CONFIG_SRCDIR([Makefile.in])
-AC_CONFIG_HEADERS([include/config.h])
-AC_CONFIG_MACRO_DIR([m4])
 
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
 VERSION_MINOR=`echo ${PACKAGE_VERSION} | cut -d. -f2`
@@ -60,7 +63,6 @@ PKG_CFLAGS=""
 PKG_LIBS=""
 
 AC_PROG_INSTALL
-AM_PROG_AR
 AC_PROG_LN_S
 AC_PROG_GREP
 
