@@ -123,7 +123,12 @@ function main() {
     then
         cd ${DOCS}
         rm -f index.html
-        ln README.html index.html
+	# enter Google verificator into the HTML head
+        local GOOGLE_VERIF="<meta name="google-site-verification" content="jdDnuP2rYGJVy8AHSd-8LkmOmvK_dyz5buZ98wilYII" />"
+        LINE_NO=$(($(awk '/meta name="viewport"/{print NR}' README.html) + 1))
+        sed -i "$LINE_NO i ${GOOGLE_VERIF}" README.html
+        
+	ln README.html index.html
         exit 0
     else
         exit 3
