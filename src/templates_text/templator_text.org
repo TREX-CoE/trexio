@@ -94,21 +94,9 @@ typedef struct $group$_s {
 ** Template for general structure in text back end
 
     #+begin_src c :tangle struct_text_group.h
-typedef struct rdm_s {
-  uint64_t dim_one_e;
-  uint32_t to_flush;
-  uint32_t padding;
-  double*  one_e;
-  char     file_name[TREXIO_MAX_FILENAME_LENGTH];
-  char     two_e_file_name[TREXIO_MAX_FILENAME_LENGTH];
-} rdm_t;
-    #+end_src
-
-    #+begin_src c :tangle struct_text_group.h
 typedef struct trexio_text_s {
   trexio_t   parent ;
   $group$_t* $group$;
-  rdm_t*      rdm;
   int        lock_file;
 } trexio_text_t;
     #+end_src
@@ -268,9 +256,6 @@ trexio_text_deinit (trexio_t* const file)
 
   /* Error handling for this call is added by the generator */
   rc = trexio_text_free_$group$( (trexio_text_t*) file);
-
-  rc = trexio_text_free_rdm( (trexio_text_t*) file);
-  if (rc != TREXIO_SUCCESS) return rc;
 
   return TREXIO_SUCCESS;
 
@@ -1016,323 +1001,155 @@ trexio_text_has_$group_str$ (trexio_t* const file)
 
 }
    #+end_src
-** RDM struct (hard-coded)
-*** Read the complete struct
+** Template for has/read/write the dataset of sparse data 
 
-    #+begin_src c :tangle rdm_text.h
-rdm_t* trexio_text_read_rdm(trexio_text_t* const file);
-    #+end_src
-
-    #+begin_src c :tangle rdm_text.c
-rdm_t* trexio_text_read_rdm(trexio_text_t* const file) {
-  if (file  == NULL) return NULL;
-
-  if (file->rdm != NULL) return file->rdm;
-
-  /* Allocate the data structure */
-  rdm_t* rdm = MALLOC(rdm_t);
-  assert (rdm != NULL);
-
-  rdm->one_e           = NULL;
-  rdm->two_e_file_name[0] = '\0';
-  rdm->to_flush        = 0;
-
-  /* Try to open the file. If the file does not exist, return */
-  const char* rdm_file_name = "/rdm.txt";
-
-  strncpy (rdm->file_name, file->parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
-
-  strncat (rdm->file_name, rdm_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen(rdm_file_name));
-
-  if (rdm->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
-    FREE(rdm);
-    return NULL;
-  }
-  /* If the file exists, read it */
-  FILE* f = fopen(rdm->file_name,"r");
-  if (f != NULL) {
-
-    /* Find size of file to allocate the max size of the string buffer */
-    fseek(f, 0L, SEEK_END);
-    size_t sz = ftell(f);
-    fseek(f, 0L, SEEK_SET);
-    sz = (sz < 1024) ? (1024) : (sz);
-    char* buffer = CALLOC(sz, char);
-
-    /* Read the dimensioning variables */
-    int rc;
-    rc = fscanf(f, "%1023s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "dim_one_e") == 0);
-
-    rc = fscanf(f, "%" SCNu64 "", &(rdm->dim_one_e));
-    assert (rc == 1);
-
-    /* Allocate arrays */
-    rdm->one_e = CALLOC(rdm->dim_one_e, double);
-    assert (rdm->one_e != NULL);
-
-    /* Read one_e */
-    rc = fscanf(f, "%1023s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "one_e") == 0);
-
-    for (uint64_t i=0 ; i<rdm->dim_one_e; ++i) {
-      rc = fscanf(f, "%lf", &(rdm->one_e[i]));
-      assert (rc == 1);
-    }
-
-    /* Read two_e */
-    rc = fscanf(f, "%1023s", buffer);
-    assert (rc == 1);
-    assert (strcmp(buffer, "two_e_file_name") == 0);
-
-    rc = fscanf(f, "%1023s", buffer);
-    assert (rc == 1);
-    strncpy(rdm->two_e_file_name, buffer, 1024);
-    if (rdm->two_e_file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
-      FREE(buffer);
-      FREE(rdm->one_e);
-      FREE(rdm);
-      fclose(f);
-      return NULL;
-    }
-
-    FREE(buffer);
-    fclose(f);
-    f = NULL;
-  }
-  file->rdm = rdm ;
-  return rdm;
-}
+   #+begin_src c :tangle hrw_sparse_text.h :exports none
+trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file);
+trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int_64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int_64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
    #+end_src
 
-*** Flush the complete struct
+   #+begin_src c :tangle write_sparse_text.c
+trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, 
+                                                  const int64_t offset_file, 
+                                                  const int64_t offset_dset, 
+                                                  const int64_t size, 
+                                                  const int64_t size_max, 
+                                                  const int32_t* index_sparse, 
+                                                  const double* value_sparse)
+{
+  if (file == NULL) return TREXIO_FILE_ERROR;
 
-    #+begin_src c :tangle rdm_text.h
-trexio_exit_code trexio_text_flush_rdm(trexio_text_t* const file);
-    #+end_src
+  /* Build the name of the file with sparse data*/
+  const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
+  const char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
 
-    #+begin_src c :tangle rdm_text.c
-trexio_exit_code trexio_text_flush_rdm(trexio_text_t* const file) {
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  strncat (file_abs_path, $group_sparse_dset$_file_name,
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
-  if (file->parent.mode == 'r') return TREXIO_READONLY;
 
-  rdm_t* const rdm = file->rdm;
-  if (rdm == NULL) return TREXIO_SUCCESS;
-
-  if (rdm->to_flush == 0) return TREXIO_SUCCESS;
-
-  FILE* f = fopen(rdm->file_name,"w");
-  assert (f != NULL);
-
-  /* Write the dimensioning variables */
-  fprintf(f, "num %" PRIu64 "\n", rdm->dim_one_e);
-
-  /* Write arrays */
-  fprintf(f, "one_e\n");
-  for (uint64_t i=0 ; i< rdm->dim_one_e; ++i) {
-    fprintf(f, "%lf\n", rdm->one_e[i]);
+  FILE* f = fopen(file_abs_path, "a");
+  //TODO ERROR HANDLING
+  assert(f != NULL);
+  
+  // read the currently written number of elements
+  // line_length is 69 because
+  // 10 per index (40 in total) + 4 spaces + 24 for floating point value + 1 for newline char
+  // in general: 10*n_indices + n_indices + 24 + 1
+  const uint64_t line_length = $group_sparse_dset_line_length$L;
+  
+  fseek(f, (long) offset_file * line_length, SEEK_SET);
+  
+  for (uint64_t i=0L+offset_data ; i<size+offset_data ; ++i) {
+      int rc = fprintf(f, "$group_sparse_dset_format_printf$\n",
+         $group_sparse_dset_indices_printf$,
+         value_sparse[i]);
+      assert(rc > 0);
   }
-
-  fprintf(f, "two_e_file_name\n");
-  fprintf(f, "%s\n", rdm->two_e_file_name);
-
+/*
+        int rc = fprintf(f, "%10d %10d %10d %10d %24.16e\n",
+           index[4*i],
+           index[4*i+1],
+           index[4*i+2],
+           index[4*i+3],
+           value[i]);
+*/
+  
   fclose(f);
-  rdm->to_flush = 0;
   return TREXIO_SUCCESS;
 }
    #+end_src
 
-*** Free memory
+  
+   #+begin_src c :tangle read_sparse_text.c
+trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, 
+                                                 const int64_t offset_file, 
+                                                 const int64_t offset_dset,
+                                                 const int64_t size,
+                                                 const int64_t size_max,
+                                                 int32_t* const index_sparse,
+                                                 double* const value_sparse)
+{
+  if (file == NULL) return TREXIO_FILE_ERROR;
+  
+  /* Build the name of the file with sparse data*/
+  const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
+  const char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
 
-     Memory is allocated when reading. The followig function frees memory.
+  strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  strncat (file_abs_path, $group_sparse_dset$_file_name,
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
-    #+begin_src c :tangle rdm_text.h
-trexio_exit_code trexio_text_free_rdm(trexio_text_t* const file);
-    #+end_src
 
-    #+begin_src c :tangle rdm_text.c
-trexio_exit_code trexio_text_free_rdm(trexio_text_t* const file) {
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  FILE* f = fopen(file_abs_path, "a");
+  //TODO ERROR HANDLING
+  assert(f != NULL);
+  
+  // read the currently written number of elements
+  // line_length is 69 because
+  // 10 per index (40 in total) + 4 spaces + 24 for floating point value + 1 for newline char
+  // in general: 10*n_indices + n_indices + 24 + 1
+  const uint64_t line_length = $group_sparse_dset_line_length$L;
+  
+  fseek(f, (long) offset_file * line_length, SEEK_SET);
+  
+  for (uint64_t i=0L+offset_data ; i<size+offset_data ; ++i) {
+      int rc = fprintf(f, "$group_sparse_dset_format_scanf$\n",
+         $group_sparse_dset_indices_scanf$,
+         value_sparse[i]);
 
-  if (file->parent.mode != 'r') {
-    trexio_exit_code rc = trexio_text_flush_rdm(file);
-    if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
+// TODO: find a way to indicate the number of elements being read (useful?)
+      if (rc == EOF){
+        return TREXIO_END;
+      } else {
+        assert(rc > 0);
+      }  
   }
-
-  rdm_t* const rdm = file->rdm;
-  if (rdm == NULL) return TREXIO_SUCCESS;
-
-  if (rdm->one_e != NULL) {
-    FREE (rdm->one_e);
-  }
-
-  free (rdm);
-  file->rdm = NULL;
+/*
+        int rc = fscanf(f, "%d %d %d %d %lf",
+           &index[4*i],
+           &index[4*i+1],
+           &index[4*i+2],N OPEN
+           &index[4*i+3],
+           &value[i]);
+,*/
+  
+  fclose(f);
   return TREXIO_SUCCESS;
+
 }
-    #+end_src
-
-*** Read/Write the one_e attribute
-
-     The ~one_e~ array is assumed allocated with the appropriate size.
-
-    #+begin_src c :tangle rdm_text.h
-trexio_exit_code
-trexio_text_read_rdm_one_e(trexio_t* const file,
-			   double* const one_e,
-			   const uint64_t dim_one_e);
-
-trexio_exit_code
-trexio_text_write_rdm_one_e(trexio_t* const file,
-			    const double* one_e,
-			    const uint64_t dim_one_e);
    #+end_src
 
-    #+begin_src c :tangle rdm_text.c
-trexio_exit_code
-trexio_text_read_rdm_one_e(trexio_t* const file,
-			   double* const one_e,
-			   const uint64_t dim_one_e)
+   #+begin_src c :tangle has_sparse_text.c
+trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file)
 {
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (one_e == NULL) return TREXIO_INVALID_ARG_2;
+  if (file == NULL) return TREXIO_FILE_ERROR;
+  
+  /* Build the name of the file with sparse data*/
+  const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
+  const char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
 
-  rdm_t* const rdm = trexio_text_read_rdm((trexio_text_t*) file);
-  if (rdm == NULL) return TREXIO_FAILURE;
+  strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  strncat (file_abs_path, $group_sparse_dset$_file_name,
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
-  if (dim_one_e != rdm->dim_one_e) return TREXIO_INVALID_ARG_3;
+  /*struct stat buffer;
+  int rc = stat(file_abs_path, &buffer)
+  if (rc == 0) {
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }*/
 
-  for (uint64_t i=0 ; i<dim_one_e ; ++i) {
-    one_e[i] = rdm->one_e[i];
+  int fd = open(file_abs_path, O_CREAT | O_EXCL | O_RDONLY);
+  if (fd < 0) {
+    if(errno == EEXIST) return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
   }
-
-  return TREXIO_SUCCESS;
 }
-
-
-trexio_exit_code
-trexio_text_write_rdm_one_e(trexio_t* const file,
-			    const double* one_e,
-			    const uint64_t dim_one_e)
-{
-  if (file  == NULL)  return TREXIO_INVALID_ARG_1;
-  if (one_e == NULL)  return TREXIO_INVALID_ARG_2;
-  if (file->mode != 'r') return TREXIO_READONLY;
-
-  rdm_t* const rdm = trexio_text_read_rdm((trexio_text_t*) file);
-  if (rdm == NULL) return TREXIO_FAILURE;
-
-  rdm->dim_one_e = dim_one_e;
-  for (uint64_t i=0 ; i<dim_one_e ; ++i) {
-    rdm->one_e[i] = one_e[i];
-  }
-
-  rdm->to_flush = 1;
-  return TREXIO_SUCCESS;
-}
-     #+end_src
-
-*** Read/Write the two_e attribute
-
-     ~two_e~ is a sparse data structure, which can be too large to fit
-     in memory. So we provide functions to read and write it by
-     chunks.
-     In the text back end, the easiest way to do it is to create a
-     file for each sparse float structure.
-
-    #+begin_src c :tangle rdm_text.h
-trexio_exit_code
-trexio_text_buffered_read_rdm_two_e(trexio_t* const file,
-				    const uint64_t offset,
-				    const uint64_t size,
-				    int64_t* const index,
-				    double* const value);
-
-trexio_exit_code
-trexio_text_buffered_write_rdm_two_e(trexio_t* const file,
-				     const uint64_t offset,
-				     const uint64_t size,
-				     const int64_t* index,
-				     const double* value);
    #+end_src
-
-    #+begin_src c :tangle rdm_text.c
-trexio_exit_code
-trexio_text_buffered_read_rdm_two_e(trexio_t* const file,
-				    const uint64_t offset,
-				    const uint64_t size,
-				    int64_t* const index,
-				    double* const value)
-{
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (index == NULL) return TREXIO_INVALID_ARG_4;
-  if (value == NULL) return TREXIO_INVALID_ARG_5;
-
-  rdm_t* const rdm = trexio_text_read_rdm((trexio_text_t*) file);
-  if (rdm == NULL) return TREXIO_FAILURE;
-
-  FILE* f = fopen(rdm->two_e_file_name, "r");
-  if (f == NULL) return TREXIO_END;
-
-  const uint64_t line_length = 64L;
-  fseek(f, (long) offset * line_length, SEEK_SET);
-
-  for (uint64_t i=0 ; i<size ; ++i) {
-    int rc = fscanf(f, "%9" SCNd64 " %9" SCNd64 " %9" SCNd64 " %9" SCNd64 " %24le\n",
-	   &index[4*i],
-	   &index[4*i+1],
-	   &index[4*i+2],
-	   &index[4*i+3],
-	   &value[i]);
-    if (rc == 5) {
-      /* Do nothing */
-    } else if (rc == EOF) {
-      return TREXIO_END;
-    }
-  }
-
-  return TREXIO_SUCCESS;
-}
-
-
-trexio_exit_code
-trexio_text_buffered_write_rdm_two_e(trexio_t* const file,
-				     const uint64_t offset,
-				     const uint64_t size,
-				     const int64_t* index,
-				     const double* value)
-{
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (index == NULL) return TREXIO_INVALID_ARG_4;
-  if (value == NULL) return TREXIO_INVALID_ARG_5;
-  if (file->mode != 'r') return TREXIO_READONLY;
-
-  rdm_t* const rdm = trexio_text_read_rdm((trexio_text_t*) file);
-  if (rdm == NULL) return TREXIO_FAILURE;
-
-  FILE* f = fopen(rdm->two_e_file_name, "w");
-  if (f == NULL) return TREXIO_FAILURE;
-
-  const uint64_t line_length = 64L;
-  fseek(f, (long) offset * line_length, SEEK_SET);
-
-  for (uint64_t i=0 ; i<size ; ++i) {
-    int rc = fprintf(f, "%9" PRId64 " %9" PRId64 " %9" PRId64 " %9" PRId64 " %24le\n",
-	   index[4*i],
-	   index[4*i+1],
-	   index[4*i+2],
-	   index[4*i+3],
-	   value[i]);
-    if (rc != 5) return TREXIO_FAILURE;
-  }
-
-  return TREXIO_SUCCESS;
-}
-     #+end_src
 
 * Constant file suffixes (not used by the generator)               :noexport:
 

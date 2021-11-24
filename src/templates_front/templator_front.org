@@ -1628,7 +1628,6 @@ def has_$group_num$(trexio_file) -> bool:
 
 **** Function declarations
 
-
      #+begin_src c :tangle hrw_dset_data_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, $group_dset_dtype_default$* const $group_dset$);
@@ -1646,7 +1645,6 @@ trexio_exit_code trexio_write_safe_$group_dset$_64(trexio_t* const file, const $
      #+end_src
 
 **** Source code for double precision functions
-
 
      #+begin_src c :tangle read_dset_data_64_front.c
 trexio_exit_code
@@ -2350,7 +2348,8 @@ def has_$group_dset$(trexio_file) -> bool:
         return False
      #+end_src
 
-** Sparse data structures
+** Templates for front end has/read/write a dataset of sparse data
+*** Introduction
 
    Sparse data structures are used typically for large tensors such as
    two-electron integrals. For example, in the =trex.json= file sparse
@@ -2358,12 +2357,11 @@ def has_$group_dset$(trexio_file) -> bool:
 
    #+begin_src python
    "ao_2e_int"  : {
-     "eri_num"  : [ "int", [  ] ]
      "eri"      : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
    }
    #+end_src
    
-  The electron repulsion integral $\langle ij | kl \rangle$ is 
+  The electron repulsion integral (eri) $\langle ij | kl \rangle$ is 
   represented as a quartet of integers $(i,j,k,l)$ and a floating
   point value.
 
@@ -2384,85 +2382,118 @@ def has_$group_dset$(trexio_file) -> bool:
   As the number of integrals to store can be prohibitively large, we 
   provide the possibility to read/write the integrals in chunks. So the
   functions take two extra parameters:
-  - ~offset~ : the index of the 1st integral we want to read. An
-    offset of zero implies to read the first integral.
-  - ~num~ : the number of integrals to read.
+
+  - ~offset~ : how many integrals in the file should be skipped when reading. 
+    An offset of zero implies to read the first integral.
+  - ~size~ : the number of integrals to read.
 
   We provide a function to read a chunk of indices, and a function to
   read a chunk of values, because some users might want to read only
   the values of the integrals, or only the indices.
 
-  Here is an example for the indices:
+*** C templates for front end
+**** Function declarations
 
-  #+BEGIN_SRC c
+     #+begin_src c :tangle hrw_sparse_front.h :exports none
+trexio_exit_code trexio_has_$group_sparse_dset$(trexio_t* const file);
+trexio_exit_code trexio_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int64_t size, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int64_t size, const int32_t* index_sparse, const double* value_sparse);
+//trexio_exit_code trexio_read_$group_sparse_dset$_value(trexio_t* const file, const uint64_t offset, const uint_64_t size, int32_t* const value_sparse);
+//trexio_exit_code trexio_write_$group_sparse_dset$_value(trexio_t* const file, const uint64_t offset, const uint_64_t size, double* const value_sparse);
+     #+end_src
+
+**** Source code for default functions
+
+  #+begin_src c :tangle read_sparse_front.c
 trexio_exit_code
-trexio_read_chunk_ao_2e_int_eri_index_32(trexio_t* const file,
-                                         const int64_t offset,
-                                         const int64_t num,
-                                         int32_t* buffer)
+trexio_read_$group_sparse_dset$(trexio_t* const file,
+                           const int64_t offset_file,
+                           const int64_t offset_dset,
+                           const int64_t size,
+                           int32_t* const index_sparse,
+                           double* const value_sparse
+                           )
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (offset   < 0L) return TREXIO_INVALID_ARG_2;
-  if (num      < 0L) return TREXIO_INVALID_ARG_3;
+  if (offset_file < 0L) return TREXIO_INVALID_ARG_2;
+  if (offset_dset < 0L) return TREXIO_INVALID_ARG_3;
+  if (size        <= 0L) return TREXIO_INVALID_ARG_4;
+  if (index_sparse == NULL) return TREXIO_INVALID_ARG_5;
+  if (value_sparse == NULL) return TREXIO_INVALID_ARG_6;
 
-  const uint32_t rank = 4;  // To be set by generator : number of indices
+  const uint32_t rank = $group_sparse_dset_rank$;  // To be set by generator : number of indices
 
-  int64_t nmax;             // Max number of integrals
+  int64_t size_max;         // Max number of integrals (already in the file)
   trexio_exit_code rc;
 
-  rc = trexio_read_ao_2e_int_eri_num(const file, &nmax);
+  rc = trexio_read_$group_sparse_dset$_num(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_chunk_ao_2e_int_eri_index(file, buffer, offset, num, rank, nmax);
+    return trexio_text_read_$group_sparse_dset$(file, offset_file, offset_dset, size, size_max, rank, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_chunk_ao_2e_int_eri_index(file, buffer, offset, num, rank, nmax);
+    return trexio_hdf5_read_$group_sparse_dset$(file, offset_file, offset_dset, size, size_max, rank, index_sparse, value_sparse);
     break;
-
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_$group_sparse_dset$(...);
+    break;
+*/
   default:
     return TREXIO_FAILURE;  /* Impossible case */
   }
 }
-  #+END_SRC
+  #+end_src
 
-  For the values, 
-
-  #+BEGIN_SRC c
+  #+begin_src c :tangle write_sparse_front.c
 trexio_exit_code
-trexio_read_chunk_ao_2e_int_eri_value_64(trexio_t* const file,
-                                         const int64_t offset,
-                                         const int64_t num,
-                                         double* buffer)
+trexio_write_$group_sparse_dset$(trexio_t* const file,
+                           const int64_t offset_file,
+                           const int64_t offset_dset,
+                           const int64_t size,
+                           const int32_t* index_sparse,
+                           const double* value_sparse
+                           )
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (offset   < 0L) return TREXIO_INVALID_ARG_2;
-  if (num      < 0L) return TREXIO_INVALID_ARG_3;
+  if (offset_file < 0L) return TREXIO_INVALID_ARG_2;
+  if (offset_dset < 0L) return TREXIO_INVALID_ARG_3;
+  if (size        <= 0L) return TREXIO_INVALID_ARG_4;
+  if (index_sparse == NULL) return TREXIO_INVALID_ARG_5;
+  if (value_sparse == NULL) return TREXIO_INVALID_ARG_6;
 
-  int64_t nmax;             // Max number of integrals
+  const uint32_t rank = $group_sparse_dset_rank$;  // To be set by generator : number of indices
+
+  int64_t size_max;         // Max number of integrals (already in the file)
   trexio_exit_code rc;
 
-  rc = trexio_read_ao_2e_int_eri_num(const file, &nmax);
+  rc = trexio_read_$group_sparse_dset$_num(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_chunk_ao_2e_int_eri_value(file, buffer, offset, num, nmax);
+    return trexio_text_write_$group_sparse_dset$(file, offset_file, offset_dset, size, size_max, rank, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
-    return trexio_hdf5_read_chunk_ao_2e_int_eri_index(file, buffer, offset, num, nmax);
+    return trexio_hdf5_write_$group_sparse_dset$(file, offset_file, offset_dset, size, size_max, rank, index_sparse, value_sparse);
     break;
-
+/*
+  case TREXIO_JSON:
+    return trexio_json_write_$group_sparse_dset$(...);
+    break;
+*/
   default:
     return TREXIO_FAILURE;  /* Impossible case */
   }
 }
-  #+END_SRC
+  #+end_src
+
 
 ** Templates for front end has/read/write a dataset of strings
 *** Introduction
