@@ -90,6 +90,7 @@ TESTS_C = \
   tests/io_num_text \
   tests/io_dset_float_text \
   tests/io_dset_int_text \
+  tests/io_dset_sparse_text \
   tests/io_safe_dset_float_text \
   tests/io_str_text \
   tests/io_dset_str_text \
@@ -123,6 +124,7 @@ tests_open_text_LDFLAGS = -no-install
 tests_io_num_text_LDFLAGS = -no-install
 tests_io_dset_float_text_LDFLAGS = -no-install
 tests_io_dset_int_text_LDFLAGS = -no-install
+tests_io_dset_sparse_text_LDFLAGS = -no-install
 tests_io_safe_dset_float_text_LDFLAGS = -no-install
 tests_io_str_text_LDFLAGS = -no-install
 tests_io_dset_str_text_LDFLAGS = -no-install
@@ -271,4 +273,3 @@ CLEANFILES += $(pytrexio_c) \
 .PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE
 
 endif
-
