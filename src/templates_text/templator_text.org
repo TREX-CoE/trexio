@@ -1001,28 +1001,28 @@ trexio_text_has_$group_str$ (trexio_t* const file)
 
 }
    #+end_src
-** Template for has/read/write the dataset of sparse data 
+** Template for has/read/write the dataset of sparse data
 
-   #+begin_src c :tangle hrw_sparse_text.h :exports none
+   #+begin_src c :tangle hrw_dset_sparse_text.h :exports none
 trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int_64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
-trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int_64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
    #+end_src
 
-   #+begin_src c :tangle write_sparse_text.c
-trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, 
-                                                  const int64_t offset_file, 
-                                                  const int64_t offset_dset, 
-                                                  const int64_t size, 
-                                                  const int64_t size_max, 
-                                                  const int32_t* index_sparse, 
+   #+begin_src c :tangle write_dset_sparse_text.c
+trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
+                                                  const int64_t offset_file,
+                                                  const int64_t offset_dset,
+                                                  const int64_t size,
+                                                  const int64_t size_max,
+                                                  const int32_t* index_sparse,
                                                   const double* value_sparse)
 {
   if (file == NULL) return TREXIO_FILE_ERROR;
 
   /* Build the name of the file with sparse data*/
   const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
-  const char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
+  char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
 
   strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   strncat (file_abs_path, $group_sparse_dset$_file_name,
@@ -1032,17 +1032,18 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
   FILE* f = fopen(file_abs_path, "a");
   //TODO ERROR HANDLING
   assert(f != NULL);
-  
+
   // read the currently written number of elements
   // line_length is 69 because
   // 10 per index (40 in total) + 4 spaces + 24 for floating point value + 1 for newline char
   // in general: 10*n_indices + n_indices + 24 + 1
   const uint64_t line_length = $group_sparse_dset_line_length$L;
-  
-  fseek(f, (long) offset_file * line_length, SEEK_SET);
-  
-  for (uint64_t i=0L+offset_data ; i<size+offset_data ; ++i) {
-      int rc = fprintf(f, "$group_sparse_dset_format_printf$\n",
+
+  //fseek(f, (long) offset_file * line_length, SEEK_SET);
+
+  int rc;
+  for (uint64_t i=0L+offset_dset ; i<size+offset_dset ; ++i) {
+      rc = fprintf(f, "$group_sparse_dset_format_printf$\n",
          $group_sparse_dset_indices_printf$,
          value_sparse[i]);
       assert(rc > 0);
@@ -1055,16 +1056,18 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
            index[4*i+3],
            value[i]);
 */
-  
-  fclose(f);
+
+  rc = fclose(f);
+  assert(rc == 0);
+
   return TREXIO_SUCCESS;
 }
    #+end_src
 
-  
-   #+begin_src c :tangle read_sparse_text.c
-trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, 
-                                                 const int64_t offset_file, 
+
+   #+begin_src c :tangle read_dset_sparse_text.c
+trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
+                                                 const int64_t offset_file,
                                                  const int64_t offset_dset,
                                                  const int64_t size,
                                                  const int64_t size_max,
@@ -1072,79 +1075,65 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
                                                  double* const value_sparse)
 {
   if (file == NULL) return TREXIO_FILE_ERROR;
-  
+
   /* Build the name of the file with sparse data*/
   const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
-  const char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
+  char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
 
   strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   strncat (file_abs_path, $group_sparse_dset$_file_name,
 	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
 
-  FILE* f = fopen(file_abs_path, "a");
+  FILE* f = fopen(file_abs_path, "r");
   //TODO ERROR HANDLING
   assert(f != NULL);
-  
+
   // read the currently written number of elements
   // line_length is 69 because
   // 10 per index (40 in total) + 4 spaces + 24 for floating point value + 1 for newline char
   // in general: 10*n_indices + n_indices + 24 + 1
   const uint64_t line_length = $group_sparse_dset_line_length$L;
-  
+
   fseek(f, (long) offset_file * line_length, SEEK_SET);
-  
-  for (uint64_t i=0L+offset_data ; i<size+offset_data ; ++i) {
-      int rc = fprintf(f, "$group_sparse_dset_format_scanf$\n",
+
+  int rc;
+  for (uint64_t i=0L+offset_dset ; i<size+offset_dset ; ++i) {
+      rc = fscanf(f, "$group_sparse_dset_format_scanf$",
          $group_sparse_dset_indices_scanf$,
-         value_sparse[i]);
+         &value_sparse[i]);
 
 // TODO: find a way to indicate the number of elements being read (useful?)
       if (rc == EOF){
         return TREXIO_END;
       } else {
         assert(rc > 0);
-      }  
+      }
   }
-/*
-        int rc = fscanf(f, "%d %d %d %d %lf",
-           &index[4*i],
-           &index[4*i+1],
-           &index[4*i+2],N OPEN
-           &index[4*i+3],
-           &value[i]);
-,*/
-  
-  fclose(f);
+
+  rc = fclose(f);
+  assert(rc==0);
+
   return TREXIO_SUCCESS;
 
 }
    #+end_src
 
-   #+begin_src c :tangle has_sparse_text.c
+   #+begin_src c :tangle has_dset_sparse_text.c
 trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file)
 {
   if (file == NULL) return TREXIO_FILE_ERROR;
-  
+
   /* Build the name of the file with sparse data*/
   const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
-  const char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
+  char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
 
   strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   strncat (file_abs_path, $group_sparse_dset$_file_name,
 	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
-  /*struct stat buffer;
-  int rc = stat(file_abs_path, &buffer)
-  if (rc == 0) {
+  if (access(file_abs_path, F_OK) == 0){
     return TREXIO_SUCCESS;
-  } else {
-    return TREXIO_HAS_NOT;
-  }*/
-
-  int fd = open(file_abs_path, O_CREAT | O_EXCL | O_RDONLY);
-  if (fd < 0) {
-    if(errno == EEXIST) return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
   }
@@ -1156,4 +1145,3 @@ trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file)
   #+begin_src c :tangle suffix_text.h
 #endif
   #+end_src
-
