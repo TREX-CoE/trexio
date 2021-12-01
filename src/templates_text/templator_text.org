@@ -1005,14 +1005,13 @@ trexio_text_has_$group_str$ (trexio_t* const file)
 
    #+begin_src c :tangle hrw_dset_sparse_text.h :exports none
 trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
-trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_dset, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
    #+end_src
 
    #+begin_src c :tangle write_dset_sparse_text.c
 trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
                                                   const int64_t offset_file,
-                                                  const int64_t offset_dset,
                                                   const int64_t size,
                                                   const int64_t size_max,
                                                   const int32_t* index_sparse,
@@ -1042,7 +1041,7 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
   //fseek(f, (long) offset_file * line_length, SEEK_SET);
 
   int rc;
-  for (uint64_t i=0L+offset_dset ; i<size+offset_dset ; ++i) {
+  for (uint64_t i=0L; i<size; ++i) {
       rc = fprintf(f, "$group_sparse_dset_format_printf$\n",
          $group_sparse_dset_indices_printf$,
          value_sparse[i]);
@@ -1068,7 +1067,6 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
    #+begin_src c :tangle read_dset_sparse_text.c
 trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
                                                  const int64_t offset_file,
-                                                 const int64_t offset_dset,
                                                  const int64_t size,
                                                  const int64_t size_max,
                                                  int32_t* const index_sparse,
@@ -1098,7 +1096,7 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
   fseek(f, (long) offset_file * line_length, SEEK_SET);
 
   int rc;
-  for (uint64_t i=0L+offset_dset ; i<size+offset_dset ; ++i) {
+  for (uint64_t i=0L; i<size; ++i) {
       rc = fscanf(f, "$group_sparse_dset_format_scanf$",
          $group_sparse_dset_indices_scanf$,
          &value_sparse[i]);

@@ -2396,8 +2396,8 @@ def has_$group_dset$(trexio_file) -> bool:
 
      #+begin_src c :tangle hrw_dset_sparse_front.h :exports none
 trexio_exit_code trexio_has_$group_sparse_dset$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_data, const int64_t size, int32_t* const index_sparse, double* const value_sparse);
-trexio_exit_code trexio_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t offset_data, const int64_t size, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int32_t* index_sparse, const double* value_sparse);
 //trexio_exit_code trexio_read_$group_sparse_dset$_value(trexio_t* const file, const uint64_t offset, const uint_64_t size, int32_t* const value_sparse);
 //trexio_exit_code trexio_write_$group_sparse_dset$_value(trexio_t* const file, const uint64_t offset, const uint_64_t size, double* const value_sparse);
      #+end_src
@@ -2408,7 +2408,6 @@ trexio_exit_code trexio_write_$group_sparse_dset$(trexio_t* const file, const in
 trexio_exit_code
 trexio_read_$group_sparse_dset$(trexio_t* const file,
                            const int64_t offset_file,
-                           const int64_t offset_data,
                            const int64_t size,
                            int32_t* const index_sparse,
                            double* const value_sparse
@@ -2435,12 +2434,12 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_sparse_dset$(file, offset_file, offset_data, size, size_max, index_sparse, value_sparse);
+    return trexio_text_read_$group_sparse_dset$(file, offset_file, size, size_max, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_read_$group_sparse_dset$(file, offset_file, offset_data, size, size_max, index_sparse, value_sparse);
+    return trexio_hdf5_read_$group_sparse_dset$(file, offset_file, size, size_max, index_sparse, value_sparse);
     break;
 #else
     return TREXIO_BACK_END_MISSING;
@@ -2460,7 +2459,6 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
 trexio_exit_code
 trexio_write_$group_sparse_dset$(trexio_t* const file,
                            const int64_t offset_file,
-                           const int64_t offset_data,
                            const int64_t size,
                            const int32_t* index_sparse,
                            const double* value_sparse
@@ -2487,12 +2485,12 @@ trexio_write_$group_sparse_dset$(trexio_t* const file,
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_sparse_dset$(file, offset_file, offset_data, size, size_max, index_sparse, value_sparse);
+    return trexio_text_write_$group_sparse_dset$(file, offset_file, size, size_max, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_$group_sparse_dset$(file, offset_file, offset_data, size, size_max, index_sparse, value_sparse);
+    return trexio_hdf5_write_$group_sparse_dset$(file, offset_file, size, size_max, index_sparse, value_sparse);
     break;
 #else
     return TREXIO_BACK_END_MISSING;

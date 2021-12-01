@@ -681,8 +681,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             tmp_dict['group_sparse_dset_format_scanf'] = "%d %d %d %d %lf"
             tmp_dict['group_sparse_dset_format_printf'] = "%10d %10d %10d %10d %24.16e"
             tmp_dict['group_sparse_dset_line_length'] = "69"
-            tmp_dict['group_sparse_dset_indices_printf'] = "index_sparse[4*i], index_sparse[4*i+1], index_sparse[4*i+2], index_sparse[4*i+3]"
-            tmp_dict['group_sparse_dset_indices_scanf']  = "&index_sparse[4*i], &index_sparse[4*i+1], &index_sparse[4*i+2], &index_sparse[4*i+3]"
+            tmp_dict['group_sparse_dset_indices_printf'] = "*(index_sparse + 4*i), *(index_sparse + 4*i+1), *(index_sparse + 4*i+2), *(index_sparse + 4*i+3)"
+            tmp_dict['group_sparse_dset_indices_scanf']  = "index_sparse + 4*i, index_sparse + 4*i+1, index_sparse + 4*i+2, index_sparse + 4*i+3"
 
         # add group name as a key-value pair to the dset dict
         tmp_dict['group'] = v[2]

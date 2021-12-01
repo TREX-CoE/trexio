@@ -55,7 +55,7 @@ int main(){
 
   // write 5 chunks using write_sparse
   for(int i=0; i<n_chunks; ++i){
-    rc = trexio_write_mo_2e_int_eri(trexio_file, offset_f, offset_f, chunk_size, index, value);
+    rc = trexio_write_mo_2e_int_eri(trexio_file, offset_f, chunk_size, &index[4*offset_f], &value[offset_f]);
     assert(rc==TREXIO_SUCCESS);
     offset_f += chunk_size;
   }
@@ -78,7 +78,8 @@ int main(){
 
   // read 1 chunk of 20 elements using offset of 40( i.e. lines No. 40--59)
   uint64_t offset_f_read = 40L;
-  rc = trexio_read_mo_2e_int_eri(trexio_file_2, offset_f_read, 0L, chunk_size, index_read, value_read);
+  int offset_data_read = 5;
+  rc = trexio_read_mo_2e_int_eri(trexio_file_2, offset_f_read, 10L, &index_read[4*offset_data_read], &value_read[offset_data_read]);
   assert(rc==TREXIO_SUCCESS);
 
   // print the data being read
