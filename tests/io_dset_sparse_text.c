@@ -32,6 +32,7 @@ int main(){
   assert(rc_open == TREXIO_SUCCESS);
   assert(trexio_file != NULL);
 
+
   // check if the file exists
   int rc;
   rc = trexio_has_mo_2e_int_eri(trexio_file);
@@ -65,7 +66,7 @@ int main(){
   // TODO: SHOULD NOT TREXIO_CLOSE SET TO NULL THE TREXIO_T POINTER ???
   //assert(trexio_file == NULL);
 
-  trexio_t* trexio_file_2 = trexio_open(FILENAME, 'w', TREXIO_TEXT, &rc_open);
+  trexio_t* trexio_file_2 = trexio_open(FILENAME, 'r', TREXIO_TEXT, &rc_open);
   assert(rc_open == TREXIO_SUCCESS);
   assert(trexio_file_2 != NULL);
 
@@ -81,6 +82,7 @@ int main(){
   int offset_data_read = 5;
   rc = trexio_read_mo_2e_int_eri(trexio_file_2, offset_f_read, 10L, &index_read[4*offset_data_read], &value_read[offset_data_read]);
   assert(rc==TREXIO_SUCCESS);
+  assert(index_read[0]==0 && index_read[4*offset_data_read]==offset_f_read*4);
 
   // print the data being read
   for(int i=0; i<chunk_size; ++i){
@@ -97,6 +99,7 @@ int main(){
   rc = trexio_has_mo_2e_int_eri(trexio_file_2);
   assert(rc==TREXIO_SUCCESS);
 
+  // close the TREXIO file
   rc = trexio_close(trexio_file_2);
   assert(rc == TREXIO_SUCCESS);
 
