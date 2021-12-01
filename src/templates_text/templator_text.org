@@ -1020,25 +1020,29 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   /* Build the name of the file with sparse data*/
-  const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
-  char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* The $group_sparse_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed? */
+  const char $group_sparse_dset$_file_name[256] = "/$group_sparse_dset$.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
-  strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
-  strncat (file_abs_path, $group_sparse_dset$_file_name,
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, $group_sparse_dset$_file_name,
 	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
-
-  FILE* f = fopen(file_abs_path, "a");
-  //TODO ERROR HANDLING
+  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
+  FILE* f = fopen(file_full_path, "a");
   if(f == NULL) return TREXIO_FILE_ERROR;
 
-  // read the currently written number of elements
-  // line_length is 69 because
-  // 10 per index (40 in total) + 4 spaces + 24 for floating point value + 1 for newline char
-  // in general: 10*n_indices + n_indices + 24 + 1
+  /* Specify the line length in order to offset properly. For example, for 4-index quantities
+     the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char.
+     CURRENTLY NO OFFSET IS USED WHEN WRITING !
+   */
   const uint64_t line_length = $group_sparse_dset_line_length$L;
   //fseek(f, (long) offset_file * line_length, SEEK_SET);
 
+  /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
   int rc;
   for (uint64_t i=0L; i<size; ++i) {
 
@@ -1053,6 +1057,7 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
 
   }
 
+  /* Close the TXT file */
   rc = fclose(f);
   if(rc != 0) return TREXIO_FILE_ERROR;
 
@@ -1071,26 +1076,31 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
-  /* Build the name of the file with sparse data*/
-  const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
-  char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Build the name of the file with sparse data.
+     The $group_sparse_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
+   ,*/
+  const char $group_sparse_dset$_file_name[256] = "/$group_sparse_dset$.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
-  strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
-  strncat (file_abs_path, $group_sparse_dset$_file_name,
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, $group_sparse_dset$_file_name,
 	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
-
-  FILE* f = fopen(file_abs_path, "r");
+  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
+  FILE* f = fopen(file_full_path, "r");
   if(f == NULL) return TREXIO_FILE_ERROR;
 
-  // read the currently written number of elements
-  // line_length is 69 because
-  // 10 per index (40 in total) + 4 spaces + 24 for floating point value + 1 for newline char
-  // in general: 10*n_indices + n_indices + 24 + 1
+  /* Specify the line length in order to offset properly. For example, for 4-index quantities
+     the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char
+   */
   const uint64_t line_length = $group_sparse_dset_line_length$L;
 
   fseek(f, (long) offset_file * line_length, SEEK_SET);
 
+  /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
   int rc;
   for (uint64_t i=0L; i<size; ++i) {
 
@@ -1098,7 +1108,7 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
          $group_sparse_dset_indices_scanf$,
          &value_sparse[i]);
 
-// TODO: find a way to indicate the number of elements being read (useful?)
+      // TODO: find a way to indicate the number of elements being read (useful?)
       if (rc == EOF){
 
         fclose(f);
@@ -1114,6 +1124,7 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
       }
   }
 
+  /* Close the TXT file */
   rc = fclose(f);
   if(rc != 0) return TREXIO_FILE_ERROR;
 
@@ -1127,15 +1138,21 @@ trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
-  /* Build the name of the file with sparse data*/
-  const char* $group_sparse_dset$_file_name = "/$group_sparse_dset$.txt";
-  char  file_abs_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Build the name of the file with sparse data.
+     The $group_sparse_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
+   ,*/
+  const char $group_sparse_dset$_file_name[256] = "/$group_sparse_dset$.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
-  strncpy (file_abs_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
-  strncat (file_abs_path, $group_sparse_dset$_file_name,
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, $group_sparse_dset$_file_name,
 	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
 
-  if (access(file_abs_path, F_OK) == 0){
+  /* Check the return code of access function to determine whether the file with sparse data exists or not */
+  if (access(file_full_path, F_OK) == 0){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
