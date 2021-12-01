@@ -204,11 +204,13 @@ BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
 
 all: .git_hash
 
+GENERATOR_FILES = $(srcdir)/tools/generator.py \
+		  $(srcdir)/tools/generator_tools.py
 
 $(SOURCES): $(trexio_f)
 src/trexio.c: $(trexio_h)
 
-$(trexio_f): $(ORG_FILES)
+$(trexio_f): $(ORG_FILES) $(GENERATOR_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
@@ -252,7 +254,7 @@ $(pytrexio_py): $(pytrexio_c)
 
 # Build Python module and C wrapper code for TREXIO using SWIG
 # [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
-$(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
+$(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	cp $(trexio_h) src/
 	cd src/ && \
 		$(SWIG) -python -py3 -o pytrexio_wrap.c pytrexio.i
