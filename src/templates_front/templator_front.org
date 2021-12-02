@@ -188,9 +188,15 @@ __trexio_path__ = None
    | ~TREXIO_DSET_MISSING~        |   25 | 'Dataset does not exist in the file'   |
    | ~TREXIO_BACK_END_MISSING~    |   26 | 'Requested back end is disabled'       |
    | ~TREXIO_INVALID_STR_LEN~     |   30 | 'Invalid max_str_len'                  |
+   | ~TREXIO_INT_SIZE_OVERFLOW~   |   31 | 'Possible integer overflow'            |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
+
+   *IMPORTANT!*
+   The code below has to be executed within Emacs each time
+   a new error code is added to the table above. Otherwise, the codes
+   and the corresponding message are not propagated to the source code.
 
    #+begin_src python :var table=table-exit-codes :results drawer
 """ This script generates the C and Fortran constants for the error
@@ -257,6 +263,7 @@ return '\n'.join(result)
    #define TREXIO_DSET_MISSING            ((trexio_exit_code) 25)
    #define TREXIO_BACK_END_MISSING        ((trexio_exit_code) 26)
    #define TREXIO_INVALID_STR_LEN         ((trexio_exit_code) 30)
+   #define TREXIO_INT_SIZE_OVERFLOW       ((trexio_exit_code) 31)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -289,6 +296,7 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_DSET_MISSING            = 25
       integer(trexio_exit_code), parameter :: TREXIO_BACK_END_MISSING        = 26
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_STR_LEN         = 30
+      integer(trexio_exit_code), parameter :: TREXIO_INT_SIZE_OVERFLOW       = 31
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
@@ -322,6 +330,7 @@ return '\n'.join(result)
    TREXIO_DSET_MISSING            = 25
    TREXIO_BACK_END_MISSING        = 26
    TREXIO_INVALID_STR_LEN         = 30
+   TREXIO_INT_SIZE_OVERFLOW       = 31
    #+end_src
    :END:
 
@@ -342,7 +351,10 @@ const char* trexio_string_of_error(const trexio_exit_code error);
 void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>]);
    #+end_src
 
-   The text strings are extracted from the previous table.
+   *IMPORTANT!*
+   The code below has to be executed within Emacs each time
+   a new error code is added to the table above. Otherwise, the codes
+   and the corresponding message are not propagated to the source code.
 
    #+NAME:cases
    #+begin_src python :var table=table-exit-codes :exports none :noweb yes
@@ -442,8 +454,14 @@ return '\n'.join(result)
    case TREXIO_DSET_MISSING:
      return "Dataset does not exist in the file";
      break;
+   case TREXIO_BACK_END_MISSING:
+     return "Requested back end is disabled";
+     break;
    case TREXIO_INVALID_STR_LEN:
      return "Invalid max_str_len";
+     break;
+   case TREXIO_INT_SIZE_OVERFLOW:
+     return "Possible integer overflow";
      break;
    #+end_example
 
@@ -2397,6 +2415,7 @@ def has_$group_dset$(trexio_file) -> bool:
      #+begin_src c :tangle hrw_dset_sparse_front.h :exports none
 trexio_exit_code trexio_has_$group_sparse_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_read_$group_sparse_dset$_size(trexio_t* const file, int64_t* const size_max);
 trexio_exit_code trexio_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int32_t* index_sparse, const double* value_sparse);
      #+end_src
 
@@ -2416,18 +2435,16 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
   if (buffer_size <= 0L) return TREXIO_INVALID_ARG_3;
   if (index_sparse == NULL) return TREXIO_INVALID_ARG_4;
   if (value_sparse == NULL) return TREXIO_INVALID_ARG_5;
+  if (trexio_has_$group_sparse_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   const uint32_t rank = $group_dset_rank$;  // To be set by generator : number of indices
 
   int64_t size_max;         // Max number of integrals (already in the file)
   trexio_exit_code rc;
 
-  // temporary
-  size_max = buffer_size;
-  /* TODO
-  rc = trexio_read_$group_sparse_dset$_num(file, &size_max);
+  /* Read the max number of integrals stored in the file */
+  rc = trexio_read_$group_sparse_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
-  */
 
   switch (file->back_end) {
 
@@ -2446,12 +2463,45 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
   case TREXIO_JSON:
     return trexio_json_read_$group_sparse_dset$(...);
     break;
-*/
+,*/
   default:
     return TREXIO_FAILURE;  /* Impossible case */
   }
 }
   #+end_src
+
+
+  #+begin_src c :tangle read_dset_sparse_size_front.c
+trexio_exit_code
+trexio_read_$group_sparse_dset$_size(trexio_t* const file, int64_t* const size_max)
+{
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (trexio_has_$group_sparse_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_$group_sparse_dset$_size(file, size_max);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_$group_sparse_dset$_size(file, size_max);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_$group_sparse_dset$_size(...);
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+  #+end_src
+
 
   #+begin_src c :tangle write_dset_sparse_front.c
 trexio_exit_code
@@ -2470,15 +2520,17 @@ trexio_write_$group_sparse_dset$(trexio_t* const file,
 
   const uint32_t rank = $group_dset_rank$;  // To be set by generator : number of indices
 
-  int64_t size_max;         // Max number of integrals (already in the file)
+  int64_t size_max=0L;         // Max number of integrals (already in the file)
   trexio_exit_code rc;
 
-  // temporary
-  size_max = buffer_size;
-  /* TODO
-  rc = trexio_read_$group_sparse_dset$_num(file, &size_max);
-  if (rc != TREXIO_SUCCESS) return rc;
-  */
+  /* Read the max number of integrals stored in the file */
+  rc = trexio_has_$group_sparse_dset$(file);
+  if (rc == TREXIO_SUCCESS) {
+    rc = trexio_read_$group_sparse_dset$_size(file, &size_max);
+    if (rc != TREXIO_SUCCESS) return rc;
+  } else {
+    size_max = 0L;
+  }
 
   switch (file->back_end) {
 
@@ -2570,6 +2622,17 @@ interface
      integer(4), intent(in)        :: index_sparse(*)
      double precision, intent(out) :: value_sparse(*)
    end function trexio_read_$group_sparse_dset$
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle read_dset_sparse_size_front_fortran.f90
+interface
+   integer function trexio_read_$group_sparse_dset$_size (trex_file, &
+                                                          size_max) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     integer(8), intent(out) :: size_max
+   end function trexio_read_$group_sparse_dset$_size
 end interface
      #+end_src
 
