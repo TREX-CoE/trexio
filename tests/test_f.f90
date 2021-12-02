@@ -11,12 +11,12 @@ program test_trexio
   print'(a,i3)', "         TREXIO MINOR VERSION  : ", TREXIO_VERSION_MINOR
   print *      , "============================================"
 
-  call system('rm -rf test_write_f.dir')
+  call system('rm -rf -- test_write_f.dir')
   print *, 'call test_write(''test_write_f.dir'', TREXIO_TEXT)'
   call test_write('test_write_f.dir', TREXIO_TEXT)
   print *, 'call test_read(''test_write_f.dir'', TREXIO_TEXT)'
   call test_read('test_write_f.dir', TREXIO_TEXT)
-  call system('rm -rf test_write_f.dir')
+  call system('rm -rf -- test_write_f.dir')
 
   call test_read_void('test_write_f.dir', TREXIO_TEXT)
 
@@ -152,6 +152,9 @@ subroutine test_write(file_name, back_end)
   rc = trexio_has_nucleus_coord(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 2')
 
+  rc = trexio_has_mo_2e_int_eri(trex_file)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 3')
+
   rc = trexio_close(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS CLOSE')
 
@@ -191,6 +194,7 @@ subroutine test_read(file_name, back_end)
   double precision :: value_sparse_mo_2e_int_eri(20)
   integer(8) :: read_buf_size = 10
   integer(8) :: offset_read = 40
+  integer(8) :: size_toread = 0
 
   character*(128) :: str
 
@@ -275,6 +279,17 @@ subroutine test_read(file_name, back_end)
     print *, 'FAILURE SPARSE DATA CHECK'
     call exit(-1)
   endif
+
+
+  rc = trexio_read_mo_2e_int_eri_size(trex_file, size_toread)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+  if (size_toread == 100) then
+    write(*,*) 'SUCCESS READ SPARSE SIZE'
+  else
+    print *, 'FAILURE SPARSE DATA CHECK'
+    call exit(-1)
+  endif
+
 
   rc = trexio_close(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS)
