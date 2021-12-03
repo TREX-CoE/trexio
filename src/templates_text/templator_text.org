@@ -396,7 +396,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         return NULL;
       }
 
-      rc = fscanf(f, "%$group_num_std_dtype_in$", &($group$->$group_num$));
+      rc = fscanf(f, "%$group_num_format_scanf$", &($group$->$group_num$));
       assert(!(rc != 1));
       if (rc != 1) {
         FREE(buffer);
@@ -484,7 +484,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
 
     for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-      rc = fscanf(f, "%$group_dset_std_dtype_in$", &($group$->$group_dset$[i]));
+      rc = fscanf(f, "%$group_dset_format_scanf$", &($group$->$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
 	FREE(buffer);
@@ -598,7 +598,7 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
 
   // START REPEAT GROUP_NUM
   fprintf(f, "$group_num$_isSet %u \n", $group$->$group_num$_isSet);
-  if ($group$->$group_num$_isSet == true) fprintf(f, "$group_num$ %$group_num_std_dtype_out$ \n", $group$->$group_num$);
+  if ($group$->$group_num$_isSet == true) fprintf(f, "$group_num$ %$group_num_format_printf$ \n", $group$->$group_num$);
   // END REPEAT GROUP_NUM
 
   // START REPEAT GROUP_ATTR_STR
@@ -612,7 +612,7 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
 
   fprintf(f, "$group_dset$\n");
   for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-    fprintf(f, "%$group_dset_std_dtype_out$\n", $group$->$group_dset$[i]);
+    fprintf(f, "%$group_dset_format_printf$\n", $group$->$group_dset$[i]);
   }
   // END REPEAT GROUP_DSET_ALL
 
@@ -1004,15 +1004,15 @@ trexio_text_has_$group_str$ (trexio_t* const file)
 ** Template for has/read/write the dataset of sparse data
 
    #+begin_src c :tangle hrw_dset_sparse_text.h :exports none
-trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
-trexio_exit_code trexio_text_read_$group_sparse_dset$_size(trexio_t* const file, int64_t* const size_max);
-trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
+trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
    #+end_src
 
 
    #+begin_src c :tangle write_dset_sparse_text.c
-trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
+trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
                                                   const int64_t offset_file,
                                                   const int64_t size,
                                                   const int64_t size_max,
@@ -1022,16 +1022,16 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   /* Build the name of the file with sparse data*/
-  /* The $group_sparse_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed? */
-  const char $group_sparse_dset$_file_name[256] = "/$group_sparse_dset$.txt";
+  /* The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed? */
+  const char $group_dset$_file_name[256] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, $group_sparse_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
+  strncat (file_full_path, $group_dset$_file_name,
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
   FILE* f = fopen(file_full_path, "a");
@@ -1041,7 +1041,7 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char.
      CURRENTLY NO OFFSET IS USED WHEN WRITING !
    */
-  const int64_t line_length = $group_sparse_dset_line_length$L;
+  const int64_t line_length = $group_dset_sparse_line_length$L;
 
   /* Get the starting position of the IO stream to be written in the .size file.
      This is error-prone due to the fact that for large files (>2 GB) in 32-bit systems ftell will fail.
@@ -1057,8 +1057,8 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
   int rc;
   for (uint64_t i=0L; i<size; ++i) {
 
-      rc = fprintf(f, "$group_sparse_dset_format_printf$\n",
-         $group_sparse_dset_indices_printf$,
+      rc = fprintf(f, "$group_dset_format_printf$\n",
+         $group_dset_sparse_indices_printf$,
          value_sparse[i]);
 
       if(rc <= 0) {
@@ -1099,7 +1099,7 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
 
 
    #+begin_src c :tangle read_dset_sparse_text.c
-trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
+trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
                                                  const int64_t offset_file,
                                                  const int64_t size,
                                                  const int64_t size_max,
@@ -1109,17 +1109,17 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   /* Build the name of the file with sparse data.
-     The $group_sparse_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
+     The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
    */
-  const char $group_sparse_dset$_file_name[256] = "/$group_sparse_dset$.txt";
+  const char $group_dset$_file_name[256] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, $group_sparse_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
+  strncat (file_full_path, $group_dset$_file_name,
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
@@ -1128,7 +1128,7 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char
    */
-  const uint64_t line_length = $group_sparse_dset_line_length$L;
+  const uint64_t line_length = $group_dset_sparse_line_length$L;
 
   fseek(f, (long) offset_file * line_length, SEEK_SET);
 
@@ -1136,8 +1136,8 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
   int rc;
   for (uint64_t i=0L; i<size; ++i) {
 
-      rc = fscanf(f, "$group_sparse_dset_format_scanf$",
-         $group_sparse_dset_indices_scanf$,
+      rc = fscanf(f, "$group_dset_format_scanf$",
+         $group_dset_sparse_indices_scanf$,
          &value_sparse[i]);
 
       // TODO: find a way to indicate the number of elements being read (useful?)
@@ -1167,22 +1167,22 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$(trexio_t* const file,
 
 
    #+begin_src c :tangle read_dset_sparse_text.c
-trexio_exit_code trexio_text_read_$group_sparse_dset$_size(trexio_t* const file, int64_t* const size_max)
+trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   /* Build the name of the file with sparse data.
-     The $group_sparse_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
+     The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
    ,*/
-  const char $group_sparse_dset$_file_name[256] = "/$group_sparse_dset$.txt.size";
+  const char $group_dset$_file_name[256] = "/$group_dset$.txt.size";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, $group_sparse_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
+  strncat (file_full_path, $group_dset$_file_name,
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
@@ -1217,22 +1217,22 @@ trexio_exit_code trexio_text_read_$group_sparse_dset$_size(trexio_t* const file,
    #+end_src
 
    #+begin_src c :tangle has_dset_sparse_text.c
-trexio_exit_code trexio_text_has_$group_sparse_dset$(trexio_t* const file)
+trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   /* Build the name of the file with sparse data.
-     The $group_sparse_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
+     The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
    ,*/
-  const char $group_sparse_dset$_file_name[256] = "/$group_sparse_dset$.txt";
+  const char $group_dset$_file_name[256] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, $group_sparse_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_sparse_dset$_file_name));
+  strncat (file_full_path, $group_dset$_file_name,
+	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Check the return code of access function to determine whether the file with sparse data exists or not */
   if (access(file_full_path, F_OK) == 0){

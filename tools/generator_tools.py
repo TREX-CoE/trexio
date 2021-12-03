@@ -107,8 +107,8 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                 'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
                 'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
                 'group_num_h5_dtype', 'group_num_py_dtype',
-                'group_sparse_dset', 'group_sparse_dset_format_scanf', 'group_sparse_dset_format_printf',
-                'group_sparse_dset_line_length', 'group_sparse_dset_indices_printf', 'group_sparse_dset_indices_scanf',
+                'group_dset_format_scanf', 'group_dset_format_printf',
+                'group_dset_sparse_line_length', 'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
@@ -294,8 +294,8 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
     fname_new = join('populated',f'pop_{fname}')
     templ_path = get_template_path(fname, paths)
 
-    triggers = ['group_dset_dtype', 'group_dset_std_dtype_out', 'group_dset_std_dtype_in',
-                'group_num_dtype_double', 'group_num_std_dtype_out', 'group_num_std_dtype_in',
+    triggers = ['group_dset_dtype', 'group_dset_format_printf', 'group_dset_format_scanf',
+                'group_num_dtype_double', 'group_num_format_printf', 'group_num_format_scanf',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for group in group_dict.keys():
@@ -491,8 +491,8 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                         tmp_dict['group_num_dtype_double'] = 'double'
                         tmp_dict['group_num_dtype_single'] = 'float'
                         tmp_dict['default_prec']   = '64'
-                        tmp_dict['group_num_std_dtype_out'] = '24.16e'
-                        tmp_dict['group_num_std_dtype_in'] = 'lf'
+                        tmp_dict['group_num_format_printf'] = '24.16e'
+                        tmp_dict['group_num_format_scanf'] = 'lf'
                         tmp_dict['group_num_py_dtype'] = 'float'
                     elif v2[0] in ['int', 'dim']:
                         tmp_dict['datatype'] = 'int64_t'
@@ -504,8 +504,8 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                         tmp_dict['group_num_dtype_double'] = 'int64_t'
                         tmp_dict['group_num_dtype_single'] = 'int32_t'
                         tmp_dict['default_prec']   = '32'
-                        tmp_dict['group_num_std_dtype_out'] = '" PRId64 "'
-                        tmp_dict['group_num_std_dtype_in']  = '" SCNd64 "'
+                        tmp_dict['group_num_format_printf'] = '" PRId64 "'
+                        tmp_dict['group_num_format_scanf']  = '" SCNd64 "'
                         tmp_dict['group_num_py_dtype'] = 'int'
                         tmp_dict['trex_json_int_type'] = v2[0]
 
@@ -589,8 +589,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             group_dset_dtype_double = 'double'
             group_dset_dtype_single = 'float'
             default_prec   = '64'
-            group_dset_std_dtype_out = '24.16e'
-            group_dset_std_dtype_in = 'lf'
+            group_dset_format_printf = '24.16e'
+            group_dset_format_scanf = 'lf'
             group_dset_py_dtype = 'float'
         elif v[0] in ['int', 'index']:
             datatype = 'int64_t'
@@ -602,8 +602,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             group_dset_dtype_double = 'int64_t'
             group_dset_dtype_single = 'int32_t'
             default_prec   = '32'
-            group_dset_std_dtype_out = '" PRId64 "'
-            group_dset_std_dtype_in  = '" SCNd64 "'
+            group_dset_format_printf = '" PRId64 "'
+            group_dset_format_scanf  = '" SCNd64 "'
             group_dset_py_dtype = 'int'
         elif v[0] == 'str':
             datatype = 'char*'
@@ -615,29 +615,25 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             group_dset_dtype_double = ''
             group_dset_dtype_single = ''
             default_prec   = ''
-            group_dset_std_dtype_out = 's'
-            group_dset_std_dtype_in  = 's'
+            group_dset_format_printf = 's'
+            group_dset_format_scanf  = 's'
             group_dset_py_dtype = 'str'
         elif 'sparse' in v[0]:
             is_sparse = True
             datatype = 'double'
-            group_dset_h5_dtype       = 'native_double'
-            group_dset_f_dtype_default= 'real(8)'
-            group_dset_f_dtype_double = 'real(8)'
-            group_dset_f_dtype_single = 'real(4)'
-            group_dset_dtype_default= 'double'
-            group_dset_dtype_double = 'double'
-            group_dset_dtype_single = 'float'
-            default_prec   = '64'
-            group_dset_std_dtype_out = '24.16e'
-            group_dset_std_dtype_in = 'lf'
-            group_dset_py_dtype = 'float'
+            group_dset_h5_dtype       = ''
+            group_dset_f_dtype_default= ''
+            group_dset_f_dtype_double = ''
+            group_dset_f_dtype_single = ''
+            group_dset_dtype_default= ''
+            group_dset_dtype_double = ''
+            group_dset_dtype_single = ''
+            default_prec   = ''
+            group_dset_format_printf = '%10" PRId32 " %10" PRId32 " %10" PRId32 " %10" PRId32 " %24.16e'
+            group_dset_format_scanf = '%" SCNd32 " %" SCNd32 " %" SCNd32 " %" SCNd32 " %lf'
+            group_dset_py_dtype = ''
 
-        # add the dset name for templates
-        if is_sparse:
-            tmp_dict['group_sparse_dset'] = k
-        else:
-            tmp_dict['group_dset'] = k
+        tmp_dict['group_dset'] = k
         # add flag to detect index types
         if 'index' == v[0]:
             tmp_dict['is_index'] = 'file->one_based'
@@ -654,8 +650,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group_dset_dtype_double'] = group_dset_dtype_double
         tmp_dict['group_dset_dtype_single'] = group_dset_dtype_single
         tmp_dict['default_prec'] = default_prec
-        tmp_dict['group_dset_std_dtype_in'] = group_dset_std_dtype_in
-        tmp_dict['group_dset_std_dtype_out'] = group_dset_std_dtype_out
+        tmp_dict['group_dset_format_printf'] = group_dset_format_printf
+        tmp_dict['group_dset_format_scanf'] = group_dset_format_scanf
         tmp_dict['group_dset_py_dtype'] = group_dset_py_dtype
         # add the rank
         tmp_dict['rank'] = len(v[1])
@@ -678,19 +674,17 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group_dset_f_dims'] = dim_f_list
 
         if is_sparse:
-            tmp_dict['group_sparse_dset_format_scanf'] = "%d %d %d %d %lf"
-            tmp_dict['group_sparse_dset_format_printf'] = "%10d %10d %10d %10d %24.16e"
-            tmp_dict['group_sparse_dset_line_length'] = "69"
-            tmp_dict['group_sparse_dset_indices_printf'] = "*(index_sparse + 4*i), *(index_sparse + 4*i+1), *(index_sparse + 4*i+2), *(index_sparse + 4*i+3)"
-            tmp_dict['group_sparse_dset_indices_scanf']  = "index_sparse + 4*i, index_sparse + 4*i+1, index_sparse + 4*i+2, index_sparse + 4*i+3"
+            tmp_dict['group_dset_sparse_line_length'] = "69"
+            tmp_dict['group_dset_sparse_indices_printf'] = "*(index_sparse + 4*i), *(index_sparse + 4*i+1), *(index_sparse + 4*i+2), *(index_sparse + 4*i+3)"
+            tmp_dict['group_dset_sparse_indices_scanf']  = "index_sparse + 4*i, index_sparse + 4*i+1, index_sparse + 4*i+2, index_sparse + 4*i+3"
 
         # add group name as a key-value pair to the dset dict
         tmp_dict['group'] = v[2]
 
         # split datasets in numeric- and string- based
-        if (datatype == 'char*'):
+        if datatype == 'char*':
             dset_string_dict[k] = tmp_dict
-        elif (is_sparse):
+        elif is_sparse:
             dset_sparse_dict[k] = tmp_dict
         else:
             dset_numeric_dict[k] = tmp_dict

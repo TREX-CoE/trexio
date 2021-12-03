@@ -1200,8 +1200,8 @@ def close(trexio_file):
    | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~    |
    | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~               |
    | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~              |
-   | ~$group_dset_std_dtype_in$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                 |
-   | ~$group_dset_std_dtype_out$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~             |
+   | ~$group_dset_format_scanf$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                 |
+   | ~$group_dset_format_printf$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~             |
    | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~      |
    | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~       |
    | ~$group_dset_dtype_double$~    | Double precision datatype of the dataset [C]        | ~double/int64_t~      |
@@ -2413,17 +2413,17 @@ def has_$group_dset$(trexio_file) -> bool:
 **** Function declarations
 
      #+begin_src c :tangle hrw_dset_sparse_front.h :exports none
-trexio_exit_code trexio_has_$group_sparse_dset$(trexio_t* const file);
-trexio_exit_code trexio_read_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, int32_t* const index_sparse, double* const value_sparse);
-trexio_exit_code trexio_read_$group_sparse_dset$_size(trexio_t* const file, int64_t* const size_max);
-trexio_exit_code trexio_write_$group_sparse_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int32_t* index_sparse, const double* value_sparse);
      #+end_src
 
 **** Source code for default functions
 
   #+begin_src c :tangle read_dset_sparse_front.c
 trexio_exit_code
-trexio_read_$group_sparse_dset$(trexio_t* const file,
+trexio_read_$group_dset$(trexio_t* const file,
                            const int64_t offset_file,
                            const int64_t buffer_size,
                            int32_t* const index_sparse,
@@ -2435,7 +2435,7 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
   if (buffer_size <= 0L) return TREXIO_INVALID_ARG_3;
   if (index_sparse == NULL) return TREXIO_INVALID_ARG_4;
   if (value_sparse == NULL) return TREXIO_INVALID_ARG_5;
-  if (trexio_has_$group_sparse_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   const uint32_t rank = $group_dset_rank$;  // To be set by generator : number of indices
 
@@ -2443,7 +2443,7 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
   trexio_exit_code rc;
 
   /* Read the max number of integrals stored in the file */
-  rc = trexio_read_$group_sparse_dset$_size(file, &size_max);
+  rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
   /* Cannot read more data points than there is already in the file */
   if (buffer_size > size_max) return TREXIO_INVALID_ARG_3;
@@ -2451,19 +2451,19 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_sparse_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    return trexio_text_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_read_$group_sparse_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    return trexio_hdf5_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
     break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_read_$group_sparse_dset$(...);
+    return trexio_json_read_$group_dset$(...);
     break;
 ,*/
   default:
@@ -2475,27 +2475,27 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
 
   #+begin_src c :tangle read_dset_sparse_size_front.c
 trexio_exit_code
-trexio_read_$group_sparse_dset$_size(trexio_t* const file, int64_t* const size_max)
+trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (trexio_has_$group_sparse_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_sparse_dset$_size(file, size_max);
+    return trexio_text_read_$group_dset$_size(file, size_max);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_read_$group_sparse_dset$_size(file, size_max);
+    return trexio_hdf5_read_$group_dset$_size(file, size_max);
     break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_read_$group_sparse_dset$_size(...);
+    return trexio_json_read_$group_dset$_size(...);
     break;
 ,*/
   default:
@@ -2507,7 +2507,7 @@ trexio_read_$group_sparse_dset$_size(trexio_t* const file, int64_t* const size_m
 
   #+begin_src c :tangle write_dset_sparse_front.c
 trexio_exit_code
-trexio_write_$group_sparse_dset$(trexio_t* const file,
+trexio_write_$group_dset$(trexio_t* const file,
                            const int64_t offset_file,
                            const int64_t buffer_size,
                            const int32_t* index_sparse,
@@ -2526,26 +2526,26 @@ trexio_write_$group_sparse_dset$(trexio_t* const file,
   trexio_exit_code rc;
 
   /* Read the max number of integrals stored in the file */
-  rc = trexio_read_$group_sparse_dset$_size(file, &size_max);
+  rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_sparse_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    return trexio_text_write_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_$group_sparse_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    return trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
     break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_sparse_dset$(...);
+    return trexio_json_write_$group_dset$(...);
     break;
 */
   default:
@@ -2557,7 +2557,7 @@ trexio_write_$group_sparse_dset$(trexio_t* const file,
 
   #+begin_src c :tangle has_dset_sparse_front.c
 trexio_exit_code
-trexio_has_$group_sparse_dset$ (trexio_t* const file)
+trexio_has_$group_dset$ (trexio_t* const file)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -2567,19 +2567,19 @@ trexio_has_$group_sparse_dset$ (trexio_t* const file)
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_has_$group_sparse_dset$(file);
+    return trexio_text_has_$group_dset$(file);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_has_$group_sparse_dset$(file);
+    return trexio_hdf5_has_$group_dset$(file);
     break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_has_$group_sparse_dset$(file);
+    return trexio_json_has_$group_dset$(file);
     break;
 ,*/
   }
@@ -2595,7 +2595,7 @@ trexio_has_$group_sparse_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_sparse_front_fortran.f90
 interface
-   integer function trexio_write_$group_sparse_dset$ (trex_file, &
+   integer function trexio_write_$group_dset$ (trex_file, &
                                                       offset_file, buffer_size, &
                                                       index_sparse, value_sparse) bind(C)
      use, intrinsic :: iso_c_binding
@@ -2604,13 +2604,13 @@ interface
      integer(8), intent(in), value :: buffer_size
      integer(4), intent(in)        :: index_sparse(*)
      double precision, intent(in)  :: value_sparse(*)
-   end function trexio_write_$group_sparse_dset$
+   end function trexio_write_$group_dset$
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_dset_sparse_front_fortran.f90
 interface
-   integer function trexio_read_$group_sparse_dset$ (trex_file, &
+   integer function trexio_read_$group_dset$ (trex_file, &
                                                      offset_file, buffer_size, &
                                                      index_sparse, value_sparse) bind(C)
      use, intrinsic :: iso_c_binding
@@ -2619,27 +2619,27 @@ interface
      integer(8), intent(in), value :: buffer_size
      integer(4), intent(in)        :: index_sparse(*)
      double precision, intent(out) :: value_sparse(*)
-   end function trexio_read_$group_sparse_dset$
+   end function trexio_read_$group_dset$
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_dset_sparse_size_front_fortran.f90
 interface
-   integer function trexio_read_$group_sparse_dset$_size (trex_file, &
+   integer function trexio_read_$group_dset$_size (trex_file, &
                                                           size_max) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
      integer(8), intent(out) :: size_max
-   end function trexio_read_$group_sparse_dset$_size
+   end function trexio_read_$group_dset$_size
 end interface
      #+end_src
 
      #+begin_src f90 :tangle has_dset_sparse_front_fortran.f90
 interface
-   integer function trexio_has_$group_sparse_dset$ (trex_file) bind(C)
+   integer function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      integer(8), intent(in), value :: trex_file
-   end function trexio_has_$group_sparse_dset$
+   end function trexio_has_$group_dset$
 end interface
      #+end_src
 
