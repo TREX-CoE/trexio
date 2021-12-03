@@ -1059,7 +1059,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
 
       rc = fprintf(f, "$group_dset_format_printf$\n",
          $group_dset_sparse_indices_printf$,
-         value_sparse[i]);
+         *(value_sparse + i));
 
       if(rc <= 0) {
         fclose(f);
@@ -1110,7 +1110,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
   /* Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
-   */
+   ,*/
   const char $group_dset$_file_name[256] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
@@ -1127,26 +1127,28 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char
-   */
+   ,*/
   const uint64_t line_length = $group_dset_sparse_line_length$L;
 
   fseek(f, (long) offset_file * line_length, SEEK_SET);
 
   /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
   int rc;
+  char buffer[1024];
   for (uint64_t i=0L; i<size; ++i) {
 
-      rc = fscanf(f, "$group_dset_format_scanf$",
-         $group_dset_sparse_indices_scanf$,
-         &value_sparse[i]);
+      memset(buffer,0,sizeof(buffer));
 
-      // TODO: find a way to indicate the number of elements being read (useful?)
-      if (rc == EOF){
+      if(fgets(buffer, 1023, f) == NULL){
 
         fclose(f);
         return TREXIO_END;
 
       } else {
+
+        rc = sscanf(buffer, "$group_dset_format_scanf$",
+                    $group_dset_sparse_indices_scanf$,
+                    value_sparse + i);
 
         if(rc <= 0) {
           fclose(f);
