@@ -2445,6 +2445,8 @@ trexio_read_$group_sparse_dset$(trexio_t* const file,
   /* Read the max number of integrals stored in the file */
   rc = trexio_read_$group_sparse_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
+  /* Cannot read more data points than there is already in the file */
+  if (buffer_size > size_max) return TREXIO_INVALID_ARG_3;
 
   switch (file->back_end) {
 
@@ -2524,13 +2526,9 @@ trexio_write_$group_sparse_dset$(trexio_t* const file,
   trexio_exit_code rc;
 
   /* Read the max number of integrals stored in the file */
-  rc = trexio_has_$group_sparse_dset$(file);
-  if (rc == TREXIO_SUCCESS) {
-    rc = trexio_read_$group_sparse_dset$_size(file, &size_max);
-    if (rc != TREXIO_SUCCESS) return rc;
-  } else {
-    size_max = 0L;
-  }
+  rc = trexio_read_$group_sparse_dset$_size(file, &size_max);
+  if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
+  if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
   switch (file->back_end) {
 

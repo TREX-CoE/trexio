@@ -1037,14 +1037,20 @@ trexio_exit_code trexio_text_write_$group_sparse_dset$(trexio_t* const file,
   FILE* f = fopen(file_full_path, "a");
   if(f == NULL) return TREXIO_FILE_ERROR;
 
-  /* Get the starting position of the IO stream to be written in the .size file */
-  int64_t io_start_pos = (int64_t) ftell(f);
-
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char.
      CURRENTLY NO OFFSET IS USED WHEN WRITING !
-   ,*/
-  const uint64_t line_length = $group_sparse_dset_line_length$L;
+   */
+  const int64_t line_length = $group_sparse_dset_line_length$L;
+
+  /* Get the starting position of the IO stream to be written in the .size file.
+     This is error-prone due to the fact that for large files (>2 GB) in 32-bit systems ftell will fail.
+     One can use ftello function which is adapted for large files.
+     For now, we can use front-end-provided size_max, which has been checked for INT64_MAX overflow.
+  */
+  //int64_t io_start_pos = (int64_t) ftell(f);
+  int64_t io_start_pos = size_max * line_length;
+
   //fseek(f, (long) offset_file * line_length, SEEK_SET);
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
