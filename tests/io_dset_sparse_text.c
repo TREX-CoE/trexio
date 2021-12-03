@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define TEST_BACKEND 	TREXIO_TEXT
-#define TREXIO_FILE 	"test_dset_sparse.dir"
-#define RM_COMMAND 	  "rm -rf " TREXIO_FILE
+#define TEST_BACKEND  TREXIO_TEXT
+#define TREXIO_FILE   "test_dset_sparse.dir"
+#define RM_COMMAND    "rm -rf " TREXIO_FILE
 #define SIZE          100
 #define N_CHUNKS      5
 
@@ -115,15 +115,15 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
  // define arrays to read into
   int32_t* index_read;
   double* value_read;
-  uint64_t size = 20L;
+  uint64_t size_r = 20L;
 
-  index_read = (int32_t*) calloc(4L*size,sizeof(int32_t));
-  value_read = (double*) calloc(size,sizeof(double));
+  index_read = (int32_t*) calloc(4L*size_r,sizeof(int32_t));
+  value_read = (double*) calloc(size_r,sizeof(double));
 
   // specify the read parameters, here:
   // 1 chunk of 10 elements using offset of 40 (i.e. lines No. 40--59) into elements of the array starting from 5
-  uint64_t chunk_read = 10L;
-  uint64_t offset_file_read = 40L;
+  int64_t chunk_read = 10L;
+  int64_t offset_file_read = 40L;
   int offset_data_read = 5;
 
   // read one chunk using the aforementioned parameters
@@ -131,6 +131,16 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   assert(rc == TREXIO_SUCCESS);
   assert(index_read[0] == 0);
   assert(index_read[4*offset_data_read] == offset_file_read*4);
+
+  // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
+  offset_file_read = 97L;
+  offset_data_read = 1;
+
+  // read one chunk that will reach EOF and return TREXIO_END code
+  rc = trexio_read_mo_2e_int_eri(file, offset_file_read, chunk_read, &index_read[4*offset_data_read], &value_read[offset_data_read]);
+  assert(rc == TREXIO_END);
+  assert(index_read[4*size_r-1] == 0);
+  assert(index_read[4*offset_data_read] == 4 * (int32_t) offset_file_read);
 
   // close current session
   rc = trexio_close(file);
