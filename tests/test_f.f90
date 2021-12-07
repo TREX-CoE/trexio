@@ -62,7 +62,7 @@ subroutine test_write(file_name, back_end)
   character(len=:), allocatable :: label(:)
 
   ! sparse data
-  integer(4) :: index_sparse_mo_2e_int_eri(400)
+  integer(4) :: index_sparse_mo_2e_int_eri(4,100)
   double precision :: value_sparse_mo_2e_int_eri(100)
 
   integer :: i, n_buffers = 5
@@ -70,10 +70,10 @@ subroutine test_write(file_name, back_end)
   buf_size = 100/n_buffers
 
   do i = 1, 100
-    index_sparse_mo_2e_int_eri(4*i-3)   = 4*i   - 3
-    index_sparse_mo_2e_int_eri(4*i+1-3) = 4*i+1 - 3
-    index_sparse_mo_2e_int_eri(4*i+2-3) = 4*i+2 - 3
-    index_sparse_mo_2e_int_eri(4*i+3-3) = 4*i+3 - 3
+    index_sparse_mo_2e_int_eri(1,i) = 4*i   - 3
+    index_sparse_mo_2e_int_eri(2,i) = 4*i+1 - 3
+    index_sparse_mo_2e_int_eri(3,i) = 4*i+2 - 3
+    index_sparse_mo_2e_int_eri(4,i) = 4*i+3 - 3
     value_sparse_mo_2e_int_eri(i) = 3.14 + float(i)
   enddo
 
@@ -140,7 +140,7 @@ subroutine test_write(file_name, back_end)
 
   do i = 1, n_buffers
     rc = trexio_write_mo_2e_int_eri(trex_file, offset, buf_size, &
-	                            index_sparse_mo_2e_int_eri(4*offset+1), &
+	                            index_sparse_mo_2e_int_eri(1,offset+1), &
 				    value_sparse_mo_2e_int_eri(offset+1))
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE SPARSE')
     offset = offset + buf_size
@@ -190,7 +190,7 @@ subroutine test_read(file_name, back_end)
   character(len=32) :: sym_str
 
   ! sparse data
-  integer(4) :: index_sparse_mo_2e_int_eri(80)
+  integer(4) :: index_sparse_mo_2e_int_eri(4,20)
   double precision :: value_sparse_mo_2e_int_eri(20)
   integer(8) :: read_buf_size = 10
   integer(8) :: offset_read = 40
@@ -270,10 +270,10 @@ subroutine test_read(file_name, back_end)
 
 
   rc = trexio_read_mo_2e_int_eri(trex_file, offset_read, read_buf_size, &
-	                         index_sparse_mo_2e_int_eri(4*5+1), &
+	                         index_sparse_mo_2e_int_eri(1,5+1), &
 			         value_sparse_mo_2e_int_eri(5+1))
   call trexio_assert(rc, TREXIO_SUCCESS)
-  if (index_sparse_mo_2e_int_eri(1) == 0 .and. index_sparse_mo_2e_int_eri(5*4+1) == offset_read*4+1) then
+  if (index_sparse_mo_2e_int_eri(1,1) == 0 .and. index_sparse_mo_2e_int_eri(1,5+1) == offset_read*4+1) then
     write(*,*) 'SUCCESS READ SPARSE DATA'
   else
     print *, 'FAILURE SPARSE DATA CHECK'
