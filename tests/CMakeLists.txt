@@ -20,6 +20,7 @@ if(ENABLE_HDF5)
     open_hdf5
     io_dset_float_hdf5
     io_dset_str_hdf5
+    io_dset_sparse_hdf5
     io_safe_dset_float_hdf5
     io_dset_int_hdf5
     io_num_hdf5

@@ -103,6 +103,7 @@ TESTS_C += \
   tests/io_num_hdf5 \
   tests/io_dset_float_hdf5 \
   tests/io_dset_int_hdf5 \
+  tests/io_dset_sparse_hdf5 \
   tests/io_safe_dset_float_hdf5 \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
@@ -136,6 +137,7 @@ tests_open_hdf5_LDFLAGS = -no-install
 tests_io_num_hdf5_LDFLAGS = -no-install
 tests_io_dset_float_hdf5_LDFLAGS = -no-install
 tests_io_dset_int_hdf5_LDFLAGS = -no-install
+tests_io_dset_sparse_hdf5_LDFLAGS = -no-install
 tests_io_safe_dset_float_hdf5_LDFLAGS = -no-install
 tests_io_str_hdf5_LDFLAGS = -no-install
 tests_io_dset_str_hdf5_LDFLAGS = -no-install
