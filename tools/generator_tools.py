@@ -578,7 +578,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
         for k2,v2 in v1.items():
             if len(v2[1]) == 0:
                 tmp_num = f'{k1}_{k2}'
-                if 'str' not in v2[0]:
+                if 'int' in v2[0] or 'dim' in v2[0] or 'index' in v2[0]:
                     tmp_dict = {}
                     tmp_dict['group'] = k1
                     tmp_dict['group_num'] = tmp_num
