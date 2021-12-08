@@ -181,17 +181,18 @@ def recursive_replace_line (input_line: str, triggers: list, source: dict) -> st
     return output_line
 
 
-def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets: dict, numbers: dict, strings: dict) -> None:
+def iterative_populate_file (filename: str, paths: dict, detailed_all: dict) -> None:
     """
     Iteratively populate files with unique functions that contain templated variables.
 
             Parameters:
                     filename (str)          : template file to be populated
                     paths (dict)            : dictionary of paths per source directory
-                    groups (dict)           : dictionary of groups
-                    datasets (dict)         : dictionary of datasets with substitution details
-                    numbers (dict)          : dictionary of numbers with substitution details
-                    strings (dict)          : dictionary of strings with substitution details
+                    detailed_all(dict)      : dictionary with substitution details with the following keys:
+                        'groups'            : dictionary of groups with substitution details
+                        'datasets'          : dictionary of datasets with substitution details
+                        'numbers'           : dictionary of numbers with substitution details
+                        'strings'           : dictionary of strings with substitution details
 
             Returns:
                     None
@@ -211,19 +212,19 @@ def iterative_populate_file (filename: str, paths: dict, groups: dict, datasets:
                 if id == 0:
                     # special case for proper error handling when deallocting text groups
                     error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
-                    populated_line = iterative_replace_line(line, '$group$', groups, add_line=error_handler)
+                    populated_line = iterative_replace_line(line, '$group$', detailed_all['groups'], add_line=error_handler)
                     f_out.write(populated_line)
                 elif id == 1:
-                    populated_line = iterative_replace_line(line, triggers[id], datasets, None)
+                    populated_line = iterative_replace_line(line, triggers[id], detailed_all['datasets'], None)
                     f_out.write(populated_line)
                 elif id == 2:
-                    populated_line = iterative_replace_line(line, triggers[id], numbers, None)
+                    populated_line = iterative_replace_line(line, triggers[id], detailed_all['numbers'], None)
                     f_out.write(populated_line)
                 elif id == 3:
-                    populated_line = iterative_replace_line(line, triggers[id], strings, None)
+                    populated_line = iterative_replace_line(line, triggers[id], detailed_all['strings'], None)
                     f_out.write(populated_line)
                 elif id == 4:
-                    populated_line = iterative_replace_line(line, triggers[id], groups, None)
+                    populated_line = iterative_replace_line(line, triggers[id], detailed_all['groups'], None)
                     f_out.write(populated_line)
                 else:
                     f_out.write(line)
