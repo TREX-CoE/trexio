@@ -16,11 +16,12 @@ detailed_dsets_nostr, detailed_dsets_str, detailed_dsets_sparse = split_dset_dic
 detailed_dsets = detailed_dsets_nostr.copy()
 detailed_dsets.update(detailed_dsets_str)
 # build a big dictionary with all pre-processed data
-detailed_all = {}
-detailed_all['datasets'] = dict(detailed_dsets_nostr, **detailed_dsets_str, **detailed_dsets_sparse)
-detailed_all['groups']   = group_dict
-detailed_all['numbers']  = detailed_nums
-detailed_all['strings']  = detailed_strs
+detailed_all = {
+    'datasets' : dict(detailed_dsets_nostr, **detailed_dsets_str, **detailed_dsets_sparse),
+    'groups'   : group_dict,
+    'numbers'  : detailed_nums,
+    'strings'  : detailed_strs
+}
 # consistency check for dimensioning variables
 check_dim_consistency(detailed_nums, dsets)
 # --------------------------------------------------------------------------- #
