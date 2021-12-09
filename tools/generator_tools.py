@@ -579,7 +579,7 @@ def get_detailed_num_dict (configuration: dict) -> dict:
         for k2,v2 in v1.items():
             if len(v2[1]) == 0:
                 tmp_num = f'{k1}_{k2}'
-                if 'int' in v2[0] or 'dim' in v2[0] or 'index' in v2[0]:
+                if not 'str' in v2[0]:
                     tmp_dict = {}
                     tmp_dict['group'] = k1
                     tmp_dict['group_num'] = tmp_num
@@ -588,6 +588,8 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     tmp_dict.update(get_dtype_dict(v2[0], 'num'))
                     if v2[0] in ['int', 'dim']:
                         tmp_dict['trex_json_int_type'] = v2[0]
+                    else:
+                        tmp_dict['trex_json_int_type'] = ''
 
     return num_dict
 
