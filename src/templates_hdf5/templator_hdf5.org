@@ -419,7 +419,6 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
                               H5P_DEFAULT);
 
     assert(dset_id >= 0);
-    printf(" HERE HERE HERE !\n");
     status = H5Dwrite(dset_id, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, index_sparse);
 
     /*const herr_t status = H5LTmake_dataset(f->$group$_group,
@@ -439,7 +438,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
 
 
     hid_t fspace = H5Dget_space(dset_id);
-    hsize_t offset[1] = {offset_file*4}; //[4] = {offset_file, offset_file, offset_file, offset_file};
+    hsize_t offset[1] = {(hsize_t) offset_file*4}; //[4] = {offset_file, offset_file, offset_file, offset_file};
 
     // allocate space for the dimensions to be read
     hsize_t ddims[1] = {0};
@@ -447,8 +446,6 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
     // get the rank and dimensions of the dataset
     int rrank = H5Sget_simple_extent_dims(fspace, ddims, NULL);
     ddims[0] += chunk_dims[0];
-
-    printf("SIZE = %ld\n", ddims[0]);
 
     // extend the dset size
     herr_t status  = H5Dset_extent(dset_id, ddims);
@@ -465,11 +462,12 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
                       dspace, fspace, H5P_DEFAULT,
                       index_sparse);
     assert(status >= 0);
-    // TODO: CLOSE ALL OPENED
+
     H5Dclose(dset_id);
     H5Sclose(dspace);
     H5Sclose(fspace);
-    //if (status < 0) return TREXIO_FAILURE;
+
+    if (status < 0) return TREXIO_FAILURE;
 
   }
 
@@ -485,8 +483,8 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
                                const int64_t offset_file,
                                const int64_t size,
                                const int64_t size_max,
-                               int32_t* const index_sparse,
-                               double* const value_sparse)
+                               int32_t* const index_read,
+                               double* const value_read)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
@@ -497,35 +495,24 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
   hid_t dset_id = H5Dopen(f->$group$_group, $GROUP_DSET$_NAME, H5P_DEFAULT);
   if (dset_id <= 0) return TREXIO_INVALID_ID;
 
-  const uint32_t rank = 4;
-
-  // allocate space for the dimensions to be read
-  hsize_t* ddims = CALLOC( (int) rank, hsize_t);
-  if (ddims == NULL) return TREXIO_FAILURE;
-
   // get the dataspace of the dataset
-  hid_t dspace_id = H5Dget_space(dset_id);
-  // get the rank and dimensions of the dataset
-  int rrank = H5Sget_simple_extent_dims(dspace_id, ddims, NULL);
+  hid_t fspace_id = H5Dget_space(dset_id);
 
-  // check that dimensions are consistent
-  if (rrank != (int) rank) {
-    FREE(ddims);
-    H5Sclose(dspace_id);
-    H5Dclose(dset_id);
-    return TREXIO_INVALID_ARG_3;
-  }
+  // possible overflow HERE ?
+  hsize_t offset[1] = {(hsize_t) offset_file*4};
+  hsize_t count[1] = {(hsize_t) size*4};
 
-  free(ddims);
-  H5Sclose(dspace_id);
+  herr_t status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, NULL, count, NULL);
+
+  hid_t memspace_id = H5Screate_simple(1, count, NULL);
+
+  status = H5Dread(dset_id, H5T_NATIVE_INT32, memspace_id, fspace_id, H5P_DEFAULT, index_read);
+
+  H5Sclose(fspace_id);
+  H5Sclose(memspace_id);
   H5Dclose(dset_id);
 
-  /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  /*herr_t status = H5LTread_dataset(f->$group$_group,
-			           $GROUP_DSET$_NAME,
-			           H5T_$GROUP_DSET_H5_DTYPE$,
-			           $group_dset$);
-  if (status < 0) return TREXIO_FAILURE;*/
+  assert (status >= 0);
 
   return TREXIO_SUCCESS;
 }
@@ -539,7 +526,27 @@ trexio_hdf5_read_$group_dset$_size (trexio_t* const file, int64_t* const size_ma
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
-  // TODO
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  hid_t dset_id = H5Dopen(f->$group$_group, $GROUP_DSET$_NAME, H5P_DEFAULT);
+  if (dset_id <= 0) return TREXIO_INVALID_ID;
+
+  hid_t fspace_id = H5Dget_space(dset_id);
+
+  // allocate space for the dimensions to be read
+  hsize_t ddims[1] = {0};
+
+  // get the rank and dimensions of the dataset
+  int rrank = H5Sget_simple_extent_dims(fspace_id, ddims, NULL);
+
+  H5Dclose(dset_id);
+  H5Sclose(fspace_id);
+
+  int mod_4 = (int) (ddims[0] % 4);
+
+  if (mod_4 != 0) return TREXIO_FAILURE;
+
+  *size_max = ((int64_t) ddims[0]) / 4L;
 
   return TREXIO_SUCCESS;
 }
