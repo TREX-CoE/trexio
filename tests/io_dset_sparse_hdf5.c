@@ -122,7 +122,7 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
 
   // specify the read parameters, here:
   // 1 chunk of 10 elements using offset of 40 (i.e. lines No. 40--59) into elements of the array starting from 5
-  int64_t chunk_read = 30L;
+  int64_t chunk_read = 10L;
   int64_t offset_file_read = 40L;
   int offset_data_read = 5;
 
@@ -133,7 +133,6 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   assert(index_read[4*offset_data_read] == offset_file_read*4);
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
-  /*
   offset_file_read = 97L;
   offset_data_read = 1;
 
@@ -142,11 +141,6 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   assert(rc == TREXIO_END);
   assert(index_read[4*size_r-1] == 0);
   assert(index_read[4*offset_data_read] == 4 * (int32_t) offset_file_read);
-  */
-
-  for (int i=0; i<size_r; i++){
-    printf("%d %d \n", index_read[4*i], index_read[4*i+1]);
-  }
 
   // close current session
   rc = trexio_close(file);
@@ -181,7 +175,6 @@ static int test_read_dset_sparse_size (const char* file_name, const back_end_t b
   // read one chunk using the aforementioned parameters
   rc = trexio_read_mo_2e_int_eri_size(file, &size_written);
   assert(rc == TREXIO_SUCCESS);
-  printf("%ld \n", size_written);
   assert(size_written == size_check);
 
   // close current session
@@ -208,10 +201,10 @@ int main(){
   test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE);
 
   // check the second write attempt (SIZE elements written in N_CHUNKS chunks)
-  //test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND);
-  //test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE*2);
+  test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND);
+  test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE*2);
 
-  //rc = system(RM_COMMAND);
+  rc = system(RM_COMMAND);
   assert (rc == 0);
 
   return 0;

@@ -498,12 +498,26 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
   // get the dataspace of the dataset
   hid_t fspace_id = H5Dget_space(dset_id);
 
-  // possible overflow HERE ?
+  // TODO: check for possible overflow HERE ?
   hsize_t offset[1] = {(hsize_t) offset_file*4};
   hsize_t count[1] = {(hsize_t) size*4};
 
-  herr_t status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, NULL, count, NULL);
+  /* get dimensions of the dataset in the file to check whether reading with user-provided chunk size
+     will reach end of the dataset (i.e. EOF in TEXT back end)
+   ,*/
+  hsize_t ddims[1] = {0};
+  int rrank = H5Sget_simple_extent_dims(fspace_id, ddims, NULL);
 
+  hsize_t max_offset = offset[0] + count[0];
+
+  int eof_reachable = 0;
+  if (max_offset > ddims[0]) {
+    eof_reachable = 1;
+    // lower the value of count to reduce the number of elements which will be read
+    count[0] -= max_offset - ddims[0];
+  }
+
+  herr_t status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, NULL, count, NULL);
   hid_t memspace_id = H5Screate_simple(1, count, NULL);
 
   status = H5Dread(dset_id, H5T_NATIVE_INT32, memspace_id, fspace_id, H5P_DEFAULT, index_read);
@@ -513,6 +527,8 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
   H5Dclose(dset_id);
 
   assert (status >= 0);
+
+  if (eof_reachable == 1) return TREXIO_END;
 
   return TREXIO_SUCCESS;
 }

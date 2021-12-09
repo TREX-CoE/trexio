@@ -66,7 +66,7 @@ subroutine test_write(file_name, back_end)
   double precision :: value_sparse_mo_2e_int_eri(100)
 
   integer :: i, n_buffers = 5
-  integer(8) :: buf_size, offset = 0
+  integer(8) :: buf_size, offset
   buf_size = 100/n_buffers
 
   do i = 1, 100
@@ -138,6 +138,7 @@ subroutine test_write(file_name, back_end)
   rc = trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX')
 
+  offset = 0
   do i = 1, n_buffers
     rc = trexio_write_mo_2e_int_eri(trex_file, offset, buf_size, &
 	                            index_sparse_mo_2e_int_eri(1,offset+1), &
