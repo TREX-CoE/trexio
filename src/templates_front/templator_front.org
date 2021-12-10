@@ -2476,7 +2476,7 @@ trexio_read_$group_dset$(trexio_t* const file,
   // shift indices to be one-based if Fortran API is used
   if (file->one_based) {
     // if EOF is reached - shift only indices that have been read, not an entire buffer
-    uint64_t index_size = (rc == TREXIO_END) ? (4UL*eof_read_size) : (4UL*buffer_size) ;
+    uint64_t index_size = (rc == TREXIO_END) ? (rank*eof_read_size) : (rank*buffer_size) ;
     for (uint64_t i=0; i<index_size; ++i){
       index_sparse[i] += 1;
     }
@@ -2548,7 +2548,7 @@ trexio_write_$group_dset$(trexio_t* const file,
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
 
-    uint64_t index_size = 4UL*buffer_size;
+    uint64_t index_size = rank * buffer_size;
     index_sparse_p = CALLOC(index_size, int32_t);
     if (index_sparse_p == NULL) return TREXIO_ALLOCATION_FAILED;
 
