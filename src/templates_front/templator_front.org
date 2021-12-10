@@ -2445,19 +2445,19 @@ trexio_read_$group_dset$(trexio_t* const file,
   /* Read the max number of integrals stored in the file */
   rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
-  /* Cannot read more data points than there is already in the file */
-  // TODO: YOU CAN AND WILL REACH EOF SO NO PROBLEM
-  if (buffer_size > size_max) return TREXIO_INVALID_ARG_3;
+
+  // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
+  uint64_t eof_read_size = 0UL;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    rc = trexio_text_read_$group_dset$(file, offset_file, buffer_size, size_max, &eof_read_size, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    rc = trexio_hdf5_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, buffer_size, size_max, &eof_read_size, index_sparse, value_sparse);
     break;
 #else
     rc = TREXIO_BACK_END_MISSING;
@@ -2471,21 +2471,18 @@ trexio_read_$group_dset$(trexio_t* const file,
     rc = TREXIO_FAILURE;  /* Impossible case */
   }
 
-  if (rc != TREXIO_SUCCESS) return rc;
+  if (rc != TREXIO_SUCCESS && rc != TREXIO_END) return rc;
 
   // shift indices to be one-based if Fortran API is used
-  // TODO :
-  // THIS WILL SHIFT ALL INDICES, HOWEVER IF EOF IS ENCOUNTERED THIS IS NOT DESIRABLE
-  // WE CAN MODIFY BY ADDRESS AND INT VALUE INDICATING THE NUMBER OF INTEGRALS READ BEFORE EOF
-  // AND ONLY SHIFT THEM !
   if (file->one_based) {
-    uint64_t index_size = 4L*buffer_size;
+    // if EOF is reached - shift only indices that have been read, not an entire buffer
+    uint64_t index_size = (rc == TREXIO_END) ? (4UL*eof_read_size) : (4UL*buffer_size) ;
     for (uint64_t i=0; i<index_size; ++i){
       index_sparse[i] += 1;
     }
   }
 
-  return TREXIO_SUCCESS;
+  return rc;
 }
   #+end_src
 
@@ -2551,7 +2548,7 @@ trexio_write_$group_dset$(trexio_t* const file,
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
 
-    uint64_t index_size = 4L*buffer_size;
+    uint64_t index_size = 4UL*buffer_size;
     index_sparse_p = CALLOC(index_size, int32_t);
     if (index_sparse_p == NULL) return TREXIO_ALLOCATION_FAILED;
 

@@ -195,6 +195,9 @@ subroutine test_read(file_name, back_end)
   double precision :: value_sparse_mo_2e_int_eri(20)
   integer(8) :: read_buf_size = 10
   integer(8) :: offset_read = 40
+  integer(8) :: offset_data_read = 5
+  integer(8) :: offset_eof  = 97
+  integer(8) :: offset_data_eof = 1
   integer(8) :: size_toread = 0
 
   character*(128) :: str
@@ -271,16 +274,35 @@ subroutine test_read(file_name, back_end)
 
 
   rc = trexio_read_mo_2e_int_eri(trex_file, offset_read, read_buf_size, &
-	                         index_sparse_mo_2e_int_eri(1,5+1), &
-			         value_sparse_mo_2e_int_eri(5+1))
+	                         index_sparse_mo_2e_int_eri(1, offset_data_read + 1), &
+			         value_sparse_mo_2e_int_eri(offset_data_read + 1))
   call trexio_assert(rc, TREXIO_SUCCESS)
-  if (index_sparse_mo_2e_int_eri(1,1) == 0 .and. index_sparse_mo_2e_int_eri(1,5+1) == offset_read*4+1) then
+  if (index_sparse_mo_2e_int_eri(1, 1) == 0 .and. &
+      index_sparse_mo_2e_int_eri(1, offset_data_read + 1) == offset_read*4 + 1) then
     write(*,*) 'SUCCESS READ SPARSE DATA'
   else
     print *, 'FAILURE SPARSE DATA CHECK'
     call exit(-1)
   endif
 
+
+  ! attempt to read reaching EOF: should return TREXIO_END and
+  ! NOT increment the existing values in the buffer (only upd with what has been read)
+  rc = trexio_read_mo_2e_int_eri(trex_file, offset_eof, read_buf_size, &
+	                         index_sparse_mo_2e_int_eri(1, offset_data_eof + 1), &
+			         value_sparse_mo_2e_int_eri(offset_data_eof + 1))
+  call trexio_assert(rc, TREXIO_END)
+  !do  i = 1,20
+  !  write(*,*) index_sparse_mo_2e_int_eri(1,i)
+  !enddo
+  if (index_sparse_mo_2e_int_eri(1, 1) == 0 .and. &
+      index_sparse_mo_2e_int_eri(1, offset_data_read + 1) == offset_read*4 + 1 .and. &
+      index_sparse_mo_2e_int_eri(1, offset_data_eof + 1) == offset_eof*4 + 1) then
+    write(*,*) 'SUCCESS READ SPARSE DATA EOF'
+  else
+    print *, 'FAILURE SPARSE DATA EOF CHECK'
+    call exit(-1)
+  endif
 
   rc = trexio_read_mo_2e_int_eri_size(trex_file, size_toread)
   call trexio_assert(rc, TREXIO_SUCCESS)

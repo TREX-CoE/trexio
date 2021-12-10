@@ -379,7 +379,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 
    #+begin_src c :tangle hrw_dset_sparse_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_hdf5_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_hdf5_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, uint64_t* const eof_read_size, int32_t* const index_sparse, double* const value_sparse);
 trexio_exit_code trexio_hdf5_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
 trexio_exit_code trexio_hdf5_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
    #+end_src
@@ -483,11 +483,13 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
                                const int64_t offset_file,
                                const int64_t size,
                                const int64_t size_max,
+                               uint64_t* const eof_read_size,
                                int32_t* const index_read,
                                double* const value_read)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -515,6 +517,8 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
     eof_reachable = 1;
     // lower the value of count to reduce the number of elements which will be read
     count[0] -= max_offset - ddims[0];
+    // modify the eof_read_size accordingly
+    *eof_read_size = (uint64_t) (count[0] / 4UL);
   }
 
   herr_t status = H5Sselect_hyperslab(fspace_id, H5S_SELECT_SET, offset, NULL, count, NULL);
