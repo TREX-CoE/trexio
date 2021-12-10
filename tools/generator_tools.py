@@ -708,8 +708,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
 
         if is_sparse:
             # build printf/scanf sequence and compute line length for n-index sparse quantity
-            index_printf = '*(index_sparse + 4*i'
-            index_scanf  = 'index_sparse + 4*i'
+            index_printf = f'*(index_sparse + {str(rank)}*i'
+            index_scanf  = f'index_sparse + {str(rank)}*i'
             # one index item consumes up to index_length characters (int32_len_printf for int32 + 1 for space)
             index_len = int32_len_printf + 1
             group_dset_sparse_indices_printf = index_printf + ')'
