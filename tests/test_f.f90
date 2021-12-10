@@ -125,8 +125,8 @@ subroutine test_write(file_name, back_end)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE COORD')
 
   rc = trexio_write_nucleus_label(trex_file, label, 5)
-  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE LABEL')
   deallocate(label)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE LABEL')
 
   rc = trexio_write_nucleus_point_group(trex_file, sym_str, 32)
   deallocate(sym_str)
@@ -139,7 +139,7 @@ subroutine test_write(file_name, back_end)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX')
 
   offset = 0
-  do i = 1, n_buffers
+  do i = 1,n_buffers
     rc = trexio_write_mo_2e_int_eri(trex_file, offset, buf_size, &
 	                            index_sparse_mo_2e_int_eri(1,offset+1), &
 				    value_sparse_mo_2e_int_eri(offset+1))
@@ -287,7 +287,7 @@ subroutine test_read(file_name, back_end)
   if (size_toread == 100) then
     write(*,*) 'SUCCESS READ SPARSE SIZE'
   else
-    print *, 'FAILURE SPARSE DATA CHECK'
+    print *, 'FAILURE SPARSE SIZE CHECK'
     call exit(-1)
   endif
 

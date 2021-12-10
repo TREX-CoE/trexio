@@ -2424,11 +2424,11 @@ trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const int64_t o
   #+begin_src c :tangle read_dset_sparse_front.c
 trexio_exit_code
 trexio_read_$group_dset$(trexio_t* const file,
-                           const int64_t offset_file,
-                           const int64_t buffer_size,
-                           int32_t* const index_sparse,
-                           double* const value_sparse
-                           )
+                         const int64_t offset_file,
+                         const int64_t buffer_size,
+                         int32_t* const index_sparse,
+                         double* const value_sparse
+                         )
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (offset_file < 0L) return TREXIO_INVALID_ARG_2;
@@ -2446,20 +2446,21 @@ trexio_read_$group_dset$(trexio_t* const file,
   rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
   /* Cannot read more data points than there is already in the file */
+  // TODO: YOU CAN AND WILL REACH EOF SO NO PROBLEM
   if (buffer_size > size_max) return TREXIO_INVALID_ARG_3;
 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    rc = trexio_text_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
@@ -2467,8 +2468,24 @@ trexio_read_$group_dset$(trexio_t* const file,
     break;
 ,*/
   default:
-    return TREXIO_FAILURE;  /* Impossible case */
+    rc = TREXIO_FAILURE;  /* Impossible case */
   }
+
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  // shift indices to be one-based if Fortran API is used
+  // TODO :
+  // THIS WILL SHIFT ALL INDICES, HOWEVER IF EOF IS ENCOUNTERED THIS IS NOT DESIRABLE
+  // WE CAN MODIFY BY ADDRESS AND INT VALUE INDICATING THE NUMBER OF INTEGRALS READ BEFORE EOF
+  // AND ONLY SHIFT THEM !
+  if (file->one_based) {
+    uint64_t index_size = 4L*buffer_size;
+    for (uint64_t i=0; i<index_size; ++i){
+      index_sparse[i] += 1;
+    }
+  }
+
+  return TREXIO_SUCCESS;
 }
   #+end_src
 
@@ -2530,27 +2547,46 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
+  int32_t* index_sparse_p = (int32_t*) index_sparse;
+  // shift indices to be zero-based if Fortran API is used
+  if (file->one_based) {
+
+    uint64_t index_size = 4L*buffer_size;
+    index_sparse_p = CALLOC(index_size, int32_t);
+    if (index_sparse_p == NULL) return TREXIO_ALLOCATION_FAILED;
+
+    for (uint64_t i=0; i<index_size; ++i){
+      index_sparse_p[i] = index_sparse[i] - 1;
+    }
+
+  }
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse_p, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse, value_sparse);
+    rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse_p, value_sparse);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_dset$(...);
+    rc = trexio_json_write_$group_dset$(...);
     break;
-*/
+,*/
   default:
-    return TREXIO_FAILURE;  /* Impossible case */
+    rc = TREXIO_FAILURE;  /* Impossible case */
   }
+
+  // free the memory allocated to shift indices to be zero-based
+  if (file->one_based) FREE(index_sparse_p);
+
+  return rc;
 }
   #+end_src
 
