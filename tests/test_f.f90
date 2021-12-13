@@ -338,6 +338,9 @@ subroutine test_read_void(file_name, back_end)
 ! ================= START OF TEST ===================== !
 
   trex_file = trexio_open(file_name, 'r', back_end, rc)
+  if (rc /= TREXIO_OPEN_ERROR) then
+    rc = trexio_close(trex_file)
+  endif
   call trexio_assert(rc, TREXIO_OPEN_ERROR)
 
   call trexio_string_of_error(rc, str)

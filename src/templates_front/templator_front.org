@@ -880,42 +880,6 @@ trexio_open(const char* file_name, const char mode,
     return NULL;
   }
 
-  rc = trexio_has_metadata_package_version(result);
-  if (rc == TREXIO_FAILURE) {
-    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-    free(result);
-    return NULL;
-  }
-
-  if (rc == TREXIO_HAS_NOT) {
-    switch (back_end) {
-
-    case TREXIO_TEXT:
-      rc = trexio_text_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
-      break;
-
-    case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-      rc = trexio_hdf5_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
-      break;
-#else
-      if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-      return NULL;
-#endif
-/*
-    case TREXIO_JSON:
-      rc = trexio_json_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
-      break;
-,*/
-    }
-  }
-
-  if (rc != TREXIO_SUCCESS) {
-    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-    free(result);
-    return NULL;
-  }
-
 
   /* File locking */
 
@@ -948,7 +912,42 @@ trexio_open(const char* file_name, const char mode,
     return NULL;
   }
 
+  /* Write metadata (i.e. package version) upon creation */
+  rc = trexio_has_metadata_package_version(result);
+  if (rc == TREXIO_FAILURE) {
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
+    free(result);
+    return NULL;
+  }
+
+  if (rc == TREXIO_HAS_NOT) {
+    switch (back_end) {
+
+    case TREXIO_TEXT:
+      rc = trexio_text_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
+      break;
+
+    case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+      rc = trexio_hdf5_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
+      break;
+#else
+      if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+      return NULL;
+#endif
+
+    }
+  }
+
+  if (rc != TREXIO_SUCCESS) {
+    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
+    free(result);
+    return NULL;
+  }
+
+  /* Exit upon success */
   if (rc_open != NULL) *rc_open = TREXIO_SUCCESS;
+
   return result;
 }
    #+end_src
