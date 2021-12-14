@@ -138,6 +138,12 @@ subroutine test_write(file_name, back_end)
   rc = trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX')
 
+  ! write mo_num which will be used to determine the optimal size of int indices
+  if (trexio_has_mo_num(trex_file) == TREXIO_HAS_NOT) then
+    rc = trexio_write_mo_num(trex_file, 1000)
+    call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE MO NUM')
+  endif
+
   offset = 0
   do i = 1,n_buffers
     rc = trexio_write_mo_2e_int_eri(trex_file, offset, buf_size, &

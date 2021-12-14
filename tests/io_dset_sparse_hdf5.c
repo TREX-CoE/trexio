@@ -10,7 +10,7 @@
 #define SIZE          100
 #define N_CHUNKS      5
 
-static int test_write_dset_sparse (const char* file_name, const back_end_t backend) {
+static int test_write_dset_sparse (const char* file_name, const back_end_t backend, const int64_t offset) {
 
 /* Try to write an array of sparse data into the TREXIO file */
 
@@ -39,14 +39,23 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
     value[i]     = 3.14 + (double) i;
   }
 
+  // write mo_num which will be used to determine the optimal size of int indices
+  if (trexio_has_mo_num(file) == TREXIO_HAS_NOT) {
+    rc = trexio_write_mo_num(file, 1000);
+    assert(rc == TREXIO_SUCCESS);
+  }
+
   // write dataset chunks of sparse data in the file (including FAKE statements)
   uint64_t chunk_size = (uint64_t) SIZE/N_CHUNKS;
-  uint64_t offset_f = 0;
+  uint64_t offset_f = 0UL;
+  uint64_t offset_d = 0UL;
+  if (offset != 0L) offset_f += offset;
 
   // write n_chunks times using write_sparse
   for(int i=0; i<N_CHUNKS; ++i){
-    rc = trexio_write_mo_2e_int_eri(file, offset_f, chunk_size, &index[4*offset_f], &value[offset_f]);
+    rc = trexio_write_mo_2e_int_eri(file, offset_f, chunk_size, &index[4*offset_d], &value[offset_d]);
     assert(rc == TREXIO_SUCCESS);
+    offset_d += chunk_size;
     offset_f += chunk_size;
   }
 
@@ -98,7 +107,7 @@ static int test_has_dset_sparse (const char* file_name, const back_end_t backend
   return 0;
 }
 
-static int test_read_dset_sparse (const char* file_name, const back_end_t backend) {
+static int test_read_dset_sparse (const char* file_name, const back_end_t backend, const int64_t offset) {
 
 /* Try to read one chunk of dataset of sparse data in the TREXIO file */
 
@@ -126,21 +135,25 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   int64_t offset_file_read = 40L;
   int offset_data_read = 5;
 
+  if (offset != 0L) offset_file_read += offset;
+
   // read one chunk using the aforementioned parameters
   rc = trexio_read_mo_2e_int_eri(file, offset_file_read, chunk_read, &index_read[4*offset_data_read], &value_read[offset_data_read]);
   assert(rc == TREXIO_SUCCESS);
   assert(index_read[0] == 0);
-  assert(index_read[4*offset_data_read] == offset_file_read*4);
+  assert(index_read[4*offset_data_read] == 4 * (int32_t) (offset_file_read-offset));
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
   offset_file_read = 97L;
   offset_data_read = 1;
 
+  if (offset != 0L) offset_file_read += offset;
+
   // read one chunk that will reach EOF and return TREXIO_END code
   rc = trexio_read_mo_2e_int_eri(file, offset_file_read, chunk_read, &index_read[4*offset_data_read], &value_read[offset_data_read]);
   assert(rc == TREXIO_END);
   assert(index_read[4*size_r-1] == 0);
-  assert(index_read[4*offset_data_read] == 4 * (int32_t) offset_file_read);
+  assert(index_read[4*offset_data_read] == 4 * (int32_t) (offset_file_read-offset));
 
   // close current session
   rc = trexio_close(file);
@@ -195,14 +208,15 @@ int main(){
   assert (rc == 0);
 
   // check the first write attempt (SIZE elements written in N_CHUNKS chunks)
-  test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND);
+  test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND, 0);
   test_has_dset_sparse      (TREXIO_FILE, TEST_BACKEND);
-  test_read_dset_sparse     (TREXIO_FILE, TEST_BACKEND);
-  test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE);
+  test_read_dset_sparse     (TREXIO_FILE, TEST_BACKEND, 0);
+  test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, SIZE);
 
   // check the second write attempt (SIZE elements written in N_CHUNKS chunks)
-  test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND);
-  test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE*2);
+  test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND, SIZE);
+  test_read_dset_sparse     (TREXIO_FILE, TEST_BACKEND, SIZE);
+  test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, SIZE*2);
 
   rc = system(RM_COMMAND);
   assert (rc == 0);
