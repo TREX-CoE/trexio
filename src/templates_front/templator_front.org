@@ -2445,6 +2445,10 @@ trexio_read_$group_dset$(trexio_t* const file,
   rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
 
+  int64_t num;
+  rc = trexio_read_$group_dset_sparse_dim$_64(file, &num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
   // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
   uint64_t eof_read_size = 0UL;
 
@@ -2456,7 +2460,7 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    rc = trexio_hdf5_read_$group_dset$(file, offset_file, buffer_size, size_max, &eof_read_size, index_sparse, value_sparse);
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, buffer_size, num, &eof_read_size, index_sparse, value_sparse);
     break;
 #else
     rc = TREXIO_BACK_END_MISSING;
@@ -2543,6 +2547,10 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
+  int64_t num;
+  rc = trexio_read_$group_dset_sparse_dim$_64(file, &num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
   int32_t* index_sparse_p = (int32_t*) index_sparse;
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
@@ -2565,7 +2573,7 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, size_max, index_sparse_p, value_sparse);
+    rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num, index_sparse_p, value_sparse);
     break;
 #else
     rc = TREXIO_BACK_END_MISSING;

@@ -107,7 +107,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                 'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
                 'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
                 'group_num_h5_dtype', 'group_num_py_dtype',
-                'group_dset_format_scanf', 'group_dset_format_printf',
+                'group_dset_format_scanf', 'group_dset_format_printf', 'group_dset_sparse_dim',
                 'group_dset_sparse_line_length', 'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
                 'group_dset', 'group_num', 'group_str', 'group']
 
@@ -707,6 +707,8 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group_dset_f_dims'] = dim_f_list
 
         if is_sparse:
+            # store the max possible dim of the sparse dset (e.g. mo_num)
+            tmp_dict['group_dset_sparse_dim'] = tmp_dict['dims'][0]
             # build printf/scanf sequence and compute line length for n-index sparse quantity
             index_printf = f'*(index_sparse + {str(rank)}*i'
             index_scanf  = f'index_sparse + {str(rank)}*i'
