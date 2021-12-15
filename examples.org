@@ -1,0 +1,215 @@
+#+TITLE: Examples
+#+STARTUP: latexpreview
+#+SETUPFILE: docs/theme.setup
+
+  
+* Accessing sparse quantities
+** Fortran
+  :PROPERTIES:
+  :header-args:    :tangle  print_energy.f90
+  :END:
+   
+   #+begin_src f90
+program print_energy
+  use trexio
+  implicit none
+
+  character*(128)  :: filename   ! Name of the input file
+  integer          :: rc         ! Return code for error checking
+  integer(8)       :: f          ! TREXIO file handle
+  character*(128)  :: err_msg    ! Error message
+   #+end_src
+
+   This program computes the energy as:
+
+   \[
+   E = E_{\text{NN}} + \sum_{ij} D_{ij}\, \langle i | h | j \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle i j | k l
+   \rangle\; \textrm{ with } \; 0 < i,j,k,l \le n
+   \]
+
+   One needs to read from the TREXIO file:
+
+   - $n$ :: The number of molecular orbitals
+   - $E_{\text{NN}}$ :: The nuclear repulsion energy 
+   - $D_{ij}$ :: The one-body reduced density matrix 
+   - $\langle i |h| j \rangle$ :: The one-electron Hamiltonian integrals 
+   - $\Gamma_{ijkl}$ :: The two-body reduced density matrix 
+   - $\langle i j | k l \rangle$ :: The electron repulsion integrals
+
+   #+begin_src f90
+  integer                       :: n
+  double precision              :: E, E_nn
+  double precision, allocatable :: D(:,:), h0(:,:)
+  double precision, allocatable :: G(:,:,:,:), W(:,:,:,:)
+   #+end_src
+
+*** Declare Temporary variables
+
+   #+begin_src f90
+  integer                       :: i, j, k, l, m
+  integer(8), parameter         :: BUFSIZE = 10000_8
+  integer(8)                    :: offset, icount, size_max
+  integer                       :: buffer_index(4,BUFSIZE)
+  double precision              :: buffer_values(BUFSIZE)
+
+  double precision, external    :: ddot   ! BLAS dot product
+   #+end_src
+
+*** Obtain the name of the TREXIO file from the command line, and open it for reading
+
+   #+begin_src f90
+  call getarg(1, filename)
+
+  f = trexio_open (filename, 'r', TREXIO_HDF5, rc)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error opening TREXIO file: '//trim(err_msg)
+     stop
+  end if
+   #+end_src
+
+*** Read the nuclear repulsion energy
+
+   #+begin_src f90
+  rc = trexio_read_nucleus_repulsion(f, E_nn)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading nuclear repulsion: '//trim(err_msg)
+     stop
+  end if
+   #+end_src
+
+*** Read the number of molecular orbitals
+
+    #+begin_src f90
+  rc = trexio_read_mo_num(f, n)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading number of MOs: '//trim(err_msg)
+     stop
+  end if
+    #+end_src
+
+*** Allocate memory
+
+    #+begin_src f90
+  allocate( D(n,n), h0(n,n) )
+  allocate( G(n,n,n,n), W(n,n,n,n) )
+    #+end_src
+
+*** Read one-electron quantities
+    
+    #+begin_src f90
+  rc = trexio_has_mo_1e_int_core_hamiltonian(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No core hamiltonian in file'
+  end if
+  
+  rc = trexio_read_mo_1e_int_core_hamiltonian(f, h0)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading core Hamiltonian: '//trim(err_msg)
+     stop
+  end if
+  
+  
+  rc = trexio_has_rdm_1e(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No 1e RDM in file'
+  end if
+  
+  rc = trexio_read_rdm_1e(f, D)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading one-body RDM: '//trim(err_msg)
+     stop
+  end if
+    #+end_src
+  
+*** Read two-electron quantities
+    
+    #+begin_src f90
+  rc = trexio_has_mo_2e_int_eri(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No electron repulsion integrals in file'
+  end if
+  
+  rc = trexio_read_mo_2e_int_eri_size (f, size_max)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading number of ERIs: '//trim(err_msg)
+     stop
+  end if
+
+  W(:,:,:,:) = 0.d0
+  icount = BUFSIZE
+  offset = 0_8
+  do while (offset < size_max)
+    rc = trexio_read_mo_2e_int_eri(f, offset, icount, buffer_index, buffer_values)
+    if (rc /= TREXIO_SUCCESS) exit
+    do m=1,min(icount, size_max-offset)
+      i = buffer_index(1,m)
+      j = buffer_index(2,m)
+      k = buffer_index(3,m)
+      l = buffer_index(4,m)
+      W(i,j,k,l) = buffer_values(m)
+      W(k,j,i,l) = buffer_values(m)
+      W(i,l,k,j) = buffer_values(m)
+      W(k,l,i,j) = buffer_values(m)
+      W(j,i,l,k) = buffer_values(m)
+      W(j,k,l,i) = buffer_values(m)
+      W(l,i,j,k) = buffer_values(m)
+      W(l,k,j,i) = buffer_values(m)
+    end do
+    offset = offset + icount
+  end do
+
+
+  rc = trexio_has_rdm_2e(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No two-body density matrix in file'
+  end if
+
+  rc = trexio_read_rdm_2e_size (f, size_max)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading number of 2-RDM elements: '//trim(err_msg)
+     stop
+  end if
+
+  G(:,:,:,:) = 0.d0
+  icount = BUFSIZE
+  offset = 0_8
+  do while (offset < size_max)
+    rc = trexio_read_rdm_2e(f, offset, icount, buffer_index, buffer_values)
+    if (rc /= TREXIO_SUCCESS) exit
+    do m=1,min(icount, size_max-offset)
+      i = buffer_index(1,m)
+      j = buffer_index(2,m)
+      k = buffer_index(3,m)
+      l = buffer_index(4,m)
+      G(i,j,k,l) = buffer_values(m)
+    end do
+    offset = offset + icount
+  end do
+  
+    #+end_src
+    
+*** Compute the energy
+    
+    #+begin_src f90
+  E =  E_nn +                           &
+       ddot( n**2, D, 1, h0, 1 ) + &
+       0.5d0 * ddot( n**4, G, 1, W,  1 )
+
+  print *, 'Energy: ', E
+    #+end_src
+
+*** Terminate
+    
+    #+begin_src f90
+  deallocate( D, h0, G, W )
+
+end program
+    #+end_src

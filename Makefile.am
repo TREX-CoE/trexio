@@ -136,7 +136,7 @@ clean-local:
 # =============== DOCUMENTATION =============== #
 
 HTML_TANGLED = docs/index.html            \
-               docs/Sparse.html           \
+               docs/examples.html         \
                docs/templator_hdf5.html   \
                docs/trex.html             \
                docs/README.html           \
