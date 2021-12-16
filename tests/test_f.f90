@@ -200,6 +200,7 @@ subroutine test_read(file_name, back_end)
   integer(4) :: index_sparse_mo_2e_int_eri(4,20)
   double precision :: value_sparse_mo_2e_int_eri(20)
   integer(8) :: read_buf_size = 10
+  integer(8) :: read_buf_size_save = 10
   integer(8) :: offset_read = 40
   integer(8) :: offset_data_read = 5
   integer(8) :: offset_eof  = 97
@@ -282,6 +283,9 @@ subroutine test_read(file_name, back_end)
   rc = trexio_read_mo_2e_int_eri(trex_file, offset_read, read_buf_size, &
 	                         index_sparse_mo_2e_int_eri(1, offset_data_read + 1), &
 			         value_sparse_mo_2e_int_eri(offset_data_read + 1))
+  !do  i = 1,20
+  !  write(*,*) index_sparse_mo_2e_int_eri(1,i)
+  !enddo
   call trexio_assert(rc, TREXIO_SUCCESS)
   if (index_sparse_mo_2e_int_eri(1, 1) == 0 .and. &
       index_sparse_mo_2e_int_eri(1, offset_data_read + 1) == offset_read*4 + 1) then
@@ -297,14 +301,16 @@ subroutine test_read(file_name, back_end)
   rc = trexio_read_mo_2e_int_eri(trex_file, offset_eof, read_buf_size, &
 	                         index_sparse_mo_2e_int_eri(1, offset_data_eof + 1), &
 			         value_sparse_mo_2e_int_eri(offset_data_eof + 1))
-  call trexio_assert(rc, TREXIO_END)
   !do  i = 1,20
   !  write(*,*) index_sparse_mo_2e_int_eri(1,i)
   !enddo
-  if (index_sparse_mo_2e_int_eri(1, 1) == 0 .and. &
+  call trexio_assert(rc, TREXIO_END)
+  if (read_buf_size == 3 .and. &
+      index_sparse_mo_2e_int_eri(1, 1) == 0 .and. &
       index_sparse_mo_2e_int_eri(1, offset_data_read + 1) == offset_read*4 + 1 .and. &
       index_sparse_mo_2e_int_eri(1, offset_data_eof + 1) == offset_eof*4 + 1) then
     write(*,*) 'SUCCESS READ SPARSE DATA EOF'
+    read_buf_size = read_buf_size_save
   else
     print *, 'FAILURE SPARSE DATA EOF CHECK'
     call exit(-1)

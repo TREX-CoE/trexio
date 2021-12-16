@@ -134,24 +134,29 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   int64_t chunk_read = 10L;
   int64_t offset_file_read = 40L;
   int offset_data_read = 5;
+  int64_t read_size_check;
+  read_size_check = chunk_read;
 
   if (offset != 0L) offset_file_read += offset;
 
   // read one chunk using the aforementioned parameters
-  rc = trexio_read_mo_2e_int_eri(file, offset_file_read, chunk_read, &index_read[4*offset_data_read], &value_read[offset_data_read]);
+  rc = trexio_read_mo_2e_int_eri(file, offset_file_read, &chunk_read, &index_read[4*offset_data_read], &value_read[offset_data_read]);
   assert(rc == TREXIO_SUCCESS);
+  assert(chunk_read == read_size_check);
   assert(index_read[0] == 0);
   assert(index_read[4*offset_data_read] == 4 * (int32_t) (offset_file_read-offset));
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
   offset_file_read = 97L;
   offset_data_read = 1;
+  int64_t eof_read_size_check = SIZE - offset_file_read; // if offset_file_read=97 => only 3 integrals will be read out of total of 100
 
   if (offset != 0L) offset_file_read += offset;
 
   // read one chunk that will reach EOF and return TREXIO_END code
-  rc = trexio_read_mo_2e_int_eri(file, offset_file_read, chunk_read, &index_read[4*offset_data_read], &value_read[offset_data_read]);
+  rc = trexio_read_mo_2e_int_eri(file, offset_file_read, &chunk_read, &index_read[4*offset_data_read], &value_read[offset_data_read]);
   assert(rc == TREXIO_END);
+  assert(chunk_read == eof_read_size_check);
   assert(index_read[4*size_r-1] == 0);
   assert(index_read[4*offset_data_read] == 4 * (int32_t) (offset_file_read-offset));
 
