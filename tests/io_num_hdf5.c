@@ -27,6 +27,9 @@ static int test_write_num (const char* file_name, const back_end_t backend) {
   rc = trexio_write_nucleus_num(file, num);
   assert (rc == TREXIO_SUCCESS);
 
+  rc = trexio_write_nucleus_repulsion(file, 2.14171677);
+  assert (rc == TREXIO_SUCCESS);
+
   // attempt to write 0 as dimensioning variable in an empty file; should FAIL and return TREXIO_INVALID_ARG_2
   rc = trexio_write_mo_num(file, 0);
   assert (rc == TREXIO_INVALID_NUM);
@@ -62,6 +65,9 @@ static int test_has_num (const char* file_name, const back_end_t backend) {
   rc = trexio_has_nucleus_num(file);
   assert (rc == TREXIO_SUCCESS);
 
+  rc = trexio_has_nucleus_repulsion(file);
+  assert (rc == TREXIO_SUCCESS);
+
   // check that the num variable does not exist
   rc = trexio_has_mo_num(file);
   assert (rc == TREXIO_HAS_NOT);
@@ -86,6 +92,8 @@ static int test_read_num (const char* file_name, const back_end_t backend) {
   // parameters to be read
   int num;
   int cartesian;
+  float repulsion_32;
+  double repulsion_64, d;
 
 /*================= START OF TEST ==================*/
 
@@ -97,6 +105,16 @@ static int test_read_num (const char* file_name, const back_end_t backend) {
   rc = trexio_read_nucleus_num(file, &num);
   assert (rc == TREXIO_SUCCESS);
   assert (num == 12);
+
+  rc = trexio_read_nucleus_repulsion_32(file, &repulsion_32);
+  assert (rc == TREXIO_SUCCESS);
+  d = repulsion_32 - 2.14171677;
+  assert( d*d < 1.e-8 );
+
+  rc = trexio_read_nucleus_repulsion_64(file, &repulsion_64);
+  assert (rc == TREXIO_SUCCESS);
+  d = repulsion_64 - 2.14171677;
+  assert( d*d < 1.e-14 );
 
   // read non-existing numerical attribute from the file
   rc = trexio_read_mo_num(file, &num);
@@ -134,5 +152,3 @@ int main(void) {
 
   return 0;
 }
-
-

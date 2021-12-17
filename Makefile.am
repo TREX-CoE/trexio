@@ -90,6 +90,7 @@ TESTS_C = \
   tests/io_num_text \
   tests/io_dset_float_text \
   tests/io_dset_int_text \
+  tests/io_dset_sparse_text \
   tests/io_safe_dset_float_text \
   tests/io_str_text \
   tests/io_dset_str_text \
@@ -102,6 +103,7 @@ TESTS_C += \
   tests/io_num_hdf5 \
   tests/io_dset_float_hdf5 \
   tests/io_dset_int_hdf5 \
+  tests/io_dset_sparse_hdf5 \
   tests/io_safe_dset_float_hdf5 \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
@@ -117,8 +119,8 @@ check_PROGRAMS = $(TESTS)
 # specify common LDADD options for all tests
 LDADD = src/libtrexio.la
 
-
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
+CLEANFILES += $(test_trexio_f)
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
@@ -126,7 +128,6 @@ $(test_trexio_f): $(trexio_f)
 trexio.mod: tests/trexio_f.o
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
-tests_test_f_LDFLAGS = -no-install
 
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/
@@ -134,7 +135,7 @@ clean-local:
 # =============== DOCUMENTATION =============== #
 
 HTML_TANGLED = docs/index.html            \
-               docs/Sparse.html           \
+               docs/examples.html         \
                docs/templator_hdf5.html   \
                docs/trex.html             \
                docs/README.html           \
@@ -179,11 +180,13 @@ BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
 
 all: .git_hash
 
+GENERATOR_FILES = $(srcdir)/tools/generator.py \
+		  $(srcdir)/tools/generator_tools.py
 
 $(SOURCES): $(trexio_f)
 src/trexio.c: $(trexio_h)
 
-$(trexio_f): $(ORG_FILES)
+$(trexio_f): $(ORG_FILES) $(GENERATOR_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
@@ -227,7 +230,7 @@ $(pytrexio_py): $(pytrexio_c)
 
 # Build Python module and C wrapper code for TREXIO using SWIG
 # [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
-$(pytrexio_c): $(ORG_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
+$(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	cp $(trexio_h) src/
 	cd src/ && \
 		$(SWIG) -python -py3 -o pytrexio_wrap.c pytrexio.i
@@ -248,4 +251,3 @@ CLEANFILES += $(pytrexio_c) \
 .PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE
 
 endif
-

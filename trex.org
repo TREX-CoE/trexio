@@ -2,31 +2,39 @@
 #+STARTUP: latexpreview
 #+SETUPFILE: docs/theme.setup
 
-This page contains information about the general structure of the 
-TREXIO library. The source code of the library can be automatically 
-generated based on the contents of the ~trex.json~ configuration file, 
-which itself is compiled from different sections (groups) presented below.
+This page contains information about the general structure of the
+TREXIO library. The source code of the library can be automatically
+generated based on the contents of the ~trex.json~ configuration file,
+which itself is compiled from different sections (groups) presented
+below.
 
-For more information about the automatic generation on the source code 
-or regarding possible modifications, please contact the TREXIO developers.
+For more information about the automatic generation on the source code
+or regarding possible modifications, please contact the TREXIO
+developers.
 
-All quantities are saved in TREXIO file in atomic units.
-The dimensions of the arrays in the tables below are given in
-column-major order (as in Fortran), and the ordering of the dimensions
-is reversed in the produced ~trex.json~ configuration file as the library is
+All quantities are saved in TREXIO file in atomic units. The
+dimensions of the arrays in the tables below are given in column-major
+order (as in Fortran), and the ordering of the dimensions is reversed
+in the produced ~trex.json~ configuration file as the library is
 written in C.
 
-TREXIO currently supports ~int~, ~float~ and ~str~ types for both single attributes and arrays.
-Note, that some attributes might have ~dim~ type (e.g. ~num~ of the ~nucleus~ group).
-This type is treated exactly the same as ~int~ with the only difference that ~dim~ variables
-cannot be negative or zero. This additional constraint is required because ~dim~ attributes 
-are used internally to allocate memory and to check array boundaries in the memory-safe API.
-Most of the times, the ~dim~ variables contain ~num~ suffix.
-
+TREXIO currently supports ~int~, ~float~ and ~str~ types for both
+single attributes and arrays.  Note, that some attributes might have
+~dim~ type (e.g. ~num~ of the ~nucleus~ group).  This type is treated
+exactly the same as ~int~ with the only difference that ~dim~
+variables cannot be negative. This additional constraint is required
+because ~dim~ attributes are used internally to allocate memory and to
+check array boundaries in the memory-safe API. Most of the times, the
+~dim~ variables contain the ~num~ suffix.
 
 In Fortran, the arrays are 1-based and in most other languages the
 arrays are 0-based. Hence, we introduce the ~index~ type which is an
 1-based ~int~ in the Fortran interface and 0-based otherwise.
+
+For sparse data structures such as electron replusion integrals,
+the data can be too large to fit in memory and the data needs to be
+fetched using multiple function calls to perform I/O on buffers.
+
 
   #+begin_src python :tangle trex.json :exports none
 {
@@ -78,14 +86,14 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
 
   #+CALL: json(data=electron, title="electron")
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "electron": {
-	  "up_num" : [ "int", []  ]
-	, "dn_num" : [ "int", []  ]
+          "up_num" : [ "int", []  ]
+        , "dn_num" : [ "int", []  ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 * Nucleus (nucleus group)
 
@@ -100,20 +108,22 @@ arrays are 0-based. Hence, we introduce the ~index~ type which is an
   | ~coord~       | ~float~ | ~(3,nucleus.num)~ | Coordinates of the atoms |
   | ~label~       | ~str~   | ~(nucleus.num)~   | Atom labels              |
   | ~point_group~ | ~str~   |                   | Symmetry point group     |
+  | ~repulsion~   | ~float~ |                   | Nuclear repulsion energy |
 
   #+CALL: json(data=nucleus, title="nucleus")
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "nucleus": {
-		  "num" : [ "dim"  , []                     ]
-	,      "charge" : [ "float", [ "nucleus.num" ]      ]
-	,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
-	,       "label" : [ "str"  , [ "nucleus.num" ]      ]
-	, "point_group" : [ "str"  , []                     ]
+                  "num" : [ "dim"  , []                     ]
+        ,      "charge" : [ "float", [ "nucleus.num" ]      ]
+        ,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
+        ,       "label" : [ "str"  , [ "nucleus.num" ]      ]
+        , "point_group" : [ "str"  , []                     ]
+        ,   "repulsion" : [ "float", []                     ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 * Effective core potentials (ecp group)
 
@@ -617,15 +627,18 @@ prim_factor =
    :end:
 
 * TODO Slater determinants
-* TODO Reduced density matrices (rdm group)
+* Reduced density matrices (rdm group)
 
   #+NAME: rdm
-  | Variable   | Type           | Dimensions                         | Description |
-  |------------+----------------+------------------------------------+-------------|
-  | ~one_e~    | ~float~        | ~(mo.num, mo.num)~                 |             |
-  | ~one_e_up~ | ~float~        | ~(mo.num, mo.num)~                 |             |
-  | ~one_e_dn~ | ~float~        | ~(mo.num, mo.num)~                 |             |
-  | ~two_e~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ |             |
+  | Variable  | Type           | Dimensions                         | Description                                                           |
+  |-----------+----------------+------------------------------------+-----------------------------------------------------------------------|
+  | ~1e~      | ~float~        | ~(mo.num, mo.num)~                 | One body density matrix                                               |
+  | ~1e_up~   | ~float~        | ~(mo.num, mo.num)~                 | \uparrow-spin component of the one body density matrix                |
+  | ~1e_dn~   | ~float~        | ~(mo.num, mo.num)~                 | \downarrow-spin component of the one body density matrix              |
+  | ~2e~      | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Two-body reduced density matrix (spin trace)                          |
+  | ~2e_upup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\uparrow component of the two-body reduced density matrix     |
+  | ~2e_dndn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\downarrow component of the two-body reduced density matrix |
+  | ~2e_updn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\downarrow component of the two-body reduced density matrix   |
 
   #+CALL: json(data=rdm, title="rdm", last=1)
 
@@ -633,10 +646,13 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "rdm": {
-             "one_e" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        , "one_e_up" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        , "one_e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        ,    "two_e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+               "1e" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
+        ,   "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
+        ,   "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
+        ,      "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+        , "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+        , "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+        , "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
       }
   #+end_src
   :end:

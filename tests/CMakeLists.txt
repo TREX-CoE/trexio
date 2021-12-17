@@ -1,11 +1,12 @@
 
-# ================= TESTING ================= 
+# ================= TESTING =================
 
 # Create a list of tests for TEXT back end.
 set(Tests_text
   open_text
   io_dset_float_text
   io_dset_str_text
+  io_dset_sparse_text
   io_safe_dset_float_text
   io_dset_int_text
   io_num_text
@@ -19,6 +20,7 @@ if(ENABLE_HDF5)
     open_hdf5
     io_dset_float_hdf5
     io_dset_str_hdf5
+    io_dset_sparse_hdf5
     io_safe_dset_float_hdf5
     io_dset_int_hdf5
     io_num_hdf5
@@ -43,4 +45,3 @@ endforeach()
 add_executable(test_f test_f.f90)
 target_link_libraries(test_f PRIVATE trexio_f)
 add_test(NAME test_f COMMAND $<TARGET_FILE:test_f>)
-
