@@ -48,7 +48,7 @@ program print_energy
 
    #+begin_src f90
   integer                       :: i, j, k, l, m
-  integer(8), parameter         :: BUFSIZE = 10000_8
+  integer(8), parameter         :: BUFSIZE = 100000_8
   integer(8)                    :: offset, icount, size_max
   integer                       :: buffer_index(4,BUFSIZE)
   double precision              :: buffer_values(BUFSIZE)
@@ -96,6 +96,8 @@ program print_energy
     #+begin_src f90
   allocate( D(n,n), h0(n,n) )
   allocate( G(n,n,n,n), W(n,n,n,n) )
+  G(:,:,:,:) = 0.d0
+  W(:,:,:,:) = 0.d0
     #+end_src
 
 *** Read one-electron quantities
@@ -129,12 +131,23 @@ program print_energy
   
 *** Read two-electron quantities
     
-    #+begin_src f90
+    Reading is done with OpenMP. Each thread reads its own buffer, and
+    the buffers are then processed in parallel.
+
+    Reading the file requires a lock, so it is done in a critical
+    section. The ~offset~ variable is shared, and it is incremented in
+    the critical section. For each read, the function returns in
+    ~icount~ the number of read integrals, so this variable needs also
+    to be protected in the critical section when modified.
+    
+**** Electron repulsion integrals
+
+     #+begin_src f90
   rc = trexio_has_mo_2e_int_eri(f)
   if (rc /= TREXIO_SUCCESS) then
      stop 'No electron repulsion integrals in file'
   end if
-  
+
   rc = trexio_read_mo_2e_int_eri_size (f, size_max)
   if (rc /= TREXIO_SUCCESS) then
      call trexio_string_of_error(rc, err_msg)
@@ -142,13 +155,20 @@ program print_energy
      stop
   end if
 
-  W(:,:,:,:) = 0.d0
-  icount = BUFSIZE
   offset = 0_8
-  do while (offset < size_max)
-    rc = trexio_read_mo_2e_int_eri(f, offset, icount, buffer_index, buffer_values)
-    if (rc /= TREXIO_SUCCESS) exit
-    do m=1,min(icount, size_max-offset)
+  !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(icount, i, j, k, l, &
+  !$OMP   buffer_index, buffer_values, m)
+  icount = BUFSIZE
+  do while (icount == BUFSIZE)
+    !$OMP CRITICAL
+    if (offset < size_max) then
+      rc = trexio_read_mo_2e_int_eri(f, offset, icount, buffer_index, buffer_values)
+      offset = offset + icount
+    else
+      icount = 0
+    end if
+    !$OMP END CRITICAL
+    do m=1,icount
       i = buffer_index(1,m)
       j = buffer_index(2,m)
       k = buffer_index(3,m)
@@ -162,10 +182,13 @@ program print_energy
       W(l,i,j,k) = buffer_values(m)
       W(l,k,j,i) = buffer_values(m)
     end do
-    offset = offset + icount
   end do
+  !$OMP END PARALLEL
+     #+end_src
 
-
+**** Reduced density matrix
+     
+     #+begin_src f90
   rc = trexio_has_rdm_2e(f)
   if (rc /= TREXIO_SUCCESS) then
      stop 'No two-body density matrix in file'
@@ -178,30 +201,54 @@ program print_energy
      stop
   end if
 
-  G(:,:,:,:) = 0.d0
-  icount = BUFSIZE
   offset = 0_8
+  !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(icount, i, j, k, l, &
+  !$OMP   buffer_index, buffer_values, m)
+  icount = bufsize
   do while (offset < size_max)
-    rc = trexio_read_rdm_2e(f, offset, icount, buffer_index, buffer_values)
-    if (rc /= TREXIO_SUCCESS) exit
-    do m=1,min(icount, size_max-offset)
+    !$OMP CRITICAL
+    if (offset < size_max) then
+      rc = trexio_read_rdm_2e(f, offset, icount, buffer_index, buffer_values)
+      offset = offset + icount
+    else
+      icount = 0
+    end if
+    !$OMP END CRITICAL
+    do m=1,icount
       i = buffer_index(1,m)
       j = buffer_index(2,m)
       k = buffer_index(3,m)
       l = buffer_index(4,m)
       G(i,j,k,l) = buffer_values(m)
     end do
-    offset = offset + icount
   end do
-  
-    #+end_src
+  !$OMP END PARALLEL
+
+     #+end_src
     
 *** Compute the energy
     
+    As $(n,m)$ 2D arrays are stored in memory as $(\n times m)$ 1D
+    arrays, we could pass the matrices to the ~ddot~ BLAS function to
+    perform the summations in a single call for the 1-electron quantities.
+    Instead, we prefer to interleave the 1-electron (negative) and
+    2-electron (positive) summations to have a better cancellation of
+    numerical errors.
+    
+    Here $n^4$ can be larger than the largest possible 32-bit integer,
+    so it is not safe to pass $n^4$ to the ~ddot~ BLAS
+    function. Hence, we perform $n^2$ loops, using vectors of size $n^2$.
+    
     #+begin_src f90
-  E =  E_nn +                           &
-       ddot( n**2, D, 1, h0, 1 ) + &
-       0.5d0 * ddot( n**4, G, 1, W,  1 )
+
+  E = 0.d0
+  do l=1,n
+    E = E + ddot( n, D(1,l), 1, h0(1,l), 1 ) 
+    do k=1,n
+       E = E + 0.5d0 * ddot( n*n, G(1,1,k,l), 1, W(1,1,k,l),  1 )
+    end do
+  end do
+  E = E + E_nn
 
   print *, 'Energy: ', E
     #+end_src
