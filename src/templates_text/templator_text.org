@@ -1013,7 +1013,7 @@ trexio_text_has_$group_str$ (trexio_t* const file)
 
    #+begin_src c :tangle hrw_dset_sparse_text.h :exports none
 trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file);
-trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, uint64_t* const eof_read_size, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, int64_t* const eof_read_size, int32_t* const index_sparse, double* const value_sparse);
 trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int64_t size_start, const int32_t* index_sparse, const double* value_sparse);
 trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
    #+end_src
@@ -1098,7 +1098,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   if (f_wSize == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the buffer_size */
-  rc = fprintf(f_wSize, "%ld %ld\n", size, io_start_pos);
+  rc = fprintf(f_wSize, "%" PRId64 " %" PRId64 "\n", size, io_start_pos);
   if (rc <= 0) {
     fclose(f_wSize);
     return TREXIO_FAILURE;
@@ -1119,7 +1119,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
                                                const int64_t offset_file,
                                                const int64_t size,
                                                const int64_t size_max,
-                                               uint64_t* const eof_read_size,
+                                               int64_t* const eof_read_size,
                                                int32_t* const index_sparse,
                                                double* const value_sparse)
 {
@@ -1224,7 +1224,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
   int64_t size_item, offset_item, size_accum=0L;
 
   /* Read the values from the file. BEWARE OF POSSIBLE MAX_INT64 OVERFLOW ! */
-  while(fscanf(f, "%ld %ld", &size_item, &offset_item) != EOF) {
+  while(fscanf(f, "%" SCNd64 " %" SCNd64 "", &size_item, &offset_item) != EOF) {
     /* Check that summation will not overflow the int64_t value */
     if (INT64_MAX - size_accum > size_item) {
       size_accum += size_item;

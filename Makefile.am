@@ -128,7 +128,6 @@ $(test_trexio_f): $(trexio_f)
 trexio.mod: tests/trexio_f.o
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
-tests_test_f_LDFLAGS = -no-install
 
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/
