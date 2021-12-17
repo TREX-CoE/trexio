@@ -108,7 +108,9 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                 'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
                 'group_num_h5_dtype', 'group_num_py_dtype',
                 'group_dset_format_scanf', 'group_dset_format_printf', 'group_dset_sparse_dim',
-                'group_dset_sparse_line_length', 'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
+                'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
+                'sparse_format_printf_8', 'sparse_format_printf_16', 'sparse_format_printf_32',
+                'sparse_line_length_8', 'sparse_line_length_16', 'sparse_line_length_32',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
@@ -468,7 +470,9 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
                     dtype (str)         : dtype corresponding to the trex.json (i.e. int/dim/float/float sparse/str)
                     target (str)        : `num` or `dset`
                     rank (int)          : [optional] value of n in n-index (sparse) dset; needed to build the printf/scanf format string
-                    int_len_printf (int): [optional] length reserved for one index when printing n-index (sparse) dset (e.g. 10 for int32_t)
+                    int_len_printf(dict): [optional]
+                                          keys: precision (e.g. 32 for int32_t)
+                                          values: lengths reserved for one index when printing n-index (sparse) dset (e.g. 10 for int32_t)
 
             Returns:
                     dtype_dict (dict) : dictionary dtype-related substitutions
@@ -480,8 +484,8 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
             raise Exception("Both rank and int_len_printf arguments has to be provided to build the dtype_dict for sparse data.")
     if rank is not None and rank <= 1:
         raise Exception('Rank of sparse quantity cannot be lower than 2.')
-    if int_len_printf is not None and int_len_printf <= 0:
-        raise Exception('Length of an index of sparse quantity has to be positive value.')
+    if int_len_printf is not None and not isinstance(int_len_printf, dict):
+        raise Exception('int_len_printf has to be a dictionary of lengths for different precisions.')
 
     dtype_dict = {}
     # set up the key-value pairs dependending on the dtype
@@ -532,15 +536,23 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
         })
     elif 'sparse' in dtype:
         # build format string for n-index sparse quantity
-        item_printf = f'%{int_len_printf}" PRId32 " '
+        item_printf_8  = f'%{int_len_printf[8]}" PRIu8 " '
+        item_printf_16 = f'%{int_len_printf[16]}" PRIu16 " '
+        item_printf_32 = f'%{int_len_printf[32]}" PRId32 " '
         item_scanf  = '%" SCNd32 " '
-        group_dset_format_printf = ''
+        group_dset_format_printf_8 = '"'
+        group_dset_format_printf_16 = '"'
+        group_dset_format_printf_32 = '"'
         group_dset_format_scanf  = ''
         for i in range(rank):
-            group_dset_format_printf += item_printf
+            group_dset_format_printf_8  += item_printf_8
+            group_dset_format_printf_16 += item_printf_16
+            group_dset_format_printf_32 += item_printf_32
             group_dset_format_scanf  += item_scanf
         # append the format string for float values
-        group_dset_format_printf += '%24.16e'
+        group_dset_format_printf_8  += '%24.16e" '
+        group_dset_format_printf_16 += '%24.16e" '
+        group_dset_format_printf_32 += '%24.16e" '
         group_dset_format_scanf  += '%lf'
 
         # set up the dictionary for sparse
@@ -554,7 +566,9 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
             f'group_{target}_dtype_default'  : '',
             f'group_{target}_dtype_double'   : '',
             f'group_{target}_dtype_single'   : '',
-            f'group_{target}_format_printf'  : group_dset_format_printf,
+            f'sparse_format_printf_8'        : group_dset_format_printf_8,
+            f'sparse_format_printf_16'       : group_dset_format_printf_16,
+            f'sparse_format_printf_32'       : group_dset_format_printf_32,
             f'group_{target}_format_scanf'   : group_dset_format_scanf,
             f'group_{target}_py_dtype'       : ''
         })
@@ -664,17 +678,18 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
 
         # define whether the dset is sparse
         is_sparse = False
+        int_len_printf = {}
         if 'sparse' in datatype:
             is_sparse = True
-            int32_len_printf = 10
-            # int64_len_printf = ??
-            # int16_len_printf = ??
+            int_len_printf[32] = 10
+            int_len_printf[16] = 5
+            int_len_printf[8] = 3
 
         # get the dtype-related substitutions required to replace templated variables later
         if not is_sparse:
             dtype_dict = get_dtype_dict(datatype, 'dset')
         else:
-            dtype_dict = get_dtype_dict(datatype, 'dset', rank, int32_len_printf)
+            dtype_dict = get_dtype_dict(datatype, 'dset', rank, int_len_printf)
 
         tmp_dict.update(dtype_dict)
 
@@ -713,20 +728,27 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             index_printf = f'*(index_sparse + {str(rank)}*i'
             index_scanf  = f'index_sparse + {str(rank)}*i'
             # one index item consumes up to index_length characters (int32_len_printf for int32 + 1 for space)
-            index_len = int32_len_printf + 1
             group_dset_sparse_indices_printf = index_printf + ')'
             group_dset_sparse_indices_scanf  = index_scanf
-            group_dset_sparse_line_len   = index_len
+            sparse_line_length_32            = int_len_printf[32] + 1
+            sparse_line_length_16            = int_len_printf[16] + 1
+            sparse_line_length_8             = int_len_printf[8]  + 1
             # loop from 1 because we already have stored one index
             for index_count in range(1,rank):
                 group_dset_sparse_indices_printf += f', {index_printf} + {index_count})'
                 group_dset_sparse_indices_scanf  += f', {index_scanf} + {index_count}'
-                group_dset_sparse_line_len       += index_len
+                sparse_line_length_32            += int_len_printf[32] + 1
+                sparse_line_length_16            += int_len_printf[16] + 1
+                sparse_line_length_8             += int_len_printf[8]  + 1
 
             # add 24 chars occupied by the floating point value of sparse dataset + 1 char for "\n"
-            group_dset_sparse_line_len += 24 + 1
+            sparse_line_length_32 += 24 + 1
+            sparse_line_length_16 += 24 + 1
+            sparse_line_length_8  += 24 + 1
 
-            tmp_dict['group_dset_sparse_line_length']    = str(group_dset_sparse_line_len)
+            tmp_dict['sparse_line_length_32']    = str(sparse_line_length_32)
+            tmp_dict['sparse_line_length_16']    = str(sparse_line_length_16)
+            tmp_dict['sparse_line_length_8']     = str(sparse_line_length_8)
             tmp_dict['group_dset_sparse_indices_printf'] = group_dset_sparse_indices_printf
             tmp_dict['group_dset_sparse_indices_scanf']  = group_dset_sparse_indices_scanf
 

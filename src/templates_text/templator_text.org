@@ -1014,7 +1014,7 @@ trexio_text_has_$group_str$ (trexio_t* const file)
    #+begin_src c :tangle hrw_dset_sparse_text.h :exports none
 trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, uint64_t* const eof_read_size, int32_t* const index_sparse, double* const value_sparse);
-trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int64_t size_start, const int32_t* index_sparse, const double* value_sparse);
 trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
    #+end_src
 
@@ -1024,6 +1024,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
                                                 const int64_t offset_file,
                                                 const int64_t size,
                                                 const int64_t size_max,
+                                                const int64_t size_start,
                                                 const int32_t* index_sparse,
                                                 const double* value_sparse)
 {
@@ -1045,41 +1046,49 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   FILE* f = fopen(file_full_path, "a");
   if(f == NULL) return TREXIO_FILE_ERROR;
 
+
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char.
      CURRENTLY NO OFFSET IS USED WHEN WRITING !
-    */
-  const int64_t line_length = $group_dset_sparse_line_length$L;
+    ,*/
+  int64_t line_length = 0L;
+  char format_str[256] = "\0";
+
+  /* Determine the optimal type for storing indices depending on the size_max (usually mo_num or ao_num) */
+  if (size_max < UINT8_MAX) {
+    line_length = $sparse_line_length_8$; // 41 for 4 indices
+    strncpy(format_str, $sparse_format_printf_8$, 256);
+  } else if (size_max < UINT16_MAX) {
+    line_length = $sparse_line_length_16$; // 49 for 4 indices
+    strncpy(format_str, $sparse_format_printf_16$, 256);
+  } else {
+    line_length = $sparse_line_length_32$; //69 for 4 indices
+    strncpy(format_str, $sparse_format_printf_32$, 256);
+  }
+  strncat(format_str, "\n", 2);
 
   /* Get the starting position of the IO stream to be written in the .size file.
      This is error-prone due to the fact that for large files (>2 GB) in 32-bit systems ftell will fail.
      One can use ftello function which is adapted for large files.
-     For now, we can use front-end-provided size_max, which has been checked for INT64_MAX overflow.
+     For now, we can use front-end-provided size_start, which has been checked for INT64_MAX overflow.
    */
-  //int64_t io_start_pos = (int64_t) ftell(f);
-  int64_t io_start_pos = size_max * line_length;
-
-  //fseek(f, (long) offset_file * line_length, SEEK_SET);
+  int64_t io_start_pos = size_start * line_length;
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
   int rc;
   for (uint64_t i=0UL; i<size; ++i) {
-
-      rc = fprintf(f, "$group_dset_format_printf$\n",
-         $group_dset_sparse_indices_printf$,
-         *(value_sparse + i));
-
-      if(rc <= 0) {
-        fclose(f);
-        return TREXIO_FAILURE;
-      }
-
+    rc = fprintf(f, format_str,
+       $group_dset_sparse_indices_printf$,
+       *(value_sparse + i));
+    if(rc <= 0) {
+      fclose(f);
+      return TREXIO_FAILURE;
+    }
   }
 
   /* Close the TXT file */
   rc = fclose(f);
-  if(rc != 0) return TREXIO_FILE_ERROR;
-
+  if (rc != 0) return TREXIO_FILE_ERROR;
 
   /* Append .size to the file_full_path in order to write additional info about the written buffer of data */
   strncat(file_full_path, ".size", 6);
@@ -1097,8 +1106,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
 
   /* Close the TXT file */
   rc = fclose(f_wSize);
-  if(rc != 0) return TREXIO_FILE_ERROR;
-
+  if (rc != 0) return TREXIO_FILE_ERROR;
 
   /* Exit upon success */
   return TREXIO_SUCCESS;
@@ -1120,7 +1128,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
   /* Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
-   */
+   ,*/
   const char $group_dset$_file_name[256] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
@@ -1137,9 +1145,18 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char
-   */
-  const uint64_t line_length = $group_dset_sparse_line_length$L;
+   ,*/
+  uint64_t line_length = 0UL;
+  /* Determine the line length depending on the size_max (usually mo_num or ao_num) */
+  if (size_max < UINT8_MAX) {
+    line_length = $sparse_line_length_8$; // 41 for 4 indices
+  } else if (size_max < UINT16_MAX) {
+    line_length = $sparse_line_length_16$; // 49 for 4 indices
+  } else {
+    line_length = $sparse_line_length_32$; //69 for 4 indices
+  }
 
+  /* Offset in the file according to the provided  value of offset_file and optimal line_length */
   fseek(f, (long) offset_file * line_length, SEEK_SET);
 
   /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
