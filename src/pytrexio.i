@@ -12,10 +12,10 @@
 %include <stdint.i>
 
 /* NOTE:
-   carrays was useful before numpy.i was introduced. 
+   carrays was useful before numpy.i was introduced.
    For Python interface it's better to use numpy arrays instead of carrays, because the latter are less python-ic.
    On the other hand, carrays might be more portable to other target languages.
-// Include carrays to work with C pointers to arrays 
+// Include carrays to work with C pointers to arrays
 %include "carrays.i"
 // Include classes that correspond to integer and float arrays
 %array_class(double, doubleArray);
@@ -24,20 +24,26 @@
 %array_class(int64_t, int64Array);
 */
 
-/* Include typemaps to play with input/output re-casting 
+/* Include typemaps to play with input/output re-casting
    Useful when working with C pointers
 */
 %include typemaps.i
-/* Redefine the [int32_t*, int64_t*, float*, double*] num 
+/* Redefine the [int32_t*, int64_t*, float*, double*] num
    pattern to be appended to the output tuple.
-   Useful for TREXIO read_num functions where the 
+   Useful for TREXIO read_num functions where the
    num variable is modified by address
 */
+/* Return num variables as part of the output tuple */
 %apply int *OUTPUT { int32_t* const num};
 %apply int *OUTPUT { int64_t* const num};
 %apply float *OUTPUT { float* const num};
 %apply float *OUTPUT { double* const num};
+/* Return TREXIO exit code from trexio_open as part of the output tuple */
 %apply int *OUTPUT { trexio_exit_code* const rc_open};
+/* Return number of sparse data points stored in the file as part of the output tuple */
+%apply int *OUTPUT { int64_t* const size_max};
+/* Return number of sparse data points read from the file as part of the output tuple */
+/* %apply int *INOUT { int64_t* const buffer_size_read}; */
 
 /* Does not work for arrays (SIGSEGV) */
 
@@ -47,13 +53,13 @@
 %include <cstring.i>
 /* This enables read of long strings with TREXIO_DELIM delimeters that can be further converted into an array of string */
 %cstring_bounded_output(char* dset_out, 4096);
-/* This enables read of single string attributes with pre-defined max_str_len 
+/* This enables read of single string attributes with pre-defined max_str_len
    for Python we pre-define max_str_len = PYTREXIO_MAX_STR_LENGTH everywhere for simplicity
 */
 %cstring_output_maxsize(char* const str_out, const int32_t max_str_len);
 
 
-/* This block is needed make SWIG treat (double * dset_out|_in, int64_t dim_out|_in) pattern 
+/* This block is needed make SWIG treat (double * dset_out|_in, int64_t dim_out|_in) pattern
    as a special case in order to return the NumPy array to Python from C pointer to array
    provided by trexio_read_safe_[dset_num] function.
    NOTE: numpy.i is currently not part of SWIG but included in the numpy distribution (under numpy/tools/swig/numpy.i)
@@ -81,8 +87,14 @@ import_array();
 /* Enable write|read_safe functions to convert numpy arrays from/to int64 arrays */
 %apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t* const dset_out, const int64_t dim_out)};
 %apply (int64_t* IN_ARRAY1, int64_t DIM1) {(const int64_t* dset_in, const int64_t dim_in)};
+/* Enable write|read_safe functions to convert numpy arrays from/to sparse arrays */
+%apply (double* IN_ARRAY1, int64_t DIM1) {(const double* value_sparse, const int64_t size_value_write)};
+%apply (int32_t* IN_ARRAY1, int64_t DIM1) {(const int32_t* index_sparse, const int64_t size_index_write)};
 
-/* This tells SWIG to treat char ** dset_in pattern as a special case 
+%apply (int32_t* ARGOUT_ARRAY1, int DIM1) {(int32_t* const index_sparse_read, const int64_t size_index_read)};
+%apply (double* ARGOUT_ARRAY1, int DIM1) {(double* const value_sparse_read, const int64_t size_value_read)};
+
+/* This tells SWIG to treat char ** dset_in pattern as a special case
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.
    by converting input list of strings from Python into char ** of C
 */
@@ -116,4 +128,3 @@ import_array();
 /* Parse the header files to generate wrappers */
 %include "trexio_s.h"
 %include "trexio.h"
-

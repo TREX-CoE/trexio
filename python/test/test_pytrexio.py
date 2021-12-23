@@ -54,7 +54,7 @@ assert rc==0
 charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
 charges_np = np.array(charges, dtype=np.float64)
 
-# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
+# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived
 # from the size of the list/array by SWIG using typemaps from numpy.i
 rc = trexio_write_safe_nucleus_charge(test_file, charges_np)
 assert rc==0
@@ -78,10 +78,21 @@ indices_np = np.array(indices, dtype=np.int32)
 rc = trexio_write_basis_shell_num(test_file, basis_num)
 assert rc==0
 
-# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
+# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived
 # from the size of the list/array by SWIG using typemacs from numpy.i
 rc = trexio_write_safe_basis_nucleus_index(test_file, indices_np)
 assert rc==0
+
+# test writing of sparse data
+rc = trexio_write_mo_num(test_file, 600)
+assert rc==0
+
+indices = [i for i in range(400)]
+values  = [(3.14 + float(i)) for i in range(100)]
+
+rc = trexio_write_mo_2e_int_eri_safe(test_file, 0, 100, indices, values)
+assert rc==0
+
 
 point_group = 'B3U'
 
@@ -172,16 +183,20 @@ print(f'Read point group: {rpoint_group}')
 assert rc==0
 assert rpoint_group==point_group
 
+num = 100
+ret_tuple = trexio_read_mo_2e_int_eri_safe(test_file2, 0, num)
+print(ret_tuple)
+assert ret_tuple[0]==0
+
 rc = trexio_close(test_file2)
 assert rc==0
 
-try:
-    if TEST_TREXIO_BACKEND == 0:
-        os.remove(output_filename)
-    elif TEST_TREXIO_BACKEND == 1:
-        shutil.rmtree(output_filename)
-except:
-    print (f'No output file {output_filename} has been produced')
+#try:
+#    if TEST_TREXIO_BACKEND == 0:
+#        os.remove(output_filename)
+#    elif TEST_TREXIO_BACKEND == 1:
+#        shutil.rmtree(output_filename)
+#except:
+#    print (f'No output file {output_filename} has been produced')
 
 #==========================================================#
-
