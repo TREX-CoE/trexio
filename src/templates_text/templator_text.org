@@ -499,6 +499,12 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     // START REPEAT GROUP_DSET_STR
     rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
+    if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
+      FREE(buffer);
+      fclose(f);
+      FREE($group$);
+      return NULL;
+    }
 
     /* Allocate arrays */
     if(size_$group_dset$ != 0) {
@@ -528,7 +534,6 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           FREE(buffer);
           fclose(f);
           FREE($group$->$group_dset$);
-          FREE(tmp_$group_dset$);
           FREE($group$);
           return NULL;
         }
