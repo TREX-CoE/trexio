@@ -87,18 +87,20 @@ assert rc==0
 rc = trexio_write_mo_num(test_file, 600)
 assert rc==0
 
-indices = [i for i in range(400)]
-values  = [(3.14 + float(i)) for i in range(100)]
+num_integrals = 100
+indices = [i for i in range(num_integrals*4)]
+values  = [(3.14 + float(i)) for i in range(num_integrals)]
 
-rc = trexio_write_mo_2e_int_eri_safe(test_file, 0, 100, indices, values)
+rc = trexio_write_safe_mo_2e_int_eri(test_file, 0, num_integrals, indices, values)
 assert rc==0
 
-
+# test writing of single string
 point_group = 'B3U'
 
 rc = trexio_write_nucleus_point_group(test_file, point_group, 10)
 assert rc==0
 
+# test writing of array of strings
 labels = [
         'C',
         'C',
@@ -183,20 +185,45 @@ print(f'Read point group: {rpoint_group}')
 assert rc==0
 assert rpoint_group==point_group
 
-num = 100
-ret_tuple = trexio_read_mo_2e_int_eri_safe(test_file2, 0, num)
-print(ret_tuple)
-assert ret_tuple[0]==0
+# test reasing sparse quantities
+rc, mo_2e_int_size = trexio_read_mo_2e_int_eri_size(test_file2)
+assert rc==0
+assert mo_2e_int_size==num_integrals
+
+buf_size = 60
+offset_file = 0
+# read full buf_size (i.e. the one that does not reach EOF)
+rc, read_buf_size, indices_sparse_np, value_sparse_np = trexio_read_safe_mo_2e_int_eri(test_file2, offset_file, buf_size, buf_size*4, buf_size)
+print(f'First complete sparse read size: {read_buf_size}')
+#print(indices_sparse_np)
+assert rc==0
+assert read_buf_size==buf_size
+assert indices_sparse_np[0]==0
+assert indices_sparse_np[read_buf_size*4-1]==read_buf_size*4-1
+offset_file += buf_size
+
+# read incomplete buf_size (i.e. the one that does reach EOF)
+rc, read_buf_size, indices_sparse_np, value_sparse_np = trexio_read_safe_mo_2e_int_eri(test_file2, offset_file, buf_size, buf_size*4, buf_size)
+print(f'Second incomplete sparse read size: {read_buf_size}')
+# Incomplete read still allocates NumPy array of buf_size=60 elements but only 40 elements read upon encounter of EOF,
+# Thus the remaining 20 elements are filled with garbage rather than zeros. Handle this in the front end ?
+print(indices_sparse_np)
+# trexio_exit_code = 6 correspond to TREXIO_END
+assert rc==6
+assert read_buf_size==(num_integrals - buf_size)
+assert indices_sparse_np[0]==offset_file*4
+assert indices_sparse_np[read_buf_size*4-1]==(offset_file+read_buf_size)*4-1
+
 
 rc = trexio_close(test_file2)
 assert rc==0
 
-#try:
-#    if TEST_TREXIO_BACKEND == 0:
-#        os.remove(output_filename)
-#    elif TEST_TREXIO_BACKEND == 1:
-#        shutil.rmtree(output_filename)
-#except:
-#    print (f'No output file {output_filename} has been produced')
+try:
+    if TEST_TREXIO_BACKEND == 0:
+        os.remove(output_filename)
+    elif TEST_TREXIO_BACKEND == 1:
+        shutil.rmtree(output_filename)
+except:
+    print (f'No output file {output_filename} has been produced')
 
 #==========================================================#
