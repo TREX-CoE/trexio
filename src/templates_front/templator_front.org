@@ -2416,11 +2416,25 @@ trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int32_t* const index_sparse, double* const value_sparse);
 trexio_exit_code trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
 trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int32_t* const index_sparse_read, const int64_t size_index_read, double* const value_sparse_read, const int64_t size_value_read);
+trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int32_t* index_sparse_write, const int64_t size_index_write, const double* value_sparse_write, const int64_t size_value_write);
      #+end_src
 
 **** Source code for default functions
 
   #+begin_src c :tangle read_dset_sparse_front.c
+trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file,
+                                               const int64_t offset_file,
+                                               int64_t* const buffer_size_read,
+                                               int32_t* const index_sparse_read,
+                                               const int64_t size_index_read,
+                                               double* const value_sparse_read,
+                                               const int64_t size_value_read
+                                               )
+{
+  return trexio_read_$group_dset$(file, offset_file, buffer_size_read, index_sparse_read, value_sparse_read);
+}
+
 trexio_exit_code
 trexio_read_$group_dset$(trexio_t* const file,
                          const int64_t offset_file,
@@ -2525,13 +2539,25 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 
 
   #+begin_src c :tangle write_dset_sparse_front.c
+trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file,
+                                                const int64_t offset_file,
+                                                const int64_t buffer_size,
+                                                const int32_t* index_sparse_write,
+                                                const int64_t size_index_write,
+                                                const double* value_sparse_write,
+                                                const int64_t size_value_write
+                                                )
+{
+  return trexio_write_$group_dset$(file, offset_file, buffer_size, index_sparse_write, value_sparse_write);
+}
+
 trexio_exit_code
 trexio_write_$group_dset$(trexio_t* const file,
-                           const int64_t offset_file,
-                           const int64_t buffer_size,
-                           const int32_t* index_sparse,
-                           const double* value_sparse
-                           )
+                          const int64_t offset_file,
+                          const int64_t buffer_size,
+                          const int32_t* index_sparse,
+                          const double* value_sparse
+                          )
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (offset_file < 0L) return TREXIO_INVALID_ARG_2;

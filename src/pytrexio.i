@@ -43,7 +43,7 @@
 /* Return number of sparse data points stored in the file as part of the output tuple */
 %apply int *OUTPUT { int64_t* const size_max};
 /* Return number of sparse data points read from the file as part of the output tuple */
-/* %apply int *INOUT { int64_t* const buffer_size_read}; */
+%apply int *INOUT { int64_t* const buffer_size_read};
 
 /* Does not work for arrays (SIGSEGV) */
 
@@ -88,11 +88,11 @@ import_array();
 %apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t* const dset_out, const int64_t dim_out)};
 %apply (int64_t* IN_ARRAY1, int64_t DIM1) {(const int64_t* dset_in, const int64_t dim_in)};
 /* Enable write|read_safe functions to convert numpy arrays from/to sparse arrays */
-%apply (double* IN_ARRAY1, int64_t DIM1) {(const double* value_sparse, const int64_t size_value_write)};
-%apply (int32_t* IN_ARRAY1, int64_t DIM1) {(const int32_t* index_sparse, const int64_t size_index_write)};
+%apply (double* IN_ARRAY1, int64_t DIM1) {(const double* value_sparse_write, const int64_t size_value_write)};
+%apply (int32_t* IN_ARRAY1, int64_t DIM1) {(const int32_t* index_sparse_write, const int64_t size_index_write)};
 
-%apply (int32_t* ARGOUT_ARRAY1, int DIM1) {(int32_t* const index_sparse_read, const int64_t size_index_read)};
-%apply (double* ARGOUT_ARRAY1, int DIM1) {(double* const value_sparse_read, const int64_t size_value_read)};
+%apply (double* ARGOUT_ARRAY1, int64_t DIM1) {(double* const value_sparse_read, const int64_t size_value_read)};
+%apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const index_sparse_read, const int64_t size_index_read)};
 
 /* This tells SWIG to treat char ** dset_in pattern as a special case
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.
