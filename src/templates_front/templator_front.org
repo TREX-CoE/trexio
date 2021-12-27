@@ -2872,9 +2872,9 @@ def read_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int) -> 
         The number of integrals to read from the file.
 
     Returns:
-        (indices, values, read_buf_size, eof_flag) tuple where
+        (indices, values, n_int_read, eof_flag) tuple where
           - indices and values are NumPy arrays [numpy.ndarray] with the default int32 and float64 precision, respectively;
-          - read_buf_size [int] is the number of integrals read from the trexio_file
+          - n_int_read [int] is the number of integrals read from the trexio_file
             (either strictly equal to buffer_size or less than buffer_size if EOF has been reached);
           - eof_flag [bool] is True when EOF has been reached (i.e. when call to low-level pytrexio API returns TREXIO_END)
                                False otherwise.
@@ -2911,14 +2911,14 @@ def read_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int) -> 
     # main call to the low-level (SWIG-wrapped) trexio_read function, which also requires the sizes of the output to be provided
     # as the last 2 arguments (for numpy arrays of indices and values, respectively)
     # read_buf_size contains the number of elements being read from the file, useful when EOF has been reached
-    rc, read_buf_size, indices, values = pytr.trexio_read_safe_$group_dset$(trexio_file.pytrexio_s,
-                                                                            offset_file,
-                                                                            verified_size,
-                                                                            verified_size * $group_dset_rank$,
-                                                                            verified_size)
+    rc, n_int_read, indices, values = pytr.trexio_read_safe_$group_dset$(trexio_file.pytrexio_s,
+                                                                         offset_file,
+                                                                         verified_size,
+                                                                         verified_size * $group_dset_rank$,
+                                                                         verified_size)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
-    if read_buf_size == 0:
+    if n_int_read == 0:
         raise ValueError("No integrals have been read from the file.")
     if indices is None or values is None:
         raise ValueError("Returned NULL array from the low-level pytrexio API.")
@@ -2927,7 +2927,7 @@ def read_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int) -> 
     shape = tuple([verified_size, $group_dset_rank$])
     indices_reshaped = np.reshape(indices, shape, order='C')
 
-    return (indices_reshaped, values, read_buf_size, eof_flag)
+    return (indices_reshaped, values, n_int_read, eof_flag)
 
 
 def read_$group_dset$_size(trexio_file) -> int:
