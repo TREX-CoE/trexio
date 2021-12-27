@@ -316,7 +316,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
 
     /* Read the dimensioning variables */
-    int rc;
+    int rc = 0;
     // START REPEAT GROUP_DSET_ALL
     rc = fscanf(f, "%1023s", buffer);
     if ((rc != 1) || (strcmp(buffer, "rank_$group_dset$") != 0)) {
@@ -363,9 +363,9 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
     // END REPEAT GROUP_DSET_ALL
 
-    unsigned int local_isSet;
     // START REPEAT GROUP_NUM
     /* Read data */
+    unsigned int $group_num$_isSet;
     rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)));
     if ((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)) {
@@ -375,9 +375,9 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       return NULL;
     }
 
-    /* additional parameter local_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
-    rc = fscanf(f, "%u", &(local_isSet));
-    $group$->$group_num$_isSet = (bool) local_isSet;
+    /* additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
+    rc = fscanf(f, "%u", &($group_num$_isSet));
+    $group$->$group_num$_isSet = (bool) $group_num$_isSet;
     assert(!(rc != 1));
     if (rc != 1) {
       FREE(buffer);
@@ -1050,7 +1050,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
      CURRENTLY NO OFFSET IS USED WHEN WRITING !
     ,*/
   int64_t line_length = 0L;
-  char format_str[256] = "\0";
+  char format_str[256];
 
   /* Determine the optimal type for storing indices depending on the size_max (usually mo_num or ao_num) */
   if (size_max < UINT8_MAX) {
@@ -1074,7 +1074,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
   int rc;
-  for (uint64_t i=0UL; i<size; ++i) {
+  for (uint64_t i=0UL; i < (uint64_t) size; ++i) {
     rc = fprintf(f, format_str,
        $group_dset_sparse_indices_printf$,
        *(value_sparse + i));
@@ -1161,9 +1161,9 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   int rc;
   char buffer[1024];
   uint64_t count = 0UL;
-  for (uint64_t i=0UL; i<size; ++i) {
+  for (uint64_t i=0UL; i < (uint64_t) size; ++i) {
 
-      memset(buffer,0,sizeof(buffer));
+      memset(buffer, 0, sizeof(buffer));
 
       if(fgets(buffer, 1023, f) == NULL){
 
