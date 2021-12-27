@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-set -e 
+set -e
 
 export H5_LDFLAGS=-L/usr/local/lib
 export H5_CFLAGS=-I/usr/local/include
@@ -30,7 +30,7 @@ gzip -cd /tmp/trexio-${TR_VERSION}.tar.gz | tar xvf -
 cd trexio-${TR_VERSION}
 
 # the function below build manylinux wheels based on the provided version of python (e.g. build_wheel_for_py 36)
-function build_wheel_for_py() 
+function build_wheel_for_py()
 {
 
    if [[ -z "$1" ]]; then
@@ -52,19 +52,21 @@ function build_wheel_for_py()
 
    # create and activate a virtual environment based on CPython version ${PYVERSION}
    /opt/python/${CPYTHON}/bin/python3 -m venv --clear trexio-manylinux-py${PYVERSION}
-   source trexio-manylinux-py${PYVERSION}/bin/activate 
+   source trexio-manylinux-py${PYVERSION}/bin/activate
    python3 --version
 
    # upgrade pip, otherwise it complains that manylinux wheel is "...not supported wheel on this platform"
-   pip install --upgrade pip 
+   pip install --upgrade pip
    # install dependencies needed to build manylinux wheel
    pip install --upgrade setuptools wheel auditwheel
    if [ ${PYVERSION} -eq 36 ] || [ ${PYVERSION} -eq 37 ]; then
        pip install numpy==1.17.3
    elif [ ${PYVERSION} -eq 38 ]; then
        pip install numpy==1.18.3
-   else
+   elif [ ${PYVERSION} -eq 39 ]; then
        pip install numpy==1.19.3
+   else
+       pip install numpy==1.21.4
    fi
 
    # set an environment variable needed to locate numpy header files
@@ -94,9 +96,8 @@ function build_wheel_for_py()
 }
 
 
-# build wheels for all versions of CPython in this container 
-for CPYVERSION in 36 37 38 39
+# build wheels for all versions of CPython in this container
+for CPYVERSION in 36 37 38 39 310
 do
   build_wheel_for_py ${CPYVERSION}
 done
-

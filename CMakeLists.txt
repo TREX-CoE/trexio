@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.16)
 # =========== SETUP THE PROJECT =============
 
 # Initialize the CMake project.
-project(Trexio 
-	VERSION 2.0.0 
-	DESCRIPTION "TREX I/O library" 
+project(Trexio
+	VERSION 2.1.0
+	DESCRIPTION "TREX I/O library"
 	LANGUAGES C Fortran
 	)
 
@@ -43,4 +43,3 @@ add_subdirectory(src)
 # Add subdirectory with unit tests.
 enable_testing()
 add_subdirectory(tests)
-
