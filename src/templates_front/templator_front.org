@@ -2378,35 +2378,58 @@ def has_$group_dset$(trexio_file) -> bool:
    }
    #+end_src
 
-  The electron repulsion integral (eri) $\langle ij | kl \rangle$ is
-  represented as a quartet of integers $(i,j,k,l)$ and a floating
-  point value.
+   The electron repulsion integral (eri) $\langle ij | kl \rangle$ is
+   represented as a quartet of integers $(i,j,k,l)$ and a floating
+   point value.
 
-  To store $N$ integrals in the file, we store
+   To store $N$ integrals in the file, we store
 
-  - An array of quartets of integers
-  - An array of values (floats)
+   - An array of quartets of integers
+   - An array of values (floats)
 
-  Both arrays have the same size, $N$, the number of non-zero integrals.
-  Knowing the maximum dimensions allows to check that the integers are
-  in a valid range, and also lets the library choose the smallest
-  integer representation to compress the storage.
+   Both arrays have the same size, $N$, the number of non-zero integrals.
+   Knowing the maximum dimensions allows to check that the integers are
+   in a valid range, and also lets the library choose the smallest
+   integer representation to compress the storage.
 
-  Fortran uses 1-based array indexing, while C uses 0-based indexing.
-  Internally, we use a 0-based representation but the Fortran binding
-  does the appropriate conversion when reading or writing.
+   Fortran uses 1-based array indexing, while C uses 0-based indexing.
+   Internally, we use a 0-based representation but the Fortran binding
+   does the appropriate conversion when reading or writing.
 
-  As the number of integrals to store can be prohibitively large, we
-  provide the possibility to read/write the integrals in chunks. So the
-  functions take two extra parameters:
+   As the number of integrals to store can be prohibitively large, we
+   provide the possibility to read/write the integrals in chunks. So the
+   functions take two extra parameters:
 
-  - ~offset~ : how many integrals in the file should be skipped when reading.
-    An offset of zero implies to read the first integral.
-  - ~size~ : the number of integrals to read.
+   - ~offset_file~ : how many integrals in the file should be skipped when reading/writing.
+     An offset of zero implies to read the first integral.
+   - ~buffer_size~ : the number of integrals to read/write.
+     If EOF is encountered upon reading, the ~buffer_size~ is overwritten with the number
+     of integrals that have been read before EOF and the ~trexio_read_~ function return
+     ~TREXIO_END~ exit code instead of ~TREXIO_SUCCESS~.
 
-  We provide a function to read a chunk of indices, and a function to
-  read a chunk of values, because some users might want to read only
-  the values of the integrals, or only the indices.
+   The storage of ~int~ indices is internally compressed based on the maximum possible value of an index,
+   which is derived from the corresponding dimension of the sparse array (e.g. ~ao_num~ is the upper bound
+   of indices in the aforementioned ~ao_2e_int_eri~ dataset).
+   The upper bounds for different ~int~ types (e.g. ~uint16_t~) can be found in the in the =stdint.h= C library.
+   Currently implemented list of compressions based on the upper bound of indices can be found below:
+
+   | Max value of indices            | Internal representation (in the TREXIO file) |
+   |---------------------------------+----------------------------------------------|
+   | ~UINT8_MAX~  (e.g. $< 255$)     | 8-bit unsigned int                           |
+   | ~UINT16_MAX~ (e.g. $< 65535$)   | 16-bit unsigned int                          |
+   | Otherwise    (e.g. $\ge 65535$) | 32-bit signed int                            |
+
+
+   This section concerns API calls related to sparse data structures.
+
+   | Function name                    | Description                                                 | Precision                        |
+   |----------------------------------+-------------------------------------------------------------+----------------------------------|
+   | ~trexio_has_$group_dset$~        | Check if a sparse dset is present in a file                 | ---                              |
+   | ~trexio_read_$group_dset$~       | Read indices and values of a sparse dset                    | Single/Double for indices/values |
+   | ~trexio_read_$group_dset$_size~  | Read the number of sparse data elements stored in the file  | Double for size                  |
+   | ~trexio_write_$group_dset$~      | Write indices and values of a sparse dset                   | Single/Double for indices/values |
+   | ~trexio_read_safe_$group_dset$~  | Safe (bounded) read of indices and values  (for Python API) | Single/Double for indices/values |
+   | ~trexio_write_safe_$group_dset$~ | Safe (bounded) write of indices and values (for Python API) | Single/Double for indices/values |
 
 *** C templates for front end
 **** Function declarations
@@ -2416,11 +2439,25 @@ trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int32_t* const index_sparse, double* const value_sparse);
 trexio_exit_code trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
 trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int32_t* const index_sparse_read, const int64_t size_index_read, double* const value_sparse_read, const int64_t size_value_read);
+trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int32_t* index_sparse_write, const int64_t size_index_write, const double* value_sparse_write, const int64_t size_value_write);
      #+end_src
 
 **** Source code for default functions
 
   #+begin_src c :tangle read_dset_sparse_front.c
+trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file,
+                                               const int64_t offset_file,
+                                               int64_t* const buffer_size_read,
+                                               int32_t* const index_sparse_read,
+                                               const int64_t size_index_read,
+                                               double* const value_sparse_read,
+                                               const int64_t size_value_read
+                                               )
+{
+  return trexio_read_$group_dset$(file, offset_file, buffer_size_read, index_sparse_read, value_sparse_read);
+}
+
 trexio_exit_code
 trexio_read_$group_dset$(trexio_t* const file,
                          const int64_t offset_file,
@@ -2525,13 +2562,25 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 
 
   #+begin_src c :tangle write_dset_sparse_front.c
+trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file,
+                                                const int64_t offset_file,
+                                                const int64_t buffer_size,
+                                                const int32_t* index_sparse_write,
+                                                const int64_t size_index_write,
+                                                const double* value_sparse_write,
+                                                const int64_t size_value_write
+                                                )
+{
+  return trexio_write_$group_dset$(file, offset_file, buffer_size, index_sparse_write, value_sparse_write);
+}
+
 trexio_exit_code
 trexio_write_$group_dset$(trexio_t* const file,
-                           const int64_t offset_file,
-                           const int64_t buffer_size,
-                           const int32_t* index_sparse,
-                           const double* value_sparse
-                           )
+                          const int64_t offset_file,
+                          const int64_t buffer_size,
+                          const int32_t* index_sparse,
+                          const double* value_sparse
+                          )
 {
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (offset_file < 0L) return TREXIO_INVALID_ARG_2;
@@ -2649,6 +2698,22 @@ interface
      double precision, intent(in)  :: value_sparse(*)
    end function trexio_write_$group_dset$
 end interface
+
+interface
+   integer function trexio_write_safe_$group_dset$ (trex_file, &
+                                                    offset_file, buffer_size, &
+                                                    index_sparse, index_size, &
+                                                    value_sparse, value_size) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     integer(8), intent(in), value :: offset_file
+     integer(8), intent(in), value :: buffer_size
+     integer(4), intent(in)        :: index_sparse(*)
+     integer(8), intent(in), value :: index_size
+     double precision, intent(in)  :: value_sparse(*)
+     integer(8), intent(in), value :: value_size
+   end function trexio_write_safe_$group_dset$
+end interface
      #+end_src
 
      #+begin_src f90 :tangle read_dset_sparse_front_fortran.f90
@@ -2663,6 +2728,22 @@ interface
      integer(4), intent(out)       :: index_sparse(*)
      double precision, intent(out) :: value_sparse(*)
    end function trexio_read_$group_dset$
+end interface
+
+interface
+   integer function trexio_read_safe_$group_dset$ (trex_file, &
+                                                   offset_file, buffer_size, &
+                                                   index_sparse, index_size, &
+                                                   value_sparse, value_size) bind(C)
+     use, intrinsic :: iso_c_binding
+     integer(8), intent(in), value :: trex_file
+     integer(8), intent(in), value :: offset_file
+     integer(8), intent(inout)     :: buffer_size
+     integer(4), intent(out)       :: index_sparse(*)
+     integer(8), intent(in), value :: index_size
+     double precision, intent(out) :: value_sparse(*)
+     integer(8), intent(in), value :: value_size
+   end function trexio_read_safe_$group_dset$
 end interface
      #+end_src
 
@@ -2684,6 +2765,221 @@ interface
      integer(8), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
+     #+end_src
+
+*** Python templates for front end
+
+     #+begin_src python :tangle write_dset_sparse_front.py
+def write_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int, indices: list, values: list) -> None:
+    """Write the $group_dset$ indices and values in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    offset_file: int
+        The number of integrals to be skipped in the file when writing.
+
+    buffer_size: int
+        The number of integrals to write in the file from the provided sparse arrays.
+
+    values: list OR numpy.ndarray
+        Array of $group_dset$ indices to be written. If array data type does not correspond to int32, the conversion is performed.
+
+    values: list OR numpy.ndarray
+        Array of $group_dset$ values to be written. If array data type does not correspond to float64, the conversion is performed.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    try:
+        import numpy as np
+    except ImportError:
+        raise Exception("NumPy cannot be imported.")
+
+    if not isinstance(offset_file, int):
+        raise TypeError("offset_file argument has to be an integer.")
+    if not isinstance(buffer_size, int):
+        raise TypeError("buffer_size argument has to be an integer.")
+    if not isinstance(indices, (list, tuple, np.ndarray)):
+        raise TypeError("indices argument has to be an array (list, tuple or NumPy ndarray).")
+    if not isinstance(values, (list, tuple, np.ndarray)):
+        raise TypeError("values argument has to be an array (list, tuple or NumPy ndarray).")
+
+    convertIndices = False
+    convertValues = False
+    flattenIndices = False
+    if isinstance(indices, np.ndarray):
+       # convert to int32 if input indices are in a different precision
+       if not indices.dtype==np.int32:
+           convertIndices = True
+
+       if len(indices.shape) > 1:
+           flattenIndices = True
+           if convertIndices:
+               indices_32 = np.int32(indices).flatten()
+           else:
+               indices_32 = np.array(indices, dtype=np.int32).flatten()
+       else:
+           if convertIndices:
+               indices_32 = np.int32(indices)
+    else:
+       # if input array is a multidimensional list or tuple, we have to convert it
+       try:
+           doFlatten = True
+           # if list of indices is flat - the attempt to compute len(indices[0]) will raise a TypeError
+           ncol = len(indices[0])
+           indices_32 = np.array(indices, dtype=np.int32).flatten()
+       except TypeError:
+           doFlatten = False
+           pass
+
+    if isinstance(values, np.ndarray):
+       # convert to float64 if input values are in a different precision
+       if not values.dtype==np.float64:
+           convertValues = True
+       if convertValues:
+           values_64 = np.float64(values)
+
+    if (convertIndices or flattenIndices) and convertValues:
+        rc = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, indices_32, values_64)
+    elif (convertIndices or flattenIndices) and not convertValues:
+        rc = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, indices_32, values)
+    elif not (convertIndices or flattenIndices) and convertValues:
+        rc = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, indices, values_64)
+    else:
+        rc = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, indices, values)
+
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+     #+end_src
+
+     #+begin_src python :tangle read_dset_sparse_front.py
+def read_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int) -> tuple:
+    """Read the $group_dset$ indices and values from the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    offset_file: int
+        The number of integrals to be skipped in the file when reading.
+
+    buffer_size: int
+        The number of integrals to read from the file.
+
+    Returns:
+        (indices, values, n_int_read, eof_flag) tuple where
+          - indices and values are NumPy arrays [numpy.ndarray] with the default int32 and float64 precision, respectively;
+          - n_int_read [int] is the number of integrals read from the trexio_file
+            (either strictly equal to buffer_size or less than buffer_size if EOF has been reached);
+          - eof_flag [bool] is True when EOF has been reached (i.e. when call to low-level pytrexio API returns TREXIO_END)
+                               False otherwise.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS
+            and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    try:
+        import numpy as np
+    except ImportError:
+        raise Exception("NumPy cannot be imported.")
+
+    if not isinstance(offset_file, int):
+        raise TypeError("offset_file argument has to be an integer.")
+    if not isinstance(buffer_size, int):
+        raise TypeError("buffer_size argument has to be an integer.")
+
+
+    # read the number of integrals already in the file
+    integral_num = read_$group_dset$_size(trexio_file)
+
+    # additional modification needed to avoid allocating more memory than needed if EOF will be reached during read
+    overflow = offset_file + buffer_size - integral_num
+    eof_flag = False
+    if overflow > 0:
+        verified_size = buffer_size - overflow
+        eof_flag = True
+    else:
+        verified_size = buffer_size
+
+    # main call to the low-level (SWIG-wrapped) trexio_read function, which also requires the sizes of the output to be provided
+    # as the last 2 arguments (for numpy arrays of indices and values, respectively)
+    # read_buf_size contains the number of elements being read from the file, useful when EOF has been reached
+    rc, n_int_read, indices, values = pytr.trexio_read_safe_$group_dset$(trexio_file.pytrexio_s,
+                                                                         offset_file,
+                                                                         verified_size,
+                                                                         verified_size * $group_dset_rank$,
+                                                                         verified_size)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+    if n_int_read == 0:
+        raise ValueError("No integrals have been read from the file.")
+    if indices is None or values is None:
+        raise ValueError("Returned NULL array from the low-level pytrexio API.")
+
+    # conversion to custom types can be performed on the user side, here we only reshape the returned flat array of indices according to group_dset_rank
+    shape = tuple([verified_size, $group_dset_rank$])
+    indices_reshaped = np.reshape(indices, shape, order='C')
+
+    return (indices_reshaped, values, n_int_read, eof_flag)
+
+
+def read_$group_dset$_size(trexio_file) -> int:
+    """Read the number of $group_dset$ integrals stored in the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+        ~num_integral~: int
+        Integer value of corresponding to the size of the $group_dset$ sparse array from ~trexio_file~.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    try:
+        rc, num_integral = pytr.trexio_read_$group_dset$_size(trexio_file.pytrexio_s)
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
+    except:
+        raise
+
+    return num_integral
+     #+end_src
+
+     #+begin_src python :tangle has_dset_sparse_front.py
+def has_$group_dset$(trexio_file) -> bool:
+    """Check that $group_dset$ variable exists in the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+          True if the variable exists, False otherwise
+
+    Raises:
+        - Exception from trexio.Error class if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    try:
+        rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
+        if rc == TREXIO_FAILURE:
+            raise Error(rc)
+    except:
+        raise
+
+    if rc == TREXIO_SUCCESS:
+        return True
+    else:
+        return False
      #+end_src
 
 ** Templates for front end has/read/write a dataset of strings

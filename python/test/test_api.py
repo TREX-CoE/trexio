@@ -67,7 +67,7 @@ charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
 #charges_np = np.array(charges, dtype=np.float32)
 charges_np = np.array(charges, dtype=np.int32)
 
-# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
+# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived
 # from the size of the list/array by SWIG using typemaps from numpy.i
 trexio.write_nucleus_charge(test_file, charges_np)
 
@@ -80,7 +80,7 @@ indices_np = np.array(indices, dtype=np.int64)
 # first write basis_shell_num because it is needed to check dimensions of basis_nucleus_index in TREXIO >= 2.0.0
 trexio.write_basis_shell_num(test_file, basis_shell_num)
 
-# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived 
+# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived
 # from the size of the list/array by SWIG using typemacs from numpy.i
 trexio.write_basis_nucleus_index(test_file, indices_np)
 
@@ -103,11 +103,25 @@ coords = [
 # write coordinates in the file
 trexio.write_nucleus_coord(test_file, coords)
 
-point_group = 'B3U'
+
+# write mo_num (needed later to write sparse mo_2e_int_eri integrals)
+trexio.write_mo_num(test_file, 600)
+
+# write sparse data in the file
+num_integrals = 100
+indices = [i for i in range(num_integrals*4)]
+values  = [(3.14 + float(i)) for i in range(num_integrals)]
+
+trexio.write_mo_2e_int_eri(test_file, 0, num_integrals, indices, values)
+
 
 # write nucleus_point_group in the file
+point_group = 'B3U'
+
 trexio.write_nucleus_point_group(test_file, point_group)
 
+
+# write nucleus_label in the file
 labels = [
         'C',
         'C',
@@ -122,14 +136,13 @@ labels = [
         'H',
         'H']
 
-# write nucleus_label in the file
 trexio.write_nucleus_label(test_file,labels)
 
-# close TREXIO file 
+# close TREXIO file
 # this call is no longer needed as we introduced TREXIO_File class which has a desctructor that closes the file
 #trexio.close(test_file)
-# without calling destructor on test_file the TREXIO_FILE is not getting created and the data is not written when using TEXT back end. 
-# This, the user still has to explicitly call destructor on test_file object instead of the trexio.close function. 
+# without calling destructor on test_file the TREXIO_FILE is not getting created and the data is not written when using TEXT back end.
+# This, the user still has to explicitly call destructor on test_file object instead of the trexio.close function.
 # This is only an issue when the data is getting written and read in the same session (e.g. in Jupyter notebook)
 del test_file
 
@@ -147,6 +160,7 @@ assert trexio.has_nucleus_charge
 assert trexio.has_nucleus_coord
 assert trexio.has_nucleus_label
 assert trexio.has_nucleus_point_group
+assert trexio.has_mo_2e_int_eri
 
 # read nucleus_num from file
 rnum = trexio.read_nucleus_num(test_file2)
@@ -189,6 +203,33 @@ np.testing.assert_array_almost_equal(rcoords_np, np.array(coords).reshape(nucleu
 # set doReshape to False to get a flat 1D array (e.g. when reading matrices like nuclear coordinates)
 #rcoords_reshaped_2 = trexio.read_nucleus_coord(test_file2, doReshape=False)
 
+# read number of integrals already present in the file
+assert trexio.has_mo_2e_int_eri(test_file2)
+assert trexio.read_mo_2e_int_eri_size(test_file2)==num_integrals
+
+# read sparse arrays on mo_2e_int_eri integrals
+buf_size = 60
+offset_file = 0
+# read full buf_size (i.e. the one that does not reach EOF)
+indices_sparse_np, value_sparse_np, read_buf_size, eof = trexio.read_mo_2e_int_eri(test_file2, offset_file, buf_size)
+print(f'First complete sparse read size: {read_buf_size}')
+#print(indices_sparse_np)
+assert not eof
+assert read_buf_size==buf_size
+assert indices_sparse_np[0][0]==0
+assert indices_sparse_np[read_buf_size-1][3]==read_buf_size*4-1
+offset_file += buf_size
+
+# read incomplete buf_size (i.e. the one that does reach EOF)
+indices_sparse_np, value_sparse_np, read_buf_size, eof2 = trexio.read_mo_2e_int_eri(test_file2, offset_file, buf_size)
+print(f'Second incomplete sparse read size: {read_buf_size}')
+#print(indices_sparse_np)
+assert eof2
+assert read_buf_size==(num_integrals - buf_size)
+assert indices_sparse_np[0][0]==offset_file*4
+assert indices_sparse_np[read_buf_size-1][3]==(offset_file+read_buf_size)*4-1
+
+
 # read array of nuclear labels
 rlabels_2d = trexio.read_nucleus_label(test_file2, dim=nucleus_num)
 print(rlabels_2d)
@@ -197,13 +238,13 @@ for i in range(nucleus_num):
 
 # read a string corresponding to nuclear point group
 rpoint_group = trexio.read_nucleus_point_group(test_file2)
-assert rpoint_group==point_group 
+assert rpoint_group==point_group
 
 # another way to read only if the variable exists
-if trexio.has_mo_num(test_file2):
-    rmo_num = trexio.read_mo_num(test_file2)
+if trexio.has_ao_num(test_file2):
+    rmo_num = trexio.read_ao_num(test_file2)
 else:
-    print("Pass on reading the non-existing variable mo_num: checked")
+    print("Pass on reading the non-existing variable ao_num: checked")
 
 # close TREXIO file
 #trexio.close(test_file2)
