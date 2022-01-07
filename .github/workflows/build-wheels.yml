@@ -45,8 +45,13 @@ jobs:
     strategy:
       matrix:
         manylinux_tag: [2010_x86_64, 2014_x86_64, 2_24_x86_64]
-
+    env:
+      PYTREXIO_VERSION: $(grep __version__ python/pytrexio/_version.py | cut -d\  -f3)
+      
     steps:
+      - name: Print the computed PYTREXIO_VERSION
+        run: echo "${PYTREXIO_VERSION}"
+    
       - name: Checkout the branch
         uses: actions/checkout@v2
 
@@ -133,40 +138,23 @@ jobs:
         run: gzip -cd trexio-*.tar.gz | tar xvf -
         working-directory: python
         
-      - name: Create virtual environment for a given CPython
-        run: python3 -m venv trexio-macos-venv-py${{ matrix.python-version }}
-  
-      - name: Activate virtual environment for a given CPython
-        run: source trexio-macos-venv-py${{ matrix.python-version }}/bin/activate
-        
       - name: Install Python dependencies
-        run: |
-          pip install -U setuptools wheel delocate
-          if [ ${{ matrix.python-version }} = "3.7" ]; then 
-            pip install -U numpy==1.17.3
-          elif [ ${{ matrix.python-version }} = "3.8" ]; then 
-            pip install -U numpy==1.18.3
-          elif [ ${{ matrix.python-version }} = "3.9" ]; then 
-            pip install -U numpy==1.19.3
-          else
-            pip install -U numpy==1.21.4
-          fi
-
+        run: pip install -U setuptools build delocate
        
       - name: Build wheel for a given version of CPython
         run: |
-          source tools/set_NUMPY_INCLUDEDIR.sh
+          mkdir wheelhouse/
           cd trexio-*/
-          python setup.py bdist_wheel
-          mv dist/*.whl .
+          python -m build --wheel --outdir=./
           delocate-wheel trexio-*.whl
+          mv trexio-*.whl ../wheelhouse/
         working-directory: python
 
       - name: Upload produced wheels as artifacts
         uses: actions/upload-artifact@v2
         with:
           name: pytrexio-${{ matrix.os }}
-          path: ./python/*.whl
+          path: ./python/wheelhouse/*.whl
 
 
   publish_wheels:
