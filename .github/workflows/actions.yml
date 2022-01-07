@@ -5,8 +5,32 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-  
+  release:
+    types:
+      - published
+
 jobs:
+
+  get_commit_message:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Get commit message
+    runs-on: ubuntu-latest
+    outputs:
+      message: ${{ steps.commit_message.outputs.message }}
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+        # Gets the correct commit message for pull request
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Get commit message
+        id: commit_message
+        run: |
+          set -xe
+          COMMIT_MSG=$(git log --no-merges -1 --oneline)
+          echo "::set-output name=message::$COMMIT_MSG"
+
+
   trexio_ubuntu:
 
     runs-on: ubuntu-latest
@@ -14,34 +38,48 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-    
-      - name: install dependencies    
+
+      - name: install dependencies
         run: |
           sudo add-apt-repository ppa:kelleyk/emacs
           sudo apt-get install libhdf5-dev emacs26
-        
+
       - name: configure with autotools
         run: |
           ./autogen.sh
           ./configure --enable-silent-rules
-        
+
       - name: compile TREXIO
         run: make -j 2
-        
+
       - name: check TREXIO
         run: make check
 
       - name: create virtual environment
-        run: | 
+        run: |
           python3 -m venv --clear pytrexio-venv
           source pytrexio-venv/bin/activate
-      
+
       - name: install Python API
         run: make python-install
         # alternatively we can also run pip install trexio to check PyPI installation
 
       - name: check Python API
         run: make python-test
+
+      - name: build Python API distribution
+        run: make python-sdist
+
+      - name: publish Python API distribution as an artifact
+        needs: get_commit_message
+        if: >-
+          contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
+          github.event_name == 'release'
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytrexio-source
+          path: ./trexio-*.tar.gz
+        working-directory: python/dist
 
       - name: clean
         run: make clean
@@ -53,23 +91,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: install dependencies
         run: |
           brew install emacs
           brew install hdf5
           brew install automake
-        
+
       - name: configure with autotools
         run: |
           ./autogen.sh
           ./configure FC=gfortran-10 --enable-silent-rules
-        
+
       - name: compile TREXIO
         run: make -j 2
-        
+
       - name: check TREXIO
         run: make check
-        
+
       - name: clean
         run: make clean
