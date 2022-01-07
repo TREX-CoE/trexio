@@ -775,7 +775,7 @@ trexio_t* trexio_open(const char* file_name, const char mode,
    #+begin_src c :tangle prefix_front.c
 trexio_t*
 trexio_open(const char* file_name, const char mode,
-	    const back_end_t back_end, trexio_exit_code* const rc_open)
+            const back_end_t back_end, trexio_exit_code* const rc_open)
 {
 
   if (file_name == NULL || file_name[0] == '\0') {
@@ -1171,7 +1171,7 @@ def close(trexio_file):
    #+begin_src python
   {
     "nucleus": {
-	"num"                : [ "int"  , [                     ] ]
+        "num"                : [ "int"  , [                     ] ]
       , "charge"             : [ "float", [ "nucleus.num"       ] ]
       , "coord"              : [ "float", [ "nucleus.num", "3"  ] ]
       , "label"              : [ "str" ,  [ "nucleus.num"       ] ]
@@ -2625,46 +2625,76 @@ trexio_write_$group_dset$(trexio_t* const file,
   rc = trexio_read_$group_dset_sparse_dim$_64(file, &num);
   if (rc != TREXIO_SUCCESS) return rc;
 
-  int32_t* index_sparse_p = (int32_t*) index_sparse;
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
 
     uint64_t index_size = rank * buffer_size;
-    index_sparse_p = CALLOC(index_size, int32_t);
+    
+    int32_t* index_sparse_p = CALLOC(index_size, int32_t);
     if (index_sparse_p == NULL) return TREXIO_ALLOCATION_FAILED;
 
     for (uint64_t i=0; i<index_size; ++i){
       index_sparse_p[i] = index_sparse[i] - 1;
     }
 
-  }
+    switch (file->back_end) {
 
-  switch (file->back_end) {
+    case TREXIO_TEXT:
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+                                          size_max, index_sparse_p, value_sparse);
+      break;
 
-  case TREXIO_TEXT:
-    rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num, size_max, index_sparse_p, value_sparse);
-    break;
-
-  case TREXIO_HDF5:
+    case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num, index_sparse_p, value_sparse);
-    break;
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+                                          index_sparse_p, value_sparse);
+      break;
 #else
-    rc = TREXIO_BACK_END_MISSING;
-    break;
+      rc = TREXIO_BACK_END_MISSING;
+      break;
 #endif
-/*
-  case TREXIO_JSON:
-    rc = trexio_json_write_$group_dset$(...);
-    break;
-,*/
-  default:
-    rc = TREXIO_FAILURE;  /* Impossible case */
-    break;
-  }
+      /*
+        case TREXIO_JSON:
+        rc = trexio_json_write_$group_dset$(...);
+        break;
+      ,*/
+    default:
+      rc = TREXIO_FAILURE;  /* Impossible case */
+      break;
+    }
 
-  // free the memory allocated to shift indices to be zero-based
-  if (file->one_based) FREE(index_sparse_p);
+    FREE(index_sparse_p);
+
+  }
+  else {
+
+    switch (file->back_end) {
+
+    case TREXIO_TEXT:
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+                                          size_max, index_sparse, value_sparse);
+      break;
+
+    case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+                                          index_sparse, value_sparse);
+      break;
+#else
+      rc = TREXIO_BACK_END_MISSING;
+      break;
+#endif
+      /*
+        case TREXIO_JSON:
+        rc = trexio_json_write_$group_dset$(...);
+        break;
+      ,*/
+    default:
+      rc = TREXIO_FAILURE;  /* Impossible case */
+      break;
+    }
+
+  }
 
   return rc;
 }

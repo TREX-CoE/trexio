@@ -291,7 +291,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
   strncpy ($group$->file_name, file->parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
   strncat ($group$->file_name, $group$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
 
   if ($group$->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
     FREE($group$);
@@ -344,19 +344,19 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
       rc = fscanf(f, "%1023s %u", buffer, &j);
       if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$);
-	return NULL;
+        FREE(buffer);
+        fclose(f);
+        FREE($group$);
+        return NULL;
       }
 
       rc = fscanf(f, "%" SCNu64 "\n", &($group$->dims_$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$);
-	return NULL;
+        FREE(buffer);
+        fclose(f);
+        FREE($group$);
+        return NULL;
       }
 
       size_$group_dset$ *= $group$->dims_$group_dset$[i];
@@ -451,11 +451,11 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       rc = fscanf(f, " %1023[^\n]", $group$->$group_str$);
       assert(!(rc != 1));
       if (rc != 1) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$->$group_str$);
-	FREE($group$);
-	return NULL;
+        FREE(buffer);
+        fclose(f);
+        FREE($group$->$group_str$);
+        FREE($group$);
+        return NULL;
       }
 
     }
@@ -476,22 +476,22 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     rc = fscanf(f, "%1023s", buffer);
     assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
     if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$->$group_dset$);
-	FREE($group$);
-	return NULL;
+      FREE(buffer);
+      fclose(f);
+      FREE($group$->$group_dset$);
+      FREE($group$);
+      return NULL;
     }
 
     for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
       rc = fscanf(f, "%$group_dset_format_scanf$", &($group$->$group_dset$[i]));
       assert(!(rc != 1));
       if (rc != 1) {
-	FREE(buffer);
-	fclose(f);
-	FREE($group$->$group_dset$);
-	FREE($group$);
-	return NULL;
+        FREE(buffer);
+        fclose(f);
+        FREE($group$->$group_dset$);
+        FREE($group$);
+        return NULL;
       }
     }
     // END REPEAT GROUP_DSET_NUM
@@ -742,7 +742,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const $gro
    #+begin_src c :tangle read_dset_data_text.c
 trexio_exit_code
 trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $group_dset$,
-			       const uint32_t rank, const uint64_t* dims)
+                               const uint32_t rank, const uint64_t* dims)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -771,7 +771,7 @@ trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
    #+begin_src c :tangle write_dset_data_text.c
 trexio_exit_code
 trexio_text_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* $group_dset$,
-				const uint32_t rank, const uint64_t* dims)
+                                const uint32_t rank, const uint64_t* dims)
 {
 
   if (file  == NULL)  return TREXIO_INVALID_ARG_1;
@@ -1038,7 +1038,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
   FILE* f = fopen(file_full_path, "a");
@@ -1069,7 +1069,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
      This is error-prone due to the fact that for large files (>2 GB) in 32-bit systems ftell will fail.
      One can use ftello function which is adapted for large files.
      For now, we can use front-end-provided size_start, which has been checked for INT64_MAX overflow.
-   */
+   ,*/
   int64_t io_start_pos = size_start * line_length;
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
@@ -1077,7 +1077,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   for (uint64_t i=0UL; i < (uint64_t) size; ++i) {
     rc = fprintf(f, format_str,
        $group_dset_sparse_indices_printf$,
-       *(value_sparse + i));
+       ,*(value_sparse + i));
     if(rc <= 0) {
       fclose(f);
       return TREXIO_FAILURE;
@@ -1135,7 +1135,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
@@ -1168,7 +1168,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
       if(fgets(buffer, 1023, f) == NULL){
 
         fclose(f);
-        *eof_read_size = count;
+        ,*eof_read_size = count;
         return TREXIO_END;
 
       } else {
@@ -1201,7 +1201,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
 
   /* Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
-   */
+   ,*/
   const char $group_dset$_file_name[256] = "/$group_dset$.txt.size";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
@@ -1210,7 +1210,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
@@ -1228,7 +1228,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
       size_accum += size_item;
     } else {
       fclose(f);
-      *size_max = -1L;
+      ,*size_max = -1L;
       return TREXIO_INT_SIZE_OVERFLOW;
     }
   }
@@ -1238,7 +1238,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
   if(rc != 0) return TREXIO_FILE_ERROR;
 
   /* Overwrite the value at the input address and return TREXIO_SUCCESS */
-  *size_max = size_accum;
+  ,*size_max = size_accum;
   return TREXIO_SUCCESS;
 
 }
@@ -1251,7 +1251,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
 
   /* Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
-   */
+   ,*/
   const char $group_dset$_file_name[256] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
@@ -1260,7 +1260,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
-	   TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Check the return code of access function to determine whether the file with sparse data exists or not */
   if (access(file_full_path, F_OK) == 0){
