@@ -44,13 +44,8 @@ jobs:
     strategy:
       matrix:
         manylinux_tag: [2010_x86_64, 2014_x86_64, 2_24_x86_64]
-    env:
-      PYTREXIO_VERSION: $(grep __version__ python/pytrexio/_version.py | cut -d\  -f3)
       
     steps:
-      - name: Print the computed PYTREXIO_VERSION
-        run: echo "${PYTREXIO_VERSION}"
-    
       - name: Checkout the branch
         uses: actions/checkout@v2
 
@@ -61,22 +56,37 @@ jobs:
 
       - name: Install build dependencies
         run: python -m pip install -U setuptools
+        
+      - name: Compute the PYTREXIO_VERSION environment variable
+        run: echo "PYTREXIO_VERSION=$(grep __version__ python/pytrexio/_version.py | cut -d\  -f3 | tr -d '"')" >> $GITHUB_ENV
+          
+      - name: Print the PYTREXIO_VERSION
+        run: echo ${{ env.PYTREXIO_VERSION }}
 
-      - name: Download the Python API distribution tarball
       # conventional download-artifact action does not work for artifact produced in a different workflow
       # which is the case here (TREXIO CI produced the Python API distribution tarball)
+      - name: Download the Python API distribution tarball
         uses: dawidd6/action-download-artifact@v2
         with:
-          # specify the name of tha workflow file which uploads the tarball
+          # specify the name of tha workflow file which uploaded the tarball
           workflow: actions.yml
           workflow_conclusion: success
           name: pytrexio-source
           path: python
+      
+      # at the moment we have to pull the custom container with pre-installed HDF5
+      # the containers are built and stored in GitHub container registry ghcr.io/q-posev
+      - name: Pull the manylinux Docker container with HDF5
+        run: docker pull ghcr.io/q-posev/hdf5_1_12_on_${{ matrix.manylinux_tag }}:latest
 
-      - name: Build manylinux wheels
-        run: |
-          docker pull ghcr.io/q-posev/hdf5_1_12_on_${{ matrix.manylinux_tag }}:latest
-          docker run --rm --env PLAT=manylinux${{ matrix.manylinux_tag }} --volume `pwd`:/tmp --workdir /tmp ghcr.io/q-posev/hdf5_1_12_on_${{ matrix.manylinux_tag }} /bin/bash build_manylinux_wheels.sh trexio-*.tar.gz
+      - name: Build wheels for different versions of CPython inside the Docker container
+        run: >
+          docker run --rm 
+          --env PLAT=manylinux${{ matrix.manylinux_tag }} 
+          --volume `pwd`:/tmp 
+          --workdir /tmp 
+          ghcr.io/q-posev/hdf5_1_12_on_${{ matrix.manylinux_tag }} 
+          /bin/bash build_manylinux_wheels.sh trexio-${{ env.PYTREXIO_VERSION }}.tar.gz
         working-directory: python
 
       - name: Upload produced wheels as artifacts
@@ -121,20 +131,23 @@ jobs:
         if: ${{ matrix.os == 'macos-11' }}
         # it is not possible to set ENV variables conditionally, so we improvise below
         run: echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
+        
+      - name: Compute the PYTREXIO_VERSION environment variable
+        run: echo "PYTREXIO_VERSION=$(grep __version__ python/pytrexio/_version.py | cut -d\  -f3 | tr -d '"')" >> $GITHUB_ENV
+          
+      - name: Print the PYTREXIO_VERSION
+        run: echo ${{ env.PYTREXIO_VERSION }}
 
       - name: Download the Python API distribution tarball
-      # conventional download-artifact action does not work for artifact produced in a different workflow
-      # which is the case here (TREXIO CI produced the Python API distribution tarball)
         uses: dawidd6/action-download-artifact@v2
         with:
-          # specify the name of tha workflow file which uploads the tarball
           workflow: actions.yml
           workflow_conclusion: success
           name: pytrexio-source
           path: python
           
       - name: Extract the Python distribution
-        run: gzip -cd trexio-*.tar.gz | tar xvf -
+        run: gzip -cd trexio-${{ env.PYTREXIO_VERSION }}.tar.gz | tar xvf -
         working-directory: python
         
       - name: Install Python dependencies
@@ -143,7 +156,7 @@ jobs:
       - name: Build wheel for a given version of CPython
         run: |
           mkdir wheelhouse/
-          cd trexio-*/
+          cd trexio-${{ env.PYTREXIO_VERSION }}/
           python -m build --wheel --outdir=./
           delocate-wheel trexio-*.whl
           mv trexio-*.whl ../wheelhouse/
@@ -173,12 +186,18 @@ jobs:
       - name: Install build dependencies
         run: python -m pip install -U setuptools twine
 
-      - name: Download the build artifacts
+      - name: Download the build artifacts (wheels) of this workflow
         uses: actions/download-artifact@v2
         with:
           path: dist
-     # if name is not specified - all artifacts will be downloaded
-     #    name: pytrexio-manylinux
+
+      - name: Download the Python API distribution tarball
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: actions.yml
+          workflow_conclusion: success
+          name: pytrexio-source
+          path: dist
 
       # the artifacts have to be in dist/ directory so that
       # pypa/gh-action-pypi-publish action can discover them
@@ -187,16 +206,15 @@ jobs:
           ls -R
           mv pytrexio-manylinux-*/trexio-*.whl ./
           mv pytrexio-macos-*/trexio-*.whl ./
-          mv pytrexio-source/trexio-*.tar.gz ./
-          rm -rf -- pytrexio-manylinux/ pytrexio-macos/ pytrexio-source/
+          rm -rf -- pytrexio-manylinux/ pytrexio-macos/
           ls -sh -w 1
         working-directory: dist
 
-      #- name: Publish distribution 📦 to Test PyPI
-      #  uses: pypa/gh-action-pypi-publish@master
-      #  with:
-      #    password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      #    repository_url: https://test.pypi.org/legacy/
+      - name: Publish distribution 📦 to Test PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
           #verbose: true
 
       #- name: Publish distribution 📦 to PyPI
