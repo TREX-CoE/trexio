@@ -4,8 +4,22 @@ setup.py file for TREXIO Python package
 """
 
 
-import os
+import os, sys
 from setuptools import setup, Extension
+
+def parse_setuppy_commands():
+    """Check the commands and respond appropriately.
+    At the moment it is adapted to ignore checks for numpy, plgconfig, HDF5 flags
+    when building the distribution tarball with sdist option.
+    """
+    args = sys.argv[1:]
+
+    if 'sdist' in args:
+        return True
+    else:
+        return False
+
+do_sdist = parse_setuppy_commands()
 
 # this was recommended to solve the problem of the missing numpy header files
 # bit it causes `pip install .` to fail with numpy module not found error
@@ -23,7 +37,7 @@ from setuptools import setup, Extension
 numpy_includedir = os.environ.get("NUMPY_INCLUDEDIR", None)
 numpy_isUndefined = numpy_includedir is None or numpy_includedir==""
 
-if numpy_isUndefined:
+if numpy_isUndefined and not do_sdist:
     raise Exception("NUMPY_INCLUDEDIR environment variable is not specified. Please do it manually or execute set_NUMPY_INCLUDEDIR.sh script.")
 
 
@@ -56,7 +70,7 @@ h5_cflags_withI  = os.environ.get("H5_CFLAGS", None)
 h5_ldflags_isUndefined = h5_ldflags_withl is None or h5_ldflags_withl==""
 h5_cflags_isUndefined = h5_cflags_withI is None or h5_cflags_withI==""
 
-if h5_ldflags_isUndefined or h5_cflags_isUndefined:
+if (h5_ldflags_isUndefined or h5_cflags_isUndefined) and not do_sdist:
 
     try:
         import pkgconfig as pk
@@ -71,8 +85,9 @@ if h5_ldflags_isUndefined or h5_cflags_isUndefined:
     h5_cflags_withI = pk.cflags('hdf5')
     h5_ldflags_withl = pk.libs('hdf5')
 
-h5_cflags = h5_cflags_withI.replace("-I","").split(" ")[0]
-h5_ldflags = h5_ldflags_withl.split(" ")[0]
+
+h5_cflags = h5_cflags_withI.replace("-I","").split(" ")[0] if not do_sdist else ""
+h5_ldflags = h5_ldflags_withl.split(" ")[0] if not do_sdist else ""
 
 # ============================ End of the HDF5 block ============================ #
 
@@ -115,4 +130,3 @@ setup(name             = 'trexio',
       python_requires = ">=3.6",
       install_requires = ['numpy>=1.17.3']
       )
-

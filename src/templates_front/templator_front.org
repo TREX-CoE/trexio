@@ -843,6 +843,7 @@ trexio_open(const char* file_name, const char mode,
   result->one_based   = false;  // Need to be flipped in Fortran interface
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
   if (irc != 0) {
+    if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
     free(result);
     return NULL;
   }
@@ -1754,7 +1755,7 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
     if ($group_dset$_p == NULL) return TREXIO_ALLOCATION_FAILED;
 
     for (uint64_t i=0; i<dim_size; ++i){
-      $group_dset$_p[i] -= ($group_dset_dtype_double$) 1;
+       $group_dset$_p[i] = $group_dset$[i] - ($group_dset_dtype_double$) 1;
     }
 
     rc = TREXIO_FAILURE;
@@ -3023,7 +3024,7 @@ def has_$group_dset$(trexio_file) -> bool:
      #+begin_src c :tangle hrw_dset_str_front.h :exports none
 trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
 trexio_exit_code trexio_read_$group_dset$_low(trexio_t* const file, char* dset_out, const int32_t max_str_len);
-trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, const char* dset_in, const int32_t max_str_len);
+trexio_exit_code trexio_write_$group_dset$_low(trexio_t* const file, char* dset_in, const int32_t max_str_len);
 trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, char** dset_out, const int32_t max_str_len);
 trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const char** dset_in, const int32_t max_str_len);
      #+end_src
@@ -3122,7 +3123,7 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const int32_t m
 
      #+begin_src c :tangle write_dset_str_front.c
 trexio_exit_code
-trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const int32_t max_str_len)
+trexio_write_$group_dset$_low (trexio_t* const file, char* dset_in, const int32_t max_str_len)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -3155,7 +3156,7 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
   for(uint64_t i=0; i<dims[0]; i++) {
 
     char* pch;
-    pch = i == 0 ? strtok( (char*) dset_in, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
+    pch = i == 0 ? strtok(dset_in, TREXIO_DELIM) : strtok(NULL, TREXIO_DELIM) ;
 
     if (pch == NULL) {
       FREE(dset_str[0]);

@@ -278,7 +278,6 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
   hid_t dspace_id = H5Dget_space(dset_id);
   // get the rank and dimensions of the dataset
   int rrank = H5Sget_simple_extent_dims(dspace_id, ddims, NULL);
-
   // check that dimensions are consistent
   if (rrank != (int) rank) {
     FREE(ddims);
@@ -400,13 +399,13 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   hid_t index_dtype;
-  void* index_p;
+  void* index_p = NULL;
   uint64_t size_ranked = (uint64_t) size * $group_dset_rank$;
   /* Determine the optimal type for storing indices depending on the size_max (usually mo_num or ao_num) */
   if (size_max < UINT8_MAX) {
     uint8_t* index = CALLOC(size_ranked, uint8_t);
     if (index == NULL) return TREXIO_ALLOCATION_FAILED;
-    for (int64_t i=0; i<size_ranked; ++i){
+    for (uint64_t i=0; i<size_ranked; ++i){
       index[i] = (uint8_t) index_sparse[i];
     }
     index_p = index;
@@ -414,7 +413,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
   } else if (size_max < UINT16_MAX) {
     uint16_t* index = CALLOC(size_ranked, uint16_t);
     if (index == NULL) return TREXIO_ALLOCATION_FAILED;
-    for (int64_t i=0; i<size_ranked; ++i){
+    for (uint64_t i=0; i<size_ranked; ++i){
       index[i] = (uint16_t) index_sparse[i];
     }
     index_p = index;
@@ -431,8 +430,8 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
   const hsize_t chunk_v_dims[1] = {size};
 
   /* Indices and values are stored as 2 independent datasets in the HDF5 file */
-  char dset_index_name[256] = "\0";
-  char dset_value_name[256] = "\0";
+  char dset_index_name[256];
+  char dset_value_name[256];
   /* Build the names of the datasets */
   strncpy(dset_index_name, $GROUP_DSET$_NAME "_indices", 256);
   strncpy(dset_value_name, $GROUP_DSET$_NAME "_values", 256);
@@ -489,8 +488,8 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
   /* Indices and values are stored as 2 independent datasets in the HDF5 file */
-  char dset_index_name[256] = "\0";
-  char dset_value_name[256] = "\0";
+  char dset_index_name[256];
+  char dset_value_name[256];
   /* Build the names of the datasets */
   strncpy(dset_index_name, $GROUP_DSET$_NAME "_indices", 256);
   strncpy(dset_value_name, $GROUP_DSET$_NAME "_values", 256);
@@ -539,7 +538,7 @@ trexio_hdf5_read_$group_dset$_size (trexio_t* const file, int64_t* const size_ma
   hsize_t ddims[1] = {0};
 
   // get the rank and dimensions of the dataset
-  int rrank = H5Sget_simple_extent_dims(fspace_id, ddims, NULL);
+  H5Sget_simple_extent_dims(fspace_id, ddims, NULL);
 
   H5Dclose(dset_id);
   H5Sclose(fspace_id);
@@ -613,7 +612,6 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, char* const $group_dset$, c
 
   // get the rank of the dataset in a file
   int rrank = H5Sget_simple_extent_dims(dspace, ddims, NULL);
-
   if (rrank != (int) rank) {
     FREE(ddims);
     H5Dclose(dset_id);
@@ -807,7 +805,6 @@ trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str, const uint3
   const hid_t ftype_id = H5Aget_type(str_id);
   if (ftype_id <= 0) return TREXIO_INVALID_ID;
   uint64_t sdim = H5Tget_size(ftype_id);
-  if (sdim <= 0) return TREXIO_FAILURE;
   sdim++;                         /* Make room for null terminator */
 
   const hid_t mem_id = H5Tcopy(H5T_C_S1);
@@ -983,6 +980,12 @@ trexio_hdf5_open_write_dset_sparse (const hid_t group_id,
 
   // get the rank and dimensions of the dataset
   int rrank = H5Sget_simple_extent_dims(fspace, ddims, NULL);
+  if (rrank != h5_rank) {
+    H5Sclose(fspace);
+    H5Dclose(dset_id);
+    return TREXIO_FAILURE;
+  }
+
   ddims[0] += chunk_dims[0];
 
   // extend the dset size
@@ -1059,6 +1062,12 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
    ,*/
   hsize_t ddims[1] = {0};
   int rrank = H5Sget_simple_extent_dims(fspace_id, ddims, NULL);
+  if (rrank != h5_rank) {
+    H5Sclose(fspace_id);
+    H5Dclose(dset_id);
+    return TREXIO_FAILURE;
+  }
+
   hsize_t max_offset = offset_file[0] + size_read[0];
 
   int is_EOF = 0;
@@ -1072,8 +1081,8 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
   }
 
   // special case when reading int indices
-  int64_t size_ranked = (int64_t) size_read[0];
-  void* index_p;
+  uint64_t size_ranked = (uint64_t) size_read[0];
+  void* index_p = NULL;
   // read the datatype from the dataset and compare with the pre-defined values
   hid_t dtype = H5Dget_type(dset_id);
   if (is_index == 1) {
@@ -1129,13 +1138,13 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
   if (is_index == 1) {
     if (H5Tequal(dtype, H5T_NATIVE_UINT8) > 0) {
       uint8_t* index = (uint8_t*) index_p;
-      for (int64_t i=0; i<size_ranked; ++i){
+      for (uint64_t i=0; i<size_ranked; ++i){
         ((int32_t*)data_sparse)[i] = (int32_t) index[i];
       }
       FREE(index_p);
     } else if (H5Tequal(dtype, H5T_NATIVE_UINT16) > 0) {
       uint16_t* index = (uint16_t*) index_p;
-      for (int64_t i=0; i<size_ranked; ++i){
+      for (uint64_t i=0; i<size_ranked; ++i){
         ((int32_t*)data_sparse)[i] = (int32_t) index[i];
       }
       FREE(index_p);

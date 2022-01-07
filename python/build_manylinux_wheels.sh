@@ -1,11 +1,15 @@
 #!/bin/bash
 
 set -x
-set -e 
+set -e
 
 export H5_LDFLAGS=-L/usr/local/lib
 export H5_CFLAGS=-I/usr/local/include
 
+readonly ROOTDIR=${PWD}
+
+# create the wheelhouse directory
+mkdir -p ${ROOTDIR}/wheelhouse
 
 # build wheel directly from developer-provided .tar.gz of TREXIO (generated with `python setup.py sdist`)
 # note: trexio-VERSION.tar.gz has to be in the root directory of the host machine and provided as an argument to this script
@@ -26,11 +30,11 @@ TR_VERSION=${tmp%.tar.gz*}
 echo "TREXIO VERSION:" ${TR_VERSION}
 
 # unzip and enter the folder with TREXIO Python API
-gzip -cd /tmp/trexio-${TR_VERSION}.tar.gz | tar xvf -
+gzip -cd ${TREXIO_SOURCE} | tar xvf -
 cd trexio-${TR_VERSION}
 
 # the function below build manylinux wheels based on the provided version of python (e.g. build_wheel_for_py 36)
-function build_wheel_for_py() 
+function build_wheel_for_py()
 {
 
    if [[ -z "$1" ]]; then
@@ -40,6 +44,15 @@ function build_wheel_for_py()
 
    # derive PYVERSION from the input argument
    PYVERSION=${1}
+
+   # derive manylinux glibc tag from the PLAT env variable provided to docker run
+   # this is needed to avoid building wheel for 2010_x86_64 with CPython 3.10
+   # because NumPy does not have wheels for it
+   MANYLINUX_TAG=${PLAT:9:4}
+   if [[ ${PYVERSION} -eq 310 ]] && [[ ${MANYLINUX_TAG} -eq 2010 ]]; then
+	echo "Skip build of the wheel for CPython 3.10 on manylinux2010_x86_64"
+	return
+   fi
 
    # python versions <= 3.7 required additional "m" in the platform tag, e.g. cp37-cp37m
    if [[ ${PYVERSION} -eq 36 ]] || [[ ${PYVERSION} -eq 37 ]]; then
@@ -52,19 +65,21 @@ function build_wheel_for_py()
 
    # create and activate a virtual environment based on CPython version ${PYVERSION}
    /opt/python/${CPYTHON}/bin/python3 -m venv --clear trexio-manylinux-py${PYVERSION}
-   source trexio-manylinux-py${PYVERSION}/bin/activate 
+   source trexio-manylinux-py${PYVERSION}/bin/activate
    python3 --version
 
    # upgrade pip, otherwise it complains that manylinux wheel is "...not supported wheel on this platform"
-   pip install --upgrade pip 
+   pip install --upgrade pip
    # install dependencies needed to build manylinux wheel
    pip install --upgrade setuptools wheel auditwheel
    if [ ${PYVERSION} -eq 36 ] || [ ${PYVERSION} -eq 37 ]; then
        pip install numpy==1.17.3
    elif [ ${PYVERSION} -eq 38 ]; then
        pip install numpy==1.18.3
-   else
+   elif [ ${PYVERSION} -eq 39 ]; then
        pip install numpy==1.19.3
+   else
+       pip install numpy==1.21.4
    fi
 
    # set an environment variable needed to locate numpy header files
@@ -91,12 +106,13 @@ function build_wheel_for_py()
    # remove the virtual environment
    rm -rf -- trexio-manylinux-py${PYVERSION}
 
+   # move the wheelhouse directory to the ROOTDIR
+   mv wheelhouse/trexio-${TR_VERSION}-${CPYTHON}-manylinux*.whl ${ROOTDIR}/wheelhouse/
 }
 
 
-# build wheels for all versions of CPython in this container 
-for CPYVERSION in 36 37 38 39
+# build wheels for all versions of CPython in this container
+for CPYVERSION in 36 37 38 39 310
 do
   build_wheel_for_py ${CPYVERSION}
 done
-
