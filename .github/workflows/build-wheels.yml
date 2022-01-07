@@ -109,10 +109,8 @@ jobs:
       - name: Display Python version
         run: python --version
 
-      - name: Install build dependencies
-        run: |
-          brew install hdf5@1.12
-          python -m pip install -U setuptools build delocate numpy
+      - name: Install HDF5
+        run: brew install hdf5@1.12
 
       # this step is needed to produce wheels with the correct platform tag
       - name: Set MACOSX_DEPLOYMENT_TARGET environment variable
@@ -130,11 +128,37 @@ jobs:
           workflow_conclusion: success
           name: pytrexio-source
           path: python
+          
+      - name: Extract the Python distribution
+        run: gzip -cd trexio-*.tar.gz | tar xvf -
+        working-directory: python
+        
+      - name: Create virtual environment for a given CPython
+        run: python3 -m venv trexio-macos-venv-py${{ matrix.python-version }}
+  
+      - name: Activate virtual environment for a given CPython
+        run: source trexio-macos-venv-py${{ matrix.python-version }}/bin/activate
+        
+      - name: Install Python dependencies
+        run: |
+          pip install -U setuptools wheel delocate
+          if [ ${{ matrix.python-version }} = "3.7" ]; then 
+            pip install -U numpy==1.17.3
+          elif [ ${{ matrix.python-version }} = "3.8" ]; then 
+            pip install -U numpy==1.18.3
+          elif [ ${{ matrix.python-version }} = "3.9" ]; then 
+            pip install -U numpy==1.19.3
+          else
+            pip install -U numpy==1.21.4
+          fi
 
+       
       - name: Build wheel for a given version of CPython
         run: |
           source tools/set_NUMPY_INCLUDEDIR.sh
-          python -m build --wheel --outdir ./
+          cd trexio-*/
+          python setup.py bdist_wheel
+          mv dist/*.whl .
           delocate-wheel trexio-*.whl
         working-directory: python
 
