@@ -38,7 +38,7 @@ jobs:
     name: Build Linux wheels for different versions of CPython on manylinux_x86_64
     needs: get_commit_message
     if: >-
-      contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
+      contains(needs.get_commit_message.outputs.message, '[LOLOLO build]') ||
       github.event_name == 'release'
     runs-on: ubuntu-latest
     strategy:
@@ -104,7 +104,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-11, macos-10.15]
+        os: [macos-11]
+        #, macos-10.15]
         python-version: ['3.7', '3.8', '3.9', '3.10']
         #exclude:
         #  - os: macos-10.15
@@ -151,7 +152,7 @@ jobs:
         working-directory: python
         
       - name: Install Python dependencies
-        run: pip install -U setuptools build delocate
+        run: pip install --upgrade pip setuptools build delocate
        
       - name: Build wheel for a given version of CPython
         run: |
@@ -164,12 +165,10 @@ jobs:
         
       # some issues with Python 3.10 wheels on MacOS-11
       - name: Install the wheel
-        if: ${{ matrix.python-version != '3.10' }}
         run: python -m pip install wheelhouse/trexio-*.whl
         working-directory: python
         
       - name: Test the wheel
-        if: ${{ matrix.python-version != '3.10' }}
         run: python test_api.py
         working-directory: python/test
         
