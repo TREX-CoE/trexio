@@ -31,8 +31,10 @@ cp ${INCLUDIR}/trexio.h ${PYDIR}/src
 
 # fix needed to define HAVE_HDF5 symbol so that Python extension is always compiled with HDF5 (without including config.h)
 # add "#define HAVE_HDF5 1" line after "#include stdint.h" using awk and sed
-LINE_NO=$(($(awk '/stdint.h/{print NR}' ${PYDIR}/src/trexio.h) + 1))
-sed -i "$LINE_NO i #define HAVE_HDF5 1" ${PYDIR}/src/trexio.h 
+export LINE_NO=$(($(awk '/stdint.h/{print NR}' ${PYDIR}/src/trexio.h) + 1))
+sed -i'' -e "$LINE_NO"'i \
+#define HAVE_HDF5 1
+' -- ${PYDIR}/src/trexio.h 
 
 # Copy additional info
 cp ${TREXIO_ROOT}/AUTHORS ${TREXIO_ROOT}/LICENSE ${PYDIR}

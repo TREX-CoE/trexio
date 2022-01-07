@@ -34,6 +34,7 @@ jobs:
 
     runs-on: ubuntu-latest
     name: x86 Ubuntu latest
+    needs: get_commit_message
 
     steps:
       - uses: actions/checkout@v2
@@ -61,16 +62,16 @@ jobs:
 
       - name: install Python API
         run: make python-install
-        # alternatively we can also run pip install trexio to check PyPI installation
 
       - name: check Python API
         run: make python-test
 
-      - name: build Python API distribution
-        run: make python-sdist
+      - name: build and move Python API distribution
+        run: |
+          make python-sdist
+          cp python/dist/trexio-*.tar.gz .
 
       - name: publish Python API distribution as an artifact
-        needs: get_commit_message
         if: >-
           contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
           github.event_name == 'release'
@@ -78,7 +79,6 @@ jobs:
         with:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
-        working-directory: python/dist
 
       - name: clean
         run: make clean
