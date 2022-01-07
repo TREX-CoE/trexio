@@ -30,12 +30,11 @@ python3 -m pip install --upgrade setuptools build pip
 python3 -m pip install -r requirements.txt
 
 # export NUMPY_INCLUDEDIR environment variable needed for the proper setup
-source tools/set_NUMPY_INCLUDEDIR.sh
-
-if [[ -z ${NUMPY_INCLUDEDIR} ]] ; then
-    echo "NUMPY_INCLUDEDIR is not set. Check that numpy is installed (e.g. call pip freeze)."
-    exit 1
-fi
+#source tools/set_NUMPY_INCLUDEDIR.sh
+#if [[ -z ${NUMPY_INCLUDEDIR} ]] ; then
+#    echo "NUMPY_INCLUDEDIR is not set. Check that numpy is installed (e.g. call pip freeze)."
+#    exit 1
+#fi
 
 # Create build directory and compile extension files (*.c)
 # --no-user-cfg disables custom .cfg files of the user machine, so that only setup.cfg is used
