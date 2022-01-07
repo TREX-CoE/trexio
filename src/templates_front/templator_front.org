@@ -845,7 +845,7 @@ trexio_open(const char* file_name, const char mode,
     free(result);
     return NULL;
   }
-  assert (irc == 0);
+  // assert (irc == 0);
 
   trexio_exit_code rc;
 
@@ -1080,6 +1080,7 @@ trexio_close (trexio_t* file)
     rc = trexio_hdf5_deinit(file);
     break;
 #else
+    FREE(file);
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
@@ -1109,6 +1110,7 @@ trexio_close (trexio_t* file)
     rc = TREXIO_SUCCESS;
     break;
 #else
+    FREE(file);
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
@@ -1290,19 +1292,16 @@ trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* cons
 
   case TREXIO_TEXT:
     return trexio_text_read_$group_num$(file, num);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_read_$group_num$(file, num);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
     return trexio_json_read_$group_num$(file, num);
-    break;
 ,*/
   }
 
@@ -1322,19 +1321,16 @@ trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double
 
   case TREXIO_TEXT:
     return trexio_text_write_$group_num$(file, num);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_write_$group_num$(file, num);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
     return trexio_json_write_$group_num$(file, num);
-    break;
 ,*/
   }
 
@@ -1365,7 +1361,8 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
     rc = trexio_hdf5_read_$group_num$(file, &num_64);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
+    break ;
 #endif
 /*
   case TREXIO_JSON:
@@ -1376,7 +1373,7 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
 
   if (rc != TREXIO_SUCCESS) return rc;
 
-  *num = ($group_num_dtype_single$) num_64;
+  ,*num = ($group_num_dtype_single$) num_64;
   return TREXIO_SUCCESS;
 }
      #+end_src
@@ -1394,12 +1391,10 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
 
   case TREXIO_TEXT:
     return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -1445,12 +1440,10 @@ trexio_has_$group_num$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_num$(file);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_has_$group_num$(file);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -1697,7 +1690,8 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
     rc = trexio_hdf5_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
+    break;
 #endif
 /*
   case TREXIO_JSON:
@@ -1774,7 +1768,8 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
     rc = trexio_hdf5_write_$group_dset$(file, $group_dset$_p, rank, dims);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
+    break;
 #endif
     /*
       case TREXIO_JSON:
@@ -1838,7 +1833,8 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
     rc = trexio_hdf5_read_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
+    break;
 #endif
 /*
   case TREXIO_JSON:
@@ -1921,7 +1917,8 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
     rc = trexio_hdf5_write_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
+    break;
 #endif
 /*
   case TREXIO_JSON:
@@ -2082,19 +2079,16 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_dset$(file);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_has_$group_dset$(file);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
     return trexio_json_has_$group_dset$(file);
-    break;
 ,*/
   }
   return TREXIO_FAILURE;
@@ -2509,6 +2503,7 @@ trexio_read_$group_dset$(trexio_t* const file,
 ,*/
   default:
     rc = TREXIO_FAILURE;  /* Impossible case */
+    break;
   }
 
   if (rc != TREXIO_SUCCESS && rc != TREXIO_END) return rc;
@@ -2628,6 +2623,7 @@ trexio_write_$group_dset$(trexio_t* const file,
     break;
 #else
     rc = TREXIO_BACK_END_MISSING;
+    break;
 #endif
 /*
   case TREXIO_JSON:
@@ -2636,6 +2632,7 @@ trexio_write_$group_dset$(trexio_t* const file,
 ,*/
   default:
     rc = TREXIO_FAILURE;  /* Impossible case */
+    break;
   }
 
   // free the memory allocated to shift indices to be zero-based
@@ -2659,12 +2656,10 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_dset$(file);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_has_$group_dset$(file);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -3034,19 +3029,16 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const int32_
 
   case TREXIO_TEXT:
     return trexio_text_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
     rc = trexio_json_read_$group_dset$(file, dset_out, rank, dims);
-    break;
 ,*/
   }
 
@@ -3169,7 +3161,8 @@ trexio_write_$group_dset$_low (trexio_t* const file, const char* dset_in, const 
     rc = trexio_hdf5_write_$group_dset$(file, (const char**) dset_str, rank, dims);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc =TREXIO_BACK_END_MISSING;
+    break;
 #endif
 /*
   case TREXIO_JSON:
@@ -3234,12 +3227,10 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_dset$(file);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_has_$group_dset$(file);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -3487,12 +3478,10 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const int32_
 
   case TREXIO_TEXT:
     return trexio_text_read_$group_str$(file, str_out, (uint32_t) max_str_len);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_read_$group_str$(file, str_out, (uint32_t) max_str_len);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -3524,19 +3513,16 @@ trexio_write_$group_str$ (trexio_t* const file, const char* str, const int32_t m
 
   case TREXIO_TEXT:
     return trexio_text_write_$group_str$(file, str);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_write_$group_str$(file, str);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
     return trexio_json_write_$group_str$(file, str);
-    break;
 ,*/
   }
 
@@ -3557,19 +3543,16 @@ trexio_has_$group_str$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_str$(file);
-    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_has_$group_str$(file);
-    break;
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
     return trexio_json_has_$group_str$(file);
-    break;
 ,*/
   }
 
