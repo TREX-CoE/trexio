@@ -59,8 +59,13 @@ jobs:
         run: python -m pip install -U setuptools
 
       - name: Download the Python API distribution tarball
-        uses: actions/download-artifact@v2
+      # conventional download-artifact action does not work for artifact produced in a different workflow
+      # which is the case here (TREXIO CI produced the Python API distribution tarball)
+        uses: dawidd6/action-download-artifact@v2
         with:
+          # specify the name of tha workflow file which uploads the tarball
+          workflow: actions.yml
+          workflow_conclusion: success
           name: pytrexio-source
           path: python
 
@@ -116,8 +121,13 @@ jobs:
         run: echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
 
       - name: Download the Python API distribution tarball
-        uses: actions/download-artifact@v2
+      # conventional download-artifact action does not work for artifact produced in a different workflow
+      # which is the case here (TREXIO CI produced the Python API distribution tarball)
+        uses: dawidd6/action-download-artifact@v2
         with:
+          # specify the name of tha workflow file which uploads the tarball
+          workflow: actions.yml
+          workflow_conclusion: success
           name: pytrexio-source
           path: python
 
