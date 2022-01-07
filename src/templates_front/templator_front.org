@@ -1745,12 +1745,11 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 
   $group_dset_dtype_double$* $group_dset$_p = ($group_dset_dtype_double$*) $group_dset$;
 
-  /* Handle index type */
   if ($is_index$) {
-
+    /* Handle index type : is_index = $is_index$ */
     uint64_t dim_size = 1;
     for (uint32_t i=0; i<rank; ++i){
-        dim_size *= dims[i];
+      dim_size *= dims[i];
     }
 
     $group_dset$_p = CALLOC(dim_size, $group_dset_dtype_double$);
@@ -1777,11 +1776,11 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
-  case TREXIO_JSON:
-    rc = trexio_json_write_$group_dset$(file, $group_dset$_p, rank, dims);
-    break;
-,*/
+    /*
+      case TREXIO_JSON:
+      rc = trexio_json_write_$group_dset$(file, $group_dset$_p, rank, dims);
+      break;
+    ,*/
   }
 
   /* Handle index type */
@@ -2500,7 +2499,8 @@ trexio_read_$group_dset$(trexio_t* const file,
     rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, num, &eof_read_size, index_sparse, value_sparse);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
+    break;
 #endif
 /*
   case TREXIO_JSON:
