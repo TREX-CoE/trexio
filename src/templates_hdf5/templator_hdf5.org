@@ -301,9 +301,9 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
 
   /* High-level H5LT API. No need to deal with dataspaces and datatypes */
   herr_t status = H5LTread_dataset(f->$group$_group,
-			           $GROUP_DSET$_NAME,
-			           H5T_$GROUP_DSET_H5_DTYPE$,
-			           $group_dset$);
+                                   $GROUP_DSET$_NAME,
+                                   H5T_$GROUP_DSET_H5_DTYPE$,
+                                   $group_dset$);
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
@@ -323,10 +323,10 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
   if ( H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME) != 1 ) {
 
     const herr_t status = H5LTmake_dataset(f->$group$_group,
-					   $GROUP_DSET$_NAME,
-					   (int) rank, (const hsize_t*) dims,
-					   H5T_$GROUP_DSET_H5_DTYPE$,
-					   $group_dset$);
+                                           $GROUP_DSET$_NAME,
+                                           (int) rank, (const hsize_t*) dims,
+                                           H5T_$GROUP_DSET_H5_DTYPE$,
+                                           $group_dset$);
     if (status < 0) return TREXIO_FAILURE;
 
   } else {
@@ -335,9 +335,9 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
     if (dset_id <= 0) return TREXIO_INVALID_ID;
 
     const herr_t status = H5Dwrite(dset_id,
-				   H5T_$GROUP_DSET_H5_DTYPE$,
-				   H5S_ALL, H5S_ALL, H5P_DEFAULT,
-				   $group_dset$);
+                                   H5T_$GROUP_DSET_H5_DTYPE$,
+                                   H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                                   $group_dset$);
 
     H5Dclose(dset_id);
     if (status < 0) return TREXIO_FAILURE;
@@ -740,8 +740,8 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const char** $group_dset$,
 
     /* code to write dataset */
     status = H5Dwrite(dset_id, memtype,
-		      H5S_ALL, H5S_ALL, H5P_DEFAULT,
-		      $group_dset$);
+                      H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                      $group_dset$);
 
     H5Dclose(dset_id);
     H5Tclose(memtype);
