@@ -223,7 +223,7 @@ python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 
 python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
-		python setup.py sdist
+		python3 -m build --sdist
 
 $(pytrexio_py): $(pytrexio_c)
 	cd tools && ./prepare_python.sh
