@@ -23,19 +23,19 @@ program print_energy
    This program computes the energy as:
 
    \[
-   E = E_{\text{NN}} + \sum_{ij} D_{ij}\, \langle i | h | j \rangle\,
-   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle i j | k l
+   E = E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
    \rangle\; \textrm{ with } \; 0 < i,j,k,l \le n
    \]
-
    One needs to read from the TREXIO file:
 
    - $n$ :: The number of molecular orbitals
    - $E_{\text{NN}}$ :: The nuclear repulsion energy 
-   - $D_{ij}$ :: The one-body reduced density matrix 
-   - $\langle i |h| j \rangle$ :: The one-electron Hamiltonian integrals 
+   - $\gamma_{ij}$ :: The one-body reduced density matrix 
+   - $\langle j |h| i \rangle$ :: The one-electron Hamiltonian integrals 
    - $\Gamma_{ijkl}$ :: The two-body reduced density matrix 
-   - $\langle i j | k l \rangle$ :: The electron repulsion integrals
+   - $\langle k l  | i j \rangle$ :: The electron repulsion integrals
+
 
    #+begin_src f90
   integer                       :: n
@@ -228,7 +228,17 @@ program print_energy
     
 *** Compute the energy
     
-    As $(n,m)$ 2D arrays are stored in memory as $(\n times m)$ 1D
+    When the orbitals are real, we can use
+   \begin{eqnarray*}
+   E &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
+   \rangle \\
+     &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle i | h | j \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle i j | k l
+   \rangle \\
+   \end{eqnarray*}
+
+    As $(n,m)$ 2D arrays are stored in memory as $(n \times m)$ 1D
     arrays, we could pass the matrices to the ~ddot~ BLAS function to
     perform the summations in a single call for the 1-electron quantities.
     Instead, we prefer to interleave the 1-electron (negative) and

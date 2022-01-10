@@ -631,6 +631,45 @@ prim_factor =
 * TODO Slater determinants
 * Reduced density matrices (rdm group)
 
+  The reduced density matrices are defined in the basis of molecular
+  orbitals.
+
+  The $\uparrow$-spin and $\downarrow$-spin components of the one-body
+  density matrix are given by
+  \begin{eqnarray*}
+    \gamma_{ij}^{\uparrow}   &=& \langle \Psi | a^{\dagger}_{j\alpha}\, a_{i\alpha} | \Psi \rangle \\
+    \gamma_{ij}^{\downarrow} &=& \langle \Psi | a^{\dagger}_{j\beta} \, a_{i\beta}  | \Psi \rangle 
+  \end{eqnarray*}
+  and the spin-summed one-body density matrix is
+  \[
+  \gamma_{ij} = \gamma^{\uparrow}_{ij} + \gamma^{\downarrow}_{ij} 
+  \]
+
+  The $\uparrow \uparrow$,  $\downarrow \downarrow$, $\uparrow \downarrow$, $\downarrow \uparrow$
+  components of the two-body density matrix are given by
+  \begin{eqnarray*}
+    \Gamma_{ijkl}^{\uparrow \uparrow} &=&
+       \langle \Psi | a^{\dagger}_{k\alpha}\, a^{\dagger}_{l\alpha} a_{j\alpha}\, a_{i\alpha} | \Psi \rangle \\
+    \Gamma_{ijkl}^{\downarrow \downarrow} &=&
+       \langle \Psi | a^{\dagger}_{k\beta}\, a^{\dagger}_{l\beta} a_{j\beta}\, a_{i\beta} | \Psi \rangle \\
+    \Gamma_{ijkl}^{\uparrow \downarrow} &=&
+      +\langle \Psi | a^{\dagger}_{k\alpha}\, a^{\dagger}_{l\beta} a_{j\beta}\, a_{i\alpha} | \Psi \rangle \\
+    \Gamma_{ijkl}^{\downarrow \uparrow} &=&
+       \langle \Psi | a^{\dagger}_{k\beta}\, a^{\dagger}_{l\alpha} a_{j\alpha}\, a_{i\beta} | \Psi \rangle \\
+  \end{eqnarray*}
+  and the spin-summed one-body density matrix is
+  \[
+  \Gamma_{ijkl} = \Gamma_{ijkl}^{\uparrow \uparrow} +
+    \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow} 
+    \Gamma_{ijkl}^{\downarrow \uparrow}
+  \]
+   
+  The total energy can be computed as:
+  \[
+  E = E_{\text{NN}} + \sum_{ij} \gamma_{ij} \langle j|h|i \rangle +
+      \frac{1}{2} \sum_{ijlk} \Gamma_{ijkl} \langle k l | i j \rangle
+  \]
+  
   #+NAME: rdm
   | Variable  | Type           | Dimensions                         | Description                                                           |
   |-----------+----------------+------------------------------------+-----------------------------------------------------------------------|
@@ -641,6 +680,7 @@ prim_factor =
   | ~2e_upup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\uparrow component of the two-body reduced density matrix     |
   | ~2e_dndn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\downarrow component of the two-body reduced density matrix |
   | ~2e_updn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\downarrow component of the two-body reduced density matrix   |
+  | ~2e_dnup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\uparrow component of the two-body reduced density matrix   |
 
   #+CALL: json(data=rdm, title="rdm", last=1)
 
@@ -655,6 +695,7 @@ prim_factor =
         , "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
         , "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
         , "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+        , "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
       }
   #+end_src
   :end:
