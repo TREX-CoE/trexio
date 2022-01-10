@@ -71,22 +71,10 @@ function build_wheel_for_py()
    # upgrade pip, otherwise it complains that manylinux wheel is "...not supported wheel on this platform"
    pip install --upgrade pip
    # install dependencies needed to build manylinux wheel
-   pip install --upgrade setuptools wheel auditwheel
-   if [ ${PYVERSION} -eq 36 ] || [ ${PYVERSION} -eq 37 ]; then
-       pip install numpy==1.17.3
-   elif [ ${PYVERSION} -eq 38 ]; then
-       pip install numpy==1.18.3
-   elif [ ${PYVERSION} -eq 39 ]; then
-       pip install numpy==1.19.3
-   else
-       pip install numpy==1.21.4
-   fi
-
-   # set an environment variable needed to locate numpy header files
-   source tools/set_NUMPY_INCLUDEDIR.sh
+   pip install --upgrade setuptools build
 
    # produce conventional (non-manylinux) wheel
-   python3 setup.py bdist_wheel
+   python3 -m build --wheel --outdir dist/
 
    # use auditwheel from PyPA to repair all wheels and make them manylinux-compatible
    auditwheel repair dist/trexio-${TR_VERSION}-${CPYTHON}-*.whl

@@ -26,33 +26,42 @@ else
 fi
 
 # Install/upgrade packages required for the installation
-python3 -m pip install --upgrade setuptools wheel pip
+python3 -m pip install --upgrade setuptools build pip
 python3 -m pip install -r requirements.txt
 
 # export NUMPY_INCLUDEDIR environment variable needed for the proper setup
-source tools/set_NUMPY_INCLUDEDIR.sh
-
-if [[ -z ${NUMPY_INCLUDEDIR} ]] ; then
-    echo "NUMPY_INCLUDEDIR is not set. Check that numpy is installed (e.g. call pip freeze)."
-    exit 1
-fi
+#source tools/set_NUMPY_INCLUDEDIR.sh
+#if [[ -z ${NUMPY_INCLUDEDIR} ]] ; then
+#    echo "NUMPY_INCLUDEDIR is not set. Check that numpy is installed (e.g. call pip freeze)."
+#    exit 1
+#fi
 
 # Create build directory and compile extension files (*.c)
 # --no-user-cfg disables custom .cfg files of the user machine, so that only setup.cfg is used
-python3 -s setup.py --no-user-cfg build 
+#python3 -s setup.py --no-user-cfg build 
 
 # Local inplace build of the .so module with SWIG-produced pytrexio_wrap.c (from the SWIG documentation)
 #python3 setup.py build_ext --inplace --swig-opts="-modern"
 
 # Create distributions: 
+
+# OLD WAY (DEPRECATED BY PYPA)
 #   1) sdist produces .tar.gz with all files necessary for manual compilation;
 #   2) bdist_whell produces .whl wheel distribution (see https://www.python.org/dev/peps/pep-0425/).
-python3 setup.py sdist bdist_wheel
+#python3 setup.py sdist bdist_wheel
+
+# NEW WAY (USING BUILD PACKAGE OF PYPA)
+python3 -m build --sdist --wheel --outdir dist/
 
 # Install pytrexio in the current environment from the aforementioned wheel
+
+# OLD WAY
 # --force-reinstall is needed here because build-system pre-installs pytrexio in the environment 
 #                   but does not install things in the corresponding site-packages directory
-python3 -m pip install dist/trexio-*.whl --force-reinstall
+#python3 -m pip install dist/trexio-*.whl --force-reinstall
+
+# NEW WAY
+python3 -m pip install dist/trexio-*.whl
 
 # Run the command below in the root directory to install the package in 'editable' (-e) mode without dependencies (--no-deps)
 #python -m pip install -e . --no-deps

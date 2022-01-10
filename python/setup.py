@@ -22,19 +22,16 @@ def parse_setuppy_commands():
 do_sdist = parse_setuppy_commands()
 
 # this was recommended to solve the problem of the missing numpy header files
-# bit it causes `pip install .` to fail with numpy module not found error
-#try:
-#    import numpy
-#except ImportError:
-#    raise Exception("numpy Python package cannot be imported.")
-#numpy_includedir = numpy.get_include()
+try:
+    import numpy
+except ImportError:
+    raise Exception("numpy Python package cannot be imported.")
 
-# this does not cause aforementioned issue but the includedir points to system-wide numpy and not to venv-wide
-#from distutils.sysconfig import get_python_inc
-#numpy_includedir = os.path.join(get_python_inc(plat_specific=1), 'numpy')
+numpy_includedir = numpy.get_include()
 
 # dirty workaround: get numpy includedir from the environment variable that can be pre-set using set_NUMPY_INCLUDEDIR.sh
-numpy_includedir = os.environ.get("NUMPY_INCLUDEDIR", None)
+#numpy_includedir = os.environ.get("NUMPY_INCLUDEDIR", None)
+
 numpy_isUndefined = numpy_includedir is None or numpy_includedir==""
 
 if numpy_isUndefined and not do_sdist:
