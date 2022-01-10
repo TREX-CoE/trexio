@@ -134,7 +134,7 @@ fetched using multiple function calls to perform I/O on buffers.
   V_{A \ell_{\max}+1} +
   \sum_{\ell=0}^{\ell_{\max}}
   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
-  V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} | 
+  V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} |
   \]
 
   The first term in the equation above is sometimes attributed to the local channel,
@@ -147,9 +147,9 @@ fetched using multiple function calls to perform I/O on buffers.
   \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
   e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
   \]
-  
+
   See http://dx.doi.org/10.1063/1.4984046 or https://doi.org/10.1063/1.5121006 for more info.
-  
+
   #+NAME: ecp
   | Variable             | Type    | Dimensions      | Description                                                                            |
   |----------------------+---------+-----------------+----------------------------------------------------------------------------------------|
@@ -163,17 +163,17 @@ fetched using multiple function calls to perform I/O on buffers.
   | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
 
 
-There might be some confusion in the meaning of the $\ell_{\max}$. 
-It can be attributed to the maximum angular momentum occupied 
+There might be some confusion in the meaning of the $\ell_{\max}$.
+It can be attributed to the maximum angular momentum occupied
 in the core orbitals, which are removed by the ECP.
-On the other hand, it can be attributed to the maximum angular momentum of the 
-ECP that replaces the core electrons. 
+On the other hand, it can be attributed to the maximum angular momentum of the
+ECP that replaces the core electrons.
 *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
 
 
-*Note for developers*: avoid having variables with similar prefix in their name. 
+*Note for developers*: avoid having variables with similar prefix in their name.
 HDF5 back end might cause issues due to the way ~find_dataset~ function works.
-For example, in the ECP group we use ~max_ang_mom~ and not ~ang_mom_max~. 
+For example, in the ECP group we use ~max_ang_mom~ and not ~ang_mom_max~.
 The latter causes issues when written before ~ang_mom~ in the TREXIO file.
 
 
@@ -197,16 +197,16 @@ The latter causes issues when written before ~ang_mom~ in the TREXIO file.
 
 ** Example
 
-  For example, consider H_2 molecule with the following 
-  [[https://pseudopotentiallibrary.org/recipes/H/ccECP/H.ccECP.gamess][effective core potential]] 
+  For example, consider H_2 molecule with the following
+  [[https://pseudopotentiallibrary.org/recipes/H/ccECP/H.ccECP.gamess][effective core potential]]
   (in GAMESS input format for the H atom):
 
    #+BEGIN_EXAMPLE
 H-ccECP GEN 0 1
 3
-1.00000000000000    1 21.24359508259891 
-21.24359508259891   3 21.24359508259891 
--10.85192405303825  2 21.77696655044365 
+1.00000000000000    1 21.24359508259891
+21.24359508259891   3 21.24359508259891
+-10.85192405303825  2 21.77696655044365
 1
 0.00000000000000    2 1.000000000000000
    #+END_EXAMPLE
@@ -228,7 +228,7 @@ nucleus_index = [
   1, 1, 1, 1
   ]
 
-# 3 first ECP elements correspond to potential of the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom 
+# 3 first ECP elements correspond to potential of the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom
 ang_mom = [
   1, 1, 1, 0,
   1, 1, 1, 0
@@ -240,13 +240,13 @@ coefficient = [
   1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000
   ]
 
-exponent = [ 
+exponent = [
   21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000,
   21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000
   ]
 
-power = [ 
-  -1, 1, 0, 0, 
+power = [
+  -1, 1, 0, 0,
   -1, 1, 0, 0
   ]
    #+END_EXAMPLE
@@ -357,32 +357,32 @@ prim_num   = 20
 shell_num   = 12
 
 # 6 shells per H atom
-nucleus_index = 
-[ 0, 0, 0, 0, 0, 0,  
-  1, 1, 1, 1, 1, 1 ] 
+nucleus_index =
+[ 0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1, 1, 1 ]
 
 # 3 shells in S (l=0), 2 in P (l=1), 1 in D (l=2)
 shell_ang_mom =
-[ 0, 0, 0, 1, 1, 2, 
+[ 0, 0, 0, 1, 1, 2,
   0, 0, 0, 1, 1, 2 ]
 
-# no need to renormalize shells 
-shell_factor = 
-[ 1., 1., 1., 1., 1., 1.,  
-  1., 1., 1., 1., 1., 1. ] 
+# no need to renormalize shells
+shell_factor =
+[ 1., 1., 1., 1., 1., 1.,
+  1., 1., 1., 1., 1., 1. ]
 
 # 5 primitives for the first S shell and then 1 primitive per remaining shells in each H atom
-shell_index = 
-[ 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 
+shell_index =
+[ 0, 0, 0, 0, 0, 1, 2, 3, 4, 5,
   6, 6, 6, 6, 6, 7, 8, 9, 10, 11 ]
 
 # parameters of the primitives (10 per H atom)
 exponent =
-[ 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407, 0.388, 1.057, 
+[ 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407, 0.388, 1.057,
   33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407, 0.388, 1.057 ]
 
 coefficient =
-[ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0, 
+[ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0,
   0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0 ]
 
 prim_factor =
@@ -467,7 +467,7 @@ prim_factor =
    :PROPERTIES:
    :CUSTOM_ID: ao_one_e
    :END:
-   
+
    - \[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
      \sum_{i=1}^{N_\text{elec}} \frac{-Z_A }{\vert \mathbf{R}_A -
      \mathbf{r}_i \vert} \] : electron-nucleus attractive potential,
@@ -637,39 +637,39 @@ prim_factor =
   The $\uparrow$-spin and $\downarrow$-spin components of the one-body
   density matrix are given by
   \begin{eqnarray*}
-    \gamma_{ij}^{\uparrow}   &=& \langle \Psi | a^{\dagger}_{j\alpha}\, a_{i\alpha} | \Psi \rangle \\
-    \gamma_{ij}^{\downarrow} &=& \langle \Psi | a^{\dagger}_{j\beta} \, a_{i\beta}  | \Psi \rangle 
+    \gamma_{ij}^{\uparrow}   &=& \langle \Psi | \hat{a}^{\dagger}_{j\alpha}\, \hat{a}_{i\alpha} | \Psi \rangle \\
+    \gamma_{ij}^{\downarrow} &=& \langle \Psi | \hat{a}^{\dagger}_{j\beta} \, \hat{a}_{i\beta}  | \Psi \rangle
   \end{eqnarray*}
   and the spin-summed one-body density matrix is
   \[
-  \gamma_{ij} = \gamma^{\uparrow}_{ij} + \gamma^{\downarrow}_{ij} 
+  \gamma_{ij} = \gamma^{\uparrow}_{ij} + \gamma^{\downarrow}_{ij}
   \]
 
   The $\uparrow \uparrow$,  $\downarrow \downarrow$, $\uparrow \downarrow$, $\downarrow \uparrow$
   components of the two-body density matrix are given by
   \begin{eqnarray*}
     \Gamma_{ijkl}^{\uparrow \uparrow} &=&
-       \langle \Psi | a^{\dagger}_{k\alpha}\, a^{\dagger}_{l\alpha} a_{j\alpha}\, a_{i\alpha} | \Psi \rangle \\
+       \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\alpha} \hat{a}_{j\alpha}\, \hat{a}_{i\alpha} | \Psi \rangle \\
     \Gamma_{ijkl}^{\downarrow \downarrow} &=&
-       \langle \Psi | a^{\dagger}_{k\beta}\, a^{\dagger}_{l\beta} a_{j\beta}\, a_{i\beta} | \Psi \rangle \\
+       \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\beta} | \Psi \rangle \\
     \Gamma_{ijkl}^{\uparrow \downarrow} &=&
-      +\langle \Psi | a^{\dagger}_{k\alpha}\, a^{\dagger}_{l\beta} a_{j\beta}\, a_{i\alpha} | \Psi \rangle \\
+       \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle \\
     \Gamma_{ijkl}^{\downarrow \uparrow} &=&
-       \langle \Psi | a^{\dagger}_{k\beta}\, a^{\dagger}_{l\alpha} a_{j\alpha}\, a_{i\beta} | \Psi \rangle \\
+       \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\alpha} \hat{a}_{j\alpha}\, \hat{a}_{i\beta} | \Psi \rangle \\
   \end{eqnarray*}
   and the spin-summed one-body density matrix is
   \[
   \Gamma_{ijkl} = \Gamma_{ijkl}^{\uparrow \uparrow} +
-    \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow} 
+    \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow}
     \Gamma_{ijkl}^{\downarrow \uparrow}
   \]
-   
+
   The total energy can be computed as:
   \[
   E = E_{\text{NN}} + \sum_{ij} \gamma_{ij} \langle j|h|i \rangle +
       \frac{1}{2} \sum_{ijlk} \Gamma_{ijkl} \langle k l | i j \rangle
   \]
-  
+
   #+NAME: rdm
   | Variable  | Type           | Dimensions                         | Description                                                           |
   |-----------+----------------+------------------------------------+-----------------------------------------------------------------------|
