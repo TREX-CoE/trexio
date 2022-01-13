@@ -148,8 +148,6 @@ htmldir = $(docdir)
 # The circular dependency did not impose issues on GNU make but produced errors on bmake.
 htmlizer = docs/.htmlizer
 
-CLEANFILES += $(HTML_TANGLED) $(htmlizer)
-
 HTML_FILES = $(HTML_TANGLED) \
              docs/trexio.css \
              docs/tutorial_benzene.html \
@@ -171,7 +169,7 @@ HDF5_CPPFLAGS = @HDF5_CPPFLAGS@
 
 if TREXIO_DEVEL
 
-CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h) .git_hash
+CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h) $(HTML_TANGLED) $(htmlizer) .git_hash
 
 BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
 
