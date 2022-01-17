@@ -47,7 +47,7 @@ TREX library for efficient I/O.
 
 ## Installation procedure for CMake users (from the tarball or GitHub repo clone):
 
-The aforementioned instructions rely on [Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html) build system. 
+The aforementioned instructions rely on [Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html) build system.
 [CMake](https://cmake.org) users can achieve the same with the following steps (an example of out-of-source build):
 
 1. `cmake -S. -Bbuild`
@@ -77,7 +77,7 @@ In order to link the program against TREXIO, the search paths can be modified as
 
 (same holds for `$LD_LIBRARY_PATH`). The `<path_to_trexio>` has to be replaced by the prefix used during the installation.
 
-If your project relies on CMake build system, feel free to use the 
+If your project relies on CMake build system, feel free to use the
 [FindTREXIO.cmake](https://github.com/TREX-CoE/trexio/blob/master/cmake/FindTREXIO.cmake)
 module to find and link TREXIO library automatically.
 
@@ -110,6 +110,8 @@ These quantities can be accessed using the corresponding `trexio_[has|read|write
 
 ## Python API
 
+[![PyPI version](https://badge.fury.io/py/trexio.svg)](https://badge.fury.io/py/trexio)
+
 For more details regarding the installation and usage of the TREXIO Python API,
 see [this page](python/README.md).
 
@@ -140,5 +142,3 @@ This can be checked with the `cppcheck` tool.
 -----------------
 ![European flag](https://trex-coe.eu/sites/default/files/inline-images/euflag.jpg)
 [TREX: Targeting Real Chemical Accuracy at the Exascale](https://trex-coe.eu) project has received funding from the European Union’s Horizon 2020 - Research and Innovation program - under grant agreement no. 952165. The content of this document does not represent the opinion of the European Union, and the European Union is not responsible for any use that might be made of such content.
-
-
