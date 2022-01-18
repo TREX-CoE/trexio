@@ -83,8 +83,8 @@ module trexio
   use, intrinsic :: iso_c_binding
   implicit none
 
-  integer, parameter :: trexio_exit_code = 4
-  integer, parameter :: trexio_backend = 4
+  integer, parameter :: trexio_exit_code = c_int
+  integer, parameter :: trexio_backend = c_int
 
   character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
   #+end_src
@@ -492,8 +492,8 @@ interface
    subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
      use, intrinsic :: iso_c_binding
      import
-     integer (trexio_exit_code), intent(in), value :: error
-     character, intent(out) :: string(<<MAX_STRING_LENGTH()>>)
+     integer(trexio_exit_code), intent(in), value :: error
+     character(kind=c_char), intent(out)          :: string(<<MAX_STRING_LENGTH()>>)
    end subroutine trexio_string_of_error
 end interface
   #+end_src
@@ -596,9 +596,9 @@ bool trexio_has_backend(back_end_t back_end) {
 
   #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   logical function trexio_has_backend (back_end) bind(C)
+   logical(c_bool) function trexio_has_backend (back_end) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(4), intent(in), value :: back_end
+     integer(c_int), intent(in), value :: back_end
    end function trexio_has_backend
 end interface
   #+end_src
@@ -958,11 +958,11 @@ trexio_open(const char* file_name, const char mode,
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(8) function trexio_open_c (filename, mode, backend, rc_open) bind(C, name="trexio_open")
+   integer(c_long) function trexio_open_c (filename, mode, backend, rc_open) bind(C, name="trexio_open")
      use, intrinsic :: iso_c_binding
      import
      character(kind=c_char), dimension(*)       :: filename
-     character, intent(in), value               :: mode
+     character(kind=c_char), intent(in), value  :: mode
      integer(trexio_backend), intent(in), value :: backend
      integer(trexio_exit_code), intent(out)     :: rc_open
    end function trexio_open_c
@@ -1036,9 +1036,9 @@ trexio_exit_code trexio_set_one_based(trexio_t* file)
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer function trexio_set_one_based(trex_file) bind(C)
+   integer(c_int) function trexio_set_one_based(trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
    end function trexio_set_one_based
 end interface
    #+end_src
@@ -1139,9 +1139,9 @@ trexio_close (trexio_t* file)
 
     #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer function trexio_close (trex_file) bind(C)
+   integer(c_int) function trexio_close (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
    end function trexio_close
 end interface
     #+end_src
@@ -1192,29 +1192,29 @@ def close(trexio_file):
   example, in ~#define~ statements).  More detailed description of
   each variable can be found below:
 
-   | Template variable              | Description                                         | Example               |
-   |--------------------------------+-----------------------------------------------------+-----------------------|
-   | ~$group$~                      | Name of the group                                   | ~nucleus~             |
-   | ~$group_num$~                  | Name of the numerical attribute (scalar)            | ~nucleus_num~         |
-   | ~$group_str$~                  | Name of the string attribute (scalar)               | ~nucleus_point_group~ |
-   | ~$group_dset$~                 | Name of the dataset (vector/matrix/tensor)          | ~nucleus_coord~       |
-   | ~$group_dset_rank$~            | Rank of the dataset                                 | ~2~                   |
-   | ~$group_dset_dim$~             | Selected dimension of the dataset                   | ~nucleus_num~         |
-   | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~    |
-   | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~               |
-   | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~              |
-   | ~$group_dset_format_scanf$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                 |
-   | ~$group_dset_format_printf$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~             |
-   | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~      |
-   | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~       |
-   | ~$group_dset_dtype_double$~    | Double precision datatype of the dataset [C]        | ~double/int64_t~      |
-   | ~$group_dset_f_dtype_default$~ | Default datatype of the dataset [Fortran]           | ~real(8)/integer(4)~  |
-   | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(4)/integer(4)~  |
-   | ~$group_dset_f_dtype_double$~  | Double precision datatype of the dataset [Fortran]  | ~real(8)/integer(8)~  |
-   | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~               |
-   | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~           |
-   | ~$default_prec$~               | Default precision for read/write without suffix [C] | ~64/32~               |
-   | ~$is_index$~                   | Expands to ~true~ if dataset has a type ~index~ [C] | ~true/false~          |
+   | Template variable              | Description                                         | Example                           |
+   |--------------------------------+-----------------------------------------------------+-----------------------------------|
+   | ~$group$~                      | Name of the group                                   | ~nucleus~                         |
+   | ~$group_num$~                  | Name of the numerical attribute (scalar)            | ~nucleus_num~                     |
+   | ~$group_str$~                  | Name of the string attribute (scalar)               | ~nucleus_point_group~             |
+   | ~$group_dset$~                 | Name of the dataset (vector/matrix/tensor)          | ~nucleus_coord~                   |
+   | ~$group_dset_rank$~            | Rank of the dataset                                 | ~2~                               |
+   | ~$group_dset_dim$~             | Selected dimension of the dataset                   | ~nucleus_num~                     |
+   | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~                |
+   | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~                           |
+   | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~                          |
+   | ~$group_dset_format_scanf$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                             |
+   | ~$group_dset_format_printf$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~                         |
+   | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~                  |
+   | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~                   |
+   | ~$group_dset_dtype_double$~    | Double precision datatype of the dataset [C]        | ~double/int64_t~                  |
+   | ~$group_dset_f_dtype_default$~ | Default datatype of the dataset [Fortran]           | ~real(c_double)/integer(c_int)~   |
+   | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(c_float)/integer(c_int)~    |
+   | ~$group_dset_f_dtype_double$~  | Double precision datatype of the dataset [Fortran]  | ~real(c_double)/integer(c_long)~  |
+   | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~                           |
+   | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~                       |
+   | ~$default_prec$~               | Default precision for read/write without suffix [C] | ~64/32~                           |
+   | ~$is_index$~                   | Expands to ~true~ if dataset has a type ~index~ [C] | ~true/false~                      |
 
 
    Some of the aforementioned template variables with ~group_dset~ prefix are duplicated with ~group_num~ prefix,
@@ -1467,9 +1467,9 @@ trexio_has_$group_num$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_attr_num_64_front_fortran.f90
 interface
-   integer function trexio_write_$group_num$_64 (trex_file, num) bind(C)
+   integer(c_int) function trexio_write_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(in), value :: num
    end function trexio_write_$group_num$_64
 end interface
@@ -1477,9 +1477,9 @@ end interface
 
      #+begin_src f90 :tangle read_attr_num_64_front_fortran.f90
 interface
-   integer function trexio_read_$group_num$_64 (trex_file, num) bind(C)
+   integer(c_int) function trexio_read_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(out) :: num
    end function trexio_read_$group_num$_64
 end interface
@@ -1487,9 +1487,9 @@ end interface
 
      #+begin_src f90 :tangle write_attr_num_32_front_fortran.f90
 interface
-   integer function trexio_write_$group_num$_32 (trex_file, num) bind(C)
+   integer(c_int) function trexio_write_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(in), value :: num
    end function trexio_write_$group_num$_32
 end interface
@@ -1497,9 +1497,9 @@ end interface
 
      #+begin_src f90 :tangle read_attr_num_32_front_fortran.f90
 interface
-   integer function trexio_read_$group_num$_32 (trex_file, num) bind(C)
+   integer(c_int) function trexio_read_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(out) :: num
    end function trexio_read_$group_num$_32
 end interface
@@ -1507,9 +1507,9 @@ end interface
 
      #+begin_src f90 :tangle write_attr_num_def_front_fortran.f90
 interface
-   integer function trexio_write_$group_num$ (trex_file, num) bind(C)
+   integer(c_int) function trexio_write_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(in), value :: num
    end function trexio_write_$group_num$
 end interface
@@ -1517,9 +1517,9 @@ end interface
 
      #+begin_src f90 :tangle read_attr_num_def_front_fortran.f90
 interface
-   integer function trexio_read_$group_num$ (trex_file, num) bind(C)
+   integer(c_int) function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(out) :: num
    end function trexio_read_$group_num$
 end interface
@@ -1527,9 +1527,9 @@ end interface
 
      #+begin_src f90 :tangle has_attr_num_front_fortran.f90
 interface
-   integer function trexio_has_$group_num$ (trex_file) bind(C)
+   integer(c_int) function trexio_has_$group_num$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
    end function trexio_has_$group_num$
 end interface
      #+end_src
@@ -2130,9 +2130,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_data_64_front_fortran.f90
 interface
-   integer function trexio_write_$group_dset$_64 (trex_file, dset) bind(C)
+   integer(c_int) function trexio_write_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(in) :: dset$group_dset_f_dims$
    end function trexio_write_$group_dset$_64
 end interface
@@ -2140,9 +2140,9 @@ end interface
 
      #+begin_src f90 :tangle read_dset_data_64_front_fortran.f90
 interface
-   integer function trexio_read_$group_dset$_64 (trex_file, dset) bind(C)
+   integer(c_int) function trexio_read_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(out) :: dset$group_dset_f_dims$
    end function trexio_read_$group_dset$_64
 end interface
@@ -2150,9 +2150,9 @@ end interface
 
      #+begin_src f90 :tangle write_dset_data_32_front_fortran.f90
 interface
-   integer function trexio_write_$group_dset$_32 (trex_file, dset) bind(C)
+   integer(c_int) function trexio_write_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(in) :: dset$group_dset_f_dims$
    end function trexio_write_$group_dset$_32
 end interface
@@ -2160,9 +2160,9 @@ end interface
 
      #+begin_src f90 :tangle read_dset_data_32_front_fortran.f90
 interface
-   integer function trexio_read_$group_dset$_32 (trex_file, dset) bind(C)
+   integer(c_int) function trexio_read_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(out) :: dset$group_dset_f_dims$
    end function trexio_read_$group_dset$_32
 end interface
@@ -2170,9 +2170,9 @@ end interface
 
      #+begin_src f90 :tangle write_dset_data_def_front_fortran.f90
 interface
-   integer function trexio_write_$group_dset$ (trex_file, dset) bind(C)
+   integer(c_int) function trexio_write_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(in) :: dset$group_dset_f_dims$
    end function trexio_write_$group_dset$
 end interface
@@ -2180,9 +2180,9 @@ end interface
 
      #+begin_src f90 :tangle read_dset_data_def_front_fortran.f90
 interface
-   integer function trexio_read_$group_dset$ (trex_file, dset) bind(C)
+   integer(c_int) function trexio_read_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(out) :: dset$group_dset_f_dims$
    end function trexio_read_$group_dset$
 end interface
@@ -2190,9 +2190,9 @@ end interface
 
      #+begin_src f90 :tangle has_dset_data_front_fortran.f90
 interface
-   integer function trexio_has_$group_dset$ (trex_file) bind(C)
+   integer(c_int) function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
      #+end_src
@@ -2739,82 +2739,82 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_sparse_front_fortran.f90
 interface
-   integer function trexio_write_$group_dset$ (trex_file, &
-                                               offset_file, buffer_size, &
-                                               index_sparse, value_sparse) bind(C)
+   integer(c_int) function trexio_write_$group_dset$ (trex_file, &
+                                                      offset_file, buffer_size, &
+                                                      index_sparse, value_sparse) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     integer(8), intent(in), value :: offset_file
-     integer(8), intent(in), value :: buffer_size
-     integer(4), intent(in)        :: index_sparse(*)
-     double precision, intent(in)  :: value_sparse(*)
+     integer(c_long), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: offset_file
+     integer(c_long), intent(in), value :: buffer_size
+     integer(c_int), intent(in)         :: index_sparse(*)
+     real(c_double), intent(in)         :: value_sparse(*)
    end function trexio_write_$group_dset$
 end interface
 
 interface
-   integer function trexio_write_safe_$group_dset$ (trex_file, &
-                                                    offset_file, buffer_size, &
-                                                    index_sparse, index_size, &
-                                                    value_sparse, value_size) bind(C)
+   integer(c_int) function trexio_write_safe_$group_dset$ (trex_file, &
+                                                           offset_file, buffer_size, &
+                                                           index_sparse, index_size, &
+                                                           value_sparse, value_size) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     integer(8), intent(in), value :: offset_file
-     integer(8), intent(in), value :: buffer_size
-     integer(4), intent(in)        :: index_sparse(*)
-     integer(8), intent(in), value :: index_size
-     double precision, intent(in)  :: value_sparse(*)
-     integer(8), intent(in), value :: value_size
+     integer(c_long), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: offset_file
+     integer(c_long), intent(in), value :: buffer_size
+     integer(c_int), intent(in)         :: index_sparse(*)
+     integer(c_long), intent(in), value :: index_size
+     real(c_double), intent(in)         :: value_sparse(*)
+     integer(c_long), intent(in), value :: value_size
    end function trexio_write_safe_$group_dset$
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_dset_sparse_front_fortran.f90
 interface
-   integer function trexio_read_$group_dset$ (trex_file, &
-                                              offset_file, buffer_size, &
-                                              index_sparse, value_sparse) bind(C)
+   integer(c_int) function trexio_read_$group_dset$ (trex_file, &
+                                                     offset_file, buffer_size, &
+                                                     index_sparse, value_sparse) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     integer(8), intent(in), value :: offset_file
-     integer(8), intent(inout)     :: buffer_size
-     integer(4), intent(out)       :: index_sparse(*)
-     double precision, intent(out) :: value_sparse(*)
+     integer(c_long), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: offset_file
+     integer(c_long), intent(inout)     :: buffer_size
+     integer(c_int), intent(out)        :: index_sparse(*)
+     real(c_double), intent(out)        :: value_sparse(*)
    end function trexio_read_$group_dset$
 end interface
 
 interface
-   integer function trexio_read_safe_$group_dset$ (trex_file, &
-                                                   offset_file, buffer_size, &
-                                                   index_sparse, index_size, &
-                                                   value_sparse, value_size) bind(C)
+   integer(c_int) function trexio_read_safe_$group_dset$ (trex_file, &
+                                                          offset_file, buffer_size, &
+                                                          index_sparse, index_size, &
+                                                          value_sparse, value_size) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     integer(8), intent(in), value :: offset_file
-     integer(8), intent(inout)     :: buffer_size
-     integer(4), intent(out)       :: index_sparse(*)
-     integer(8), intent(in), value :: index_size
-     double precision, intent(out) :: value_sparse(*)
-     integer(8), intent(in), value :: value_size
+     integer(c_long), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: offset_file
+     integer(c_long), intent(inout)     :: buffer_size
+     integer(c_int), intent(out)        :: index_sparse(*)
+     integer(c_long), intent(in), value :: index_size
+     real(c_double), intent(out)        :: value_sparse(*)
+     integer(c_long), intent(in), value :: value_size
    end function trexio_read_safe_$group_dset$
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_dset_sparse_size_front_fortran.f90
 interface
-   integer function trexio_read_$group_dset$_size (trex_file, &
-                                                   size_max) bind(C)
+   integer(c_int) function trexio_read_$group_dset$_size (trex_file, &
+                                                          size_max) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     integer(8), intent(out) :: size_max
+     integer(c_long), intent(in), value :: trex_file
+     integer(c_long), intent(out) :: size_max
    end function trexio_read_$group_dset$_size
 end interface
      #+end_src
 
      #+begin_src f90 :tangle has_dset_sparse_front_fortran.f90
 interface
-   integer function trexio_has_$group_dset$ (trex_file) bind(C)
+   integer(c_int) function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
      #+end_src
@@ -3310,31 +3310,31 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_str_front_fortran.f90
 interface
-   integer function trexio_write_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
+   integer(c_int) function trexio_write_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     character, intent(in) :: dset(*)
-     integer(4), intent(in), value :: max_str_len
+     integer(c_long), intent(in), value :: trex_file
+     character(kind=c_char), intent(in) :: dset(*)
+     integer(c_int), intent(in), value  :: max_str_len
    end function trexio_write_$group_dset$_low
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_dset_str_front_fortran.f90
 interface
-   integer function trexio_read_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
+   integer(c_int) function trexio_read_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     character, intent(out) :: dset(*)
-     integer(4), intent(in), value :: max_str_len
+     integer(c_long), intent(in), value  :: trex_file
+     character(kind=c_char), intent(out) :: dset(*)
+     integer(c_int), intent(in), value   :: max_str_len
    end function trexio_read_$group_dset$_low
 end interface
      #+end_src
 
      #+begin_src f90 :tangle has_dset_str_front_fortran.f90
 interface
-   integer function trexio_has_$group_dset$ (trex_file) bind(C)
+   integer(c_int) function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
      #+end_src
@@ -3348,7 +3348,7 @@ end interface
 
      character, allocatable :: str_compiled(:)
      integer(8) :: $group_dset_dim$
-     integer :: rc
+     integer(4) :: rc
 
      rc = trexio_read_$group_dset_dim$_64(trex_file, $group_dset_dim$)
      if (rc /= TREXIO_SUCCESS) trexio_read_$group_dset$ = rc
@@ -3369,7 +3369,7 @@ end interface
   #+end_src
 
   #+begin_src f90 :tangle helper_write_dset_str_front_fortran.fh_90
-   integer function trexio_write_$group_dset$ (trex_file, dset, max_str_len)
+   integer(4) function trexio_write_$group_dset$ (trex_file, dset, max_str_len)
      implicit none
      integer(8), intent(in), value :: trex_file
      integer(4), intent(in), value :: max_str_len
@@ -3626,33 +3626,33 @@ trexio_has_$group_str$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_attr_str_front_fortran.f90
 interface
-   integer function trexio_write_$group_str$_c (trex_file, str, max_str_len) &
-           bind(C, name="trexio_write_$group_str$")
+   integer(c_int) function trexio_write_$group_str$_c (trex_file, str, max_str_len) &
+                  bind(C, name="trexio_write_$group_str$")
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     character, intent(in) :: str(*)
-     integer(4), intent(in), value :: max_str_len
+     integer(c_long), intent(in), value :: trex_file
+     character(kind=c_char), intent(in) :: str(*)
+     integer(c_int), intent(in), value  :: max_str_len
    end function trexio_write_$group_str$_c
 end interface
      #+end_src
 
      #+begin_src f90 :tangle read_attr_str_front_fortran.f90
 interface
-   integer function trexio_read_$group_str$_c (trex_file, str, max_str_len) &
-           bind(C, name="trexio_read_$group_str$")
+   integer(c_int) function trexio_read_$group_str$_c (trex_file, str, max_str_len) &
+                  bind(C, name="trexio_read_$group_str$")
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
-     character, intent(out) :: str(*)
-     integer(4), intent(in), value :: max_str_len
+     integer(c_long), intent(in), value  :: trex_file
+     character(kind=c_char), intent(out) :: str(*)
+     integer(c_int), intent(in), value   :: max_str_len
    end function trexio_read_$group_str$_c
 end interface
      #+end_src
 
      #+begin_src f90 :tangle has_attr_str_front_fortran.f90
 interface
-   integer function trexio_has_$group_str$ (trex_file) bind(C)
+   integer(c_int) function trexio_has_$group_str$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
-     integer(8), intent(in), value :: trex_file
+     integer(c_long), intent(in), value :: trex_file
    end function trexio_has_$group_str$
 end interface
      #+end_src
@@ -3814,7 +3814,7 @@ contains
      integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
      character(len=*), intent(in)  :: str_array(*)
      character(len=:), allocatable, intent(out) :: str_res
-     integer :: i
+     integer(8) :: i
 
      str_res = ''
      do i = 1, max_num_str
@@ -3837,13 +3837,11 @@ contains
      character(len=*), intent(inout)  :: str_array(*)
 
      character(len=max_len_str)  :: tmp_str
-     integer :: i, j, k, ind, offset
-     integer(8) :: len_flat
+     integer(8) :: len_flat, i, j, k, ind
 
      len_flat = (max_len_str+1)*max_num_str + 1
 
      ind=1
-     offset=1
      do i=1,max_num_str
        k = 1
        tmp_str=''
@@ -3856,7 +3854,6 @@ contains
          k = k + 1
        enddo
        str_array(i)=tmp_str
-       offset=ind
      enddo
 
    end subroutine trexio_str2strarray
@@ -3882,7 +3879,7 @@ contains
      else
        call trexio_string_of_error(trexio_rc, str)
        print *, trim(str)
-       call exit(1)
+       error stop 1
      endif
 
    end subroutine trexio_assert
