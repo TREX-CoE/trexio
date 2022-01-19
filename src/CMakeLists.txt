@@ -127,17 +127,6 @@ if(TREXIO_DEVEL)
                               ${TREXIO_MOD_FILE}
                               PROPERTIES GENERATED TRUE)
 
-  add_custom_command(
-      OUTPUT ${CMAKE_SOURCE_DIR}/include/config.h
-      COMMAND bash -c "echo -e '#define TREXIO_PACKAGE_VERSION \"${PROJECT_VERSION}\"\\n#define TREXIO_VERSION_MAJOR ${PROJECT_VERSION_MAJOR}\\n#define TREXIO_VERSION_MINOR ${PROJECT_VERSION_MINOR}\\n#define TREXIO_VERSION_PATCH ${PROJECT_VERSION_PATCH}' > config.h"
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include
-      COMMENT "Generates minimal include/config.h without using autotools."
-      VERBATIM)
-
-  set_source_files_properties(
-      ${CMAKE_SOURCE_DIR}/include/config.h
-      PROPERTIES GENERATED TRUE)
-
 endif()
 
 # ============= INSTALL TREXIO ============== 
