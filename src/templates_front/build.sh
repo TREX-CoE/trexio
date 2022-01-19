@@ -25,9 +25,9 @@ cat prefix_python.py   > trexio.py
 # append version string and attributes to the Fortran module file
 echo "" >> trexio_f.f90
 echo "character(len = 12) :: TREXIO_PACKAGE_VERSION = ${VERSION_VAL}" >> trexio_f.f90
-echo "integer(4) :: TREXIO_VERSION_MAJOR = ${VERSION_MAJOR_VAL}" >> trexio_f.f90
-echo "integer(4) :: TREXIO_VERSION_MINOR = ${VERSION_MINOR_VAL}" >> trexio_f.f90
-echo "integer(4) :: TREXIO_VERSION_PATCH = ${VERSION_PATCH_VAL}" >> trexio_f.f90
+echo "integer(int32) :: TREXIO_VERSION_MAJOR = ${VERSION_MAJOR_VAL}" >> trexio_f.f90
+echo "integer(int32) :: TREXIO_VERSION_MINOR = ${VERSION_MINOR_VAL}" >> trexio_f.f90
+echo "integer(int32) :: TREXIO_VERSION_PATCH = ${VERSION_PATCH_VAL}" >> trexio_f.f90
 echo "" >> trexio_f.f90
 
 # c front end
