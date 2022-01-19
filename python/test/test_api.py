@@ -40,6 +40,7 @@ except:
 
 # create TREXIO file and open it for writing
 test_file = trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND)
+assert test_file.exists
 
 # Print docstring of the trexio.open function
 #print(trexio.open.__doc__)
@@ -153,6 +154,7 @@ del test_file
 
 # open previously created TREXIO file, now in 'read' mode
 test_file2 = trexio.File(output_filename, 'r', TEST_TREXIO_BACKEND)
+assert test_file2.exists
 
 # check for existence of some of the previously written variables
 assert trexio.has_nucleus_num

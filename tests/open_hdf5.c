@@ -85,10 +85,32 @@ static int test_open_errors (const back_end_t backend) {
   fprintf(stderr, "%s \n", trexio_string_of_error(rc));
 
   // open existing file with non-supported back end, should return TREXIO_INVALID_ARG_3
-  file = trexio_open(TREXIO_VOID, 'w', 666, &rc);
+  file = trexio_open(TREXIO_FILE, 'w', 666, &rc);
   assert (file == NULL);
   assert (rc == TREXIO_INVALID_ARG_3);
   fprintf(stderr, "%s \n", trexio_string_of_error(rc));
+
+/*================= END OF TEST ==================*/
+
+  return 0;
+}
+
+
+static int test_inquire (const back_end_t backend) {
+
+/* Try to call trexio_inquire function */
+
+  trexio_exit_code rc;
+
+/*================= START OF TEST ==================*/
+
+  // inquire non-existing file
+  rc = trexio_inquire(TREXIO_VOID);
+  assert (rc == TREXIO_FAILURE);
+
+  // inquire existing file
+  rc = trexio_inquire(TREXIO_FILE);
+  assert (rc == TREXIO_SUCCESS);
 
 /*================= END OF TEST ==================*/
 
@@ -107,11 +129,10 @@ int main(void) {
   test_open_w     (TREXIO_FILE, TEST_BACKEND);
   test_open_r     (TREXIO_FILE, TEST_BACKEND);
   test_open_errors(TEST_BACKEND);
+  test_inquire    (TEST_BACKEND);
 
   rc = system(RM_COMMAND);
   assert (rc == 0);
 
   return 0;
 }
-
-

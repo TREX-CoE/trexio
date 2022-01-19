@@ -103,6 +103,9 @@ subroutine test_write(file_name, back_end)
 
 ! ================= START OF TEST ===================== !
 
+  rc = trexio_inquire(file_name)
+  call trexio_assert(rc, TREXIO_FAILURE)
+
   trex_file = trexio_open(file_name, 'w', back_end, rc)
   call trexio_assert(rc, TREXIO_SUCCESS)
 
@@ -216,6 +219,9 @@ subroutine test_read(file_name, back_end)
   value_sparse_mo_2e_int_eri = 0.0d0
 
 ! ================= START OF TEST ===================== !
+
+  rc = trexio_inquire(file_name)
+  call trexio_assert(rc, TREXIO_SUCCESS)
 
   trex_file = trexio_open(file_name, 'r', back_end, rc)
   call trexio_assert(rc, TREXIO_SUCCESS)
