@@ -26,8 +26,9 @@ TREX library for efficient I/O.
 7. `sudo make install`
 
 
-**Note: on systems with no `sudo` access, one can replace `./configure` with `./configure prefix=${PWD}/_install` in order to execute `make install/uninstall` commands without `sudo` privileges.**
+**Note: on systems with no `sudo` access, one can replace `./configure` with `./configure prefix=${PWD}/build` in order to execute `make install/uninstall` commands without `sudo` privileges.**
 
+**Note: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `CC=mpicc` to the `./configure` command.**
 
 ## Additional requirements (for developers):
 
@@ -55,6 +56,10 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 3. `make`
 4. `ctest` (or `make test`)
 5. `sudo make install`
+
+**Note: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.**
+
+**Note: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `-DCMAKE_C_COMPILER=mpicc` to the `cmake` command.**
 
 ## Compilation without the HDF5 library
 

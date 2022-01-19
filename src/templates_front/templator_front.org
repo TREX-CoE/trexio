@@ -492,8 +492,8 @@ interface
    subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
      use, intrinsic :: iso_c_binding
      import
-     integer (trexio_exit_code), intent(in), value :: error
-     character, intent(out) :: string(<<MAX_STRING_LENGTH()>>)
+     integer(trexio_exit_code), intent(in), value :: error
+     character(kind=c_char), intent(out)          :: string(<<MAX_STRING_LENGTH()>>)
    end subroutine trexio_string_of_error
 end interface
   #+end_src
@@ -596,7 +596,7 @@ bool trexio_has_backend(back_end_t back_end) {
 
   #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   logical function trexio_has_backend (back_end) bind(C)
+   logical(c_bool) function trexio_has_backend (back_end) bind(C)
      use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in), value :: back_end
@@ -972,7 +972,7 @@ interface
      use, intrinsic :: iso_c_binding
      import
      character(kind=c_char), dimension(*)       :: filename
-     character, intent(in), value               :: mode
+     character(kind=c_char), intent(in), value  :: mode
      integer(trexio_backend), intent(in), value :: backend
      integer(trexio_exit_code), intent(out)     :: rc_open
    end function trexio_open_c
@@ -1275,29 +1275,29 @@ def _inquire(file_name: str) -> bool:
   example, in ~#define~ statements).  More detailed description of
   each variable can be found below:
 
-   | Template variable              | Description                                         | Example                       |
-   |--------------------------------+-----------------------------------------------------+-------------------------------|
-   | ~$group$~                      | Name of the group                                   | ~nucleus~                     |
-   | ~$group_num$~                  | Name of the numerical attribute (scalar)            | ~nucleus_num~                 |
-   | ~$group_str$~                  | Name of the string attribute (scalar)               | ~nucleus_point_group~         |
-   | ~$group_dset$~                 | Name of the dataset (vector/matrix/tensor)          | ~nucleus_coord~               |
-   | ~$group_dset_rank$~            | Rank of the dataset                                 | ~2~                           |
-   | ~$group_dset_dim$~             | Selected dimension of the dataset                   | ~nucleus_num~                 |
-   | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~            |
-   | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~                       |
-   | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~                      |
-   | ~$group_dset_format_scanf$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                         |
-   | ~$group_dset_format_printf$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~                     |
-   | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~              |
-   | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~               |
-   | ~$group_dset_dtype_double$~    | real(c_double) datatype of the dataset [C]            | ~double/int64_t~              |
+   | Template variable              | Description                                         | Example                             |
+   |--------------------------------+-----------------------------------------------------+-------------------------------------|
+   | ~$group$~                      | Name of the group                                   | ~nucleus~                           |
+   | ~$group_num$~                  | Name of the numerical attribute (scalar)            | ~nucleus_num~                       |
+   | ~$group_str$~                  | Name of the string attribute (scalar)               | ~nucleus_point_group~               |
+   | ~$group_dset$~                 | Name of the dataset (vector/matrix/tensor)          | ~nucleus_coord~                     |
+   | ~$group_dset_rank$~            | Rank of the dataset                                 | ~2~                                 |
+   | ~$group_dset_dim$~             | Selected dimension of the dataset                   | ~nucleus_num~                       |
+   | ~$group_dset_dim_list$~        | All dimensions of the dataset                       | ~{nucleus_num, 3}~                  |
+   | ~$group_dset_dtype$~           | Basic type of the dataset (int/float/char)          | ~float~                             |
+   | ~$group_dset_h5_dtype$~        | Type of the dataset in HDF5                         | ~double~                            |
+   | ~$group_dset_format_scanf$~    | Input type of the dataset in TEXT  [fscanf]         | ~%lf~                               |
+   | ~$group_dset_format_printf$~   | Output type of the dataset in TEXT [fprintf]        | ~%24.16e~                           |
+   | ~$group_dset_dtype_default$~   | Default datatype of the dataset [C]                 | ~double/int32_t~                    |
+   | ~$group_dset_dtype_single$~    | Single precision datatype of the dataset [C]        | ~float/int32_t~                     |
+   | ~$group_dset_dtype_double$~    | Double precision datatype of the dataset [C]        | ~double/int64_t~                    |
    | ~$group_dset_f_dtype_default$~ | Default datatype of the dataset [Fortran]           | ~real(c_double)/integer(c_int32_t)~ |
-   | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(c_float)/integer(c_int32_t)~ |
-   | ~$group_dset_f_dtype_double$~  | real(c_double) datatype of the dataset [Fortran]      | ~real(c_double)/integer(c_int64_t)~ |
-   | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~                       |
-   | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~                   |
-   | ~$default_prec$~               | Default precision for read/write without suffix [C] | ~64/32~                       |
-   | ~$is_index$~                   | Expands to ~true~ if dataset has a type ~index~ [C] | ~true/false~                  |
+   | ~$group_dset_f_dtype_single$~  | Single precision datatype of the dataset [Fortran]  | ~real(c_float)/integer(c_int32_t)~  |
+   | ~$group_dset_f_dtype_double$~  | Double precision datatype of the dataset [Fortran]  | ~real(c_double)/integer(c_int64_t)~ |
+   | ~$group_dset_f_dims$~          | Dimensions in Fortran                               | ~(:,:)~                             |
+   | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~                         |
+   | ~$default_prec$~               | Default precision for read/write without suffix [C] | ~64/32~                             |
+   | ~$is_index$~                   | Expands to ~true~ if dataset has a type ~index~ [C] | ~true/false~                        |
 
 
    Some of the aforementioned template variables with ~group_dset~ prefix are duplicated with ~group_num~ prefix,
@@ -1717,8 +1717,8 @@ def has_$group_num$(trexio_file) -> bool:
    | ~trexio_write_safe_$group_dset$~ | Write a bounded dataset              | Double                      |
    | ~trexio_read_$group_dset$_32~    | Read  a dataset in single precision  | Single                      |
    | ~trexio_write_$group_dset$_32~   | Write a dataset in single precision  | Single                      |
-   | ~trexio_read_$group_dset$_64~    | Read  a dataset in real(c_double)      | Double                      |
-   | ~trexio_write_$group_dset$_64~   | Write a dataset in real(c_double)      | Double                      |
+   | ~trexio_read_$group_dset$_64~    | Read  a dataset in real(c_double)    | Double                      |
+   | ~trexio_write_$group_dset$_64~   | Write a dataset in real(c_double)    | Double                      |
 
 *** C templates for front end
 
@@ -2845,7 +2845,7 @@ interface
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
      integer(c_int32_t), intent(in)        :: index_sparse(*)
-     real   (c_double), intent(in)        :: value_sparse(*)
+     real(c_double), intent(in)            :: value_sparse(*)
    end function trexio_write_$group_dset$
 end interface
 
@@ -2861,7 +2861,7 @@ interface
      integer(c_int64_t), intent(in), value :: buffer_size
      integer(c_int32_t), intent(in)        :: index_sparse(*)
      integer(c_int64_t), intent(in), value :: index_size
-     real   (c_double), intent(in)        :: value_sparse(*)
+     real(c_double), intent(in)            :: value_sparse(*)
      integer(c_int64_t), intent(in), value :: value_size
    end function trexio_write_safe_$group_dset$
 end interface
@@ -2878,7 +2878,7 @@ interface
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
      integer(c_int32_t), intent(out)       :: index_sparse(*)
-     real   (c_double), intent(out)       :: value_sparse(*)
+     real(c_double), intent(out)           :: value_sparse(*)
    end function trexio_read_$group_dset$
 end interface
 
@@ -2894,7 +2894,7 @@ interface
      integer(c_int64_t), intent(inout)     :: buffer_size
      integer(c_int32_t), intent(out)       :: index_sparse(*)
      integer(c_int64_t), intent(in), value :: index_size
-     real   (c_double), intent(out) :: value_sparse(*)
+     real(c_double), intent(out)           :: value_sparse(*)
      integer(c_int64_t), intent(in), value :: value_size
    end function trexio_read_safe_$group_dset$
 end interface
@@ -3417,7 +3417,7 @@ interface
      use, intrinsic :: iso_c_binding
      import
      integer(c_int64_t), intent(in), value :: trex_file
-     character, intent(in) :: dset(*)
+     character(kind=c_char), intent(in)    :: dset(*)
      integer(c_int32_t), intent(in), value :: max_str_len
    end function trexio_write_$group_dset$_low
 end interface
@@ -3428,9 +3428,9 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
-     character, intent(out) :: dset(*)
-     integer(c_int32_t), intent(in), value :: max_str_len
+     integer(c_int64_t), intent(in), value  :: trex_file
+     character(kind=c_char), intent(out)    :: dset(*)
+     integer(c_int32_t), intent(in), value  :: max_str_len
    end function trexio_read_$group_dset$_low
 end interface
      #+end_src
@@ -3737,7 +3737,7 @@ interface
      use, intrinsic :: iso_c_binding
      import
      integer(c_int64_t), intent(in), value :: trex_file
-     character, intent(in) :: str(*)
+     character(kind=c_char), intent(in)    :: str(*)
      integer(c_int32_t), intent(in), value :: max_str_len
    end function trexio_write_$group_str$_c
 end interface
@@ -3750,7 +3750,7 @@ interface
      use, intrinsic :: iso_c_binding
      import
      integer(c_int64_t), intent(in), value :: trex_file
-     character, intent(out) :: str(*)
+     character(kind=c_char), intent(out)   :: str(*)
      integer(c_int32_t), intent(in), value :: max_str_len
    end function trexio_read_$group_str$_c
 end interface
@@ -3894,7 +3894,7 @@ contains
      character, intent(in), value                 :: mode
      integer(trexio_backend), intent(in), value   :: backend
      integer(trexio_exit_code), intent(out)       :: rc_open
-     character(len=len_trim(filename)+1) :: filename_c
+     character(len=len_trim(filename)+1)          :: filename_c
      integer(trexio_exit_code) :: rc
 
      filename_c = trim(filename) // c_null_char
@@ -3958,9 +3958,9 @@ contains
      implicit none
 
      integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in strign array
-     integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
-     character, intent(in) :: str_flat(*)
-     character(len=*), intent(inout)  :: str_array(*)
+     integer, intent(in), value              :: max_len_str  ! maximum length of a string in an array
+     character(kind=c_char), intent(in)      :: str_flat(*)
+     character(len=*), intent(inout)         :: str_array(*)
 
      character(len=max_len_str)  :: tmp_str
      integer(c_int64_t) :: i, j, k, ind, offset
@@ -3969,7 +3969,6 @@ contains
      len_flat = (max_len_str+1)*max_num_str + 1
 
      ind=1
-     offset=1
      do i=1,max_num_str
        k = 1
        tmp_str=''
@@ -3982,7 +3981,6 @@ contains
          k = k + 1
        enddo
        str_array(i)=tmp_str
-       offset=ind
      enddo
 
    end subroutine trexio_str2strarray
@@ -3997,8 +3995,8 @@ contains
    subroutine trexio_assert(trexio_rc, check_rc, success_message)
      implicit none
 
-     integer, intent(in), value   :: trexio_rc
-     integer, intent(in), value   :: check_rc
+     integer, intent(in), value :: trexio_rc
+     integer, intent(in), value :: check_rc
      character(len=*), intent(in), optional  :: success_message
 
      character*(128) :: str
@@ -4008,7 +4006,7 @@ contains
      else
        call trexio_string_of_error(trexio_rc, str)
        print *, trim(str)
-       call exit(1)
+       error stop 1
      endif
 
    end subroutine trexio_assert
