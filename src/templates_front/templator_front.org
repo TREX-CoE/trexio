@@ -1,5 +1,4 @@
 #+TITLE: Front end API
-break;
 #+PROPERTY: comments org
 #+SETUPFILE: ../../docs/theme.setup
 # -*- mode: org -*-
@@ -696,12 +695,15 @@ class File:
         self.back_end = back_end
 
         self.isOpen = False
+        self.exists = False
         if pytrexio_s is None:
-            self.pytrexio_s = open(filename, mode, back_end)
+            self.pytrexio_s = _open(filename, mode, back_end)
             self.isOpen = True
+            self.exists = True
         else:
             self.pytrexio_s = pytrexio_s
             self.isOpen = None
+            self.exists = None
 
         self.info = info
 
@@ -710,17 +712,23 @@ class File:
         """Close a TREXIO File."""
 
         if self.isOpen:
-            close(self.pytrexio_s)
+            _close(self.pytrexio_s)
             self.isOpen = False
         else:
             raise Exception("TREXIO File object has not been opened.")
+
+
+    def inquire(self):
+        """Inquire whether a TREXIO file exists."""
+
+        self.exists = _inquire(self.filename)
 
 
     def __del__(self):
         """This is a TREXIO File destructor."""
 
         if self.isOpen:
-            close(self.pytrexio_s)
+            _close(self.pytrexio_s)
         elif self.isOpen is None:
             raise Exception("[WIP]: TREXIO file handle provided but what if the file is already closed?")
         else:
@@ -972,7 +980,7 @@ end interface
 *** Python
 
    #+begin_src python :tangle basic_python.py
-def open(file_name: str, mode: str, back_end: int):
+def _open(file_name: str, mode: str, back_end: int):
     """Create TREXIO file or open existing one.
 
     Parameters:
@@ -1149,7 +1157,7 @@ end interface
 *** Python
 
    #+begin_src python :tangle basic_python.py
-def close(trexio_file):
+def _close(trexio_file):
     """Close TREXIO file.
 
     Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
@@ -1161,6 +1169,77 @@ def close(trexio_file):
             raise Error(rc)
     except:
         raise
+   #+end_src
+
+** File existence
+
+    ~trexio_inquire~ check whether TREXIO file exists.
+
+    input parameters:
+     ~file_name~     - string containing file name
+
+    output:
+      ~trexio_exit_code~ exit code.
+
+*** C
+
+    #+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_inquire(const char* file_name);
+    #+end_src
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_inquire (const char* file_name)
+{
+
+  if (file_name == NULL || file_name[0] == '\0') return TREXIO_INVALID_ARG_1;
+
+  /* First check if the TREXIO file exists and if it is a directory */
+  trexio_exit_code rc_text = trexio_text_inquire(file_name);
+
+#ifdef HAVE_HDF5
+  /* FILE_ERROR here means that the file exists but it is not a directory -> check with HDF5 */
+  if (rc_text == TREXIO_FILE_ERROR) {
+    trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(file_name);
+    return rc_hdf5;
+  /* If rc_text is TREXIO_SUCCESS -> file is a TREXIO directory; TREXIO_FAILURE -> file/directory does not exist */
+  } else {
+    return rc_text;
+  }
+#else
+  return rc_text;
+#endif
+}
+    #+end_src
+
+*** Fortran
+
+  The function below is a C binding.
+  The front end Fortran function for ~trexio_inquire~ can be found in the ~Fortran helper/wrapper functions~.
+
+   #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer function trexio_inquire_c (filename) bind(C, name="trexio_inquire")
+     use, intrinsic :: iso_c_binding
+     import
+     character(kind=c_char), dimension(*)       :: filename
+   end function trexio_inquire_c
+end interface
+   #+end_src
+
+*** Python
+
+   #+begin_src python :tangle basic_python.py
+def _inquire(file_name: str) -> bool:
+    """Check whether ~file_name~ TREXIO file exists.
+    """
+    rc = pytr.trexio_inquire(trexio_file_name)
+    if rc == TREXIO_SUCCESS:
+        return True
+    elif rc == TREXIO_FAILURE:
+        return False
+    else:
+        raise Error(rc)
    #+end_src
 
 * Templates for front end
@@ -1769,7 +1848,7 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-      rc = trexio_hdf5_write_$group_dset$(file, 
+      rc = trexio_hdf5_write_$group_dset$(file,
                                           (const $group_dset_dtype_double$*) $group_dset$_p,
                                           rank, dims);
       break;
@@ -2629,7 +2708,7 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (file->one_based) {
 
     uint64_t index_size = rank * buffer_size;
-    
+
     int32_t* index_sparse_p = CALLOC(index_size, int32_t);
     if (index_sparse_p == NULL) return TREXIO_ALLOCATION_FAILED;
 
@@ -3799,6 +3878,23 @@ contains
         trexio_open = 0_8
      endif
    end function trexio_open
+  #+end_src
+
+  The function below adapts the original C-based ~trexio_inquire~ for Fortran.
+  This is needed due to the same reasons as for ~trexio_open~ function.
+  Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+   integer function trexio_inquire (filename)
+     use, intrinsic :: iso_c_binding
+     implicit none
+     character(len=*), intent(in)        :: filename
+     character(len=len_trim(filename)+1) :: filename_c
+
+     filename_c = trim(filename) // c_null_char
+     trexio_inquire = trexio_inquire_c(filename_c)
+   end function trexio_inquire
+
   #+end_src
 
   The subroutine below transforms an array of Fortran strings into one big string using ~TREXIO_DELIM~ symbol

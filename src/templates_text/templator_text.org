@@ -105,6 +105,33 @@ typedef struct trexio_text_s {
 
     #+begin_src c :tangle basic_text.h :exports none
 trexio_exit_code trexio_text_init(trexio_t* const file);
+trexio_exit_code trexio_text_inquire(const char* file_name);
+trexio_exit_code trexio_text_deinit(trexio_t* const file);
+trexio_exit_code trexio_text_lock(trexio_t* const file);
+trexio_exit_code trexio_text_unlock(trexio_t* const file);
+    #+end_src
+
+    #+begin_src c :tangle basic_text.c
+trexio_exit_code
+trexio_text_inquire (const char* file_name)
+{
+  /* Check if the file with "file_name" exists and that it is a directory */
+  struct stat st;
+
+  int rc = stat(file_name, &st);
+
+  bool file_exists = rc == 0;
+
+  if (file_exists) {
+
+    bool is_a_directory = st.st_mode & S_IFDIR;
+    if (!is_a_directory) return TREXIO_FILE_ERROR;
+
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_FAILURE;
+  }
+}
     #+end_src
 
     #+begin_src c :tangle basic_text.c
@@ -119,30 +146,19 @@ trexio_text_init (trexio_t* const file)
   /* Put all pointers to NULL but leave parent untouched */
   memset(&(f->parent)+1,0,sizeof(trexio_text_t)-sizeof(trexio_t));
 
-  /* If directory doesn't exist, create it in write mode */
-  struct stat st;
+  /* Check if directory exists */
+  trexio_exit_code rc;
+  rc = trexio_text_inquire(file->file_name);
+  /* TREXIO file exists but is not  a directory */
+  if (rc == TREXIO_FILE_ERROR) return rc;
+  /* If directory does not exist - create it in write mode */
+  if (rc == TREXIO_FAILURE) {
 
-  int rc = stat(file->file_name, &st);
+    if (file->mode == 'r') return TREXIO_READONLY;
 
-  bool file_exists = rc == 0;
+    int rc_dir = mkdir(file->file_name, 0777);
+    if (rc_dir != 0) return TREXIO_ERRNO;
 
-  if (file_exists) {
-
-    bool is_a_directory = st.st_mode & S_IFDIR;
-    if (!is_a_directory) {
-      return TREXIO_FILE_ERROR;
-    }
-
-  } else {
-
-    if (file->mode == 'r') {
-      return TREXIO_READONLY;
-    }
-
-    rc = mkdir(file->file_name, 0777);
-    if (rc != 0) {
-      return TREXIO_ERRNO;
-    }
   }
 
   /* Create the lock file in the directory */
@@ -166,7 +182,7 @@ trexio_text_init (trexio_t* const file)
       if (errno == EACCES) {
         /* The directory is read-only and the lock file can't be written.
           Create a dummy temporary file for dummy locking.
-        */
+        ,*/
         char dirname[TREXIO_MAX_FILENAME_LENGTH] = "/tmp/trexio.XXXXXX";
         if (mkdtemp(dirname) == NULL) return TREXIO_ERRNO;
         strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
@@ -182,10 +198,6 @@ trexio_text_init (trexio_t* const file)
 
   return TREXIO_SUCCESS;
 }
-    #+end_src
-
-    #+begin_src c :tangle basic_text.h :exports none
-trexio_exit_code trexio_text_lock(trexio_t* const file);
     #+end_src
 
     #+begin_src c :tangle basic_text.c
@@ -208,15 +220,6 @@ trexio_exit_code trexio_text_lock(trexio_t* const file) {
   return TREXIO_SUCCESS;
 
 }
-    #+end_src
-
-
-    #+begin_src c :tangle basic_text.h :exports none
-trexio_exit_code trexio_text_deinit(trexio_t* const file);
-    #+end_src
-
-    #+begin_src c :tangle basic_text.h :exports none
-trexio_exit_code trexio_text_unlock(trexio_t* const file);
     #+end_src
 
     #+begin_src c :tangle basic_text.c

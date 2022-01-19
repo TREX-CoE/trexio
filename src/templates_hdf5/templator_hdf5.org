@@ -69,13 +69,29 @@ typedef struct trexio_hdf5_s {
 } trexio_hdf5_t;
   #+end_src
 
+** Template for HDF5 init/deinit
 
   #+begin_src c :tangle struct_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_init(trexio_t* const file);
 trexio_exit_code trexio_hdf5_deinit(trexio_t* const file);
+trexio_exit_code trexio_hdf5_inquire(const char* file_name);
   #+end_src
 
-** Template for HDF5 init/deinit
+  #+begin_src c :tangle basic_hdf5.c
+trexio_exit_code
+trexio_hdf5_inquire(const char* file_name)
+{
+  /* H5Fis_hdf5 determines whether file is in HDF5 format */
+  htri_t rc = H5Fis_hdf5(file_name);
+  if (rc > 0 ) {
+    return TREXIO_SUCCESS;    //exists and HDF5
+  } else if (rc == 0) {
+    return TREXIO_FILE_ERROR; //exists but not HDF5
+  } else {
+    return TREXIO_FAILURE;    //does not exist or function fails
+  }
+}
+  #+end_src
 
   #+begin_src c :tangle basic_hdf5.c
 trexio_exit_code
@@ -134,7 +150,9 @@ trexio_hdf5_init (trexio_t* const file)
 
   return TREXIO_SUCCESS;
 }
+  #+end_src
 
+  #+begin_src c :tangle basic_hdf5.c
 trexio_exit_code
 trexio_hdf5_deinit (trexio_t* const file)
 {
