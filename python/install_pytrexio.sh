@@ -1,4 +1,4 @@
-#!/bin/bash                                                    
+#!/bin/bash
 
 set -x
 set -e
@@ -38,12 +38,12 @@ python3 -m pip install -r requirements.txt
 
 # Create build directory and compile extension files (*.c)
 # --no-user-cfg disables custom .cfg files of the user machine, so that only setup.cfg is used
-#python3 -s setup.py --no-user-cfg build 
+#python3 -s setup.py --no-user-cfg build
 
 # Local inplace build of the .so module with SWIG-produced pytrexio_wrap.c (from the SWIG documentation)
 #python3 setup.py build_ext --inplace --swig-opts="-modern"
 
-# Create distributions: 
+# Create distributions:
 
 # OLD WAY (DEPRECATED BY PYPA)
 #   1) sdist produces .tar.gz with all files necessary for manual compilation;
@@ -54,14 +54,7 @@ python3 -m pip install -r requirements.txt
 python3 -m build --sdist --wheel --outdir dist/
 
 # Install pytrexio in the current environment from the aforementioned wheel
-
-# OLD WAY
-# --force-reinstall is needed here because build-system pre-installs pytrexio in the environment 
-#                   but does not install things in the corresponding site-packages directory
-#python3 -m pip install dist/trexio-*.whl --force-reinstall
-
-# NEW WAY
-python3 -m pip install dist/trexio-*.whl
+python3 -m pip install dist/trexio-*.whl --force-reinstall
 
 # Run the command below in the root directory to install the package in 'editable' (-e) mode without dependencies (--no-deps)
 #python -m pip install -e . --no-deps
@@ -83,7 +76,6 @@ rm -rf build dist trexio.egg-info
 
 # Additional information related to the installation of the TREXIO Python API
 
-#Removing MANIFEST.in leads to issues in the installation. In particular, the .c and .h source files do not get copied 
-#from the src/ directory into the tar.gz which is produced by setup sdist command. 
+#Removing MANIFEST.in leads to issues in the installation. In particular, the .c and .h source files do not get copied
+#from the src/ directory into the tar.gz which is produced by setup sdist command.
 #These source files are required to build the pytrexio.so extension module, which is needed for the Python API.
-
