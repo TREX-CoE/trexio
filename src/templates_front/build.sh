@@ -12,10 +12,10 @@ VERSION_PATCH_VAL=`grep "VERSION_PATCH" ../../include/config.h | cut -d " " -f 3
 
 # grep some usefull constants from the config.h
 echo "" >> trexio.h
-echo "#define TREXIO_PACKAGE_VERSION ${VERSION_VAL}" >> trexio.h
-echo "#define TREXIO_VERSION_MAJOR ${VERSION_MAJOR_VAL}" >> trexio.h
-echo "#define TREXIO_VERSION_MINOR ${VERSION_MINOR_VAL}" >> trexio.h
-echo "#define TREXIO_VERSION_PATCH ${VERSION_PATCH_VAL}" >> trexio.h
+echo "#define TREXIO_PACKAGE_VERSION ${VERSION_VAL:='0.0.0'}" >> trexio.h
+echo "#define TREXIO_VERSION_MAJOR ${VERSION_MAJOR_VAL:=0}" >> trexio.h
+echo "#define TREXIO_VERSION_MINOR ${VERSION_MINOR_VAL:=0}" >> trexio.h
+echo "#define TREXIO_VERSION_PATCH ${VERSION_PATCH_VAL:=0}" >> trexio.h
 echo "" >> trexio.h
 
 cat prefix_s_front.h > trexio_s.h

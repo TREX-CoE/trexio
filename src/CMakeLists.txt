@@ -91,6 +91,8 @@ FortranCInterface_VERIFY()
 
 # Fortran module
 set(TREXIO_MOD_FILE ${CMAKE_SOURCE_DIR}/include/trexio_f.f90)
+# Export to parent scope so tests directory picks this up.
+set(TREXIO_MOD_FILE ${TREXIO_MOD_FILE} PARENT_SCOPE)
 # Add TREXIO Fortran module as a library.
 add_library(trexio_f SHARED)
 target_sources(trexio_f PUBLIC ${TREXIO_MOD_FILE})
@@ -114,10 +116,17 @@ if(TREXIO_DEVEL)
 	  ${TREXIO_PRIVATE_HEADERS}
 	  ${TREXIO_MOD_FILE}
       COMMAND ./build_trexio.sh
-      DEPENDS ${ORG_FILES}
+      DEPENDS ${ORG_FILES} ${CMAKE_SOURCE_DIR}/include/config.h
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools
       COMMENT "Generating TREXIO source code from org-mode files."
       VERBATIM)
+
+  set_source_files_properties(${TREXIO_SOURCES}
+                              ${TREXIO_PUBLIC_HEADERS}
+                              ${TREXIO_PRIVATE_HEADERS}
+                              ${TREXIO_MOD_FILE}
+                              PROPERTIES GENERATED TRUE)
+
 endif()
 
 # ============= INSTALL TREXIO ============== 
