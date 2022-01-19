@@ -1319,7 +1319,7 @@ def _inquire(file_name: str) -> bool:
 
    For each of the aforementioned objects, TREXIO provides *has*,
    *read* and *write* functionality.  TREXIO supports I/O with single
-   or real(c_double) for integer and floating point numbers.
+   or double precision for integer and floating point numbers.
 
    *Note:* single integer attributes that contain ~num~ in their name (e.g. ~nucleus_num~) are
    considered dimensioning variables and cannot be negative or 0. An attempt to write negative or 0
@@ -1364,7 +1364,7 @@ trexio_exit_code trexio_read_$group_num$_64(trexio_t* const file, $group_num_dty
 trexio_exit_code trexio_write_$group_num$_64(trexio_t* const file, const $group_num_dtype_double$ num);
      #+end_src
 
-**** Source code for real(c_double) functions
+**** Source code for double precision functions
 
      #+begin_src c :tangle read_attr_num_64_front.c
 trexio_exit_code
@@ -1717,15 +1717,15 @@ def has_$group_num$(trexio_file) -> bool:
    | ~trexio_write_safe_$group_dset$~ | Write a bounded dataset              | Double                      |
    | ~trexio_read_$group_dset$_32~    | Read  a dataset in single precision  | Single                      |
    | ~trexio_write_$group_dset$_32~   | Write a dataset in single precision  | Single                      |
-   | ~trexio_read_$group_dset$_64~    | Read  a dataset in real(c_double)    | Double                      |
-   | ~trexio_write_$group_dset$_64~   | Write a dataset in real(c_double)    | Double                      |
+   | ~trexio_read_$group_dset$_64~    | Read  a dataset in double precision  | Double                      |
+   | ~trexio_write_$group_dset$_64~   | Write a dataset in double precision  | Double                      |
 
 *** C templates for front end
 
    The C templates that correspond to each of the abovementioned functions can be found below.
    First parameter is the ~TREXIO~ file handle. Second parameter is the variable to be written/read
    to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
-   Suffixes ~_32~ and ~_64~ correspond to API calls dealing with single and real(c_double), respectively.
+   Suffixes ~_32~ and ~_64~ correspond to API calls dealing with single and double precision, respectively.
    The basic (non-suffixed) API call on datasets deals with real(c_double) (see Table above).
 
 **** Function declarations
@@ -1746,7 +1746,7 @@ trexio_exit_code trexio_read_safe_$group_dset$_64(trexio_t* const file, $group_d
 trexio_exit_code trexio_write_safe_$group_dset$_64(trexio_t* const file, const $group_dset_dtype_double$* dset_in, const int64_t dim_in);
      #+end_src
 
-**** Source code for real(c_double) functions
+**** Source code for double precision functions
 
      #+begin_src c :tangle read_dset_data_64_front.c
 trexio_exit_code
@@ -2010,7 +2010,7 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
   $group_dset_dtype_double$* $group_dset$_64 = CALLOC(dim_size, $group_dset_dtype_double$);
   if ($group_dset$_64 == NULL) return TREXIO_ALLOCATION_FAILED;
 
-  /* A type conversion from single precision to double reqired since back end only accepts 64-bit data */
+  /* A type conversion from single precision to double required since back end only accepts 64-bit data */
   if ($is_index$) {
     for (uint64_t i=0; i<dim_size; ++i){
       $group_dset$_64[i] = ($group_dset_dtype_double$) $group_dset$[i] - ($group_dset_dtype_double$) 1;
@@ -2371,7 +2371,7 @@ def read_$group_dset$(trexio_file, dim = None, doReshape = None, dtype = None):
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
-        NumPy data type of the output (e.g. np.int32|int16 or np.float32|float16). If specified, the output array will be converted from the default real(c_double).
+        NumPy data type of the output (e.g. np.int32|int16 or np.float32|float16). If specified, the output array will be converted from the default double precision.
 
     doReshape (Optional): bool
         Flag to determine whether the output NumPy array has be reshaped or not. Be default, reshaping is performed
@@ -3963,8 +3963,7 @@ contains
      character(len=*), intent(inout)         :: str_array(*)
 
      character(len=max_len_str)  :: tmp_str
-     integer(c_int64_t) :: i, j, k, ind, offset
-     integer(c_int64_t) :: len_flat
+     integer(c_int64_t) :: i, j, k, ind, len_flat
 
      len_flat = (max_len_str+1)*max_num_str + 1
 
