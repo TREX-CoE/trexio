@@ -49,7 +49,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git/config")
   # replace placeholders in the templace config.h.in file to produce config.h
   # config.h is needed to insert TREXIO_PACKAGE_VERSION and TREXIO_GIT_HASH into trexio.h
   configure_file(${CMAKE_SOURCE_DIR}/include/cmake_config.h.in
-                 ${CMAKE_SOURCE_DIR}/include/config.h)
+                 ${CMAKE_SOURCE_DIR}/include/config.h
+		 @ONLY)
 endif()
 
 # Set directories to be included at build time.
