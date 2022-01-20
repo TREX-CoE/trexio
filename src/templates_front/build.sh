@@ -15,10 +15,10 @@ GIT_HASH_STR=`grep "GIT_HASH" ../../include/config.h | cut -d " " -f 3`
 
 # grep some usefull constants from the config.h
 echo "" >> trexio.h
-echo "#define TREXIO_PACKAGE_VERSION ${VERSION_VAL}" >> trexio.h
-echo "#define TREXIO_VERSION_MAJOR ${VERSION_MAJOR_VAL}" >> trexio.h
-echo "#define TREXIO_VERSION_MINOR ${VERSION_MINOR_VAL}" >> trexio.h
-echo "#define TREXIO_VERSION_PATCH ${VERSION_PATCH_VAL}" >> trexio.h
+echo "#define TREXIO_PACKAGE_VERSION ${VERSION_VAL:='0.0.0'}" >> trexio.h
+echo "#define TREXIO_VERSION_MAJOR ${VERSION_MAJOR_VAL:=0}" >> trexio.h
+echo "#define TREXIO_VERSION_MINOR ${VERSION_MINOR_VAL:=0}" >> trexio.h
+echo "#define TREXIO_VERSION_PATCH ${VERSION_PATCH_VAL:=0}" >> trexio.h
 echo "#define TREXIO_GIT_HASH ${GIT_HASH_STR:='0000'}" >> trexio.h
 echo "" >> trexio.h
 

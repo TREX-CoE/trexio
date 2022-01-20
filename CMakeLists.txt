@@ -16,7 +16,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Optional configure for developer mode to generate source code from org-mode files.
 option(TREXIO_DEVEL "TREXIO developer mode (for code generation)." OFF)
 
-if(EXISTS ".git/config")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git/config")
   set(TREXIO_DEVEL ON)
   find_package(Python3 REQUIRED)
   if(Python3_FOUND)
@@ -32,6 +32,8 @@ if(EXISTS ".git/config")
   else()
     message(FATAL_ERROR "EMACS not found. It is required to produce TREXIO source code from org-mode files.")
   endif()
+  configure_file(${CMAKE_SOURCE_DIR}/include/cmake_config.h.in
+                 ${CMAKE_SOURCE_DIR}/include/config.h)
 endif()
 
 # Set directories to be included at build time.
