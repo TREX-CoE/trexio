@@ -3851,6 +3851,70 @@ def has_$group_str$(trexio_file) -> bool:
         return False
      #+end_src
 
+* General helper functions
+
+  This section contains general helper functions like ~trexio_info~.
+
+  ~trexio_info~ prints information about the TREXIO configuration (see =config.h= file).
+  In particular:
+
+  1) ~TREXIO_PACKAGE_VERSION~ [string]
+  2) ~HAVE_HDF5~ [bool]
+  3) ~HDF5_VERSION~ [string] (optional, only if ~HAVE_HDF5~ is ~true~)
+  4) ~TREXIO_GIT_HASH~ [string]
+
+** C
+
+     #+begin_src c :tangle prefix_front.h :exports none
+ trexio_exit_code trexio_info(void);
+     #+end_src
+
+     #+begin_src c :tangle prefix_front.c
+ trexio_exit_code
+ trexio_info (void)
+ {
+   printf("TREXIO_PACKAGE_VERSION : %s\n", TREXIO_PACKAGE_VERSION);
+
+ #ifdef TREXIO_GIT_HASH
+   printf("TREXIO_GIT_HASH        : %s\n", TREXIO_GIT_HASH);
+ #else
+   printf("GIT_HASH is stored in the config.h file, which is missing.");
+ #endif
+
+ #ifdef HAVE_HDF5
+   printf("HAVE_HDF5              : true\n");
+   printf("%s\n", H5_VERS_INFO);
+ #else
+   printf("HAVE_HDF5              : false\n");
+   printf("TREXIO configured without the HDF5 library\n");
+ #endif
+
+   return TREXIO_SUCCESS;
+ }
+     #+end_src
+
+** Fortran
+
+   #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer function trexio_info () bind(C)
+     use, intrinsic :: iso_c_binding
+   end function trexio_info
+end interface
+   #+end_src
+
+** Python
+
+   #+begin_src python :tangle basic_python.py
+def info():
+    """Print the info about the installed TREXIO library.
+    """
+
+    rc = pytr.trexio_info()
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+   #+end_src
+
 * Fortran helper/wrapper functions
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.

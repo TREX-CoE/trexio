@@ -4,11 +4,14 @@
 cat prefix_front.c   > trexio.c
 cat prefix_front.h   > trexio.h
 
-# parse the config-defined version attributes to pass them to Fortran module file
+# parse the config-defined version attributes to pass them to the header files
 VERSION_VAL=`grep "PACKAGE_VERSION" ../../include/config.h | cut -d " " -f 3`
 VERSION_MAJOR_VAL=`grep "VERSION_MAJOR" ../../include/config.h | cut -d " " -f 3`
 VERSION_MINOR_VAL=`grep "VERSION_MINOR" ../../include/config.h | cut -d " " -f 3`
 VERSION_PATCH_VAL=`grep "VERSION_PATCH" ../../include/config.h | cut -d " " -f 3`
+
+# parse the config-defined GIT_HASH to pass them to the header files
+GIT_HASH_STR=`grep "GIT_HASH" ../../include/config.h | cut -d " " -f 3`
 
 # grep some usefull constants from the config.h
 echo "" >> trexio.h
@@ -16,6 +19,7 @@ echo "#define TREXIO_PACKAGE_VERSION ${VERSION_VAL}" >> trexio.h
 echo "#define TREXIO_VERSION_MAJOR ${VERSION_MAJOR_VAL}" >> trexio.h
 echo "#define TREXIO_VERSION_MINOR ${VERSION_MINOR_VAL}" >> trexio.h
 echo "#define TREXIO_VERSION_PATCH ${VERSION_PATCH_VAL}" >> trexio.h
+echo "#define TREXIO_GIT_HASH ${GIT_HASH_STR:='0000'}" >> trexio.h
 echo "" >> trexio.h
 
 cat prefix_s_front.h > trexio_s.h
@@ -24,10 +28,11 @@ cat prefix_python.py   > trexio.py
 
 # append version string and attributes to the Fortran module file
 echo "" >> trexio_f.f90
-echo "character(len = 12) :: TREXIO_PACKAGE_VERSION = ${VERSION_VAL}" >> trexio_f.f90
+echo "character(len = 12) :: TREXIO_PACKAGE_VERSION = ${VERSION_VAL:='0.0.0'}" >> trexio_f.f90
 echo "integer(4) :: TREXIO_VERSION_MAJOR = ${VERSION_MAJOR_VAL}" >> trexio_f.f90
 echo "integer(4) :: TREXIO_VERSION_MINOR = ${VERSION_MINOR_VAL}" >> trexio_f.f90
 echo "integer(4) :: TREXIO_VERSION_PATCH = ${VERSION_PATCH_VAL}" >> trexio_f.f90
+echo "character(len = 64) :: TREXIO_GIT_HASH = ${GIT_HASH_STR:='0000'}" >> trexio_f.f90
 echo "" >> trexio_f.f90
 
 # c front end
@@ -48,4 +53,3 @@ cat populated/pop_*.py >> trexio.py
 cat suffix_s_front.h >> trexio_s.h
 cat suffix_front.h   >> trexio.h
 cat suffix_fortran.f90 >> trexio_f.f90
-
