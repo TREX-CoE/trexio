@@ -1181,6 +1181,18 @@ def _close(trexio_file):
     output:
       ~trexio_exit_code~ exit code.
 
+    It returns:
+
+    - ~TREXIO_SUCCESS~ if the ~file_name~ exists and if it correspond to a valid TREXIO file (i.e. a directory OR an HDF5 file)
+    - ~TREXIO_FILE_ERROR~ if ~file_name~ exists but it is not a TREXIO file
+    - ~TREXIO_FAILURE~ otherwise
+
+Also, there is an implicit way to have the aforementioned functionality.
+Attempt to open a non-existing file with ~trexio_open~ function will result in a ~TREXIO_OPEN_ERROR~ exit code
+(see the modified value that has been passed as a 4-th argument to ~trexio_open~).
+
+You can see examples of both functionalities in =test_f.f90=  (search for calls with ~_void~ suffix).
+
 *** C
 
     #+begin_src c :tangle prefix_front.h :exports none
