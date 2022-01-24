@@ -190,6 +190,7 @@ __trexio_path__ = None
    | ~TREXIO_BACK_END_MISSING~    |   26 | 'Requested back end is disabled'       |
    | ~TREXIO_INVALID_STR_LEN~     |   30 | 'Invalid max_str_len'                  |
    | ~TREXIO_INT_SIZE_OVERFLOW~   |   31 | 'Possible integer overflow'            |
+   | ~TREXIO_SAFE_MODE~           |   32 | 'Unsafe operation in safe mode'        |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -265,6 +266,7 @@ return '\n'.join(result)
    #define TREXIO_BACK_END_MISSING        ((trexio_exit_code) 26)
    #define TREXIO_INVALID_STR_LEN         ((trexio_exit_code) 30)
    #define TREXIO_INT_SIZE_OVERFLOW       ((trexio_exit_code) 31)
+   #define TREXIO_SAFE_MODE               ((trexio_exit_code) 32)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -298,6 +300,7 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_BACK_END_MISSING        = 26
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_STR_LEN         = 30
       integer(trexio_exit_code), parameter :: TREXIO_INT_SIZE_OVERFLOW       = 31
+      integer(trexio_exit_code), parameter :: TREXIO_SAFE_MODE               = 32
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
@@ -332,6 +335,7 @@ return '\n'.join(result)
    TREXIO_BACK_END_MISSING        = 26
    TREXIO_INVALID_STR_LEN         = 30
    TREXIO_INT_SIZE_OVERFLOW       = 31
+   TREXIO_SAFE_MODE               = 32
    #+end_src
    :END:
 
@@ -463,6 +467,9 @@ return '\n'.join(result)
      break;
    case TREXIO_INT_SIZE_OVERFLOW:
      return "Possible integer overflow";
+     break;
+   case TREXIO_SAFE_MODE:
+     return "Unsafe operation in safe mode";
      break;
    #+end_example
 
@@ -776,6 +783,7 @@ struct trexio_back_end_s {
      2) ~mode~          - character containing open mode (see below)
        - ~'w'~         - (write)  creates a new file as READWRITE (overwrite existing file)
        - ~'r'~         - (read)   opens existing file as READONLY
+       - ~'u'~         - (unsafe) opens existing file as READWRITE with the possibility to overwrite blocks and delete full groups.
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
        - ~TREXIO_HDF5~ - for HDF5 back end (integer alternative: 0)
        - ~TREXIO_TEXT~ - for TEXT back end (integer alternative: 1)
@@ -783,13 +791,15 @@ struct trexio_back_end_s {
    output:
      ~trexio_t~ file handle
 
-   Note: the ~file_name~ in TEXT back end actually corresponds to the
+   **Note:** the ~file_name~ in TEXT back end actually corresponds to the
    name of the directory where ~.txt~ data files are stored. The
    actual name of each ~.txt~ file corresponds to the group name
    provided in ~trex.config~ (e.g. ~nucleus.txt~ for nuclei-related
    data).  These names are populated by the generator.py (i.e. they
    are hard-coded), which is why the user should tend to avoid
    renaming the ~.txt~ data files.
+
+   **Note:** internal consistency is not guaranteed once the file has been modified in ~'u'~ (unsafe) mode.
 
 *** C
 
@@ -815,7 +825,7 @@ trexio_open(const char* file_name, const char mode,
     return NULL;
   }
 
-  if (mode != 'r' && mode != 'w') {
+  if (mode != 'r' && mode != 'w' && mode != 'u') {
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
     return NULL;
   }
@@ -3892,6 +3902,88 @@ def has_$group_str$(trexio_file) -> bool:
         return True
     else:
         return False
+     #+end_src
+
+** Templates for front end delete an entire group (UNSAFE MODE)
+*** Introduction
+
+   This section concerns API calls related to string attributes.
+
+   | Function name           | Description                               |
+   |-------------------------+-------------------------------------------|
+   | ~trexio_delete_$group$~ | Delete a given group from the TREXIO file |
+
+*** C templates for front end
+
+     #+begin_src c :tangle delete_group_front.h :exports none
+trexio_exit_code trexio_delete_$group$(trexio_t* const file);
+     #+end_src
+
+
+     #+begin_src c :tangle delete_group_front.c
+trexio_exit_code
+trexio_delete_$group$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file->mode != 'u') return TREXIO_SAFE_MODE;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_delete_$group$(file);
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_delete_$group$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_delete_$group$(file);
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+*** Fortran templates for front end
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+     #+begin_src f90 :tangle delete_group_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_delete_$group$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(trexio_t), intent(in), value  :: trex_file
+   end function trexio_delete_$group$
+end interface
+     #+end_src
+
+*** Python templates for front end
+
+     #+begin_src python :tangle delete_group_front.py
+def delete_$group$(trexio_file) -> None:
+    """Delete the entire $group$ group from the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc = pytr.trexio_delete_$group$(trexio_file.pytrexio_s)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
      #+end_src
 
 * Fortran helper/wrapper functions

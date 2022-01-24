@@ -10,7 +10,9 @@ cat populated/pop_basic_hdf5.c >> trexio_hdf5.c
 cat populated/pop_has_*.c >> trexio_hdf5.c
 cat populated/pop_read_*.c >> trexio_hdf5.c
 cat populated/pop_write_*.c >> trexio_hdf5.c
+cat populated/pop_delete_group_hdf5.c >> trexio_hdf5.c
 cat populated/pop_hrw_*.h >> trexio_hdf5.h
+cat populated/pop_delete_group_hdf5.h >> trexio_hdf5.h
 
 cat helpers_hdf5.c  >> trexio_hdf5.c
 cat suffix_hdf5.h   >> trexio_hdf5.h

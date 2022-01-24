@@ -265,7 +265,7 @@ trexio_text_deinit (trexio_t* const file)
 }
     #+end_src
 
-** Template for text read struct
+** Template for text read a group
 
     #+begin_src c :tangle read_group_text.h :exports none
 $group$_t* trexio_text_read_$group$(trexio_text_t* const file);
@@ -558,7 +558,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 }
    #+end_src
 
-** Template for text flush struct
+** Template for text flush a group
 
     #+begin_src c :tangle flush_group_text.h :exports none
 trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file);
@@ -574,7 +574,6 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
   if (file->parent.mode == 'r') return TREXIO_READONLY;
 
   $group$_t* $group$ = file->$group$;
-
   if ($group$ == NULL) return TREXIO_SUCCESS;
 
   if ($group$->to_flush == 0) return TREXIO_SUCCESS;
@@ -663,12 +662,14 @@ trexio_text_free_$group$ (trexio_text_t* const file)
   // END REPEAT GROUP_ATTR_STR
 
   FREE ($group$);
+  file->$group$ = NULL;
+
   return TREXIO_SUCCESS;
 
 }
     #+end_src
 
-** Template for has/read/write the numerical attribute
+** Template for has/read/write a numerical attribute
 
     #+begin_src c :tangle hrw_attr_num_text.h :exports none
 trexio_exit_code trexio_text_has_$group_num$ (trexio_t* const file);
@@ -732,7 +733,7 @@ trexio_text_has_$group_num$ (trexio_t* const file)
 }
    #+end_src
 
-** Template for has/read/write the dataset of numerical data
+** Template for has/read/write a dataset of numerical data
 
      The ~group_dset~ array is assumed allocated with the appropriate size.
 
@@ -827,7 +828,7 @@ trexio_text_has_$group_dset$ (trexio_t* const file)
 
 }
    #+end_src
-** Template for has/read/write the dataset of strings
+** Template for has/read/write a dataset of strings
 
      The ~group_dset~ array is assumed allocated with the appropriate size.
 
@@ -927,7 +928,7 @@ trexio_text_has_$group_dset$ (trexio_t* const file)
 
 }
    #+end_src
-** Template for has/read/write the string attribute
+** Template for has/read/write a string attribute
 
    #+begin_src c :tangle hrw_attr_str_text.h :exports none
 trexio_exit_code trexio_text_has_$group_str$ (trexio_t* const file);
@@ -1271,6 +1272,35 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
   } else {
     return TREXIO_HAS_NOT;
   }
+}
+   #+end_src
+
+** Template for text delete a group (UNSAFE mode)
+
+  #+begin_src c :tangle delete_group_text.h :exports none
+trexio_exit_code trexio_text_delete_$group$ (trexio_t* const file);
+  #+end_src
+
+  #+begin_src c :tangle delete_group_text.c
+trexio_exit_code
+trexio_text_delete_$group$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_text_t* f = (trexio_text_t*) file;
+
+  $group$_t* $group$ = trexio_text_read_$group$(f);
+  if ($group$ == NULL) return TREXIO_FAILURE;
+
+  int rc = remove($group$->file_name);
+  if (rc == -1) return TREXIO_FAILURE;
+
+  $group$->to_flush = 0;
+
+  trexio_exit_code rc_free = trexio_text_free_$group$(f);
+  if (rc_free != TREXIO_SUCCESS) return rc_free;
+
+  return TREXIO_SUCCESS;
 }
    #+end_src
 

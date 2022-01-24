@@ -49,8 +49,7 @@
 
   #+end_src
 
-* HDF5 back end
-** Template for HDF5 definitions
+* Template for HDF5 definitions
 
   #+begin_src c :tangle def_hdf5.c
 #define $GROUP$_GROUP_NAME          "$group$"
@@ -59,7 +58,7 @@
 #define $GROUP_STR$_NAME            "$group_str$"
   #+end_src
 
-** Template for HDF5 structures
+* Template for HDF5 structures
 
   #+begin_src c :tangle struct_hdf5.h
 typedef struct trexio_hdf5_s {
@@ -69,7 +68,7 @@ typedef struct trexio_hdf5_s {
 } trexio_hdf5_t;
   #+end_src
 
-** Template for HDF5 init/deinit
+* Template for HDF5 init/deinit
 
   #+begin_src c :tangle struct_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_init(trexio_t* const file);
@@ -113,6 +112,7 @@ trexio_hdf5_init (trexio_t* const file)
       // reading the existing file -> open as RDONLY
       f->file_id = H5Fopen(file->file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
       break;
+    case 'u':
     case 'w':
       // writing the existing file -> open as RDWRITE
       f->file_id = H5Fopen(file->file_name, H5F_ACC_RDWR, H5P_DEFAULT);
@@ -125,6 +125,7 @@ trexio_hdf5_init (trexio_t* const file)
     case 'r':
       // reading non-existing file -> error
       return TREXIO_FAILURE;
+    case 'u':
     case 'w':
       // writing non-existing file -> create it
       f->file_id = H5Fcreate(file->file_name, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
@@ -138,6 +139,7 @@ trexio_hdf5_init (trexio_t* const file)
     case 'r':
       f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
       break;
+    case 'u':
     case 'w':
       if (f_exists == 1) {
         f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
@@ -170,7 +172,7 @@ trexio_hdf5_deinit (trexio_t* const file)
 }
   #+end_src
 
-** Template for HDF5 has/read/write the numerical attribute
+* Template for HDF5 has/read/write a numerical attribute
 
   #+begin_src c :tangle hrw_attr_num_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_num$ (trexio_t* const file);
@@ -266,7 +268,7 @@ trexio_hdf5_has_$group_num$ (trexio_t* const file)
 }
     #+end_src
 
-** Template for HDF5 has/read/write the dataset of numerical data
+* Template for HDF5 has/read/write a dataset of numerical data
 
    #+begin_src c :tangle hrw_dset_data_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file);
@@ -389,7 +391,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 }
    #+end_src
 
-** Template for HDF5 has/read/write the dataset of sparse data
+* Template for HDF5 has/read/write a dataset of sparse data
 
   Sparse data is stored using extensible datasets of HDF5. Extensibility is required
   due to the fact that the sparse data will be written in chunks of user-defined size.
@@ -590,7 +592,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 }
    #+end_src
 
-** Template for HDF5 has/read/write the dataset of strings
+* Template for HDF5 has/read/write a dataset of strings
 
    #+begin_src c :tangle hrw_dset_str_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file);
@@ -795,7 +797,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
 }
    #+end_src
 
-** Template for HDF5 has/read/write the string attribute
+* Template for HDF5 has/read/write a string attribute
 
   #+begin_src c :tangle hrw_attr_str_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_has_$group_str$ (trexio_t* const file);
@@ -919,7 +921,38 @@ trexio_hdf5_has_$group_str$ (trexio_t* const file)
 
 }
     #+end_src
-** Helper functions
+* Template for HDF5 delete a group (UNSAFE mode)
+
+  **Note:** in early versions of the HDF5 library (v < 1.10) unlinking an object was not working as expected
+  and the associated memory was not necessarily freed (see [[https://stackoverflow.com/questions/1124994/removing-data-from-a-hdf5-file][this StackOverflow discussion]] for example).
+  Nevertheless, we highly recommend to reopen the file in SAFE mode (e.g. ~'r'~ or ~'w'~) after deleting the data.
+
+  #+begin_src c :tangle delete_group_hdf5.h :exports none
+trexio_exit_code trexio_hdf5_delete_$group$ (trexio_t* const file);
+  #+end_src
+
+  #+begin_src c :tangle delete_group_hdf5.c
+trexio_exit_code
+trexio_hdf5_delete_$group$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  // delete the link to the existing group: this should free the associated space
+  H5Gclose(f->$group$_group);
+  herr_t status = H5Ldelete(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+  if (status < 0) return TREXIO_FAILURE;
+
+  // re-create the group (with the new link ?)
+  f->$group$_group = H5Gcreate(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (f->$group$_group <= 0L) return TREXIO_INVALID_ID;
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+* Helper functions
 
   #+begin_src c :tangle helpers_hdf5.c
 trexio_exit_code
