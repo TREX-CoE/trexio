@@ -1,13 +1,26 @@
 
-# ========= DEFINE TREXIO C LIBRARY ========= 
+# ============= THREADS SUPPORT ==============
+
+# the two options below add preference for the pthread library over other system-wide threads implementations
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+# find thread library
+find_package(Threads REQUIRED)
+
+# ============= STDINT SUPPORT ===============
+
+include(CheckIncludeFile)
+check_include_file(stdint.h HAVE_STDINT_H)
+
+# ========= DEFINE TREXIO C LIBRARY =========
 
 # Set a list of TREXIO source and header files that are always compiled.
-set(TREXIO_SOURCES 
+set(TREXIO_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio.c
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_text.c
 	)
 set(TREXIO_PUBLIC_HEADERS ${CMAKE_SOURCE_DIR}/include/trexio.h)
-set(TREXIO_PRIVATE_HEADERS 
+set(TREXIO_PRIVATE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_s.h
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_private.h
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_text.h
@@ -29,7 +42,7 @@ if(BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
   add_library(trexio SHARED)
 
 elseif(NOT BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
-  
+
   message(STATUS "TREXIO :: static C library will be built")
   add_library(trexio STATIC)
   # Static TREXIO has to be compiled with -fPIC flag. For Shared it is done by default.
@@ -40,12 +53,12 @@ else()
 endif()
 
 # Set TREXIO version and include files.
-set_target_properties(trexio PROPERTIES 
+set_target_properties(trexio PROPERTIES
 	VERSION ${PROJECT_VERSION}
 	PUBLIC_HEADER ${TREXIO_PUBLIC_HEADERS}
 	)
 
-# ============= CONFIGURE HDF5 ============== 
+# ============= CONFIGURE HDF5 ==============
 
 # By defaulti, TREXIO is configured with the HDF5 support.
 # To change this, append -DENABLE_HDF5=OFF to the cmake call.
@@ -74,8 +87,8 @@ if(ENABLE_HDF5)
   # - include directories with HDF5 header files
   target_include_directories(trexio PRIVATE ${HDF5_C_INCLUDE_DIRS})
   # - link to HDF5 C libraries
-  target_link_libraries(trexio PRIVATE 
-         ${HDF5_C_HL_LIBRARIES} 
+  target_link_libraries(trexio PRIVATE
+         ${HDF5_C_HL_LIBRARIES}
          ${HDF5_C_LIBRARIES})
 endif()
 
@@ -110,7 +123,7 @@ if(TREXIO_DEVEL)
     list(APPEND ORG_FILES templates_hdf5/templator_hdf5.org)
   endif()
 
-  add_custom_command(OUTPUT 
+  add_custom_command(OUTPUT
 	  ${TREXIO_SOURCES}
 	  ${TREXIO_PUBLIC_HEADERS}
 	  ${TREXIO_PRIVATE_HEADERS}
@@ -129,7 +142,7 @@ if(TREXIO_DEVEL)
 
 endif()
 
-# ============= INSTALL TREXIO ============== 
+# ============= INSTALL TREXIO ==============
 
 include(GNUInstallDirs)
 # Use standard GNU directories for installation of TREXIO (e.g. /usr/local/lib|include).
@@ -153,4 +166,4 @@ if(NOT TARGET uninstall)
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()
 
-# =========================================== 
+# ===========================================

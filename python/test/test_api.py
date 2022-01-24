@@ -38,6 +38,8 @@ except:
 #============ WRITE THE DATA IN THE TEST FILE ============#
 #=========================================================#
 
+trexio.info()
+
 # create TREXIO file and open it for writing
 test_file = trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND)
 assert test_file.exists

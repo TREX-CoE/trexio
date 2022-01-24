@@ -14,6 +14,8 @@ int main() {
 
   int rc;
 
+  trexio_info();
+
   bool have_hdf5 = trexio_has_backend(TREXIO_HDF5);
   if(have_hdf5) {
     rc = system("rm -f -- test_all.h5");
@@ -72,7 +74,7 @@ int test_write(const char* file_name, const back_end_t backend) {
         	         "H 999asdasd" ,
                 	 "H" ,
 	                 "H" };
-  
+
   const char* sym = "B3U with some comments";
 /*================= START OF TEST ==================*/
 
@@ -96,11 +98,11 @@ int test_write(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_point_group(file, sym, 32);
   assert (rc == TREXIO_SUCCESS);
-  
+
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
- 
+
   // reopen file in 'write' mode
   file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
@@ -188,7 +190,7 @@ int test_read(const char* file_name, const back_end_t backend) {
   assert (rc == TREXIO_SUCCESS);
   assert (strcmp(label[0], "C")  == 0);
   assert (strcmp(label[1], "Na") == 0);
-  
+
   for (int i=0; i<num; i++){
     free(label[i]);
   }
@@ -220,8 +222,6 @@ int test_read(const char* file_name, const back_end_t backend) {
   assert (file2 == NULL);
 
 /*================= END OF TEST =====================*/
- 
+
   return 0;
 }
-
-

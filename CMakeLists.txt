@@ -32,8 +32,25 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git/config")
   else()
     message(FATAL_ERROR "EMACS not found. It is required to produce TREXIO source code from org-mode files.")
   endif()
+  # in case Git is not available, we default to "unknown"
+  set(GIT_HASH "unknown")
+  # find Git and if available set GIT_HASH variable
+  find_package(Git QUIET)
+  if(GIT_FOUND)
+    execute_process(
+	    COMMAND ${GIT_EXECUTABLE} --no-pager show -s --pretty=format:%H -n 1
+	    OUTPUT_VARIABLE GIT_HASH
+	    OUTPUT_STRIP_TRAILING_WHITESPACE
+	    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	    ERROR_QUIET)
+  endif()
+  # get the user name from the ${USER} env variable
+  set(TREXIO_USER_NAME $ENV{USER})
+  # replace placeholders in the templace config.h.in file to produce config.h
+  # config.h is needed to insert TREXIO_PACKAGE_VERSION and TREXIO_GIT_HASH into trexio.h
   configure_file(${CMAKE_SOURCE_DIR}/include/cmake_config.h.in
-                 ${CMAKE_SOURCE_DIR}/include/config.h)
+                 ${CMAKE_SOURCE_DIR}/include/config.h
+		 @ONLY)
 endif()
 
 # Set directories to be included at build time.

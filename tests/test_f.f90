@@ -3,6 +3,7 @@ program test_trexio
   use, intrinsic :: iso_c_binding
   implicit none
 
+  integer :: rc
   logical :: have_hdf5
 
   print *      , "============================================"
@@ -10,6 +11,8 @@ program test_trexio
   print'(a,i3)', "         TREXIO MAJOR VERSION  : ", TREXIO_VERSION_MAJOR
   print'(a,i3)', "         TREXIO MINOR VERSION  : ", TREXIO_VERSION_MINOR
   print *      , "============================================"
+
+  rc = trexio_info()
 
   call system('rm -rf -- test_write_f.dir')
   print *, 'call test_write(''test_write_f.dir'', TREXIO_TEXT)'
