@@ -149,6 +149,41 @@ del test_file
 
 
 #==========================================================#
+#========== DELETE THE GROUP FROM THE TEST FILE ===========#
+#==========================================================#
+
+unsafe_file = trexio.File(output_filename, 'u', TEST_TREXIO_BACKEND)
+
+# overwrite existing data (only allowed in 'u' - unsafe mode)
+trexio.write_nucleus_num(unsafe_file, nucleus_num)
+trexio.write_nucleus_charge(unsafe_file, charges_np)
+trexio.write_nucleus_coord(unsafe_file, coords)
+trexio.write_nucleus_label(unsafe_file,labels)
+trexio.write_nucleus_point_group(unsafe_file, point_group)
+
+print("Overwriting the data in UNSAFE mode: checked")
+
+# delete existing group (only allowed in 'u' - unsafe mode)
+trexio.delete_nucleus(unsafe_file)
+
+assert not trexio.has_nucleus_num(unsafe_file)
+assert not trexio.has_nucleus_charge(unsafe_file)
+assert not trexio.has_nucleus_coord(unsafe_file)
+assert not trexio.has_nucleus_label(unsafe_file)
+assert not trexio.has_nucleus_point_group(unsafe_file)
+
+print("Deleting nucleus group in UNSAFE mode: checked")
+
+# restore the deleted data
+trexio.write_nucleus_num(unsafe_file, nucleus_num)
+trexio.write_nucleus_charge(unsafe_file, charges_np)
+trexio.write_nucleus_coord(unsafe_file, coords)
+trexio.write_nucleus_label(unsafe_file,labels)
+trexio.write_nucleus_point_group(unsafe_file, point_group)
+
+del unsafe_file
+
+#==========================================================#
 #============ READ THE DATA FROM THE TEST FILE ============#
 #==========================================================#
 
@@ -157,12 +192,12 @@ test_file2 = trexio.File(output_filename, 'r', TEST_TREXIO_BACKEND)
 assert test_file2.exists
 
 # check for existence of some of the previously written variables
-assert trexio.has_nucleus_num
-assert trexio.has_nucleus_charge
-assert trexio.has_nucleus_coord
-assert trexio.has_nucleus_label
-assert trexio.has_nucleus_point_group
-assert trexio.has_mo_2e_int_eri
+assert trexio.has_nucleus_num(test_file2)
+assert trexio.has_nucleus_charge(test_file2)
+assert trexio.has_nucleus_coord(test_file2)
+assert trexio.has_nucleus_label(test_file2)
+assert trexio.has_nucleus_point_group(test_file2)
+assert trexio.has_mo_2e_int_eri(test_file2)
 
 # read nucleus_num from file
 rnum = trexio.read_nucleus_num(test_file2)
