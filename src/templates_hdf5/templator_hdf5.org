@@ -925,7 +925,12 @@ trexio_hdf5_has_$group_str$ (trexio_t* const file)
 
   **Note:** in early versions of the HDF5 library (v < 1.10) unlinking an object was not working as expected
   and the associated memory was not necessarily freed (see [[https://stackoverflow.com/questions/1124994/removing-data-from-a-hdf5-file][this StackOverflow discussion]] for example).
-  Nevertheless, we highly recommend to reopen the file in SAFE mode (e.g. ~'r'~ or ~'w'~) after deleting the data.
+  Nevertheless, some space might remain occupied even after deleting the associated object in recent version.
+  To take the best use of the deleted file space, we recommend to write the deleted group within the same session
+  (i.e. before closing the TREXIO file).
+
+  In principle, one can use HDF5-provided ~h5repack~ binary, which copies all existing objects from one file into another.
+  Thus, any corrupted/lost file space will remain in the first file. The use of ~h5repack~ is highly encouraged.
 
   #+begin_src c :tangle delete_group_hdf5.h :exports none
 trexio_exit_code trexio_hdf5_delete_$group$ (trexio_t* const file);
@@ -941,6 +946,7 @@ trexio_hdf5_delete_$group$ (trexio_t* const file)
 
   // delete the link to the existing group: this should free the associated space
   H5Gclose(f->$group$_group);
+  f->$group$_group = 0;
   herr_t status = H5Ldelete(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
   if (status < 0) return TREXIO_FAILURE;
 
