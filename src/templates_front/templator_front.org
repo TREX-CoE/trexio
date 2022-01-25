@@ -903,6 +903,7 @@ trexio_open(const char* file_name, const char mode,
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+    free(result);
     return NULL;
 #endif
 /*
@@ -935,6 +936,7 @@ trexio_open(const char* file_name, const char mode,
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+    free(result);
     return NULL;
 #endif
 /*
@@ -971,6 +973,7 @@ trexio_open(const char* file_name, const char mode,
       break;
 #else
       if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+      free(result);
       return NULL;
 #endif
 
@@ -978,10 +981,50 @@ trexio_open(const char* file_name, const char mode,
   }
 
   if (rc != TREXIO_SUCCESS) {
-    if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
+    if (rc_open != NULL) *rc_open = rc;
     free(result);
     return NULL;
   }
+
+
+  /* Mark the file as unsafe upon opening in UNSAFE 'u' mode */
+  if (mode == 'u') {
+
+    rc = trexio_has_metadata_unsafe(result);
+    if (rc == TREXIO_FAILURE) {
+      if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
+      free(result);
+      return NULL;
+    }
+
+    if (rc == TREXIO_HAS_NOT) {
+      int64_t unsafe_val = 1;
+      switch (back_end) {
+
+      case TREXIO_TEXT:
+        rc = trexio_text_write_metadata_unsafe(result, unsafe_val);
+        break;
+
+      case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+        rc = trexio_hdf5_write_metadata_unsafe(result, unsafe_val);
+        break;
+#else
+        if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+        free(result);
+        return NULL;
+#endif
+      }
+    }
+
+    if (rc != TREXIO_SUCCESS) {
+      if (rc_open != NULL) *rc_open = rc;
+      free(result);
+      return NULL;
+    }
+
+  }
+
 
   /* Exit upon success */
   if (rc_open != NULL) *rc_open = TREXIO_SUCCESS;
@@ -4013,10 +4056,17 @@ def delete_$group$(trexio_file) -> None:
   3) ~HDF5_VERSION~ [string] (optional, only if ~HAVE_HDF5~ is ~true~)
   4) ~TREXIO_GIT_HASH~ [string]
 
+  ~trexio_mark_safety~ checks if the file has been open in UNSAFE mode.
+  If it was, the ~metadata_unsafe~ attribute can be overwritten with the value provided in a second argument of the function.
+  Since ~metadata_unsafe~ is set to ~1~ (~true~) upon the first opening of the file in UNSAFE mode, this value is immutable.
+  However, if the user validated that the file is correct (e.g. using ~trexio-tools~),
+  then value of the ~metadata_unsafe~ attribute can be changed using the aforementioned function.
+
 ** C
 
      #+begin_src c :tangle prefix_front.h :exports none
  trexio_exit_code trexio_info(void);
+ trexio_exit_code trexio_mark_safety(trexio_t* const file, const int32_t safety_flag);
      #+end_src
 
      #+begin_src c :tangle prefix_front.c
@@ -4040,6 +4090,21 @@ def delete_$group$(trexio_file) -> None:
  #endif
 
    return TREXIO_SUCCESS;
+ }
+     #+end_src
+
+     #+begin_src c :tangle prefix_front.c
+ trexio_exit_code
+ trexio_mark_safety (trexio_t* const file, const int32_t safety_flag)
+ {
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  /* 1 for true ; 0 for false */
+  if (safety_flag != 0 && safety_flag != 1) return TREXIO_INVALID_ARG_2;
+  /* Cannot mark the file in safe mode */
+  if (file->mode != 'u') return TREXIO_FAILURE;
+
+  return trexio_write_metadata_unsafe(file, safety_flag);
  }
      #+end_src
 
