@@ -226,7 +226,7 @@ subroutine test_read(file_name, back_end)
   rc = trexio_inquire(file_name)
   call trexio_assert(rc, TREXIO_SUCCESS)
 
-  trex_file = trexio_open(file_name, 'r', back_end, rc)
+  trex_file = trexio_open(file_name, 'r', TREXIO_AUTO, rc)
   call trexio_assert(rc, TREXIO_SUCCESS)
 
   rc = trexio_read_nucleus_num(trex_file, num_read)

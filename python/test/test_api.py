@@ -155,7 +155,7 @@ del test_file
 #==========================================================#
 
 # open previously created TREXIO file, now in 'read' mode
-test_file2 = trexio.File(output_filename, 'r', TEST_TREXIO_BACKEND)
+test_file2 = trexio.File(output_filename, 'r', trexio.TREXIO_AUTO)
 assert test_file2.exists
 
 # check for existence of some of the previously written variables

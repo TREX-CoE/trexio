@@ -163,7 +163,7 @@ int test_read(const char* file_name, const back_end_t backend) {
 /*================= START OF TEST ==================*/
 
   // open existing file on 'read' mode [created by test_write]
-  file = trexio_open(file_name, 'r', backend, &rc);
+  file = trexio_open(file_name, 'r', TREXIO_AUTO, &rc);
   assert (file != NULL);
 
   // read nucleus_num
