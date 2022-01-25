@@ -37,14 +37,16 @@ def get_files_todo(source_files: dict) -> dict:
         all_files += source_files[key]
 
     files_todo = {}
-    #files_todo['all'] = list(filter(lambda x: 'read' in x or 'write' in x or 'has' in x or 'hrw' in x or 'flush' in x or 'free' in x, all_files))
-    files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f]
+    files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f or 'delete' in f]
     for key in ['dset_data', 'dset_str', 'dset_sparse', 'attr_num', 'attr_str', 'group']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
     # files that correspond to iterative population (e.g. the code is repeated within the function body but the function itself is unique)
-    files_todo['auxiliary'] = ['def_hdf5.c', 'basic_hdf5.c', 'basic_text_group.c', 'struct_hdf5.h', 'struct_text_group.h']
+    files_todo['auxiliary'] = [
+        'def_hdf5.c', 'basic_hdf5.c', 'struct_hdf5.h',
+        'basic_text_group.c', 'struct_text_group.h'
+    ]
 
     return files_todo
 
@@ -92,7 +94,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
             Parameters:
                     filename (str)          : template file to be populated
                     paths (dict)            : dictionary of paths per source directory
-                    detailed_source (dict)  : dictionary of variables with substitution details (usually either datasets or numbers)
+                    detailed_source (dict)  : dictionary of variables with substitution details
 
             Returns:
                     None
@@ -456,7 +458,7 @@ def get_group_dict (configuration: dict) -> dict:
     """
     group_dict = {}
     for k in configuration.keys():
-        group_dict[k] = 0
+        group_dict[k] = {'group' : k}
 
     return group_dict
 

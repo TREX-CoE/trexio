@@ -62,8 +62,13 @@ for fname in files_todo['dset_str']:
 for fname in files_todo['dset_sparse']:
     recursive_populate_file(fname, template_paths, detailed_dsets_sparse)
 
-# populate group-related functions with mixed (iterative+recursive) scheme [text backend]
+# populate group-related functions with mixed scheme
 for fname in files_todo['group']:
-    special_populate_text_group(fname, template_paths, group_dict, detailed_dsets, detailed_nums, detailed_strs)
+    # recursive scheme for delete_group functions
+    if 'delete' in fname:
+        recursive_populate_file(fname, template_paths, group_dict)
+    # mixed (iterative+recursive) scheme [text backend]
+    else:
+        special_populate_text_group(fname, template_paths, group_dict, detailed_dsets, detailed_nums, detailed_strs)
 
 # --------------------------------------------------------------------------- #
