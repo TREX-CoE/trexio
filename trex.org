@@ -57,6 +57,12 @@ fetched using multiple function calls to perform I/O on buffers.
   | ~author~          | ~str~ | ~(metadata.author_num)~ | Names of the authors of the file         |
   | ~package_version~ | ~str~ |                         | TREXIO version used to produce the file  |
   | ~description~     | ~str~ |                         | Text describing the content of file      |
+  | ~unsafe~          | ~int~ |                         | ~1~: true, ~0~: false                    |
+
+  **Note:** ~unsafe~ attribute of the ~metadata~ group indicates whether the file has been previously opened with ~'u'~ mode.
+  It is automatically written in the file upon the first unsafe opening.
+  If the user has checked that the TREXIO file is valid (e.g. using ~trexio-tools~) after unsafe operations,
+  then the ~unsafe~ attribute value can be manually overwritten (in unsafe mode) from ~1~ to ~0~.
 
   #+CALL: json(data=metadata, title="metadata")
   #+RESULTS:
@@ -69,6 +75,7 @@ fetched using multiple function calls to perform I/O on buffers.
 	,          "author" : [ "str", [ "metadata.author_num" ] ]
 	, "package_version" : [ "str", []                        ]
 	,     "description" : [ "str", []                        ]
+	,          "unsafe" : [ "int", []                        ]
       } ,
   #+end_src
   :END:

@@ -94,6 +94,7 @@ TESTS_C = \
   tests/io_safe_dset_float_text \
   tests/io_str_text \
   tests/io_dset_str_text \
+  tests/delete_group_text \
   tests/overwrite_all_text \
   tests/io_all
 
@@ -107,6 +108,7 @@ TESTS_C += \
   tests/io_safe_dset_float_hdf5 \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
+  tests/delete_group_hdf5 \
   tests/overwrite_all_hdf5
 endif
 
