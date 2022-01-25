@@ -57,6 +57,30 @@ static int test_open_r (const char* file_name, const back_end_t backend) {
 }
 
 
+static int test_open_auto (const char* file_name) {
+
+/* Try to open the TREXIO file in 'read' mode */
+
+  trexio_t* file = NULL;
+  trexio_exit_code rc;
+
+/*================= START OF TEST ==================*/
+
+  // open file in 'write' mode
+  file = trexio_open(file_name, 'r', TREXIO_AUTO, &rc);
+  assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
+
+  // close current session
+  rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+
+/*================= END OF TEST ==================*/
+
+  return 0;
+}
+
+
 static int test_open_errors (const back_end_t backend) {
 
 /* Try to call trexio_open with bad arguments */
@@ -128,6 +152,7 @@ int main(void) {
 
   test_open_w     (TREXIO_FILE, TEST_BACKEND);
   test_open_r     (TREXIO_FILE, TEST_BACKEND);
+  test_open_auto  (TREXIO_FILE);
   test_open_errors(TEST_BACKEND);
   test_inquire    (TEST_BACKEND);
 
