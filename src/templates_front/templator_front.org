@@ -650,7 +650,7 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
    library.
 
    Writing to TREXIO files is done with transactions (all-or-nothing
-   effect) in a per-group fashion.  File writes are attempted by
+   effect). File writes are attempted by
    calling explicitly the write (~TREXIO_HDF5~) or flush (~TREXIO_TEXT~)
    function, or when the TREXIO file is closed.
    If writing is impossible because the data is not valid, no data is written.
@@ -661,6 +661,7 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
    The TREXIO files are supposed to be opened by only one program at a
    time: if the same TREXIO file is modified simultaneously by multiple
    concurrent programs, the behavior is not specified.
+
 ** TREXIO file type
 
    ~trexio_s~ is the the main type for TREXIO files, visible to the users
@@ -782,12 +783,12 @@ struct trexio_back_end_s {
 
 ** File opening
 
-   ~trexio_open~ creates a new TREXIO file or opens existing one.
+   ~trexio_open~ creates a new TREXIO file or opens the existing one.
 
-   input parameters:
+   **Input parameters:**
      1) ~file_name~     - string containing file name
      2) ~mode~          - character containing open mode (see below)
-       - ~'w'~         - (write)  creates a new file as READWRITE (overwrite existing file)
+       - ~'w'~         - (write)  creates a new file as READWRITE
        - ~'r'~         - (read)   opens existing file as READONLY
        - ~'u'~         - (unsafe) opens existing file as READWRITE with the possibility to overwrite blocks and delete full groups.
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
@@ -795,18 +796,25 @@ struct trexio_back_end_s {
        - ~TREXIO_TEXT~ - for TEXT back end (integer alternative: 1)
        - ~TREXIO_AUTO~ - to automatically detect the applicable back end
 
-   output:
-     ~trexio_t~ file handle
+   **Output:**
+     - Pointer to the ~trexio_t~ (struct) file handle.
 
-   **Note:** the ~file_name~ in TEXT back end actually corresponds to the
-   name of the directory where ~.txt~ data files are stored. The
-   actual name of each ~.txt~ file corresponds to the group name
-   provided in ~trex.config~ (e.g. ~nucleus.txt~ for nuclei-related
-   data).  These names are populated by the generator.py (i.e. they
-   are hard-coded), which is why the user should tend to avoid
-   renaming the ~.txt~ data files.
+  Upon creation of the TREXIO file, the ~package_version~ attribute of the
+  ~metadata~ group is set to the ~TREXIO_PACKAGE_VERSION~ string.
+  This attribute **is not** automatically updated when the file is modified with
+  newer versions. However, this can be done manually by the user in unsafe mode.
 
-   **Note:** internal consistency is not guaranteed once the file has been modified in ~'u'~ (unsafe) mode.
+  **Note:** internal consistency is not guaranteed once the file has been modified in ~'u'~ (unsafe) mode.
+  Upon the first unsafe call to ~trexio_open~ the ~unsafe~ attribute of the ~metadata~ group will be set
+  to 1 (true) in order to indicate that the file might be inconsistent due to the use of ~'u'~ mode.
+
+  **Note:** the ~file_name~ in TEXT back end actually corresponds to the
+  name of the directory where ~.txt~ data files are stored. The
+  actual name of each ~.txt~ file corresponds to the group name
+  provided in ~trex.config~ (e.g. ~nucleus.txt~ for nuclei-related
+  data).  These names are populated by the generator.py (i.e. they
+  are hard-coded), which is why the user should tend to avoid
+  renaming the ~.txt~ data files.
 
 *** C
 
