@@ -318,234 +318,203 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       return NULL;
     }
 
-    /* Read the dimensioning variables */
     int rc = 0;
-    // START REPEAT GROUP_DSET_ALL
-    rc = fscanf(f, "%1023s", buffer);
-    if ((rc != 1) || (strcmp(buffer, "rank_$group_dset$") != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      return NULL;
-    }
-
-    rc = fscanf(f, "%u", &($group$->rank_$group_dset$));
-    if (rc != 1) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      return NULL;
-    }
 
     /* workaround for the case of missing blocks in the file */
+    // START REPEAT GROUP_DSET_ALL
     uint64_t size_$group_dset$ = 0;
-    if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1;
-
-    for (uint32_t i=0; i<$group$->rank_$group_dset$; ++i){
-
-      uint32_t j=0;
-
-      rc = fscanf(f, "%1023s %u", buffer, &j);
-      if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        return NULL;
-      }
-
-      rc = fscanf(f, "%" SCNu64 "\n", &($group$->dims_$group_dset$[i]));
-      assert(!(rc != 1));
-      if (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        return NULL;
-      }
-
-      size_$group_dset$ *= $group$->dims_$group_dset$[i];
-    }
     // END REPEAT GROUP_DSET_ALL
 
-    // START REPEAT GROUP_NUM
-    /* Read data */
-    unsigned int $group_num$_isSet;
-    rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_num$_isSet") != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      return NULL;
-    }
+    while(fscanf(f, "%1023s", buffer) != EOF) {
 
-    /* additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
-    rc = fscanf(f, "%u", &($group_num$_isSet));
-    $group$->$group_num$_isSet = (bool) $group_num$_isSet;
-    assert(!(rc != 1));
-    if (rc != 1) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      return NULL;
-    }
+      if (strcmp(buffer, "EXIT") == 0) {
+        break;
+      // START REPEAT GROUP_DSET_ALL
+      } else if (strcmp(buffer, "rank_$group_dset$") == 0) {
 
-    if ($group$->$group_num$_isSet == true) {
-      rc = fscanf(f, "%1023s", buffer);
-      assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
-      if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        return NULL;
-      }
-
-      rc = fscanf(f, "%$group_num_format_scanf$", &($group$->$group_num$));
-      assert(!(rc != 1));
-      if (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        return NULL;
-      }
-    }
-    // END REPEAT GROUP_NUM
-
-    // START REPEAT GROUP_ATTR_STR
-    rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "len_$group_str$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "len_$group_str$") != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      return NULL;
-    }
-
-    rc = fscanf(f, "%" SCNu64 "", &($group$->len_$group_str$));
-    assert(!(rc != 1));
-    if (rc != 1) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      return NULL;
-    }
-
-    rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_str$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_str$") != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$->$group_str$);
-      FREE($group$);
-      return NULL;
-    }
-
-    if ($group$->len_$group_str$ != 0) {
-
-      $group$->$group_str$ = CALLOC($group$->len_$group_str$, char);
-      assert (!($group$->$group_str$ == NULL));
-      if ($group$->$group_str$ == NULL) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$->$group_str$);
-        FREE($group$);
-        return NULL;
-      }
-
-      rc = fscanf(f, " %1023[^\n]", $group$->$group_str$);
-      assert(!(rc != 1));
-      if (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$->$group_str$);
-        FREE($group$);
-        return NULL;
-      }
-
-    }
-    // END REPEAT GROUP_ATTR_STR
-
-    // START REPEAT GROUP_DSET_NUM
-    /* Allocate arrays */
-    $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
-    assert (!($group$->$group_dset$ == NULL));
-    if ($group$->$group_dset$ == NULL) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$->$group_dset$);
-      FREE($group$);
-      return NULL;
-    }
-
-    rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$->$group_dset$);
-      FREE($group$);
-      return NULL;
-    }
-
-    for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-      rc = fscanf(f, "%$group_dset_format_scanf$", &($group$->$group_dset$[i]));
-      assert(!(rc != 1));
-      if (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$->$group_dset$);
-        FREE($group$);
-        return NULL;
-      }
-    }
-    // END REPEAT GROUP_DSET_NUM
-
-    // START REPEAT GROUP_DSET_STR
-    rc = fscanf(f, "%1023s", buffer);
-    assert(!((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)));
-    if ((rc != 1) || (strcmp(buffer, "$group_dset$") != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      return NULL;
-    }
-
-    /* Allocate arrays */
-    if(size_$group_dset$ != 0) {
-      $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
-      if ($group$->$group_dset$ == NULL) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$->$group_dset$);
-        FREE($group$);
-        return NULL;
-      }
-
-      /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
-         BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
-       ,*/
-      char* tmp_$group_dset$;
-      tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
-
-      for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-        $group$->$group_dset$[i] = tmp_$group_dset$;
-        /* conventional fcanf with "%s" only return the string before the first space character
-         ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
-         ,* Q: depending on what ? */
-        rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
-        assert(!(rc != 1));
+        rc = fscanf(f, "%u", &($group$->rank_$group_dset$));
         if (rc != 1) {
           FREE(buffer);
           fclose(f);
-          FREE($group$->$group_dset$);
           FREE($group$);
           return NULL;
         }
 
-        size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
-        tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+        if ($group$->rank_$group_dset$ != 0) size_$group_dset$ = 1UL;
+
+        for (uint32_t i=0; i<$group$->rank_$group_dset$; ++i){
+
+          uint32_t j=0;
+          rc = fscanf(f, "%1023s %u", buffer, &j);
+          if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$);
+            return NULL;
+          }
+
+          rc = fscanf(f, "%" SCNu64 "\n", &($group$->dims_$group_dset$[i]));
+          assert(!(rc != 1));
+          if (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$);
+            return NULL;
+          }
+
+          size_$group_dset$ *= $group$->dims_$group_dset$[i];
+        }
+      // END REPEAT GROUP_DSET_ALL
+      // START REPEAT GROUP_DSET_NUM
+      } else if (strcmp(buffer, "$group_dset$") == 0) {
+
+        /* Allocate arrays */
+        $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
+        if ($group$->$group_dset$ == NULL) {
+          FREE(buffer);
+          fclose(f);
+          FREE($group$);
+          return NULL;
+        }
+
+        for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
+          rc = fscanf(f, "%$group_dset_format_scanf$", &($group$->$group_dset$[i]));
+          if (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$);
+            return NULL;
+          }
+        }
+
+      // END REPEAT GROUP_DSET_NUM
+      // START REPEAT GROUP_DSET_STR
+      } else if (strcmp(buffer, "$group_dset$") == 0) {
+
+        if(size_$group_dset$ != 0) {
+          /* Allocate arrays */
+          $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
+          if ($group$->$group_dset$ == NULL) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$);
+            return NULL;
+          }
+
+          /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
+             BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+           ,*/
+          char* tmp_$group_dset$;
+          tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
+
+          for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
+            $group$->$group_dset$[i] = tmp_$group_dset$;
+            /* conventional fcanf with "%s" only return the string before the first space character
+             ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
+             ,* Q: depending on what ? */
+            rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
+            assert(!(rc != 1));
+            if (rc != 1) {
+              FREE(buffer);
+              fclose(f);
+              FREE($group$);
+              return NULL;
+            }
+
+            size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
+            tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+          }
+        }
+
+      // END REPEAT GROUP_DSET_STR
+      // START REPEAT GROUP_NUM
+      } else if (strcmp(buffer, "$group_num$_isSet") == 0) {
+
+        unsigned int $group_num$_isSet;
+        /* additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
+        rc = fscanf(f, "%u", &($group_num$_isSet));
+        $group$->$group_num$_isSet = (bool) $group_num$_isSet;
+        assert(!(rc != 1));
+        if (rc != 1) {
+          FREE(buffer);
+          fclose(f);
+          FREE($group$);
+          return NULL;
+        }
+
+        if ($group$->$group_num$_isSet == true) {
+          rc = fscanf(f, "%1023s", buffer);
+          assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
+          if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$);
+            return NULL;
+          }
+
+          rc = fscanf(f, "%$group_num_format_scanf$", &($group$->$group_num$));
+          assert(!(rc != 1));
+          if (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$);
+            return NULL;
+          }
+        }
+
+      // END REPEAT GROUP_NUM
+      // START REPEAT GROUP_ATTR_STR
+      } else if (strcmp(buffer, "len_$group_str$") == 0) {
+
+        rc = fscanf(f, "%" SCNu64 "", &($group$->len_$group_str$));
+        assert(!(rc != 1));
+        if (rc != 1) {
+          FREE(buffer);
+          fclose(f);
+          FREE($group$);
+          return NULL;
+        }
+
+        rc = fscanf(f, "%1023s", buffer);
+        assert(!((rc != 1) || (strcmp(buffer, "$group_str$") != 0)));
+        if ((rc != 1) || (strcmp(buffer, "$group_str$") != 0)) {
+          FREE(buffer);
+          fclose(f);
+          FREE($group$->$group_str$);
+          FREE($group$);
+          return NULL;
+        }
+
+        if ($group$->len_$group_str$ != 0) {
+
+          $group$->$group_str$ = CALLOC($group$->len_$group_str$, char);
+          assert (!($group$->$group_str$ == NULL));
+          if ($group$->$group_str$ == NULL) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$->$group_str$);
+            FREE($group$);
+            return NULL;
+          }
+
+          rc = fscanf(f, " %1023[^\n]", $group$->$group_str$);
+          assert(!(rc != 1));
+          if (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            FREE($group$->$group_str$);
+            FREE($group$);
+            return NULL;
+          }
+
+        }
+
+      // END REPEAT GROUP_ATTR_STR
+      } else {
+        continue;
       }
+
     }
-    // END REPEAT GROUP_DSET_STR
 
     FREE(buffer);
     fclose(f);
