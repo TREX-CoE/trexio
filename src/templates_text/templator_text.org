@@ -80,12 +80,12 @@
     #+begin_src c :tangle struct_text_group_dset.h
 typedef struct $group$_s {
   $group_num_dtype_double$ $group_num$;
-  bool $group_num$_isSet;
   $group_dset_dtype$*  $group_dset$;
-  uint32_t rank_$group_dset$;
-  uint32_t to_flush;
   uint64_t dims_$group_dset$[16];
   uint64_t len_$group_str$;
+  uint32_t rank_$group_dset$;
+  uint32_t to_flush;
+  bool $group_num$_isSet;
   char*    $group_str$;
   char     file_name[TREXIO_MAX_FILENAME_LENGTH];
 } $group$_t;
@@ -319,6 +319,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
 
     int rc = 0;
+    trexio_exit_code rc_free = TREXIO_FAILURE;
 
     /* workaround for the case of missing blocks in the file */
     // START REPEAT GROUP_DSET_ALL
@@ -336,7 +337,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         if (rc != 1) {
           FREE(buffer);
           fclose(f);
-          FREE($group$);
+          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+          file->$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
           return NULL;
         }
 
@@ -349,7 +353,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
             FREE(buffer);
             fclose(f);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
 
@@ -358,7 +365,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if (rc != 1) {
             FREE(buffer);
             fclose(f);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
 
@@ -373,7 +383,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         if ($group$->$group_dset$ == NULL) {
           FREE(buffer);
           fclose(f);
-          FREE($group$);
+          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+          file->$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
           return NULL;
         }
 
@@ -382,7 +395,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if (rc != 1) {
             FREE(buffer);
             fclose(f);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
         }
@@ -397,7 +413,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if ($group$->$group_dset$ == NULL) {
             FREE(buffer);
             fclose(f);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
 
@@ -417,7 +436,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
             if (rc != 1) {
               FREE(buffer);
               fclose(f);
-              FREE($group$);
+              /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+              file->$group$ = $group$;
+              rc_free = trexio_text_free_$group$(file);
+              assert(rc_free == TREXIO_SUCCESS);
               return NULL;
             }
 
@@ -438,7 +460,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         if (rc != 1) {
           FREE(buffer);
           fclose(f);
-          FREE($group$);
+          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+          file->$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
           return NULL;
         }
 
@@ -448,7 +473,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
             FREE(buffer);
             fclose(f);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
 
@@ -457,7 +485,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if (rc != 1) {
             FREE(buffer);
             fclose(f);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
         }
@@ -471,7 +502,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         if (rc != 1) {
           FREE(buffer);
           fclose(f);
-          FREE($group$);
+          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+          file->$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
           return NULL;
         }
 
@@ -480,8 +514,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         if ((rc != 1) || (strcmp(buffer, "$group_str$") != 0)) {
           FREE(buffer);
           fclose(f);
-          FREE($group$->$group_str$);
-          FREE($group$);
+          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+          file->$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
           return NULL;
         }
 
@@ -492,8 +528,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if ($group$->$group_str$ == NULL) {
             FREE(buffer);
             fclose(f);
-            FREE($group$->$group_str$);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
 
@@ -502,8 +540,10 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           if (rc != 1) {
             FREE(buffer);
             fclose(f);
-            FREE($group$->$group_str$);
-            FREE($group$);
+            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+            file->$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
             return NULL;
           }
 

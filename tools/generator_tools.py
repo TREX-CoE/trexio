@@ -311,8 +311,6 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                 subloop_dset = False
                 subloop_num = False
                 loop_body = ''
-                dset_allocated = []
-                str_allocated = []
 
                 for line in f_in :
 
@@ -335,25 +333,12 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                             if ('REPEAT GROUP_DSET_NUM' in line) and (detailed_dset[dset]['group_dset_dtype'] == 'char*'):
                                 continue
 
-                            dset_allocated.append(dset)
-
-                            if 'FREE($group$->$group_dset$)' in loop_body:
-                                tmp_string = ''
-                                for dset_alloc in dset_allocated:
-                                    tmp_string += f'FREE({group}->{dset_alloc});\n        '
-
-                                tmp_body = loop_body.replace('FREE($group$->$group_dset$);', tmp_string)
-
-                                populated_body = recursive_replace_line(tmp_body, triggers, detailed_dset[dset])
-                                f_out.write(populated_body)
-                            else:
-                                save_body = loop_body
-                                populated_body = recursive_replace_line(save_body, triggers, detailed_dset[dset])
-                                f_out.write(populated_body)
+                            save_body = loop_body
+                            populated_body = recursive_replace_line(save_body, triggers, detailed_dset[dset])
+                            f_out.write(populated_body)
 
                         subloop_dset = False
                         loop_body = ''
-                        dset_allocated = []
                         continue
 
                     elif 'END REPEAT GROUP_NUM' in line:
@@ -374,26 +359,12 @@ def special_populate_text_group(fname: str, paths: dict, group_dict: dict, detai
                             if group != detailed_strings[str]['group']:
                                 continue
 
-                            str_allocated.append(str)
-
-                            if 'FREE($group$->$group_str$)' in loop_body:
-                                tmp_string = ''
-                                for str_alloc in str_allocated:
-                                    tmp_string += f'FREE({group}->{str_alloc});\n        '
-
-                                tmp_body = loop_body.replace('FREE($group$->$group_str$);', tmp_string)
-
-                                populated_body = recursive_replace_line(tmp_body, triggers, detailed_strings[str])
-                                f_out.write(populated_body)
-                            else:
-                                save_body = loop_body
-                                populated_body = recursive_replace_line(save_body, triggers, detailed_strings[str])
-                                f_out.write(populated_body)
+                            save_body = loop_body
+                            populated_body = recursive_replace_line(save_body, triggers, detailed_strings[str])
+                            f_out.write(populated_body)
 
                         subloop_num = False
                         loop_body = ''
-                        str_allocated = []
-
                         continue
 
                     if not subloop_num and not subloop_dset:
