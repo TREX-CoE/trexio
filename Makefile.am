@@ -83,6 +83,27 @@ EXTRA_DIST += CMakeLists.txt \
               cmake/cmake_uninstall.cmake.in \
               cmake/FindTREXIO.cmake
 
+
+# Include files needed to produce the debian package.
+DEB_FILES = \
+  debian/changelog     \
+  debian/compat        \
+  debian/control       \
+  debian/copyright     \
+  debian/patches       \
+  debian/README.Debian \
+  debian/README.md     \
+  debian/rules         \
+  debian/source        \
+  debian/watch
+
+EXTRA_DIST += $(DEB_FILES)
+
+debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
+	VERSION=`echo ../trexio-*.tar.gz | grep -Eo '[[:digit:]].[[:digit:]].[[:digit:]]'` && \
+		cp ../trexio-${VERSION}.tar.gz ../libtrexio_${VERSION}.orig.tar.gz
+	debuild
+
 # =============== TESTS =============== #
 
 TESTS_C = \
