@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-02-04 Fri 10:23 -->
+<!-- 2022-02-16 Wed 13:52 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TEXT back end</title>
@@ -311,29 +311,29 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgfe5e94c">1. TEXT back end</a>
+<li><a href="#org2b283a5">1. TEXT back end</a>
 <ul>
-<li><a href="#orgc9ed80e">1.1. Template for group-related structures in text back end</a></li>
-<li><a href="#orgda41412">1.2. Template for general structure in text back end</a></li>
-<li><a href="#org9ff3349">1.3. Initialize function (constant part)</a></li>
-<li><a href="#orgb181f48">1.4. Deinitialize function (templated part)</a></li>
-<li><a href="#org3d44f42">1.5. Template for text read a group</a></li>
-<li><a href="#org8ebf193">1.6. Template for text flush a group</a></li>
-<li><a href="#orgc501e50">1.7. Template for text free memory</a></li>
-<li><a href="#org8a5dec1">1.8. Template for has/read/write a numerical attribute</a></li>
-<li><a href="#org39dfd8c">1.9. Template for has/read/write a dataset of numerical data</a></li>
-<li><a href="#org8df20be">1.10. Template for has/read/write a dataset of strings</a></li>
-<li><a href="#org278f65a">1.11. Template for has/read/write a string attribute</a></li>
-<li><a href="#org6deb4a7">1.12. Template for has/read/write the dataset of sparse data</a></li>
-<li><a href="#org91b498a">1.13. Template for text delete a group (UNSAFE mode)</a></li>
+<li><a href="#org3c6a7b3">1.1. Template for group-related structures in text back end</a></li>
+<li><a href="#org1e07007">1.2. Template for general structure in text back end</a></li>
+<li><a href="#orgad02bfb">1.3. Initialize function (constant part)</a></li>
+<li><a href="#org76d4a60">1.4. Deinitialize function (templated part)</a></li>
+<li><a href="#org70c9ff7">1.5. Template for text read a group</a></li>
+<li><a href="#org4e4514c">1.6. Template for text flush a group</a></li>
+<li><a href="#org5198ec7">1.7. Template for text free memory</a></li>
+<li><a href="#orgb097852">1.8. Template for has/read/write a numerical attribute</a></li>
+<li><a href="#org3df4185">1.9. Template for has/read/write a dataset of numerical data</a></li>
+<li><a href="#orgb6b7c3a">1.10. Template for has/read/write a dataset of strings</a></li>
+<li><a href="#org98e611c">1.11. Template for has/read/write a string attribute</a></li>
+<li><a href="#orgaceea75">1.12. Template for has/read/write the dataset of sparse data</a></li>
+<li><a href="#org0b87886">1.13. Template for text delete a group (UNSAFE mode)</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgfe5e94c" class="outline-2">
-<h2 id="orgfe5e94c"><span class="section-number-2">1</span> TEXT back end</h2>
+<div id="outline-container-org2b283a5" class="outline-2">
+<h2 id="org2b283a5"><span class="section-number-2">1</span> TEXT back end</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 The "file" produced by the text back end is a directory with one
@@ -354,18 +354,18 @@ The file is written when closed, or when the flush function is called.
 </p>
 </div>
 
-<div id="outline-container-orgc9ed80e" class="outline-3">
-<h3 id="orgc9ed80e"><span class="section-number-3">1.1</span> Template for group-related structures in text back end</h3>
+<div id="outline-container-org3c6a7b3" class="outline-3">
+<h3 id="org3c6a7b3"><span class="section-number-3">1.1</span> Template for group-related structures in text back end</h3>
 <div class="outline-text-3" id="text-1-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> $group$_s {
   $group_num_dtype_double$ $group_num$;
-  bool $group_num$_isSet;
   $group_dset_dtype$*  $group_dset$;
-  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank_$group_dset$</span>;
-  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">to_flush</span>;
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims_$group_dset$</span>[16];
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">len_$group_str$</span>;
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank_$group_dset$</span>;
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">to_flush</span>;
+  bool $group_num$_isSet;
   <span style="color: #228b22;">char</span>*    $group_str$;
   <span style="color: #228b22;">char</span>     <span style="color: #a0522d;">file_name</span>[TREXIO_MAX_FILENAME_LENGTH];
 } $group$_t;
@@ -374,8 +374,8 @@ The file is written when closed, or when the flush function is called.
 </div>
 </div>
 
-<div id="outline-container-orgda41412" class="outline-3">
-<h3 id="orgda41412"><span class="section-number-3">1.2</span> Template for general structure in text back end</h3>
+<div id="outline-container-org1e07007" class="outline-3">
+<h3 id="org1e07007"><span class="section-number-3">1.2</span> Template for general structure in text back end</h3>
 <div class="outline-text-3" id="text-1-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_text_s</span> {
@@ -388,8 +388,8 @@ The file is written when closed, or when the flush function is called.
 </div>
 </div>
 
-<div id="outline-container-org9ff3349" class="outline-3">
-<h3 id="org9ff3349"><span class="section-number-3">1.3</span> Initialize function (constant part)</h3>
+<div id="outline-container-orgad02bfb" class="outline-3">
+<h3 id="orgad02bfb"><span class="section-number-3">1.3</span> Initialize function (constant part)</h3>
 <div class="outline-text-3" id="text-1-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -532,8 +532,8 @@ The file is written when closed, or when the flush function is called.
 </div>
 </div>
 
-<div id="outline-container-orgb181f48" class="outline-3">
-<h3 id="orgb181f48"><span class="section-number-3">1.4</span> Deinitialize function (templated part)</h3>
+<div id="outline-container-org76d4a60" class="outline-3">
+<h3 id="org76d4a60"><span class="section-number-3">1.4</span> Deinitialize function (templated part)</h3>
 <div class="outline-text-3" id="text-1-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -555,8 +555,8 @@ The file is written when closed, or when the flush function is called.
 </div>
 </div>
 
-<div id="outline-container-org3d44f42" class="outline-3">
-<h3 id="org3d44f42"><span class="section-number-3">1.5</span> Template for text read a group</h3>
+<div id="outline-container-org70c9ff7" class="outline-3">
+<h3 id="org70c9ff7"><span class="section-number-3">1.5</span> Template for text read a group</h3>
 <div class="outline-text-3" id="text-1-5">
 <div class="org-src-container">
 <pre class="src src-c">$group$_t*
@@ -605,234 +605,243 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
       <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
     }
 
-    /* <span style="color: #b22222;">Read the dimensioning variables </span>*/
     <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span> = 0;
-    // <span style="color: #b22222;">START REPEAT GROUP_DSET_ALL</span>
-    rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
-    <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"rank_$group_dset$"</span>) != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
-
-    rc = fscanf(f, <span style="color: #8b2252;">"%u"</span>, &amp;($group$-&gt;rank_$group_dset$));
-    <span style="color: #a020f0;">if</span> (rc != 1) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+    <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc_free</span> = TREXIO_FAILURE;
 
     /* <span style="color: #b22222;">workaround for the case of missing blocks in the file </span>*/
+    // <span style="color: #b22222;">START REPEAT GROUP_DSET_ALL</span>
     <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">size_$group_dset$</span> = 0;
-    <span style="color: #a020f0;">if</span> ($group$-&gt;rank_$group_dset$ != 0) size_$group_dset$ = 1;
-
-    <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">i</span>=0; i&lt;$group$-&gt;rank_$group_dset$; ++i){
-
-      <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">j</span>=0;
-
-      rc = fscanf(f, <span style="color: #8b2252;">"%1023s %u"</span>, buffer, &amp;j);
-      <span style="color: #a020f0;">if</span> ((rc != 2) || (strcmp(buffer, <span style="color: #8b2252;">"dims_$group_dset$"</span>) != 0) || (j!=i)) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
-
-      rc = fscanf(f, <span style="color: #8b2252;">"%"</span> SCNu64 <span style="color: #8b2252;">"\n"</span>, &amp;($group$-&gt;dims_$group_dset$[i]));
-      assert(!(rc != 1));
-      <span style="color: #a020f0;">if</span> (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
-
-      size_$group_dset$ *= $group$-&gt;dims_$group_dset$[i];
-    }
     // <span style="color: #b22222;">END REPEAT GROUP_DSET_ALL</span>
 
-    // <span style="color: #b22222;">START REPEAT GROUP_NUM</span>
-    /* <span style="color: #b22222;">Read data </span>*/
-    <span style="color: #228b22;">unsigned</span> <span style="color: #228b22;">int</span> $group_num$_isSet;
-    rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
-    assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_num$_isSet"</span>) != 0)));
-    <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_num$_isSet"</span>) != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+    <span style="color: #a020f0;">while</span>(fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer) != EOF) {
 
-    /* <span style="color: #b22222;">additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d </span>*/
-    rc = fscanf(f, <span style="color: #8b2252;">"%u"</span>, &amp;($group_num$_isSet));
-    $group$-&gt;$group_num$_isSet = (bool) $group_num$_isSet;
-    assert(!(rc != 1));
-    <span style="color: #a020f0;">if</span> (rc != 1) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+      <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"EXIT"</span>) == 0) {
+        <span style="color: #a020f0;">break</span>;
+      // <span style="color: #b22222;">START REPEAT GROUP_DSET_ALL</span>
+      } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"rank_$group_dset$"</span>) == 0) {
 
-    <span style="color: #a020f0;">if</span> ($group$-&gt;$group_num$_isSet == <span style="color: #008b8b;">true</span>) {
-      rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
-      assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_num$"</span>) != 0)));
-      <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_num$"</span>) != 0)) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
+        rc = fscanf(f, <span style="color: #8b2252;">"%u"</span>, &amp;($group$-&gt;rank_$group_dset$));
+        <span style="color: #a020f0;">if</span> (rc != 1) {
+          FREE(buffer);
+          fclose(f);
+          /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+          file-&gt;$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
+          <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+        }
 
-      rc = fscanf(f, <span style="color: #8b2252;">"%$group_num_format_scanf$"</span>, &amp;($group$-&gt;$group_num$));
-      assert(!(rc != 1));
-      <span style="color: #a020f0;">if</span> (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
-    }
-    // <span style="color: #b22222;">END REPEAT GROUP_NUM</span>
+        <span style="color: #a020f0;">if</span> ($group$-&gt;rank_$group_dset$ != 0) size_$group_dset$ = 1UL;
 
-    // <span style="color: #b22222;">START REPEAT GROUP_ATTR_STR</span>
-    rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
-    assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"len_$group_str$"</span>) != 0)));
-    <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"len_$group_str$"</span>) != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+        <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">i</span>=0; i&lt;$group$-&gt;rank_$group_dset$; ++i){
 
-    rc = fscanf(f, <span style="color: #8b2252;">"%"</span> SCNu64 <span style="color: #8b2252;">""</span>, &amp;($group$-&gt;len_$group_str$));
-    assert(!(rc != 1));
-    <span style="color: #a020f0;">if</span> (rc != 1) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+          <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">j</span>=0;
+          rc = fscanf(f, <span style="color: #8b2252;">"%1023s %u"</span>, buffer, &amp;j);
+          <span style="color: #a020f0;">if</span> ((rc != 2) || (strcmp(buffer, <span style="color: #8b2252;">"dims_$group_dset$"</span>) != 0) || (j!=i)) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
 
-    rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
-    assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_str$"</span>) != 0)));
-    <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_str$"</span>) != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$-&gt;$group_str$);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+          rc = fscanf(f, <span style="color: #8b2252;">"%"</span> SCNu64 <span style="color: #8b2252;">"\n"</span>, &amp;($group$-&gt;dims_$group_dset$[i]));
+          assert(!(rc != 1));
+          <span style="color: #a020f0;">if</span> (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
 
-    <span style="color: #a020f0;">if</span> ($group$-&gt;len_$group_str$ != 0) {
+          size_$group_dset$ *= $group$-&gt;dims_$group_dset$[i];
+        }
+      // <span style="color: #b22222;">END REPEAT GROUP_DSET_ALL</span>
+      // <span style="color: #b22222;">START REPEAT GROUP_DSET_NUM</span>
+      } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) == 0) {
 
-      $group$-&gt;$group_str$ = CALLOC($group$-&gt;len_$group_str$, <span style="color: #228b22;">char</span>);
-      assert (!($group$-&gt;$group_str$ == <span style="color: #008b8b;">NULL</span>));
-      <span style="color: #a020f0;">if</span> ($group$-&gt;$group_str$ == <span style="color: #008b8b;">NULL</span>) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$-&gt;$group_str$);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
+        /* <span style="color: #b22222;">Allocate arrays </span>*/
+        $group$-&gt;$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
+        <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ == <span style="color: #008b8b;">NULL</span>) {
+          FREE(buffer);
+          fclose(f);
+          /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+          file-&gt;$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
+          <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+        }
 
-      rc = fscanf(f, <span style="color: #8b2252;">" %1023[^\n]"</span>, $group$-&gt;$group_str$);
-      assert(!(rc != 1));
-      <span style="color: #a020f0;">if</span> (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$-&gt;$group_str$);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
+        <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0 ; i&lt;size_$group_dset$ ; ++i) {
+          rc = fscanf(f, <span style="color: #8b2252;">"%$group_dset_format_scanf$"</span>, &amp;($group$-&gt;$group_dset$[i]));
+          <span style="color: #a020f0;">if</span> (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
+        }
 
-    }
-    // <span style="color: #b22222;">END REPEAT GROUP_ATTR_STR</span>
+      // <span style="color: #b22222;">END REPEAT GROUP_DSET_NUM</span>
+      // <span style="color: #b22222;">START REPEAT GROUP_DSET_STR</span>
+      } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) == 0) {
 
-    // <span style="color: #b22222;">START REPEAT GROUP_DSET_NUM</span>
-    /* <span style="color: #b22222;">Allocate arrays </span>*/
-    $group$-&gt;$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
-    assert (!($group$-&gt;$group_dset$ == <span style="color: #008b8b;">NULL</span>));
-    <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ == <span style="color: #008b8b;">NULL</span>) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$-&gt;$group_dset$);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+        <span style="color: #a020f0;">if</span>(size_$group_dset$ != 0) {
+          /* <span style="color: #b22222;">Allocate arrays </span>*/
+          $group$-&gt;$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
+          <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ == <span style="color: #008b8b;">NULL</span>) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
 
-    rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
-    assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) != 0)));
-    <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$-&gt;$group_dset$);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+          /* <span style="color: #b22222;">WARNING: this tmp array allows to avoid allocation of space for each element of array of string</span>
+<span style="color: #b22222;">             BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.</span>
+<span style="color: #b22222;">           </span>*/
+          <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">tmp_$group_dset$</span>;
+          tmp_$group_dset$ = CALLOC(size_$group_dset$*32, <span style="color: #228b22;">char</span>);
 
-    <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0 ; i&lt;size_$group_dset$ ; ++i) {
-      rc = fscanf(f, <span style="color: #8b2252;">"%$group_dset_format_scanf$"</span>, &amp;($group$-&gt;$group_dset$[i]));
-      assert(!(rc != 1));
-      <span style="color: #a020f0;">if</span> (rc != 1) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$-&gt;$group_dset$);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
-    }
-    // <span style="color: #b22222;">END REPEAT GROUP_DSET_NUM</span>
+          <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0 ; i&lt;size_$group_dset$ ; ++i) {
+            $group$-&gt;$group_dset$[i] = tmp_$group_dset$;
+            /* <span style="color: #b22222;">conventional fcanf with "%s" only return the string before the first space character</span>
+<span style="color: #b22222;">             * to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"</span>
+<span style="color: #b22222;">             * Q: depending on what ? </span>*/
+            rc = fscanf(f, <span style="color: #8b2252;">" %1023[^\n]"</span>, tmp_$group_dset$);
+            assert(!(rc != 1));
+            <span style="color: #a020f0;">if</span> (rc != 1) {
+              FREE(buffer);
+              fclose(f);
+              /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+              file-&gt;$group$ = $group$;
+              rc_free = trexio_text_free_$group$(file);
+              assert(rc_free == TREXIO_SUCCESS);
+              <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+            }
 
-    // <span style="color: #b22222;">START REPEAT GROUP_DSET_STR</span>
-    rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
-    assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) != 0)));
-    <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) != 0)) {
-      FREE(buffer);
-      fclose(f);
-      FREE($group$);
-      <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-    }
+            <span style="color: #228b22;">size_t</span> <span style="color: #a0522d;">tmp_$group_dset$_len</span> = strlen($group$-&gt;$group_dset$[i]);
+            tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+          }
+        }
 
-    /* <span style="color: #b22222;">Allocate arrays </span>*/
-    <span style="color: #a020f0;">if</span>(size_$group_dset$ != 0) {
-      $group$-&gt;$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
-      <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ == <span style="color: #008b8b;">NULL</span>) {
-        FREE(buffer);
-        fclose(f);
-        FREE($group$-&gt;$group_dset$);
-        FREE($group$);
-        <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
-      }
+      // <span style="color: #b22222;">END REPEAT GROUP_DSET_STR</span>
+      // <span style="color: #b22222;">START REPEAT GROUP_NUM</span>
+      } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"$group_num$_isSet"</span>) == 0) {
 
-      /* <span style="color: #b22222;">WARNING: this tmp array allows to avoid allocation of space for each element of array of string</span>
-<span style="color: #b22222;">         BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.</span>
-<span style="color: #b22222;">       </span>*/
-      <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">tmp_$group_dset$</span>;
-      tmp_$group_dset$ = CALLOC(size_$group_dset$*32, <span style="color: #228b22;">char</span>);
-
-      <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0 ; i&lt;size_$group_dset$ ; ++i) {
-        $group$-&gt;$group_dset$[i] = tmp_$group_dset$;
-        /* <span style="color: #b22222;">conventional fcanf with "%s" only return the string before the first space character</span>
-<span style="color: #b22222;">         * to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"</span>
-<span style="color: #b22222;">         * Q: depending on what ? </span>*/
-        rc = fscanf(f, <span style="color: #8b2252;">" %1023[^\n]"</span>, tmp_$group_dset$);
+        <span style="color: #228b22;">unsigned</span> <span style="color: #228b22;">int</span> $group_num$_isSet;
+        /* <span style="color: #b22222;">additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d </span>*/
+        rc = fscanf(f, <span style="color: #8b2252;">"%u"</span>, &amp;($group_num$_isSet));
+        $group$-&gt;$group_num$_isSet = (bool) $group_num$_isSet;
         assert(!(rc != 1));
         <span style="color: #a020f0;">if</span> (rc != 1) {
           FREE(buffer);
           fclose(f);
-          FREE($group$-&gt;$group_dset$);
-          FREE($group$);
+          /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+          file-&gt;$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
           <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
         }
 
-        <span style="color: #228b22;">size_t</span> <span style="color: #a0522d;">tmp_$group_dset$_len</span> = strlen($group$-&gt;$group_dset$[i]);
-        tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+        <span style="color: #a020f0;">if</span> ($group$-&gt;$group_num$_isSet == <span style="color: #008b8b;">true</span>) {
+          rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
+          assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_num$"</span>) != 0)));
+          <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_num$"</span>) != 0)) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
+
+          rc = fscanf(f, <span style="color: #8b2252;">"%$group_num_format_scanf$"</span>, &amp;($group$-&gt;$group_num$));
+          assert(!(rc != 1));
+          <span style="color: #a020f0;">if</span> (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
+        }
+
+      // <span style="color: #b22222;">END REPEAT GROUP_NUM</span>
+      // <span style="color: #b22222;">START REPEAT GROUP_ATTR_STR</span>
+      } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"len_$group_str$"</span>) == 0) {
+
+        rc = fscanf(f, <span style="color: #8b2252;">"%"</span> SCNu64 <span style="color: #8b2252;">""</span>, &amp;($group$-&gt;len_$group_str$));
+        assert(!(rc != 1));
+        <span style="color: #a020f0;">if</span> (rc != 1) {
+          FREE(buffer);
+          fclose(f);
+          /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+          file-&gt;$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
+          <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+        }
+
+        rc = fscanf(f, <span style="color: #8b2252;">"%1023s"</span>, buffer);
+        assert(!((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_str$"</span>) != 0)));
+        <span style="color: #a020f0;">if</span> ((rc != 1) || (strcmp(buffer, <span style="color: #8b2252;">"$group_str$"</span>) != 0)) {
+          FREE(buffer);
+          fclose(f);
+          /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+          file-&gt;$group$ = $group$;
+          rc_free = trexio_text_free_$group$(file);
+          assert(rc_free == TREXIO_SUCCESS);
+          <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+        }
+
+        <span style="color: #a020f0;">if</span> ($group$-&gt;len_$group_str$ != 0) {
+
+          $group$-&gt;$group_str$ = CALLOC($group$-&gt;len_$group_str$, <span style="color: #228b22;">char</span>);
+          assert (!($group$-&gt;$group_str$ == <span style="color: #008b8b;">NULL</span>));
+          <span style="color: #a020f0;">if</span> ($group$-&gt;$group_str$ == <span style="color: #008b8b;">NULL</span>) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
+
+          rc = fscanf(f, <span style="color: #8b2252;">" %1023[^\n]"</span>, $group$-&gt;$group_str$);
+          assert(!(rc != 1));
+          <span style="color: #a020f0;">if</span> (rc != 1) {
+            FREE(buffer);
+            fclose(f);
+            /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+            file-&gt;$group$ = $group$;
+            rc_free = trexio_text_free_$group$(file);
+            assert(rc_free == TREXIO_SUCCESS);
+            <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
+          }
+
+        }
+
+      // <span style="color: #b22222;">END REPEAT GROUP_ATTR_STR</span>
+      } <span style="color: #a020f0;">else</span> {
+        <span style="color: #a020f0;">continue</span>;
       }
+
     }
-    // <span style="color: #b22222;">END REPEAT GROUP_DSET_STR</span>
 
     FREE(buffer);
     fclose(f);
@@ -848,8 +857,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-org8ebf193" class="outline-3">
-<h3 id="org8ebf193"><span class="section-number-3">1.6</span> Template for text flush a group</h3>
+<div id="outline-container-org4e4514c" class="outline-3">
+<h3 id="org4e4514c"><span class="section-number-3">1.6</span> Template for text flush a group</h3>
 <div class="outline-text-3" id="text-1-6">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -913,8 +922,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-orgc501e50" class="outline-3">
-<h3 id="orgc501e50"><span class="section-number-3">1.7</span> Template for text free memory</h3>
+<div id="outline-container-org5198ec7" class="outline-3">
+<h3 id="org5198ec7"><span class="section-number-3">1.7</span> Template for text free memory</h3>
 <div class="outline-text-3" id="text-1-7">
 <p>
 Memory is allocated when reading. The following function frees memory.
@@ -961,8 +970,8 @@ Memory is allocated when reading. The following function frees memory.
 </div>
 </div>
 
-<div id="outline-container-org8a5dec1" class="outline-3">
-<h3 id="org8a5dec1"><span class="section-number-3">1.8</span> Template for has/read/write a numerical attribute</h3>
+<div id="outline-container-orgb097852" class="outline-3">
+<h3 id="orgb097852"><span class="section-number-3">1.8</span> Template for has/read/write a numerical attribute</h3>
 <div class="outline-text-3" id="text-1-8">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1025,8 +1034,8 @@ Memory is allocated when reading. The following function frees memory.
 </div>
 </div>
 
-<div id="outline-container-org39dfd8c" class="outline-3">
-<h3 id="org39dfd8c"><span class="section-number-3">1.9</span> Template for has/read/write a dataset of numerical data</h3>
+<div id="outline-container-org3df4185" class="outline-3">
+<h3 id="org3df4185"><span class="section-number-3">1.9</span> Template for has/read/write a dataset of numerical data</h3>
 <div class="outline-text-3" id="text-1-9">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1122,8 +1131,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org8df20be" class="outline-3">
-<h3 id="org8df20be"><span class="section-number-3">1.10</span> Template for has/read/write a dataset of strings</h3>
+<div id="outline-container-orgb6b7c3a" class="outline-3">
+<h3 id="orgb6b7c3a"><span class="section-number-3">1.10</span> Template for has/read/write a dataset of strings</h3>
 <div class="outline-text-3" id="text-1-10">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1224,8 +1233,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org278f65a" class="outline-3">
-<h3 id="org278f65a"><span class="section-number-3">1.11</span> Template for has/read/write a string attribute</h3>
+<div id="outline-container-org98e611c" class="outline-3">
+<h3 id="org98e611c"><span class="section-number-3">1.11</span> Template for has/read/write a string attribute</h3>
 <div class="outline-text-3" id="text-1-11">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1299,8 +1308,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org6deb4a7" class="outline-3">
-<h3 id="org6deb4a7"><span class="section-number-3">1.12</span> Template for has/read/write the dataset of sparse data</h3>
+<div id="outline-container-orgaceea75" class="outline-3">
+<h3 id="orgaceea75"><span class="section-number-3">1.12</span> Template for has/read/write the dataset of sparse data</h3>
 <div class="outline-text-3" id="text-1-12">
 <p>
 Each sparse array is stored in a separate <code>.txt</code> file due to the fact that sparse I/O has to be decoupled
@@ -1574,8 +1583,8 @@ User provides indices and values of the sparse array as two separate variables.
 </div>
 </div>
 
-<div id="outline-container-org91b498a" class="outline-3">
-<h3 id="org91b498a"><span class="section-number-3">1.13</span> Template for text delete a group (UNSAFE mode)</h3>
+<div id="outline-container-org0b87886" class="outline-3">
+<h3 id="org0b87886"><span class="section-number-3">1.13</span> Template for text delete a group (UNSAFE mode)</h3>
 <div class="outline-text-3" id="text-1-13">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1606,7 +1615,7 @@ User provides indices and values of the sparse array as two separate variables.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2022-02-04 Fri 10:23</p>
+<p class="date">Created: 2022-02-16 Wed 13:52</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
