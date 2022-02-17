@@ -37,6 +37,7 @@ CLEANFILES = trexio.mod
 BUILT_SOURCES = trexio.mod
 EXTRA_DIST = .git_hash
 
+PACKAGE_VERSION = @PACKAGE_VERSION@
 SUBDIRS =
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -82,6 +83,26 @@ EXTRA_DIST += CMakeLists.txt \
               tests/CMakeLists.txt \
               cmake/cmake_uninstall.cmake.in \
               cmake/FindTREXIO.cmake
+
+
+# Include files needed to produce the debian package.
+DEB_FILES = \
+  debian/changelog     \
+  debian/compat        \
+  debian/control       \
+  debian/copyright     \
+  debian/patches       \
+  debian/README.Debian \
+  debian/README.md     \
+  debian/rules         \
+  debian/source        \
+  debian/watch
+
+EXTRA_DIST += $(DEB_FILES)
+
+debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
+	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
+	debuild
 
 # =============== TESTS =============== #
 
