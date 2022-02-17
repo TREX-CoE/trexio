@@ -37,6 +37,7 @@ CLEANFILES = trexio.mod
 BUILT_SOURCES = trexio.mod
 EXTRA_DIST = .git_hash
 
+PACKAGE_VERSION = @PACKAGE_VERSION@
 SUBDIRS =
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -100,8 +101,7 @@ DEB_FILES = \
 EXTRA_DIST += $(DEB_FILES)
 
 debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
-	VERSION=`echo ../trexio-*.tar.gz | grep -Eo '[[:digit:]].[[:digit:]].[[:digit:]]'` && \
-		cp ../trexio-${VERSION}.tar.gz ../libtrexio_${VERSION}.orig.tar.gz
+	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
 	debuild
 
 # =============== TESTS =============== #
