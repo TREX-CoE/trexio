@@ -298,23 +298,24 @@ power = [
   All the basis set parameters are stored in one-dimensional arrays:
 
   #+NAME: basis
-  | Variable        | Type    | Dimensions          | Description                                                  |
-  |-----------------+---------+---------------------+--------------------------------------------------------------|
-  | ~type~          | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"                    |
-  | ~prim_num~      | ~dim~   |                     | Total number of primitives                                   |
-  | ~shell_num~     | ~dim~   |                     | Total number of shells                                       |
-  | ~nucleus_index~ | ~index~ | ~(basis.shell_num)~ | One-to-one correspondence between shells and atomic indices  |
-  | ~shell_ang_mom~ | ~int~   | ~(basis.shell_num)~ | One-to-one correspondence between shells and angular momenta |
-  | ~shell_factor~  | ~float~ | ~(basis.shell_num)~ | Normalization factor of each shell ($\mathcal{N}_s$)         |
-  | ~shell_index~   | ~index~ | ~(basis.prim_num)~  | One-to-one correspondence between primitives and shell index |
-  | ~exponent~      | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives ($\gamma_{ks}$)                  |
-  | ~coefficient~   | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives ($a_{ks}$)                    |
-  | ~prim_factor~   | ~float~ | ~(basis.prim_num)~  | Normalization coefficients for the primitives ($f_{ks}$)     |
+  | Variable        | Type    | Dimensions          | Description                                                                                 |
+  |-----------------+---------+---------------------+---------------------------------------------------------------------------------------------|
+  | ~type~          | ~str~   |                     | Type of basis set: "Gaussian" or "Slater"                                                   |
+  | ~prim_num~      | ~dim~   |                     | Total number of primitives                                                                  |
+  | ~shell_num~     | ~dim~   |                     | Total number of shells                                                                      |
+  | ~nucleus_index~ | ~index~ | ~(basis.shell_num)~ | One-to-one correspondence between shells and atomic indices                                 |
+  | ~shell_ang_mom~ | ~int~   | ~(basis.shell_num)~ | One-to-one correspondence between shells and angular momenta                                |
+  | ~shell_exp_n~   | ~int~   | ~(basis.shell_num)~ | One-to-one correspondence between shells and exponent for r (only for slater type orbitals) |
+  | ~shell_factor~  | ~float~ | ~(basis.shell_num)~ | Normalization factor of each shell ($\mathcal{N}_s$)                                        |
+  | ~shell_index~   | ~index~ | ~(basis.prim_num)~  | One-to-one correspondence between primitives and shell index                                |
+  | ~exponent~      | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives ($\gamma_{ks}$)                                                 |
+  | ~coefficient~   | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives ($a_{ks}$)                                                   |
+  | ~prim_factor~   | ~float~ | ~(basis.prim_num)~  | Normalization coefficients for the primitives ($f_{ks}$)                                    |
 
   #+CALL: json(data=basis, title="basis")
 
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "basis": {
 		   "type" : [ "str"  , []                    ]
@@ -322,6 +323,7 @@ power = [
 	,     "shell_num" : [ "dim"  , []                    ]
 	, "nucleus_index" : [ "index", [ "basis.shell_num" ] ]
 	, "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ] ]
+	,   "shell_exp_n" : [ "int"  , [ "basis.shell_num" ] ]
 	,  "shell_factor" : [ "float", [ "basis.shell_num" ] ]
 	,   "shell_index" : [ "index", [ "basis.prim_num" ]  ]
 	,      "exponent" : [ "float", [ "basis.prim_num" ]  ]
@@ -329,7 +331,7 @@ power = [
 	,   "prim_factor" : [ "float", [ "basis.prim_num" ]  ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 ** Example
 
@@ -433,7 +435,11 @@ prim_factor =
   $P$ encodes for either the
   polynomials or the spherical harmonics, $\theta(i)$ returns the
   shell on which the AO is expanded, and $\eta(i)$ denotes which
-  angular function is chosen.
+  angular function is chosen. 
+  The ratial part \[R_{\theta(i)} (\mathbf{r})\] depends on
+  the type of orbital, note that for Slater type orbitals,
+  \[R_{\theta(i)} (\mathbf{r})=n^{n-l-1}e^{-\kappa(r-X)}\] and thus depends on the shell
+  quantum number \[n\].
   $\mathcal{N}_i$ is a normalization factor that enables the
   possibility to have different normalization coefficients within a
   shell, as in the GAMESS convention where
