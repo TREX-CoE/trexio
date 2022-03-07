@@ -38,7 +38,7 @@ jobs:
     needs: get_commit_message
     if: >-
       contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
-      github.event_name == 'release'
+      (github.repository == 'TREX-CoE/trexio' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -99,7 +99,7 @@ jobs:
     needs: get_commit_message
     if: >-
       contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
-      github.event_name == 'release'
+      (github.repository == 'TREX-CoE/trexio' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
