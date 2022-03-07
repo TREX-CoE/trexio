@@ -51,9 +51,9 @@ subroutine test_write(file_name, back_end)
   character*(*), intent(in) :: file_name
   integer, intent(in) :: back_end
 
-  integer(8) :: trex_file
+  integer(trexio_t) :: trex_file
 
-  integer :: rc = 1
+  integer(trexio_exit_code) :: rc = 1
 
   integer :: num, basis_shell_num
 
@@ -186,10 +186,10 @@ subroutine test_read(file_name, back_end)
   character*(*), intent(in) :: file_name
   integer, intent(in) :: back_end
 
-  integer(8) :: trex_file
+  integer(trexio_t) :: trex_file
 
   integer :: i, j, k, ind, offset, flag
-  integer :: rc = 1
+  integer(trexio_exit_code) :: rc = 1
   integer :: num, num_read, basis_shell_num
 
   integer :: basis_nucleus_index(24)
