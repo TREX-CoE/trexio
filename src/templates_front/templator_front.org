@@ -720,8 +720,7 @@ class File:
 
     def __init__(self, filename, mode='r', back_end=TREXIO_HDF5,
                  pytrexio_s=None, info=None):
-        """This is a TREXIO File constructor."""
-
+        """TREXIO File class constructor."""
         self.filename = filename
         self.mode = mode
         self.back_end = back_end
@@ -740,9 +739,19 @@ class File:
         self.info = info
 
 
+    def __enter__(self):
+        """Enter statement for with ... as ... handling."""
+        return self
+
+
+    def __exit__(self, *args):
+        """Exit statement for with ... as ... handling."""
+        if self.isOpen:
+           self.close()
+
+
     def close(self):
         """Close a TREXIO File."""
-
         if self.isOpen:
             _close(self.pytrexio_s)
             self.isOpen = False
@@ -752,13 +761,11 @@ class File:
 
     def inquire(self):
         """Inquire whether a TREXIO file exists."""
-
         self.exists = _inquire(self.filename)
 
 
     def __del__(self):
-        """This is a TREXIO File destructor."""
-
+        """TREXIO File class destructor."""
         if self.isOpen:
             _close(self.pytrexio_s)
         elif self.isOpen is None:
