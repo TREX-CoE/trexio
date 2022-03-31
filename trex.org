@@ -5,14 +5,10 @@
 This page contains information about the general structure of the
 TREXIO library. The source code of the library can be automatically
 generated based on the contents of the ~trex.json~ configuration file,
-which itself is compiled from different sections (groups) presented
+which itself is generated from different sections (groups) presented
 below.
 
-For more information about the automatic generation on the source code
-or regarding possible modifications, please contact the TREXIO
-developers.
-
-All quantities are saved in TREXIO file in atomic units. The
+All quantities are saved in TREXIO files in atomic units. The
 dimensions of the arrays in the tables below are given in column-major
 order (as in Fortran), and the ordering of the dimensions is reversed
 in the produced ~trex.json~ configuration file as the library is
@@ -21,19 +17,21 @@ written in C.
 TREXIO currently supports ~int~, ~float~ and ~str~ types for both
 single attributes and arrays.  Note, that some attributes might have
 ~dim~ type (e.g. ~num~ of the ~nucleus~ group).  This type is treated
-exactly the same as ~int~ with the only difference that ~dim~
+exactly in the same way as ~int~ with the only difference that ~dim~
 variables cannot be negative. This additional constraint is required
 because ~dim~ attributes are used internally to allocate memory and to
 check array boundaries in the memory-safe API. Most of the times, the
 ~dim~ variables contain the ~num~ suffix.
 
-In Fortran, the arrays are 1-based and in most other languages the
-arrays are 0-based. Hence, we introduce the ~index~ type which is an
+In Fortran, arrays are 1-based and in most other languages the
+arrays are 0-based. Hence, we introduce the ~index~ type which is a
 1-based ~int~ in the Fortran interface and 0-based otherwise.
 
 For sparse data structures such as electron replusion integrals,
 the data can be too large to fit in memory and the data needs to be
 fetched using multiple function calls to perform I/O on buffers.
+For more information on how to read/write sparse data structures, see
+the [[./examples.html][examples]].
 
 
   #+begin_src python :tangle trex.json :exports none
@@ -685,7 +683,7 @@ prim_factor =
   | ~2e_updn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\downarrow component of the two-body reduced density matrix   |
   | ~2e_dnup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\uparrow component of the two-body reduced density matrix   |
 
-  #+CALL: json(data=rdm, title="rdm", last=1)
+  #+CALL: json(data=rdm, title="rdm")
 
   #+RESULTS:
   :results:
@@ -699,9 +697,41 @@ prim_factor =
         , "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
         , "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
         , "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-      }
+      } ,
   #+end_src
   :end:
+
+* Quantum Monte Carlo data (qmc group)
+
+   In quantum Monte Carlo calculations, the wave function is evaluated
+   at points of the 3N-dimensional space. Some algorithms require multiple
+   independent /walkers/, so it is possible to store multiple coordinates,
+   as well as some quantities evaluated at those points.
+
+   By convention, the electron coordinates contain first all the electrons
+   of $\uparrow$-spin and then all the $\downarrow$-spin.
+
+   #+name: qmc
+  | Variable | Type    | Dimensions               | Description                           |
+  |----------+---------+--------------------------+---------------------------------------|
+  | ~num~    | ~dim~   |                          | Number of 3N-dimensional points       |
+  | ~point~  | ~float~ | ~(3, elec.num, qmc.num)~ | 3N-dimensional points                 |
+  | ~psi~    | ~float~ | ~(qmc.num)~              | Wave function evaluated at the points |
+  | ~e_loc~  | ~float~ | ~(qmc.num)~              | Local energy evaluated at the points  |
+   
+   #+CALL: json(data=qmc, title="qmc", last=1)
+
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+       "qmc": {
+             "num" : [ "dim"  , []                             ]
+         , "point" : [ "float", [ "qmc.num", "elec.num", "3" ] ]
+         ,   "psi" : [ "float", [ "qmc.num" ]                  ]
+         , "e_loc" : [ "float", [ "qmc.num" ]                  ]
+       }
+   #+end_src
+   :end:
 
 * Appendix    :noexport:
 ** Python script from table to json
