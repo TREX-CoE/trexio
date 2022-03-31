@@ -1426,7 +1426,9 @@ trexio_pre_close (trexio_t* file)
       if (rc != TREXIO_SUCCESS) return rc;
       
       if (nelec != nup + ndn) {
-        return TREXIO_INVALID_NUM;
+        nelec = nup + ndn;
+        rc = trexio_write_electron_num(file, nelec);
+        if (rc != TREXIO_SUCCESS) return rc;
       }
     } else if (has_up && has_dn) {
       rc = trexio_read_electron_up_num(file, &nup);
