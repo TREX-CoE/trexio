@@ -720,8 +720,7 @@ class File:
 
     def __init__(self, filename, mode='r', back_end=TREXIO_HDF5,
                  pytrexio_s=None, info=None):
-        """This is a TREXIO File constructor."""
-
+        """TREXIO File class constructor."""
         self.filename = filename
         self.mode = mode
         self.back_end = back_end
@@ -740,9 +739,19 @@ class File:
         self.info = info
 
 
+    def __enter__(self):
+        """Enter statement for with ... as ... handling."""
+        return self
+
+
+    def __exit__(self, *args):
+        """Exit statement for with ... as ... handling."""
+        if self.isOpen:
+           self.close()
+
+
     def close(self):
         """Close a TREXIO File."""
-
         if self.isOpen:
             _close(self.pytrexio_s)
             self.isOpen = False
@@ -752,13 +761,11 @@ class File:
 
     def inquire(self):
         """Inquire whether a TREXIO file exists."""
-
         self.exists = _inquire(self.filename)
 
 
     def __del__(self):
-        """This is a TREXIO File destructor."""
-
+        """TREXIO File class destructor."""
         if self.isOpen:
             _close(self.pytrexio_s)
         elif self.isOpen is None:
@@ -1204,6 +1211,12 @@ trexio_close (trexio_t* file)
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  /* Things to be done before the closing the file in the back-end */
+  rc = trexio_pre_close(file);
+  if (rc != TREXIO_SUCCESS) {
+    return rc;
+  }
+  
   /* Terminate the back end */
   switch (file->back_end) {
 
@@ -1381,6 +1394,80 @@ def _inquire(file_name: str) -> bool:
         raise Error(rc)
    #+end_src
 
+** Tasks to be done before closing
+   
+    #+begin_src c :tangle trexio_private.h :exports none
+trexio_exit_code trexio_pre_close(trexio_t* file);
+    #+end_src
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_pre_close (trexio_t* file)
+{
+
+  if (file == NULL) return TREXIO_FILE_ERROR;
+
+  { /* Up-spin and down-spin electrons */
+    trexio_exit_code rc;
+    
+    int32_t nup, ndn, nelec;
+    bool has_up   = (trexio_has_electron_up_num(file) == TREXIO_SUCCESS);
+    bool has_dn   = (trexio_has_electron_dn_num(file) == TREXIO_SUCCESS);
+    bool has_updn = (trexio_has_electron_num(file) == TREXIO_SUCCESS);
+    
+    if (has_updn && has_up && has_dn) {
+      rc = trexio_read_electron_up_num(file, &nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      rc = trexio_read_electron_dn_num(file, &ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      rc = trexio_read_electron_elec_num(file, &nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      if (nelec != nup + ndn) {
+        return TREXIO_INVALID_NUM;
+      }
+    } else if (has_up && has_dn) {
+      rc = trexio_read_electron_up_num(file, &nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      rc = trexio_read_electron_dn_num(file, &ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nelec = nup + ndn;
+      rc = trexio_write_electron_num(file, nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+    } else if (has_up) {
+      rc = trexio_read_electron_up_num(file, &nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      ndn = 0;
+      rc = trexio_write_electron_dn_num(file, ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nelec = nup;
+      rc = trexio_write_electron_num(file, nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+    } else if (has_dn) {
+      rc = trexio_read_electron_dn_num(file, &ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nup = 0;
+      rc = trexio_write_electron_up_num(file, nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nelec = ndn;
+      rc = trexio_write_electron_num(file, nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+    }
+
+  }
+  
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+   
 * Templates for front end
 ** Description
 

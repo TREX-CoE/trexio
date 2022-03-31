@@ -32,13 +32,24 @@ try:
     elif TEST_TREXIO_BACKEND == trexio.TREXIO_TEXT:
         shutil.rmtree(output_filename)
 except:
-    print ('Nothing to remove.')
+    print('Nothing to remove.')
 
 #=========================================================#
 #============ WRITE THE DATA IN THE TEST FILE ============#
 #=========================================================#
 
 trexio.info()
+
+
+# test with ... as ... block
+with trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND) as tfile:
+    trexio.write_metadata_description(tfile, "Test file produced by the Python API")
+    assert trexio.has_metadata_description(tfile)
+    assert tfile.isOpen
+
+# the file handle can remain existing but the file itself is closed upon exit from the `with` block
+assert not tfile.isOpen
+
 
 # create TREXIO file and open it for writing
 test_file = trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND)
@@ -281,7 +292,7 @@ assert rpoint_group==point_group
 
 # another way to read only if the variable exists
 if trexio.has_ao_num(test_file2):
-    rmo_num = trexio.read_ao_num(test_file2)
+    rao_num = trexio.read_ao_num(test_file2)
 else:
     print("Pass on reading the non-existing variable ao_num: checked")
 
@@ -290,12 +301,12 @@ else:
 
 # cleaning (remove the TREXIO file)
 try:
-    if TEST_TREXIO_BACKEND == trexio.TREXIO_HDF5:
-        os.remove(output_filename)
-    elif TEST_TREXIO_BACKEND == trexio.TREXIO_TEXT:
-        shutil.rmtree(output_filename)
+   if TEST_TREXIO_BACKEND == trexio.TREXIO_HDF5:
+       os.remove(output_filename)
+   elif TEST_TREXIO_BACKEND == trexio.TREXIO_TEXT:
+       shutil.rmtree(output_filename)
 except:
-    print (f'No output file {output_filename} has been produced')
+    print(f'No output file {output_filename} has been produced')
 
 #==========================================================#
 

@@ -86,6 +86,7 @@ the [[./examples.html][examples]].
   #+NAME:electron
   | Variable | Type  | Dimensions | Description                         |
   |----------+-------+------------+-------------------------------------|
+  | ~num~    | ~dim~ |            | Number of electrons                 |
   | ~up_num~ | ~int~ |            | Number of \uparrow-spin electrons   |
   | ~dn_num~ | ~int~ |            | Number of \downarrow-spin electrons |
 
@@ -94,7 +95,8 @@ the [[./examples.html][examples]].
   :results:
   #+begin_src python :tangle trex.json
       "electron": {
-          "up_num" : [ "int", []  ]
+             "num" : [ "dim", []  ]
+        , "up_num" : [ "int", []  ]
         , "dn_num" : [ "int", []  ]
       } ,
   #+end_src
@@ -179,7 +181,11 @@ ECP that replaces the core electrons.
 *Note for developers*: avoid having variables with similar prefix in their name.
 HDF5 back end might cause issues due to the way ~find_dataset~ function works.
 For example, in the ECP group we use ~max_ang_mom~ and not ~ang_mom_max~.
-The latter causes issues when written before ~ang_mom~ in the TREXIO file.
+The latter causes issues when written before the ~ang_mom~ array in the TREXIO file.
+*Update*: in fact, the aforementioned issue has only been observed when using HDF5 version 1.10.4
+installed via ~apt-get~. Installing the same version from the ~conda-forge~ channel and running it in
+an isolated ~conda~ environment works just fine. Thus, it seems to be a bug in the ~apt~-provided package.
+If you encounter the aforementioned issue, please report it to our [[https://github.com/TREX-CoE/trexio/issues][issue tracker on GitHub]].
 
 
   #+CALL: json(data=ecp, title="ecp")
@@ -712,23 +718,23 @@ prim_factor =
    of $\uparrow$-spin and then all the $\downarrow$-spin.
 
    #+name: qmc
-  | Variable | Type    | Dimensions               | Description                           |
-  |----------+---------+--------------------------+---------------------------------------|
-  | ~num~    | ~dim~   |                          | Number of 3N-dimensional points       |
-  | ~point~  | ~float~ | ~(3, elec.num, qmc.num)~ | 3N-dimensional points                 |
-  | ~psi~    | ~float~ | ~(qmc.num)~              | Wave function evaluated at the points |
-  | ~e_loc~  | ~float~ | ~(qmc.num)~              | Local energy evaluated at the points  |
+  | Variable | Type    | Dimensions                   | Description                           |
+  |----------+---------+------------------------------+---------------------------------------|
+  | ~num~    | ~dim~   |                              | Number of 3N-dimensional points       |
+  | ~point~  | ~float~ | ~(3, electron.num, qmc.num)~ | 3N-dimensional points                 |
+  | ~psi~    | ~float~ | ~(qmc.num)~                  | Wave function evaluated at the points |
+  | ~e_loc~  | ~float~ | ~(qmc.num)~                  | Local energy evaluated at the points  |
    
    #+CALL: json(data=qmc, title="qmc", last=1)
-
+   
    #+RESULTS:
    :results:
    #+begin_src python :tangle trex.json
        "qmc": {
-             "num" : [ "dim"  , []                             ]
-         , "point" : [ "float", [ "qmc.num", "elec.num", "3" ] ]
-         ,   "psi" : [ "float", [ "qmc.num" ]                  ]
-         , "e_loc" : [ "float", [ "qmc.num" ]                  ]
+             "num" : [ "dim"  , []                                 ]
+         , "point" : [ "float", [ "qmc.num", "electron.num", "3" ] ]
+         ,   "psi" : [ "float", [ "qmc.num" ]                      ]
+         , "e_loc" : [ "float", [ "qmc.num" ]                      ]
        }
    #+end_src
    :end:
