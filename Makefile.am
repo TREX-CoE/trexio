@@ -117,7 +117,8 @@ TESTS_C = \
   tests/io_dset_str_text \
   tests/delete_group_text \
   tests/overwrite_all_text \
-  tests/io_all
+  tests/io_all \
+  tests/pre_close
 
 if HAVE_HDF5
 TESTS_C += \
