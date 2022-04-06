@@ -4104,7 +4104,284 @@ def delete_$group$(trexio_file) -> None:
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
      #+end_src
-* General helper functions
+* Source code for the determinant part
+
+   Storage of the determinants is a particular case, 
+   which requires special treatment, but has to be coded only once 
+   (since there is only one group that corresponds to it).
+   Thus, there is no need to auto-generate this part via templates. 
+
+   This section concerns API calls related to Slater determinants.
+
+   | Function name                          | Description                            |
+   |----------------------------------------+----------------------------------------|
+   | ~trexio_has_determinant_coefficient~   | Check if an attribute exists in a file |
+   | ~trexio_has_determinant_list~          | Check if an attribute exists in a file |
+   | ~trexio_write_determinant_coefficient~ | Write an attribute                     |
+   | ~trexio_write_determinant_list~        | Write an attribute                     |
+   | ~trexio_read_determinant_coefficient~  | Read an attribute                      |
+   | ~trexio_read_determinant_list~         | Read an attribute                      |
+
+*** C source code 
+
+**** Function declarations
+
+     #+begin_src c :tangle hrw_determinant_front.h :exports none
+trexio_exit_code trexio_has_determinant_list(trexio_t* const file);
+trexio_exit_code trexio_read_determinant_list(trexio_t* const file, int64_t* const dset);
+trexio_exit_code trexio_write_determinant_list(trexio_t* const file, const int64_t* dset);
+trexio_exit_code trexio_has_determinant_coefficient(trexio_t* const file);
+trexio_exit_code trexio_read_determinant_coefficient(trexio_t* const file, double* const dset);
+trexio_exit_code trexio_write_determinant_coefficient(trexio_t* const file, const double* dset);
+     #+end_src
+
+**** Source code for default functions
+
+     #+begin_src c :tangle read_determinant_front.c
+trexio_exit_code
+trexio_read_determinant_list (trexio_t* const file, int64_t* const dset)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_determinant_list(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
+
+  trexio_exit_code rc;
+  int64_t det_dim = 0L;
+
+  rc = trexio_read_determinant_num_64(file, &det_dim);
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (det_dim == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {det_dim, 2};
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  rc = TREXIO_FAILURE;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_determinant_list(file, dset, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_determinant_list(file, dset, rank, dims);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+    break;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_
+    break;
+,*/
+  }
+
+}
+
+trexio_exit_code
+trexio_read_determinant_coefficient (trexio_t* const file, double* const dset)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_determinant_coefficient(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
+
+  trexio_exit_code rc;
+  int64_t det_dim = 0L;
+
+  rc = trexio_read_determinant_num_64(file, &det_dim);
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (det_dim == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {det_dim};
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  rc = TREXIO_FAILURE;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_determinant_coefficient(file, dset, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_determinant_coefficient(file, dset, rank, dims);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+    break;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_
+    break;
+,*/
+  }
+
+}
+     #+end_src
+
+     #+begin_src c :tangle write_determinant_front.c
+trexio_exit_code
+trexio_write_determinant_list (trexio_t* const file, const int64_t* dset)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  int64_t det_dim = 0L;
+
+  rc = trexio_read_determinant_num_64(file, &det_dim);
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (det_dim == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 2;
+  uint64_t dims[2] = {det_dim, 2};
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  rc = TREXIO_FAILURE;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_determinant_list(file, dset, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_write_determinant_list(file, dset, rank, dims);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+    break;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_
+    break;
+,*/
+  }
+
+}
+
+trexio_exit_code
+trexio_write_determinant_coefficient (trexio_t* const file, const double* dset)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+
+  trexio_exit_code rc;
+  int64_t det_dim = 0L;
+
+  rc = trexio_read_determinant_num_64(file, &det_dim);
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (det_dim == 0L) return TREXIO_INVALID_NUM;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {det_dim};
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  rc = TREXIO_FAILURE;
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_determinant_coefficient(file, dset, rank, dims);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_write_determinant_coefficient(file, dset, rank, dims);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+    break;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_
+    break;
+,*/
+  }
+}
+     #+end_src
+
+     #+begin_src c :tangle has_determinant_front.c
+trexio_exit_code
+trexio_has_determinant_list (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_determinant_list(file)
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_has_determinant_list(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_has_determinant_coefficient (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_determinant_coefficient(file)
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_has_determinant_coefficient(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+
+*** TODO Fortran templates for front end
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+*** TODO Python templates for front end
+* TODO General helper functions
 
   This section contains general helper functions like ~trexio_info~.
 
@@ -4121,6 +4398,11 @@ def delete_$group$(trexio_file) -> None:
   Since ~metadata_unsafe~ is set to ~1~ (~true~) upon the first opening of the file in UNSAFE mode, this value is immutable.
   However, if the user validated that the file is correct (e.g. using ~trexio-tools~),
   then value of the ~metadata_unsafe~ attribute can be changed using the aforementioned function.
+
+  TODO: 
+  ~trexio_bitfield_to_list~ functions converts the bit field representation of a 
+  given determinants into a list of ~mo.num~ occupation numbers. 
+  (adapt from slaterlib or QP)
 
 ** C
 
