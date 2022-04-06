@@ -635,7 +635,49 @@ prim_factor =
    #+end_src
    :end:
 
-* TODO Slater determinants
+* Slater determinants (determinant group)
+
+  The configuration interaction (CI) wave function $\Psi$ 
+  can be expanded in the basis of Slater determinants $D_I$ as follows
+
+  \[
+  |\Psi> = \sum_I C_I |D_I>
+  \]
+  
+  For relatively small expansions, a given determinant can be represented as a list of ~mo.num~ occupation numbers. 
+  However, this requires a lot of extra memory and would be technically impossible for larger expansions 
+  (~millions of determinants). This is why the determinants are stored as bit fields in the TREXIO file 
+  (see ~int bitfield~ type in the table below). By default, the chemist notation is used, namely 
+
+  \[
+  | D_I > = | \alpha_1 \alpha_2 \ldots \alpha_{n\uparrow} \beta_1 \beta_2 \ldots \beta_{n\downarrow} >
+  \
+
+  where $\alpha$ and $\beta$ denote $\uparrow$-spin and $\downarrow$-spin electrons, respectively,
+  $n\uparrow$ and $n\downarrow$ correspond to ~electron.up_num~ and ~electron.dn_num~, respectively.
+  Internally, bit fields for $\alpha$ and $\beta$ electrons are stored separately,
+  which is why the ~determinant.list~ attribute has a second dimension.
+ 
+  #+NAME: determinant
+  | Variable      | Type           | Dimensions             | Description                                            |
+  |---------------+----------------+------------------------+--------------------------------------------------------|
+  | ~num~         | ~dim~          |                        | Number of determinants                                 |
+  | ~list~        | ~int bitfield~ | ~(determinant.num, 2)~ | List of determinants as integer bit fields             |
+  | ~coefficient~ | ~float~        | ~(determinant.num)~    | Coefficients of the determinants from the CI expansion |
+
+  #+CALL: json(data=determinant, title="determinant")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "determinant": {
+		  "num" : [ "dim"       , []                         ]
+	,        "list" : [ "int binary", [ "2", "determinant.num" ] ]
+	, "coefficient" : [ "float"     , [ "determinant.num" ]      ]
+      } ,
+  #+end_src
+  :end:
+
 * Reduced density matrices (rdm group)
 
   The reduced density matrices are defined in the basis of molecular
