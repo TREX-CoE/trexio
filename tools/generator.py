@@ -4,7 +4,6 @@ from generator_tools import *
 # --------------------- GET CONFIGURATION FROM THE TREX.JSON ---------------- #
 config_file = 'trex.json'
 trex_config = read_json(config_file)
-trex_config.pop('determinant')
 # --------------------------------------------------------------------------- #
 
 # -------------------- GET ATTRIBUTES FROM THE CONFIGURATION ---------------- #
