@@ -4245,28 +4245,27 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
 
   if (rc != TREXIO_SUCCESS) return rc;
 
-  /* Update the determinant_num value with the number of determinants written */
+  // Update the determinant_num value with the number of determinants written
   int64_t det_num = 0L;
-  /* Read the determinant_num if it exists already */
+  // Read the determinant_num if it exists already
   if (trexio_has_determinant_num(file) == TREXIO_SUCCESS) {
      rc = trexio_read_determinant_num_64(file, &det_num);
      if (rc != TREXIO_SUCCESS) return rc;
   }
-  /* Check for the INT64 overflow before writing an updated value */
+  // Check for the INT64 overflow before writing an updated value
   if (INT64_MAX - det_num > buffer_size) {
     det_num += buffer_size;
   } else {
     return TREXIO_INT_SIZE_OVERFLOW;
   }
-  /* Overwrite previous value. Here we have to temporarily set the file->mode to 'u' to trick the API
-     in order to overwrite existing determinant_num. Otherwise the API returns TREXIO_NUM_ALREADY_EXISTS.
-   */
+  // Overwrite previous value. Here we have to temporarily set the file->mode to 'u' to trick the API
+  //   in order to overwrite existing determinant_num. Otherwise the API returns TREXIO_NUM_ALREADY_EXISTS.
   char mode_tmp = file->mode;
   file->mode = 'u';
   rc = trexio_write_determinant_num_64(file, det_num);
-  file->mode = mode_tmp
+  file->mode = mode_tmp;
   if (rc != TREXIO_SUCCESS) return rc;
-
+  
   return TREXIO_SUCCESS;
 }
 
