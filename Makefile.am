@@ -112,6 +112,7 @@ TESTS_C = \
   tests/io_dset_float_text \
   tests/io_dset_int_text \
   tests/io_dset_sparse_text \
+  tests/io_determinant_text \
   tests/io_safe_dset_float_text \
   tests/io_str_text \
   tests/io_dset_str_text \

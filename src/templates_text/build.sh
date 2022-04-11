@@ -10,6 +10,9 @@ cat populated/pop_struct_text_group_dset.h >> trexio_text.h
 cat populated/pop_struct_text_group.h >> trexio_text.h
 cat basic_text.h   >> trexio_text.h
 
+cat hrw_determinant_text.h >> trexio_text.h
+cat *_determinant_text.c >> trexio_text.c
+
 cat populated/pop_free_group_text.c >> trexio_text.c
 cat populated/pop_read_group_text.c >> trexio_text.c
 cat populated/pop_flush_group_text.c >> trexio_text.c

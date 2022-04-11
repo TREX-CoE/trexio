@@ -2749,7 +2749,7 @@ trexio_read_$group_dset$(trexio_t* const file,
   if (rc != TREXIO_SUCCESS) return rc;
 
   // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
-  int64_t eof_read_size = 0UL;
+  int64_t eof_read_size = 0L;
 
   switch (file->back_end) {
 
@@ -4128,18 +4128,16 @@ def delete_$group$(trexio_file) -> None:
 
      #+begin_src c :tangle hrw_determinant_front.h :exports none
 trexio_exit_code trexio_has_determinant_list(trexio_t* const file);
-trexio_exit_code trexio_read_determinant_list(trexio_t* const file, int64_t* const dset);
-trexio_exit_code trexio_write_determinant_list(trexio_t* const file, const int64_t* dset);
 trexio_exit_code trexio_has_determinant_coefficient(trexio_t* const file);
-trexio_exit_code trexio_read_determinant_coefficient(trexio_t* const file, double* const dset);
-trexio_exit_code trexio_write_determinant_coefficient(trexio_t* const file, const double* dset);
+trexio_exit_code trexio_read_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset);
+trexio_exit_code trexio_write_determinant_list(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset);
      #+end_src
 
 **** Source code for default functions
 
      #+begin_src c :tangle read_determinant_front.c
 trexio_exit_code
-trexio_read_determinant_list (trexio_t* const file, int64_t* const dset)
+trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -4147,116 +4145,92 @@ trexio_read_determinant_list (trexio_t* const file, int64_t* const dset)
   if (trexio_has_determinant_list(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   trexio_exit_code rc;
-  int64_t det_dim = 0L;
 
-  rc = trexio_read_determinant_num_64(file, &det_dim);
+  /* Read the number of mos */
+  int64_t mo_num = 0L;
+  rc = trexio_read_mo_num_64(file, &mo_num);
   if (rc != TREXIO_SUCCESS) return rc;
-  if (det_dim == 0L) return TREXIO_INVALID_NUM;
+  if (mo_num == 0L) return TREXIO_INVALID_NUM;
+
+  /* Compute how many integer numbers is needed to represent a determinant */
+  uint32_t int_num = 0;
+  int_num = ((mo_num - 1)/64) + 1;
 
   uint32_t rank = 2;
-  uint64_t dims[2] = {det_dim, 2};
+  uint64_t det_size = (uint64_t) (*buffer_size);
+  uint64_t dims[2] = {det_size, int_num*2UL};
 
-  assert(file->back_end < TREXIO_INVALID_BACK_END);
+  // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
+  int64_t eof_read_size = 0L;
 
-  rc = TREXIO_FAILURE;
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_determinant_list(file, dset, rank, dims);
+    rc = trexio_text_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset); 
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_read_determinant_list(file, dset, rank, dims);
+    rc = -1; //trexio_hdf5_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
     break;
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
     break;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_read_
+    return trexio_json_read_$group_dset$(...);
     break;
 ,*/
+  default:
+    rc = TREXIO_FAILURE;  /* Impossible case */
+    break;
   }
+
+  if (rc != TREXIO_SUCCESS && rc != TREXIO_END) return rc;
+
+  if (rc == TREXIO_END) *buffer_size = eof_read_size;
+
+  return rc; 
 
 }
 
-trexio_exit_code
-trexio_read_determinant_coefficient (trexio_t* const file, double* const dset)
-{
-
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
-  if (trexio_has_determinant_coefficient(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
-
-  trexio_exit_code rc;
-  int64_t det_dim = 0L;
-
-  rc = trexio_read_determinant_num_64(file, &det_dim);
-  if (rc != TREXIO_SUCCESS) return rc;
-  if (det_dim == 0L) return TREXIO_INVALID_NUM;
-
-  uint32_t rank = 1;
-  uint64_t dims[1] = {det_dim};
-
-  assert(file->back_end < TREXIO_INVALID_BACK_END);
-
-  rc = TREXIO_FAILURE;
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_read_determinant_coefficient(file, dset, rank, dims);
-    break;
-
-  case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-    return trexio_hdf5_read_determinant_coefficient(file, dset, rank, dims);
-    break;
-#else
-    return TREXIO_BACK_END_MISSING;
-    break;
-#endif
-/*
-  case TREXIO_JSON:
-    return trexio_json_read_
-    break;
-,*/
-  }
-
-}
      #+end_src
 
      #+begin_src c :tangle write_determinant_front.c
 trexio_exit_code
-trexio_write_determinant_list (trexio_t* const file, const int64_t* dset)
+trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset)
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (dset == NULL) return TREXIO_INVALID_ARG_2;
 
   trexio_exit_code rc;
-  int64_t det_dim = 0L;
 
-  rc = trexio_read_determinant_num_64(file, &det_dim);
+  /* Read the number of mos */
+  int64_t mo_num = 0L;
+  rc = trexio_read_mo_num_64(file, &mo_num);
   if (rc != TREXIO_SUCCESS) return rc;
-  if (det_dim == 0L) return TREXIO_INVALID_NUM;
+  if (mo_num == 0L) return TREXIO_INVALID_NUM;
+
+  /* Compute how many integer numbers is needed to represent a determinant */
+  uint32_t int_num = 0;
+  int_num = ((mo_num - 1)/64) + 1;
 
   uint32_t rank = 2;
-  uint64_t dims[2] = {det_dim, 2};
+  uint64_t dims[2] = {buffer_size, int_num*2UL};
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
-  rc = TREXIO_FAILURE;
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_determinant_list(file, dset, rank, dims);
+    return trexio_text_write_determinant_list(file, offset_file, rank, dims, dset);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_determinant_list(file, dset, rank, dims);
+    return -1; //trexio_hdf5_write_determinant_list(file, dset, rank, dims);
     break;
 #else
     return TREXIO_BACK_END_MISSING;
@@ -4271,47 +4245,6 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t* dset)
 
 }
 
-trexio_exit_code
-trexio_write_determinant_coefficient (trexio_t* const file, const double* dset)
-{
-
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
-
-  trexio_exit_code rc;
-  int64_t det_dim = 0L;
-
-  rc = trexio_read_determinant_num_64(file, &det_dim);
-  if (rc != TREXIO_SUCCESS) return rc;
-  if (det_dim == 0L) return TREXIO_INVALID_NUM;
-
-  uint32_t rank = 1;
-  uint64_t dims[1] = {det_dim};
-
-  assert(file->back_end < TREXIO_INVALID_BACK_END);
-
-  rc = TREXIO_FAILURE;
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_write_determinant_coefficient(file, dset, rank, dims);
-    break;
-
-  case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-    return trexio_hdf5_write_determinant_coefficient(file, dset, rank, dims);
-    break;
-#else
-    return TREXIO_BACK_END_MISSING;
-    break;
-#endif
-/*
-  case TREXIO_JSON:
-    return trexio_json_read_
-    break;
-,*/
-  }
-}
      #+end_src
 
      #+begin_src c :tangle has_determinant_front.c
@@ -4326,11 +4259,11 @@ trexio_has_determinant_list (trexio_t* const file)
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_has_determinant_list(file)
+    return trexio_text_has_determinant_list(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_has_determinant_list(file);
+    return -1; //trexio_hdf5_has_determinant_list(file);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -4355,11 +4288,11 @@ trexio_has_determinant_coefficient (trexio_t* const file)
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_has_determinant_coefficient(file)
+    return -1; //trexio_text_has_determinant_coefficient(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_has_determinant_coefficient(file);
+    return -1; //trexio_hdf5_has_determinant_coefficient(file);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif

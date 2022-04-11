@@ -1313,6 +1313,182 @@ trexio_text_delete_$group$ (trexio_t* const file)
 }
    #+end_src
 
+** Source code for the determinant part 
+
+   Each array is stored in a separate =.txt= file due to the fact that determinant I/O has to be decoupled
+   from conventional write/read/flush behaviour of the TEXT back end. Chunks are used to read/write the data
+   to prevent memory overflow. Chunks have a given ~int64_t size~.
+   Size specifies the number of data items, e.g. determinants.
+
+
+   #+begin_src c :tangle hrw_determinant_text.h :exports none
+trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file);
+trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, int64_t* const list);
+trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const int64_t* list);
+   #+end_src
+
+   #+begin_src c :tangle read_determinant_text.c
+trexio_exit_code trexio_text_read_determinant_list(
+                                               trexio_t* const file,
+                                               const int64_t offset_file,
+                                               const uint32_t rank,
+                                               const uint64_t* dims,
+                                               int64_t* const eof_read_size,
+                                               int64_t* const list) 
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+
+  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, determinant_list_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
+
+  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
+  FILE* f = fopen(file_full_path, "r");
+  if(f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Specify the line length in order to offset properly. 
+     Each 64-bit integer takes at most 10 slots and requires one space, 
+     we have int_num integers per up-spin determinant, 
+     then this number is doubled because we have the same number for down-spin electrons,
+     and then one newline char.
+   ,*/
+  uint64_t line_length = 6UL*10UL + 6UL; // + 6UL + 1UL; // dims[1]*11UL + 1UL;
+
+  /* Offset in the file according to the provided  value of offset_file and optimal line_length */
+  fseek(f, (long) offset_file * line_length, SEEK_SET);
+
+  /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
+  int rc;
+
+  //char buffer[16];
+  char* buffer = CALLOC(line_length+1, char);
+  
+  uint64_t count = 0UL;
+  int shift = 0;
+  uint64_t accum = 0UL;
+  for (uint64_t i=0UL; i < (uint64_t) dims[0]; ++i) {
+
+      accum = 0UL;
+      memset(buffer, 0, line_length+1); // sizeof(buffer)); //1024);
+
+      if(fgets(buffer, line_length, f) == NULL){
+
+        fclose(f);
+        FREE(buffer);
+        *eof_read_size = count;
+        return TREXIO_END;
+
+      } else {
+
+  /* The format string is not anymore static but rather dynamic (the number of ints depend on the mo_num) 
+     Thus, we parse the buffer string int_num*2 times to get the bit field determinants. 
+  */
+        
+        for (int32_t j=0; j<dims[1]; ++j) {
+          rc = sscanf(buffer, "%10" SCNd64 "%n", list + i + j, &shift);
+          if(rc <= 0) {
+            fclose(f);
+            FREE(buffer);
+            return TREXIO_FAILURE;
+          }
+          buffer += shift;
+          accum += shift;
+        }
+ 
+        count += 1UL;
+        buffer -= accum;
+      }
+  }
+
+  FREE(buffer);
+ 
+  /* Close the TXT file */
+  rc = fclose(f);
+  if(rc != 0) return TREXIO_FILE_ERROR;
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   #+begin_src c :tangle write_determinant_text.c
+trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
+                                                const int64_t offset_file,
+						const uint32_t rank,
+                                                const uint64_t* dims,
+                                                const int64_t* list) 
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, determinant_list_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
+
+  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive reads */
+  FILE* f = fopen(file_full_path, "a");
+  if(f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
+  int rc;
+  for (uint64_t i=0UL; i < dims[0]; ++i) {
+    
+    /* The loop below is needed to write a line with int bit fields for alpha and beta electrons */
+    for (uint32_t j=0; j < (uint32_t) dims[1]; ++j) {
+      rc = fprintf(f, "%10" PRId64 " ", *(list + i + j));
+      if(rc <= 0) {
+        fclose(f);
+        return TREXIO_FAILURE;
+      }
+    }
+    fprintf(f, "%s", "\n");
+    
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  /* Exit upon success */
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   #+begin_src c :tangle has_determinant_text.c
+trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, determinant_list_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
+
+  /* Check the return code of access function to determine whether the file with data exists or not */
+  if (access(file_full_path, F_OK) == 0){
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
+}
+   #+end_src
+
 * Constant file suffixes (not used by the generator)               :noexport:
 
   #+begin_src c :tangle suffix_text.h

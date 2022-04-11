@@ -39,6 +39,9 @@ echo "" >> trexio_f.f90
 cat populated/pop_*.c >> trexio.c
 cat populated/pop_*.h >> trexio.h
 
+cat hrw_determinant_front.h >> trexio.h
+cat *_determinant_front.c >> trexio.c
+
 # fortran front end
 cat populated/pop_*.f90  >> trexio_f.f90
 # add helper functions
