@@ -975,6 +975,105 @@ trexio_hdf5_delete_$group$ (trexio_t* const file)
 }
    #+end_src
 
+* Source code for the determinant part
+
+   Each array is stored in a separate HDF5 dataset due to the fact that determinant I/O has to be decoupled.
+   Chunks are used to read/write the data to prevent memory overflow. Chunks have a given ~int64_t dims[0]*dims[1]~.
+   Size specifies the number of data items (e.g. determinants) to process.
+
+   #+begin_src c :tangle hrw_determinant_hdf5.h :exports none
+trexio_exit_code trexio_hdf5_has_determinant_list(trexio_t* const file);
+trexio_exit_code trexio_hdf5_read_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, int64_t* const list);
+trexio_exit_code trexio_hdf5_write_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const int64_t* list);
+   #+end_src
+
+   #+begin_src c :tangle read_determinant_hdf5.c
+trexio_exit_code trexio_hdf5_read_determinant_list(trexio_t* const file,
+                                                   const int64_t offset_file,
+                                                   const uint32_t rank,
+                                                   const uint64_t* dims,
+                                                   int64_t* const eof_read_size,
+                                                   int64_t* const list)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  char dset_det_name[256] = "determinant_list";
+
+  hsize_t offset[1] = {(hsize_t) offset_file * dims[1]};
+  hsize_t count[1]  = {(hsize_t) dims[0] * dims[1]};
+
+  /* Attempt to read determinants (if EOF -> eof_read_size is modified with the number of elements read and return code is TREXIO_END)
+     0 argument below is requires to skip internal treatment specific to sparse indices (i.e. their de-compression).*/
+  return trexio_hdf5_open_read_dset_sparse(f->determinant_group, dset_det_name, offset, count, eof_read_size, 0, list);
+}
+   #+end_src
+
+   #+begin_src c :tangle write_determinant_hdf5.c
+trexio_exit_code trexio_hdf5_write_determinant_list(trexio_t* const file,
+                                                    const int64_t offset_file,
+		                                    const uint32_t rank,
+                                                    const uint64_t* dims,
+                                                    const int64_t* list)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  hid_t det_dtype = H5T_NATIVE_INT64;
+  uint64_t size_ranked = dims[1]*dims[0];
+
+  /* Arrays of chunk dims that will be used for chunking the dataset */
+  const hsize_t chunk_dims[1] = {size_ranked};
+
+  /* Indices and values are stored as 2 independent datasets in the HDF5 file */
+  char dset_det_name[256] = "determinant_list";
+
+  trexio_exit_code rc_write = TREXIO_FAILURE;
+  /* NOTE: chunk size is set upon creation of the HDF5 dataset and cannot be changed ! */
+  if ( H5LTfind_dataset(f->determinant_group, dset_det_name) != 1 ) {
+  /* If the file does not exist -> create it and write */
+
+  /* Create chunked dataset with index_dtype datatype and write indices into it */
+    rc_write = trexio_hdf5_create_write_dset_sparse(f->determinant_group, dset_det_name, index_dtype, chunk_dims, list);
+    if (rc_write != TREXIO_SUCCESS) return rc_write;
+
+  } else {
+  /* If the file exists -> open it and write */
+    hsize_t offset_data[1] = {(hsize_t) offset_file * dims[1]};
+
+  /* Create chunked dataset with index_dtype datatype and write indices into it */
+    rc_write = trexio_hdf5_open_write_dset_sparse(f->determinant_group, dset_det_name, det_dtype, chunk_dims, offset_data, list);
+    if (rc_write != TREXIO_SUCCESS) return rc_write;
+
+  }
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   #+begin_src c :tangle has_determinant_hdf5.c
+trexio_exit_code trexio_hdf5_has_determinant_list(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  herr_t status = H5LTfind_dataset(f->determinant_group, "determinant_list");
+  /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
+  if (status == 1){
+    return TREXIO_SUCCESS;
+  } else if (status == 0) {
+    return TREXIO_HAS_NOT;
+  } else {
+    return TREXIO_FAILURE;
+  }
+}
+   #+end_src
+
 * Helper functions
 
   #+begin_src c :tangle helpers_hdf5.c
