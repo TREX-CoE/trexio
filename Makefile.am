@@ -127,6 +127,7 @@ TESTS_C += \
   tests/io_dset_float_hdf5 \
   tests/io_dset_int_hdf5 \
   tests/io_dset_sparse_hdf5 \
+  tests/io_determinant_hdf5 \
   tests/io_safe_dset_float_hdf5 \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
