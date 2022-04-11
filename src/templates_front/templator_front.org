@@ -4106,10 +4106,10 @@ def delete_$group$(trexio_file) -> None:
      #+end_src
 * Source code for the determinant part
 
-   Storage of the determinants is a particular case, 
-   which requires special treatment, but has to be coded only once 
+   Storage of the determinants is a particular case,
+   which requires special treatment, but has to be coded only once
    (since there is only one group that corresponds to it).
-   Thus, there is no need to auto-generate this part via templates. 
+   Thus, there is no need to auto-generate this part via templates.
 
    This section concerns API calls related to Slater determinants.
 
@@ -4122,7 +4122,7 @@ def delete_$group$(trexio_file) -> None:
    | ~trexio_read_determinant_coefficient~  | Read an attribute                      |
    | ~trexio_read_determinant_list~         | Read an attribute                      |
 
-*** C source code 
+*** C source code
 
 **** Function declarations
 
@@ -4166,12 +4166,12 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset); 
+    rc = trexio_text_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    rc = -1; //trexio_hdf5_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
+    rc = trexio_hdf5_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
     break;
 #else
     rc = TREXIO_BACK_END_MISSING;
@@ -4191,7 +4191,7 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 
   if (rc == TREXIO_END) *buffer_size = eof_read_size;
 
-  return rc; 
+  return rc;
 
 }
 
@@ -4225,12 +4225,12 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_determinant_list(file, offset_file, rank, dims, dset);
+    rc = trexio_text_write_determinant_list(file, offset_file, rank, dims, dset);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return -1; //trexio_hdf5_write_determinant_list(file, dset, rank, dims);
+    rc = trexio_hdf5_write_determinant_list(file, offset_file, rank, dims, dset);
     break;
 #else
     return TREXIO_BACK_END_MISSING;
@@ -4238,11 +4238,36 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_read_
+    rc = trexio_json_read_
     break;
 ,*/
   }
 
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Update the determinant_num value with the number of determinants written */
+  int64_t det_num = 0L;
+  /* Read the determinant_num if it exists already */
+  if (trexio_has_determinant_num(file) == TREXIO_SUCCESS) {
+     rc = trexio_read_determinant_num_64(file, &det_num);
+     if (rc != TREXIO_SUCCESS) return rc;
+  }
+  /* Check for the INT64 overflow before writing an updated value */
+  if (INT64_MAX - det_num > buffer_size) {
+    det_num += buffer_size;
+  } else {
+    return TREXIO_INT_SIZE_OVERFLOW;
+  }
+  /* Overwrite previous value. Here we have to temporarily set the file->mode to 'u' to trick the API
+     in order to overwrite existing determinant_num. Otherwise the API returns TREXIO_NUM_ALREADY_EXISTS.
+   */
+  char mode_tmp = file->mode;
+  file->mode = 'u';
+  rc = trexio_write_determinant_num_64(file, det_num);
+  file->mode = mode_tmp
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  return TREXIO_SUCCESS;
 }
 
      #+end_src
@@ -4263,7 +4288,7 @@ trexio_has_determinant_list (trexio_t* const file)
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return -1; //trexio_hdf5_has_determinant_list(file);
+    return trexio_hdf5_has_determinant_list(file);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -4332,9 +4357,9 @@ trexio_has_determinant_coefficient (trexio_t* const file)
   However, if the user validated that the file is correct (e.g. using ~trexio-tools~),
   then value of the ~metadata_unsafe~ attribute can be changed using the aforementioned function.
 
-  TODO: 
-  ~trexio_bitfield_to_list~ functions converts the bit field representation of a 
-  given determinants into a list of ~mo.num~ occupation numbers. 
+  TODO:
+  ~trexio_bitfield_to_list~ functions converts the bit field representation of a
+  given determinants into a list of ~mo.num~ occupation numbers.
   (adapt from slaterlib or QP)
 
 ** C
