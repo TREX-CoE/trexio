@@ -118,15 +118,28 @@ coords = [
 trexio.write_nucleus_coord(test_file, coords)
 
 
-# write mo_num (needed later to write sparse mo_2e_int_eri integrals)
-trexio.write_mo_num(test_file, 600)
+# write ao_num (needed later to write sparse ao_2e_int_eri integrals)
+trexio.write_ao_num(test_file, 600)
 
 # write sparse data in the file
 num_integrals = 100
 indices = [i for i in range(num_integrals*4)]
 values  = [(3.14 + float(i)) for i in range(num_integrals)]
 
-trexio.write_mo_2e_int_eri(test_file, 0, num_integrals, indices, values)
+trexio.write_ao_2e_int_eri(test_file, 0, num_integrals, indices, values)
+
+
+# write mo_num (needed later to write determinants) 
+mo_num = 150
+trexio.write_mo_num(test_file, mo_num)
+
+int_num = 2*int((mo_num-1)/64+1)
+
+# write determinants in the file
+num_dets = 50
+dets = [i for i in range(num_dets*int_num)]
+
+trexio.write_determinant_list(test_file, 0, num_dets, dets) 
 
 
 # write nucleus_point_group in the file
@@ -210,7 +223,8 @@ assert trexio.has_nucleus_charge(test_file2)
 assert trexio.has_nucleus_coord(test_file2)
 assert trexio.has_nucleus_label(test_file2)
 assert trexio.has_nucleus_point_group(test_file2)
-assert trexio.has_mo_2e_int_eri(test_file2)
+assert trexio.has_ao_2e_int_eri(test_file2)
+assert trexio.has_determinant_list(test_file2)
 
 # read nucleus_num from file
 rnum = trexio.read_nucleus_num(test_file2)
@@ -254,14 +268,14 @@ np.testing.assert_array_almost_equal(rcoords_np, np.array(coords).reshape(nucleu
 #rcoords_reshaped_2 = trexio.read_nucleus_coord(test_file2, doReshape=False)
 
 # read number of integrals already present in the file
-assert trexio.has_mo_2e_int_eri(test_file2)
-assert trexio.read_mo_2e_int_eri_size(test_file2)==num_integrals
+assert trexio.has_ao_2e_int_eri(test_file2)
+assert trexio.read_ao_2e_int_eri_size(test_file2)==num_integrals
 
-# read sparse arrays on mo_2e_int_eri integrals
+# read sparse arrays on ao_2e_int_eri integrals
 buf_size = 60
 offset_file = 0
 # read full buf_size (i.e. the one that does not reach EOF)
-indices_sparse_np, value_sparse_np, read_buf_size, eof = trexio.read_mo_2e_int_eri(test_file2, offset_file, buf_size)
+indices_sparse_np, value_sparse_np, read_buf_size, eof = trexio.read_ao_2e_int_eri(test_file2, offset_file, buf_size)
 print(f'First complete sparse read size: {read_buf_size}')
 #print(indices_sparse_np)
 assert not eof
@@ -271,7 +285,7 @@ assert indices_sparse_np[read_buf_size-1][3]==read_buf_size*4-1
 offset_file += buf_size
 
 # read incomplete buf_size (i.e. the one that does reach EOF)
-indices_sparse_np, value_sparse_np, read_buf_size, eof2 = trexio.read_mo_2e_int_eri(test_file2, offset_file, buf_size)
+indices_sparse_np, value_sparse_np, read_buf_size, eof2 = trexio.read_ao_2e_int_eri(test_file2, offset_file, buf_size)
 print(f'Second incomplete sparse read size: {read_buf_size}')
 #print(indices_sparse_np)
 assert eof2
@@ -279,6 +293,21 @@ assert read_buf_size==(num_integrals - buf_size)
 assert indices_sparse_np[0][0]==offset_file*4
 assert indices_sparse_np[read_buf_size-1][3]==(offset_file+read_buf_size)*4-1
 
+# read number of determinants already present in the file
+assert trexio.has_determinant_list(test_file2)
+assert trexio.read_determinant_num(test_file2)==num_dets
+
+# read sparse arrays on ao_2e_int_eri integrals
+buf_size = 20
+offset_file = 0
+# read full buf_size (i.e. the one that does not reach EOF)
+dets_np, read_buf_size, eof = trexio.read_determinant_list(test_file2, offset_file, buf_size)
+print(f'First complete read of determinant list: {read_buf_size}')
+#print(indices_sparse_np)
+assert not eof
+assert read_buf_size==buf_size
+assert dets_np[0][0]==0
+assert dets_np[read_buf_size-1][int_num-1]==read_buf_size*int_num-1
 
 # read array of nuclear labels
 rlabels_2d = trexio.read_nucleus_label(test_file2, dim=nucleus_num)
