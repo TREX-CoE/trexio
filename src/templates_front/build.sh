@@ -53,6 +53,7 @@ cat populated/pop_*.fh_90 >> trexio_f.f90
 # python front end
 cat basic_python.py >> trexio.py
 cat populated/pop_*.py >> trexio.py
+cat *_determinant_front.py >> trexio.py
 
 # suffixes
 cat suffix_s_front.h >> trexio_s.h

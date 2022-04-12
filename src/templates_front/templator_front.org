@@ -1830,7 +1830,7 @@ def has_$group_num$(trexio_file) -> bool:
           True if the variable exists, False otherwise
 
     Raises:
-        - Exception from trexio.Error class if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -2453,7 +2453,7 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         Array of $group_dset$ values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
-        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -2526,7 +2526,7 @@ def read_$group_dset$(trexio_file, dim = None, doReshape = None, dtype = None):
         1D NumPy array with ~dim~ elements corresponding to $group_dset$ values read from the TREXIO file.
 
     Raises:
-        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
         - Exception from some other error (e.g. RuntimeError).
 """
 
@@ -2610,7 +2610,7 @@ def has_$group_dset$(trexio_file) -> bool:
           True if the variable exists, False otherwise
 
     Raises:
-        - Exception from trexio.Error class if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -3084,14 +3084,14 @@ def write_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int, in
     buffer_size: int
         The number of integrals to write in the file from the provided sparse arrays.
 
-    values: list OR numpy.ndarray
+    indices: list OR numpy.ndarray
         Array of $group_dset$ indices to be written. If array data type does not correspond to int32, the conversion is performed.
 
     values: list OR numpy.ndarray
         Array of $group_dset$ values to be written. If array data type does not correspond to float64, the conversion is performed.
 
     Raises:
-        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -3265,7 +3265,7 @@ def has_$group_dset$(trexio_file) -> bool:
           True if the variable exists, False otherwise
 
     Raises:
-        - Exception from trexio.Error class if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -3734,7 +3734,7 @@ def has_$group_dset$(trexio_file) -> bool:
           True if the variable exists, False otherwise
 
     Raises:
-        - Exception from trexio.Error class if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -4006,7 +4006,7 @@ def has_$group_str$(trexio_file) -> bool:
           True if the variable exists, False otherwise
 
     Raises:
-        - Exception from trexio.Error class if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -4128,14 +4128,14 @@ def delete_$group$(trexio_file) -> None:
 trexio_exit_code trexio_has_determinant_list(trexio_t* const file);
 trexio_exit_code trexio_has_determinant_coefficient(trexio_t* const file);
 trexio_exit_code trexio_read_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset);
-trexio_exit_code trexio_read_safe_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset_out, const int64_t dim_out);
+trexio_exit_code trexio_read_safe_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset_out, const int64_t dim_out);
 trexio_exit_code trexio_write_determinant_list(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset);
 trexio_exit_code trexio_write_safe_determinant_list(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in);
      #+end_src
 
      #+begin_src c :tangle read_determinant_front.c
 trexio_exit_code
-trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset)
+trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset)
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
@@ -4152,10 +4152,10 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 
   /* Compute how many integer numbers is needed to represent a determinant */
   uint32_t int_num = 0;
-  int_num = ((mo_num - 1)/64) + 1;
+  int_num = (mo_num - 1)/64 + 1;
 
   uint32_t rank = 2;
-  uint64_t det_size = (uint64_t) (*buffer_size);
+  uint64_t det_size = (uint64_t) (*buffer_size_read);
   uint64_t dims[2] = {det_size, int_num*2UL};
 
   // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
@@ -4187,16 +4187,16 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 
   if (rc != TREXIO_SUCCESS && rc != TREXIO_END) return rc;
 
-  if (rc == TREXIO_END) *buffer_size = eof_read_size;
+  if (rc == TREXIO_END) *buffer_size_read = eof_read_size;
 
   return rc;
 
 }
 
 trexio_exit_code
-trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset_out, const int64_t dim_out)
+trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset_out, const int64_t dim_out)
 {
-  return trexio_read_determinant_list(file, offset_file, buffer_size, dset_out); 
+  return trexio_read_determinant_list(file, offset_file, buffer_size_read, dset_out); 
 }
      #+end_src
 
@@ -4218,7 +4218,7 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
 
   /* Compute how many integer numbers is needed to represent a determinant */
   uint32_t int_num = 0;
-  int_num = ((mo_num - 1)/64) + 1;
+  int_num = (mo_num - 1)/64 + 1;
 
   uint32_t rank = 2;
   uint64_t dims[2] = {buffer_size, int_num*2UL};
@@ -4410,7 +4410,172 @@ interface
 end interface
      #+end_src
 
-*** TODO Python templates for front end
+*** Python interface 
+
+     #+begin_src python :tangle write_determinant_front.py
+def write_determinant_list(trexio_file: File, offset_file: int, buffer_size: int, determinants: list) -> None:
+    """Write the determinant list in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    offset_file: int
+        The number of determinants to be skipped in the file when writing.
+
+    buffer_size: int
+        The number of determinants to write in the file. 
+
+    determinants: list OR numpy.ndarray
+        Array of determinant_list to be written. If array data type does not correspond to int64, the conversion is performed.
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    try:
+        import numpy as np
+    except ImportError:
+        raise Exception("NumPy cannot be imported.")
+
+    if not isinstance(offset_file, int):
+        raise TypeError("offset_file argument has to be an integer.")
+    if not isinstance(buffer_size, int):
+        raise TypeError("buffer_size argument has to be an integer.")
+    if not isinstance(determinants, (list, tuple, np.ndarray)):
+        raise TypeError("determinants argument has to be an array (list, tuple or NumPy ndarray).")
+
+    convert = False
+    flatten = False
+    if isinstance(determinants, np.ndarray):
+       # convert to int64 if input determinants are in a different precision
+       if not determinants.dtype==np.int64:
+           convert= True
+
+       if len(determinants.shape) > 1:
+           flatten = True
+           if convert:
+               dets_64 = np.int64(determinants).flatten()
+           else:
+               dets_64 = np.array(determinants, dtype=np.int64).flatten()
+       else:
+           if convert:
+               dets_64 = np.int64(determinants)
+    else:
+       # if input array is a multidimensional list or tuple, we have to convert it
+       try:
+           # if list is flat - the attempt to compute len() will raise a TypeError
+           _ = len(determinants[0])
+           dets_64 = np.array(determinants, dtype=np.int64).flatten()
+           flatten = True
+       except TypeError:
+           pass
+
+    if flatten or convert:
+        rc = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, dets_64) 
+    else:
+        rc = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, determinants) 
+
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+     #+end_src
+
+     #+begin_src python :tangle read_determinant_front.py
+def read_determinant_list(trexio_file: File, offset_file: int, buffer_size: int) -> tuple:
+    """Read determinant_list from the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    offset_file: int
+        The number of integrals to be skipped in the file when reading.
+
+    buffer_size: int
+        The number of integrals to read from the file.
+
+    Returns:
+        (determinants, n_int_read, eof_flag) tuple where
+          - determinants are NumPy arrays [numpy.ndarray] with the default int64 precision;
+          - n_int_read [int] is the number of determinants read from the trexio_file
+            (either strictly equal to buffer_size or less than buffer_size if EOF has been reached);
+          - eof_flag [bool] is True when EOF has been reached (i.e. when call to low-level pytrexio API returns TREXIO_END)
+                               False otherwise.
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    try:
+        import numpy as np
+    except ImportError:
+        raise Exception("NumPy cannot be imported.")
+
+    if not isinstance(offset_file, int):
+        raise TypeError("offset_file argument has to be an integer.")
+    if not isinstance(buffer_size, int):
+        raise TypeError("buffer_size argument has to be an integer.")
+
+
+    # read the number of determinants already in the file
+    det_num = read_determinant_num(trexio_file)
+    # TODO: calculate the rank (number of int bit fields per determinant)
+    mo_num = read_mo_num(trexio_file)
+    int_num = 2*int((mo_num-1)/64+1)
+
+    # additional modification needed to avoid allocating more memory than needed if EOF will be reached during read
+    overflow = offset_file + buffer_size - det_num
+    eof_flag = False
+    if overflow > 0:
+        verified_size = buffer_size - overflow
+        eof_flag = True
+    else:
+        verified_size = buffer_size
+
+    # main call to the low-level (SWIG-wrapped) trexio_read function, which also requires the sizes of the output to be provided
+    # read_buf_size contains the number of elements being read from the file, useful when EOF has been reached
+    rc, n_int_read, determinants = pytr.trexio_read_safe_determinant_list(trexio_file.pytrexio_s,
+                                                                          offset_file,
+                                                                          verified_size,
+                                                                          verified_size * int_num)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+    if n_int_read == 0:
+        raise ValueError("No integrals have been read from the file.")
+    if determinants is None: 
+        raise ValueError("Returned NULL array from the low-level pytrexio API.")
+
+    # conversion to custom types can be performed on the user side, here we only reshape the returned flat array according to int_num
+    dets_reshaped = np.reshape(determinants, (verified_size, int_num), order='C')
+
+    return (dets_reshaped, n_int_read, eof_flag)
+     #+end_src
+
+     #+begin_src python :tangle has_determinant_front.py
+def has_determinant_list(trexio_file) -> bool:
+    """Check that determinant_list exists in the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+          True if the variable exists, False otherwise
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc = pytr.trexio_has_determinant_list(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
+
+    return rc == TREXIO_SUCCESS
+     #+end_src
+
 * TODO General helper functions
 
   This section contains general helper functions like ~trexio_info~.
