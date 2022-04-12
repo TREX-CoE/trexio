@@ -4124,16 +4124,14 @@ def delete_$group$(trexio_file) -> None:
 
 *** C source code
 
-**** Function declarations
-
      #+begin_src c :tangle hrw_determinant_front.h :exports none
 trexio_exit_code trexio_has_determinant_list(trexio_t* const file);
 trexio_exit_code trexio_has_determinant_coefficient(trexio_t* const file);
 trexio_exit_code trexio_read_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset);
+trexio_exit_code trexio_read_safe_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset_out, const int64_t dim_out);
 trexio_exit_code trexio_write_determinant_list(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset);
+trexio_exit_code trexio_write_safe_determinant_list(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in);
      #+end_src
-
-**** Source code for default functions
 
      #+begin_src c :tangle read_determinant_front.c
 trexio_exit_code
@@ -4195,6 +4193,11 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 
 }
 
+trexio_exit_code
+trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset_out, const int64_t dim_out)
+{
+  return trexio_read_determinant_list(file, offset_file, buffer_size, dset_out); 
+}
      #+end_src
 
      #+begin_src c :tangle write_determinant_front.c
@@ -4269,6 +4272,11 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   return TREXIO_SUCCESS;
 }
 
+trexio_exit_code
+trexio_write_safe_determinant_list (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in)
+{
+  return trexio_write_determinant_list(file, offset_file, buffer_size, dset_in);
+} 
      #+end_src
 
      #+begin_src c :tangle has_determinant_front.c
@@ -4331,11 +4339,76 @@ trexio_has_determinant_coefficient (trexio_t* const file)
 }
      #+end_src
 
-
-*** TODO Fortran templates for front end
+*** Fortran interface 
 
     The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
     These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+     #+begin_src f90 :tangle write_determinant_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_write_determinant_list (trex_file, &
+                                               offset_file, buffer_size, list) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(in), value :: buffer_size
+     integer(c_int64_t), intent(in)        :: list(*)
+   end function trexio_write_determinant_list
+end interface
+
+interface
+   integer(trexio_exit_code) function trexio_write_safe_determinant_list (trex_file, &
+                                                    offset_file, buffer_size, &
+                                                    list, list_size) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(in), value :: buffer_size
+     integer(c_int64_t), intent(in)        :: list(*) 
+     integer(c_int64_t), intent(in), value :: list_size
+   end function trexio_write_safe_determinant_list
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle read_determinant_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_read_determinant_list(trex_file, &
+                                              offset_file, buffer_size, list) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(inout)     :: buffer_size
+     integer(c_int64_t), intent(out)       :: list(*) 
+   end function trexio_read_determinant_list
+end interface
+
+interface
+   integer(trexio_exit_code) function trexio_read_safe_determinant_list (trex_file, &
+                                                   offset_file, buffer_size, &
+                                                   list, list_size) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(inout)     :: buffer_size
+     integer(c_int64_t), intent(out)       :: list(*)
+     integer(c_int64_t), intent(in), value :: list_size
+   end function trexio_read_safe_determinant_list
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle has_determinant_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_has_determinant_list (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+   end function trexio_has_determinant_list
+end interface
+     #+end_src
 
 *** TODO Python templates for front end
 * TODO General helper functions
