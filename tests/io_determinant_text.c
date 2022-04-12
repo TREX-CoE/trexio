@@ -154,7 +154,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   assert(rc == TREXIO_END);
   assert(chunk_read == eof_read_size_check);
   assert(det_list_read[6*size_r-1] == 0);
-  assert(det_list_read[6*offset_data_read] == 497); 
+  assert(det_list_read[6*offset_data_read] == 6 * (int64_t) (offset_file_read-offset));
 
   // check the value of determinant_num
   int32_t det_num = 0;
@@ -195,7 +195,7 @@ int main(){
   test_write_determinant (TREXIO_FILE, TEST_BACKEND, SIZE);
   test_read_determinant  (TREXIO_FILE, TEST_BACKEND, SIZE);
 
-//  rc = system(RM_COMMAND);
+  rc = system(RM_COMMAND);
   assert (rc == 0);
 
   return 0;
