@@ -13,6 +13,7 @@ set(Tests_text
   io_str_text
   delete_group_text
   overwrite_all_text
+  pre_close
   )
 
 if(ENABLE_HDF5)

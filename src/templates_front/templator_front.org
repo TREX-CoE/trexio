@@ -864,19 +864,17 @@ trexio_open(const char* file_name, const char mode,
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
   if (back_end == TREXIO_AUTO && mode == 'r') {
 #ifdef HAVE_HDF5
-    trexio_exit_code rc_text, rc_hdf5;
     /* Check if the TREXIO file exists and if it is a directory */
-    rc_text = trexio_text_inquire(file_name);
+    trexio_exit_code rc_text = trexio_text_inquire(file_name);
     if (rc_text == TREXIO_SUCCESS) {
       back_end_local = TREXIO_TEXT;
     } else {
     /* If not, check if it is an HDF5 file */
-      rc_hdf5 = trexio_hdf5_inquire(file_name);
+      trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(file_name);
       if (rc_hdf5 == TREXIO_SUCCESS) {
         back_end_local = TREXIO_HDF5;
       } else {
     /* File is neither a directory nor an HDF5 file -> return an error */
-        back_end_local = -1;
         if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
         return NULL;
       }
@@ -1211,6 +1209,12 @@ trexio_close (trexio_t* file)
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
+  /* Things to be done before the closing the file in the back-end */
+  rc = trexio_pre_close(file);
+  if (rc != TREXIO_SUCCESS) {
+    return rc;
+  }
+  
   /* Terminate the back end */
   switch (file->back_end) {
 
@@ -1388,6 +1392,82 @@ def _inquire(file_name: str) -> bool:
         raise Error(rc)
    #+end_src
 
+** Tasks to be done before closing
+   
+    #+begin_src c :tangle trexio_private.h :exports none
+trexio_exit_code trexio_pre_close(trexio_t* file);
+    #+end_src
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_pre_close (trexio_t* file)
+{
+
+  if (file == NULL) return TREXIO_FILE_ERROR;
+
+  { /* Up-spin and down-spin electrons */
+    trexio_exit_code rc;
+    
+    int32_t nup, ndn, nelec;
+    bool has_up   = (trexio_has_electron_up_num(file) == TREXIO_SUCCESS);
+    bool has_dn   = (trexio_has_electron_dn_num(file) == TREXIO_SUCCESS);
+    bool has_updn = (trexio_has_electron_num(file) == TREXIO_SUCCESS);
+    
+    if (has_updn && has_up && has_dn) {
+      rc = trexio_read_electron_up_num(file, &nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      rc = trexio_read_electron_dn_num(file, &ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      rc = trexio_read_electron_num(file, &nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      if (nelec != nup + ndn) {
+        nelec = nup + ndn;
+        rc = trexio_write_electron_num(file, nelec);
+        if (rc != TREXIO_SUCCESS) return rc;
+      }
+    } else if (has_up && has_dn) {
+      rc = trexio_read_electron_up_num(file, &nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      rc = trexio_read_electron_dn_num(file, &ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nelec = nup + ndn;
+      rc = trexio_write_electron_num(file, nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+    } else if (has_up) {
+      rc = trexio_read_electron_up_num(file, &nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      ndn = 0;
+      rc = trexio_write_electron_dn_num(file, ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nelec = nup;
+      rc = trexio_write_electron_num(file, nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+    } else if (has_dn) {
+      rc = trexio_read_electron_dn_num(file, &ndn);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nup = 0;
+      rc = trexio_write_electron_up_num(file, nup);
+      if (rc != TREXIO_SUCCESS) return rc;
+      
+      nelec = ndn;
+      rc = trexio_write_electron_num(file, nelec);
+      if (rc != TREXIO_SUCCESS) return rc;
+    }
+
+  }
+  
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+   
 * Templates for front end
 ** Description
 

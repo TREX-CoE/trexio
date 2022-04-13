@@ -117,7 +117,8 @@ TESTS_C = \
   tests/io_dset_str_text \
   tests/delete_group_text \
   tests/overwrite_all_text \
-  tests/io_all
+  tests/io_all \
+  tests/pre_close
 
 if HAVE_HDF5
 TESTS_C += \
@@ -252,10 +253,15 @@ $(pytrexio_py): $(pytrexio_c)
 # Build Python module and C wrapper code for TREXIO using SWIG
 # [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
 $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
-	cp $(trexio_h) src/
+	@if [[ $(SWIG).x != ".x" ]] ; then \
+	cp $(trexio_h) src/ ; \
 	cd src/ && \
-		$(SWIG) -python -py3 -o pytrexio_wrap.c pytrexio.i
-	$(RM) -- src/trexio.h
+		$(SWIG) -python -py3 -o pytrexio_wrap.c pytrexio.i ; \
+	$(RM) -- src/trexio.h ;\
+	else echo "Error: SWIG is not installed" ; \
+	exit 1 ; \
+	fi
+
 
 $(numpy_i):
 	wget https://raw.githubusercontent.com/numpy/numpy/main/tools/swig/numpy.i -O $(numpy_i)
