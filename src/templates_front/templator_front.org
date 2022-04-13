@@ -527,16 +527,10 @@ def string_of_error(return_code: int) -> str:
     """Decode the TREXIO exit code.
 
     Argument is an integer return code that correspond to one of the TREXIO errors.
-
-    Returns string that contains description of TREXIO ~return_code~.
+    Returns a string that contains description of TREXIO ~return_code~.
     """
 
-    try:
-        error_str = pytr.trexio_string_of_error(return_code)
-    except:
-        raise
-
-    return error_str
+    return pytr.trexio_string_of_error(return_code)
   #+end_src
 
 ** Back ends
@@ -684,12 +678,15 @@ struct trexio_s {
   back_end_t        back_end;
   char              mode;
   bool              one_based;
+  int32_t           state;
   char              version[16];
-  char              padding[6];   /* Ensures the proper alignment of back ends */
 };
    #+end_src
 
-*** TREXIO_File Python class
+
+   File class for the Python API is defined below.
+   Use of Python class make it more intuitive and more python-ic
+   to work with TREXIO files.
 
    #+begin_src python :tangle basic_python.py
 class File:
@@ -707,6 +704,9 @@ class File:
     mode: str
         One of the currently supported TREXIO open modes.
         For example, 'r' or 'w'.
+    state: int
+        Active state of the file (needed to write determinant_coefficient).
+        Default is 0.
     isOpen: bool
         Flag indicating whether the current object is still open for I/O
     pytrexio_s:
@@ -724,6 +724,7 @@ class File:
         self.filename = filename
         self.mode = mode
         self.back_end = back_end
+        self.state = 0
 
         self.isOpen = False
         self.exists = False
@@ -759,6 +760,29 @@ class File:
             raise Exception("TREXIO File object has not been opened.")
 
 
+    def set_state(self, state):
+        """Set the state of the TREXIO File."""
+        if not isinstance(state, int):
+            raise TypeError("state argument has to be int")
+
+        rc = pytr.trexio_set_state(self.pytrexio_s, state)
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
+
+        self.state = state
+
+
+    def get_state(self):
+        """Get the state of the TREXIO File."""
+        rc, state = pytr.trexio_get_state(self.pytrexio_s)
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
+
+        if state != self.state:
+            raise Exception("Inconsistent state of the TREXIO file.")
+
+        return self.state
+
     def inquire(self):
         """Inquire whether a TREXIO file exists."""
         self.exists = _inquire(self.filename)
@@ -774,7 +798,7 @@ class File:
             pass
    #+end_src
 
-** Polymorphism of the file handle
+** TODO (Remove) : Polymorphism of the file handle
 
    Polymorphism of the ~trexio_t~ type is handled by ensuring that the
    corresponding types for all back ends can be safely casted to
@@ -939,6 +963,7 @@ trexio_open(const char* file_name, const char mode,
   result->back_end    = back_end_local;
   result->mode        = mode;
   result->one_based   = false;  // Need to be flipped in Fortran interface
+  result->state       = 0;      // By default the file corresponds to a ground state
   int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
   if (irc != 0) {
     if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
@@ -1297,12 +1322,9 @@ def _close(trexio_file):
     Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
     """
 
-    try:
-        rc = pytr.trexio_close(trexio_file)
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_close(trexio_file)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
    #+end_src
 
 ** File existence
@@ -1387,6 +1409,74 @@ def _inquire(file_name: str) -> bool:
     else:
         raise Error(rc)
    #+end_src
+
+** File state
+
+    ~trexio_set_state~ set an existing ~trexio_t~ file handle to a given state.
+    ~trexio_get_state~ returns current sate of the ~trexio_t~ file handle.
+
+    input parameters:
+      ~file~  -- TREXIO file handle.
+      ~state~ -- ~int32_t~ number of state.
+
+    output:
+      ~trexio_exit_code~ exit code.
+
+*** C
+
+    #+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_set_state(trexio_t* file, const int32_t num);
+trexio_exit_code trexio_get_state(trexio_t* file, int32_t* const num);
+    #+end_src
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_set_state (trexio_t* file, const int32_t num)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  file->state = num;
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_get_state (trexio_t* file, int32_t* const num)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (num  == NULL) return TREXIO_INVALID_ARG_2;
+
+  *num = file->state;
+
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+
+*** Fortran
+
+    #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_set_state (trex_file, state) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int32_t), intent(in), value :: state
+   end function trexio_set_state
+end interface
+
+interface
+   integer(trexio_exit_code) function trexio_get_state (trex_file, state) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int32_t), intent(out)       :: state
+   end function trexio_get_state
+end interface
+    #+end_src
+
+*** Python
+
+    See TREXIO File Python class.
 
 * Templates for front end
 ** Description
@@ -1787,12 +1877,9 @@ def write_$group_num$(trexio_file, num_w: $group_num_py_dtype$) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc = pytr.trexio_write_$group_num$(trexio_file.pytrexio_s, num_w)
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_write_$group_num$(trexio_file.pytrexio_s, num_w)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
      #+end_src
 
      #+begin_src python :tangle read_attr_num_front.py
@@ -1810,12 +1897,9 @@ def read_$group_num$(trexio_file) -> $group_num_py_dtype$:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc, num_r = pytr.trexio_read_$group_num$(trexio_file.pytrexio_s)
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc, num_r = pytr.trexio_read_$group_num$(trexio_file.pytrexio_s)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
 
     return num_r
      #+end_src
@@ -1834,17 +1918,11 @@ def has_$group_num$(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc = pytr.trexio_has_$group_num$(trexio_file.pytrexio_s)
-        if rc == TREXIO_FAILURE:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_has_$group_num$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
 
-    if rc == TREXIO_SUCCESS:
-        return True
-    else:
-        return False
+    return rc == TREXIO_SUCCESS
      #+end_src
 
 ** Templates for front end has/read/write a dataset of numerical data
@@ -2453,7 +2531,7 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         Array of $group_dset$ values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
-        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -2526,7 +2604,7 @@ def read_$group_dset$(trexio_file, dim = None, doReshape = None, dtype = None):
         1D NumPy array with ~dim~ elements corresponding to $group_dset$ values read from the TREXIO file.
 
     Raises:
-        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
         - Exception from some other error (e.g. RuntimeError).
 """
 
@@ -2553,44 +2631,32 @@ def read_$group_dset$(trexio_file, dim = None, doReshape = None, dtype = None):
     if shape is None and doReshape:
         raise ValueError("Reshaping failure: shape is None.")
 
-    try:
-        rc, dset_64 = pytr.trexio_read_safe_$group_dset$_64(trexio_file.pytrexio_s, dim)
 
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc, dset_64 = pytr.trexio_read_safe_$group_dset$_64(trexio_file.pytrexio_s, dim)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
 
 
     isConverted = False
     dset_converted = None
     if dtype is not None:
-
         try:
             assert isinstance(dtype, type)
         except AssertionError:
             raise TypeError("dtype argument has to be an instance of the type class (e.g. np.float32).")
 
-
         if not dtype==np.int64 or not dtype==np.float64:
-            try:
-                dset_converted = np.array(dset_64, dtype=dtype)
-            except:
-                raise
-
+            dset_converted = np.array(dset_64, dtype=dtype)
             isConverted = True
 
     # additional assert can be added here to check that read_safe functions returns numpy array of proper dimension
 
     if doReshape:
-        try:
-            # in-place reshaping did not work so I have to make a copy
-            if isConverted:
-                dset_reshaped = np.reshape(dset_converted, shape, order='C')
-            else:
-                dset_reshaped = np.reshape(dset_64, shape, order='C')
-        except:
-            raise
+        # in-place reshaping did not work so I have to make a copy
+        if isConverted:
+            dset_reshaped = np.reshape(dset_converted, shape, order='C')
+        else:
+            dset_reshaped = np.reshape(dset_64, shape, order='C')
 
     if isConverted:
         return dset_converted
@@ -2614,17 +2680,11 @@ def has_$group_dset$(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
-        if rc == TREXIO_FAILURE:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
 
-    if rc == TREXIO_SUCCESS:
-        return True
-    else:
-        return False
+    return rc == TREXIO_SUCCESS
      #+end_src
 
 ** Templates for front end has/read/write a dataset of sparse data
@@ -3091,7 +3151,7 @@ def write_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int, in
         Array of $group_dset$ values to be written. If array data type does not correspond to float64, the conversion is performed.
 
     Raises:
-        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -3245,12 +3305,9 @@ def read_$group_dset$_size(trexio_file) -> int:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc, num_integral = pytr.trexio_read_$group_dset$_size(trexio_file.pytrexio_s)
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc, num_integral = pytr.trexio_read_$group_dset$_size(trexio_file.pytrexio_s)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
 
     return num_integral
      #+end_src
@@ -3269,17 +3326,11 @@ def has_$group_dset$(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
-        if rc == TREXIO_FAILURE:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
 
-    if rc == TREXIO_SUCCESS:
-        return True
-    else:
-        return False
+    return rc == TREXIO_SUCCESS
      #+end_src
 
 ** Templates for front end has/read/write a dataset of strings
@@ -3662,14 +3713,9 @@ def write_$group_dset$(trexio_file, dset_w: list) -> None:
 
     max_str_length = len(max(dset_w, key=len)) + 1
 
-    try:
-        rc = pytr.trexio_write_$group_dset$(trexio_file.pytrexio_s, dset_w, max_str_length)
-
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
-
+    rc = pytr.trexio_write_$group_dset$(trexio_file.pytrexio_s, dset_w, max_str_length)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
      #+end_src
 
      #+begin_src python :tangle read_dset_str_front.py
@@ -3704,22 +3750,15 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
             dim *= dims_list[i]
 
 
-    try:
-        rc, dset_1d_r = pytr.trexio_read_$group_dset$_low(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
-
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc, dset_1d_r = pytr.trexio_read_$group_dset$_low(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
 
 
-    try:
-        dset_full = dset_1d_r.split(pytr.TREXIO_DELIM)
-        dset_2d_r = [dset_full[i] for i in range(dim) if dset_full[i]]
-        if not dset_2d_r:
-            raise ValueError(f"Output of {read_$group_dset$.__name__} function cannot be an empty list.")
-    except:
-        raise
+    dset_full = dset_1d_r.split(pytr.TREXIO_DELIM)
+    dset_2d_r = [dset_full[i] for i in range(dim) if dset_full[i]]
+    if not dset_2d_r:
+        raise ValueError(f"Output of {read_$group_dset$.__name__} function cannot be an empty list.")
 
     return dset_2d_r
      #+end_src
@@ -3738,17 +3777,11 @@ def has_$group_dset$(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
-        if rc == TREXIO_FAILURE:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
 
-    if rc == TREXIO_SUCCESS:
-        return True
-    else:
-        return False
+    return rc == TREXIO_SUCCESS
      #+end_src
 
 ** Templates for front end has/read/write a single string attribute
@@ -3961,13 +3994,9 @@ def write_$group_str$(trexio_file, str_w: str) -> None:
 
     max_str_length = len(str_w) + 1
 
-    try:
-        rc = pytr.trexio_write_$group_str$(trexio_file.pytrexio_s, str_w, max_str_length)
-
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_write_$group_str$(trexio_file.pytrexio_s, str_w, max_str_length)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
      #+end_src
 
      #+begin_src python :tangle read_attr_str_front.py
@@ -3985,13 +4014,9 @@ def read_$group_str$(trexio_file) -> str:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc, str_r = pytr.trexio_read_$group_str$(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
-
-        if rc != TREXIO_SUCCESS:
-            raise Error(rc)
-    except:
-        raise
+    rc, str_r = pytr.trexio_read_$group_str$(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
 
     return str_r
      #+end_src
@@ -4010,17 +4035,11 @@ def has_$group_str$(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        rc = pytr.trexio_has_$group_str$(trexio_file.pytrexio_s)
-        if rc == TREXIO_FAILURE:
-            raise Error(rc)
-    except:
-        raise
+    rc = pytr.trexio_has_$group_str$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
 
-    if rc == TREXIO_SUCCESS:
-        return True
-    else:
-        return False
+    return rc == TREXIO_SUCCESS
      #+end_src
 
 ** Templates for front end delete an entire group (UNSAFE MODE)
@@ -4196,7 +4215,7 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 trexio_exit_code
 trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset_out, const int64_t dim_out)
 {
-  return trexio_read_determinant_list(file, offset_file, buffer_size_read, dset_out); 
+  return trexio_read_determinant_list(file, offset_file, buffer_size_read, dset_out);
 }
      #+end_src
 
@@ -4268,7 +4287,7 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   rc = trexio_write_determinant_num_64(file, det_num);
   file->mode = mode_tmp;
   if (rc != TREXIO_SUCCESS) return rc;
-  
+
   return TREXIO_SUCCESS;
 }
 
@@ -4276,7 +4295,7 @@ trexio_exit_code
 trexio_write_safe_determinant_list (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in)
 {
   return trexio_write_determinant_list(file, offset_file, buffer_size, dset_in);
-} 
+}
      #+end_src
 
      #+begin_src c :tangle has_determinant_front.c
@@ -4339,7 +4358,7 @@ trexio_has_determinant_coefficient (trexio_t* const file)
 }
      #+end_src
 
-*** Fortran interface 
+*** Fortran interface
 
     The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
     These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
@@ -4366,7 +4385,7 @@ interface
      integer(c_int64_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
-     integer(c_int64_t), intent(in)        :: list(*) 
+     integer(c_int64_t), intent(in)        :: list(*)
      integer(c_int64_t), intent(in), value :: list_size
    end function trexio_write_safe_determinant_list
 end interface
@@ -4381,7 +4400,7 @@ interface
      integer(c_int64_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
-     integer(c_int64_t), intent(out)       :: list(*) 
+     integer(c_int64_t), intent(out)       :: list(*)
    end function trexio_read_determinant_list
 end interface
 
@@ -4410,7 +4429,7 @@ interface
 end interface
      #+end_src
 
-*** Python interface 
+*** Python interface
 
      #+begin_src python :tangle write_determinant_front.py
 def write_determinant_list(trexio_file: File, offset_file: int, buffer_size: int, determinants: list) -> None:
@@ -4425,13 +4444,13 @@ def write_determinant_list(trexio_file: File, offset_file: int, buffer_size: int
         The number of determinants to be skipped in the file when writing.
 
     buffer_size: int
-        The number of determinants to write in the file. 
+        The number of determinants to write in the file.
 
     determinants: list OR numpy.ndarray
         Array of determinant_list to be written. If array data type does not correspond to int64, the conversion is performed.
 
     Raises:
-        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -4474,9 +4493,9 @@ def write_determinant_list(trexio_file: File, offset_file: int, buffer_size: int
            pass
 
     if flatten or convert:
-        rc = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, dets_64) 
+        rc = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, dets_64)
     else:
-        rc = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, determinants) 
+        rc = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, determinants)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
@@ -4506,7 +4525,7 @@ def read_determinant_list(trexio_file: File, offset_file: int, buffer_size: int)
                                False otherwise.
 
     Raises:
-        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message. 
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
         - Exception from some other error (e.g. RuntimeError).
     """
 
@@ -4546,7 +4565,7 @@ def read_determinant_list(trexio_file: File, offset_file: int, buffer_size: int)
         raise Error(rc)
     if n_int_read == 0:
         raise ValueError("No integrals have been read from the file.")
-    if determinants is None: 
+    if determinants is None:
         raise ValueError("Returned NULL array from the low-level pytrexio API.")
 
     # conversion to custom types can be performed on the user side, here we only reshape the returned flat array according to int_num
