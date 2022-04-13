@@ -439,7 +439,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   hid_t index_dtype;
-  void* index_p = NULL;
+  const void* index_p;
   uint64_t size_ranked = (uint64_t) size * $group_dset_rank$;
   /* Determine the optimal type for storing indices depending on the size_max (usually mo_num or ao_num) */
   if (size_max < UINT8_MAX) {
@@ -459,7 +459,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
     index_p = index;
     index_dtype = H5T_NATIVE_UINT16;
   } else {
-    index_p = (int32_t*) index_sparse;
+    index_p = (const int32_t*) index_sparse;
     index_dtype = H5T_NATIVE_INT32;
   }
 

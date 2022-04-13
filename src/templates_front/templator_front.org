@@ -864,19 +864,17 @@ trexio_open(const char* file_name, const char mode,
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
   if (back_end == TREXIO_AUTO && mode == 'r') {
 #ifdef HAVE_HDF5
-    trexio_exit_code rc_text, rc_hdf5;
     /* Check if the TREXIO file exists and if it is a directory */
-    rc_text = trexio_text_inquire(file_name);
+    trexio_exit_code rc_text = trexio_text_inquire(file_name);
     if (rc_text == TREXIO_SUCCESS) {
       back_end_local = TREXIO_TEXT;
     } else {
     /* If not, check if it is an HDF5 file */
-      rc_hdf5 = trexio_hdf5_inquire(file_name);
+      trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(file_name);
       if (rc_hdf5 == TREXIO_SUCCESS) {
         back_end_local = TREXIO_HDF5;
       } else {
     /* File is neither a directory nor an HDF5 file -> return an error */
-        back_end_local = -1;
         if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
         return NULL;
       }
