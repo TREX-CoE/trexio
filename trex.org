@@ -637,46 +637,71 @@ prim_factor =
 
 * Slater determinants (determinant group)
 
-  The configuration interaction (CI) wave function $\Psi$ 
+  The configuration interaction (CI) wave function $\Psi$
   can be expanded in the basis of Slater determinants $D_I$ as follows
 
   \[
-  | \Psi> = \sum_I C_I | D_I> 
+  | \Psi> = \sum_I C_I | D_I> |
   \]
-  
-  For relatively small expansions, a given determinant can be represented as a list of ~mo.num~ occupation numbers. 
-  However, this requires a lot of extra memory and would be technically impossible for larger expansions 
-  (~millions of determinants). This is why the determinants are stored as bit fields in the TREXIO file 
-  (see ~int bitfield~ type in the table below). By default, the chemist notation is used, namely 
+
+  For relatively small expansions, a given determinant can be represented as a list of ~mo.num~ occupation numbers.
+  However, this requires a lot of extra memory and would be technically impossible for larger expansions
+  (~millions of determinants). This is why the determinants are stored as bit fields in the TREXIO file
+  (see ~int bitfield~ type in the table below). By default, the chemist notation is used, namely
 
   \[
-  | D_I > = | \alpha_1 \alpha_2 \ldots \alpha_{n\uparrow} \beta_1 \beta_2 \ldots \beta_{n\downarrow} > 
+  | D_I > = | \alpha_1 \alpha_2 \ldots \alpha_{n\uparrow} \beta_1 \beta_2 \ldots \beta_{n\downarrow} > |
   \]
 
   where $\alpha$ and $\beta$ denote $\uparrow$-spin and $\downarrow$-spin electrons, respectively,
   $n\uparrow$ and $n\downarrow$ correspond to ~electron.up_num~ and ~electron.dn_num~, respectively.
   Internally, bit fields for $\alpha$ and $\beta$ electrons are stored separately,
   which is why the ~determinant.list~ attribute has a second dimension.
- 
+
   #+NAME: determinant
-  | Variable      | Type            | Dimensions             | Description                                            |
-  |---------------+-----------------+------------------------+--------------------------------------------------------|
-  | ~num~         | ~dim~           |                        | Number of determinants                                 |
-  | ~list~        | ~int special~   | ~(determinant.num, 2)~ | List of determinants as integer bit fields             |
-  | ~coefficient~ | ~float special~ | ~(determinant.num)~    | Coefficients of the determinants from the CI expansion |
+  | Variable      | Type            | Dimensions                    | Description                                            |
+  |---------------+-----------------+-------------------------------+--------------------------------------------------------|
+  | ~num~         | ~dim~           |                               | Number of determinants                                 |
+  | ~list~        | ~int special~   | ~(determinant.num)~           | List of determinants as integer bit fields             |
+  | ~coefficient~ | ~float special~ | ~(state.num,determinant.num)~ | Coefficients of the determinants from the CI expansion |
 
   #+CALL: json(data=determinant, title="determinant")
 
   #+RESULTS:
-  :results:
+  :RESULTS:
   #+begin_src python :tangle trex.json
       "determinant": {
-		  "num" : [ "dim"          , []                         ]
-	,        "list" : [ "int special"  , [ "2", "determinant.num" ] ]
-	, "coefficient" : [ "float special", [ "determinant.num" ]      ]
+		  "num" : [ "dim"          , []                                 ]
+	,        "list" : [ "int special"  , [ "determinant.num" ]              ]
+	, "coefficient" : [ "float special", [ "determinant.num", "state.num" ] ]
       } ,
   #+end_src
-  :end:
+  :END:
+
+* Excited states (state group)
+
+  By default, the ~determinant~ group corresponds to the ground state.
+  However, it should be also possible to store the coefficients that
+  correspond to excited state wave functions for the same set of
+  determinants. This is the goal of the present group
+
+  #+NAME: state
+  | Variable | Type  | Dimensions    | Description                                    |
+  |----------+-------+---------------+------------------------------------------------|
+  | ~num~    | ~dim~ |               | Number of states (including the ground state)  |
+  | ~label~  | ~str~ | ~(state.num)~ | Label of a given state (e.g. 'S' for singlets) |
+
+  #+CALL: json(data=state, title="state")
+
+  #+RESULTS:
+  :RESULTS:
+  #+begin_src python :tangle trex.json
+      "state": {
+	    "num" : [ "dim", []              ]
+	, "label" : [ "str", [ "state.num" ] ]
+      } ,
+  #+end_src
+  :END:
 
 * Reduced density matrices (rdm group)
 
