@@ -1323,6 +1323,9 @@ trexio_text_delete_$group$ (trexio_t* const file)
 trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file);
 trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, int64_t* const list);
 trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const int64_t* list);
+trexio_exit_code trexio_text_has_determinant_coefficient(trexio_t* const file);
+trexio_exit_code trexio_text_read_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, double* const coeff);
+trexio_exit_code trexio_text_write_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const double* coeff);
    #+end_src
 
    #+begin_src c :tangle read_determinant_text.c
@@ -1335,6 +1338,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+  if (list == NULL) return TREXIO_INVALID_ARG_6;
 
   const char determinant_list_file_name[256] = "/determinant_list.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
@@ -1379,7 +1383,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
     if(fgets(buffer, buf_size-1, f) == NULL){
 
       fclose(f);
-      *eof_read_size = count;
+      ,*eof_read_size = count;
       return TREXIO_END;
 
     } else {
@@ -1406,6 +1410,83 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
 
   return TREXIO_SUCCESS;
 }
+
+trexio_exit_code trexio_text_read_determinant_coefficient(trexio_t* const file,
+                                                          const int64_t offset_file,
+                                                          const uint32_t rank,
+                                                          const uint64_t* dims,
+                                                          int64_t* const eof_read_size,
+                                                          double* const coeff)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+  if (coeff == NULL) return TREXIO_INVALID_ARG_6;
+
+  char coeff_file_name[256];
+  memset(coeff_file_name, 0, sizeof(coeff_file_name));
+  const int32_t trexio_state = file->state;
+
+  if (trexio_state != 0) {
+    sprintf(coeff_file_name, "/determinant_coefficient_state_%" PRId32 ".txt", trexio_state);
+  } else {
+    strncpy(coeff_file_name, "/determinant_coefficient.txt", 28);
+  }
+
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, coeff_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(coeff_file_name));
+
+  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
+  FILE* f = fopen(file_full_path, "r");
+  if(f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Specify the line length in order to offset properly.
+     Each double value 24 elements + one newline char.
+   ,*/
+  uint64_t line_length = 25UL;
+
+  /* Offset in the file according to the provided  value of offset_file and optimal line_length */
+  fseek(f, (long) offset_file * line_length, SEEK_SET);
+
+  /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
+  int rc;
+  /* Declare fixed buffer which will be used to read the determinant string <a1 a2 ... a/\ b1 b2 ... b\/> */
+  char buffer[64];
+  uint32_t buf_size = sizeof(buffer);
+  /* Counter for number of elements beind processed */
+  uint64_t count = 0UL;
+
+  for (uint64_t i=0UL; i < dims[0]; ++i) {
+
+    memset(buffer, 0, buf_size);
+    if(fgets(buffer, buf_size-1, f) == NULL){
+
+      fclose(f);
+      ,*eof_read_size = count;
+      return TREXIO_END;
+
+    } else {
+
+      rc = sscanf(buffer, "%lf", coeff + i);
+      if(rc <= 0) {
+        fclose(f);
+        return TREXIO_FAILURE;
+      }
+      count += 1UL;
+
+    }
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if(rc != 0) return TREXIO_FILE_ERROR;
+
+  return TREXIO_SUCCESS;
+}
    #+end_src
 
    #+begin_src c :tangle write_determinant_text.c
@@ -1416,6 +1497,7 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
                                                     const int64_t* list)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (list == NULL) return TREXIO_INVALID_ARG_5;
 
   const char determinant_list_file_name[256] = "/determinant_list.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
@@ -1454,6 +1536,58 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
   /* Exit upon success */
   return TREXIO_SUCCESS;
 }
+
+trexio_exit_code trexio_text_write_determinant_coefficient(trexio_t* const file,
+                                                           const int64_t offset_file,
+                                                           const uint32_t rank,
+                                                           const uint64_t* dims,
+                                                           const double* coeff)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (coeff == NULL) return TREXIO_INVALID_ARG_5;
+
+  char coeff_file_name[256];
+  memset(coeff_file_name, 0, sizeof(coeff_file_name));
+  const int32_t trexio_state = file->state;
+
+  if (trexio_state != 0) {
+    sprintf(coeff_file_name, "/determinant_coefficient_state_%" PRId32 ".txt", trexio_state);
+  } else {
+    strncpy(coeff_file_name, "/determinant_coefficient.txt", 28);
+  }
+
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, coeff_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(coeff_file_name));
+
+  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
+  FILE* f = fopen(file_full_path, "a");
+  if(f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
+  int rc;
+  for (uint64_t i=0UL; i < dims[0]; ++i) {
+
+    rc = fprintf(f, "%24.16e\n", *(coeff + i));
+    if(rc <= 0) {
+      fclose(f);
+      return TREXIO_FAILURE;
+    }
+
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  /* Exit upon success */
+  return TREXIO_SUCCESS;
+}
+
    #+end_src
 
    #+begin_src c :tangle has_determinant_text.c
@@ -1470,6 +1604,36 @@ trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file)
   /* Append name of the file with sparse data */
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
+
+  /* Check the return code of access function to determine whether the file with data exists or not */
+  if (access(file_full_path, F_OK) == 0){
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
+}
+
+trexio_exit_code trexio_text_has_determinant_coefficient(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  char coeff_file_name[256];
+  memset(coeff_file_name, 0, sizeof(coeff_file_name));
+  const int32_t trexio_state = file->state;
+
+  if (trexio_state != 0) {
+    sprintf(coeff_file_name, "/determinant_coefficient_state_%" PRId32 ".txt", trexio_state);
+  } else {
+    strncpy(coeff_file_name, "/determinant_coefficient.txt", 28);
+  }
+
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, coeff_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(coeff_file_name));
 
   /* Check the return code of access function to determine whether the file with data exists or not */
   if (access(file_full_path, F_OK) == 0){
