@@ -985,6 +985,9 @@ trexio_hdf5_delete_$group$ (trexio_t* const file)
 trexio_exit_code trexio_hdf5_has_determinant_list(trexio_t* const file);
 trexio_exit_code trexio_hdf5_read_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, int64_t* const list);
 trexio_exit_code trexio_hdf5_write_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const int64_t* list);
+trexio_exit_code trexio_hdf5_has_determinant_coefficient(trexio_t* const file);
+trexio_exit_code trexio_hdf5_read_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, double* const coeff);
+trexio_exit_code trexio_hdf5_write_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const double* coeff);
    #+end_src
 
    #+begin_src c :tangle read_determinant_hdf5.c
@@ -997,6 +1000,7 @@ trexio_exit_code trexio_hdf5_read_determinant_list(trexio_t* const file,
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+  if (list == NULL) return TREXIO_INVALID_ARG_6;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -1009,6 +1013,37 @@ trexio_exit_code trexio_hdf5_read_determinant_list(trexio_t* const file,
      0 argument below is requires to skip internal treatment specific to sparse indices (i.e. their de-compression).*/
   return trexio_hdf5_open_read_dset_sparse(f->determinant_group, dset_det_name, (uint32_t) dims[1], offset, count, eof_read_size, 0, list);
 }
+
+trexio_exit_code trexio_hdf5_read_determinant_coefficient(trexio_t* const file,
+                                                   const int64_t offset_file,
+                                                   const uint32_t rank,
+                                                   const uint64_t* dims,
+                                                   int64_t* const eof_read_size,
+                                                   double* const coeff)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+  if (coeff == NULL) return TREXIO_INVALID_ARG_6;
+
+  char dset_coeff_name[128];
+  memset(dset_coeff_name, 0, sizeof(dset_coeff_name));
+  const int32_t trexio_state = file->state;
+
+  if (trexio_state != 0) {
+    sprintf(dset_coeff_name, "determinant_coefficient_state_%" PRId32, trexio_state);
+  } else {
+    strncpy(dset_coeff_name, "determinant_coefficient", 24);
+  }
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  hsize_t offset[1] = {(hsize_t) offset_file};
+  hsize_t count[1]  = {(hsize_t) dims[0]};
+
+  /* Attempt to read determinants (if EOF -> eof_read_size is modified with the number of elements read and return code is TREXIO_END)
+     0 argument below is requires to skip internal treatment specific to sparse indices (i.e. their de-compression).*/
+  return trexio_hdf5_open_read_dset_sparse(f->determinant_group, dset_coeff_name, 1, offset, count, eof_read_size, 0, coeff);
+}
    #+end_src
 
    #+begin_src c :tangle write_determinant_hdf5.c
@@ -1020,6 +1055,7 @@ trexio_exit_code trexio_hdf5_write_determinant_list(trexio_t* const file,
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (list == NULL) return TREXIO_INVALID_ARG_5;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
@@ -1053,6 +1089,55 @@ trexio_exit_code trexio_hdf5_write_determinant_list(trexio_t* const file,
 
   return TREXIO_SUCCESS;
 }
+
+trexio_exit_code trexio_hdf5_write_determinant_coefficient(trexio_t* const file,
+                                                    const int64_t offset_file,
+		                                    const uint32_t rank,
+                                                    const uint64_t* dims,
+                                                    const double* coeff)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (coeff == NULL) return TREXIO_INVALID_ARG_5;
+
+  char dset_coeff_name[128];
+  memset(dset_coeff_name, 0, sizeof(dset_coeff_name));
+  const int32_t trexio_state = file->state;
+
+  if (trexio_state != 0) {
+    sprintf(dset_coeff_name, "determinant_coefficient_state_%" PRId32, trexio_state);
+  } else {
+    strncpy(dset_coeff_name, "determinant_coefficient", 24);
+  }
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  hid_t det_dtype = H5T_NATIVE_DOUBLE;
+
+  /* Arrays of chunk dims that will be used for chunking the dataset */
+  const hsize_t chunk_dims[1] = {(hsize_t) dims[0]};
+
+  trexio_exit_code rc_write = TREXIO_FAILURE;
+  /* NOTE: chunk size is set upon creation of the HDF5 dataset and cannot be changed ! */
+  if ( H5LTfind_dataset(f->determinant_group, dset_coeff_name) != 1 ) {
+  /* If the file does not exist -> create it and write */
+
+  /* Create chunked dataset with det_dtype datatype and write indices into it */
+    rc_write = trexio_hdf5_create_write_dset_sparse(f->determinant_group, dset_coeff_name, det_dtype, chunk_dims, coeff);
+    if (rc_write != TREXIO_SUCCESS) return rc_write;
+
+  } else {
+  /* If the file exists -> open it and write */
+    hsize_t offset_data[1] = {(hsize_t) offset_file};
+
+  /* Create chunked dataset with det_dtype datatype and write indices into it */
+    rc_write = trexio_hdf5_open_write_dset_sparse(f->determinant_group, dset_coeff_name, det_dtype, chunk_dims, offset_data, coeff);
+    if (rc_write != TREXIO_SUCCESS) return rc_write;
+
+  }
+
+  return TREXIO_SUCCESS;
+}
    #+end_src
 
    #+begin_src c :tangle has_determinant_hdf5.c
@@ -1063,6 +1148,33 @@ trexio_exit_code trexio_hdf5_has_determinant_list(trexio_t* const file)
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   herr_t status = H5LTfind_dataset(f->determinant_group, "determinant_list");
+  /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
+  if (status == 1){
+    return TREXIO_SUCCESS;
+  } else if (status == 0) {
+    return TREXIO_HAS_NOT;
+  } else {
+    return TREXIO_FAILURE;
+  }
+}
+
+trexio_exit_code trexio_hdf5_has_determinant_coefficient(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  char dset_coeff_name[128];
+  memset(dset_coeff_name, 0, sizeof(dset_coeff_name));
+  const int32_t trexio_state = file->state;
+
+  if (trexio_state != 0) {
+    sprintf(dset_coeff_name, "determinant_coefficient_state_%" PRId32, trexio_state);
+  } else {
+    strncpy(dset_coeff_name, "determinant_coefficient", 24);
+  }
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  herr_t status = H5LTfind_dataset(f->determinant_group, dset_coeff_name);
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
   if (status == 1){
     return TREXIO_SUCCESS;
@@ -1219,6 +1331,7 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
                                    )
 {
   const int h5_rank = 1;
+  if (dset_rank == 0) return TREXIO_INVALID_ARG_3;
 
   // get the dataset handle
   hid_t dset_id = H5Dopen(group_id, dset_name, H5P_DEFAULT);
