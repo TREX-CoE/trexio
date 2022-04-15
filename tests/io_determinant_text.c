@@ -64,6 +64,18 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
+    // The block below will write the coefficients for state #2
+    rc = trexio_set_state(file, 2);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
+    assert(rc == TREXIO_SUCCESS);
+
+    // set state back to the default 0 (ground state)
+    rc = trexio_set_state(file, 0);
+    assert(rc == TREXIO_SUCCESS);
+    // =================================================
+
     offset_d += chunk_size;
     offset_f += chunk_size;
   }
@@ -103,6 +115,16 @@ static int test_has_determinant(const char* file_name, const back_end_t backend)
   rc = trexio_has_determinant_coefficient(file);
   assert(rc==TREXIO_SUCCESS);
 
+  // also check for state 2
+  rc = trexio_set_state(file, 2);
+  assert(rc == TREXIO_SUCCESS);
+
+  rc = trexio_has_determinant_coefficient(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  rc = trexio_set_state(file, 0);
+  assert(rc == TREXIO_SUCCESS);
+
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
@@ -129,11 +151,13 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
  // define arrays to read into
   int64_t* det_list_read;
   double*  det_coef_read;
+  double*  det_coef_s2_read;
   double check_diff;
   uint64_t size_r = 40L;
 
   det_list_read = (int64_t*) calloc(2*3*size_r,sizeof(int64_t));
   det_coef_read = (double*)  calloc(size_r,sizeof(double));
+  det_coef_s2_read = (double*)  calloc(size_r,sizeof(double));
 
   // specify the read parameters, here:
   // 1 chunk of 10 elements using offset of 40 (i.e. lines No. 40--59) into elements of the array starting from 5
@@ -162,6 +186,20 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   check_diff = det_coef_read[offset_data_read] - (3.14 + (double) (offset_file_read-offset));
   //printf("%lf %lf\n", check_diff, det_coef_read[offset_data_read]);
   assert(check_diff*check_diff < 1e-14);
+
+  // read one chuk of coefficients for a different state
+  rc = trexio_set_state(file, 2);
+  assert(rc == TREXIO_SUCCESS);
+
+  rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_s2_read[offset_data_read]);
+  assert(rc == TREXIO_SUCCESS);
+  assert(chunk_read == read_size_check);
+
+  check_diff = det_coef_s2_read[0] - 0.;
+  assert(check_diff*check_diff < 1e-14);
+
+  rc = trexio_set_state(file, 0);
+  assert(rc == TREXIO_SUCCESS);
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
   offset_file_read = 97L;
@@ -215,6 +253,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   // free the memory
   free(det_list_read);
   free(det_coef_read);
+  free(det_coef_s2_read);
 
 /*================= END OF TEST ==================*/
 

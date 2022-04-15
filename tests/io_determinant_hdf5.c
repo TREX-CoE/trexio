@@ -26,10 +26,12 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   // parameters to be written
   int64_t* det_list;
+  double*  det_coef;
 
   int mo_num = 150;
 
   det_list = (int64_t*) calloc(2*3*SIZE, sizeof(int64_t));
+  det_coef = (double*) calloc(SIZE, sizeof(double));
 
   for(int i=0; i<SIZE; i++){
     det_list[6*i]   = 6*i;
@@ -38,6 +40,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     det_list[6*i+3] = 6*i+3;
     det_list[6*i+4] = 6*i+4;
     det_list[6*i+5] = 6*i+5;
+    det_coef[i]     = 3.14 + (double) i;
   }
 
   // write mo_num which will be used to determine the optimal size of int indices
@@ -54,8 +57,25 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   // write n_chunks times using write_sparse
   for(int i=0; i<N_CHUNKS; ++i){
-    rc = trexio_write_determinant_list(file, offset_f, chunk_size, &det_list[6*offset_d]); 
+
+    rc = trexio_write_determinant_list(file, offset_f, chunk_size, &det_list[6*offset_d]);
     assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
+    assert(rc == TREXIO_SUCCESS);
+
+    // The block below will write the coefficients for state #2
+    rc = trexio_set_state(file, 2);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
+    assert(rc == TREXIO_SUCCESS);
+
+    // set state back to the default 0 (ground state)
+    rc = trexio_set_state(file, 0);
+    assert(rc == TREXIO_SUCCESS);
+    // =================================================
+
     offset_d += chunk_size;
     offset_f += chunk_size;
   }
@@ -66,6 +86,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   // free the allocated memeory
   free(det_list);
+  free(det_coef);
 
 /*================= END OF TEST ==================*/
 
@@ -89,6 +110,20 @@ static int test_has_determinant(const char* file_name, const back_end_t backend)
   // now check that previously written determinant_list exists
   rc = trexio_has_determinant_list(file);
   assert(rc==TREXIO_SUCCESS);
+
+  // now check that previously written determinant_coefficient exists
+  rc = trexio_has_determinant_coefficient(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  // also check for state 2
+  rc = trexio_set_state(file, 2);
+  assert(rc == TREXIO_SUCCESS);
+
+  rc = trexio_has_determinant_coefficient(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  rc = trexio_set_state(file, 0);
+  assert(rc == TREXIO_SUCCESS);
 
   // close current session
   rc = trexio_close(file);
@@ -115,9 +150,14 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
 
  // define arrays to read into
   int64_t* det_list_read;
+  double*  det_coef_read;
+  double*  det_coef_s2_read;
+  double check_diff;
   uint64_t size_r = 40L;
 
   det_list_read = (int64_t*) calloc(2*3*size_r,sizeof(int64_t));
+  det_coef_read = (double*)  calloc(size_r,sizeof(double));
+  det_coef_s2_read = (double*)  calloc(size_r,sizeof(double));
 
   // specify the read parameters, here:
   // 1 chunk of 10 elements using offset of 40 (i.e. lines No. 40--59) into elements of the array starting from 5
@@ -136,6 +176,31 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   assert(det_list_read[0] == 0);
   assert(det_list_read[6*offset_data_read] == 6 * (int64_t) (offset_file_read-offset));
 
+  rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_read[offset_data_read]);
+  assert(rc == TREXIO_SUCCESS);
+  assert(chunk_read == read_size_check);
+
+  check_diff = det_coef_read[0] - 0.;
+  assert(check_diff*check_diff < 1e-14);
+
+  check_diff = det_coef_read[offset_data_read] - (3.14 + (double) (offset_file_read-offset));
+  //printf("%lf %lf\n", check_diff, det_coef_read[offset_data_read]);
+  assert(check_diff*check_diff < 1e-14);
+
+  // read one chuk of coefficients for a different state
+  rc = trexio_set_state(file, 2);
+  assert(rc == TREXIO_SUCCESS);
+
+  rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_s2_read[offset_data_read]);
+  assert(rc == TREXIO_SUCCESS);
+  assert(chunk_read == read_size_check);
+
+  check_diff = det_coef_s2_read[0] - 0.;
+  assert(check_diff*check_diff < 1e-14);
+
+  rc = trexio_set_state(file, 0);
+  assert(rc == TREXIO_SUCCESS);
+
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
   offset_file_read = 97L;
   offset_data_read = 1;
@@ -143,18 +208,34 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
 
   if (offset != 0L) offset_file_read += offset;
 
+  chunk_read = read_size_check;
   // read one chunk that will reach EOF and return TREXIO_END code
   rc = trexio_read_determinant_list(file, offset_file_read, &chunk_read, &det_list_read[6*offset_data_read]);
   /*
   printf("%s\n", trexio_string_of_error(rc));
   for (int i=0; i<size_r; i++) {
-    printf("%lld %lld\n", det_list_read[6*i], det_list_read[6*i+5]); 
+    printf("%lld %lld\n", det_list_read[6*i], det_list_read[6*i+5]);
   }
   */
   assert(rc == TREXIO_END);
   assert(chunk_read == eof_read_size_check);
   assert(det_list_read[6*size_r-1] == 0);
   assert(det_list_read[6*offset_data_read] == 6 * (int64_t) (offset_file_read-offset));
+
+  chunk_read = read_size_check;
+  rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_read[offset_data_read]);
+  /*
+  printf("%s\n", trexio_string_of_error(rc));
+  for (int i=0; i<size_r; i++) {
+    printf("%lf\n", det_coef_read[i]);
+  }
+  */
+  assert(rc == TREXIO_END);
+  assert(chunk_read == eof_read_size_check);
+
+  check_diff= det_coef_read[size_r-1] - 0.;
+  //printf("%lf %lf\n", check_diff, det_coef_read[size_r-1]);
+  assert(check_diff*check_diff < 1e-14);
 
   // check the value of determinant_num
   int32_t det_num = 0;
@@ -171,6 +252,8 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
 
   // free the memory
   free(det_list_read);
+  free(det_coef_read);
+  free(det_coef_s2_read);
 
 /*================= END OF TEST ==================*/
 
