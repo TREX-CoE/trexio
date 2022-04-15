@@ -129,7 +129,7 @@ values  = [(3.14 + float(i)) for i in range(num_integrals)]
 trexio.write_ao_2e_int_eri(test_file, 0, num_integrals, indices, values)
 
 
-# write mo_num (needed later to write determinants) 
+# write mo_num (needed later to write determinants)
 mo_num = 150
 trexio.write_mo_num(test_file, mo_num)
 
@@ -137,10 +137,20 @@ int_num = 2*int((mo_num-1)/64+1)
 
 # write determinants in the file
 num_dets = 50
+offset = 0
 dets = [i for i in range(num_dets*int_num)]
+coeffs = [(3.14 + float(i)) for i in range(num_dets)]
+coeffs_s2 = [(6.28 + float(i)) for i in range(num_dets)]
 
-trexio.write_determinant_list(test_file, 0, num_dets, dets) 
+trexio.write_determinant_list(test_file, offset, num_dets, dets)
+trexio.write_determinant_coefficient(test_file, offset, num_dets, coeffs)
 
+test_file.set_state(2)
+trexio.write_determinant_coefficient(test_file, offset, num_dets, coeffs_s2)
+test_file.set_state(0)
+
+# manually check the consistency between coefficient_size and number of determinants
+assert trexio.read_determinant_coefficient_size(test_file) == trexio.read_determinant_num(test_file)
 
 # write nucleus_point_group in the file
 point_group = 'B3U'
@@ -225,6 +235,7 @@ assert trexio.has_nucleus_label(test_file2)
 assert trexio.has_nucleus_point_group(test_file2)
 assert trexio.has_ao_2e_int_eri(test_file2)
 assert trexio.has_determinant_list(test_file2)
+assert trexio.has_determinant_coefficient(test_file2)
 
 # read nucleus_num from file
 rnum = trexio.read_nucleus_num(test_file2)
@@ -308,6 +319,12 @@ assert not eof
 assert read_buf_size==buf_size
 assert dets_np[0][0]==0
 assert dets_np[read_buf_size-1][int_num-1]==read_buf_size*int_num-1
+
+coefficients_np, read_buf_size, eof = trexio.read_determinant_coefficient(test_file2, offset_file, buf_size)
+print(f'First complete read of determinant coefficients: {read_buf_size}')
+#print(indices_sparse_np)
+assert not eof
+assert read_buf_size==buf_size
 
 # read array of nuclear labels
 rlabels_2d = trexio.read_nucleus_label(test_file2, dim=nucleus_num)

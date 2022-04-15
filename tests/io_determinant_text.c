@@ -9,6 +9,7 @@
 #define RM_COMMAND    "rm -rf " TREXIO_FILE
 #define SIZE          100
 #define N_CHUNKS      5
+#define STATE_TEST    2
 
 static int test_write_determinant (const char* file_name, const back_end_t backend, const int64_t offset) {
 
@@ -64,8 +65,8 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
-    // The block below will write the coefficients for state #2
-    rc = trexio_set_state(file, 2);
+    // The block below will write the coefficients for STATE_TEST
+    rc = trexio_set_state(file, STATE_TEST);
     assert(rc == TREXIO_SUCCESS);
 
     rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
@@ -79,6 +80,24 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     offset_d += chunk_size;
     offset_f += chunk_size;
   }
+
+  // manually check the consistency of the determinant_num and coefficient_size after writing
+  int64_t coeff_size = 0L;
+  int64_t determinant_num = 0L;
+
+  rc = trexio_read_determinant_num_64(file, &determinant_num);
+  assert(rc == TREXIO_SUCCESS);
+
+  rc = trexio_read_determinant_coefficient_size(file, &coeff_size);
+  assert(rc == TREXIO_SUCCESS);
+  assert(determinant_num == coeff_size);
+
+  rc = trexio_set_state(file, STATE_TEST);
+  assert(rc == TREXIO_SUCCESS);
+
+  rc = trexio_read_determinant_coefficient_size(file, &coeff_size);
+  assert(rc == TREXIO_SUCCESS);
+  assert(determinant_num == coeff_size);
 
   // close current session
   rc = trexio_close(file);
@@ -115,8 +134,8 @@ static int test_has_determinant(const char* file_name, const back_end_t backend)
   rc = trexio_has_determinant_coefficient(file);
   assert(rc==TREXIO_SUCCESS);
 
-  // also check for state 2
-  rc = trexio_set_state(file, 2);
+  // also check for STATE_TEST
+  rc = trexio_set_state(file, STATE_TEST);
   assert(rc == TREXIO_SUCCESS);
 
   rc = trexio_has_determinant_coefficient(file);
@@ -188,7 +207,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   assert(check_diff*check_diff < 1e-14);
 
   // read one chuk of coefficients for a different state
-  rc = trexio_set_state(file, 2);
+  rc = trexio_set_state(file, STATE_TEST);
   assert(rc == TREXIO_SUCCESS);
 
   rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_s2_read[offset_data_read]);
