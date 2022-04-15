@@ -265,6 +265,7 @@ trexio_hdf5_has_$group_num$ (trexio_t* const file)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+  if (f->$group$_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
   htri_t status = H5Aexists(f->$group$_group, $GROUP_NUM$_NAME);
   /* H5Aexists returns positive value if attribute exists, 0 if does not, negative if error */
@@ -399,6 +400,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  if (f->$group$_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
   herr_t status = H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME);
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
@@ -601,6 +603,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  if (f->$group$_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
   herr_t status = H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME "_values");
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
@@ -799,6 +802,7 @@ trexio_hdf5_has_$group_dset$ (trexio_t* const file)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  if (f->$group$_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
   herr_t status = H5LTfind_dataset(f->$group$_group, $GROUP_DSET$_NAME);
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
@@ -928,6 +932,7 @@ trexio_hdf5_has_$group_str$ (trexio_t* const file)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+  if (f->$group$_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
   htri_t status = H5Aexists(f->$group$_group, $GROUP_STR$_NAME);
   /* H5Aexists returns positive value if attribute exists, 0 if does not, negative if error */
@@ -1192,6 +1197,7 @@ trexio_exit_code trexio_hdf5_has_determinant_list(trexio_t* const file)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  if (f->determinant_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
   herr_t status = H5LTfind_dataset(f->determinant_group, "determinant_list");
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
@@ -1208,6 +1214,9 @@ trexio_exit_code trexio_hdf5_has_determinant_coefficient(trexio_t* const file)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  if (f->determinant_group == (hsize_t) 0) return TREXIO_HAS_NOT;
+
   char dset_coeff_name[128];
   memset(dset_coeff_name, 0, sizeof(dset_coeff_name));
   const int32_t trexio_state = file->state;
@@ -1217,8 +1226,6 @@ trexio_exit_code trexio_hdf5_has_determinant_coefficient(trexio_t* const file)
   } else {
     strncpy(dset_coeff_name, "determinant_coefficient", 24);
   }
-
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   herr_t status = H5LTfind_dataset(f->determinant_group, dset_coeff_name);
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
