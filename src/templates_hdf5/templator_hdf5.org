@@ -137,18 +137,20 @@ trexio_hdf5_init (trexio_t* const file)
   /* Create or open groups in the hdf5 file assuming that they exist if file exists */
   switch (file->mode) {
     case 'r':
-      f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+      if (H5Lexists(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT) > 0) f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+      if (H5Lexists(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT) == 0) f->$group$_group = (hid_t) 0;
       break;
     case 'u':
     case 'w':
       if (f_exists == 1) {
-        f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+        if (H5Lexists(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT) >  0) f->$group$_group = H5Gopen(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT);
+        if (H5Lexists(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT) == 0) f->$group$_group = H5Gcreate(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       } else {
         f->$group$_group = H5Gcreate(f->file_id, $GROUP$_GROUP_NAME, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       }
       break;
   }
-  if (f->$group$_group <= 0L) return TREXIO_INVALID_ID;
+  if (f->$group$_group < (hid_t) 0) return TREXIO_INVALID_ID;
 
   return TREXIO_SUCCESS;
 }
@@ -161,7 +163,7 @@ trexio_hdf5_deinit (trexio_t* const file)
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
-  H5Gclose(f->$group$_group);
+  if (f->$group$_group != (hid_t) 0) H5Gclose(f->$group$_group);
   f->$group$_group = 0;
 
   H5Fclose(f->file_id);
