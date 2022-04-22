@@ -36,6 +36,10 @@
 /* Return num variables as part of the output tuple */
 %apply int *OUTPUT { int32_t* const num};
 %apply int *OUTPUT { int64_t* const num};
+%apply int *OUTPUT { int32_t* const num_up};
+%apply int *OUTPUT { int32_t* const num_dn};
+%apply int *OUTPUT { int64_t* const num_up};
+%apply int *OUTPUT { int64_t* const num_dn};
 %apply float *OUTPUT { float* const num};
 %apply float *OUTPUT { double* const num};
 /* Return TREXIO exit code from trexio_open as part of the output tuple */
@@ -44,6 +48,10 @@
 %apply int *OUTPUT { int64_t* const size_max};
 /* Return number of sparse data points read from the file as part of the output tuple */
 %apply int *INOUT { int64_t* const buffer_size_read};
+
+/*
+%apply int { bitfield_t };
+*/
 
 /* Does not work for arrays (SIGSEGV) */
 
@@ -93,6 +101,11 @@ import_array();
 
 %apply (double* ARGOUT_ARRAY1, int64_t DIM1) {(double* const value_sparse_read, const int64_t size_value_read)};
 %apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const index_sparse_read, const int64_t size_index_read)};
+/* Enable write|read_safe functions to convert numpy arrays from orbital list arrays */
+%apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const dset_up_out, const int64_t dim_up_out)};
+%apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const dset_dn_out, const int64_t dim_dn_out)};
+%apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t* const dset_up_out, const int64_t dim_up_out)};
+%apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t* const dset_dn_out, const int64_t dim_dn_out)};
 
 /* This tells SWIG to treat char ** dset_in pattern as a special case
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.
