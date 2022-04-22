@@ -308,7 +308,7 @@ assert indices_sparse_np[read_buf_size-1][3]==(offset_file+read_buf_size)*4-1
 assert trexio.has_determinant_list(test_file2)
 assert trexio.read_determinant_num(test_file2)==num_dets
 
-# read sparse arrays on ao_2e_int_eri integrals
+# read determinants (list of ints and float coefficients)
 buf_size = 20
 offset_file = 0
 # read full buf_size (i.e. the one that does not reach EOF)
@@ -325,6 +325,18 @@ print(f'First complete read of determinant coefficients: {read_buf_size}')
 #print(indices_sparse_np)
 assert not eof
 assert read_buf_size==buf_size
+
+# convert one determinant into a list of orbitals
+
+dets_tmp = dets_np[read_buf_size-1][:]
+#print(dets_tmp)
+
+# divide by 2 because in this test int_num is the total number of integers (i.e. up-spin + down_spin)
+orb_list_up, orb_list_dn = trexio.to_orbital_list_up_dn(int(int_num/2), dets_tmp)
+assert(orb_list_up[0] == 2)
+assert(orb_list_dn[0] == 1)
+#print(orb_list_up)
+#print(orb_list_dn)
 
 # read array of nuclear labels
 rlabels_2d = trexio.read_nucleus_label(test_file2, dim=nucleus_num)

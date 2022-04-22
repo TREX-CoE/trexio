@@ -86,7 +86,7 @@ subroutine test_write(file_name, back_end)
     index_sparse_ao_2e_int_eri(4,i) = 4*i+3 - 3
     value_sparse_ao_2e_int_eri(i) = 3.14 + float(i)
   enddo
-  
+
   ! fill determinant list
   do i = 1, 50
     do j = 1, 6
@@ -170,7 +170,7 @@ subroutine test_write(file_name, back_end)
     rc = trexio_write_ao_num(trex_file, ao_num)
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE AO NUM')
   endif
-  ! write mo_num which will be used to determine the optimal size of the determinants bit fields 
+  ! write mo_num which will be used to determine the optimal size of the determinants bit fields
   if (trexio_has_mo_num(trex_file) == TREXIO_HAS_NOT) then
     rc = trexio_write_mo_num(trex_file, mo_num)
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE MO NUM')
@@ -256,7 +256,12 @@ subroutine test_read(file_name, back_end)
   integer*8 :: read_buf_det_size = 20
   integer*8 :: offset_det_read = 10
   integer*8 :: offset_det_data_read = 5
-  integer*8 :: determinant_num 
+  integer*8 :: determinant_num
+
+  ! orbital lists
+  integer*4 :: orb_list_up(150)
+  integer*4 :: orb_list_dn(150)
+  integer*4 :: occ_num_up, occ_num_dn
 
   character*(128) :: str
 
@@ -267,6 +272,8 @@ subroutine test_read(file_name, back_end)
   value_sparse_ao_2e_int_eri = 0.0d0
 
   det_list = 0_8
+  orb_list_up = 0
+  orb_list_dn = 0
 
 ! ================= START OF TEST ===================== !
 
@@ -337,8 +344,8 @@ subroutine test_read(file_name, back_end)
 
 
   rc = trexio_read_ao_2e_int_eri(trex_file, offset_read, read_buf_size, &
-	                               index_sparse_ao_2e_int_eri(1, offset_data_read + 1), &
-			                           value_sparse_ao_2e_int_eri(offset_data_read + 1))
+	                         index_sparse_ao_2e_int_eri(1, offset_data_read + 1), &
+			         value_sparse_ao_2e_int_eri(offset_data_read + 1))
   !do  i = 1,20
   !  write(*,*) index_sparse_ao_2e_int_eri(1,i)
   !enddo
@@ -355,8 +362,8 @@ subroutine test_read(file_name, back_end)
   ! attempt to read reaching EOF: should return TREXIO_END and
   ! NOT increment the existing values in the buffer (only upd with what has been read)
   rc = trexio_read_ao_2e_int_eri(trex_file, offset_eof, read_buf_size, &
-	                               index_sparse_ao_2e_int_eri(1, offset_data_eof + 1), &
-			                           value_sparse_ao_2e_int_eri(offset_data_eof + 1))
+	                         index_sparse_ao_2e_int_eri(1, offset_data_eof + 1), &
+			         value_sparse_ao_2e_int_eri(offset_data_eof + 1))
   !do  i = 1,20
   !  write(*,*) index_sparse_ao_2e_int_eri(1,i)
   !enddo
@@ -384,7 +391,7 @@ subroutine test_read(file_name, back_end)
 
   ! read a chunk of determinants
   rc = trexio_read_determinant_list(trex_file, offset_det_read, read_buf_det_size, &
-	                                  det_list(1, offset_det_data_read + 1))
+	                            det_list(1, offset_det_data_read + 1))
   !do  i = 1,50
   !  write(*,*) det_list(1,i)
   !enddo
@@ -404,6 +411,19 @@ subroutine test_read(file_name, back_end)
     write(*,*) 'SUCCESS READ DET NUM'
   else
     print *, 'FAILURE DET NUM CHECK'
+    call exit(-1)
+  endif
+
+  ! convert one given determinant into lists of orbitals
+  rc = trexio_to_orbital_list_up_dn(3, det_list(:, offset_det_data_read+1), orb_list_up, orb_list_dn, occ_num_up, occ_num_dn)
+  !write(*,*) occ_num_up, occ_num_dn
+  !write(*,*) orb_list_up(1:occ_num_up)
+  !write(*,*) det_list(:, offset_det_data_read+1)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+  if (occ_num_up == 16 .and. occ_num_dn == 5) then
+    write(*,*) 'SUCCESS CONVERT DET LIST'
+  else
+    print *, 'FAILURE DET CONVERT CHECK'
     call exit(-1)
   endif
 
