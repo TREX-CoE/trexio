@@ -517,7 +517,7 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
         group_dset_format_printf_16 = '"'
         group_dset_format_printf_32 = '"'
         group_dset_format_scanf  = ''
-        for i in range(rank):
+        for _ in range(rank):
             group_dset_format_printf_8  += item_printf_8
             group_dset_format_printf_16 += item_printf_16
             group_dset_format_printf_32 += item_printf_32
@@ -644,10 +644,15 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
     dset_string_dict = {}
     dset_sparse_dict = {}
     for k,v in datasets.items():
+
         # create a temp dictionary
         tmp_dict = {}
         rank = len(v[1])
         datatype = v[0]
+
+        # skip the data which has 'special' datatype (e.g. determinants for which the code is not templated)
+        if 'special' in datatype:
+            continue
 
         # define whether the dset is sparse
         is_sparse = False

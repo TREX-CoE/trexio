@@ -14,5 +14,8 @@ cat populated/pop_delete_group_hdf5.c >> trexio_hdf5.c
 cat populated/pop_hrw_*.h >> trexio_hdf5.h
 cat populated/pop_delete_group_hdf5.h >> trexio_hdf5.h
 
+cat hrw_determinant_hdf5.h >> trexio_hdf5.h
+cat *_determinant_hdf5.c >> trexio_hdf5.c
+
 cat helpers_hdf5.c  >> trexio_hdf5.c
 cat suffix_hdf5.h   >> trexio_hdf5.h
