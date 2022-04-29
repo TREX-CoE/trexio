@@ -4336,15 +4336,16 @@ def delete_$group$(trexio_file) -> None:
 
    This section concerns API calls related to Slater determinants.
 
-   | Function name                              | Description                            |
-   |--------------------------------------------+----------------------------------------|
-   | ~trexio_has_determinant_coefficient~       | Check if an attribute exists in a file |
-   | ~trexio_has_determinant_list~              | Check if an attribute exists in a file |
-   | ~trexio_write_determinant_coefficient~     | Write an attribute                     |
-   | ~trexio_write_determinant_list~            | Write an attribute                     |
-   | ~trexio_read_determinant_coefficient~      | Read an attribute                      |
-   | ~trexio_read_determinant_list~             | Read an attribute                      |
-   | ~trexio_read_determinant_coefficient_size~ | Get the number of the coefficients     |
+   | Function name                              | Description                                        |
+   |--------------------------------------------+----------------------------------------------------|
+   | ~trexio_has_determinant_coefficient~       | Check if an attribute exists in a file             |
+   | ~trexio_has_determinant_list~              | Check if an attribute exists in a file             |
+   | ~trexio_write_determinant_coefficient~     | Write an attribute                                 |
+   | ~trexio_write_determinant_list~            | Write an attribute                                 |
+   | ~trexio_read_determinant_coefficient~      | Read an attribute                                  |
+   | ~trexio_read_determinant_list~             | Read an attribute                                  |
+   | ~trexio_read_determinant_coefficient_size~ | Get the number of the coefficients                 |
+   | ~trexio_get_int64_num~                     | Get the number of int64 bit fields per determinant |
 
 *** C source code
 
@@ -4360,6 +4361,31 @@ trexio_exit_code trexio_write_safe_determinant_list(trexio_t* const file, const 
 trexio_exit_code trexio_write_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset);
 trexio_exit_code trexio_write_safe_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset_in, const int64_t dim_in);
 trexio_exit_code trexio_read_determinant_coefficient_size(trexio_t* const file, int64_t* const size_max);
+trexio_exit_code trexio_get_int64_num(trexio_t* const file, int32_t* const num);
+     #+end_src
+
+     #+begin_src c :tangle read_determinant_front.c
+trexio_exit_code
+trexio_get_int64_num(trexio_t* const file, int32_t* const num)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (num   == NULL) return TREXIO_INVALID_ARG_2;
+
+  /* Read the number of mos */
+  int64_t mo_num = 0L;
+  trexio_exit_code rc = trexio_read_mo_num_64(file, &mo_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+  if (mo_num == 0L) return TREXIO_INVALID_NUM;
+
+  /* Compute how many integer numbers is needed to represent a determinant */
+  int32_t int_num = 0;
+  int_num = (mo_num - 1L)/64 + 1;
+
+  *num = int_num;
+
+  return TREXIO_SUCCESS;
+}
      #+end_src
 
      #+begin_src c :tangle read_determinant_front.c
@@ -4371,17 +4397,10 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
   if (dset  == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_determinant_list(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
-  trexio_exit_code rc;
-
-  /* Read the number of mos */
-  int64_t mo_num = 0L;
-  rc = trexio_read_mo_num_64(file, &mo_num);
+  /* Get the number of int bit fields per determinant */
+  int32_t int_num = 0;
+  trexio_exit_code rc = trexio_get_int64_num(file, &int_num);
   if (rc != TREXIO_SUCCESS) return rc;
-  if (mo_num == 0L) return TREXIO_INVALID_NUM;
-
-  /* Compute how many integer numbers is needed to represent a determinant */
-  uint32_t int_num = 0;
-  int_num = (mo_num - 1)/64 + 1;
 
   uint32_t rank = 2;
   uint64_t det_size = (uint64_t) (*buffer_size_read);
@@ -4419,10 +4438,10 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
   if (rc == TREXIO_END) *buffer_size_read = eof_read_size;
 
   return rc;
-
 }
+     #+end_src
 
-
+     #+begin_src c :tangle read_determinant_front.c
 trexio_exit_code
 trexio_read_determinant_coefficient (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset)
 {
@@ -4469,13 +4488,14 @@ trexio_read_determinant_coefficient (trexio_t* const file, const int64_t offset_
   if (rc == TREXIO_END) *buffer_size_read = eof_read_size;
 
   return rc;
-
 }
+     #+end_src
 
-
+     #+begin_src c :tangle read_determinant_front.c
 trexio_exit_code
 trexio_read_determinant_coefficient_size(trexio_t* const file, int64_t* const size_max)
 {
+
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if (size_max == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_determinant_coefficient(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
@@ -4502,7 +4522,9 @@ trexio_read_determinant_coefficient_size(trexio_t* const file, int64_t* const si
     return TREXIO_FAILURE;  /* Impossible case */
   }
 }
+     #+end_src
 
+     #+begin_src c :tangle read_determinant_front.c
 trexio_exit_code
 trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset_out, const int64_t dim_out)
 {
@@ -4524,17 +4546,10 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (dset == NULL) return TREXIO_INVALID_ARG_2;
 
-  trexio_exit_code rc;
-
-  /* Read the number of mos */
-  int64_t mo_num = 0L;
-  rc = trexio_read_mo_num_64(file, &mo_num);
+  /* Get the number of int bit fields per determinant */
+  int32_t int_num = 0;
+  trexio_exit_code rc = trexio_get_int64_num(file, &int_num);
   if (rc != TREXIO_SUCCESS) return rc;
-  if (mo_num == 0L) return TREXIO_INVALID_NUM;
-
-  /* Compute how many integer numbers is needed to represent a determinant */
-  uint32_t int_num = 0;
-  int_num = (mo_num - 1)/64 + 1;
 
   uint32_t rank = 2;
   uint64_t dims[2] = {buffer_size, int_num*2UL};
@@ -4587,7 +4602,9 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
 
   return TREXIO_SUCCESS;
 }
+     #+end_src
 
+     #+begin_src c :tangle write_determinant_front.c
 trexio_exit_code
 trexio_write_determinant_coefficient (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset)
 {
@@ -4623,7 +4640,9 @@ trexio_write_determinant_coefficient (trexio_t* const file, const int64_t offset
 
   return TREXIO_FAILURE;
 }
+     #+end_src
 
+     #+begin_src c :tangle write_determinant_front.c
 trexio_exit_code
 trexio_write_safe_determinant_list (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in)
 {
@@ -4836,6 +4855,15 @@ interface
      integer(c_int64_t), intent(in), value :: trex_file
    end function trexio_has_determinant_coefficient
 end interface
+
+interface
+   integer(trexio_exit_code) function trexio_get_int64_num (trex_file, num) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int32_t), intent(out) :: num
+   end function trexio_get_int64_num
+end interface
      #+end_src
 
 *** Python interface
@@ -4908,6 +4936,7 @@ def write_determinant_list(trexio_file: File, offset_file: int, buffer_size: int
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
+
 
 def write_determinant_coefficient(trexio_file: File, offset_file: int, buffer_size: int, coefficients: list) -> None:
     """Write the determinant coefficients in the TREXIO file.
@@ -4996,8 +5025,7 @@ def read_determinant_list(trexio_file: File, offset_file: int, buffer_size: int)
     # read the number of determinants already in the file
     det_num = read_determinant_num(trexio_file)
     # calculate the int_num (number of int bit fields per determinant)
-    mo_num = read_mo_num(trexio_file)
-    int_num = 2*int((mo_num-1)/64+1)
+    int_num = 2 * get_int64_num(trexio_file)
 
     # additional modification needed to avoid allocating more memory than needed if EOF will be reached during read
     overflow = offset_file + buffer_size - det_num
@@ -5025,6 +5053,7 @@ def read_determinant_list(trexio_file: File, offset_file: int, buffer_size: int)
     dets_reshaped = np.reshape(determinants, (verified_size, int_num), order='C')
 
     return (dets_reshaped, n_int_read, eof_flag)
+
 
 def read_determinant_coefficient(trexio_file: File, offset_file: int, buffer_size: int) -> tuple:
     """Read determinant_coefficient from the TREXIO file.
@@ -5111,8 +5140,27 @@ def read_determinant_coefficient_size(trexio_file) -> int:
         raise Error(rc)
 
     return num
-     #+end_src
 
+
+def get_int64_num(trexio_file) -> int:
+    """Compute the number of int64 bit fields corresponding to the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+        ~num~: int
+        Number of int64 bit fields per determinant.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc, num = pytr.trexio_get_int64_num(trexio_file.pytrexio_s)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+
+    return num
      #+end_src
 
      #+begin_src python :tangle has_determinant_front.py
@@ -5134,6 +5182,7 @@ def has_determinant_list(trexio_file) -> bool:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
+
 
 def has_determinant_coefficient(trexio_file) -> bool:
     """Check that determinant_coefficient exists in the TREXIO file.
