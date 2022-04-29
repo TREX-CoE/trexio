@@ -120,6 +120,18 @@ These quantities can be accessed using the corresponding `trexio_[has|read|write
 For more details regarding the installation and usage of the TREXIO Python API,
 see [this page](python/README.md).
 
+The aforementioned instructions are adapted for users installing from the source code distribution (periodically updated).
+In order to install the Python API with the latest changes, follow the developer installation guide and run the following command in the end
+
+```
+make python-install
+```
+
+**Note: this implies that both HDF5 and SWIG are installed and available.
+At the moment, it is not possible to configure the Python API without HDF5 library.**
+
+We highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.
+
 
 ## Tutorial
 
