@@ -42,6 +42,10 @@ cat populated/pop_*.h >> trexio.h
 cat hrw_determinant_front.h >> trexio.h
 cat *_determinant_front.c >> trexio.c
 
+# private API header file
+cat populated/private_pop_front.h >> trexio_private.h
+echo "#endif" >> trexio_private.h
+
 # fortran front end
 cat populated/pop_*.f90  >> trexio_f.f90
 # add determinant part

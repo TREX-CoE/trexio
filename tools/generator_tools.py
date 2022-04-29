@@ -37,7 +37,10 @@ def get_files_todo(source_files: dict) -> dict:
         all_files += source_files[key]
 
     files_todo = {}
-    files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f or 'delete' in f]
+    files_todo['all'] = [
+        f for f in all_files
+        if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f or 'delete' in f
+        ]
     for key in ['dset_data', 'dset_str', 'dset_sparse', 'attr_num', 'attr_str', 'group']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
@@ -116,6 +119,11 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
+
+        # special case to exclude write_determinant_num funcs from the public APIs
+        if 'determinant_num' in item and 'write' in fname and 'front' in fname and ('.f90' in fname or '.py' in fname):
+            continue
+
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
                 num_written = []
@@ -144,7 +152,12 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                     # general case of recursive replacement of inline triggers
                     else:
                         populated_line = recursive_replace_line(line, triggers, detailed_source[item])
-                        f_out.write(populated_line)
+                        # special case to include write_determinant_num funcs in the private header
+                        if 'determinant_num' in item and 'write' in line and 'front.h' in fname:
+                            with open(join(templ_path,'populated/private_pop_front.h'), 'a') as f_priv:
+                                f_priv.write(populated_line)
+                        else:
+                            f_out.write(populated_line)
 
                 f_out.write("\n")
 
