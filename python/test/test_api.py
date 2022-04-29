@@ -43,7 +43,7 @@ trexio.info()
 
 # test with ... as ... block
 with trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND) as tfile:
-    trexio.write_metadata_description(tfile, "Test file produced by the Python API")
+    trexio.write_metadata_description(tfile, 'Test file produced by the Python API')
     assert trexio.has_metadata_description(tfile)
     assert tfile.isOpen
 
@@ -63,7 +63,7 @@ nucleus_num = 12
 try:
     trexio.write_nucleus_num(test_file, -100)
 except trexio.Error:
-    print("Raise error for an attempt to write negative nucleus_num: checked.")
+    print('Raise error for an attempt to write negative nucleus_num: checked.')
 
 # write nucleus_num in the file
 try:
@@ -74,7 +74,7 @@ except:
 try:
     trexio.write_nucleus_num(test_file, nucleus_num*2)
 except trexio.Error:
-    print("Raise error for an attempt to overwrite nucleus_num: checked.")
+    print('Raise error for an attempt to overwrite nucleus_num: checked.')
 
 # initialize charge arrays as a list and convert it to numpy array
 charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
@@ -133,7 +133,9 @@ trexio.write_ao_2e_int_eri(test_file, 0, num_integrals, indices, values)
 mo_num = 150
 trexio.write_mo_num(test_file, mo_num)
 
-int_num = 2*int((mo_num-1)/64+1)
+int_num = trexio.get_int64_num(test_file)
+assert(int_num == int((mo_num-1)/64+1))
+int_num *= 2
 
 # write determinants in the file
 num_dets = 50
@@ -197,7 +199,7 @@ trexio.write_nucleus_coord(unsafe_file, coords)
 trexio.write_nucleus_label(unsafe_file,labels)
 trexio.write_nucleus_point_group(unsafe_file, point_group)
 
-print("Overwriting the data in UNSAFE mode: checked")
+print('Overwriting the data in UNSAFE mode: checked')
 
 # delete existing group (only allowed in 'u' - unsafe mode)
 trexio.delete_nucleus(unsafe_file)
@@ -208,7 +210,7 @@ assert not trexio.has_nucleus_coord(unsafe_file)
 assert not trexio.has_nucleus_label(unsafe_file)
 assert not trexio.has_nucleus_point_group(unsafe_file)
 
-print("Deleting nucleus group in UNSAFE mode: checked")
+print('Deleting nucleus group in UNSAFE mode: checked')
 
 # restore the deleted data
 trexio.write_nucleus_num(unsafe_file, nucleus_num)
@@ -250,7 +252,7 @@ np.testing.assert_array_almost_equal(rcharges_np, charges_np, decimal=8)
 try:
     rcharges_fail = trexio.read_nucleus_charge(test_file2, dim=nucleus_num*5)
 except trexio.Error:
-    print("Unsafe call to safe API: checked")
+    print('Unsafe call to safe API: checked')
 
 # safe call to read array of int values (nuclear indices)
 rindices_np_16 = trexio.read_basis_nucleus_index(test_file2, dim=basis_shell_num, dtype=np.int16)
@@ -352,7 +354,7 @@ assert rpoint_group==point_group
 if trexio.has_ao_num(test_file2):
     rao_num = trexio.read_ao_num(test_file2)
 else:
-    print("Pass on reading the non-existing variable ao_num: checked")
+    print('Pass on reading the non-existing variable ao_num: checked')
 
 # close TREXIO file
 #trexio.close(test_file2)
@@ -376,8 +378,8 @@ try:
     void_file = trexio.File('non_existing.file', 'r', TEST_TREXIO_BACKEND)
 except trexio.Error as e:
     if e.error == trexio.TREXIO_OPEN_ERROR:
-        print("Opening non-existing file returns TREXIO_OPEN_ERROR: checked")
+        print('Opening non-existing file returns TREXIO_OPEN_ERROR: checked')
     else:
-        raise ValueError("[DEV]: error handling of trexio_open function has changed; check the consistency")
+        raise ValueError('[DEV]: error handling of trexio_open function has changed; check the consistency')
 
 #==========================================================#

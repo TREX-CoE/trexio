@@ -71,6 +71,7 @@ subroutine test_write(file_name, back_end)
   ! determinants
   integer*8 :: det_list(6, 50)
   integer*8 :: det_num
+  integer   :: int_num
 
   integer :: i, j, n_buffers = 5
   integer(8) :: buf_size_sparse, buf_size_det, offset
@@ -257,6 +258,7 @@ subroutine test_read(file_name, back_end)
   integer*8 :: offset_det_read = 10
   integer*8 :: offset_det_data_read = 5
   integer*8 :: determinant_num
+  integer   :: int_num
 
   ! orbital lists
   integer*4 :: orb_list_up(150)
@@ -386,6 +388,16 @@ subroutine test_read(file_name, back_end)
     write(*,*) 'SUCCESS READ SPARSE SIZE'
   else
     print *, 'FAILURE SPARSE SIZE CHECK'
+    call exit(-1)
+  endif
+
+  ! obtain a number of int64 bit fields per determinant
+  rc = trexio_get_int64_num(trex_file, int_num)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+  if (int_num == 3) then
+    write(*,*) 'SUCCESS GET INT64_NUM'
+  else
+    print *, 'FAILURE DET INT64_NUM CHECK'
     call exit(-1)
   endif
 

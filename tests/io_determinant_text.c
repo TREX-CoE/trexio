@@ -32,7 +32,20 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   int mo_num = MO_NUM;
 
-  det_list = (int64_t*) calloc(2*3*SIZE, sizeof(int64_t));
+  // write mo_num which will be used to determine the optimal size of int indices
+  if (trexio_has_mo_num(file) == TREXIO_HAS_NOT) {
+    rc = trexio_write_mo_num(file, mo_num);
+    assert(rc == TREXIO_SUCCESS);
+  }
+
+  // get the number of int64 bit fields per determinant
+  int int_num;
+  rc = trexio_get_int64_num(file, &int_num);
+  assert(rc == TREXIO_SUCCESS);
+  assert(int_num == (MO_NUM-1)/64 + 1);
+
+  // allocate memory and fill with values to be written
+  det_list = (int64_t*) calloc(2 * int_num * SIZE, sizeof(int64_t));
   det_coef = (double*) calloc(SIZE, sizeof(double));
 
   for(int i=0; i<SIZE; i++){
@@ -45,12 +58,6 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     det_coef[i]     = 3.14 + (double) i;
   }
 
-  // write mo_num which will be used to determine the optimal size of int indices
-  if (trexio_has_mo_num(file) == TREXIO_HAS_NOT) {
-    rc = trexio_write_mo_num(file, mo_num);
-    assert(rc == TREXIO_SUCCESS);
-  }
-
   // write dataset chunks of sparse data in the file (including FAKE statements)
   uint64_t chunk_size = (uint64_t) SIZE/N_CHUNKS;
   uint64_t offset_f = 0UL;
@@ -60,7 +67,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   // write n_chunks times using write_sparse
   for(int i=0; i<N_CHUNKS; ++i){
 
-    rc = trexio_write_determinant_list(file, offset_f, chunk_size, &det_list[6*offset_d]);
+    rc = trexio_write_determinant_list(file, offset_f, chunk_size, &det_list[2*int_num*offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
     rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
@@ -174,8 +181,10 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   assert (rc == TREXIO_SUCCESS);
   assert (mo_num == MO_NUM);
 
-  int int_num = (mo_num - 1)/64 + 1;
-  assert (int_num == 3);
+  int int_num;
+  rc = trexio_get_int64_num(file, &int_num);
+  assert (rc == TREXIO_SUCCESS);
+  assert (int_num == (MO_NUM - 1)/64 + 1);
 
   // define arrays to read into
   int64_t* det_list_read;
