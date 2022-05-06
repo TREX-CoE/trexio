@@ -131,12 +131,13 @@ __trexio_path__ = None
 ** Memory allocation
 
    Memory allocation of structures can be facilitated by using the
-   following macro, which ensures that the size of the allocated
+   following macros, which ensure that the size of the allocated
    object is the same as the size of the data type pointed by the pointer.
+   For CALLOC, we allocate N+1 to avoid errors when N=0.
 
    #+begin_src c :tangle trexio_private.h
 #define MALLOC(T) (T*) malloc (sizeof(T))
-#define CALLOC(N,T) (T*) calloc ( (N) , sizeof(T) )
+#define CALLOC(N,T) (T*) calloc ( (N)+1 , sizeof(T) )     
    #+end_src
 
    When a pointer is freed, it should be set to ~NULL~.
