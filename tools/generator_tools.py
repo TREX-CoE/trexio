@@ -120,9 +120,11 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
 
     for item in detailed_source.keys():
 
-        # special case to exclude write_determinant_num funcs from the public APIs
-        if 'determinant_num' in item and 'write' in fname and 'front' in fname and ('.f90' in fname or '.py' in fname):
-            continue
+        # special case to exclude write functions for readonly dimensions (like determinant_num) from the public API
+        if 'write' in fname and 'front' in fname and ('.f90' in fname or '.py' in fname):
+            if 'trex_json_int_type' in detailed_source[item].keys():
+                if 'readonly' in detailed_source[item]['trex_json_int_type']:
+                    continue
 
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
@@ -145,17 +147,20 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                         continue
                     # special case to uncomment check for positive dimensioning variables in templates
                     elif 'uncommented by the generator for dimensioning' in line:
-                        # only uncomment and write the line if `num` is in the name
+                        # only uncomment and write the line if `dim` is in the name
                         if 'dim' in detailed_source[item]['trex_json_int_type']:
                             templine = line.replace('//', '')
                             f_out.write(templine)
                     # general case of recursive replacement of inline triggers
                     else:
                         populated_line = recursive_replace_line(line, triggers, detailed_source[item])
-                        # special case to include write_determinant_num funcs in the private header
-                        if 'determinant_num' in item and 'write' in line and 'front.h' in fname:
-                            with open(join(templ_path,'populated/private_pop_front.h'), 'a') as f_priv:
-                                f_priv.write(populated_line)
+                        # special case to include some functions in the private header
+                        if 'trex_json_int_type' in detailed_source[item].keys():
+                            if 'readonly' in detailed_source[item]['trex_json_int_type'] and 'write' in line and 'front.h' in fname:
+                                with open(join(templ_path,'populated/private_pop_front.h'), 'a') as f_priv:
+                                    f_priv.write(populated_line)
+                            else:
+                                f_out.write(populated_line)
                         else:
                             f_out.write(populated_line)
 
@@ -490,7 +495,7 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
             f'group_{target}_format_scanf'    : 'lf',
             f'group_{target}_py_dtype'        : 'float'
         })
-    elif dtype in ['int', 'dim', 'index']:
+    elif dtype in ['int', 'dim', 'dim readonly', 'index']:
         dtype_dict.update({
             'default_prec'                    : '32',
             f'group_{target}_dtype'           : 'int64_t',
@@ -581,15 +586,16 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                 tmp_num = f'{k1}_{k2}'
                 if not 'str' in v2[0]:
                     tmp_dict = {}
+
                     tmp_dict['group'] = k1
                     tmp_dict['group_num'] = tmp_num
-                    num_dict[tmp_num] = tmp_dict
-
                     tmp_dict.update(get_dtype_dict(v2[0], 'num'))
-                    if v2[0] in ['int', 'dim']:
+                    if v2[0] in ['int', 'dim', 'dim readonly']:
                         tmp_dict['trex_json_int_type'] = v2[0]
                     else:
                         tmp_dict['trex_json_int_type'] = ''
+
+                    num_dict[tmp_num] = tmp_dict
 
     return num_dict
 
@@ -775,7 +781,10 @@ def check_dim_consistency(num: dict, dset: dict) -> None:
             if dim not in dim_tocheck:
                 dim_tocheck.append(dim)
 
-    num_onlyDim = [attr_name for attr_name, specs in num.items() if specs['trex_json_int_type']=='dim']
+    num_onlyDim = [
+        attr_name for attr_name, specs in num.items()
+        if 'dim' in specs['trex_json_int_type']
+        ]
 
     for dim in dim_tocheck:
         if not dim in num_onlyDim:
