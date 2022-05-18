@@ -137,7 +137,7 @@ __trexio_path__ = None
 
    #+begin_src c :tangle trexio_private.h
 #define MALLOC(T) (T*) malloc (sizeof(T))
-#define CALLOC(N,T) (T*) calloc ( (N)+1 , sizeof(T) )     
+#define CALLOC(N,T) (T*) calloc ( (N)+1 , sizeof(T) )
    #+end_src
 
    When a pointer is freed, it should be set to ~NULL~.
@@ -600,7 +600,7 @@ def string_of_error(return_code: int) -> str:
    Then the corresponding back-end ~has/read/write~ functions has to be implemented. For example, see the commented
    lines that correspond to the ~TREXIO_JSON~ back end (not implemented yet).
 
-   _Note_: It is important to increment the value of ~TREXIO_INVALID_BACK_END~ when a new back end is added. Otherwise, it will not be available.
+   _Note_: It is important to increment the value of ~TREXIO_INVALID_BACK_END~ when a new back end is implemented. Otherwise, it will not be available.
 
 *** C
 
@@ -850,20 +850,6 @@ class File:
             raise Exception("[WIP]: TREXIO file handle provided but what if the file is already closed?")
         else:
             pass
-   #+end_src
-
-** TODO (Remove) : Polymorphism of the file handle
-
-   Polymorphism of the ~trexio_t~ type is handled by ensuring that the
-   corresponding types for all back ends can be safely casted to
-   ~trexio_t~. This is done by making the back-end structs start with
-   ~struct trexio_s~:
-
-   #+begin_src c
-struct trexio_back_end_s {
-  trexio_t     parent ;
-  /* add below specific back-end data */
-}
    #+end_src
 
 ** File opening
