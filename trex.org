@@ -22,6 +22,10 @@ variables cannot be negative. This additional constraint is required
 because ~dim~ attributes are used internally to allocate memory and to
 check array boundaries in the memory-safe API. Most of the times, the
 ~dim~ variables contain the ~num~ suffix.
+You may also encounter some ~dim readonly~ variables.
+It means that the value is automatically computed and written by the
+TREXIO library, thus it is read-only and cannot be (over)written by the
+user.
 
 In Fortran, arrays are 1-based and in most other languages the
 arrays are 0-based. Hence, we introduce the ~index~ type which is a
@@ -641,27 +645,27 @@ prim_factor =
   can be expanded in the basis of Slater determinants $D_I$ as follows
 
   \[
-  | \Psi> = \sum_I C_I | D_I> |
+  \Psi = \sum_I C_I D_I
   \]
 
-  For relatively small expansions, a given determinant can be represented as a list of ~mo.num~ occupation numbers.
-  However, this requires a lot of extra memory and would be technically impossible for larger expansions
-  (~millions of determinants). This is why the determinants are stored as bit fields in the TREXIO file
-  (see ~int bitfield~ type in the table below). By default, the chemist notation is used, namely
+  For relatively small expansions, a given determinant can be represented as a list of occupied orbitals.
+  However, this becomes unfeasible for larger expansions and requires more advanced data structures.
+  The bit field representation is used here, namely a given determinant is represented as $N_{\text{int}}$
+  64-bit integers where j-th bit is set to 1 if there is an electron in the j-th orbital and 0 otherwise.
+  This gives access to larger determinant expansions by optimising the storage of the determinant lists
+  in the memory.
 
   \[
-  | D_I > = | \alpha_1 \alpha_2 \ldots \alpha_{n\uparrow} \beta_1 \beta_2 \ldots \beta_{n\downarrow} > |
+  D_I = \alpha_1 \alpha_2 \ldots \alpha_{n\uparrow} \beta_1 \beta_2 \ldots \beta_{n\downarrow}
   \]
 
   where $\alpha$ and $\beta$ denote $\uparrow$-spin and $\downarrow$-spin electrons, respectively,
   $n\uparrow$ and $n\downarrow$ correspond to ~electron.up_num~ and ~electron.dn_num~, respectively.
-  Internally, bit fields for $\alpha$ and $\beta$ electrons are stored separately,
-  which is why the ~determinant.list~ attribute has a second dimension.
 
   #+NAME: determinant
   | Variable      | Type            | Dimensions                    | Description                                            |
   |---------------+-----------------+-------------------------------+--------------------------------------------------------|
-  | ~num~         | ~dim~           |                               | Number of determinants                                 |
+  | ~num~         | ~dim readonly~  |                               | Number of determinants                                 |
   | ~list~        | ~int special~   | ~(determinant.num)~           | List of determinants as integer bit fields             |
   | ~coefficient~ | ~float special~ | ~(state.num,determinant.num)~ | Coefficients of the determinants from the CI expansion |
 
@@ -671,7 +675,7 @@ prim_factor =
   :RESULTS:
   #+begin_src python :tangle trex.json
       "determinant": {
-		  "num" : [ "dim"          , []                                 ]
+		  "num" : [ "dim readonly" , []                                 ]
 	,        "list" : [ "int special"  , [ "determinant.num" ]              ]
 	, "coefficient" : [ "float special", [ "determinant.num", "state.num" ] ]
       } ,
