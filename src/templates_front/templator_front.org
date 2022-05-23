@@ -5293,7 +5293,7 @@ trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
           pos = trailz(tmp);
           if (pos < 0) return TREXIO_FAILURE;
 
-          list[k] = ( (int32_t) pos) + shift;
+          list[k] = ( (int32_t) pos) + shift - 1;
           tmp ^= ( ((bitfield_t) 1) << pos);
           k++;
       }
@@ -5413,27 +5413,30 @@ end interface
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_to_orbital_list(N_int, d1, list, occupied_num) bind(C)
+   integer(trexio_exit_code) function trexio_to_orbital_list_c(N_int, d1, list, occupied_num) bind(C, name="trexio_to_orbital_list")
      use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in), value :: N_int
      integer(c_int64_t), intent(in)        :: d1(*)
-     integer(c_int32_t), intent(out)       :: list(*)
+     integer(c_int32_t), intent(inout)     :: list(*)
      integer(c_int32_t), intent(inout)     :: occupied_num
-   end function trexio_to_orbital_list
+   end function trexio_to_orbital_list_c
 end interface
+   #+end_src
 
+   #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_to_orbital_list_up_dn(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn) bind(C)
+   integer(trexio_exit_code) function trexio_to_orbital_list_up_dn_c(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn) &
+   bind(C, name="trexio_to_orbital_list_up_dn")
      use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in), value :: N_int
      integer(c_int64_t), intent(in)        :: d1(*)
-     integer(c_int32_t), intent(out)       :: list_up(*)
-     integer(c_int32_t), intent(out)       :: list_dn(*)
+     integer(c_int32_t), intent(inout)     :: list_up(*)
+     integer(c_int32_t), intent(inout)     :: list_dn(*)
      integer(c_int32_t), intent(inout)     :: occ_num_up
      integer(c_int32_t), intent(inout)     :: occ_num_dn
-   end function trexio_to_orbital_list_up_dn
+   end function trexio_to_orbital_list_up_dn_c
 end interface
    #+end_src
 
@@ -5554,7 +5557,58 @@ contains
      filename_c = trim(filename) // c_null_char
      trexio_inquire = trexio_inquire_c(filename_c)
    end function trexio_inquire
+  #+end_src
 
+  The subrotine below wrap the ~to_orbital_list~ functions to shift the MO indices
+  by 1 since in Fortran arrays are 1-based and C/Python they are 0-based.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+   integer(trexio_exit_code) function trexio_to_orbital_list(N_int, d1, list, occupied_num)
+     use, intrinsic :: iso_c_binding
+     implicit none
+
+     integer(c_int32_t), intent(in), value :: N_int
+     integer(c_int64_t), intent(in)        :: d1(*)
+     integer(c_int32_t), intent(out)       :: list(*)
+     integer(c_int32_t), intent(out)       :: occupied_num
+
+     integer :: i
+
+     trexio_to_orbital_list = trexio_to_orbital_list_c(N_int, d1, list, occupied_num)
+     if (trexio_to_orbital_list /= TREXIO_SUCCESS) then
+       return
+     endif
+
+     do i = 1,occupied_num
+       list(i) = list(i) + 1
+     enddo
+   end function trexio_to_orbital_list
+
+
+   integer(trexio_exit_code) function trexio_to_orbital_list_up_dn(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn)
+     use, intrinsic :: iso_c_binding
+     implicit none
+     integer(c_int32_t), intent(in), value :: N_int
+     integer(c_int64_t), intent(in)        :: d1(*)
+     integer(c_int32_t), intent(out)       :: list_up(*)
+     integer(c_int32_t), intent(out)       :: list_dn(*)
+     integer(c_int32_t), intent(out)       :: occ_num_up
+     integer(c_int32_t), intent(out)       :: occ_num_dn
+
+     integer :: i
+
+     trexio_to_orbital_list_up_dn = trexio_to_orbital_list_up_dn_c(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn)
+     if (trexio_to_orbital_list_up_dn /= TREXIO_SUCCESS) then
+       return
+     endif
+
+     do i = 1,occ_num_up
+       list_up(i) = list_up(i) + 1
+     enddo
+     do i = 1,occ_num_dn
+       list_dn(i) = list_dn(i) + 1
+     enddo
+   end function trexio_to_orbital_list_up_dn
   #+end_src
 
   The subroutine below transforms an array of Fortran strings into one big string using ~TREXIO_DELIM~ symbol
