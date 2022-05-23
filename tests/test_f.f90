@@ -429,8 +429,12 @@ subroutine test_read(file_name, back_end)
   ! convert one given determinant into lists of orbitals
   rc = trexio_to_orbital_list_up_dn(3, det_list(:, offset_det_data_read+1), orb_list_up, orb_list_dn, occ_num_up, occ_num_dn)
   !write(*,*) occ_num_up, occ_num_dn
+  ! Print occupied orbitals for an up-spin component of a given determinant
   !write(*,*) orb_list_up(1:occ_num_up)
+  ! Print integers representanting a given determinant fully (up- and down-spin components)
   !write(*,*) det_list(:, offset_det_data_read+1)
+  ! Print binary representation of the first integer bit field of a given determinant
+  !write(*,'(B64.64)') det_list(1, offset_det_data_read+1)
   call trexio_assert(rc, TREXIO_SUCCESS)
   if (occ_num_up == 16 .and. occ_num_dn == 5) then
     write(*,*) 'SUCCESS CONVERT DET LIST'

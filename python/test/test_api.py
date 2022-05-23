@@ -335,8 +335,8 @@ dets_tmp = dets_np[read_buf_size-1][:]
 
 # divide by 2 because in this test int_num is the total number of integers (i.e. up-spin + down_spin)
 orb_list_up, orb_list_dn = trexio.to_orbital_list_up_dn(int(int_num/2), dets_tmp)
-assert(orb_list_up[0] == 2)
-assert(orb_list_dn[0] == 1)
+assert(orb_list_up[0] == 1)
+assert(orb_list_dn[0] == 0)
 #print(orb_list_up)
 #print(orb_list_dn)
 
