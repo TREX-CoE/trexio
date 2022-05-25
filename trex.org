@@ -496,28 +496,38 @@ prim_factor =
    over atomic orbitals.
 
    #+NAME: ao_1e_int
-  | Variable           | Type    | Dimensions         | Description                                            |
-  |--------------------+---------+--------------------+--------------------------------------------------------|
-  | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                            |
-  | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$            |
-  | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  |
-  | ~ecp~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$ |
-  | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$              |
+  | Variable              | Type    | Dimensions         | Description                                                                       |
+  |-----------------------+---------+--------------------+-----------------------------------------------------------------------------------|
+  | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$  (real part, general case)                            |
+  | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$  (real part, general case)            |
+  | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (real part, general case)  |
+  | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$  (real part, general case) |
+  | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$  (real part, general case)              |
+  | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)  (imaginary part)                    |
+  | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)                    |
+  | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)           |
+  | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part)          |
+  | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)                        |
 
    #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
    #+RESULTS:
-   :results:
+   :RESULTS:
    #+begin_src python :tangle trex.json
        "ao_1e_int": {
-                    "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
-         ,          "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
-         ,    "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
-         ,              "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
-         , "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+		       "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,             "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	 ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	 , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
        } ,
    #+end_src
-   :end:
+   :END:
 
 ** Two-electron integrals (~ao_2e_int~ group)
    :PROPERTIES:
@@ -560,14 +570,15 @@ prim_factor =
 * Molecular orbitals (mo group)
 
   #+NAME: mo
-  | Variable      | Type    | Dimensions         | Description                                                              |
-  |---------------+---------+--------------------+--------------------------------------------------------------------------|
-  | ~type~        | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
-  | ~num~         | ~dim~   |                    | Number of MOs                                                            |
-  | ~coefficient~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                                                          |
-  | ~class~       | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
-  | ~symmetry~    | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
-  | ~occupation~  | ~float~ | ~(mo.num)~         | Occupation number                                                        |
+  | Variable         | Type    | Dimensions         | Description                                                              |
+  |------------------+---------+--------------------+--------------------------------------------------------------------------|
+  | ~type~           | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
+  | ~num~            | ~dim~   |                    | Number of MOs                                                            |
+  | ~coefficient~    | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (real part, general case)                                |
+  | ~coefficient_im~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (imaginary part, for periodic calculations)              |
+  | ~class~          | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
+  | ~symmetry~       | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
+  | ~occupation~     | ~float~ | ~(mo.num)~         | Occupation number                                                        |
 
   #+CALL: json(data=mo, title="mo")
 
@@ -575,12 +586,13 @@ prim_factor =
   :RESULTS:
   #+begin_src python :tangle trex.json
       "mo": {
-		 "type" : [ "str"  , []                     ]
-	,         "num" : [ "dim"  , []                     ]
-	, "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
-	,       "class" : [ "str"  , [ "mo.num" ]           ]
-	,    "symmetry" : [ "str"  , [ "mo.num" ]           ]
-	,  "occupation" : [ "float", [ "mo.num" ]           ]
+		    "type" : [ "str"  , []                     ]
+	,            "num" : [ "dim"  , []                     ]
+	,    "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
+	, "coefficient_im" : [ "float", [ "mo.num", "ao.num" ] ]
+	,          "class" : [ "str"  , [ "mo.num" ]           ]
+	,       "symmetry" : [ "str"  , [ "mo.num" ]           ]
+	,     "occupation" : [ "float", [ "mo.num" ]           ]
       } ,
   #+end_src
   :END:
@@ -592,28 +604,38 @@ prim_factor =
    the basis of molecular orbitals.
 
    #+NAME: mo_1e_int
-  | Variable           | Type    | Dimensions         | Description                                            |
-  |--------------------+---------+--------------------+--------------------------------------------------------|
-  | ~overlap~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                            |
-  | ~kinetic~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$            |
-  | ~potential_n_e~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  |
-  | ~ecp~              | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$ |
-  | ~core_hamiltonian~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$              |
+  | Variable              | Type    | Dimensions         | Description                                                                       |
+  |-----------------------+---------+--------------------+-----------------------------------------------------------------------------------|
+  | ~overlap~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$  (real part, general case)                            |
+  | ~kinetic~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$ (real part, general case)             |
+  | ~potential_n_e~       | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (real part, general case)  |
+  | ~ecp~                 | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (real part, general case) |
+  | ~core_hamiltonian~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$  (real part, general case)              |
+  | ~overlap_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$ (imaginary part)  (imaginary part)                    |
+  | ~kinetic_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)                    |
+  | ~potential_n_e_im~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)           |
+  | ~ecp_im~              | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part)          |
+  | ~core_hamiltonian_im~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)                        |
 
    #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
    #+RESULTS:
-   :results:
+   :RESULTS:
    #+begin_src python :tangle trex.json
        "mo_1e_int": {
-                    "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
-         ,          "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
-         ,    "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
-         ,              "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
-         , "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+		       "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,             "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	 ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	 , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
        } ,
    #+end_src
-   :end:
+   :END:
 
 ** Two-electron integrals (~mo_2e_int~ group)
 
@@ -777,6 +799,48 @@ prim_factor =
       } ,
   #+end_src
   :end:
+
+* Cell (cell group)
+
+  #+NAME: cell
+  | Variable | Type    | Dimensions | Description             |
+  |----------+---------+------------+-------------------------|
+  | ~a~      | ~float~ | ~(3)~      | First unit cell vector  |
+  | ~b~      | ~float~ | ~(3)~      | Second unit cell vector |
+  | ~c~      | ~float~ | ~(3)~      | Third unit cell vector  |
+
+  #+CALL: json(data=cell, title="cell")
+
+  #+RESULTS:
+  :RESULTS:
+  #+begin_src python :tangle trex.json
+      "cell": {
+	  "a" : [ "float", [ "3" ] ]
+	, "b" : [ "float", [ "3" ] ]
+	, "c" : [ "float", [ "3" ] ]
+      } ,
+  #+end_src
+  :END:
+
+* Periodic boundary calculations (pbc group)
+
+  #+NAME: pbc
+  | Variable   | Type    | Dimensions | Description             |
+  |------------+---------+------------+-------------------------|
+  | ~periodic~ | ~int~   |            | ~1~: true or ~0~: false |
+  | ~k_point~  | ~float~ | ~(3)~      | k-point sampling        |
+
+  #+CALL: json(data=pbc, title="pbc")
+
+  #+RESULTS:
+  :RESULTS:
+  #+begin_src python :tangle trex.json
+      "pbc": {
+	  "periodic" : [ "int"  , []      ]
+	,  "k_point" : [ "float", [ "3" ] ]
+      } ,
+  #+end_src
+  :END:
 
 * Quantum Monte Carlo data (qmc group)
 
