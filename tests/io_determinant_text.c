@@ -286,7 +286,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
 
 
   // check conversion of determinants into orbital lists
-  int64_t  size_list = NORB_PER_INT * int_num;
+  int64_t  size_list = TREXIO_NORB_PER_INT * int_num;
   int32_t* orb_list_up = (int32_t*) calloc(size_list, sizeof(int32_t));
   int32_t* orb_list_dn = (int32_t*) calloc(size_list, sizeof(int32_t));
   int32_t  occ_num_up, occ_num_dn;

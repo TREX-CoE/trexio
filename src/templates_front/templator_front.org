@@ -73,6 +73,8 @@ typedef int32_t trexio_exit_code;
 <<header>>
 #ifndef _TREXIO_PRIVATE_H
 #define _TREXIO_PRIVATE_H
+
+#include "trexio.h"
   #+end_src
 
 ** Fortran
@@ -5219,46 +5221,13 @@ def has_determinant_coefficient(trexio_file) -> bool:
      #+begin_src c :tangle prefix_front.h
 trexio_exit_code trexio_info(void);
 trexio_exit_code trexio_mark_safety(trexio_t* const file, const int32_t safety_flag);
-     #+end_src
 
-     #+begin_src c :tangle prefix_front.h
 typedef int64_t  bitfield_t;
 
-#define ORBITAL_SHIFT  1
-#define INT_SIZE       64
-#define NORB_PER_INT   ( 8*sizeof(bitfield_t) )
-
-/* Popcount and trailz */
-#if INT_SIZE == 64
-
-  extern int __builtin_popcountll (unsigned long long x_0);
-  #define popcnt(X) __builtin_popcountll((unsigned long long) X)
-
-  extern int __builtin_ctzll (unsigned long long x_0);
-  #define trailz(X) __builtin_ctzll((unsigned long long) X)
-
-#elif INT_SIZE == 32
-
-  extern int __builtin_popcountl (unsigned long x_0);
-  #define popcnt(X) __builtin_popcountl((unsigned long) X)
-
-  extern int __builtin_ctzl(unsigned long x_0);
-  #define trailz(X) __builtin_ctzl((unsigned long) X)
-
-#elif INT_SIZE == 16
-
-  extern int __builtin_popcount (unsigned int x_0);
-  #define popcnt(X) __builtin_popcount((unsigned int) X)
-
-  extern int __builtin_ctz (unsigned int x_0);
-  #define trailz(X) __builtin_ctz((unsigned int) X)
-
-#else
-
- #error("Invalid INT_SIZE")
-
-#endif
-
+#define TREXIO_ORBITAL_SHIFT  1
+#define TREXIO_INT_SIZE       64
+#define TREXIO_NORB_PER_INT   ( 8*sizeof(bitfield_t) )
+#
 trexio_exit_code trexio_to_orbital_list (const int32_t N_int, const bitfield_t* d1, int32_t* const list, int32_t* const occupied_num);
 trexio_exit_code trexio_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* d1, int32_t* const list_up, int32_t* const list_dn, int32_t* const occ_num_up, int32_t* const occ_num_dn);
 trexio_exit_code trexio_safe_to_orbital_list (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_out, const int64_t dim_out, int32_t* const num);
@@ -5282,7 +5251,7 @@ trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
   int32_t     pos;
 
   k = 0;
-  shift = ORBITAL_SHIFT;
+  shift = TREXIO_ORBITAL_SHIFT;
 
   for (int32_t i=0 ; i<N_int ; i++)
   {
@@ -5297,7 +5266,7 @@ trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
           tmp ^= ( ((bitfield_t) 1) << pos);
           k++;
       }
-      shift += NORB_PER_INT;
+      shift += TREXIO_NORB_PER_INT;
   }
 
   ,*occupied_num = (int32_t) k;
@@ -5360,6 +5329,40 @@ trexio_safe_to_orbital_list_up_dn (const int32_t N_int,
   return trexio_to_orbital_list_up_dn(N_int, dset_in, dset_up_out, dset_dn_out, num_up, num_dn);
 }
     #+end_src
+
+     #+begin_src c :tangle trexio_private.h
+/* Popcount and trailz */
+#if TREXIO_INT_SIZE == 64
+
+  extern int __builtin_popcountll (unsigned long long x_0);
+  #define popcnt(X) __builtin_popcountll((unsigned long long) X)
+
+  extern int __builtin_ctzll (unsigned long long x_0);
+  #define trailz(X) __builtin_ctzll((unsigned long long) X)
+
+#elif TREXIO_INT_SIZE == 32
+
+  extern int __builtin_popcountl (unsigned long x_0);
+  #define popcnt(X) __builtin_popcountl((unsigned long) X)
+
+  extern int __builtin_ctzl(unsigned long x_0);
+  #define trailz(X) __builtin_ctzl((unsigned long) X)
+
+#elif TREXIO_INT_SIZE == 16
+
+  extern int __builtin_popcount (unsigned int x_0);
+  #define popcnt(X) __builtin_popcount((unsigned int) X)
+
+  extern int __builtin_ctz (unsigned int x_0);
+  #define trailz(X) __builtin_ctz((unsigned int) X)
+
+#else
+
+ #error("Invalid TREXIO_INT_SIZE")
+
+#endif
+     #+end_src
+
 
     #+begin_src c :tangle prefix_front.c
 trexio_exit_code
@@ -5559,7 +5562,7 @@ contains
    end function trexio_inquire
   #+end_src
 
-  The subrotine below wrap the ~to_orbital_list~ functions to shift the MO indices
+  The subroutines below wrap the ~to_orbital_list~ functions to shift the MO indices
   by 1 since in Fortran arrays are 1-based and C/Python they are 0-based.
 
   #+begin_src f90 :tangle helper_fortran.f90
