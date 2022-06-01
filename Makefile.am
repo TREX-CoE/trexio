@@ -238,8 +238,9 @@ numpy_i       = $(srcdir)/src/numpy.i
 
 
 python-test: $(TEST_PY)
-	python3 $(TEST_PY)
+	python3 -m pytest -v $(TEST_PY)
 	$(RM) -r -- __pycache__
+	$(RM) -f -- test_file_py.h5 unsafe_test_file_py.h5
 
 python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \

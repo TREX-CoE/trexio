@@ -28,6 +28,7 @@ fi
 # Install/upgrade packages required for the installation
 python3 -m pip install --upgrade setuptools build pip
 python3 -m pip install -r requirements.txt
+python3 -m pip install pytest
 
 # export NUMPY_INCLUDEDIR environment variable needed for the proper setup
 #source tools/set_NUMPY_INCLUDEDIR.sh

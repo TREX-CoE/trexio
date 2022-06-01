@@ -1,385 +1,320 @@
 #!/usr/bin/env python3
 
-import os
-import shutil
 import numpy as np
-
+import pytest
 import trexio
+from benzene_data import *
 
-#=========================================================#
-#======== SETUP THE BACK END AND OUTPUT FILE NAME ========#
-#=========================================================#
-
-# 0: TREXIO_HDF5 ; 1: TREXIO_TEXT
-TEST_TREXIO_BACKEND = 0
-OUTPUT_FILENAME_TEXT = 'test_py_swig.dir'
-OUTPUT_FILENAME_HDF5 = 'test_py_swig.h5'
-
-
-# define TREXIO file name
-if TEST_TREXIO_BACKEND == trexio.TREXIO_HDF5:
-    output_filename = OUTPUT_FILENAME_HDF5
-elif TEST_TREXIO_BACKEND == trexio.TREXIO_TEXT:
-    output_filename = OUTPUT_FILENAME_TEXT
-else:
-    raise ValueError ('Specify one of the supported back ends as TEST_TREXIO_BACKEND')
-
-
-# remove TREXIO file if exists in the current directory
-try:
-    if TEST_TREXIO_BACKEND == trexio.TREXIO_HDF5:
-        os.remove(output_filename)
-    elif TEST_TREXIO_BACKEND == trexio.TREXIO_TEXT:
-        shutil.rmtree(output_filename)
-except:
-    print('Nothing to remove.')
 
-#=========================================================#
-#============ WRITE THE DATA IN THE TEST FILE ============#
-#=========================================================#
+FILENAME = 'test_file_py.h5'
+BACK_END = trexio.TREXIO_HDF5
 
-trexio.info()
-
-
-# test with ... as ... block
-with trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND) as tfile:
-    trexio.write_metadata_description(tfile, 'Test file produced by the Python API')
-    assert trexio.has_metadata_description(tfile)
-    assert tfile.isOpen
-
-# the file handle can remain existing but the file itself is closed upon exit from the `with` block
-assert not tfile.isOpen
-
-
-# create TREXIO file and open it for writing
-test_file = trexio.File(output_filename, mode='w', back_end=TEST_TREXIO_BACKEND)
-assert test_file.exists
-
-# Print docstring of the trexio.open function
-#print(trexio.open.__doc__)
 
-nucleus_num = 12
+def clean():
+    """Remove test files."""
+    import os
 
-try:
-    trexio.write_nucleus_num(test_file, -100)
-except trexio.Error:
-    print('Raise error for an attempt to write negative nucleus_num: checked.')
+    try:
+        os.remove(FILENAME)
+        os.remove('unsafe_' + FILENAME)
+    except FileNotFoundError:
+        pass
 
-# write nucleus_num in the file
-try:
-    trexio.write_nucleus_num(test_file, nucleus_num)
-except:
-    raise
-
-try:
-    trexio.write_nucleus_num(test_file, nucleus_num*2)
-except trexio.Error:
-    print('Raise error for an attempt to overwrite nucleus_num: checked.')
-
-# initialize charge arrays as a list and convert it to numpy array
-charges = [6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.]
-#charges_np = np.array(charges, dtype=np.float32)
-charges_np = np.array(charges, dtype=np.int32)
-
-# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived
-# from the size of the list/array by SWIG using typemaps from numpy.i
-trexio.write_nucleus_charge(test_file, charges_np)
-
-basis_shell_num = 24
-# initialize arrays of nuclear indices as a list and convert it to numpy array
-indices = [i for i in range(basis_shell_num)]
-# type cast is important here because by default numpy transforms a list of integers into int64 array
-indices_np = np.array(indices, dtype=np.int64)
-
-# first write basis_shell_num because it is needed to check dimensions of basis_nucleus_index in TREXIO >= 2.0.0
-trexio.write_basis_shell_num(test_file, basis_shell_num)
-
-# function call below works with both lists and numpy arrays, dimension needed for memory-safety is derived
-# from the size of the list/array by SWIG using typemacs from numpy.i
-trexio.write_basis_nucleus_index(test_file, indices_np)
-
-# initialize a list of nuclear coordinates
-coords = [
- [ 0.00000000 ,  1.39250319 ,  0.00000000 ],
- [-1.20594314 ,  0.69625160 ,  0.00000000 ],
- [-1.20594314 , -0.69625160 ,  0.00000000 ],
- [ 0.00000000 , -1.39250319 ,  0.00000000 ],
- [ 1.20594314 , -0.69625160 ,  0.00000000 ],
- [ 1.20594314 ,  0.69625160 ,  0.00000000 ],
- [-2.14171677 ,  1.23652075 ,  0.00000000 ],
- [-2.14171677 , -1.23652075 ,  0.00000000 ],
- [ 0.00000000 , -2.47304151 ,  0.00000000 ],
- [ 2.14171677 , -1.23652075 ,  0.00000000 ],
- [ 2.14171677 ,  1.23652075 ,  0.00000000 ],
- [ 0.00000000 ,  2.47304151 ,  0.00000000 ],
-  ]
 
-# write coordinates in the file
-trexio.write_nucleus_coord(test_file, coords)
-
-
-# write ao_num (needed later to write sparse ao_2e_int_eri integrals)
-trexio.write_ao_num(test_file, 600)
-
-# write sparse data in the file
-num_integrals = 100
-indices = [i for i in range(num_integrals*4)]
-values  = [(3.14 + float(i)) for i in range(num_integrals)]
+def test_info():
+    """Print the output of the trexio.info function."""
+    trexio.info()
 
-trexio.write_ao_2e_int_eri(test_file, 0, num_integrals, indices, values)
-
-
-# write mo_num (needed later to write determinants)
-mo_num = 150
-trexio.write_mo_num(test_file, mo_num)
-
-int_num = trexio.get_int64_num(test_file)
-assert(int_num == int((mo_num-1)/64+1))
-int_num *= 2
-
-# write determinants in the file
-num_dets = 50
-offset = 0
-dets = [i for i in range(num_dets*int_num)]
-coeffs = [(3.14 + float(i)) for i in range(num_dets)]
-coeffs_s2 = [(6.28 + float(i)) for i in range(num_dets)]
-
-trexio.write_determinant_list(test_file, offset, num_dets, dets)
-trexio.write_determinant_coefficient(test_file, offset, num_dets, coeffs)
-
-test_file.set_state(2)
-trexio.write_determinant_coefficient(test_file, offset, num_dets, coeffs_s2)
-test_file.set_state(0)
-
-# manually check the consistency between coefficient_size and number of determinants
-assert trexio.read_determinant_coefficient_size(test_file) == trexio.read_determinant_num(test_file)
-
-# write nucleus_point_group in the file
-point_group = 'B3U'
-
-trexio.write_nucleus_point_group(test_file, point_group)
-
-
-# write nucleus_label in the file
-labels = [
-        'C',
-        'C',
-        'C',
-        'C',
-        'C',
-        'C',
-        'H',
-        'H',
-        'H',
-        'H',
-        'H',
-        'H']
-
-trexio.write_nucleus_label(test_file,labels)
-
-# close TREXIO file
-# this call is no longer needed as we introduced TREXIO_File class which has a desctructor that closes the file
-#trexio.close(test_file)
-# without calling destructor on test_file the TREXIO_FILE is not getting created and the data is not written when using TEXT back end.
-# This, the user still has to explicitly call destructor on test_file object instead of the trexio.close function.
-# This is only an issue when the data is getting written and read in the same session (e.g. in Jupyter notebook)
-del test_file
-
-
-#==========================================================#
-#========== DELETE THE GROUP FROM THE TEST FILE ===========#
-#==========================================================#
-
-unsafe_file = trexio.File(output_filename, 'u', TEST_TREXIO_BACKEND)
-
-# overwrite existing data (only allowed in 'u' - unsafe mode)
-trexio.write_nucleus_num(unsafe_file, nucleus_num)
-trexio.write_nucleus_charge(unsafe_file, charges_np)
-trexio.write_nucleus_coord(unsafe_file, coords)
-trexio.write_nucleus_label(unsafe_file,labels)
-trexio.write_nucleus_point_group(unsafe_file, point_group)
-
-print('Overwriting the data in UNSAFE mode: checked')
-
-# delete existing group (only allowed in 'u' - unsafe mode)
-trexio.delete_nucleus(unsafe_file)
-
-assert not trexio.has_nucleus_num(unsafe_file)
-assert not trexio.has_nucleus_charge(unsafe_file)
-assert not trexio.has_nucleus_coord(unsafe_file)
-assert not trexio.has_nucleus_label(unsafe_file)
-assert not trexio.has_nucleus_point_group(unsafe_file)
-
-print('Deleting nucleus group in UNSAFE mode: checked')
-
-# restore the deleted data
-trexio.write_nucleus_num(unsafe_file, nucleus_num)
-trexio.write_nucleus_charge(unsafe_file, charges_np)
-trexio.write_nucleus_coord(unsafe_file, coords)
-trexio.write_nucleus_label(unsafe_file,labels)
-trexio.write_nucleus_point_group(unsafe_file, point_group)
-
-del unsafe_file
-
-#==========================================================#
-#============ READ THE DATA FROM THE TEST FILE ============#
-#==========================================================#
-
-# open previously created TREXIO file, now in 'read' mode
-test_file2 = trexio.File(output_filename, 'r', trexio.TREXIO_AUTO)
-assert test_file2.exists
-
-# check for existence of some of the previously written variables
-assert trexio.has_nucleus_num(test_file2)
-assert trexio.has_nucleus_charge(test_file2)
-assert trexio.has_nucleus_coord(test_file2)
-assert trexio.has_nucleus_label(test_file2)
-assert trexio.has_nucleus_point_group(test_file2)
-assert trexio.has_ao_2e_int_eri(test_file2)
-assert trexio.has_determinant_list(test_file2)
-assert trexio.has_determinant_coefficient(test_file2)
-
-# read nucleus_num from file
-rnum = trexio.read_nucleus_num(test_file2)
-assert rnum==nucleus_num
-
-# safe call to read_nucleus_charge array of float values
-rcharges_np = trexio.read_nucleus_charge(test_file2, dim=nucleus_num)
-assert rcharges_np.dtype is np.dtype(np.float64)
-np.testing.assert_array_almost_equal(rcharges_np, charges_np, decimal=8)
-
-# unsafe call to read_safe should fail with error message corresponding to TREXIO_UNSAFE_ARRAY_DIM
-try:
-    rcharges_fail = trexio.read_nucleus_charge(test_file2, dim=nucleus_num*5)
-except trexio.Error:
-    print('Unsafe call to safe API: checked')
-
-# safe call to read array of int values (nuclear indices)
-rindices_np_16 = trexio.read_basis_nucleus_index(test_file2, dim=basis_shell_num, dtype=np.int16)
-assert rindices_np_16.dtype is np.dtype(np.int16)
-for i in range(basis_shell_num):
-    assert rindices_np_16[i]==indices_np[i]
-
-rindices_np_32 = trexio.read_basis_nucleus_index(test_file2, dim=basis_shell_num, dtype=np.int32)
-assert rindices_np_32.dtype is np.dtype(np.int32)
-for i in range(basis_shell_num):
-    assert rindices_np_32[i]==indices_np[i]
-
-rindices_np_64 = trexio.read_basis_nucleus_index(test_file2)
-assert rindices_np_64.dtype is np.dtype(np.int64)
-assert rindices_np_64.size==basis_shell_num
-for i in range(basis_shell_num):
-    assert rindices_np_64[i]==indices_np[i]
-
-# read nuclear coordinates without providing optional argument dim
-rcoords_np = trexio.read_nucleus_coord(test_file2)
-
-assert rcoords_np.size==nucleus_num*3
-np.testing.assert_array_almost_equal(rcoords_np, np.array(coords).reshape(nucleus_num,3), decimal=8)
-
-# set doReshape to False to get a flat 1D array (e.g. when reading matrices like nuclear coordinates)
-#rcoords_reshaped_2 = trexio.read_nucleus_coord(test_file2, doReshape=False)
-
-# read number of integrals already present in the file
-assert trexio.has_ao_2e_int_eri(test_file2)
-assert trexio.read_ao_2e_int_eri_size(test_file2)==num_integrals
-
-# read sparse arrays on ao_2e_int_eri integrals
-buf_size = 60
-offset_file = 0
-# read full buf_size (i.e. the one that does not reach EOF)
-indices_sparse_np, value_sparse_np, read_buf_size, eof = trexio.read_ao_2e_int_eri(test_file2, offset_file, buf_size)
-print(f'First complete sparse read size: {read_buf_size}')
-#print(indices_sparse_np)
-assert not eof
-assert read_buf_size==buf_size
-assert indices_sparse_np[0][0]==0
-assert indices_sparse_np[read_buf_size-1][3]==read_buf_size*4-1
-offset_file += buf_size
-
-# read incomplete buf_size (i.e. the one that does reach EOF)
-indices_sparse_np, value_sparse_np, read_buf_size, eof2 = trexio.read_ao_2e_int_eri(test_file2, offset_file, buf_size)
-print(f'Second incomplete sparse read size: {read_buf_size}')
-#print(indices_sparse_np)
-assert eof2
-assert read_buf_size==(num_integrals - buf_size)
-assert indices_sparse_np[0][0]==offset_file*4
-assert indices_sparse_np[read_buf_size-1][3]==(offset_file+read_buf_size)*4-1
-
-# read number of determinants already present in the file
-assert trexio.has_determinant_list(test_file2)
-assert trexio.read_determinant_num(test_file2)==num_dets
-
-# read determinants (list of ints and float coefficients)
-buf_size = 20
-offset_file = 0
-# read full buf_size (i.e. the one that does not reach EOF)
-dets_np, read_buf_size, eof = trexio.read_determinant_list(test_file2, offset_file, buf_size)
-print(f'First complete read of determinant list: {read_buf_size}')
-#print(indices_sparse_np)
-assert not eof
-assert read_buf_size==buf_size
-assert dets_np[0][0]==0
-assert dets_np[read_buf_size-1][int_num-1]==read_buf_size*int_num-1
-
-coefficients_np, read_buf_size, eof = trexio.read_determinant_coefficient(test_file2, offset_file, buf_size)
-print(f'First complete read of determinant coefficients: {read_buf_size}')
-#print(indices_sparse_np)
-assert not eof
-assert read_buf_size==buf_size
-
-# convert one determinant into a list of orbitals
-
-dets_tmp = dets_np[read_buf_size-1][:]
-#print(dets_tmp)
-
-# divide by 2 because in this test int_num is the total number of integers (i.e. up-spin + down_spin)
-orb_list_up, orb_list_dn = trexio.to_orbital_list_up_dn(int(int_num/2), dets_tmp)
-assert(orb_list_up[0] == 1)
-assert(orb_list_dn[0] == 0)
-#print(orb_list_up)
-#print(orb_list_dn)
-
-# read array of nuclear labels
-rlabels_2d = trexio.read_nucleus_label(test_file2, dim=nucleus_num)
-print(rlabels_2d)
-for i in range(nucleus_num):
-    assert rlabels_2d[i]==labels[i]
-
-# read a string corresponding to nuclear point group
-rpoint_group = trexio.read_nucleus_point_group(test_file2)
-assert rpoint_group==point_group
-
-# another way to read only if the variable exists
-if trexio.has_ao_num(test_file2):
-    rao_num = trexio.read_ao_num(test_file2)
-else:
-    print('Pass on reading the non-existing variable ao_num: checked')
-
-# close TREXIO file
-#trexio.close(test_file2)
-
-# cleaning (remove the TREXIO file)
-try:
-   if TEST_TREXIO_BACKEND == trexio.TREXIO_HDF5:
-       os.remove(output_filename)
-   elif TEST_TREXIO_BACKEND == trexio.TREXIO_TEXT:
-       shutil.rmtree(output_filename)
-except:
-    print(f'No output file {output_filename} has been produced')
-
-#==========================================================#
-
-#==========================================================#
-#======= OPEN NON-EXISTING FILE TO TEST TREXIO.OPEN =======#
-#==========================================================#
-
-try:
-    void_file = trexio.File('non_existing.file', 'r', TEST_TREXIO_BACKEND)
-except trexio.Error as e:
-    if e.error == trexio.TREXIO_OPEN_ERROR:
-        print('Opening non-existing file returns TREXIO_OPEN_ERROR: checked')
-    else:
-        raise ValueError('[DEV]: error handling of trexio_open function has changed; check the consistency')
-
-#==========================================================#
+
+def test_void():
+    """Check raise of an error upon I/O on non-existing file."""
+    with pytest.raises(trexio.Error):
+        _ = trexio.File('void.file', 'r', BACK_END)
+
+
+def test_orbital_list():
+    """Convert one determinant into a list of orbitals."""
+    orb_list_up, orb_list_dn = trexio.to_orbital_list_up_dn(int64_num, det_test)
+    assert orb_list_up[0] == 0 
+    assert orb_list_dn[0] == 1
+
+
+class TestIO:
+    """Unit tests for writing/reading different blocks of the TREXIO file."""
+
+    filename  = FILENAME
+    back_end  = BACK_END
+    mode      = 'w'
+    test_file = None
+
+    clean()
+
+
+    def __del__(self):
+        if self.test_file:
+            if self.test_file.isOpen:
+                self.test_file.close()
+
+
+    def open(self, filename=None, mode=None, back_end=None):
+        """Create a TREXIO file and open it for writing."""
+        if not filename:
+            filename = self.filename
+        else:
+            self.filename = filename
+        if not mode:
+            mode = self.mode
+        else: 
+            self.mode = mode
+        if not back_end:
+            back_end = self.back_end
+        else:
+            self.back_end = back_end
+
+        self.test_file = trexio.File(filename, mode, back_end)
+        assert self.test_file.exists
+    
+
+    def test_close(self):
+        """Close the file."""
+        self.open()
+        if self.test_file.isOpen:
+            self.test_file.close()
+        assert not self.test_file.isOpen
+
+    
+    def test_errors(self):
+        """Test some exceptions based on trexio.Error class."""
+        self.open(filename='unsafe_' + self.filename, mode='w', back_end=self.back_end)
+        # try to write a negative number (should raise an error)
+        with pytest.raises(trexio.Error):
+            trexio.write_nucleus_num(self.test_file, -100)
+
+        trexio.write_nucleus_num(self.test_file, nucleus_num)
+
+        # try to overwrite a number (should raise an error)
+        with pytest.raises(trexio.Error):
+            trexio.write_nucleus_num(self.test_file, nucleus_num * 2)
+
+
+    def test_num(self):
+        """Write a number."""
+        self.open()
+        trexio.write_nucleus_num(self.test_file, nucleus_num)
+        assert trexio.has_nucleus_num(self.test_file)
+
+    
+    def test_str(self):
+        """Write a string."""
+        self.open()
+        trexio.write_nucleus_point_group(self.test_file, point_group)
+        assert trexio.has_nucleus_point_group(self.test_file)
+
+
+    def test_array_str(self):
+        """Write an array of strings."""
+        self.open()
+        if not trexio.has_nucleus_num(self.test_file):
+            self.test_num()
+        trexio.write_nucleus_label(self.test_file, nucleus_label)
+        assert trexio.has_nucleus_label(self.test_file)
+
+
+    def test_array_1D(self):
+        """Write array of charges."""
+        self.open()
+        if not trexio.has_nucleus_num(self.test_file):
+            self.test_num()
+        trexio.write_nucleus_charge(self.test_file, nucleus_charge)
+        assert trexio.has_nucleus_charge(self.test_file)
+
+
+    def test_array_2D(self):
+        """Write array of coordinates."""
+        self.open()
+        if not trexio.has_nucleus_num(self.test_file):
+            self.test_num()        
+        trexio.write_nucleus_coord(self.test_file, nucleus_coord)
+        assert trexio.has_nucleus_coord(self.test_file)
+
+
+    def test_indices(self):
+        """Write array of indices."""
+        self.open()
+        # type cast is important here because by default numpy transforms a list of integers into int64 array
+        indices_np = np.array(nucleus_index, dtype=np.int64)
+        # first write basis_shell_num because it is needed to check dimensions of basis_nucleus_index
+        trexio.write_basis_shell_num(self.test_file, basis_shell_num)
+        # now write the indices
+        trexio.write_basis_nucleus_index(self.test_file, indices_np)
+        assert trexio.has_basis_nucleus_index(self.test_file)
+
+
+    def test_sparse(self):
+        """Write a sparse array."""
+        self.open()
+        # write ao_num (needed later to write sparse ao_2e_int_eri integrals)
+        trexio.write_ao_num(self.test_file, ao_num)
+        # one complete write (no chunking)
+        offset = 0
+        trexio.write_ao_2e_int_eri(self.test_file, offset, num_integrals, indices, values)
+        assert trexio.has_ao_2e_int_eri(self.test_file)
+
+
+    def test_determinant(self):
+        """Write CI determinants and coefficients."""
+        self.open()
+        # write mo_num (needed later to write determinants)
+        trexio.write_mo_num(self.test_file, mo_num)
+        # get the number of bit-strings per spin component
+        int_num = trexio.get_int64_num(self.test_file)
+        assert int_num == int64_num
+        # write the data for the ground state
+        offset = 0
+        trexio.write_determinant_list(self.test_file, offset, det_num, dets)
+        assert trexio.has_determinant_list(self.test_file)
+        trexio.write_determinant_coefficient(self.test_file, offset, det_num, coeffs)
+        assert trexio.has_determinant_coefficient(self.test_file)
+        # write the data for some other state
+        self.test_file.set_state(2)
+        trexio.write_determinant_coefficient(self.test_file, offset, det_num, coeffs_s2)
+        assert trexio.has_determinant_coefficient(self.test_file)
+        self.test_file.set_state(0)
+        # manually check the consistency between coefficient_size and number of determinants
+        assert trexio.read_determinant_coefficient_size(self.test_file) == trexio.read_determinant_num(self.test_file)
+
+
+    def test_delete_group(self):
+        """Delete a group."""
+        self.open(filename='unsafe_' + self.filename, mode='u', back_end=self.back_end)
+
+        self.test_num()
+        self.test_array_1D()
+        self.test_array_2D()
+
+        trexio.delete_nucleus(self.test_file)
+
+        assert not trexio.has_nucleus_num(self.test_file)
+        assert not trexio.has_nucleus_charge(self.test_file)
+        assert not trexio.has_nucleus_coord(self.test_file)
+
+
+    def test_context_manager(self):
+        """Test the with ... as ... context handling."""
+        with trexio.File(filename=self.filename, mode='u', back_end=self.back_end) as tfile:
+            trexio.write_metadata_description(tfile, 'Test file produced by the Python API')
+            assert trexio.has_metadata_description(tfile)
+            assert tfile.isOpen
+        # the file handle can remain existing but the file itself is closed upon exit from the `with` block
+        assert not tfile.isOpen
+
+
+    def test_read_num(self):
+        """Read a number."""
+        self.open(mode='r')
+        num_r = trexio.read_nucleus_num(self.test_file)
+        assert num_r == nucleus_num
+
+
+    def test_read_array_1D(self):
+        """Read an array."""
+        self.open(mode='r')
+        charges_np_r = trexio.read_nucleus_charge(self.test_file)
+        assert charges_np_r.dtype is np.dtype(np.float64)
+        assert charges_np_r.size == nucleus_num
+        np.testing.assert_array_almost_equal(charges_np_r, np.array(nucleus_charge), decimal=8)
+
+
+    def test_read_array_2D(self):
+        """Read an array."""
+        self.open(mode='r')
+        # read nuclear coordinates without providing optional argument dim
+        coords_np = trexio.read_nucleus_coord(self.test_file)
+        assert coords_np.dtype is np.dtype(np.float64)
+        assert coords_np.size == nucleus_num * 3
+        np.testing.assert_array_almost_equal(coords_np, np.array(nucleus_coord).reshape(nucleus_num,3), decimal=8)
+
+
+    def test_read_errors(self):
+        """Test some reading errors."""
+        self.open(mode='r')
+        # unsafe call to read_safe should fail with error message corresponding to TREXIO_UNSAFE_ARRAY_DIM
+        with pytest.raises(trexio.Error):
+            _ = trexio.read_nucleus_charge(self.test_file, dim=nucleus_num/2)
+
+
+    def test_read_integers(self):
+        """Read some integer arrays."""
+        self.open(mode='r')
+
+        indices_np_16 = trexio.read_basis_nucleus_index(self.test_file, dtype=np.int16)
+        assert indices_np_16.dtype is np.dtype(np.int16)
+        assert (indices_np_16 == np.array(nucleus_index)).all()
+
+        indices_np_32 = trexio.read_basis_nucleus_index(self.test_file, dtype=np.int32)
+        assert indices_np_32.dtype is np.dtype(np.int32)
+        assert (indices_np_32 == np.array(nucleus_index)).all()
+
+        indices_np_64 = trexio.read_basis_nucleus_index(self.test_file)
+        assert indices_np_64.dtype is np.dtype(np.int64)
+        assert indices_np_64.size == basis_shell_num
+        assert (indices_np_64 == np.array(nucleus_index)).all()
+
+
+    def test_sparse_read(self):
+        """Read a sparse array."""
+        self.open(mode='r')
+        # read sparse arrays on ao_2e_int_eri integrals
+        buf_size    = 60
+        offset_file = 0
+        # read full buf_size (i.e. the one that does not reach EOF)
+        indices_sparse_np, value_sparse_np, read_buf_size, eof = trexio.read_ao_2e_int_eri(self.test_file, offset_file, buf_size)
+        #print(f'First complete sparse read size: {read_buf_size}')
+        assert not eof
+        assert read_buf_size == buf_size
+        assert indices_sparse_np[0][0] == 0
+        assert indices_sparse_np[read_buf_size-1][3] == read_buf_size * 4 - 1
+
+        offset_file += buf_size
+        # read incomplete buf_size (i.e. the one that does reach EOF)
+        indices_sparse_np, value_sparse_np, read_buf_size, eof = trexio.read_ao_2e_int_eri(self.test_file, offset_file, buf_size)
+        #print(f'Second incomplete sparse read size: {read_buf_size}')
+        assert eof
+        assert read_buf_size == (num_integrals - buf_size)
+        assert indices_sparse_np[0][0] == offset_file * 4
+        assert indices_sparse_np[read_buf_size-1][3] == (offset_file + read_buf_size) * 4 - 1
+
+
+    def test_determinant_read(self):
+        """Read the CI determinants."""
+        self.open(mode='r')
+        # read determinants (list of ints and float coefficients)
+        buf_size    = 100
+        offset_file = 0
+        # read full buf_size (i.e. the one that does not reach EOF)
+        dets_np, read_buf_size, eof = trexio.read_determinant_list(self.test_file, offset_file, buf_size)
+        #print(f'First complete read of determinant list: {read_buf_size}')
+        assert not eof
+        assert read_buf_size == buf_size
+        assert dets_np[0][0] == 0
+        assert dets_np[read_buf_size-1][int64_num*2-1] == read_buf_size * int64_num * 2- 1
+
+        coefficients_np, read_buf_size, eof = trexio.read_determinant_coefficient(self.test_file, offset_file, buf_size)
+        #print(f'First complete read of determinant coefficients: {read_buf_size}')
+        assert not eof
+        assert read_buf_size == buf_size
+
+
+    def test_array_str_read(self):
+        """Read an array of strings."""
+        self.open(mode='r')
+        labels_r = trexio.read_nucleus_label(self.test_file)
+        assert len(labels_r) == nucleus_num
+        assert labels_r == nucleus_label
+
+
+    def test_str_read(self):
+        """Read a string."""
+        self.open(mode='r')  
+        point_group_r = trexio.read_nucleus_point_group(self.test_file)
+        assert point_group_r == point_group
