@@ -100,6 +100,12 @@ module trexio
 This package is a top-level wrapper of the SWIG-generated pytrexio module.
 """
 
+from os import path
+
+try:
+    import numpy as np
+except ImportError:
+    raise Exception("NumPy cannot be imported.")
 
 try:
     import pytrexio.pytrexio as pytr
@@ -110,7 +116,6 @@ except ImportError:
 PYTREXIO_MAX_STR_LENGTH = 2048
 
 # setuptools do not assign __version__ variable to the trexio package, so we set it manually
-from os import path
 __trexio_path__ = path.dirname(path.abspath(__file__))
 with open(path.join(path.join(__trexio_path__, 'pytrexio'), '_version.py')) as version_file:
     __version__ = version_file.read().split('"')[1]
@@ -2728,11 +2733,6 @@ def write_$group_dset$(trexio_file, dset_w) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
-
     doConversion = False
     doFlatten = False
     if not isinstance(dset_w, (list, tuple)):
@@ -2801,24 +2801,24 @@ def read_$group_dset$(trexio_file, dim = None, doReshape = None, dtype = None):
         - Exception from some other error (e.g. RuntimeError).
 """
 
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
-
     if doReshape is None:
         doReshape = True
 
     # if dim is not specified, read dimensions from the TREXIO file
     dims_list = None
-    if dim is None or doReshape:
+    if doReshape:
         $group_dset_dim$ = read_$group_dset_dim$(trexio_file)
 
         dims_list = [$group_dset_dim_list$]
-        dim = 1
+        dim_real  = 1
         for i in range($group_dset_rank$):
-            dim *= dims_list[i]
+            dim_real *= dims_list[i]
 
+    if dim:
+        if dim_real != dim:
+            raise Error(TREXIO_UNSAFE_ARRAY_DIM)
+    else:
+        dim = dim_real
 
     shape = tuple(dims_list)
     if shape is None and doReshape:
@@ -3348,11 +3348,6 @@ def write_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int, in
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
-
     if not isinstance(offset_file, int):
         raise TypeError("offset_file argument has to be an integer.")
     if not isinstance(buffer_size, int):
@@ -3438,11 +3433,6 @@ def read_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int) -> 
             and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
-
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
 
     if not isinstance(offset_file, int):
         raise TypeError("offset_file argument has to be an integer.")
@@ -3933,15 +3923,18 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    # if dim is not specified, read dimensions from the TREXIO file
-    if dim is None:
-        $group_dset_dim$ = read_$group_dset_dim$(trexio_file)
+    $group_dset_dim$ = read_$group_dset_dim$(trexio_file)
+    
+    dims_list = [$group_dset_dim_list$]
+    dim_real  = 1
+    for i in range($group_dset_rank$):
+        dim_real *= dims_list[i]
 
-        dims_list = [$group_dset_dim_list$]
-        dim = 1
-        for i in range($group_dset_rank$):
-            dim *= dims_list[i]
-
+    if dim:
+        if dim_real != dim:
+            raise Error(TREXIO_UNSAFE_ARRAY_DIM)
+    else:
+        dim = dim_real
 
     rc, dset_1d_r = pytr.trexio_read_$group_dset$_low(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
     if rc != TREXIO_SUCCESS:
@@ -4880,11 +4873,6 @@ def write_determinant_list(trexio_file: File, offset_file: int, buffer_size: int
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
-
     if not isinstance(offset_file, int):
         raise TypeError("offset_file argument has to be an integer.")
     if not isinstance(buffer_size, int):
@@ -4949,11 +4937,6 @@ def write_determinant_coefficient(trexio_file: File, offset_file: int, buffer_si
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
-
     if not isinstance(offset_file, int):
         raise TypeError("offset_file argument has to be an integer.")
     if not isinstance(buffer_size, int):
@@ -4999,11 +4982,6 @@ def read_determinant_list(trexio_file: File, offset_file: int, buffer_size: int)
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
         - Exception from some other error (e.g. RuntimeError).
     """
-
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
 
     if not isinstance(offset_file, int):
         raise TypeError("offset_file argument has to be an integer.")
@@ -5070,11 +5048,6 @@ def read_determinant_coefficient(trexio_file: File, offset_file: int, buffer_siz
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
         - Exception from some other error (e.g. RuntimeError).
     """
-
-    try:
-        import numpy as np
-    except ImportError:
-        raise Exception("NumPy cannot be imported.")
 
     if not isinstance(offset_file, int):
         raise TypeError("offset_file argument has to be an integer.")
