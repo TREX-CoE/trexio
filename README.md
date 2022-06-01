@@ -34,7 +34,7 @@ TREX library for efficient I/O.
 
 - python3       (>= 3.6)
 - Emacs         (>= 26.0)
-- SWIG          (>= 4.0)
+- SWIG          (>= 4.0)   [required for the Python API] 
 
 ## Installation procedure from the GitHub repo clone (for developers):
 
@@ -60,6 +60,18 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 **Note: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.**
 
 **Note: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `-DCMAKE_C_COMPILER=mpicc` to the `cmake` command.**
+
+## Installation procedure for conda users
+
+The official releases (tarballs) of TREXIO `>2.0.0` are also available via the `conda-forge` channel. 
+The pre-compiled stable binaries of `trexio` can be installed as follows:
+
+```
+conda install trexio -c conda-forge
+```
+
+More details can be found in the corresponding [trexio-feedstock](https://github.com/conda-forge/trexio-feedstock).
+Note that both parallel (see `mpi_openmpi` prefix) and serial (`nompi`) variants are provided.
 
 ## Compilation without the HDF5 library
 
@@ -129,6 +141,12 @@ make python-install
 
 **Note: this implies that both HDF5 and SWIG are installed and available.
 At the moment, it is not possible to configure the Python API without HDF5 library.**
+
+We rely on the `pytest` package for unit testing. It can be installed via `pip install pytest`. To test the installation, run
+
+```
+make python-test
+```
 
 We highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.
 
