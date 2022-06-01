@@ -82,11 +82,14 @@ function build_wheel_for_py()
    # install the produced manylinux wheel in the virtual environment
    python3 -m pip install wheelhouse/trexio-${TR_VERSION}-${CPYTHON}-manylinux*.whl
 
+   # install pytest for testing
+   pip install pytest
    # run test script
-   cd test && python3 test_api.py && cd ..
+   pytest -v test/test_api.py
 
    # cleaning
-   rm -rf -- dist/ build/ trexio.egg-info/
+   rm -rf -- dist/ build/ trexio.egg-info/ 
+   rm -- test_file_py.h5 unsafe_test_file_py.h5
 
    # deactivate the current environment
    deactivate
