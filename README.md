@@ -63,6 +63,9 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 
 ## Installation procedure for conda users
 
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/trexio/badges/version.svg)](https://anaconda.org/conda-forge/trexio)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/trexio/badges/platforms.svg)](https://anaconda.org/conda-forge/trexio)
+
 The official releases of TREXIO `>2.0.0` are also available via the `conda-forge` channel.
 The pre-compiled stable binaries of `trexio` can be installed as follows:
 
