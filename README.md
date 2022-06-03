@@ -34,7 +34,7 @@ TREX library for efficient I/O.
 
 - python3       (>= 3.6)
 - Emacs         (>= 26.0)
-- SWIG          (>= 4.0)   [required for the Python API] 
+- SWIG          (>= 4.0)   [required for the Python API]
 
 ## Installation procedure from the GitHub repo clone (for developers):
 
@@ -63,7 +63,7 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 
 ## Installation procedure for conda users
 
-The official releases (tarballs) of TREXIO `>2.0.0` are also available via the `conda-forge` channel. 
+The official releases of TREXIO `>2.0.0` are also available via the `conda-forge` channel.
 The pre-compiled stable binaries of `trexio` can be installed as follows:
 
 ```
