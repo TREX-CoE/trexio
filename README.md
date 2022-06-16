@@ -1,5 +1,6 @@
 
 # TREXIO
+<img src="https://trex-coe.eu/sites/default/files/styles/responsive_no_crop/public/2022-01/TREXIO%20Code.png" width=200>
 
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
