@@ -704,6 +704,42 @@ prim_factor =
   #+end_src
   :END:
 
+* Configuration state functions (csf group)
+
+  The configuration interaction (CI) wave function $\Psi$ can be
+  expanded in the basis of [[https://en.wikipedia.org/wiki/Configuration_state_function][configuration state functions]] (CSFs)
+  $\Psi_I$ as follows
+
+  \[
+  \Psi = \sum_I C_I \psi_I.
+  \]
+
+  Each CSF is a linear combination of Slater determinants. Slater
+  determinants are stored in the =determinant= section. In this group
+  we store the CI coefficients in the basis of CSFs, and the
+  matrix $\langle D_I | \psi_J \rangle$ needed to project the CSFs in
+  the basis of Slater determinants.
+
+  #+NAME: csf
+  | Variable          | Type            | Dimensions                  | Description                                    |
+  |-------------------+-----------------+-----------------------------+------------------------------------------------|
+  | ~num~             | ~dim readonly~  |                             | Number of CSFs                                 |
+  | ~coefficient~     | ~float special~ | ~(state.num,csf.num)~       | Coefficients of the CSFs from the CI expansion |
+  | ~det_coefficient~ | ~float sparse~  | ~(determinant.num,csf.num)~ | Projection on the determinant basis            |
+
+  #+CALL: json(data=csf, title="csf")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "csf": {
+                      "num" : [ "dim readonly" , []                               ]
+        ,     "coefficient" : [ "float special", [ "csf.num", "state.num" ]       ]
+        , "det_coefficient" : [ "float sparse" , [ "csf.num", "determinant.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
 * Excited states (state group)
 
   By default, the ~determinant~ group corresponds to the ground state.
