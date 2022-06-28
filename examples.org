@@ -286,10 +286,10 @@ program test
   use trexio
   implicit none
   
-  character*(128)           :: filename   ! Name of the input file
-  integer(trexio_exit_code) :: rc         ! Return code for error checking
-  integer(trexio_t)         :: trex_determinant_file
-  character*(128)  :: err_msg    ! Error message
+  character*(128)           :: filename               ! Name of the input file
+  integer(trexio_exit_code) :: rc                     ! Return code for error checking
+  integer(trexio_t)         :: trex_determinant_file  ! TREXIO file handle
+  character*(128)           :: err_msg                ! Error message
 
 
   integer*8, allocatable :: buffer(:,:,:)
@@ -309,9 +309,19 @@ program test
   end if
   
   rc = trexio_read_determinant_num(trex_determinant_file, ndet)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading determinant_num: '//trim(err_msg)
+     stop
+  end if
   print *, 'ndet', ndet
 
   rc = trexio_get_int64_num(trex_determinant_file, int64_num)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading int64_num: '//trim(err_msg)
+     stop
+  end if
   print *, 'int64_num', int64_num
 
   BUFSIZE = 1000_8
@@ -334,7 +344,9 @@ program test
       print '(100(I3,X))', (orb_list_up(1:occ_num_up)), (orb_list_dn(1:occ_num_dn))
       print *, ''
     end do
- end do
+  end do
+
+  deallocate(buffer, orb_list_dn, orb_list_up)
 
 end
    #+end_src
