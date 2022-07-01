@@ -1,11 +1,12 @@
 (lang dune 3.1)
 
 (name trexio)
+(version 2.2.0)
 
 (generate_opam_files true)
 
 (source
- (github trex-coe/trexio))
+ (github trex-coe/trexio_ocaml))
 
 (authors
   "Anthony Scemama <scemama@irsamc.ups-tlse.fr>"
