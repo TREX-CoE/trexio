@@ -146,7 +146,6 @@ check_PROGRAMS = $(TESTS)
 LDADD = src/libtrexio.la
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
-CLEANFILES += $(test_trexio_f)
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
