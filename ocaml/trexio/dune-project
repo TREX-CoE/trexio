@@ -25,8 +25,12 @@
  (name trexio)
  (synopsis "Binding for the TREXIO Input/Output library")
  (description "TREXIO is a file format and library for storing wave functions and integrals for quantum chemistry.")
- (depends ocaml dune)
+ (depends
+  dune
+  (dune-configurator :build)
+  (conf-pkg-config :build))
  (tags
-  ("Quantum chemistry" "Library")))
+  ("Quantum chemistry" "Library"))
+)
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
