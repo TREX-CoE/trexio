@@ -234,9 +234,9 @@ cppcheck.out: $(trexio_h)
 ocaml/trexio/_build/default/lib/trexio.cma:
 	$(MAKE) -C ocaml/trexio
 
-ocaml: ocaml/trexio/_build/default/lib/trexio.a
+ocaml: ocaml/trexio/_build/default/lib/trexio.cma
 
-ocaml-install: ocaml/trexio/_build/default/lib/trexio.a
+ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
 	opam install ocaml/trexio
 
 ##################
