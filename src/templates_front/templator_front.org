@@ -1755,6 +1755,98 @@ trexio_pre_close (trexio_t* file)
    considered dimensioning variables and cannot be negative or 0. An attempt to write negative or 0
    value will result in ~TREXIO_INVALID_ARG_2~ exit code.
 
+** Templates for front end has_group functions
+*** Introduction
+
+   This section concerns API calls related to TREXIO groups
+
+   | Function name        | Description                       |
+   |----------------------+-----------------------------------|
+   | ~trexio_has_$group$~ | Check if a group exists in a file |
+
+*** C templates for front end
+
+   The ~C~ templates that correspond to each of the abovementioned
+   functions can be found below.  First parameter is the ~TREXIO~ file
+   handle.
+
+**** Function declarations
+
+     #+begin_src c :tangle hrw_group_front.h :exports none
+trexio_exit_code trexio_has_$group$(trexio_t* const file);
+     #+end_src
+
+**** Source code
+
+     #+begin_src c :tangle has_group_front.c
+trexio_exit_code
+trexio_has_$group$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_$group$(file);
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_has_$group$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_$group$(file);
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+*** Fortran templates for front end
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+     #+begin_src f90 :tangle has_group_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_has_$group$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+   end function trexio_has_$group$
+end interface
+     #+end_src
+
+*** Python templates for front end
+
+     #+begin_src python :tangle has_group_front.py
+def has_$group$(trexio_file) -> bool:
+    """Check that $group$ group exists in the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+          True if the variable exists, False otherwise
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc = pytr.trexio_has_$group$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
+
+    return rc == TREXIO_SUCCESS
+     #+end_src
+
 ** Templates for front end has/read/write a single numerical attribute
 *** Introduction
 
@@ -3924,7 +4016,7 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
     """
 
     $group_dset_dim$ = read_$group_dset_dim$(trexio_file)
-    
+
     dims_list = [$group_dset_dim_list$]
     dim_real  = 1
     for i in range($group_dset_rank$):

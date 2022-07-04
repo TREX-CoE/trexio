@@ -34,6 +34,17 @@ CAMLprim value caml_delete_{group}(value file)
     caml_failwith(trexio_string_of_error(rc));
   }
 }
+
+CAMLprim value caml_has_{group}(value file)
+{
+  CAMLparam1(file);
+  trexio_exit_code rc = trexio_has_{group}( File_val(file) );
+  if (rc == TREXIO_SUCCESS) {
+    CAMLreturn ( Val_bool(true) );
+  } else {
+    CAMLreturn ( Val_bool(false) );
+  }
+}
 """
             f.write( t.replace("{group}",group) )
 
@@ -437,7 +448,8 @@ def write_mli(data):
         f.write(content_pre)
 
         for group in data:
-            t = "val delete_{group}: trexio_file -> unit\n"
+            t  = "val delete_{group}: trexio_file -> unit\n"
+            t += "val has_{group}: trexio_file -> bool\n"
             f.write( t.replace("{group}",group) )
 
             for element in data[group]:
@@ -526,7 +538,8 @@ def write_ml(data):
         f.write(content_pre)
 
         for group in data:
-            t = "external delete_{group}: trexio_file -> unit = \"caml_delete_{group}\"\n"
+            t  = "external delete_{group}: trexio_file -> unit = \"caml_delete_{group}\"\n"
+            t += "external has_{group}: trexio_file -> bool = \"caml_has_{group}\"\n"
             f.write( t.replace("{group}",group) )
 
             for element in data[group]:

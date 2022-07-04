@@ -86,6 +86,14 @@ static int test_has_dset_sparse (const char* file_name, const back_end_t backend
   assert (file != NULL);
   assert (rc == TREXIO_SUCCESS);
 
+  // check that the group exists
+  rc = trexio_has_mo_2e_int(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  // check that the group does not exist
+  rc = trexio_has_rdm(file);
+  assert(rc==TREXIO_HAS_NOT);
+
   // first check that mo_2e_int_eri_lr (we only write non-lr component in this unit test)
   rc = trexio_has_mo_2e_int_eri_lr(file);
   assert(rc==TREXIO_HAS_NOT);
@@ -147,7 +155,7 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   assert(index_read[4*offset_data_read] == 4 * (int32_t) (offset_file_read-offset));
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
-  offset_file_read = 97;
+  offset_file_read = 97L;
   offset_data_read = 1;
   int64_t eof_read_size_check = SIZE - offset_file_read; // if offset_file_read=97 => only 3 integrals will be read out of total of 100
 
@@ -159,11 +167,6 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   assert(chunk_read == eof_read_size_check);
   assert(index_read[4*size_r-1] == 0);
   assert(index_read[4*offset_data_read] == 4 * (int32_t) (offset_file_read-offset));
-  /*
-  for(int i=0; i<size_r; ++i){
-    printf("%d %lf\n", index_read[4*i], value_read[i]);
-  }
-  */
 
   // close current session
   rc = trexio_close(file);

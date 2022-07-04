@@ -143,6 +143,12 @@ subroutine test_write(file_name, back_end)
   rc = trexio_has_determinant_list(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 4')
 
+  rc = trexio_has_nucleus(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 5')
+
+  rc = trexio_has_ao_2e_int(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 6')
+
   rc = trexio_write_nucleus_num(trex_file, nucleus_num)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE NUM')
 
@@ -206,6 +212,12 @@ subroutine test_write(file_name, back_end)
 
   rc = trexio_has_determinant_list(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 4')
+
+  rc = trexio_has_nucleus(trex_file)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 5')
+
+  rc = trexio_has_ao_2e_int(trex_file)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 6')
 
   rc = trexio_close(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS CLOSE')
