@@ -10,10 +10,10 @@ TREX library for efficient I/O.
 
 ## Minimal requirements (for users):
 
-- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2)	or	CMake (>= 3.16)
+- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2) or CMake (>= 3.16)
 - C compiler            (gcc/icc/clang)
 - Fortran compiler      (gfortran/ifort)
-- HDF5 library          (>= 1.8)	[optional, recommended for high performance]
+- HDF5 library          (>= 1.8) [optional, recommended for high performance]
 
 
 ## Installation procedure from the tarball (for users):
