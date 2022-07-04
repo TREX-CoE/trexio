@@ -63,6 +63,8 @@ subroutine test_write(file_name, back_end)
 
   character(len=:), allocatable :: sym_str
   character(len=:), allocatable :: label(:)
+  double precision, allocatable :: energy(:)
+  integer         , allocatable :: spin(:)
 
   ! sparse data
   integer(4) :: index_sparse_ao_2e_int_eri(4,100)
@@ -143,6 +145,12 @@ subroutine test_write(file_name, back_end)
   rc = trexio_has_determinant_list(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 4')
 
+  rc = trexio_has_nucleus(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 5')
+
+  rc = trexio_has_ao_2e_int(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 6')
+
   rc = trexio_write_nucleus_num(trex_file, nucleus_num)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE NUM')
 
@@ -177,12 +185,29 @@ subroutine test_write(file_name, back_end)
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE MO NUM')
   endif
 
+  allocate(energy(mo_num))
+  do i=1,mo_num
+    energy(i) = dble(i)-100.d0
+  enddo
+  rc = trexio_write_mo_energy(trex_file, energy)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE ENERGY')
+  deallocate(energy)
+
+  allocate(spin(mo_num))
+  spin(:) = 0
+  do i=mo_num/2+1,mo_num
+    spin(i) = 1
+  enddo
+  rc = trexio_write_mo_spin(trex_file, spin)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE SPIN')
+  deallocate(spin)
+
 
   offset = 0
   do i = 1,n_buffers
     rc = trexio_write_ao_2e_int_eri(trex_file, offset, buf_size_sparse, &
-	                                  index_sparse_ao_2e_int_eri(1,offset+1), &
-				                            value_sparse_ao_2e_int_eri(offset+1))
+                                      index_sparse_ao_2e_int_eri(1,offset+1), &
+                                            value_sparse_ao_2e_int_eri(offset+1))
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE SPARSE')
     offset = offset + buf_size_sparse
   enddo
@@ -190,7 +215,7 @@ subroutine test_write(file_name, back_end)
   offset = 0
   do i = 1,n_buffers
     rc = trexio_write_determinant_list(trex_file, offset, buf_size_det, &
-	                                     det_list(1,offset+1))
+                                         det_list(1,offset+1))
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE DET LIST')
     offset = offset + buf_size_det
   enddo
@@ -206,6 +231,12 @@ subroutine test_write(file_name, back_end)
 
   rc = trexio_has_determinant_list(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 4')
+
+  rc = trexio_has_nucleus(trex_file)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 5')
+
+  rc = trexio_has_ao_2e_int(trex_file)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 6')
 
   rc = trexio_close(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS CLOSE')
@@ -240,6 +271,9 @@ subroutine test_read(file_name, back_end)
   character(len=4) :: label(12) ! also works with allocatable arrays
 
   character(len=32) :: sym_str
+  integer           :: mo_num
+  double precision, allocatable :: energy(:)
+  integer         , allocatable :: spin(:)
 
   ! sparse data
   integer(4) :: index_sparse_ao_2e_int_eri(4,20)
@@ -346,8 +380,8 @@ subroutine test_read(file_name, back_end)
 
 
   rc = trexio_read_ao_2e_int_eri(trex_file, offset_read, read_buf_size, &
-	                         index_sparse_ao_2e_int_eri(1, offset_data_read + 1), &
-			         value_sparse_ao_2e_int_eri(offset_data_read + 1))
+                                 index_sparse_ao_2e_int_eri(1, offset_data_read + 1), &
+                                 value_sparse_ao_2e_int_eri(offset_data_read + 1))
   !do  i = 1,20
   !  write(*,*) index_sparse_ao_2e_int_eri(1,i)
   !enddo
@@ -364,8 +398,8 @@ subroutine test_read(file_name, back_end)
   ! attempt to read reaching EOF: should return TREXIO_END and
   ! NOT increment the existing values in the buffer (only upd with what has been read)
   rc = trexio_read_ao_2e_int_eri(trex_file, offset_eof, read_buf_size, &
-	                         index_sparse_ao_2e_int_eri(1, offset_data_eof + 1), &
-			         value_sparse_ao_2e_int_eri(offset_data_eof + 1))
+                             index_sparse_ao_2e_int_eri(1, offset_data_eof + 1), &
+                     value_sparse_ao_2e_int_eri(offset_data_eof + 1))
   !do  i = 1,20
   !  write(*,*) index_sparse_ao_2e_int_eri(1,i)
   !enddo
@@ -403,7 +437,7 @@ subroutine test_read(file_name, back_end)
 
   ! read a chunk of determinants
   rc = trexio_read_determinant_list(trex_file, offset_det_read, read_buf_det_size, &
-	                            det_list(1, offset_det_data_read + 1))
+                                    det_list(1, offset_det_data_read + 1))
   !do  i = 1,50
   !  write(*,*) det_list(1,i)
   !enddo
@@ -442,6 +476,26 @@ subroutine test_read(file_name, back_end)
     print *, 'FAILURE DET CONVERT CHECK'
     call exit(-1)
   endif
+
+  rc = trexio_read_mo_num(trex_file, mo_num)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
+  allocate(spin(mo_num), energy(mo_num))
+  rc = trexio_read_mo_energy(trex_file, energy)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
+  if (energy(10) /= -90.d0) then
+     print *, 'Failure to read MO energy: ', energy(10)
+     call exit(-1)
+  end if
+
+  rc = trexio_read_mo_spin(trex_file, spin)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
+  if (sum(spin) /= mo_num/2) then
+     print *, 'Failure to read MO spin', mo_num, sum(spin)
+     call exit(-1)
+  end if
 
   ! close the file
   rc = trexio_close(trex_file)

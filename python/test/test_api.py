@@ -35,7 +35,7 @@ def test_void():
 def test_orbital_list():
     """Convert one determinant into a list of orbitals."""
     orb_list_up, orb_list_dn = trexio.to_orbital_list_up_dn(int64_num, det_test)
-    assert orb_list_up[0] == 0 
+    assert orb_list_up[0] == 0
     assert orb_list_dn[0] == 1
 
 
@@ -64,7 +64,7 @@ class TestIO:
             self.filename = filename
         if not mode:
             mode = self.mode
-        else: 
+        else:
             self.mode = mode
         if not back_end:
             back_end = self.back_end
@@ -73,7 +73,7 @@ class TestIO:
 
         self.test_file = trexio.File(filename, mode, back_end)
         assert self.test_file.exists
-    
+
 
     def test_close(self):
         """Close the file."""
@@ -82,7 +82,7 @@ class TestIO:
             self.test_file.close()
         assert not self.test_file.isOpen
 
-    
+
     def test_errors(self):
         """Test some exceptions based on trexio.Error class."""
         self.open(filename='unsafe_' + self.filename, mode='w', back_end=self.back_end)
@@ -103,7 +103,7 @@ class TestIO:
         trexio.write_nucleus_num(self.test_file, nucleus_num)
         assert trexio.has_nucleus_num(self.test_file)
 
-    
+
     def test_str(self):
         """Write a string."""
         self.open()
@@ -133,7 +133,7 @@ class TestIO:
         """Write array of coordinates."""
         self.open()
         if not trexio.has_nucleus_num(self.test_file):
-            self.test_num()        
+            self.test_num()
         trexio.write_nucleus_coord(self.test_file, nucleus_coord)
         assert trexio.has_nucleus_coord(self.test_file)
 
@@ -192,11 +192,21 @@ class TestIO:
         self.test_array_1D()
         self.test_array_2D()
 
+        assert trexio.has_nucleus(self.test_file)
+
         trexio.delete_nucleus(self.test_file)
 
         assert not trexio.has_nucleus_num(self.test_file)
         assert not trexio.has_nucleus_charge(self.test_file)
         assert not trexio.has_nucleus_coord(self.test_file)
+        assert not trexio.has_nucleus(self.test_file)
+
+
+    def test_has_group(self):
+        """Check existense of a group."""
+        self.open()
+        assert trexio.has_nucleus(self.test_file)
+        assert not trexio.has_rdm(self.test_file)
 
 
     def test_context_manager(self):
@@ -315,6 +325,6 @@ class TestIO:
 
     def test_str_read(self):
         """Read a string."""
-        self.open(mode='r')  
+        self.open(mode='r')
         point_group_r = trexio.read_nucleus_point_group(self.test_file)
         assert point_group_r == point_group

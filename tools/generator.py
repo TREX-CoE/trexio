@@ -65,7 +65,7 @@ for fname in files_todo['dset_sparse']:
 # populate group-related functions with mixed scheme
 for fname in files_todo['group']:
     # recursive scheme for delete_group functions
-    if 'delete' in fname:
+    if 'delete' in fname or 'has' in fname:
         recursive_populate_file(fname, template_paths, group_dict)
     # mixed (iterative+recursive) scheme [text backend]
     else:

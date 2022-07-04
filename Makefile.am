@@ -146,7 +146,6 @@ check_PROGRAMS = $(TESTS)
 LDADD = src/libtrexio.la
 
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
-CLEANFILES += $(test_trexio_f)
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
@@ -227,6 +226,22 @@ cppcheck.out: $(trexio_h)
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
 
+#################
+# OCaml binding #
+#################
+
+ocaml/trexio/_build/default/lib/trexio.cma:
+	$(MAKE) -C ocaml/trexio
+
+ocaml: ocaml/trexio/_build/default/lib/trexio.cma
+
+ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
+	opam install ocaml/trexio
+
+##################
+# Python binding #
+##################
+
 setup_py      = $(srcdir)/python/setup.py
 setup_cfg     = $(srcdir)/python/setup.cfg
 pytrexio_py   = $(srcdir)/python/pytrexio/pytrexio.py
@@ -278,6 +293,6 @@ CLEANFILES += $(pytrexio_c) \
               python/src/*.c \
               python/src/*.h
 
-.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE
+.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE ocaml
 
 endif
