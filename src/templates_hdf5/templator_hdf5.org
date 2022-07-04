@@ -179,6 +179,38 @@ trexio_hdf5_deinit (trexio_t* const file)
 }
   #+end_src
 
+* Template for HDF5 has a group
+
+  #+begin_src c :tangle hrw_group_hdf5.h :exports none
+trexio_exit_code trexio_hdf5_has_$group$ (trexio_t* const file);
+  #+end_src
+
+
+  #+begin_src c :tangle has_group_hdf5.c
+trexio_exit_code
+trexio_hdf5_has_$group$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  struct H5G_info_t group_info;
+
+  /* H5Gget_info return info about the HDF5 group as a group_info struct */
+  herr_t status = H5Gget_info(f->$group$_group, &group_info);
+  if (status < 0) return TREXIO_FAILURE;
+
+  /* If nlinks==0 --> the group is empty, i.e. non-existent */
+  if (group_info.nlinks == (hsize_t) 0) {
+    return TREXIO_HAS_NOT;
+  } else {
+    return TREXIO_SUCCESS;
+  }
+
+}
+    #+end_src
+
 * Template for HDF5 has/read/write a numerical attribute
 
   #+begin_src c :tangle hrw_attr_num_hdf5.h :exports none
