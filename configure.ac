@@ -138,7 +138,7 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 
 # Checks for library functions.
-AC_FUNC_MALLOC
+# AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
 if test "x$enable_maintainer_mode" == "xyes"; then
