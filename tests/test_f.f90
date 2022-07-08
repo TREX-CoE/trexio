@@ -349,9 +349,11 @@ subroutine test_read(file_name, back_end)
   endif
 
 
-  rc = trexio_read_nucleus_label(trex_file, label, 2)
+  rc = trexio_read_nucleus_label(trex_file, label, 4)
   call trexio_assert(rc, TREXIO_SUCCESS)
-  if (trim(label(2)) == 'Na') then
+  if (trim(label(2)) == 'Na'   .and. &
+      trim(label(4)) == 'C 66' .and. &
+      trim(label(5)) == 'C')   then
     write(*,*) 'SUCCESS READ LABEL'
   else
     print *, 'FAILURE LABEL CHECK'
