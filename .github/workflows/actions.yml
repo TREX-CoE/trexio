@@ -52,10 +52,10 @@ jobs:
           ./configure --enable-silent-rules
 
       - name: compile TREXIO
-        run: make -j 2
+        run: make -j2
 
       - name: check TREXIO
-        run: make check
+        run: make -j2 check
 
       - name: create virtual environment
         run: |
@@ -82,8 +82,22 @@ jobs:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
 
-      - name: clean
-        run: make clean
+      - name: maintainer clean
+        run: make maintainer-clean
+
+      - name: reconfigure with clang and AddressSanitizer
+        run: |
+          ./autogen.sh
+          ./configure CC=clang-11 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
+
+      - name: recompile TREXIO
+        run: make -j2
+
+      - name: recheck TREXIO for memory leaks
+        run: make -j2 check
+
+      - name: maintainer clean
+        run: make maintainer-clean
 
   trexio_macos:
 
