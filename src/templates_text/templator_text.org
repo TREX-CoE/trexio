@@ -143,7 +143,15 @@ trexio_text_inquire (const char* file_name)
 
   if (file_exists) {
 
-    bool is_a_directory = st.st_mode & S_IFDIR;
+    bool is_a_directory = false;
+#ifdef S_IFDIR
+    is_a_directory = st.st_mode & S_IFDIR;
+#elif S_ISDIR
+    is_a_directory = S_ISDIR(s.st_mode);
+#else
+    printf("Some important macros are missing for directory handling.\n");
+    return TREXIO_FAILURE;
+#endif
     if (!is_a_directory) return TREXIO_FILE_ERROR;
 
     return TREXIO_SUCCESS;
