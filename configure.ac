@@ -66,6 +66,31 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_GREP
 
+# Specific options required with some compilers
+case $FC in
+ *gfortran*)
+      FCFLAGS="$FCFLAGS -fPIC"
+      ;;
+ *flang*)
+      FCFLAGS="$FCFLAGS -fPIC"
+      ;;
+ *ifort*)
+      FCFLAGS="$FCFLAGS -fPIC"
+      ;;
+esac
+
+case $CC in
+  *gcc*)
+        CFLAGS="$CFLAGS -fPIC"
+        ;;
+  *clang*)
+        CFLAGS="$CFLAGS -fPIC"
+        ;;
+  *icc*)
+        CFLAGS="$CFLAGS -fPIC"
+        ;;
+esac
+
 
 ## ---------
 ## Libraries
