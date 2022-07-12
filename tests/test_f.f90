@@ -6,11 +6,11 @@ program test_trexio
   integer :: rc
   logical :: have_hdf5
 
-  print *      , "============================================"
+  print'(a)'   , "============================================"
   print'(a,a)' , "         TREXIO VERSION STRING : ", TREXIO_PACKAGE_VERSION
   print'(a,i3)', "         TREXIO MAJOR VERSION  : ", TREXIO_VERSION_MAJOR
   print'(a,i3)', "         TREXIO MINOR VERSION  : ", TREXIO_VERSION_MINOR
-  print *      , "============================================"
+  print'(a)'   , "============================================"
 
   rc = trexio_info()
 
@@ -288,6 +288,7 @@ subroutine test_read(file_name, back_end)
 
   ! determinant data
   integer*8 :: det_list(6,50)
+  integer*8 :: det_list_check(3)
   integer*8 :: read_buf_det_size = 20
   integer*8 :: offset_det_read = 10
   integer*8 :: offset_det_data_read = 5
@@ -476,6 +477,26 @@ subroutine test_read(file_name, back_end)
     write(*,*) 'SUCCESS CONVERT DET LIST'
   else
     print *, 'FAILURE DET CONVERT CHECK'
+    call exit(-1)
+  endif
+
+  ! convert one orbital list into a bitfield determinant representation
+  rc = trexio_to_bitfield_list(orb_list_up, occ_num_up, det_list_check, 3)
+  !write(*,*) occ_num_up, occ_num_dn
+  ! Print occupied orbitals for an up-spin component of a given determinant
+  !write(*,*) orb_list_up(1:occ_num_up)
+  ! Print integers representanting a given determinant fully (up- and down-spin components)
+  !write(*,*) det_list(1:3, offset_det_data_read+1)
+  !write(*,*) det_list_check(1:3)
+  ! Print binary representation of the first integer bit field of a given determinant
+  !write(*,'(B64.64)') det_list(1, offset_det_data_read+1)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+  if (det_list_check(1) == det_list(1, offset_det_data_read+1) .and. &
+      det_list_check(2) == det_list(2, offset_det_data_read+1) .and. &
+      det_list_check(3) == det_list(3, offset_det_data_read+1)) then
+    write(*,*) 'SUCCESS CONVERT ORB LIST'
+  else
+    print *, 'FAILURE ORB CONVERT CHECK'
     call exit(-1)
   endif
 
