@@ -25,7 +25,7 @@
                 ))))
     (build-system gnu-build-system)
     (arguments '(#:configure-flags '("--enable-silent-rules")))
-    (inputs `(("hdf5" ,hdf5-1.12) ("gfortran", gfortran)))
+    (inputs `(("hdf5" ,hdf5) ("gfortran", gfortran)))
     (synopsis "TREX I/O lbrary: trexio package")
     (description "APIs in C and Fortran to exchange wavefunction data.
 		  Supports HDF5 and TEXT back ends.")
