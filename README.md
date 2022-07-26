@@ -77,6 +77,19 @@ conda install trexio -c conda-forge
 More details can be found in the corresponding [trexio-feedstock](https://github.com/conda-forge/trexio-feedstock).
 Note that both parallel (see `mpi_openmpi` prefix) and serial (`nompi`) variants are provided.
 
+## Installation procedure for Guix users
+
+The official releases of TREXIO `>=2.0.0` can be installed using the
+[GNU Guix](https://guix.gnu.org)
+functional package manager.
+The [tools/trexio.scm](https://github.com/TREX-CoE/trexio/blob/master/tools/trexio.scm)
+Schema file contains the manifest specification for the `trexio` package.
+It can be installed within the selected `$GUIX_PROFILE` as follows:
+
+```
+guix package --profile=$GUIX_PROFILE --install-from-file=trexio.scm
+```
+
 ## Compilation without the HDF5 library
 
 By default, the configuration step proceeds to search for the [HDF5 library](https://portal.hdfgroup.org/display/HDF5/HDF5).
