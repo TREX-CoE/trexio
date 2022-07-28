@@ -80,14 +80,28 @@ Note that both parallel (see `mpi_openmpi` prefix) and serial (`nompi`) variants
 ## Installation procedure for Guix users
 
 The official releases of TREXIO `>=2.0.0` can be installed using the
-[GNU Guix](https://guix.gnu.org)
-functional package manager.
-The [tools/trexio.scm](https://github.com/TREX-CoE/trexio/blob/master/tools/trexio.scm)
+[GNU Guix](https://guix.gnu.org) functional package manager.
+The [trexio.scm](https://github.com/TREX-CoE/trexio/blob/master/tools/trexio.scm)
 Schema file contains the manifest specification for the `trexio` package.
 It can be installed within the selected `$GUIX_PROFILE` as follows:
 
 ```
-guix package --profile=$GUIX_PROFILE --install-from-file=trexio.scm
+guix package \
+	--profile=$GUIX_PROFILE \
+	--cores=<n_cores> \
+	--install-from-file=trexio.scm
+```
+
+## Installation procedure for Spack users
+
+The official releases `>=2.0.0` and the development version of TREXIO can be installed using the
+[Spack](https://spack.io/) package manager.
+The [trexio/package.py](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/trexio/package.py)
+file contains the Spack specifications required to build different variants of `trexio` library.
+It can be installed as follows
+
+```
+spack install --jobs <n_cores> trexio
 ```
 
 ## Compilation without the HDF5 library
