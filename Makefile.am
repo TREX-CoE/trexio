@@ -157,6 +157,11 @@ tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/
 
+# =============== GUIX MANIFEST =============== #
+
+trexio_scm = $(srcdir)/tools/trexio.scm
+EXTRA_DIST += $(trexio_scm)
+
 # =============== DOCUMENTATION =============== #
 
 HTML_TANGLED = docs/index.html            \
