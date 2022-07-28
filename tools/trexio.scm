@@ -1,4 +1,4 @@
-(define-module (gnu packages trexio)
+(define-module (trexio)
   #:use-module (guix packages)
   #:use-module (gnu packages pkg-config)
   #:use-module (gnu packages glib)
