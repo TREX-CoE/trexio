@@ -19,8 +19,8 @@ LT_INIT
 # Activate developer mode when the source is the git repository.
 # Otherwise, it is the source distribution and the developer mode should not be activated.
 TEST_IFEXISTS=".git"
-AC_CHECK_FILE([$TEST_IFEXISTS],
-        [enable_maintainer_mode="yes"],
+AS_IF([test -d $TEST_IFEXISTS],
+        [enable_maintainer_mode="yes"]
 )
 
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
