@@ -5281,6 +5281,9 @@ def has_determinant_coefficient(trexio_file) -> bool:
   ~trexio_to_orbital_list_up_dn~ function does the same but for both up- and down-spin components
   of the determinant and returns two list of orbitals each corresponding to a different component.
 
+  ~trexio_to_bitfield_list~ function converts the list of occupied orbitals (up- or down-spin)
+  into the corresponding ~int64_t~ bitfield representation of the determinant.
+
 ** C
 
      #+begin_src c :tangle prefix_front.h
@@ -5289,15 +5292,49 @@ trexio_exit_code trexio_mark_safety(trexio_t* const file, const int32_t safety_f
 
 typedef int64_t  bitfield_t;
 
-#define TREXIO_ORBITAL_SHIFT  1
-#define TREXIO_INT_SIZE       64
-#define TREXIO_NORB_PER_INT   ( 8*sizeof(bitfield_t) )
-#
+#define TREXIO_ORBITAL_SHIFT      1
+#define TREXIO_INT_SIZE           64
+#define TREXIO_NORB_PER_INT       ( 8*sizeof(bitfield_t) )
+#define TREXIO_NORB_PER_INT_SHIFT ( trailz( TREXIO_NORB_PER_INT ) )
+
 trexio_exit_code trexio_to_orbital_list (const int32_t N_int, const bitfield_t* d1, int32_t* const list, int32_t* const occupied_num);
 trexio_exit_code trexio_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* d1, int32_t* const list_up, int32_t* const list_dn, int32_t* const occ_num_up, int32_t* const occ_num_dn);
 trexio_exit_code trexio_safe_to_orbital_list (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_out, const int64_t dim_out, int32_t* const num);
 trexio_exit_code trexio_safe_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_up_out, const int64_t dim_up_out, int32_t* const dset_dn_out, const int64_t dim_dn_out, int32_t* const num_up, int32_t* const num_dn);
+trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list, const int32_t occupied_num, bitfield_t* const bit_list, const int32_t N_int);
      #+end_src
+
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list,
+                                          const int32_t occupied_num,
+                                          bitfield_t* const bit_list,
+                                          const int32_t N_int)
+{
+  if (orb_list == NULL)  return TREXIO_INVALID_ARG_1;
+  if (occupied_num <= 0) return TREXIO_INVALID_ARG_2;
+  if (bit_list == NULL)  return TREXIO_INVALID_ARG_3;
+  if (N_int <= 0)        return TREXIO_INVALID_ARG_4;
+
+  uint32_t i;
+  uint32_t k;
+  uint32_t iorb;
+
+  for (int32_t j = 0 ; j < N_int ; j++) {
+      bit_list[j] = (bitfield_t) 0;
+  }
+
+  for (int32_t pos = 0 ; pos < occupied_num ; pos++) {
+    iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
+    i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
+    k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
+    bit_list[i] |= ((bitfield_t) 1) << k;
+  }
+
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+
 
      #+begin_src c :tangle prefix_front.c
 trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
@@ -5478,10 +5515,24 @@ interface
 end interface
    #+end_src
 
+   #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_to_bitfield_list_c(list, occupied_num, det_list, N_int) &
+   bind(C, name="trexio_to_bitfield_list")
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int32_t), intent(in)        :: list(*)
+     integer(c_int32_t), intent(in), value :: occupied_num
+     integer(c_int64_t), intent(inout)     :: det_list(*)
+     integer(c_int32_t), intent(in), value :: N_int
+   end function trexio_to_bitfield_list_c
+end interface
+   #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_to_orbital_list_c(N_int, d1, list, occupied_num) bind(C, name="trexio_to_orbital_list")
+   integer(trexio_exit_code) function trexio_to_orbital_list_c(N_int, d1, list, occupied_num) &
+   bind(C, name="trexio_to_orbital_list")
      use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in), value :: N_int
@@ -5521,6 +5572,33 @@ def info():
 
 
    #+begin_src python :tangle basic_python.py
+def to_bitfield_list(n_int: int, orbitals: list) -> list:
+    """Convert a list of occupied orbitals into a bitfield determinant.
+
+    Input:
+        ~orbitals~ - list of occupied orbital indices fields (integers)
+        ~n_int~ - number of bitfields per determinant of a given spin
+
+    Returns:
+        ~bitfield_list~: list
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+
+    rc, bitfield_list = pytr.trexio_to_bitfield_list(orbitals, n_int)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+    if len(bitfield_list) != n_int:
+        raise Exception("Inconsistent size of the bitfield_list.")
+
+    return bitfield_list
+   #+end_src
+
+
+   #+begin_src python :tangle basic_python.py
 def to_orbital_list(n_int: int, determinant: list) -> list:
     """Convert a given determinant into a list of occupied orbitals.
 
@@ -5546,8 +5624,10 @@ def to_orbital_list(n_int: int, determinant: list) -> list:
         raise Exception("Inconsistent size of the orbital_list.")
 
     return orbital_list[0:occ_num]
+   #+end_src
 
 
+   #+begin_src python :tangle basic_python.py
 def to_orbital_list_up_dn(n_int: int, determinant: list) -> tuple:
     """Convert a given determinant into two lists of occupied orbitals.
 
@@ -5631,6 +5711,29 @@ contains
   by 1 since in Fortran arrays are 1-based and C/Python they are 0-based.
 
   #+begin_src f90 :tangle helper_fortran.f90
+   integer(trexio_exit_code) function trexio_to_bitfield_list(list, occupied_num, det_list, N_int)
+     use, intrinsic :: iso_c_binding
+     implicit none
+
+     integer(c_int32_t), intent(in)        :: list(*)
+     integer(c_int32_t), intent(in), value :: occupied_num
+     integer(c_int64_t), intent(out)       :: det_list(*)
+     integer(c_int32_t), intent(in), value :: N_int
+     integer(c_int32_t)                    :: list_0based(occupied_num)
+
+     integer :: i
+     do i = 1,occupied_num
+       list_0based(i) = list(i) - 1
+     enddo
+
+     trexio_to_bitfield_list = trexio_to_bitfield_list_c(list_0based, occupied_num, det_list, N_int)
+     if (trexio_to_bitfield_list /= TREXIO_SUCCESS) then
+       return
+     endif
+
+   end function trexio_to_bitfield_list
+
+
    integer(trexio_exit_code) function trexio_to_orbital_list(N_int, d1, list, occupied_num)
      use, intrinsic :: iso_c_binding
      implicit none

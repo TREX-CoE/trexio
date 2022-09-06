@@ -39,6 +39,17 @@ def test_orbital_list():
     assert orb_list_dn[0] == 1
 
 
+def test_bitfield_list():
+    """Convert lists of occupied up- and down-spin orbitals into determinants."""
+    # convert det_test list into a numpy array for .all() assertion to work
+    det_test_np = np.array(det_test, dtype=np.int64)
+
+    det_list_up = trexio.to_bitfield_list(int64_num, orb_up_test)
+    assert (det_list_up == det_test_np[:int64_num]).all()
+    det_list_dn = trexio.to_bitfield_list(int64_num, orb_dn_test)
+    assert (det_list_dn == det_test_np[int64_num:]).all()
+
+
 class TestIO:
     """Unit tests for writing/reading different blocks of the TREXIO file."""
 

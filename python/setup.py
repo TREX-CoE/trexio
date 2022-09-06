@@ -94,6 +94,7 @@ pytrexio_module = Extension('pytrexio._pytrexio',
                             include_dirs = [h5_cflags, srcpath, numpy_includedir],
                             libraries = ['hdf5', 'hdf5_hl'],
                             extra_compile_args = [
+                                '-std=c99',
                                 '-Wno-discarded-qualifiers',
                                 '-Wno-unused-variable',
                                 '-Wno-unused-but-set-variable'
