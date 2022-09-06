@@ -34,7 +34,11 @@
 
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
+if HAVE_FORTRAN
 BUILT_SOURCES = trexio.mod
+else
+BUILT_SOURCES = 
+endif
 EXTRA_DIST = .git_hash
 
 PACKAGE_VERSION = @PACKAGE_VERSION@
@@ -48,7 +52,10 @@ pkgconfig_DATA = pkgconfig/trexio.pc
 trexio_h = $(srcdir)/include/trexio.h
 trexio_f = $(srcdir)/include/trexio_f.f90
 
-include_HEADERS = $(trexio_h) $(trexio_f)
+include_HEADERS = $(trexio_h) 
+if HAVE_FORTRAN
+include_HEADERS += $(trexio_f)
+endif
 
 AM_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/include
 
@@ -136,15 +143,19 @@ TESTS_C += \
   tests/overwrite_all_hdf5
 endif
 
+TESTS = $(TESTS_C) 
+if HAVE_FORTRAN
 TESTS_F = \
   tests/test_f
+TESTS += $(TESTS_F)
+endif
 
-TESTS = $(TESTS_C) $(TESTS_F)
 check_PROGRAMS = $(TESTS)
 
 # specify common LDADD options for all tests
 LDADD = src/libtrexio.la
 
+if HAVE_FORTRAN
 test_trexio_f = $(srcdir)/tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
@@ -153,6 +164,7 @@ $(test_trexio_f): $(trexio_f)
 trexio.mod: tests/trexio_f.o
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
+endif
 
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/

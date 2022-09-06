@@ -50,12 +50,18 @@ AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
       [AC_MSG_ERROR([The compiler does not support C99])])
 AC_PROG_CC_C_O
 
-# Fortran
-AC_PROG_FC
-AC_FC_FREEFORM
-AC_FC_SRCEXT([f90])
-AC_PROG_FC_C_O
-AC_FC_LIBRARY_LDFLAGS
+
+# Fortran API [default: --with-fortran], do not disable in the dev mode
+AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
+if test "$ok" = "yes"; then
+        AC_PROG_FC
+        AC_FC_FREEFORM
+        AC_FC_SRCEXT([f90])
+        AC_PROG_FC_C_O
+        AC_FC_LIBRARY_LDFLAGS
+fi
+
+AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
 
 # pkg-config
 PKG_PROG_PKG_CONFIG()
