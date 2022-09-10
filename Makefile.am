@@ -49,11 +49,11 @@ pkgconfig_DATA = pkgconfig/trexio.pc
 
 # =============== BUILD =============== #
 
-trexio_h = $(srcdir)/include/trexio.h
-trexio_f = $(srcdir)/include/trexio_f.f90
+trexio_h = include/trexio.h
+include_HEADERS = $(trexio_h)
 
-include_HEADERS = $(trexio_h) 
 if HAVE_FORTRAN
+trexio_f = include/trexio_f.f90
 include_HEADERS += $(trexio_f)
 endif
 
@@ -63,7 +63,6 @@ lib_LTLIBRARIES = src/libtrexio.la
 
 
 SOURCES = \
-  $(trexio_h) \
   src/trexio.c \
   src/trexio_private.h \
   src/trexio_s.h \
@@ -82,7 +81,7 @@ ORG_FILES = \
   trex.org
 
 
-src_libtrexio_la_SOURCES = $(SOURCES)
+src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
@@ -143,10 +142,10 @@ TESTS_C += \
   tests/overwrite_all_hdf5
 endif
 
-TESTS = $(TESTS_C) 
+TESTS = $(TESTS_C)
+
 if HAVE_FORTRAN
-TESTS_F = \
-  tests/test_f
+TESTS_F = tests/test_f
 TESTS += $(TESTS_F)
 endif
 
@@ -156,7 +155,7 @@ check_PROGRAMS = $(TESTS)
 LDADD = src/libtrexio.la
 
 if HAVE_FORTRAN
-test_trexio_f = $(srcdir)/tests/trexio_f.f90
+test_trexio_f = tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
@@ -211,9 +210,15 @@ HDF5_CPPFLAGS = @HDF5_CPPFLAGS@
 
 if TREXIO_DEVEL
 
-CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h) $(HTML_TANGLED) $(htmlizer) .git_hash
+CLEANFILES += $(SOURCES) $(trexio_h) $(HTML_TANGLED) $(htmlizer) .git_hash
 
-BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
+BUILT_SOURCES += $(SOURCES) $(trexio_h)
+
+if HAVE_FORTRAN
+CLEANFILES += $(trexio_f)
+BUILT_SOURCES += $(trexio_f) $(test_trexio_f)
+$(trexio_f): $(trexio_h)
+endif
 
 .git_hash: FORCE
 	git log | head -1 | cut -d ' ' -f 2 > .git_hash
@@ -223,10 +228,10 @@ all: .git_hash
 GENERATOR_FILES = $(srcdir)/tools/generator.py \
 		  $(srcdir)/tools/generator_tools.py
 
-$(SOURCES): $(trexio_f)
+$(SOURCES): $(trexio_h)
 src/trexio.c: $(trexio_h)
 
-$(trexio_f): $(ORG_FILES) $(GENERATOR_FILES)
+$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
