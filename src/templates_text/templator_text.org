@@ -112,6 +112,7 @@ trexio_exit_code trexio_text_inquire(const char* file_name);
 trexio_exit_code trexio_text_deinit(trexio_t* const file);
 trexio_exit_code trexio_text_lock(trexio_t* const file);
 trexio_exit_code trexio_text_unlock(trexio_t* const file);
+trexio_exit_code trexio_text_flush(trexio_t* const file);
 bool trexio_text_file_exists(const char* file_name);
     #+end_src
 
@@ -286,6 +287,26 @@ trexio_text_deinit (trexio_t* const file)
 
   /* Error handling for this call is added by the generator */
   rc = trexio_text_free_$group$( (trexio_text_t*) file);
+
+  return TREXIO_SUCCESS;
+
+}
+    #+end_src
+
+* Flush function (templated part)
+
+    #+begin_src c :tangle basic_text_group.c
+trexio_exit_code
+trexio_text_flush (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_exit_code rc;
+  trexio_text_t* f = (trexio_text_t*) file;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_text_flush_$group$(f);
 
   return TREXIO_SUCCESS;
 

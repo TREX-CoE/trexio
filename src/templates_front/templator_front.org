@@ -1424,6 +1424,84 @@ def _close(trexio_file):
         raise Error(rc)
    #+end_src
 
+** File flushing
+
+    ~trexio_flush~ flushes all buffers into the ~trexio_t~ file.
+
+    input parameters:
+      ~file~ -- TREXIO file handle.
+
+    output:
+      ~trexio_exit_code~ exit code.
+
+*** C
+
+    #+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_flush(trexio_t* file);
+    #+end_src
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_flush (trexio_t* file)
+{
+
+  if (file == NULL) return TREXIO_FILE_ERROR;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  /* Terminate the back end */
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_flush(file);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    rc = trexio_hdf5_flush(file);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_flush(file);
+    break;
+,*/
+  }
+
+  return rc;
+}
+    #+end_src
+
+*** Fortran
+
+    #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_flush (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+   end function trexio_flush
+end interface
+    #+end_src
+
+*** Python
+
+   #+begin_src python :tangle basic_python.py
+def flush(trexio_file):
+    """Flush buffers into the TREXIO file.
+
+    Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
+    """
+
+    rc = pytr.trexio_flush(trexio_file)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+   #+end_src
+
 ** File existence
 
     ~trexio_inquire~ check whether TREXIO file exists.

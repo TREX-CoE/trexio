@@ -79,6 +79,21 @@ typedef struct trexio_hdf5_s {
 trexio_exit_code trexio_hdf5_init(trexio_t* const file);
 trexio_exit_code trexio_hdf5_deinit(trexio_t* const file);
 trexio_exit_code trexio_hdf5_inquire(const char* file_name);
+trexio_exit_code trexio_hdf5_flush(trexio_t* const file);
+  #+end_src
+
+  #+begin_src c :tangle basic_hdf5.c
+trexio_exit_code
+trexio_hdf5_flush(trexio_t* const file)
+{
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  herr_t rc = H5Fflush(f->file_id, H5F_SCOPE_GLOBAL);
+  if (rc < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
   #+end_src
 
   #+begin_src c :tangle basic_hdf5.c
