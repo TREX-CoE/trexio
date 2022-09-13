@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-09-10 Sat 19:17 -->
+<!-- 2022-09-13 Tue 09:31 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TEXT back end</title>
@@ -311,21 +311,22 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org4b4e285">1. Template for group-related structures in text back end</a></li>
-<li><a href="#org09ce75b">2. Template for general structure in text back end</a></li>
-<li><a href="#org24ed5d6">3. Initialize function (constant part)</a></li>
-<li><a href="#org1ac732f">4. Deinitialize function (templated part)</a></li>
-<li><a href="#orgf3c2a06">5. Template for text read a group</a></li>
-<li><a href="#org7b43d0f">6. Template for text has a group</a></li>
-<li><a href="#org78eaf67">7. Template for text flush a group</a></li>
-<li><a href="#orga3848b3">8. Template for text free memory</a></li>
-<li><a href="#orgb9d9f29">9. Template for has/read/write a numerical attribute</a></li>
-<li><a href="#org3864c3f">10. Template for has/read/write a dataset of numerical data</a></li>
-<li><a href="#orgfe1ba96">11. Template for has/read/write a dataset of strings</a></li>
-<li><a href="#orgd9ef705">12. Template for has/read/write a string attribute</a></li>
-<li><a href="#org0e5a1ac">13. Template for has/read/write the dataset of sparse data</a></li>
-<li><a href="#org8d9cc43">14. Template for text delete a group (UNSAFE mode)</a></li>
-<li><a href="#org8bfd6c6">15. Source code for the determinant part</a></li>
+<li><a href="#org66c3f7f">1. Template for group-related structures in text back end</a></li>
+<li><a href="#orgcc4d3a1">2. Template for general structure in text back end</a></li>
+<li><a href="#org1b53a39">3. Initialize function (constant part)</a></li>
+<li><a href="#org6b7311a">4. Deinitialize function (templated part)</a></li>
+<li><a href="#orgb0daecf">5. Flush function (templated part)</a></li>
+<li><a href="#orge2907f3">6. Template for text read a group</a></li>
+<li><a href="#orgc8ccb2f">7. Template for text has a group</a></li>
+<li><a href="#org6892740">8. Template for text flush a group</a></li>
+<li><a href="#orgbb27c65">9. Template for text free memory</a></li>
+<li><a href="#orgdd8894d">10. Template for has/read/write a numerical attribute</a></li>
+<li><a href="#org0561451">11. Template for has/read/write a dataset of numerical data</a></li>
+<li><a href="#org5e20d31">12. Template for has/read/write a dataset of strings</a></li>
+<li><a href="#org0028124">13. Template for has/read/write a string attribute</a></li>
+<li><a href="#orgae19812">14. Template for has/read/write the dataset of sparse data</a></li>
+<li><a href="#org12b1975">15. Template for text delete a group (UNSAFE mode)</a></li>
+<li><a href="#org4d9d78e">16. Source code for the determinant part</a></li>
 </ul>
 </div>
 </div>
@@ -347,8 +348,8 @@ directory.
 The file is written when closed, or when the flush function is called.
 </p>
 
-<div id="outline-container-org4b4e285" class="outline-2">
-<h2 id="org4b4e285"><span class="section-number-2">1</span> Template for group-related structures in text back end</h2>
+<div id="outline-container-org66c3f7f" class="outline-2">
+<h2 id="org66c3f7f"><span class="section-number-2">1</span> Template for group-related structures in text back end</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> $group$_s {
@@ -367,8 +368,8 @@ The file is written when closed, or when the flush function is called.
 </div>
 </div>
 
-<div id="outline-container-org09ce75b" class="outline-2">
-<h2 id="org09ce75b"><span class="section-number-2">2</span> Template for general structure in text back end</h2>
+<div id="outline-container-orgcc4d3a1" class="outline-2">
+<h2 id="orgcc4d3a1"><span class="section-number-2">2</span> Template for general structure in text back end</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Polymorphism of the <code>trexio_t</code> type is handled by ensuring that the
@@ -388,8 +389,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org24ed5d6" class="outline-2">
-<h2 id="org24ed5d6"><span class="section-number-2">3</span> Initialize function (constant part)</h2>
+<div id="outline-container-org1b53a39" class="outline-2">
+<h2 id="org1b53a39"><span class="section-number-2">3</span> Initialize function (constant part)</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">bool</span>
@@ -556,8 +557,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org1ac732f" class="outline-2">
-<h2 id="org1ac732f"><span class="section-number-2">4</span> Deinitialize function (templated part)</h2>
+<div id="outline-container-org6b7311a" class="outline-2">
+<h2 id="org6b7311a"><span class="section-number-2">4</span> Deinitialize function (templated part)</h2>
 <div class="outline-text-2" id="text-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -579,9 +580,33 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-orgf3c2a06" class="outline-2">
-<h2 id="orgf3c2a06"><span class="section-number-2">5</span> Template for text read a group</h2>
+<div id="outline-container-orgb0daecf" class="outline-2">
+<h2 id="orgb0daecf"><span class="section-number-2">5</span> Flush function (templated part)</h2>
 <div class="outline-text-2" id="text-5">
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_text_flush</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+  <span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_text_t</span>*) file;
+
+  /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
+  rc = trexio_text_flush_$group$(f);
+
+  <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
+
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge2907f3" class="outline-2">
+<h2 id="orge2907f3"><span class="section-number-2">6</span> Template for text read a group</h2>
+<div class="outline-text-2" id="text-6">
 <div class="org-src-container">
 <pre class="src src-c">$group$_t*
 trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
@@ -806,9 +831,9 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-org7b43d0f" class="outline-2">
-<h2 id="org7b43d0f"><span class="section-number-2">6</span> Template for text has a group</h2>
-<div class="outline-text-2" id="text-6">
+<div id="outline-container-orgc8ccb2f" class="outline-2">
+<h2 id="orgc8ccb2f"><span class="section-number-2">7</span> Template for text has a group</h2>
+<div class="outline-text-2" id="text-7">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_text_has_$group$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
@@ -847,9 +872,9 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-org78eaf67" class="outline-2">
-<h2 id="org78eaf67"><span class="section-number-2">7</span> Template for text flush a group</h2>
-<div class="outline-text-2" id="text-7">
+<div id="outline-container-org6892740" class="outline-2">
+<h2 id="org6892740"><span class="section-number-2">8</span> Template for text flush a group</h2>
+<div class="outline-text-2" id="text-8">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_text_flush_$group$</span> (<span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
@@ -912,9 +937,9 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-orga3848b3" class="outline-2">
-<h2 id="orga3848b3"><span class="section-number-2">8</span> Template for text free memory</h2>
-<div class="outline-text-2" id="text-8">
+<div id="outline-container-orgbb27c65" class="outline-2">
+<h2 id="orgbb27c65"><span class="section-number-2">9</span> Template for text free memory</h2>
+<div class="outline-text-2" id="text-9">
 <p>
 Memory is allocated when reading. The following function frees memory.
 </p>
@@ -982,9 +1007,9 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 
-<div id="outline-container-orgb9d9f29" class="outline-2">
-<h2 id="orgb9d9f29"><span class="section-number-2">9</span> Template for has/read/write a numerical attribute</h2>
-<div class="outline-text-2" id="text-9">
+<div id="outline-container-orgdd8894d" class="outline-2">
+<h2 id="orgdd8894d"><span class="section-number-2">10</span> Template for has/read/write a numerical attribute</h2>
+<div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_text_read_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, $group_num_dtype_double$* <span style="color: #a020f0;">const</span> num)
@@ -1046,9 +1071,9 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 
-<div id="outline-container-org3864c3f" class="outline-2">
-<h2 id="org3864c3f"><span class="section-number-2">10</span> Template for has/read/write a dataset of numerical data</h2>
-<div class="outline-text-2" id="text-10">
+<div id="outline-container-org0561451" class="outline-2">
+<h2 id="org0561451"><span class="section-number-2">11</span> Template for has/read/write a dataset of numerical data</h2>
+<div class="outline-text-2" id="text-11">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
 </p>
@@ -1143,9 +1168,9 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-orgfe1ba96" class="outline-2">
-<h2 id="orgfe1ba96"><span class="section-number-2">11</span> Template for has/read/write a dataset of strings</h2>
-<div class="outline-text-2" id="text-11">
+<div id="outline-container-org5e20d31" class="outline-2">
+<h2 id="org5e20d31"><span class="section-number-2">12</span> Template for has/read/write a dataset of strings</h2>
+<div class="outline-text-2" id="text-12">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
 </p>
@@ -1245,9 +1270,9 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-orgd9ef705" class="outline-2">
-<h2 id="orgd9ef705"><span class="section-number-2">12</span> Template for has/read/write a string attribute</h2>
-<div class="outline-text-2" id="text-12">
+<div id="outline-container-org0028124" class="outline-2">
+<h2 id="org0028124"><span class="section-number-2">13</span> Template for has/read/write a string attribute</h2>
+<div class="outline-text-2" id="text-13">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_text_read_$group_str$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">char</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">str</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">max_str_len</span>)
@@ -1320,9 +1345,9 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org0e5a1ac" class="outline-2">
-<h2 id="org0e5a1ac"><span class="section-number-2">13</span> Template for has/read/write the dataset of sparse data</h2>
-<div class="outline-text-2" id="text-13">
+<div id="outline-container-orgae19812" class="outline-2">
+<h2 id="orgae19812"><span class="section-number-2">14</span> Template for has/read/write the dataset of sparse data</h2>
+<div class="outline-text-2" id="text-14">
 <p>
 Each sparse array is stored in a separate <code>.txt</code> file due to the fact that sparse I/O has to be decoupled
 from conventional write/read/flush behaviour of the TEXT back end. Chunks are used to read/write sparse data
@@ -1611,9 +1636,9 @@ User provides indices and values of the sparse array as two separate variables.
 </div>
 </div>
 
-<div id="outline-container-org8d9cc43" class="outline-2">
-<h2 id="org8d9cc43"><span class="section-number-2">14</span> Template for text delete a group (UNSAFE mode)</h2>
-<div class="outline-text-2" id="text-14">
+<div id="outline-container-org12b1975" class="outline-2">
+<h2 id="org12b1975"><span class="section-number-2">15</span> Template for text delete a group (UNSAFE mode)</h2>
+<div class="outline-text-2" id="text-15">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_text_delete_$group$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
@@ -1640,9 +1665,9 @@ User provides indices and values of the sparse array as two separate variables.
 </div>
 </div>
 
-<div id="outline-container-org8bfd6c6" class="outline-2">
-<h2 id="org8bfd6c6"><span class="section-number-2">15</span> Source code for the determinant part</h2>
-<div class="outline-text-2" id="text-15">
+<div id="outline-container-org4d9d78e" class="outline-2">
+<h2 id="org4d9d78e"><span class="section-number-2">16</span> Source code for the determinant part</h2>
+<div class="outline-text-2" id="text-16">
 <p>
 Each array is stored in a separate <code>.txt</code> file due to the fact that determinant I/O has to be decoupled
 from conventional write/read/flush behaviour of the TEXT back end. Chunks are used to read/write the data
@@ -2081,7 +2106,7 @@ Size specifies the number of data items, e.g. determinants.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2022-09-10 Sat 19:17</p>
+<p class="date">Created: 2022-09-13 Tue 09:31</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
