@@ -889,6 +889,56 @@ prim_factor =
   #+end_src
   :end:
 
+* Numerical integration grid (grid group)
+
+  The molecular integrals have to be computed numerically on a grid in many applications.
+  A common choice for the angular grid is the one proposed by Lebedev and Laikov
+  [Russian Academy of Sciences Doklady Mathematics, Volume 59, Number 3, 1999, pages 477-481].
+  For the radial grids, many approaches have been developed over the years.
+
+  The structure of this group is adapted for the [[https://github.com/dftlibs/numgrid][numgrid]] library.
+  Feel free to submit a PR if you find missing options/functionalities.
+
+   #+name: grid
+  | Variable        | Type    | Dimensions       | Description                                                             |
+  |-----------------+---------+------------------+-------------------------------------------------------------------------|
+  | ~description~   | ~str~   |                  | Details about the used quadratures can go here                          |
+  | ~rad_precision~ | ~float~ |                  | Radial precision parameter (not used in some schemes like Krack-Köster) |
+  | ~num~           | ~dim~   |                  | Number of grid points                                                   |
+  | ~max_ang_num~   | ~int~   |                  | Maximum number of angular grid points (for pruning)                     |
+  | ~min_ang_num~   | ~int~   |                  | Minimum number of angular grid points (for pruning)                     |
+  | ~coord~         | ~float~ | ~(grid.num)~     | Discretized coordinate space                                            |
+  | ~weight~        | ~float~ | ~(grid.num)~     | Grid weights according to a given partitioning (e.g. Becke)             |
+  | ~ang_num~       | ~dim~   |                  | Number of angular integration points (if used)                          |
+  | ~ang_coord~     | ~float~ | ~(grid.ang_num)~ | Discretized angular space (if used)                                     |
+  | ~ang_weight~    | ~float~ | ~(grid.ang_num)~ | Angular grid weights (if used)                                          |
+  | ~rad_num~       | ~dim~   |                  | Number of radial integration points (if used)                           |
+  | ~rad_coord~     | ~float~ | ~(grid.rad_num)~ | Discretized radial space (if used)                                      |
+  | ~rad_weight~    | ~float~ | ~(grid.rad_num)~ | Radial grid weights  (if used)                                          |
+
+   #+CALL: json(data=grid, title="grid")
+
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+       "grid": {
+	     "description" : [ "str"  , []                 ]
+	 , "rad_precision" : [ "float", []                 ]
+	 ,           "num" : [ "dim"  , []                 ]
+	 ,   "max_ang_num" : [ "int"  , []                 ]
+	 ,   "min_ang_num" : [ "int"  , []                 ]
+	 ,         "coord" : [ "float", [ "grid.num" ]     ]
+	 ,        "weight" : [ "float", [ "grid.num" ]     ]
+	 ,       "ang_num" : [ "dim"  , []                 ]
+	 ,     "ang_coord" : [ "float", [ "grid.ang_num" ] ]
+	 ,    "ang_weight" : [ "float", [ "grid.ang_num" ] ]
+	 ,       "rad_num" : [ "dim"  , []                 ]
+	 ,     "rad_coord" : [ "float", [ "grid.rad_num" ] ]
+	 ,    "rad_weight" : [ "float", [ "grid.rad_num" ] ]
+       } ,
+   #+end_src
+   :end:
+
 * Quantum Monte Carlo data (qmc group)
 
    In quantum Monte Carlo calculations, the wave function is evaluated
