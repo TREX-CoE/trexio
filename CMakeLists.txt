@@ -16,7 +16,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Optional configure for developer mode to generate source code from org-mode files.
 option(TREXIO_DEVEL "TREXIO developer mode (for code generation)." OFF)
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/.git/config")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.devel")
   set(TREXIO_DEVEL ON)
   find_package(Python3 REQUIRED)
   if(Python3_FOUND)

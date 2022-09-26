@@ -16,11 +16,11 @@ AM_PROG_AR
 LT_PREREQ([2.2])
 LT_INIT
 
-# Activate developer mode when the source is the git repository.
+# Activate developer mode if a dummy file is present (true when cloning the git repository).
 # Otherwise, it is the source distribution and the developer mode should not be activated.
-TEST_IFEXISTS=".git"
-AC_CHECK_FILE([$TEST_IFEXISTS],
-        [enable_maintainer_mode="yes"],
+TEST_IFEXISTS=".devel"
+AS_IF([test -f $TEST_IFEXISTS],
+        [enable_maintainer_mode="yes"]
 )
 
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
