@@ -16,7 +16,7 @@ AM_PROG_AR
 LT_PREREQ([2.2])
 LT_INIT
 
-# Activate developer mode when if a dummy file is present (true when cloning the git repository).
+# Activate developer mode if a dummy file is present (true when cloning the git repository).
 # Otherwise, it is the source distribution and the developer mode should not be activated.
 TEST_IFEXISTS=".devel"
 AS_IF([test -f $TEST_IFEXISTS],
