@@ -35,10 +35,16 @@ For sparse data structures such as electron replusion integrals,
 the data can be too large to fit in memory and the data needs to be
 fetched using multiple function calls to perform I/O on buffers.
 For more information on how to read/write sparse data structures, see
-the [[./examples.html][examples]].
+the [[./examples.html][examples]]. The ~sparse~ data representation implies the
+[[https://en.wikipedia.org/wiki/Sparse_matrix#Coordinate_list_(COO)][coordinate list]] representation, namely the user has to write a list
+of indices and values.
 
-For determinants, the ~special~ attribute is present in the type. This
-means that the source code is not produced by the generator, but hand-written.
+For the Configuration Interfaction (CI) and Configuration State Function (CSF)
+groups, the ~buffer~ data type is introduced, which allows similar incremental
+I/O as for ~sparse~ data but without the need to write indices of the sparse values.
+
+For determinant lists (integer bit fields), the ~special~ attribute is present in the type.
+This means that the source code is not produced by the generator, but hand-written.
 
   #+begin_src python :tangle trex.json :exports none
 {
@@ -696,11 +702,11 @@ prim_factor =
   An illustration on how to read determinants is presented in the [[./examples.html][examples]].
 
   #+NAME: determinant
-  | Variable      | Type            | Dimensions                    | Description                                            |
-  |---------------+-----------------+-------------------------------+--------------------------------------------------------|
-  | ~num~         | ~dim readonly~  |                               | Number of determinants                                 |
-  | ~list~        | ~int special~   | ~(determinant.num)~           | List of determinants as integer bit fields             |
-  | ~coefficient~ | ~float special~ | ~(state.num,determinant.num)~ | Coefficients of the determinants from the CI expansion |
+  | Variable      | Type           | Dimensions                    | Description                                            |
+  |---------------+----------------+-------------------------------+--------------------------------------------------------|
+  | ~num~         | ~dim readonly~ |                               | Number of determinants                                 |
+  | ~list~        | ~int special~  | ~(determinant.num)~           | List of determinants as integer bit fields             |
+  | ~coefficient~ | ~float buffer~ | ~(state.num,determinant.num)~ | Coefficients of the determinants from the CI expansion |
 
   #+CALL: json(data=determinant, title="determinant")
 
@@ -708,9 +714,9 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "determinant": {
-                  "num" : [ "dim readonly" , []                                 ]
-        ,        "list" : [ "int special"  , [ "determinant.num" ]              ]
-        , "coefficient" : [ "float special", [ "determinant.num", "state.num" ] ]
+		  "num" : [ "dim readonly", []                                 ]
+	,        "list" : [ "int special" , [ "determinant.num" ]              ]
+	, "coefficient" : [ "float buffer", [ "determinant.num", "state.num" ] ]
       } ,
   #+end_src
   :end:
@@ -732,11 +738,11 @@ prim_factor =
   the basis of Slater determinants.
 
   #+NAME: csf
-  | Variable          | Type            | Dimensions                  | Description                                    |
-  |-------------------+-----------------+-----------------------------+------------------------------------------------|
-  | ~num~             | ~dim readonly~  |                             | Number of CSFs                                 |
-  | ~coefficient~     | ~float special~ | ~(state.num,csf.num)~       | Coefficients of the CSFs from the CI expansion |
-  | ~det_coefficient~ | ~float sparse~  | ~(determinant.num,csf.num)~ | Projection on the determinant basis            |
+  | Variable          | Type           | Dimensions                  | Description                                    |
+  |-------------------+----------------+-----------------------------+------------------------------------------------|
+  | ~num~             | ~dim readonly~ |                             | Number of CSFs                                 |
+  | ~coefficient~     | ~float buffer~ | ~(state.num,csf.num)~       | Coefficients of the CSFs from the CI expansion |
+  | ~det_coefficient~ | ~float sparse~ | ~(determinant.num,csf.num)~ | Projection on the determinant basis            |
 
   #+CALL: json(data=csf, title="csf")
 
@@ -744,9 +750,9 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "csf": {
-                      "num" : [ "dim readonly" , []                               ]
-        ,     "coefficient" : [ "float special", [ "csf.num", "state.num" ]       ]
-        , "det_coefficient" : [ "float sparse" , [ "csf.num", "determinant.num" ] ]
+		      "num" : [ "dim readonly", []                               ]
+	,     "coefficient" : [ "float buffer", [ "csf.num", "state.num" ]       ]
+	, "det_coefficient" : [ "float sparse", [ "csf.num", "determinant.num" ] ]
       } ,
   #+end_src
   :end:
