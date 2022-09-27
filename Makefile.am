@@ -85,25 +85,6 @@ EXTRA_DIST += CMakeLists.txt \
               cmake/FindTREXIO.cmake
 
 
-# Include files needed to produce the debian package.
-DEB_FILES = \
-  debian/changelog     \
-  debian/compat        \
-  debian/control       \
-  debian/copyright     \
-  debian/patches       \
-  debian/README.Debian \
-  debian/README.md     \
-  debian/rules         \
-  debian/source        \
-  debian/watch
-
-EXTRA_DIST += $(DEB_FILES)
-
-debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
-	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
-	debuild
-
 # =============== TESTS =============== #
 
 TESTS_C = \
@@ -271,6 +252,24 @@ $(numpy_i):
 
 check-numpy:
 	cd tools && ./check_numpy_i.sh
+
+# Include files needed to produce the debian package.
+DEB_FILES = \
+  helpers-debian/changelog     \
+  helpers-debian/compat        \
+  helpers-debian/control       \
+  helpers-debian/copyright     \
+  helpers-debian/rules         \
+  helpers-debian/source        \
+  helpers-debian/libtrexio0.install \
+  helpers-debian/libtrexio-dev.install \
+  helpers-debian/source        \
+  helpers-debian/README.source 
+
+debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
+	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
+	debuild
+
 
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
