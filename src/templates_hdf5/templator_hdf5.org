@@ -79,6 +79,21 @@ typedef struct trexio_hdf5_s {
 trexio_exit_code trexio_hdf5_init(trexio_t* const file);
 trexio_exit_code trexio_hdf5_deinit(trexio_t* const file);
 trexio_exit_code trexio_hdf5_inquire(const char* file_name);
+trexio_exit_code trexio_hdf5_flush(trexio_t* const file);
+  #+end_src
+
+  #+begin_src c :tangle basic_hdf5.c
+trexio_exit_code
+trexio_hdf5_flush(trexio_t* const file)
+{
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  herr_t rc = H5Fflush(f->file_id, H5F_SCOPE_GLOBAL);
+  if (rc < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
   #+end_src
 
   #+begin_src c :tangle basic_hdf5.c
@@ -178,6 +193,38 @@ trexio_hdf5_deinit (trexio_t* const file)
 
 }
   #+end_src
+
+* Template for HDF5 has a group
+
+  #+begin_src c :tangle hrw_group_hdf5.h :exports none
+trexio_exit_code trexio_hdf5_has_$group$ (trexio_t* const file);
+  #+end_src
+
+
+  #+begin_src c :tangle has_group_hdf5.c
+trexio_exit_code
+trexio_hdf5_has_$group$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  struct H5G_info_t group_info;
+
+  /* H5Gget_info return info about the HDF5 group as a group_info struct */
+  herr_t status = H5Gget_info(f->$group$_group, &group_info);
+  if (status < 0) return TREXIO_FAILURE;
+
+  /* If nlinks==0 --> the group is empty, i.e. non-existent */
+  if (group_info.nlinks == (hsize_t) 0) {
+    return TREXIO_HAS_NOT;
+  } else {
+    return TREXIO_SUCCESS;
+  }
+
+}
+    #+end_src
 
 * Template for HDF5 has/read/write a numerical attribute
 

@@ -34,7 +34,11 @@
 
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
+if HAVE_FORTRAN
 BUILT_SOURCES = trexio.mod
+else
+BUILT_SOURCES = 
+endif
 EXTRA_DIST = .git_hash
 
 PACKAGE_VERSION = @PACKAGE_VERSION@
@@ -45,10 +49,13 @@ pkgconfig_DATA = pkgconfig/trexio.pc
 
 # =============== BUILD =============== #
 
-trexio_h = $(srcdir)/include/trexio.h
-trexio_f = $(srcdir)/include/trexio_f.f90
+trexio_h = include/trexio.h
+include_HEADERS = $(trexio_h)
 
-include_HEADERS = $(trexio_h) $(trexio_f)
+if HAVE_FORTRAN
+trexio_f = include/trexio_f.f90
+include_HEADERS += $(trexio_f)
+endif
 
 AM_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/include
 
@@ -56,7 +63,6 @@ lib_LTLIBRARIES = src/libtrexio.la
 
 
 SOURCES = \
-  $(trexio_h) \
   src/trexio.c \
   src/trexio_private.h \
   src/trexio_s.h \
@@ -75,7 +81,7 @@ ORG_FILES = \
   trex.org
 
 
-src_libtrexio_la_SOURCES = $(SOURCES)
+src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
@@ -117,17 +123,20 @@ TESTS_C += \
   tests/overwrite_all_hdf5
 endif
 
-TESTS_F = \
-  tests/test_f
+TESTS = $(TESTS_C)
 
-TESTS = $(TESTS_C) $(TESTS_F)
+if HAVE_FORTRAN
+TESTS_F = tests/test_f
+TESTS += $(TESTS_F)
+endif
+
 check_PROGRAMS = $(TESTS)
 
 # specify common LDADD options for all tests
 LDADD = src/libtrexio.la
 
-test_trexio_f = $(srcdir)/tests/trexio_f.f90
-CLEANFILES += $(test_trexio_f)
+if HAVE_FORTRAN
+test_trexio_f = tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
@@ -135,9 +144,15 @@ $(test_trexio_f): $(trexio_f)
 trexio.mod: tests/trexio_f.o
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
+endif
 
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/
+
+# =============== GUIX MANIFEST =============== #
+
+trexio_scm = $(srcdir)/tools/trexio.scm
+EXTRA_DIST += $(trexio_scm)
 
 # =============== DOCUMENTATION =============== #
 
@@ -176,9 +191,15 @@ HDF5_CPPFLAGS = @HDF5_CPPFLAGS@
 
 if TREXIO_DEVEL
 
-CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h) $(HTML_TANGLED) $(htmlizer) .git_hash
+CLEANFILES += $(SOURCES) $(trexio_h) $(HTML_TANGLED) $(htmlizer) .git_hash
 
-BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
+BUILT_SOURCES += $(SOURCES) $(trexio_h)
+
+if HAVE_FORTRAN
+CLEANFILES += $(trexio_f)
+BUILT_SOURCES += $(trexio_f) $(test_trexio_f)
+$(trexio_f): $(trexio_h)
+endif
 
 .git_hash: FORCE
 	git log | head -1 | cut -d ' ' -f 2 > .git_hash
@@ -188,10 +209,10 @@ all: .git_hash
 GENERATOR_FILES = $(srcdir)/tools/generator.py \
 		  $(srcdir)/tools/generator_tools.py
 
-$(SOURCES): $(trexio_f)
+$(SOURCES): $(trexio_h)
 src/trexio.c: $(trexio_h)
 
-$(trexio_f): $(ORG_FILES) $(GENERATOR_FILES)
+$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
@@ -207,6 +228,22 @@ cppcheck.out: $(trexio_h)
 	  --enable=all \
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
+
+#################
+# OCaml binding #
+#################
+
+ocaml/trexio/_build/default/lib/trexio.cma:
+	$(MAKE) -C ocaml/trexio
+
+ocaml: ocaml/trexio/_build/default/lib/trexio.cma
+
+ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
+	opam install ocaml/trexio
+
+##################
+# Python binding #
+##################
 
 setup_py      = $(srcdir)/python/setup.py
 setup_cfg     = $(srcdir)/python/setup.cfg
@@ -277,6 +314,6 @@ CLEANFILES += $(pytrexio_c) \
               python/src/*.c \
               python/src/*.h
 
-.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE
+.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE ocaml
 
 endif

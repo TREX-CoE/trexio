@@ -44,3 +44,6 @@ coeffs    = [float(i/det_num)   for i in range(det_num)]
 coeffs_s2 = [float(i*2/det_num) for i in range(det_num)]
 
 det_test  = [1, 2, 3, 2, 1, 3]
+
+orb_up_test = [0, 65, 128, 129]
+orb_dn_test = [1, 64, 128, 129]

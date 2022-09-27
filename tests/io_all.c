@@ -94,6 +94,10 @@ int test_write(const char* file_name, const back_end_t backend) {
   rc = trexio_write_nucleus_coord(file,coord);
   assert (rc == TREXIO_SUCCESS);
 
+  // check the force flushing
+  rc = trexio_flush(file);
+  assert (rc == TREXIO_SUCCESS);
+
   rc = trexio_write_nucleus_label(file, label, 32);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_point_group(file, sym, 32);

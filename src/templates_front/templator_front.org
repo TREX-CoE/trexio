@@ -1424,6 +1424,84 @@ def _close(trexio_file):
         raise Error(rc)
    #+end_src
 
+** File flushing
+
+    ~trexio_flush~ flushes all buffers into the ~trexio_t~ file.
+
+    input parameters:
+      ~file~ -- TREXIO file handle.
+
+    output:
+      ~trexio_exit_code~ exit code.
+
+*** C
+
+    #+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_flush(trexio_t* file);
+    #+end_src
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_flush (trexio_t* file)
+{
+
+  if (file == NULL) return TREXIO_FILE_ERROR;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  /* Terminate the back end */
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_flush(file);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    rc = trexio_hdf5_flush(file);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_flush(file);
+    break;
+,*/
+  }
+
+  return rc;
+}
+    #+end_src
+
+*** Fortran
+
+    #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_flush (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+   end function trexio_flush
+end interface
+    #+end_src
+
+*** Python
+
+   #+begin_src python :tangle basic_python.py
+def flush(trexio_file):
+    """Flush buffers into the TREXIO file.
+
+    Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
+    """
+
+    rc = pytr.trexio_flush(trexio_file)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+   #+end_src
+
 ** File existence
 
     ~trexio_inquire~ check whether TREXIO file exists.
@@ -1754,6 +1832,98 @@ trexio_pre_close (trexio_t* file)
    *Note:* single integer attributes that contain ~num~ in their name (e.g. ~nucleus_num~) are
    considered dimensioning variables and cannot be negative or 0. An attempt to write negative or 0
    value will result in ~TREXIO_INVALID_ARG_2~ exit code.
+
+** Templates for front end has_group functions
+*** Introduction
+
+   This section concerns API calls related to TREXIO groups
+
+   | Function name        | Description                       |
+   |----------------------+-----------------------------------|
+   | ~trexio_has_$group$~ | Check if a group exists in a file |
+
+*** C templates for front end
+
+   The ~C~ templates that correspond to each of the abovementioned
+   functions can be found below.  First parameter is the ~TREXIO~ file
+   handle.
+
+**** Function declarations
+
+     #+begin_src c :tangle hrw_group_front.h :exports none
+trexio_exit_code trexio_has_$group$(trexio_t* const file);
+     #+end_src
+
+**** Source code
+
+     #+begin_src c :tangle has_group_front.c
+trexio_exit_code
+trexio_has_$group$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_$group$(file);
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_has_$group$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_$group$(file);
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+*** Fortran templates for front end
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+     #+begin_src f90 :tangle has_group_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_has_$group$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+   end function trexio_has_$group$
+end interface
+     #+end_src
+
+*** Python templates for front end
+
+     #+begin_src python :tangle has_group_front.py
+def has_$group$(trexio_file) -> bool:
+    """Check that $group$ group exists in the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+          True if the variable exists, False otherwise
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc = pytr.trexio_has_$group$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
+
+    return rc == TREXIO_SUCCESS
+     #+end_src
 
 ** Templates for front end has/read/write a single numerical attribute
 *** Introduction
@@ -3924,7 +4094,7 @@ def read_$group_dset$(trexio_file, dim = None) -> list:
     """
 
     $group_dset_dim$ = read_$group_dset_dim$(trexio_file)
-    
+
     dims_list = [$group_dset_dim_list$]
     dim_real  = 1
     for i in range($group_dset_rank$):
@@ -5189,6 +5359,9 @@ def has_determinant_coefficient(trexio_file) -> bool:
   ~trexio_to_orbital_list_up_dn~ function does the same but for both up- and down-spin components
   of the determinant and returns two list of orbitals each corresponding to a different component.
 
+  ~trexio_to_bitfield_list~ function converts the list of occupied orbitals (up- or down-spin)
+  into the corresponding ~int64_t~ bitfield representation of the determinant.
+
 ** C
 
      #+begin_src c :tangle prefix_front.h
@@ -5197,15 +5370,49 @@ trexio_exit_code trexio_mark_safety(trexio_t* const file, const int32_t safety_f
 
 typedef int64_t  bitfield_t;
 
-#define TREXIO_ORBITAL_SHIFT  1
-#define TREXIO_INT_SIZE       64
-#define TREXIO_NORB_PER_INT   ( 8*sizeof(bitfield_t) )
-#
+#define TREXIO_ORBITAL_SHIFT      1
+#define TREXIO_INT_SIZE           64
+#define TREXIO_NORB_PER_INT       ( 8*sizeof(bitfield_t) )
+#define TREXIO_NORB_PER_INT_SHIFT ( trailz( TREXIO_NORB_PER_INT ) )
+
 trexio_exit_code trexio_to_orbital_list (const int32_t N_int, const bitfield_t* d1, int32_t* const list, int32_t* const occupied_num);
 trexio_exit_code trexio_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* d1, int32_t* const list_up, int32_t* const list_dn, int32_t* const occ_num_up, int32_t* const occ_num_dn);
 trexio_exit_code trexio_safe_to_orbital_list (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_out, const int64_t dim_out, int32_t* const num);
 trexio_exit_code trexio_safe_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_up_out, const int64_t dim_up_out, int32_t* const dset_dn_out, const int64_t dim_dn_out, int32_t* const num_up, int32_t* const num_dn);
+trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list, const int32_t occupied_num, bitfield_t* const bit_list, const int32_t N_int);
      #+end_src
+
+
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list,
+                                          const int32_t occupied_num,
+                                          bitfield_t* const bit_list,
+                                          const int32_t N_int)
+{
+  if (orb_list == NULL)  return TREXIO_INVALID_ARG_1;
+  if (occupied_num <= 0) return TREXIO_INVALID_ARG_2;
+  if (bit_list == NULL)  return TREXIO_INVALID_ARG_3;
+  if (N_int <= 0)        return TREXIO_INVALID_ARG_4;
+
+  uint32_t i;
+  uint32_t k;
+  uint32_t iorb;
+
+  for (int32_t j = 0 ; j < N_int ; j++) {
+      bit_list[j] = (bitfield_t) 0;
+  }
+
+  for (int32_t pos = 0 ; pos < occupied_num ; pos++) {
+    iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
+    i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
+    k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
+    bit_list[i] |= ((bitfield_t) 1) << k;
+  }
+
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+
 
      #+begin_src c :tangle prefix_front.c
 trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
@@ -5386,10 +5593,24 @@ interface
 end interface
    #+end_src
 
+   #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_to_bitfield_list_c(list, occupied_num, det_list, N_int) &
+   bind(C, name="trexio_to_bitfield_list")
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int32_t), intent(in)        :: list(*)
+     integer(c_int32_t), intent(in), value :: occupied_num
+     integer(c_int64_t), intent(inout)     :: det_list(*)
+     integer(c_int32_t), intent(in), value :: N_int
+   end function trexio_to_bitfield_list_c
+end interface
+   #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_to_orbital_list_c(N_int, d1, list, occupied_num) bind(C, name="trexio_to_orbital_list")
+   integer(trexio_exit_code) function trexio_to_orbital_list_c(N_int, d1, list, occupied_num) &
+   bind(C, name="trexio_to_orbital_list")
      use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in), value :: N_int
@@ -5429,6 +5650,33 @@ def info():
 
 
    #+begin_src python :tangle basic_python.py
+def to_bitfield_list(n_int: int, orbitals: list) -> list:
+    """Convert a list of occupied orbitals into a bitfield determinant.
+
+    Input:
+        ~orbitals~ - list of occupied orbital indices fields (integers)
+        ~n_int~ - number of bitfields per determinant of a given spin
+
+    Returns:
+        ~bitfield_list~: list
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+
+    rc, bitfield_list = pytr.trexio_to_bitfield_list(orbitals, n_int)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+    if len(bitfield_list) != n_int:
+        raise Exception("Inconsistent size of the bitfield_list.")
+
+    return bitfield_list
+   #+end_src
+
+
+   #+begin_src python :tangle basic_python.py
 def to_orbital_list(n_int: int, determinant: list) -> list:
     """Convert a given determinant into a list of occupied orbitals.
 
@@ -5454,8 +5702,10 @@ def to_orbital_list(n_int: int, determinant: list) -> list:
         raise Exception("Inconsistent size of the orbital_list.")
 
     return orbital_list[0:occ_num]
+   #+end_src
 
 
+   #+begin_src python :tangle basic_python.py
 def to_orbital_list_up_dn(n_int: int, determinant: list) -> tuple:
     """Convert a given determinant into two lists of occupied orbitals.
 
@@ -5539,6 +5789,29 @@ contains
   by 1 since in Fortran arrays are 1-based and C/Python they are 0-based.
 
   #+begin_src f90 :tangle helper_fortran.f90
+   integer(trexio_exit_code) function trexio_to_bitfield_list(list, occupied_num, det_list, N_int)
+     use, intrinsic :: iso_c_binding
+     implicit none
+
+     integer(c_int32_t), intent(in)        :: list(*)
+     integer(c_int32_t), intent(in), value :: occupied_num
+     integer(c_int64_t), intent(out)       :: det_list(*)
+     integer(c_int32_t), intent(in), value :: N_int
+     integer(c_int32_t)                    :: list_0based(occupied_num)
+
+     integer :: i
+     do i = 1,occupied_num
+       list_0based(i) = list(i) - 1
+     enddo
+
+     trexio_to_bitfield_list = trexio_to_bitfield_list_c(list_0based, occupied_num, det_list, N_int)
+     if (trexio_to_bitfield_list /= TREXIO_SUCCESS) then
+       return
+     endif
+
+   end function trexio_to_bitfield_list
+
+
    integer(trexio_exit_code) function trexio_to_orbital_list(N_int, d1, list, occupied_num)
      use, intrinsic :: iso_c_binding
      implicit none

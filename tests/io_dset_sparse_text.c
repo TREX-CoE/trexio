@@ -86,6 +86,14 @@ static int test_has_dset_sparse (const char* file_name, const back_end_t backend
   assert (file != NULL);
   assert (rc == TREXIO_SUCCESS);
 
+  // check that the group exists
+  rc = trexio_has_mo_2e_int(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  // check that the group does not exist
+  rc = trexio_has_rdm(file);
+  assert(rc==TREXIO_HAS_NOT);
+
   // first check that mo_2e_int_eri_lr (we only write non-lr component in this unit test)
   rc = trexio_has_mo_2e_int_eri_lr(file);
   assert(rc==TREXIO_HAS_NOT);

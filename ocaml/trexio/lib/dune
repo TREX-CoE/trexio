@@ -1,0 +1,19 @@
+(library
+ (name            trexio)
+ (public_name     trexio)
+ (foreign_stubs
+  (language c)
+  (names trexio_stubs)
+  (flags (:include c_flags.sexp) "-fPIC"))
+ (c_library_flags (:include c_library_flags.sexp))
+)
+
+(rule
+ (targets c_flags.sexp c_library_flags.sexp)
+ (action  (run ./config/discover.exe)))
+
+(env
+ (dev
+  (flags ))
+ (release
+  (ocamlopt_flags )))

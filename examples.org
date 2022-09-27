@@ -3,7 +3,8 @@
 #+SETUPFILE: docs/theme.setup
 
   
-* Accessing sparse quantities
+* Accessing sparse quantities (integrals)
+
 ** Fortran
   :PROPERTIES:
   :header-args:    :tangle  print_energy.f90
@@ -270,3 +271,83 @@ program print_energy
 
 end program
     #+end_src
+
+
+* Reading determinants
+
+** Fortran
+  :PROPERTIES:
+  :header-args:    :tangle  print_dets.f90
+  :END:
+   
+   #+begin_src f90
+program test
+
+  use trexio
+  implicit none
+  
+  character*(128)           :: filename               ! Name of the input file
+  integer(trexio_exit_code) :: rc                     ! Return code for error checking
+  integer(trexio_t)         :: trex_determinant_file  ! TREXIO file handle
+  character*(128)           :: err_msg                ! Error message
+
+
+  integer*8, allocatable :: buffer(:,:,:)
+  integer(8) :: offset, icount, BUFSIZE
+  integer :: ndet, int64_num, m
+
+  integer :: occ_num_up, occ_num_dn
+  integer, allocatable :: orb_list_up(:), orb_list_dn(:)
+
+  call getarg(1, filename)
+
+  trex_determinant_file = trexio_open(filename, 'r', TREXIO_AUTO, rc)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error opening TREXIO file: '//trim(err_msg)
+     stop
+  end if
+  
+  rc = trexio_read_determinant_num(trex_determinant_file, ndet)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading determinant_num: '//trim(err_msg)
+     stop
+  end if
+  print *, 'ndet', ndet
+
+  rc = trexio_get_int64_num(trex_determinant_file, int64_num)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading int64_num: '//trim(err_msg)
+     stop
+  end if
+  print *, 'int64_num', int64_num
+
+  BUFSIZE = 1000_8
+  allocate(buffer(int64_num, 2, BUFSIZE))
+  allocate(orb_list_up(int64_num*64), orb_list_dn(int64_num*64))
+
+  offset = 0_8
+  icount = BUFSIZE
+  do while (icount == BUFSIZE)
+    if (offset < ndet) then
+      rc = trexio_read_determinant_list(trex_determinant_file, offset, icount, buffer)
+      offset = offset + icount
+    else
+      icount = 0
+    end if
+    print *, '---'
+    do m=1,icount
+      rc = trexio_to_orbital_list_up_dn(int64_num, buffer(1,1,m), &
+           orb_list_up, orb_list_dn, occ_num_up, occ_num_dn)
+      print '(100(I3,X))', (orb_list_up(1:occ_num_up)), (orb_list_dn(1:occ_num_dn))
+      print *, ''
+    end do
+  end do
+
+  deallocate(buffer, orb_list_dn, orb_list_up)
+
+end
+   #+end_src
+  

@@ -232,7 +232,7 @@ def iterative_populate_file (filename: str, paths: dict, detailed_all: dict) -> 
             for line in f_in :
                 id = check_triggers(line, triggers)
                 if id == 0:
-                    # special case for proper error handling when deallocting text groups
+                    # special case for proper error handling when deallocating text groups
                     error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
                     populated_line = iterative_replace_line(line, '$group$', detailed_all['groups'], add_line=error_handler)
                     f_out.write(populated_line)

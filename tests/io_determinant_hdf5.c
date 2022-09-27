@@ -307,6 +307,14 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   printf("\n");
   */
 
+  // check conversion of one orbital list into the bitfield determinant representation
+  int64_t* det_list_check = (int64_t*) calloc(int_num, sizeof(int64_t));
+
+  rc = trexio_to_bitfield_list (orb_list_up, occ_num_up, det_list_check, int_num);
+  assert (rc == TREXIO_SUCCESS);
+  for (int i=0; i<int_num; i++) {
+    assert (det_list_check[i] == det_list_read[2*int_num*5+i]);
+  }
 
   // close current session
   rc = trexio_close(file);
@@ -316,6 +324,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   free(det_list_read);
   free(det_coef_read);
   free(det_coef_s2_read);
+  free(det_list_check);
   free(orb_list_up);
   free(orb_list_dn);
 

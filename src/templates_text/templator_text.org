@@ -112,6 +112,23 @@ trexio_exit_code trexio_text_inquire(const char* file_name);
 trexio_exit_code trexio_text_deinit(trexio_t* const file);
 trexio_exit_code trexio_text_lock(trexio_t* const file);
 trexio_exit_code trexio_text_unlock(trexio_t* const file);
+trexio_exit_code trexio_text_flush(trexio_t* const file);
+bool trexio_text_file_exists(const char* file_name);
+    #+end_src
+
+    #+begin_src c :tangle basic_text.c
+bool
+trexio_text_file_exists (const char* file_name)
+{
+  /* Check if the file with "file_name" exists */
+  struct stat st;
+
+  int rc = stat(file_name, &st);
+
+  bool file_exists = rc == 0;
+
+  return file_exists;
+}
     #+end_src
 
     #+begin_src c :tangle basic_text.c
@@ -127,7 +144,15 @@ trexio_text_inquire (const char* file_name)
 
   if (file_exists) {
 
-    bool is_a_directory = st.st_mode & S_IFDIR;
+    bool is_a_directory = false;
+#ifdef S_IFDIR
+    is_a_directory = st.st_mode & S_IFDIR;
+#elif S_ISDIR
+    is_a_directory = S_ISDIR(s.st_mode);
+#else
+    printf("Some important macros are missing for directory handling.\n");
+    return TREXIO_FAILURE;
+#endif
     if (!is_a_directory) return TREXIO_FILE_ERROR;
 
     return TREXIO_SUCCESS;
@@ -262,6 +287,26 @@ trexio_text_deinit (trexio_t* const file)
 
   /* Error handling for this call is added by the generator */
   rc = trexio_text_free_$group$( (trexio_text_t*) file);
+
+  return TREXIO_SUCCESS;
+
+}
+    #+end_src
+
+* Flush function (templated part)
+
+    #+begin_src c :tangle basic_text_group.c
+trexio_exit_code
+trexio_text_flush (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_exit_code rc;
+  trexio_text_t* f = (trexio_text_t*) file;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_text_flush_$group$(f);
 
   return TREXIO_SUCCESS;
 
@@ -404,13 +449,14 @@ trexio_text_read_$group$ (trexio_text_t* const file)
             /* conventional fcanf with "%s" only return the string before the first space character
              * to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
              */
-            rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
+            rc = fscanf(f, " %1023[^\n]", buffer);
             if (rc != 1) {
               trexio_text_free_read_$group$(buffer, f, file, $group$);
               return NULL;
             }
 
-            size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
+            size_t tmp_$group_dset$_len = strlen(buffer);
+            strncpy(tmp_$group_dset$, buffer, 32);
             tmp_$group_dset$ += tmp_$group_dset$_len + 1;
           }
         }
@@ -468,14 +514,15 @@ trexio_text_read_$group$ (trexio_text_t* const file)
             return NULL;
           }
 
-          rc = fscanf(f, " %1023[^\n]", $group$->$group_str$);
+          rc = fscanf(f, " %1023[^\n]", buffer);
           if (rc != 1) {
             trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
+          /* Safer string conversion to avoid buffer overflow in fscanf */
+          strncpy($group$->$group_str$, buffer, $group$->len_$group_str$);
 
         }
-
       // END REPEAT GROUP_ATTR_STR
       } else {
         continue;
@@ -490,6 +537,47 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
   file->$group$ = $group$;
   return $group$;
+}
+   #+end_src
+
+* Template for text has a group
+
+    #+begin_src c :tangle hrw_group_text.h :exports none
+trexio_exit_code trexio_text_has_$group$(trexio_t* const file);
+    #+end_src
+
+    #+begin_src c :tangle has_group_text.c
+trexio_exit_code
+trexio_text_has_$group$ (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  /* Flush the group to make sure the group.txt file is created */
+  if (file->mode != 'r') {
+    trexio_exit_code rc = trexio_text_flush_$group$((trexio_text_t*) file);
+    if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
+  }
+
+  /* Build the file name */
+  char $group$_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  const char* $group$_file_name = "/$group$.txt";
+
+  strncpy ($group$_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  strncat ($group$_full_path, $group$_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
+
+  if ($group$_full_path[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') return TREXIO_FAILURE;
+
+  bool file_exists;
+  file_exists = trexio_text_file_exists($group$_full_path);
+
+  if (file_exists) {
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
 }
    #+end_src
 
@@ -1063,6 +1151,23 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   rc = fclose(f_wSize);
   if (rc != 0) return TREXIO_FILE_ERROR;
 
+  const char $group$_file_name[256] = "/$group$.txt";
+
+  memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, $group$_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
+
+  bool file_exists = trexio_text_file_exists(file_full_path);
+
+  /* Create an empty file for the trexio_text_has_group to work */
+  if (!file_exists) {
+    FILE *fp = fopen(file_full_path, "ab+");
+    fclose(fp);
+  }
+
   /* Exit upon success */
   return TREXIO_SUCCESS;
 }
@@ -1533,6 +1638,24 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
   rc = fclose(f);
   if (rc != 0) return TREXIO_FILE_ERROR;
 
+  /* Additional part for the trexio_text_has_group to work */
+  const char det_file_name[256] = "/determinant.txt";
+
+  memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, det_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(det_file_name));
+
+  bool file_exists = trexio_text_file_exists(file_full_path);
+
+  /* Create an empty file for the trexio_text_has_group to work */
+  if (!file_exists) {
+    FILE *fp = fopen(file_full_path, "ab+");
+    fclose(fp);
+  }
+
   /* Exit upon success */
   return TREXIO_SUCCESS;
 }
@@ -1601,6 +1724,24 @@ trexio_exit_code trexio_text_write_determinant_coefficient(trexio_t* const file,
   /* Close the TXT file */
   rc = fclose(f_wSize);
   if (rc != 0) return TREXIO_FILE_ERROR;
+
+  /* Additional part for the trexio_text_has_group to work */
+  const char det_file_name[256] = "/determinant.txt";
+
+  memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, det_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(det_file_name));
+
+  bool file_exists = trexio_text_file_exists(file_full_path);
+
+  /* Create an empty file for the trexio_text_has_group to work */
+  if (!file_exists) {
+    FILE *fp = fopen(file_full_path, "ab+");
+    fclose(fp);
+  }
 
   /* Exit upon success */
   return TREXIO_SUCCESS;
