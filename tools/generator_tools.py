@@ -111,7 +111,7 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                 'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
                 'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
                 'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
-                'group_num_h5_dtype', 'group_num_py_dtype', 'with_state',
+                'group_num_h5_dtype', 'group_num_py_dtype',
                 'group_dset_format_scanf', 'group_dset_format_printf', 'group_dset_sparse_dim',
                 'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
                 'sparse_format_printf_8', 'sparse_format_printf_16', 'sparse_format_printf_32',
@@ -715,19 +715,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
             tmp_dict['is_index'] = 'false'
 
         # add the list of dimensions
-        if 'state.num' in v[1] and len(v[1]) > 1:
-            tmp_dict['with_state'] = 'file->state'
-            # we have to remove state.num from the list of dimensions
-            # because it is opaque dimension, namely it is controlled by a global state switch
-            tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1] if 'state.num' not in dim]
-            rank -= 1
-        elif 'state.num' in v[1] and len(v[1]) == 1:
-            tmp_dict['with_state'] = '0'
-            tmp_dict['dims'] = ['state_num']
-            rank = 1
-        else:
-            tmp_dict['with_state'] = '0'
-            tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
 
         # add the rank
         tmp_dict['rank'] = rank

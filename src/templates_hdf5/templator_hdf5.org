@@ -693,15 +693,7 @@ trexio_exit_code trexio_hdf5_read_$group_dset$(trexio_t* const file,
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (dset == NULL) return TREXIO_INVALID_ARG_6;
 
-  char dset_dset_name[256];
-  memset(dset_dset_name, 0, sizeof(dset_dset_name));
-  const int32_t trexio_state = $with_state$ ;
-
-  if (trexio_state != 0) {
-    sprintf(dset_dset_name, "$group_dset$_state_%" PRId32, trexio_state);
-  } else {
-    strncpy(dset_dset_name, "$group_dset$", 256);
-  }
+  const char dset_name[256] = "$group_dset$";
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -710,7 +702,7 @@ trexio_exit_code trexio_hdf5_read_$group_dset$(trexio_t* const file,
 
   /* Attempt to read values (if EOF -> eof_read_size is modified with the number of elements read and return code is TREXIO_END)
      0 argument below is requires to skip internal treatment specific to sparse indices (i.e. their de-compression).*/
-  return trexio_hdf5_open_read_dset_sparse(f->$group$_group, dset_dset_name, 1, offset, count, eof_read_size, 0, dset);
+  return trexio_hdf5_open_read_dset_sparse(f->$group$_group, dset_name, 1, offset, count, eof_read_size, 0, dset);
 }
    #+end_src
 
@@ -725,15 +717,7 @@ trexio_exit_code trexio_hdf5_write_$group_dset$(trexio_t* const file,
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (dset == NULL) return TREXIO_INVALID_ARG_5;
 
-  char dset_dset_name[256];
-  memset(dset_dset_name, 0, sizeof(dset_dset_name));
-  const int32_t trexio_state = $with_state$ ;
-
-  if (trexio_state != 0) {
-    sprintf(dset_dset_name, "$group_dset$_state_%" PRId32, trexio_state);
-  } else {
-    strncpy(dset_dset_name, "$group_dset$", 256);
-  }
+  const char dset_name[256] = "$group_dset$";
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
@@ -744,11 +728,11 @@ trexio_exit_code trexio_hdf5_write_$group_dset$(trexio_t* const file,
 
   trexio_exit_code rc_write = TREXIO_FAILURE;
   /* NOTE: chunk size is set upon creation of the HDF5 dataset and cannot be changed ! */
-  if ( H5LTfind_dataset(f->$group$_group, dset_dset_name) != 1 ) {
+  if ( H5LTfind_dataset(f->$group$_group, dset_name) != 1 ) {
   /* If the file does not exist -> create it and write */
 
   /* Create chunked dataset with dtype datatype and write indices into it */
-    rc_write = trexio_hdf5_create_write_dset_sparse(f->$group$_group, dset_dset_name, dtype, chunk_dims, dset);
+    rc_write = trexio_hdf5_create_write_dset_sparse(f->$group$_group, dset_name, dtype, chunk_dims, dset);
     if (rc_write != TREXIO_SUCCESS) return rc_write;
 
   } else {
@@ -756,7 +740,7 @@ trexio_exit_code trexio_hdf5_write_$group_dset$(trexio_t* const file,
     hsize_t offset_data[1] = {(hsize_t) offset_file};
 
   /* Create chunked dataset with dtype datatype and write indices into it */
-    rc_write = trexio_hdf5_open_write_dset_sparse(f->$group$_group, dset_dset_name, dtype, chunk_dims, offset_data, dset);
+    rc_write = trexio_hdf5_open_write_dset_sparse(f->$group$_group, dset_name, dtype, chunk_dims, offset_data, dset);
     if (rc_write != TREXIO_SUCCESS) return rc_write;
 
   }
@@ -771,19 +755,11 @@ trexio_hdf5_read_$group_dset$_size (trexio_t* const file, int64_t* const size_ma
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (size_max == NULL) return TREXIO_INVALID_ARG_2;
 
-  char dset_dset_name[128];
-  memset(dset_dset_name, 0, sizeof(dset_dset_name));
-  const int32_t trexio_state = file->state;
-
-  if (trexio_state != 0) {
-    sprintf(dset_dset_name, "$group_dset$_state_%" PRId32, trexio_state);
-  } else {
-    strncpy(dset_dset_name, "$group_dset$", 24);
-  }
+  const char dset_name[256] = "$group_dset$";
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
-  hid_t dset_id = H5Dopen(f->$group$_group, dset_dset_name, H5P_DEFAULT);
+  hid_t dset_id = H5Dopen(f->$group$_group, dset_name, H5P_DEFAULT);
   if (dset_id <= 0) return TREXIO_INVALID_ID;
 
   hid_t fspace_id = H5Dget_space(dset_id);
@@ -815,17 +791,9 @@ trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file)
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
   if (f->$group$_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
-  char dset_dset_name[128];
-  memset(dset_dset_name, 0, sizeof(dset_dset_name));
-  const int32_t trexio_state = file->state;
+  const char dset_name[256] = "$group_dset$";
 
-  if (trexio_state != 0) {
-    sprintf(dset_dset_name, "$group_dset$_state_%" PRId32, trexio_state);
-  } else {
-    strncpy(dset_dset_name, "$group_dset$", 24);
-  }
-
-  herr_t status = H5LTfind_dataset(f->$group$_group, dset_dset_name);
+  herr_t status = H5LTfind_dataset(f->$group$_group, dset_name);
   /* H5LTfind_dataset returns 1 if dataset exists, 0 otherwise */
   if (status == 1){
     return TREXIO_SUCCESS;
