@@ -108,11 +108,10 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index',
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single',
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single',
-                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_dset_rank', 'group_dset_unique_rank', 'group_dset_dim_list', 'group_dset_f_dims',
                 'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
                 'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
-                'group_num_h5_dtype', 'group_num_py_dtype',
-                'group_dset_format_scanf', 'group_dset_format_printf', 'group_dset_sparse_dim',
+                'group_num_h5_dtype', 'group_num_py_dtype', 'group_dset_format_scanf', 'group_dset_format_printf',
                 'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
                 'sparse_format_printf_8', 'sparse_format_printf_16', 'sparse_format_printf_32',
                 'sparse_line_length_8', 'sparse_line_length_16', 'sparse_line_length_32',
@@ -150,6 +149,11 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                         # only uncomment and write the line if `dim` is in the name
                         if 'dim' in detailed_source[item]['trex_json_int_type']:
                             templine = line.replace('//', '')
+                            f_out.write(templine)
+                    # special case to get the max dimension of sparse datasets with different dimensions
+                    elif 'trexio_read_$group_dset_unique_dim$_64' in line:
+                        for i in range(int(detailed_source[item]['group_dset_unique_rank'])):
+                            templine = line.replace('$group_dset_unique_dim$', detailed_source[item]['unique_dims'][i]).replace('$dim_id$', str(i))
                             f_out.write(templine)
                     # general case of recursive replacement of inline triggers
                     else:
@@ -717,6 +721,11 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         # add the list of dimensions
         tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
 
+        # get a list of unique dimensions for sparse datasets
+        if is_sparse:
+            tmp_dict['unique_dims'] = list(set(tmp_dict['dims']))
+            tmp_dict['group_dset_unique_rank'] = str(len(tmp_dict['unique_dims']))
+
         # add the rank
         tmp_dict['rank'] = rank
         tmp_dict['group_dset_rank'] = str(rank)
@@ -737,8 +746,6 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group_dset_f_dims'] = dim_f_list
 
         if is_sparse:
-            # store the max possible dim of the sparse dset (e.g. mo_num)
-            tmp_dict['group_dset_sparse_dim'] = tmp_dict['dims'][0]
             # build printf/scanf sequence and compute line length for n-index sparse quantity
             index_printf = f'*(index_sparse + {str(rank)}*i'
             index_scanf  = f'index_sparse + {str(rank)}*i'

@@ -3167,9 +3167,21 @@ trexio_read_$group_dset$(trexio_t* const file,
   rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
 
-  int64_t num;
-  rc = trexio_read_$group_dset_sparse_dim$_64(file, &num);
-  if (rc != TREXIO_SUCCESS) return rc;
+  /* To be set by generator : number of unique dimensions
+     (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
+  const uint32_t unique_rank = $group_dset_unique_rank$;
+  int64_t unique_dims[$group_dset_unique_rank$];
+
+  // Below part is populated by the generator when unique_rank > 1
+  rc = trexio_read_$group_dset_unique_dim$_64(file, &unique_dims[$dim_id$]); if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Find the maximal value along all dimensions to define the compression technique in the back end */
+  int64_t max_dim = unique_dims[0];
+  if (unique_rank != 1) {
+    for (int i = 1; i < unique_rank; i++) {
+      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
+    }
+  }
 
   // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
   int64_t eof_read_size = 0L;
@@ -3177,12 +3189,12 @@ trexio_read_$group_dset$(trexio_t* const file,
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_read_$group_dset$(file, offset_file, *buffer_size, num, &eof_read_size, index_sparse, value_sparse);
+    rc = trexio_text_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, num, &eof_read_size, index_sparse, value_sparse);
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
     break;
 #else
     rc = TREXIO_BACK_END_MISSING;
@@ -3276,9 +3288,10 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (index_sparse == NULL) return TREXIO_INVALID_ARG_4;
   if (value_sparse == NULL) return TREXIO_INVALID_ARG_5;
 
-  const uint32_t rank = $group_dset_rank$;  // To be set by generator : number of indices
+  /* To be set by generator : number of indices */
+  const uint32_t rank = $group_dset_rank$;
 
-  int64_t size_max=0L;         // Max number of integrals (already in the file)
+  int64_t size_max = 0L; // Max number of integrals (already in the file)
   trexio_exit_code rc;
 
   /* Read the max number of integrals stored in the file */
@@ -3286,9 +3299,21 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
-  int64_t num;
-  rc = trexio_read_$group_dset_sparse_dim$_64(file, &num);
-  if (rc != TREXIO_SUCCESS) return rc;
+  /* To be set by generator : number of unique dimensions
+     (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
+  const uint32_t unique_rank = $group_dset_unique_rank$;
+  int64_t unique_dims[$group_dset_unique_rank$];
+
+  // Below part is populated by the generator when unique_rank > 1
+  rc = trexio_read_$group_dset_unique_dim$_64(file, &unique_dims[$dim_id$]); if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Find the maximal value along all dimensions to define the compression technique in the back end */
+  int64_t max_dim = unique_dims[0];
+  if (unique_rank != 1) {
+    for (int i = 1; i < unique_rank; i++) {
+      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
+    }
+  }
 
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
@@ -3305,13 +3330,13 @@ trexio_write_$group_dset$(trexio_t* const file,
     switch (file->back_end) {
 
     case TREXIO_TEXT:
-      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           size_max, index_sparse_p, value_sparse);
       break;
 
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           index_sparse_p, value_sparse);
       break;
 #else
@@ -3336,13 +3361,13 @@ trexio_write_$group_dset$(trexio_t* const file,
     switch (file->back_end) {
 
     case TREXIO_TEXT:
-      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           size_max, index_sparse, value_sparse);
       break;
 
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           index_sparse, value_sparse);
       break;
 #else
