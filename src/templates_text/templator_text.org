@@ -1364,9 +1364,9 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
-  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, file_name, sizeof(file_name));
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
@@ -1426,9 +1426,9 @@ trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
-  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, file_name, sizeof(file_name));
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
@@ -1476,9 +1476,9 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
-  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name) - append_str_len);
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, file_name, sizeof(file_name));
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
   /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
   FILE* f = fopen(file_full_path, "a");
@@ -1523,9 +1523,9 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* Copy directory name in file_full_path */
-  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(group_file_name));
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, group_file_name, sizeof(group_file_name));
+  strncat (file_full_path, group_file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(group_file_name));
 
   bool file_exists = trexio_text_file_exists(file_full_path);
 
@@ -1551,9 +1551,9 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
-  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   /* Append name of the file with sparse data */
-  strncat (file_full_path, file_name, sizeof(file_name));
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
   /* Check the return code of access function to determine whether the file with data exists or not */
   if (access(file_full_path, F_OK) == 0){
