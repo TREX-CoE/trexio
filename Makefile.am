@@ -37,7 +37,7 @@ CLEANFILES = trexio.mod
 if HAVE_FORTRAN
 BUILT_SOURCES = trexio.mod
 else
-BUILT_SOURCES = 
+BUILT_SOURCES =
 endif
 EXTRA_DIST = .git_hash
 
@@ -182,6 +182,28 @@ $(HTML_TANGLED): $(htmlizer)
 html-local: $(dist_html_DATA)
 doc: html-local
 
+# =============== DEBIAN =============== #
+
+# Include files needed to produce the debian package.
+DEB_FILES = \
+  helpers-debian/changelog     \
+  helpers-debian/compat        \
+  helpers-debian/control       \
+  helpers-debian/copyright     \
+  helpers-debian/rules         \
+  helpers-debian/source        \
+  helpers-debian/libtrexio0.install \
+  helpers-debian/libtrexio-dev.install \
+  helpers-debian/source        \
+  helpers-debian/README.source
+
+EXTRA_DIST += $(DEB_FILES)
+
+debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
+	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
+	debuild
+
+
 # =============== DEVELOPER MODE =============== #
 
 SWIG          = @SWIG@
@@ -289,23 +311,6 @@ $(numpy_i):
 
 check-numpy:
 	cd tools && ./check_numpy_i.sh
-
-# Include files needed to produce the debian package.
-DEB_FILES = \
-  helpers-debian/changelog     \
-  helpers-debian/compat        \
-  helpers-debian/control       \
-  helpers-debian/copyright     \
-  helpers-debian/rules         \
-  helpers-debian/source        \
-  helpers-debian/libtrexio0.install \
-  helpers-debian/libtrexio-dev.install \
-  helpers-debian/source        \
-  helpers-debian/README.source 
-
-debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
-	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
-	debuild
 
 
 CLEANFILES += $(pytrexio_c) \
