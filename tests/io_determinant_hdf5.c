@@ -6,7 +6,7 @@
 
 #define TEST_BACKEND  TREXIO_HDF5
 #define TREXIO_FILE   "test_determinant.h5"
-#define RM_COMMAND    "rm -rf " TREXIO_FILE
+#define RM_COMMAND    "rm -f -- " TREXIO_FILE
 #define SIZE          100
 #define N_CHUNKS      5
 #define STATE_TEST    2

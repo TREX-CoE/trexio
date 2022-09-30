@@ -6,7 +6,7 @@
 
 #define TEST_BACKEND 	TREXIO_TEXT
 #define TREXIO_FILE 	"test_over.dir"
-#define RM_COMMAND 	"rm -rf " TREXIO_FILE
+#define RM_COMMAND 	"rm -f -- " TREXIO_FILE "/*.txt " TREXIO_FILE "/*.txt.size " TREXIO_FILE "/.lock && rm -fd -- " TREXIO_FILE
 
 static int test_write (const char* file_name, const back_end_t backend) {
 

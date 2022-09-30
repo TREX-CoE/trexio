@@ -14,12 +14,12 @@ program test_trexio
 
   rc = trexio_info()
 
-  call system('rm -rf -- test_write_f.dir')
+  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock && rm -fd -- test_write_f.dir')
   print *, 'call test_write(''test_write_f.dir'', TREXIO_TEXT)'
   call test_write('test_write_f.dir', TREXIO_TEXT)
   print *, 'call test_read(''test_write_f.dir'', TREXIO_TEXT)'
   call test_read('test_write_f.dir', TREXIO_TEXT)
-  call system('rm -rf -- test_write_f.dir')
+  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock && rm -fd -- test_write_f.dir')
 
   call test_read_void('test_write_f.dir', TREXIO_TEXT)
 

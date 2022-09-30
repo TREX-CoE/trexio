@@ -6,7 +6,7 @@
 
 #define TEST_BACKEND  TREXIO_TEXT
 #define TREXIO_FILE   "test_determinant.dir"
-#define RM_COMMAND    "rm -rf " TREXIO_FILE
+#define RM_COMMAND    "rm -f -- " TREXIO_FILE "/*.txt " TREXIO_FILE "/*.txt.size " TREXIO_FILE "/.lock && rm -fd -- " TREXIO_FILE
 #define SIZE          100
 #define N_CHUNKS      5
 #define STATE_TEST    2
@@ -312,6 +312,7 @@ int main(){
 /*============== Test launcher ================*/
 
   int rc;
+
   rc = system(RM_COMMAND);
   assert (rc == 0);
 
