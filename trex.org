@@ -40,7 +40,7 @@ the [[./examples.html][examples]]. The ~sparse~ data representation implies the
 of indices and values.
 
 For the Configuration Interfaction (CI) and Configuration State Function (CSF)
-groups, the ~buffer~ data type is introduced, which allows similar incremental
+groups, the ~buffered~ data type is introduced, which allows similar incremental
 I/O as for ~sparse~ data but without the need to write indices of the sparse values.
 
 For determinant lists (integer bit fields), the ~special~ attribute is present in the type.
@@ -702,11 +702,11 @@ prim_factor =
   An illustration on how to read determinants is presented in the [[./examples.html][examples]].
 
   #+NAME: determinant
-  | Variable      | Type           | Dimensions          | Description                                            |
-  |---------------+----------------+---------------------+--------------------------------------------------------|
-  | ~num~         | ~dim readonly~ |                     | Number of determinants                                 |
-  | ~list~        | ~int special~  | ~(determinant.num)~ | List of determinants as integer bit fields             |
-  | ~coefficient~ | ~float buffer~ | ~(determinant.num)~ | Coefficients of the determinants from the CI expansion |
+  | Variable      | Type             | Dimensions          | Description                                            |
+  |---------------+------------------+---------------------+--------------------------------------------------------|
+  | ~num~         | ~dim readonly~   |                     | Number of determinants                                 |
+  | ~list~        | ~int special~    | ~(determinant.num)~ | List of determinants as integer bit fields             |
+  | ~coefficient~ | ~float buffered~ | ~(determinant.num)~ | Coefficients of the determinants from the CI expansion |
 
   #+CALL: json(data=determinant, title="determinant")
 
@@ -714,9 +714,9 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "determinant": {
-		  "num" : [ "dim readonly", []                    ]
-	,        "list" : [ "int special" , [ "determinant.num" ] ]
-	, "coefficient" : [ "float buffer", [ "determinant.num" ] ]
+		  "num" : [ "dim readonly"  , []                    ]
+	,        "list" : [ "int special"   , [ "determinant.num" ] ]
+	, "coefficient" : [ "float buffered", [ "determinant.num" ] ]
       } ,
   #+end_src
   :end:
@@ -738,11 +738,11 @@ prim_factor =
   the basis of Slater determinants.
 
   #+NAME: csf
-  | Variable          | Type           | Dimensions                  | Description                                    |
-  |-------------------+----------------+-----------------------------+------------------------------------------------|
-  | ~num~             | ~dim readonly~ |                             | Number of CSFs                                 |
-  | ~coefficient~     | ~float buffer~ | ~(csf.num)~                 | Coefficients of the CSFs from the CI expansion |
-  | ~det_coefficient~ | ~float sparse~ | ~(determinant.num,csf.num)~ | Projection on the determinant basis            |
+  | Variable          | Type             | Dimensions                  | Description                                    |
+  |-------------------+------------------+-----------------------------+------------------------------------------------|
+  | ~num~             | ~dim readonly~   |                             | Number of CSFs                                 |
+  | ~coefficient~     | ~float buffered~ | ~(csf.num)~                 | Coefficients of the CSFs from the CI expansion |
+  | ~det_coefficient~ | ~float sparse~   | ~(determinant.num,csf.num)~ | Projection on the determinant basis            |
 
   #+CALL: json(data=csf, title="csf")
 
@@ -750,9 +750,9 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "csf": {
-		      "num" : [ "dim readonly", []                               ]
-	,     "coefficient" : [ "float buffer", [ "csf.num" ]                    ]
-	, "det_coefficient" : [ "float sparse", [ "csf.num", "determinant.num" ] ]
+		      "num" : [ "dim readonly"  , []                               ]
+	,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
+	, "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
       } ,
   #+end_src
   :end:

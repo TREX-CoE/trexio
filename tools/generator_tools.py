@@ -499,7 +499,7 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
             f'group_{target}_format_scanf'    : 'lf',
             f'group_{target}_py_dtype'        : 'float'
         })
-    elif 'buffer' in dtype:
+    elif 'buffered' in dtype:
         dtype_dict.update({
             'default_prec'                    : '64',
             f'group_{target}_dtype'           : 'double',
@@ -780,7 +780,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         # split datasets in numeric- and string- based
         if 'str' in datatype:
             dset_string_dict[k] = tmp_dict
-        elif 'buffer' in datatype:
+        elif 'buffered' in datatype:
             dset_buffer_dict[k] = tmp_dict
         elif is_sparse:
             dset_sparse_dict[k] = tmp_dict
