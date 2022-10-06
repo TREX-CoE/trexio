@@ -182,15 +182,11 @@ class TestIO:
         assert int_num == int64_num
         # write the data for the ground state
         offset = 0
+        trexio.write_state_id(self.test_file, 0)
         trexio.write_determinant_list(self.test_file, offset, det_num, dets)
         assert trexio.has_determinant_list(self.test_file)
         trexio.write_determinant_coefficient(self.test_file, offset, det_num, coeffs)
         assert trexio.has_determinant_coefficient(self.test_file)
-        # write the data for some other state
-        self.test_file.set_state(2)
-        trexio.write_determinant_coefficient(self.test_file, offset, det_num, coeffs_s2)
-        assert trexio.has_determinant_coefficient(self.test_file)
-        self.test_file.set_state(0)
         # manually check the consistency between coefficient_size and number of determinants
         assert trexio.read_determinant_coefficient_size(self.test_file) == trexio.read_determinant_num(self.test_file)
 

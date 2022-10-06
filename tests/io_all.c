@@ -26,11 +26,11 @@ int main() {
     assert (rc == 0);
   }
 
-  rc = system("rm -rf test_all.dir");
+  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir");
   assert (rc == 0);
   test_write("test_all.dir", TREXIO_TEXT);
   test_read ("test_all.dir", TREXIO_TEXT);
-  rc = system("rm -rf test_all.dir");
+  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir");
   assert (rc == 0);
 
   return 0;

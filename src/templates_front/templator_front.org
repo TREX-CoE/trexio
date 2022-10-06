@@ -766,7 +766,7 @@ class File:
         One of the currently supported TREXIO open modes.
         For example, 'r' or 'w'.
     state: int
-        Active state of the file (needed to write determinant_coefficient).
+        Active state of the file (needed to write $group_dset$).
         Default is 0.
     isOpen: bool
         Flag indicating whether the current object is still open for I/O
@@ -1588,7 +1588,7 @@ def _inquire(file_name: str) -> bool:
 ** File state
 
     ~trexio_set_state~ set an existing ~trexio_t~ file handle to a given state.
-    ~trexio_get_state~ returns current sate of the ~trexio_t~ file handle.
+    ~trexio_get_state~ returns current state of the ~trexio_t~ file handle.
 
     input parameters:
       ~file~  -- TREXIO file handle.
@@ -3167,9 +3167,21 @@ trexio_read_$group_dset$(trexio_t* const file,
   rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
 
-  int64_t num;
-  rc = trexio_read_$group_dset_sparse_dim$_64(file, &num);
-  if (rc != TREXIO_SUCCESS) return rc;
+  /* To be set by generator : number of unique dimensions
+     (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
+  const uint32_t unique_rank = $group_dset_unique_rank$;
+  int64_t unique_dims[$group_dset_unique_rank$];
+
+  // Below part is populated by the generator when unique_rank > 1
+  rc = trexio_read_$group_dset_unique_dim$_64(file, &unique_dims[$dim_id$]); if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Find the maximal value along all dimensions to define the compression technique in the back end */
+  int64_t max_dim = unique_dims[0];
+  if (unique_rank != 1) {
+    for (uint32_t i = 1; i < unique_rank; i++) {
+      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
+    }
+  }
 
   // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
   int64_t eof_read_size = 0L;
@@ -3177,12 +3189,12 @@ trexio_read_$group_dset$(trexio_t* const file,
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    rc = trexio_text_read_$group_dset$(file, offset_file, *buffer_size, num, &eof_read_size, index_sparse, value_sparse);
+    rc = trexio_text_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, num, &eof_read_size, index_sparse, value_sparse);
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
     break;
 #else
     rc = TREXIO_BACK_END_MISSING;
@@ -3276,9 +3288,10 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (index_sparse == NULL) return TREXIO_INVALID_ARG_4;
   if (value_sparse == NULL) return TREXIO_INVALID_ARG_5;
 
-  const uint32_t rank = $group_dset_rank$;  // To be set by generator : number of indices
+  /* To be set by generator : number of indices */
+  const uint32_t rank = $group_dset_rank$;
 
-  int64_t size_max=0L;         // Max number of integrals (already in the file)
+  int64_t size_max = 0L; // Max number of integrals (already in the file)
   trexio_exit_code rc;
 
   /* Read the max number of integrals stored in the file */
@@ -3286,9 +3299,21 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
-  int64_t num;
-  rc = trexio_read_$group_dset_sparse_dim$_64(file, &num);
-  if (rc != TREXIO_SUCCESS) return rc;
+  /* To be set by generator : number of unique dimensions
+     (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
+  const uint32_t unique_rank = $group_dset_unique_rank$;
+  int64_t unique_dims[$group_dset_unique_rank$];
+
+  // Below part is populated by the generator when unique_rank > 1
+  rc = trexio_read_$group_dset_unique_dim$_64(file, &unique_dims[$dim_id$]); if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Find the maximal value along all dimensions to define the compression technique in the back end */
+  int64_t max_dim = unique_dims[0];
+  if (unique_rank != 1) {
+    for (uint32_t i = 1; i < unique_rank; i++) {
+      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
+    }
+  }
 
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
@@ -3305,13 +3330,13 @@ trexio_write_$group_dset$(trexio_t* const file,
     switch (file->back_end) {
 
     case TREXIO_TEXT:
-      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           size_max, index_sparse_p, value_sparse);
       break;
 
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           index_sparse_p, value_sparse);
       break;
 #else
@@ -3336,13 +3361,13 @@ trexio_write_$group_dset$(trexio_t* const file,
     switch (file->back_end) {
 
     case TREXIO_TEXT:
-      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           size_max, index_sparse, value_sparse);
       break;
 
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           index_sparse, value_sparse);
       break;
 #else
@@ -4140,6 +4165,426 @@ def has_$group_dset$(trexio_file) -> bool:
     return rc == TREXIO_SUCCESS
      #+end_src
 
+** Templates for front end has/read/write a buffered vector
+
+   This corresponds to the ~buffer~ data type and is particularly useful for incremental additiona of values like
+   it was done for ~sparse~ data but without the need to supply tuples of indices.
+
+
+   | Function name                    | Description                                    | Precision |
+   |----------------------------------+------------------------------------------------+-----------|
+   | ~trexio_has_$group_dset$~        | Check if a buffered dset is present in a file  | ---       |
+   | ~trexio_read_$group_dset$~       | Read values of a vector in buffers             | Double    |
+   | ~trexio_read_$group_dset$_size~  | Read the number of elements stored in the file | Double    |
+   | ~trexio_write_$group_dset$~      | Write values of a vector in buffers            | Double    |
+   | ~trexio_read_safe_$group_dset$~  | Safe (bounded) read  (for Python API)          | Double    |
+   | ~trexio_write_safe_$group_dset$~ | Safe (bounded) write (for Python API)          | Double    |
+
+*** C source code
+
+     #+begin_src c :tangle hrw_buffered_front.h :exports none
+trexio_exit_code trexio_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_read_$group_dset$(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, double* const dset);
+trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset_out, const int64_t dim_out);
+trexio_exit_code trexio_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset);
+trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset_in, const int64_t dim_in);
+trexio_exit_code trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
+     #+end_src
+
+     #+begin_src c :tangle read_buffered_front.c
+trexio_exit_code
+trexio_read_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
+
+  trexio_exit_code rc;
+
+  uint32_t rank = 1;
+  uint64_t det_size = (uint64_t) (*buffer_size_read);
+  uint64_t dims[1] = {det_size};
+
+  // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
+  int64_t eof_read_size = 0L;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_read_$group_dset$(file, offset_file, rank, dims, &eof_read_size, dset);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, rank, dims, &eof_read_size, dset);
+    break;
+#else
+    rc = TREXIO_BACK_END_MISSING;
+    break;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_$group_dset$(...);
+    break;
+,*/
+  default:
+    rc = TREXIO_FAILURE;  /* Impossible case */
+    break;
+  }
+
+  if (rc != TREXIO_SUCCESS && rc != TREXIO_END) return rc;
+
+  if (rc == TREXIO_END) *buffer_size_read = eof_read_size;
+
+  return rc;
+}
+     #+end_src
+
+     #+begin_src c :tangle read_buffered_front.c
+trexio_exit_code
+trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (size_max == NULL) return TREXIO_INVALID_ARG_2;
+  if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_read_$group_dset$_size(file, size_max);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_$group_dset$_size(file, size_max);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_read_
+    break;
+,*/
+  default:
+    return TREXIO_FAILURE;  /* Impossible case */
+  }
+}
+     #+end_src
+
+     #+begin_src c :tangle read_buffered_front.c
+trexio_exit_code
+trexio_read_safe_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset_out, const int64_t dim_out)
+{
+  return trexio_read_$group_dset$(file, offset_file, buffer_size_read, dset_out);
+}
+     #+end_src
+
+     #+begin_src c :tangle write_buffered_front.c
+trexio_exit_code
+trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+
+  uint32_t rank = 1;
+  uint64_t dims[1] = {buffer_size};
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_write_$group_dset$(file, offset_file, rank, dims, dset);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_write_$group_dset$(file, offset_file, rank, dims, dset);
+    break;
+#else
+    return TREXIO_BACK_END_MISSING;
+    break;
+#endif
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_read_
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+     #+begin_src c :tangle write_buffered_front.c
+trexio_exit_code
+trexio_write_safe_$group_dset$ (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset_in, const int64_t dim_in)
+{
+  return trexio_write_$group_dset$(file, offset_file, buffer_size, dset_in);
+}
+     #+end_src
+
+     #+begin_src c :tangle has_buffered_front.c
+trexio_exit_code
+trexio_has_$group_dset$ (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return trexio_text_has_$group_dset$(file);
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_has_$group_dset$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+/*
+  case TREXIO_JSON:
+    return trexio_json_has_
+    break;
+,*/
+  }
+
+  return TREXIO_FAILURE;
+}
+     #+end_src
+
+*** Fortran interface
+
+    The ~Fortran~ templates that provide an access to the ~C~ API calls from Fortran.
+    These templates are based on the use of ~iso_c_binding~. Pointers have to be passed by value.
+
+     #+begin_src f90 :tangle write_buffered_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_write_$group_dset$(trex_file, &
+                                               offset_file, buffer_size, dset) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(in), value :: buffer_size
+     real(c_double), intent(in)            :: dset(*)
+   end function trexio_write_$group_dset$
+end interface
+
+interface
+   integer(trexio_exit_code) function trexio_write_safe_$group_dset$ (trex_file, &
+                                                    offset_file, buffer_size, &
+                                                    dset, dset_size) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(in), value :: buffer_size
+     real(c_double), intent(in)            :: dset(*)
+     integer(c_int64_t), intent(in), value :: dset_size
+   end function trexio_write_safe_$group_dset$
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle read_buffered_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_read_safe_$group_dset$ (trex_file, &
+                                                   offset_file, buffer_size, &
+                                                   dset, dset_size) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(inout)     :: buffer_size
+     real(c_double), intent(out)           :: dset(*)
+     integer(c_int64_t), intent(in), value :: dset_size
+   end function trexio_read_safe_$group_dset$
+end interface
+
+interface
+   integer(trexio_exit_code) function trexio_read_$group_dset$(trex_file, &
+                                              offset_file, buffer_size, dset) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(in), value :: offset_file
+     integer(c_int64_t), intent(inout)     :: buffer_size
+     real(c_double), intent(out)           :: dset(*)
+   end function trexio_read_$group_dset$
+end interface
+
+interface
+   integer(trexio_exit_code) function trexio_read_$group_dset$_size (trex_file, &
+                                                   size_max) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+     integer(c_int64_t), intent(out) :: size_max
+   end function trexio_read_$group_dset$_size
+end interface
+     #+end_src
+
+     #+begin_src f90 :tangle has_buffered_front_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
+     use, intrinsic :: iso_c_binding
+     import
+     integer(c_int64_t), intent(in), value :: trex_file
+   end function trexio_has_$group_dset$
+end interface
+     #+end_src
+
+*** Python interface
+
+     #+begin_src python :tangle write_buffered_front.py
+def write_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int, dset) -> None:
+    """Write the $group_dset$ in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    offset_file: int
+        The number of values to be skipped in the file when writing.
+
+    buffer_size: int
+        The number of values to write in the file.
+
+    dset: list OR numpy.ndarray
+        Array of $group_dset$ to be written. If array data type does not correspond to int64, the conversion is performed.
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    if not isinstance(offset_file, int):
+        raise TypeError("offset_file argument has to be an integer.")
+    if not isinstance(buffer_size, int):
+        raise TypeError("buffer_size argument has to be an integer.")
+    if not isinstance(dset, (list, tuple, np.ndarray)):
+        raise TypeError("dset argument has to be an array (list, tuple or NumPy ndarray).")
+
+    if isinstance(dset, np.ndarray) and not coefficients.dtype==np.float64:
+        # convert to float64 if input is in a different precision
+        dset_64 = np.float64(dset)
+        rc = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, dset_64)
+    else:
+        rc = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, dset)
+
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+     #+end_src
+
+     #+begin_src python :tangle read_buffered_front.py
+def read_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int) -> tuple:
+    """Read $group_dset$ from the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    offset_file: int
+        The number of values to be skipped in the file when reading.
+
+    buffer_size: int
+        The number of values to read from the file.
+
+    Returns:
+        (dset, n_int_read, eof_flag) tuple where
+          - dset is the NumPy array [numpy.ndarray] with the default int64 precision;
+          - n_int_read [int] is the number of coefficients read from the trexio_file
+            (either strictly equal to buffer_size or less than buffer_size if EOF has been reached);
+          - eof_flag [bool] is True when EOF has been reached (i.e. when call to low-level pytrexio API returns TREXIO_END)
+                               False otherwise.
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    if not isinstance(offset_file, int):
+        raise TypeError("offset_file argument has to be an integer.")
+    if not isinstance(buffer_size, int):
+        raise TypeError("buffer_size argument has to be an integer.")
+
+
+    # read the number of values already in the file
+    det_num = read_$group_dset$_size(trexio_file)
+
+    # additional modification needed to avoid allocating more memory than needed if EOF will be reached during read
+    overflow = offset_file + buffer_size - det_num
+    eof_flag = False
+    if overflow > 0:
+        verified_size = buffer_size - overflow
+        eof_flag = True
+    else:
+        verified_size = buffer_size
+
+    # main call to the low-level (SWIG-wrapped) trexio_read function, which also requires the sizes of the output to be provided
+    # read_buf_size contains the number of elements being read from the file, useful when EOF has been reached
+    rc, n_int_read, dset = pytr.trexio_read_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, verified_size, verified_size)
+
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+    if n_int_read == 0:
+        raise ValueError("No integrals have been read from the file.")
+    if dset is None:
+        raise ValueError("Returned NULL array from the low-level pytrexio API.")
+
+    return (dset, n_int_read, eof_flag)
+
+
+def read_$group_dset$_size(trexio_file) -> int:
+    """Read the number of elements stored in the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+        ~num~: int
+        Integer value of corresponding to the size of the $group_dset$ array from ~trexio_file~.
+
+    Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc, num = pytr.trexio_read_$group_dset$_size(trexio_file.pytrexio_s)
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+
+    return num
+     #+end_src
+
+     #+begin_src python :tangle has_buffered_front.py
+def has_$group_dset$(trexio_file) -> bool:
+    """Check that $group_dset$ exists in the TREXIO file.
+
+    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+
+    Returns:
+          True if the variable exists, False otherwise
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
+
+    return rc == TREXIO_SUCCESS
+     #+end_src
+
 ** Templates for front end has/read/write a single string attribute
 *** Introduction
 
@@ -4479,6 +4924,7 @@ def delete_$group$(trexio_file) -> None:
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
      #+end_src
+
 * Source code for the determinant part
 
    Storage of the determinants is a particular case,
@@ -4488,31 +4934,21 @@ def delete_$group$(trexio_file) -> None:
 
    This section concerns API calls related to Slater determinants.
 
-   | Function name                              | Description                                        |
-   |--------------------------------------------+----------------------------------------------------|
-   | ~trexio_has_determinant_coefficient~       | Check if an attribute exists in a file             |
-   | ~trexio_has_determinant_list~              | Check if an attribute exists in a file             |
-   | ~trexio_write_determinant_coefficient~     | Write an attribute                                 |
-   | ~trexio_write_determinant_list~            | Write an attribute                                 |
-   | ~trexio_read_determinant_coefficient~      | Read an attribute                                  |
-   | ~trexio_read_determinant_list~             | Read an attribute                                  |
-   | ~trexio_read_determinant_coefficient_size~ | Get the number of the coefficients                 |
-   | ~trexio_get_int64_num~                     | Get the number of int64 bit fields per determinant |
+   | Function name                   | Description                                        |
+   |---------------------------------+----------------------------------------------------|
+   | ~trexio_has_determinant_list~   | Check if an attribute exists in a file             |
+   | ~trexio_write_determinant_list~ | Write an attribute                                 |
+   | ~trexio_read_determinant_list~  | Read an attribute                                  |
+   | ~trexio_get_int64_num~          | Get the number of int64 bit fields per determinant |
 
 *** C source code
 
      #+begin_src c :tangle hrw_determinant_front.h :exports none
 trexio_exit_code trexio_has_determinant_list(trexio_t* const file);
-trexio_exit_code trexio_has_determinant_coefficient(trexio_t* const file);
 trexio_exit_code trexio_read_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, int64_t* const dset);
 trexio_exit_code trexio_read_safe_determinant_list(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset_out, const int64_t dim_out);
-trexio_exit_code trexio_read_determinant_coefficient(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size, double* const dset);
-trexio_exit_code trexio_read_safe_determinant_coefficient(trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset_out, const int64_t dim_out);
 trexio_exit_code trexio_write_determinant_list(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset);
 trexio_exit_code trexio_write_safe_determinant_list(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in);
-trexio_exit_code trexio_write_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset);
-trexio_exit_code trexio_write_safe_determinant_coefficient(trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset_in, const int64_t dim_in);
-trexio_exit_code trexio_read_determinant_coefficient_size(trexio_t* const file, int64_t* const size_max);
 trexio_exit_code trexio_get_int64_num(trexio_t* const file, int32_t* const num);
      #+end_src
 
@@ -4595,98 +5031,9 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 
      #+begin_src c :tangle read_determinant_front.c
 trexio_exit_code
-trexio_read_determinant_coefficient (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset)
-{
-
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
-  if (trexio_has_determinant_coefficient(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
-
-  trexio_exit_code rc;
-
-  uint32_t rank = 1;
-  uint64_t det_size = (uint64_t) (*buffer_size_read);
-  uint64_t dims[1] = {det_size};
-
-  // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
-  int64_t eof_read_size = 0L;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    rc = trexio_text_read_determinant_coefficient(file, offset_file, rank, dims, &eof_read_size, dset);
-    break;
-
-  case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-    rc = trexio_hdf5_read_determinant_coefficient(file, offset_file, rank, dims, &eof_read_size, dset);
-    break;
-#else
-    rc = TREXIO_BACK_END_MISSING;
-    break;
-#endif
-/*
-  case TREXIO_JSON:
-    return trexio_json_read_$group_dset$(...);
-    break;
-,*/
-  default:
-    rc = TREXIO_FAILURE;  /* Impossible case */
-    break;
-  }
-
-  if (rc != TREXIO_SUCCESS && rc != TREXIO_END) return rc;
-
-  if (rc == TREXIO_END) *buffer_size_read = eof_read_size;
-
-  return rc;
-}
-     #+end_src
-
-     #+begin_src c :tangle read_determinant_front.c
-trexio_exit_code
-trexio_read_determinant_coefficient_size(trexio_t* const file, int64_t* const size_max)
-{
-
-  if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (size_max == NULL) return TREXIO_INVALID_ARG_2;
-  if (trexio_has_determinant_coefficient(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_read_determinant_coefficient_size(file, size_max);
-    break;
-
-  case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-    return trexio_hdf5_read_determinant_coefficient_size(file, size_max);
-    break;
-#else
-    return TREXIO_BACK_END_MISSING;
-#endif
-/*
-  case TREXIO_JSON:
-    return trexio_json_read_
-    break;
-,*/
-  default:
-    return TREXIO_FAILURE;  /* Impossible case */
-  }
-}
-     #+end_src
-
-     #+begin_src c :tangle read_determinant_front.c
-trexio_exit_code
 trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset_out, const int64_t dim_out)
 {
   return trexio_read_determinant_list(file, offset_file, buffer_size_read, dset_out);
-}
-
-trexio_exit_code
-trexio_read_safe_determinant_coefficient (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset_out, const int64_t dim_out)
-{
-  return trexio_read_determinant_coefficient(file, offset_file, buffer_size_read, dset_out);
 }
      #+end_src
 
@@ -4758,53 +5105,9 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
 
      #+begin_src c :tangle write_determinant_front.c
 trexio_exit_code
-trexio_write_determinant_coefficient (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset)
-{
-
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
-
-  uint32_t rank = 1;
-  uint64_t dims[1] = {buffer_size};
-
-  assert(file->back_end < TREXIO_INVALID_BACK_END);
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_write_determinant_coefficient(file, offset_file, rank, dims, dset);
-    break;
-
-  case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-    return trexio_hdf5_write_determinant_coefficient(file, offset_file, rank, dims, dset);
-    break;
-#else
-    return TREXIO_BACK_END_MISSING;
-    break;
-#endif
-/*
-  case TREXIO_JSON:
-    rc = trexio_json_read_
-    break;
-,*/
-  }
-
-  return TREXIO_FAILURE;
-}
-     #+end_src
-
-     #+begin_src c :tangle write_determinant_front.c
-trexio_exit_code
 trexio_write_safe_determinant_list (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in)
 {
   return trexio_write_determinant_list(file, offset_file, buffer_size, dset_in);
-}
-
-trexio_exit_code
-trexio_write_safe_determinant_coefficient (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset_in, const int64_t dim_in)
-{
-  return trexio_write_determinant_coefficient(file, offset_file, buffer_size, dset_in);
 }
      #+end_src
 
@@ -4825,35 +5128,6 @@ trexio_has_determinant_list (trexio_t* const file)
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_has_determinant_list(file);
-#else
-    return TREXIO_BACK_END_MISSING;
-#endif
-/*
-  case TREXIO_JSON:
-    return trexio_json_has_
-    break;
-,*/
-  }
-
-  return TREXIO_FAILURE;
-}
-
-trexio_exit_code
-trexio_has_determinant_coefficient (trexio_t* const file)
-{
-
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
-
-  assert(file->back_end < TREXIO_INVALID_BACK_END);
-
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    return trexio_text_has_determinant_coefficient(file);
-
-  case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-    return trexio_hdf5_has_determinant_coefficient(file);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -4899,32 +5173,6 @@ interface
      integer(c_int64_t), intent(in), value :: list_size
    end function trexio_write_safe_determinant_list
 end interface
-
-interface
-   integer(trexio_exit_code) function trexio_write_determinant_coefficient(trex_file, &
-                                               offset_file, buffer_size, coefficient) bind(C)
-     use, intrinsic :: iso_c_binding
-     import
-     integer(c_int64_t), intent(in), value :: trex_file
-     integer(c_int64_t), intent(in), value :: offset_file
-     integer(c_int64_t), intent(in), value :: buffer_size
-     real(c_double), intent(in)            :: coefficient(*)
-   end function trexio_write_determinant_coefficient
-end interface
-
-interface
-   integer(trexio_exit_code) function trexio_write_safe_determinant_coefficient (trex_file, &
-                                                    offset_file, buffer_size, &
-                                                    coefficient, coefficient_size) bind(C)
-     use, intrinsic :: iso_c_binding
-     import
-     integer(c_int64_t), intent(in), value :: trex_file
-     integer(c_int64_t), intent(in), value :: offset_file
-     integer(c_int64_t), intent(in), value :: buffer_size
-     real(c_double), intent(in)            :: coefficient(*)
-     integer(c_int64_t), intent(in), value :: coefficient_size
-   end function trexio_write_safe_determinant_coefficient
-end interface
      #+end_src
 
      #+begin_src f90 :tangle read_determinant_front_fortran.f90
@@ -4953,42 +5201,6 @@ interface
      integer(c_int64_t), intent(in), value :: list_size
    end function trexio_read_safe_determinant_list
 end interface
-
-interface
-   integer(trexio_exit_code) function trexio_read_safe_determinant_coefficient (trex_file, &
-                                                   offset_file, buffer_size, &
-                                                   coefficient, coefficient_size) bind(C)
-     use, intrinsic :: iso_c_binding
-     import
-     integer(c_int64_t), intent(in), value :: trex_file
-     integer(c_int64_t), intent(in), value :: offset_file
-     integer(c_int64_t), intent(inout)     :: buffer_size
-     real(c_double), intent(out)           :: coefficient(*)
-     integer(c_int64_t), intent(in), value :: coefficient_size
-   end function trexio_read_safe_determinant_coefficient
-end interface
-
-interface
-   integer(trexio_exit_code) function trexio_read_determinant_coefficient(trex_file, &
-                                              offset_file, buffer_size, coefficient) bind(C)
-     use, intrinsic :: iso_c_binding
-     import
-     integer(c_int64_t), intent(in), value :: trex_file
-     integer(c_int64_t), intent(in), value :: offset_file
-     integer(c_int64_t), intent(inout)     :: buffer_size
-     real(c_double), intent(out)           :: coefficient(*)
-   end function trexio_read_determinant_coefficient
-end interface
-
-interface
-   integer(trexio_exit_code) function trexio_read_determinant_coefficient_size (trex_file, &
-                                                   size_max) bind(C)
-     use, intrinsic :: iso_c_binding
-     import
-     integer(c_int64_t), intent(in), value :: trex_file
-     integer(c_int64_t), intent(out) :: size_max
-   end function trexio_read_determinant_coefficient_size
-end interface
      #+end_src
 
      #+begin_src f90 :tangle has_determinant_front_fortran.f90
@@ -4998,14 +5210,6 @@ interface
      import
      integer(c_int64_t), intent(in), value :: trex_file
    end function trexio_has_determinant_list
-end interface
-
-interface
-   integer(trexio_exit_code) function trexio_has_determinant_coefficient (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
-     import
-     integer(c_int64_t), intent(in), value :: trex_file
-   end function trexio_has_determinant_coefficient
 end interface
 
 interface
@@ -5083,46 +5287,6 @@ def write_determinant_list(trexio_file: File, offset_file: int, buffer_size: int
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
-
-
-def write_determinant_coefficient(trexio_file: File, offset_file: int, buffer_size: int, coefficients: list) -> None:
-    """Write the determinant coefficients in the TREXIO file.
-
-    Parameters:
-
-    trexio_file:
-        TREXIO File object.
-
-    offset_file: int
-        The number of coefficients to be skipped in the file when writing.
-
-    buffer_size: int
-        The number of coefficients to write in the file.
-
-    coefficients: list OR numpy.ndarray
-        Array of determinant_coefficient to be written. If array data type does not correspond to int64, the conversion is performed.
-
-    Raises:
-        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
-        - Exception from some other error (e.g. RuntimeError).
-    """
-
-    if not isinstance(offset_file, int):
-        raise TypeError("offset_file argument has to be an integer.")
-    if not isinstance(buffer_size, int):
-        raise TypeError("buffer_size argument has to be an integer.")
-    if not isinstance(coefficients, (list, tuple, np.ndarray)):
-        raise TypeError("coefficients argument has to be an array (list, tuple or NumPy ndarray).")
-
-    if isinstance(coefficients, np.ndarray) and not coefficients.dtype==np.float64:
-        # convert to float64 if input is in a different precision
-        coefficients_64 = np.float64(coefficients)
-        rc = pytr.trexio_write_safe_determinant_coefficient(trexio_file.pytrexio_s, offset_file, buffer_size, coefficients_64)
-    else:
-        rc = pytr.trexio_write_safe_determinant_coefficient(trexio_file.pytrexio_s, offset_file, buffer_size, coefficients)
-
-    if rc != TREXIO_SUCCESS:
-        raise Error(rc)
      #+end_src
 
      #+begin_src python :tangle read_determinant_front.py
@@ -5192,88 +5356,6 @@ def read_determinant_list(trexio_file: File, offset_file: int, buffer_size: int)
     return (dets_reshaped, n_int_read, eof_flag)
 
 
-def read_determinant_coefficient(trexio_file: File, offset_file: int, buffer_size: int) -> tuple:
-    """Read determinant_coefficient from the TREXIO file.
-
-    Parameters:
-
-    trexio_file:
-        TREXIO File object.
-
-    offset_file: int
-        The number of coefficient to be skipped in the file when reading.
-
-    buffer_size: int
-        The number of coefficients to read from the file.
-
-    Returns:
-        (coefficients, n_int_read, eof_flag) tuple where
-          - coefficients are NumPy arrays [numpy.ndarray] with the default int64 precision;
-          - n_int_read [int] is the number of coefficients read from the trexio_file
-            (either strictly equal to buffer_size or less than buffer_size if EOF has been reached);
-          - eof_flag [bool] is True when EOF has been reached (i.e. when call to low-level pytrexio API returns TREXIO_END)
-                               False otherwise.
-
-    Raises:
-        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
-        - Exception from some other error (e.g. RuntimeError).
-    """
-
-    if not isinstance(offset_file, int):
-        raise TypeError("offset_file argument has to be an integer.")
-    if not isinstance(buffer_size, int):
-        raise TypeError("buffer_size argument has to be an integer.")
-
-
-    # read the number of determinants already in the file
-    det_num = read_determinant_coefficient_size(trexio_file)
-
-    # additional modification needed to avoid allocating more memory than needed if EOF will be reached during read
-    overflow = offset_file + buffer_size - det_num
-    eof_flag = False
-    if overflow > 0:
-        verified_size = buffer_size - overflow
-        eof_flag = True
-    else:
-        verified_size = buffer_size
-
-    # main call to the low-level (SWIG-wrapped) trexio_read function, which also requires the sizes of the output to be provided
-    # read_buf_size contains the number of elements being read from the file, useful when EOF has been reached
-    rc, n_int_read, coefficients = pytr.trexio_read_safe_determinant_coefficient(trexio_file.pytrexio_s,
-                                                                                 offset_file,
-                                                                                 verified_size,
-                                                                                 verified_size)
-    if rc != TREXIO_SUCCESS:
-        raise Error(rc)
-    if n_int_read == 0:
-        raise ValueError("No integrals have been read from the file.")
-    if coefficients is None:
-        raise ValueError("Returned NULL array from the low-level pytrexio API.")
-
-    return (coefficients, n_int_read, eof_flag)
-
-
-def read_determinant_coefficient_size(trexio_file) -> int:
-    """Read the number of determinant coefficients stored in the TREXIO file.
-
-    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
-
-    Returns:
-        ~num~: int
-        Integer value of corresponding to the size of the determinant_coefficient array from ~trexio_file~.
-
-    Raises:
-        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
-        - Exception from some other error (e.g. RuntimeError).
-    """
-
-    rc, num = pytr.trexio_read_determinant_coefficient_size(trexio_file.pytrexio_s)
-    if rc != TREXIO_SUCCESS:
-        raise Error(rc)
-
-    return num
-
-
 def get_int64_num(trexio_file) -> int:
     """Compute the number of int64 bit fields corresponding to the TREXIO file.
 
@@ -5310,26 +5392,6 @@ def has_determinant_list(trexio_file) -> bool:
     """
 
     rc = pytr.trexio_has_determinant_list(trexio_file.pytrexio_s)
-    if rc == TREXIO_FAILURE:
-        raise Error(rc)
-
-    return rc == TREXIO_SUCCESS
-
-
-def has_determinant_coefficient(trexio_file) -> bool:
-    """Check that determinant_coefficient exists in the TREXIO file.
-
-    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
-
-    Returns:
-          True if the variable exists, False otherwise
-
-    Raises:
-        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
-        - Exception from some other error (e.g. RuntimeError).
-    """
-
-    rc = pytr.trexio_has_determinant_coefficient(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 

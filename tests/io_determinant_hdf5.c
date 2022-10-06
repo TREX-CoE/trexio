@@ -6,7 +6,7 @@
 
 #define TEST_BACKEND  TREXIO_HDF5
 #define TREXIO_FILE   "test_determinant.h5"
-#define RM_COMMAND    "rm -f " TREXIO_FILE
+#define RM_COMMAND    "rm -f -- " TREXIO_FILE
 #define SIZE          100
 #define N_CHUNKS      5
 #define STATE_TEST    2
@@ -64,6 +64,12 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   uint64_t offset_d = 0UL;
   if (offset != 0L) offset_f += offset;
 
+  // write the state_id of a given file: 0 is ground state
+  if (trexio_has_state_id(file) == TREXIO_HAS_NOT) {
+    rc = trexio_write_state_id(file, 0);
+    assert(rc == TREXIO_SUCCESS);
+  }
+
   // write n_chunks times using write_sparse
   for(int i=0; i<N_CHUNKS; ++i){
 
@@ -73,11 +79,8 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
-    // The block below will write the coefficients for STATE_TEST
+    // The block below will check the set_state
     rc = trexio_set_state(file, STATE_TEST);
-    assert(rc == TREXIO_SUCCESS);
-
-    rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
     // set state back to the default 0 (ground state)
@@ -94,13 +97,6 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   int64_t determinant_num = 0L;
 
   rc = trexio_read_determinant_num_64(file, &determinant_num);
-  assert(rc == TREXIO_SUCCESS);
-
-  rc = trexio_read_determinant_coefficient_size(file, &coeff_size);
-  assert(rc == TREXIO_SUCCESS);
-  assert(determinant_num == coeff_size);
-
-  rc = trexio_set_state(file, STATE_TEST);
   assert(rc == TREXIO_SUCCESS);
 
   rc = trexio_read_determinant_coefficient_size(file, &coeff_size);
@@ -142,16 +138,6 @@ static int test_has_determinant(const char* file_name, const back_end_t backend)
   rc = trexio_has_determinant_coefficient(file);
   assert(rc==TREXIO_SUCCESS);
 
-  // also check for STATE_TEST
-  rc = trexio_set_state(file, STATE_TEST);
-  assert(rc == TREXIO_SUCCESS);
-
-  rc = trexio_has_determinant_coefficient(file);
-  assert(rc==TREXIO_SUCCESS);
-
-  rc = trexio_set_state(file, 0);
-  assert(rc == TREXIO_SUCCESS);
-
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
@@ -189,13 +175,11 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   // define arrays to read into
   int64_t* det_list_read;
   double*  det_coef_read;
-  double*  det_coef_s2_read;
   double check_diff;
   uint64_t size_r = 40L;
 
   det_list_read = (int64_t*) calloc(2*int_num*size_r,sizeof(int64_t));
   det_coef_read = (double*)  calloc(size_r,sizeof(double));
-  det_coef_s2_read = (double*)  calloc(size_r,sizeof(double));
 
   // specify the read parameters, here:
   // 1 chunk of 10 elements using offset of 40 (i.e. lines No. 40--59) into elements of the array starting from 5
@@ -225,19 +209,10 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   //printf("%lf %lf\n", check_diff, det_coef_read[offset_data_read]);
   assert(check_diff*check_diff < 1e-14);
 
-  // read one chuk of coefficients for a different state
-  rc = trexio_set_state(file, STATE_TEST);
+  int32_t read_state_id = 666;
+  rc = trexio_read_state_id(file, &read_state_id);
   assert(rc == TREXIO_SUCCESS);
-
-  rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_s2_read[offset_data_read]);
-  assert(rc == TREXIO_SUCCESS);
-  assert(chunk_read == read_size_check);
-
-  check_diff = det_coef_s2_read[0] - 0.;
-  assert(check_diff*check_diff < 1e-14);
-
-  rc = trexio_set_state(file, 0);
-  assert(rc == TREXIO_SUCCESS);
+  assert(read_state_id == 0);
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
   offset_file_read = 97L;
@@ -284,7 +259,6 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   assert(rc == TREXIO_SUCCESS);
   assert(det_num == size_check);
 
-
   // check conversion of determinants into orbital lists
   int64_t  size_list = TREXIO_NORB_PER_INT * int_num;
   int32_t* orb_list_up = (int32_t*) calloc(size_list, sizeof(int32_t));
@@ -323,7 +297,6 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   // free the memory
   free(det_list_read);
   free(det_coef_read);
-  free(det_coef_s2_read);
   free(det_list_check);
   free(orb_list_up);
   free(orb_list_dn);

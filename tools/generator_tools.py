@@ -41,7 +41,7 @@ def get_files_todo(source_files: dict) -> dict:
         f for f in all_files
         if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f or 'delete' in f
         ]
-    for key in ['dset_data', 'dset_str', 'dset_sparse', 'attr_num', 'attr_str', 'group']:
+    for key in ['dset_data', 'dset_str', 'dset_sparse', 'attr_num', 'attr_str', 'group', 'buffered']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
@@ -108,11 +108,10 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index',
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single',
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single',
-                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_dset_rank', 'group_dset_unique_rank', 'group_dset_dim_list', 'group_dset_f_dims',
                 'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
                 'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
-                'group_num_h5_dtype', 'group_num_py_dtype',
-                'group_dset_format_scanf', 'group_dset_format_printf', 'group_dset_sparse_dim',
+                'group_num_h5_dtype', 'group_num_py_dtype', 'group_dset_format_scanf', 'group_dset_format_printf',
                 'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
                 'sparse_format_printf_8', 'sparse_format_printf_16', 'sparse_format_printf_32',
                 'sparse_line_length_8', 'sparse_line_length_16', 'sparse_line_length_32',
@@ -150,6 +149,11 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                         # only uncomment and write the line if `dim` is in the name
                         if 'dim' in detailed_source[item]['trex_json_int_type']:
                             templine = line.replace('//', '')
+                            f_out.write(templine)
+                    # special case to get the max dimension of sparse datasets with different dimensions
+                    elif 'trexio_read_$group_dset_unique_dim$_64' in line:
+                        for i in range(int(detailed_source[item]['group_dset_unique_rank'])):
+                            templine = line.replace('$group_dset_unique_dim$', detailed_source[item]['unique_dims'][i]).replace('$dim_id$', str(i))
                             f_out.write(templine)
                     # general case of recursive replacement of inline triggers
                     else:
@@ -495,6 +499,21 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
             f'group_{target}_format_scanf'    : 'lf',
             f'group_{target}_py_dtype'        : 'float'
         })
+    elif 'buffered' in dtype:
+        dtype_dict.update({
+            'default_prec'                    : '64',
+            f'group_{target}_dtype'           : 'double',
+            f'group_{target}_h5_dtype'        : 'native_double',
+            f'group_{target}_f_dtype_default' : 'real(c_double)',
+            f'group_{target}_f_dtype_double'  : 'real(c_double)',
+            f'group_{target}_f_dtype_single'  : 'real(c_float)',
+            f'group_{target}_dtype_default'   : 'double',
+            f'group_{target}_dtype_double'    : 'double',
+            f'group_{target}_dtype_single'    : 'float',
+            f'group_{target}_format_printf'   : '24.16e',
+            f'group_{target}_format_scanf'    : 'lf',
+            f'group_{target}_py_dtype'        : 'float'
+        })
     elif dtype in ['int', 'dim', 'dim readonly', 'index']:
         dtype_dict.update({
             'default_prec'                    : '32',
@@ -657,11 +676,12 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
                     configuration (dict) : configuration from `trex.json`
 
             Returns:
-                    dset_numeric_dict, dset_string_dict (tuple) : dictionaries corresponding to all numeric- and string-based datasets, respectively.
+                    (tuple) : dictionaries corresponding to all types of datasets in trexio.
     """
     dset_numeric_dict = {}
-    dset_string_dict = {}
-    dset_sparse_dict = {}
+    dset_string_dict  = {}
+    dset_sparse_dict  = {}
+    dset_buffer_dict  = {}
     for k,v in datasets.items():
 
         # create a temp dictionary
@@ -698,11 +718,18 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         else:
             tmp_dict['is_index'] = 'false'
 
+        # add the list of dimensions
+        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+
+        # get a list of unique dimensions for sparse datasets
+        if is_sparse:
+            tmp_dict['unique_dims'] = list(set(tmp_dict['dims']))
+            tmp_dict['group_dset_unique_rank'] = str(len(tmp_dict['unique_dims']))
+
         # add the rank
         tmp_dict['rank'] = rank
         tmp_dict['group_dset_rank'] = str(rank)
-        # add the list of dimensions
-        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+
         # build a list of dimensions to be inserted in the dims array initialization, e.g. {ao_num, ao_num}
         dim_list = tmp_dict['dims'][0]
         if rank > 1:
@@ -719,8 +746,6 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group_dset_f_dims'] = dim_f_list
 
         if is_sparse:
-            # store the max possible dim of the sparse dset (e.g. mo_num)
-            tmp_dict['group_dset_sparse_dim'] = tmp_dict['dims'][0]
             # build printf/scanf sequence and compute line length for n-index sparse quantity
             index_printf = f'*(index_sparse + {str(rank)}*i'
             index_scanf  = f'index_sparse + {str(rank)}*i'
@@ -755,12 +780,14 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         # split datasets in numeric- and string- based
         if 'str' in datatype:
             dset_string_dict[k] = tmp_dict
+        elif 'buffered' in datatype:
+            dset_buffer_dict[k] = tmp_dict
         elif is_sparse:
             dset_sparse_dict[k] = tmp_dict
         else:
             dset_numeric_dict[k] = tmp_dict
 
-    return (dset_numeric_dict, dset_string_dict, dset_sparse_dict)
+    return (dset_numeric_dict, dset_string_dict, dset_sparse_dict, dset_buffer_dict)
 
 
 def check_dim_consistency(num: dict, dset: dict) -> None:
