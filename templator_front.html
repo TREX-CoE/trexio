@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-10-04 Tue 15:30 -->
+<!-- 2022-10-06 Thu 13:35 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Front end API</title>
@@ -333,193 +333,200 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgd1fa869">1. Coding conventions</a>
+<li><a href="#org7114521">1. Coding conventions</a>
 <ul>
-<li><a href="#org4b50749">1.1. Memory allocation</a></li>
+<li><a href="#org2b82827">1.1. Memory allocation</a></li>
 </ul>
 </li>
-<li><a href="#org5013fb1">2. Front end</a>
+<li><a href="#org0a009af">2. Front end</a>
 <ul>
-<li><a href="#orge982698">2.1. Error handling</a>
+<li><a href="#org7cd258a">2.1. Error handling</a>
 <ul>
-<li><a href="#orge42d2c6">2.1.1. Decoding errors</a>
+<li><a href="#orgf32d3d3">2.1.1. Decoding errors</a>
 <ul>
-<li><a href="#orgb8d64ec">2.1.1.1. C source code</a></li>
-<li><a href="#orga2e23ef">2.1.1.2. Fortran interface</a></li>
-<li><a href="#org0ed863d">2.1.1.3. Python interface</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#org861041e">2.2. Back ends</a>
-<ul>
-<li><a href="#orgcda2616">2.2.1. C</a></li>
-<li><a href="#orga933b8c">2.2.2. Fortran</a></li>
-<li><a href="#org4255e43">2.2.3. Python</a></li>
-</ul>
-</li>
-<li><a href="#org5fe3270">2.3. Read/write behavior</a></li>
-<li><a href="#org9709a26">2.4. TREXIO file type</a></li>
-<li><a href="#orgdd891e3">2.5. File opening</a>
-<ul>
-<li><a href="#org07829a2">2.5.1. C</a></li>
-<li><a href="#org8a93e69">2.5.2. Fortran</a></li>
-<li><a href="#orgc10a812">2.5.3. Python</a></li>
-<li><a href="#org7d4310d">2.5.4. Zero-based versus one-based arrays of indices</a></li>
-</ul>
-</li>
-<li><a href="#orga5740bb">2.6. File closing</a>
-<ul>
-<li><a href="#orgb5588e4">2.6.1. C</a></li>
-<li><a href="#org68ade7b">2.6.2. Fortran</a></li>
-<li><a href="#orge1a9f42">2.6.3. Python</a></li>
-</ul>
-</li>
-<li><a href="#org2650a0a">2.7. File flushing</a>
-<ul>
-<li><a href="#orgfc498c6">2.7.1. C</a></li>
-<li><a href="#org8a7e5cd">2.7.2. Fortran</a></li>
-<li><a href="#org2ce0d3f">2.7.3. Python</a></li>
-</ul>
-</li>
-<li><a href="#org71650ac">2.8. File existence</a>
-<ul>
-<li><a href="#org881e0b6">2.8.1. C</a></li>
-<li><a href="#org65a2f70">2.8.2. Fortran</a></li>
-<li><a href="#orgeed6945">2.8.3. Python</a></li>
-</ul>
-</li>
-<li><a href="#org48b30e8">2.9. File state</a>
-<ul>
-<li><a href="#orgea97b6d">2.9.1. C</a></li>
-<li><a href="#org4916ef9">2.9.2. Fortran</a></li>
-<li><a href="#org3cad0b6">2.9.3. Python</a></li>
-</ul>
-</li>
-<li><a href="#org5459edc">2.10. Tasks to be done before closing</a></li>
-</ul>
-</li>
-<li><a href="#org4c2a356">3. Templates for front end</a>
-<ul>
-<li><a href="#org3f51557">3.1. Description</a></li>
-<li><a href="#org2210408">3.2. Templates for front end has<sub>group</sub> functions</a>
-<ul>
-<li><a href="#org7f975a0">3.2.1. Introduction</a></li>
-<li><a href="#orga53c75a">3.2.2. C templates for front end</a>
-<ul>
-<li><a href="#orgdc293b5">3.2.2.1. Function declarations</a></li>
-<li><a href="#org47b1f57">3.2.2.2. Source code</a></li>
-</ul>
-</li>
-<li><a href="#org3626bc7">3.2.3. Fortran templates for front end</a></li>
-<li><a href="#org6855551">3.2.4. Python templates for front end</a></li>
-</ul>
-</li>
-<li><a href="#orgd2c6279">3.3. Templates for front end has/read/write a single numerical attribute</a>
-<ul>
-<li><a href="#orgc9edd40">3.3.1. Introduction</a></li>
-<li><a href="#org1272c21">3.3.2. C templates for front end</a>
-<ul>
-<li><a href="#orga93b3b4">3.3.2.1. Function declarations</a></li>
-<li><a href="#orgc6a47e1">3.3.2.2. Source code for double precision functions</a></li>
-<li><a href="#org19d6194">3.3.2.3. Source code for single precision functions</a></li>
-<li><a href="#org9b7b726">3.3.2.4. Source code for default functions</a></li>
-</ul>
-</li>
-<li><a href="#orge0404dc">3.3.3. Fortran templates for front end</a></li>
-<li><a href="#orgd1046d1">3.3.4. Python templates for front end</a></li>
-</ul>
-</li>
-<li><a href="#orgd67dcec">3.4. Templates for front end has/read/write a dataset of numerical data</a>
-<ul>
-<li><a href="#org6298664">3.4.1. Introduction</a></li>
-<li><a href="#orgc505f6d">3.4.2. C templates for front end</a>
-<ul>
-<li><a href="#org9a38034">3.4.2.1. Function declarations</a></li>
-<li><a href="#org1e5488d">3.4.2.2. Source code for double precision functions</a></li>
-<li><a href="#orgca495fc">3.4.2.3. Source code for single precision functions</a></li>
-<li><a href="#orgb44dfda">3.4.2.4. Source code for memory-safe functions</a></li>
-<li><a href="#orga9a009c">3.4.2.5. Source code for default functions</a></li>
-</ul>
-</li>
-<li><a href="#org42315ea">3.4.3. Fortran templates for front end</a></li>
-<li><a href="#org32c5acc">3.4.4. Python templates for front end</a></li>
-</ul>
-</li>
-<li><a href="#org9c667d3">3.5. Templates for front end has/read/write a dataset of sparse data</a>
-<ul>
-<li><a href="#orga450bfd">3.5.1. Introduction</a></li>
-<li><a href="#orgb381446">3.5.2. C templates for front end</a>
-<ul>
-<li><a href="#org28061f7">3.5.2.1. Function declarations</a></li>
-<li><a href="#orgbdca5be">3.5.2.2. Source code for default functions</a></li>
-</ul>
-</li>
-<li><a href="#org9c81eaf">3.5.3. Fortran templates for front end</a></li>
-<li><a href="#orgf66bc80">3.5.4. Python templates for front end</a></li>
-</ul>
-</li>
-<li><a href="#orgca91f4b">3.6. Templates for front end has/read/write a dataset of strings</a>
-<ul>
-<li><a href="#orgfbad944">3.6.1. Introduction</a></li>
-<li><a href="#org0f7d852">3.6.2. C templates for front end</a>
-<ul>
-<li><a href="#orgfcedafa">3.6.2.1. Function declarations</a></li>
-<li><a href="#org1921e8a">3.6.2.2. Source code for default functions</a></li>
-</ul>
-</li>
-<li><a href="#orgc47c28f">3.6.3. Fortran templates for front end</a></li>
-<li><a href="#org435bb6a">3.6.4. Python templates for front end</a></li>
-</ul>
-</li>
-<li><a href="#org7bc5bc0">3.7. Templates for front end has/read/write a single string attribute</a>
-<ul>
-<li><a href="#orgd714eda">3.7.1. Introduction</a></li>
-<li><a href="#org8fdeda1">3.7.2. C templates for front end</a>
-<ul>
-<li><a href="#orgd71be3c">3.7.2.1. Function declarations</a></li>
-<li><a href="#orgc416f02">3.7.2.2. Source code for default functions</a></li>
-</ul>
-</li>
-<li><a href="#orgec13b7a">3.7.3. Fortran templates for front end</a></li>
-<li><a href="#orgdd47005">3.7.4. Python templates for front end</a></li>
-</ul>
-</li>
-<li><a href="#org87e41f5">3.8. Templates for front end delete an entire group (UNSAFE MODE)</a>
-<ul>
-<li><a href="#org4f2fe11">3.8.1. Introduction</a></li>
-<li><a href="#orgf3c47b8">3.8.2. C templates for front end</a></li>
-<li><a href="#org494b59b">3.8.3. Fortran templates for front end</a></li>
-<li><a href="#org1ed1529">3.8.4. Python templates for front end</a></li>
+<li><a href="#org69424e6">2.1.1.1. C source code</a></li>
+<li><a href="#org151990b">2.1.1.2. Fortran interface</a></li>
+<li><a href="#org717806d">2.1.1.3. Python interface</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org968282e">4. Source code for the determinant part</a>
+<li><a href="#org9ab1d0d">2.2. Back ends</a>
+<ul>
+<li><a href="#orge0456e0">2.2.1. C</a></li>
+<li><a href="#org077c051">2.2.2. Fortran</a></li>
+<li><a href="#org67e7a5f">2.2.3. Python</a></li>
+</ul>
+</li>
+<li><a href="#org51ba998">2.3. Read/write behavior</a></li>
+<li><a href="#orgd5e674b">2.4. TREXIO file type</a></li>
+<li><a href="#org3694c97">2.5. File opening</a>
+<ul>
+<li><a href="#org3019616">2.5.1. C</a></li>
+<li><a href="#orge9d8400">2.5.2. Fortran</a></li>
+<li><a href="#org7c99d3f">2.5.3. Python</a></li>
+<li><a href="#org1d5232a">2.5.4. Zero-based versus one-based arrays of indices</a></li>
+</ul>
+</li>
+<li><a href="#orge44ca2f">2.6. File closing</a>
+<ul>
+<li><a href="#orgef66130">2.6.1. C</a></li>
+<li><a href="#org591003d">2.6.2. Fortran</a></li>
+<li><a href="#org020e3a2">2.6.3. Python</a></li>
+</ul>
+</li>
+<li><a href="#org0a1b8d0">2.7. File flushing</a>
+<ul>
+<li><a href="#org804c7fb">2.7.1. C</a></li>
+<li><a href="#org4a1bb28">2.7.2. Fortran</a></li>
+<li><a href="#org5d9666b">2.7.3. Python</a></li>
+</ul>
+</li>
+<li><a href="#org56f63dc">2.8. File existence</a>
+<ul>
+<li><a href="#orgb62b385">2.8.1. C</a></li>
+<li><a href="#org0cf5e3c">2.8.2. Fortran</a></li>
+<li><a href="#org46ec750">2.8.3. Python</a></li>
+</ul>
+</li>
+<li><a href="#orgade5055">2.9. File state</a>
+<ul>
+<li><a href="#orgf9c5ae7">2.9.1. C</a></li>
+<li><a href="#org8eb0071">2.9.2. Fortran</a></li>
+<li><a href="#org133d879">2.9.3. Python</a></li>
+</ul>
+</li>
+<li><a href="#org569164d">2.10. Tasks to be done before closing</a></li>
+</ul>
+</li>
+<li><a href="#org40885a0">3. Templates for front end</a>
+<ul>
+<li><a href="#org6f9e0a9">3.1. Description</a></li>
+<li><a href="#org4a463e6">3.2. Templates for front end has<sub>group</sub> functions</a>
+<ul>
+<li><a href="#org1f67780">3.2.1. Introduction</a></li>
+<li><a href="#orgecb6426">3.2.2. C templates for front end</a>
+<ul>
+<li><a href="#orge65cd09">3.2.2.1. Function declarations</a></li>
+<li><a href="#orge6c259b">3.2.2.2. Source code</a></li>
+</ul>
+</li>
+<li><a href="#org9dd17c6">3.2.3. Fortran templates for front end</a></li>
+<li><a href="#org03b98f2">3.2.4. Python templates for front end</a></li>
+</ul>
+</li>
+<li><a href="#org0dd9a65">3.3. Templates for front end has/read/write a single numerical attribute</a>
+<ul>
+<li><a href="#orgbc73d82">3.3.1. Introduction</a></li>
+<li><a href="#org6e84fd5">3.3.2. C templates for front end</a>
+<ul>
+<li><a href="#org67b8652">3.3.2.1. Function declarations</a></li>
+<li><a href="#orga6d9972">3.3.2.2. Source code for double precision functions</a></li>
+<li><a href="#org5543322">3.3.2.3. Source code for single precision functions</a></li>
+<li><a href="#orgbb442e0">3.3.2.4. Source code for default functions</a></li>
+</ul>
+</li>
+<li><a href="#orgef9b1b5">3.3.3. Fortran templates for front end</a></li>
+<li><a href="#org6624ddc">3.3.4. Python templates for front end</a></li>
+</ul>
+</li>
+<li><a href="#orgd98560e">3.4. Templates for front end has/read/write a dataset of numerical data</a>
+<ul>
+<li><a href="#org6cd7626">3.4.1. Introduction</a></li>
+<li><a href="#org8723c87">3.4.2. C templates for front end</a>
+<ul>
+<li><a href="#org83f1acd">3.4.2.1. Function declarations</a></li>
+<li><a href="#orgbefcb4a">3.4.2.2. Source code for double precision functions</a></li>
+<li><a href="#org94f32fa">3.4.2.3. Source code for single precision functions</a></li>
+<li><a href="#orgca36223">3.4.2.4. Source code for memory-safe functions</a></li>
+<li><a href="#orgd56c5a5">3.4.2.5. Source code for default functions</a></li>
+</ul>
+</li>
+<li><a href="#orgab14504">3.4.3. Fortran templates for front end</a></li>
+<li><a href="#org8654052">3.4.4. Python templates for front end</a></li>
+</ul>
+</li>
+<li><a href="#org7452206">3.5. Templates for front end has/read/write a dataset of sparse data</a>
+<ul>
+<li><a href="#orge535d04">3.5.1. Introduction</a></li>
+<li><a href="#org419d947">3.5.2. C templates for front end</a>
+<ul>
+<li><a href="#orga62f64a">3.5.2.1. Function declarations</a></li>
+<li><a href="#orgf3bbdca">3.5.2.2. Source code for default functions</a></li>
+</ul>
+</li>
+<li><a href="#orgd794ce1">3.5.3. Fortran templates for front end</a></li>
+<li><a href="#orgde68388">3.5.4. Python templates for front end</a></li>
+</ul>
+</li>
+<li><a href="#org4ac0e74">3.6. Templates for front end has/read/write a dataset of strings</a>
+<ul>
+<li><a href="#org3cc1c08">3.6.1. Introduction</a></li>
+<li><a href="#org7dd54a1">3.6.2. C templates for front end</a>
+<ul>
+<li><a href="#orgfb30d31">3.6.2.1. Function declarations</a></li>
+<li><a href="#orgadcd500">3.6.2.2. Source code for default functions</a></li>
+</ul>
+</li>
+<li><a href="#orga9bad93">3.6.3. Fortran templates for front end</a></li>
+<li><a href="#org609780e">3.6.4. Python templates for front end</a></li>
+</ul>
+</li>
+<li><a href="#org714ef6f">3.7. Templates for front end has/read/write a buffered vector</a>
+<ul>
+<li><a href="#org527e7a6">3.7.1. C source code</a></li>
+<li><a href="#org0ef1f8a">3.7.2. Fortran interface</a></li>
+<li><a href="#org774ec41">3.7.3. Python interface</a></li>
+</ul>
+</li>
+<li><a href="#org43c47cd">3.8. Templates for front end has/read/write a single string attribute</a>
+<ul>
+<li><a href="#org218b97c">3.8.1. Introduction</a></li>
+<li><a href="#orgcae6c48">3.8.2. C templates for front end</a>
+<ul>
+<li><a href="#org7d988ba">3.8.2.1. Function declarations</a></li>
+<li><a href="#org1485946">3.8.2.2. Source code for default functions</a></li>
+</ul>
+</li>
+<li><a href="#org7f85f82">3.8.3. Fortran templates for front end</a></li>
+<li><a href="#orgc03623c">3.8.4. Python templates for front end</a></li>
+</ul>
+</li>
+<li><a href="#org6b68701">3.9. Templates for front end delete an entire group (UNSAFE MODE)</a>
+<ul>
+<li><a href="#orgbe55d43">3.9.1. Introduction</a></li>
+<li><a href="#orga26fd43">3.9.2. C templates for front end</a></li>
+<li><a href="#org9f95887">3.9.3. Fortran templates for front end</a></li>
+<li><a href="#org2647175">3.9.4. Python templates for front end</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgce72114">4. Source code for the determinant part</a>
 <ul>
 <li>
 <ul>
-<li><a href="#orgd787a39">4.0.1. C source code</a></li>
-<li><a href="#org57b582b">4.0.2. Fortran interface</a></li>
-<li><a href="#org384c1ac">4.0.3. Python interface</a></li>
+<li><a href="#org677e5fd">4.0.1. C source code</a></li>
+<li><a href="#org08a404a">4.0.2. Fortran interface</a></li>
+<li><a href="#org69af729">4.0.3. Python interface</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org5c89251">5. General helper functions</a>
+<li><a href="#orgf4faf5f">5. General helper functions</a>
 <ul>
-<li><a href="#orgbaaf471">5.1. C</a></li>
-<li><a href="#org9e60a29">5.2. Fortran</a></li>
-<li><a href="#orgb753fca">5.3. Python</a></li>
+<li><a href="#org9c6e647">5.1. C</a></li>
+<li><a href="#org6c369cf">5.2. Fortran</a></li>
+<li><a href="#orgb69def2">5.3. Python</a></li>
 </ul>
 </li>
-<li><a href="#org9780577">6. Fortran helper/wrapper functions</a></li>
+<li><a href="#org720f590">6. Fortran helper/wrapper functions</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgd1fa869" class="outline-2">
-<h2 id="orgd1fa869"><span class="section-number-2">1</span> Coding conventions</h2>
+<div id="outline-container-org7114521" class="outline-2">
+<h2 id="org7114521"><span class="section-number-2">1</span> Coding conventions</h2>
 <div class="outline-text-2" id="text-1">
 <ul class="org-ul">
 <li>integer types will be defined using types given in <code>stdint.h</code></li>
@@ -534,8 +541,8 @@ for the JavaScript code in this tag.
 </ul>
 </div>
 
-<div id="outline-container-org4b50749" class="outline-3">
-<h3 id="org4b50749"><span class="section-number-3">1.1</span> Memory allocation</h3>
+<div id="outline-container-org2b82827" class="outline-3">
+<h3 id="org2b82827"><span class="section-number-3">1.1</span> Memory allocation</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
 Memory allocation of structures can be facilitated by using the
@@ -571,8 +578,8 @@ The maximum string size for the filenames is 4096 characters.
 </div>
 </div>
 
-<div id="outline-container-org5013fb1" class="outline-2">
-<h2 id="org5013fb1"><span class="section-number-2">2</span> Front end</h2>
+<div id="outline-container-org0a009af" class="outline-2">
+<h2 id="org0a009af"><span class="section-number-2">2</span> Front end</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 All calls to TREXIO are thread-safe.
@@ -580,10 +587,10 @@ TREXIO front end is modular, which simplifies implementation of new back ends.
 </p>
 </div>
 
-<div id="outline-container-orge982698" class="outline-3">
-<h3 id="orge982698"><span class="section-number-3">2.1</span> Error handling</h3>
+<div id="outline-container-org7cd258a" class="outline-3">
+<h3 id="org7cd258a"><span class="section-number-3">2.1</span> Error handling</h3>
 <div class="outline-text-3" id="text-2-1">
-<table id="org46d7339" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<table id="org89ff3db" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
@@ -872,8 +879,8 @@ and the corresponding message are not propagated to the source code.
 </div>
 </div>
 
-<div id="outline-container-orge42d2c6" class="outline-4">
-<h4 id="orge42d2c6"><span class="section-number-4">2.1.1</span> Decoding errors</h4>
+<div id="outline-container-orgf32d3d3" class="outline-4">
+<h4 id="orgf32d3d3"><span class="section-number-4">2.1.1</span> Decoding errors</h4>
 <div class="outline-text-4" id="text-2-1-1">
 <p>
 The <code>trexio_string_of_error</code> converts an exit code into a string. The
@@ -899,8 +906,8 @@ and the corresponding message are not propagated to the source code.
 </p>
 </div>
 
-<div id="outline-container-orgb8d64ec" class="outline-5">
-<h5 id="orgb8d64ec"><span class="section-number-5">2.1.1.1</span> C source code</h5>
+<div id="outline-container-org69424e6" class="outline-5">
+<h5 id="org69424e6"><span class="section-number-5">2.1.1.1</span> C source code</h5>
 <div class="outline-text-5" id="text-2-1-1-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>*
@@ -1035,8 +1042,8 @@ and the corresponding message are not propagated to the source code.
 </div>
 </div>
 
-<div id="outline-container-orga2e23ef" class="outline-5">
-<h5 id="orga2e23ef"><span class="section-number-5">2.1.1.2</span> Fortran interface</h5>
+<div id="outline-container-org151990b" class="outline-5">
+<h5 id="org151990b"><span class="section-number-5">2.1.1.2</span> Fortran interface</h5>
 <div class="outline-text-5" id="text-2-1-1-2">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">interface</span>
@@ -1052,8 +1059,8 @@ and the corresponding message are not propagated to the source code.
 </div>
 </div>
 
-<div id="outline-container-org0ed863d" class="outline-5">
-<h5 id="org0ed863d"><span class="section-number-5">2.1.1.3</span> Python interface</h5>
+<div id="outline-container-org717806d" class="outline-5">
+<h5 id="org717806d"><span class="section-number-5">2.1.1.3</span> Python interface</h5>
 <div class="outline-text-5" id="text-2-1-1-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">class</span> <span style="color: #228b22;">Error</span>(<span style="color: #228b22;">Exception</span>):
@@ -1086,8 +1093,8 @@ and the corresponding message are not propagated to the source code.
 </div>
 </div>
 
-<div id="outline-container-org861041e" class="outline-3">
-<h3 id="org861041e"><span class="section-number-3">2.2</span> Back ends</h3>
+<div id="outline-container-org9ab1d0d" class="outline-3">
+<h3 id="org9ab1d0d"><span class="section-number-3">2.2</span> Back ends</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 TREXIO has several back ends:
@@ -1116,8 +1123,8 @@ lines that correspond to the <code>TREXIO_JSON</code> back end (not implemented 
 </p>
 </div>
 
-<div id="outline-container-orgcda2616" class="outline-4">
-<h4 id="orgcda2616"><span class="section-number-4">2.2.1</span> C</h4>
+<div id="outline-container-orge0456e0" class="outline-4">
+<h4 id="orge0456e0"><span class="section-number-4">2.2.1</span> C</h4>
 <div class="outline-text-4" id="text-2-2-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #228b22;">int32_t</span> <span style="color: #228b22;">back_end_t</span>;
@@ -1166,8 +1173,8 @@ This is useful due to the fact that HDF5 back end can be disabled at configure s
 </div>
 </div>
 
-<div id="outline-container-orga933b8c" class="outline-4">
-<h4 id="orga933b8c"><span class="section-number-4">2.2.2</span> Fortran</h4>
+<div id="outline-container-org077c051" class="outline-4">
+<h4 id="org077c051"><span class="section-number-4">2.2.2</span> Fortran</h4>
 <div class="outline-text-4" id="text-2-2-2">
 <div class="org-src-container">
 <pre class="src src-f90">  <span style="color: #228b22;">integer</span>(trexio_back_end_t), <span style="color: #a020f0;">parameter</span> ::<span style="color: #a0522d;"> TREXIO_HDF5 = 0</span>
@@ -1208,8 +1215,8 @@ consistency, in version 2.2 it was renamed <code>trexio_has_back_end</code>.
 </div>
 </div>
 
-<div id="outline-container-org4255e43" class="outline-4">
-<h4 id="org4255e43"><span class="section-number-4">2.2.3</span> Python</h4>
+<div id="outline-container-org67e7a5f" class="outline-4">
+<h4 id="org67e7a5f"><span class="section-number-4">2.2.3</span> Python</h4>
 <div class="outline-text-4" id="text-2-2-3">
 <div class="org-src-container">
 <pre class="src src-python"># <span style="color: #b22222;">define TREXIO back ends</span>
@@ -1224,8 +1231,8 @@ consistency, in version 2.2 it was renamed <code>trexio_has_back_end</code>.
 </div>
 </div>
 
-<div id="outline-container-org5fe3270" class="outline-3">
-<h3 id="org5fe3270"><span class="section-number-3">2.3</span> Read/write behavior</h3>
+<div id="outline-container-org51ba998" class="outline-3">
+<h3 id="org51ba998"><span class="section-number-3">2.3</span> Read/write behavior</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 Every time a reading function is called, the data is read from the
@@ -1254,8 +1261,8 @@ concurrent programs, the behavior is not specified.
 </div>
 </div>
 
-<div id="outline-container-org9709a26" class="outline-3">
-<h3 id="org9709a26"><span class="section-number-3">2.4</span> TREXIO file type</h3>
+<div id="outline-container-orgd5e674b" class="outline-3">
+<h3 id="orgd5e674b"><span class="section-number-3">2.4</span> TREXIO file type</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 <code>trexio_s</code> is the the main type for TREXIO files, visible to the users
@@ -1315,7 +1322,7 @@ to work with TREXIO files.
 <span style="color: #8b2252;">        One of the currently supported TREXIO open modes.</span>
 <span style="color: #8b2252;">        For example, 'r' or 'w'.</span>
 <span style="color: #8b2252;">    state: int</span>
-<span style="color: #8b2252;">        Active state of the file (needed to write determinant_coefficient).</span>
+<span style="color: #8b2252;">        Active state of the file (needed to write $group_dset$).</span>
 <span style="color: #8b2252;">        Default is 0.</span>
 <span style="color: #8b2252;">    isOpen: bool</span>
 <span style="color: #8b2252;">        Flag indicating whether the current object is still open for I/O</span>
@@ -1411,8 +1418,8 @@ to work with TREXIO files.
 </div>
 </div>
 
-<div id="outline-container-orgdd891e3" class="outline-3">
-<h3 id="orgdd891e3"><span class="section-number-3">2.5</span> File opening</h3>
+<div id="outline-container-org3694c97" class="outline-3">
+<h3 id="org3694c97"><span class="section-number-3">2.5</span> File opening</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
 <code>trexio_open</code> creates a new TREXIO file or opens the existing one.
@@ -1468,8 +1475,8 @@ renaming the <code>.txt</code> data files.
 </p>
 </div>
 
-<div id="outline-container-org07829a2" class="outline-4">
-<h4 id="org07829a2"><span class="section-number-4">2.5.1</span> C</h4>
+<div id="outline-container-org3019616" class="outline-4">
+<h4 id="org3019616"><span class="section-number-4">2.5.1</span> C</h4>
 <div class="outline-text-4" id="text-2-5-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_t</span>*
@@ -1786,8 +1793,8 @@ renaming the <code>.txt</code> data files.
 </div>
 </div>
 
-<div id="outline-container-org8a93e69" class="outline-4">
-<h4 id="org8a93e69"><span class="section-number-4">2.5.2</span> Fortran</h4>
+<div id="outline-container-orge9d8400" class="outline-4">
+<h4 id="orge9d8400"><span class="section-number-4">2.5.2</span> Fortran</h4>
 <div class="outline-text-4" id="text-2-5-2">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">interface</span>
@@ -1805,8 +1812,8 @@ renaming the <code>.txt</code> data files.
 </div>
 </div>
 
-<div id="outline-container-orgc10a812" class="outline-4">
-<h4 id="orgc10a812"><span class="section-number-4">2.5.3</span> Python</h4>
+<div id="outline-container-org7c99d3f" class="outline-4">
+<h4 id="org7c99d3f"><span class="section-number-4">2.5.3</span> Python</h4>
 <div class="outline-text-4" id="text-2-5-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">_open</span>(file_name: <span style="color: #483d8b;">str</span>, mode: <span style="color: #483d8b;">str</span>, back_end: <span style="color: #483d8b;">int</span>):
@@ -1854,8 +1861,8 @@ renaming the <code>.txt</code> data files.
 </div>
 </div>
 
-<div id="outline-container-org7d4310d" class="outline-4">
-<h4 id="org7d4310d"><span class="section-number-4">2.5.4</span> Zero-based versus one-based arrays of indices</h4>
+<div id="outline-container-org1d5232a" class="outline-4">
+<h4 id="org1d5232a"><span class="section-number-4">2.5.4</span> Zero-based versus one-based arrays of indices</h4>
 <div class="outline-text-4" id="text-2-5-4">
 <p>
 Because arrays are zero-based in Fortran, we need to set a flag to
@@ -1888,8 +1895,8 @@ know if we need to shift by 1 arrays of indices.
 </div>
 </div>
 
-<div id="outline-container-orga5740bb" class="outline-3">
-<h3 id="orga5740bb"><span class="section-number-3">2.6</span> File closing</h3>
+<div id="outline-container-orge44ca2f" class="outline-3">
+<h3 id="orge44ca2f"><span class="section-number-3">2.6</span> File closing</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
 <code>trexio_close</code> closes an existing <code>trexio_t</code> file.
@@ -1906,8 +1913,8 @@ output:
 </p>
 </div>
 
-<div id="outline-container-orgb5588e4" class="outline-4">
-<h4 id="orgb5588e4"><span class="section-number-4">2.6.1</span> C</h4>
+<div id="outline-container-orgef66130" class="outline-4">
+<h4 id="orgef66130"><span class="section-number-4">2.6.1</span> C</h4>
 <div class="outline-text-4" id="text-2-6-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1992,8 +1999,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-org68ade7b" class="outline-4">
-<h4 id="org68ade7b"><span class="section-number-4">2.6.2</span> Fortran</h4>
+<div id="outline-container-org591003d" class="outline-4">
+<h4 id="org591003d"><span class="section-number-4">2.6.2</span> Fortran</h4>
 <div class="outline-text-4" id="text-2-6-2">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">interface</span>
@@ -2008,8 +2015,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-orge1a9f42" class="outline-4">
-<h4 id="orge1a9f42"><span class="section-number-4">2.6.3</span> Python</h4>
+<div id="outline-container-org020e3a2" class="outline-4">
+<h4 id="org020e3a2"><span class="section-number-4">2.6.3</span> Python</h4>
 <div class="outline-text-4" id="text-2-6-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">_close</span>(trexio_file):
@@ -2027,8 +2034,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-org2650a0a" class="outline-3">
-<h3 id="org2650a0a"><span class="section-number-3">2.7</span> File flushing</h3>
+<div id="outline-container-org0a1b8d0" class="outline-3">
+<h3 id="org0a1b8d0"><span class="section-number-3">2.7</span> File flushing</h3>
 <div class="outline-text-3" id="text-2-7">
 <p>
 <code>trexio_flush</code> flushes all buffers into the <code>trexio_t</code> file.
@@ -2045,8 +2052,8 @@ output:
 </p>
 </div>
 
-<div id="outline-container-orgfc498c6" class="outline-4">
-<h4 id="orgfc498c6"><span class="section-number-4">2.7.1</span> C</h4>
+<div id="outline-container-org804c7fb" class="outline-4">
+<h4 id="org804c7fb"><span class="section-number-4">2.7.1</span> C</h4>
 <div class="outline-text-4" id="text-2-7-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -2087,8 +2094,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-org8a7e5cd" class="outline-4">
-<h4 id="org8a7e5cd"><span class="section-number-4">2.7.2</span> Fortran</h4>
+<div id="outline-container-org4a1bb28" class="outline-4">
+<h4 id="org4a1bb28"><span class="section-number-4">2.7.2</span> Fortran</h4>
 <div class="outline-text-4" id="text-2-7-2">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">interface</span>
@@ -2103,8 +2110,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-org2ce0d3f" class="outline-4">
-<h4 id="org2ce0d3f"><span class="section-number-4">2.7.3</span> Python</h4>
+<div id="outline-container-org5d9666b" class="outline-4">
+<h4 id="org5d9666b"><span class="section-number-4">2.7.3</span> Python</h4>
 <div class="outline-text-4" id="text-2-7-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">flush</span>(trexio_file):
@@ -2122,8 +2129,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-org71650ac" class="outline-3">
-<h3 id="org71650ac"><span class="section-number-3">2.8</span> File existence</h3>
+<div id="outline-container-org56f63dc" class="outline-3">
+<h3 id="org56f63dc"><span class="section-number-3">2.8</span> File existence</h3>
 <div class="outline-text-3" id="text-2-8">
 <p>
 <code>trexio_inquire</code> check whether TREXIO file exists.
@@ -2160,8 +2167,8 @@ You can see examples of both functionalities in <code>test_f.f90</code>  (search
 </p>
 </div>
 
-<div id="outline-container-org881e0b6" class="outline-4">
-<h4 id="org881e0b6"><span class="section-number-4">2.8.1</span> C</h4>
+<div id="outline-container-orgb62b385" class="outline-4">
+<h4 id="orgb62b385"><span class="section-number-4">2.8.1</span> C</h4>
 <div class="outline-text-4" id="text-2-8-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -2191,8 +2198,8 @@ You can see examples of both functionalities in <code>test_f.f90</code>  (search
 </div>
 </div>
 
-<div id="outline-container-org65a2f70" class="outline-4">
-<h4 id="org65a2f70"><span class="section-number-4">2.8.2</span> Fortran</h4>
+<div id="outline-container-org0cf5e3c" class="outline-4">
+<h4 id="org0cf5e3c"><span class="section-number-4">2.8.2</span> Fortran</h4>
 <div class="outline-text-4" id="text-2-8-2">
 <p>
 The function below is a C binding.
@@ -2212,8 +2219,8 @@ The front end Fortran function for <code>trexio_inquire</code> can be found in t
 </div>
 </div>
 
-<div id="outline-container-orgeed6945" class="outline-4">
-<h4 id="orgeed6945"><span class="section-number-4">2.8.3</span> Python</h4>
+<div id="outline-container-org46ec750" class="outline-4">
+<h4 id="org46ec750"><span class="section-number-4">2.8.3</span> Python</h4>
 <div class="outline-text-4" id="text-2-8-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">_inquire</span>(file_name: <span style="color: #483d8b;">str</span>) -&gt; <span style="color: #483d8b;">bool</span>:
@@ -2232,12 +2239,12 @@ The front end Fortran function for <code>trexio_inquire</code> can be found in t
 </div>
 </div>
 
-<div id="outline-container-org48b30e8" class="outline-3">
-<h3 id="org48b30e8"><span class="section-number-3">2.9</span> File state</h3>
+<div id="outline-container-orgade5055" class="outline-3">
+<h3 id="orgade5055"><span class="section-number-3">2.9</span> File state</h3>
 <div class="outline-text-3" id="text-2-9">
 <p>
 <code>trexio_set_state</code> set an existing <code>trexio_t</code> file handle to a given state.
-<code>trexio_get_state</code> returns current sate of the <code>trexio_t</code> file handle.
+<code>trexio_get_state</code> returns current state of the <code>trexio_t</code> file handle.
 </p>
 
 <p>
@@ -2252,8 +2259,8 @@ output:
 </p>
 </div>
 
-<div id="outline-container-orgea97b6d" class="outline-4">
-<h4 id="orgea97b6d"><span class="section-number-4">2.9.1</span> C</h4>
+<div id="outline-container-orgf9c5ae7" class="outline-4">
+<h4 id="orgf9c5ae7"><span class="section-number-4">2.9.1</span> C</h4>
 <div class="outline-text-4" id="text-2-9-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -2281,8 +2288,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-org4916ef9" class="outline-4">
-<h4 id="org4916ef9"><span class="section-number-4">2.9.2</span> Fortran</h4>
+<div id="outline-container-org8eb0071" class="outline-4">
+<h4 id="org8eb0071"><span class="section-number-4">2.9.2</span> Fortran</h4>
 <div class="outline-text-4" id="text-2-9-2">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">interface</span>
@@ -2307,8 +2314,8 @@ output:
 </div>
 </div>
 
-<div id="outline-container-org3cad0b6" class="outline-4">
-<h4 id="org3cad0b6"><span class="section-number-4">2.9.3</span> Python</h4>
+<div id="outline-container-org133d879" class="outline-4">
+<h4 id="org133d879"><span class="section-number-4">2.9.3</span> Python</h4>
 <div class="outline-text-4" id="text-2-9-3">
 <p>
 See TREXIO File Python class.
@@ -2317,8 +2324,8 @@ See TREXIO File Python class.
 </div>
 </div>
 
-<div id="outline-container-org5459edc" class="outline-3">
-<h3 id="org5459edc"><span class="section-number-3">2.10</span> Tasks to be done before closing</h3>
+<div id="outline-container-org569164d" class="outline-3">
+<h3 id="org569164d"><span class="section-number-3">2.10</span> Tasks to be done before closing</h3>
 <div class="outline-text-3" id="text-2-10">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -2419,12 +2426,12 @@ See TREXIO File Python class.
 </div>
 </div>
 
-<div id="outline-container-org4c2a356" class="outline-2">
-<h2 id="org4c2a356"><span class="section-number-2">3</span> Templates for front end</h2>
+<div id="outline-container-org40885a0" class="outline-2">
+<h2 id="org40885a0"><span class="section-number-2">3</span> Templates for front end</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org3f51557" class="outline-3">
-<h3 id="org3f51557"><span class="section-number-3">3.1</span> Description</h3>
+<div id="outline-container-org6f9e0a9" class="outline-3">
+<h3 id="org6f9e0a9"><span class="section-number-3">3.1</span> Description</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
 Consider the following block of <code>trex.json</code>:
@@ -2645,12 +2652,12 @@ value will result in <code>TREXIO_INVALID_ARG_2</code> exit code.
 </div>
 </div>
 
-<div id="outline-container-org2210408" class="outline-3">
-<h3 id="org2210408"><span class="section-number-3">3.2</span> Templates for front end has<sub>group</sub> functions</h3>
+<div id="outline-container-org4a463e6" class="outline-3">
+<h3 id="org4a463e6"><span class="section-number-3">3.2</span> Templates for front end has<sub>group</sub> functions</h3>
 <div class="outline-text-3" id="text-3-2">
 </div>
-<div id="outline-container-org7f975a0" class="outline-4">
-<h4 id="org7f975a0"><span class="section-number-4">3.2.1</span> Introduction</h4>
+<div id="outline-container-org1f67780" class="outline-4">
+<h4 id="org1f67780"><span class="section-number-4">3.2.1</span> Introduction</h4>
 <div class="outline-text-4" id="text-3-2-1">
 <p>
 This section concerns API calls related to TREXIO groups
@@ -2680,8 +2687,8 @@ This section concerns API calls related to TREXIO groups
 </div>
 </div>
 
-<div id="outline-container-orga53c75a" class="outline-4">
-<h4 id="orga53c75a"><span class="section-number-4">3.2.2</span> C templates for front end</h4>
+<div id="outline-container-orgecb6426" class="outline-4">
+<h4 id="orgecb6426"><span class="section-number-4">3.2.2</span> C templates for front end</h4>
 <div class="outline-text-4" id="text-3-2-2">
 <p>
 The <code>C</code> templates that correspond to each of the abovementioned
@@ -2690,12 +2697,12 @@ handle.
 </p>
 </div>
 
-<div id="outline-container-orgdc293b5" class="outline-5">
-<h5 id="orgdc293b5"><span class="section-number-5">3.2.2.1</span> Function declarations</h5>
+<div id="outline-container-orge65cd09" class="outline-5">
+<h5 id="orge65cd09"><span class="section-number-5">3.2.2.1</span> Function declarations</h5>
 </div>
 
-<div id="outline-container-org47b1f57" class="outline-5">
-<h5 id="org47b1f57"><span class="section-number-5">3.2.2.2</span> Source code</h5>
+<div id="outline-container-orge6c259b" class="outline-5">
+<h5 id="orge6c259b"><span class="section-number-5">3.2.2.2</span> Source code</h5>
 <div class="outline-text-5" id="text-3-2-2-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -2732,8 +2739,8 @@ handle.
 </div>
 </div>
 
-<div id="outline-container-org3626bc7" class="outline-4">
-<h4 id="org3626bc7"><span class="section-number-4">3.2.3</span> Fortran templates for front end</h4>
+<div id="outline-container-org9dd17c6" class="outline-4">
+<h4 id="org9dd17c6"><span class="section-number-4">3.2.3</span> Fortran templates for front end</h4>
 <div class="outline-text-4" id="text-3-2-3">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from Fortran.
@@ -2753,8 +2760,8 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org6855551" class="outline-4">
-<h4 id="org6855551"><span class="section-number-4">3.2.4</span> Python templates for front end</h4>
+<div id="outline-container-org03b98f2" class="outline-4">
+<h4 id="org03b98f2"><span class="section-number-4">3.2.4</span> Python templates for front end</h4>
 <div class="outline-text-4" id="text-3-2-4">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">has_</span>$group$(trexio_file) -&gt; <span style="color: #483d8b;">bool</span>:
@@ -2781,12 +2788,12 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-orgd2c6279" class="outline-3">
-<h3 id="orgd2c6279"><span class="section-number-3">3.3</span> Templates for front end has/read/write a single numerical attribute</h3>
+<div id="outline-container-org0dd9a65" class="outline-3">
+<h3 id="org0dd9a65"><span class="section-number-3">3.3</span> Templates for front end has/read/write a single numerical attribute</h3>
 <div class="outline-text-3" id="text-3-3">
 </div>
-<div id="outline-container-orgc9edd40" class="outline-4">
-<h4 id="orgc9edd40"><span class="section-number-4">3.3.1</span> Introduction</h4>
+<div id="outline-container-orgbc73d82" class="outline-4">
+<h4 id="orgbc73d82"><span class="section-number-4">3.3.1</span> Introduction</h4>
 <div class="outline-text-4" id="text-3-3-1">
 <p>
 This section concerns API calls related to numerical attributes,
@@ -2857,8 +2864,8 @@ namely single value of int/float types.
 </div>
 </div>
 
-<div id="outline-container-org1272c21" class="outline-4">
-<h4 id="org1272c21"><span class="section-number-4">3.3.2</span> C templates for front end</h4>
+<div id="outline-container-org6e84fd5" class="outline-4">
+<h4 id="org6e84fd5"><span class="section-number-4">3.3.2</span> C templates for front end</h4>
 <div class="outline-text-4" id="text-3-3-2">
 <p>
 The <code>C</code> templates that correspond to each of the abovementioned
@@ -2872,12 +2879,12 @@ precision (see Table above).
 </p>
 </div>
 
-<div id="outline-container-orga93b3b4" class="outline-5">
-<h5 id="orga93b3b4"><span class="section-number-5">3.3.2.1</span> Function declarations</h5>
+<div id="outline-container-org67b8652" class="outline-5">
+<h5 id="org67b8652"><span class="section-number-5">3.3.2.1</span> Function declarations</h5>
 </div>
 
-<div id="outline-container-orgc6a47e1" class="outline-5">
-<h5 id="orgc6a47e1"><span class="section-number-5">3.3.2.2</span> Source code for double precision functions</h5>
+<div id="outline-container-orga6d9972" class="outline-5">
+<h5 id="orga6d9972"><span class="section-number-5">3.3.2.2</span> Source code for double precision functions</h5>
 <div class="outline-text-5" id="text-3-3-2-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -2941,8 +2948,8 @@ precision (see Table above).
 </div>
 </div>
 
-<div id="outline-container-org19d6194" class="outline-5">
-<h5 id="org19d6194"><span class="section-number-5">3.3.2.3</span> Source code for single precision functions</h5>
+<div id="outline-container-org5543322" class="outline-5">
+<h5 id="org5543322"><span class="section-number-5">3.3.2.3</span> Source code for single precision functions</h5>
 <div class="outline-text-5" id="text-3-3-2-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -3018,8 +3025,8 @@ precision (see Table above).
 </div>
 </div>
 
-<div id="outline-container-org9b7b726" class="outline-5">
-<h5 id="org9b7b726"><span class="section-number-5">3.3.2.4</span> Source code for default functions</h5>
+<div id="outline-container-orgbb442e0" class="outline-5">
+<h5 id="orgbb442e0"><span class="section-number-5">3.3.2.4</span> Source code for default functions</h5>
 <div class="outline-text-5" id="text-3-3-2-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -3074,8 +3081,8 @@ precision (see Table above).
 </div>
 </div>
 
-<div id="outline-container-orge0404dc" class="outline-4">
-<h4 id="orge0404dc"><span class="section-number-4">3.3.3</span> Fortran templates for front end</h4>
+<div id="outline-container-orgef9b1b5" class="outline-4">
+<h4 id="orgef9b1b5"><span class="section-number-4">3.3.3</span> Fortran templates for front end</h4>
 <div class="outline-text-4" id="text-3-3-3">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from Fortran.
@@ -3167,8 +3174,8 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-orgd1046d1" class="outline-4">
-<h4 id="orgd1046d1"><span class="section-number-4">3.3.4</span> Python templates for front end</h4>
+<div id="outline-container-org6624ddc" class="outline-4">
+<h4 id="org6624ddc"><span class="section-number-4">3.3.4</span> Python templates for front end</h4>
 <div class="outline-text-4" id="text-3-3-4">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_</span>$group_num$(trexio_file, num_w: $group_num_py_dtype$) -&gt; <span style="color: #008b8b;">None</span>:
@@ -3241,12 +3248,12 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-orgd67dcec" class="outline-3">
-<h3 id="orgd67dcec"><span class="section-number-3">3.4</span> Templates for front end has/read/write a dataset of numerical data</h3>
+<div id="outline-container-orgd98560e" class="outline-3">
+<h3 id="orgd98560e"><span class="section-number-3">3.4</span> Templates for front end has/read/write a dataset of numerical data</h3>
 <div class="outline-text-3" id="text-3-4">
 </div>
-<div id="outline-container-org6298664" class="outline-4">
-<h4 id="org6298664"><span class="section-number-4">3.4.1</span> Introduction</h4>
+<div id="outline-container-org6cd7626" class="outline-4">
+<h4 id="org6cd7626"><span class="section-number-4">3.4.1</span> Introduction</h4>
 <div class="outline-text-4" id="text-3-4-1">
 <p>
 This section concerns API calls related to datasets.
@@ -3328,8 +3335,8 @@ This section concerns API calls related to datasets.
 </div>
 </div>
 
-<div id="outline-container-orgc505f6d" class="outline-4">
-<h4 id="orgc505f6d"><span class="section-number-4">3.4.2</span> C templates for front end</h4>
+<div id="outline-container-org8723c87" class="outline-4">
+<h4 id="org8723c87"><span class="section-number-4">3.4.2</span> C templates for front end</h4>
 <div class="outline-text-4" id="text-3-4-2">
 <p>
 The C templates that correspond to each of the abovementioned functions can be found below.
@@ -3340,12 +3347,12 @@ The basic (non-suffixed) API call on datasets deals with real(c<sub>double</sub>
 </p>
 </div>
 
-<div id="outline-container-org9a38034" class="outline-5">
-<h5 id="org9a38034"><span class="section-number-5">3.4.2.1</span> Function declarations</h5>
+<div id="outline-container-org83f1acd" class="outline-5">
+<h5 id="org83f1acd"><span class="section-number-5">3.4.2.1</span> Function declarations</h5>
 </div>
 
-<div id="outline-container-org1e5488d" class="outline-5">
-<h5 id="org1e5488d"><span class="section-number-5">3.4.2.2</span> Source code for double precision functions</h5>
+<div id="outline-container-orgbefcb4a" class="outline-5">
+<h5 id="orgbefcb4a"><span class="section-number-5">3.4.2.2</span> Source code for double precision functions</h5>
 <div class="outline-text-5" id="text-3-4-2-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -3508,8 +3515,8 @@ The basic (non-suffixed) API call on datasets deals with real(c<sub>double</sub>
 </div>
 </div>
 
-<div id="outline-container-orgca495fc" class="outline-5">
-<h5 id="orgca495fc"><span class="section-number-5">3.4.2.3</span> Source code for single precision functions</h5>
+<div id="outline-container-org94f32fa" class="outline-5">
+<h5 id="org94f32fa"><span class="section-number-5">3.4.2.3</span> Source code for single precision functions</h5>
 <div class="outline-text-5" id="text-3-4-2-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -3660,11 +3667,11 @@ The basic (non-suffixed) API call on datasets deals with real(c<sub>double</sub>
 </div>
 </div>
 
-<div id="outline-container-orgb44dfda" class="outline-5">
-<h5 id="orgb44dfda"><span class="section-number-5">3.4.2.4</span> Source code for memory-safe functions</h5>
+<div id="outline-container-orgca36223" class="outline-5">
+<h5 id="orgca36223"><span class="section-number-5">3.4.2.4</span> Source code for memory-safe functions</h5>
 <div class="outline-text-5" id="text-3-4-2-4">
 <div class="org-src-container">
-<pre class="src src-c" id="orgd85db87"><span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+<pre class="src src-c" id="orgc5ac103"><span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
 int64_t $group_dset_dim$ = 0;
 
 /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
@@ -3820,8 +3827,8 @@ rc = trexio_read_$group_dset_dim$_64(file, &amp;($group_dset_dim$));
 </div>
 </div>
 
-<div id="outline-container-orga9a009c" class="outline-5">
-<h5 id="orga9a009c"><span class="section-number-5">3.4.2.5</span> Source code for default functions</h5>
+<div id="outline-container-orgd56c5a5" class="outline-5">
+<h5 id="orgd56c5a5"><span class="section-number-5">3.4.2.5</span> Source code for default functions</h5>
 <div class="outline-text-5" id="text-3-4-2-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -3896,8 +3903,8 @@ rc = trexio_read_$group_dset_dim$_64(file, &amp;($group_dset_dim$));
 </div>
 </div>
 
-<div id="outline-container-org42315ea" class="outline-4">
-<h4 id="org42315ea"><span class="section-number-4">3.4.3</span> Fortran templates for front end</h4>
+<div id="outline-container-orgab14504" class="outline-4">
+<h4 id="orgab14504"><span class="section-number-4">3.4.3</span> Fortran templates for front end</h4>
 <div class="outline-text-4" id="text-3-4-3">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from <code>Fortran</code>.
@@ -3989,8 +3996,8 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org32c5acc" class="outline-4">
-<h4 id="org32c5acc"><span class="section-number-4">3.4.4</span> Python templates for front end</h4>
+<div id="outline-container-org8654052" class="outline-4">
+<h4 id="org8654052"><span class="section-number-4">3.4.4</span> Python templates for front end</h4>
 <div class="outline-text-4" id="text-3-4-4">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_</span>$group_dset$(trexio_file, dset_w) -&gt; <span style="color: #008b8b;">None</span>:
@@ -4162,12 +4169,12 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org9c667d3" class="outline-3">
-<h3 id="org9c667d3"><span class="section-number-3">3.5</span> Templates for front end has/read/write a dataset of sparse data</h3>
+<div id="outline-container-org7452206" class="outline-3">
+<h3 id="org7452206"><span class="section-number-3">3.5</span> Templates for front end has/read/write a dataset of sparse data</h3>
 <div class="outline-text-3" id="text-3-5">
 </div>
-<div id="outline-container-orga450bfd" class="outline-4">
-<h4 id="orga450bfd"><span class="section-number-4">3.5.1</span> Introduction</h4>
+<div id="outline-container-orge535d04" class="outline-4">
+<h4 id="orge535d04"><span class="section-number-4">3.5.1</span> Introduction</h4>
 <div class="outline-text-4" id="text-3-5-1">
 <p>
 Sparse data structures are used typically for large tensors such as
@@ -4328,16 +4335,16 @@ This section concerns API calls related to sparse data structures.
 </div>
 </div>
 
-<div id="outline-container-orgb381446" class="outline-4">
-<h4 id="orgb381446"><span class="section-number-4">3.5.2</span> C templates for front end</h4>
+<div id="outline-container-org419d947" class="outline-4">
+<h4 id="org419d947"><span class="section-number-4">3.5.2</span> C templates for front end</h4>
 <div class="outline-text-4" id="text-3-5-2">
 </div>
-<div id="outline-container-org28061f7" class="outline-5">
-<h5 id="org28061f7"><span class="section-number-5">3.5.2.1</span> Function declarations</h5>
+<div id="outline-container-orga62f64a" class="outline-5">
+<h5 id="orga62f64a"><span class="section-number-5">3.5.2.1</span> Function declarations</h5>
 </div>
 
-<div id="outline-container-orgbdca5be" class="outline-5">
-<h5 id="orgbdca5be"><span class="section-number-5">3.5.2.2</span> Source code for default functions</h5>
+<div id="outline-container-orgf3bbdca" class="outline-5">
+<h5 id="orgf3bbdca"><span class="section-number-5">3.5.2.2</span> Source code for default functions</h5>
 <div class="outline-text-5" id="text-3-5-2-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span> <span style="color: #0000ff;">trexio_read_safe_$group_dset$</span>(<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>,
@@ -4376,9 +4383,21 @@ This section concerns API calls related to sparse data structures.
   rc = trexio_read_$group_dset$_size(file, &amp;size_max);
   <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
 
-  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">num</span>;
-  rc = trexio_read_$group_dset_sparse_dim$_64(file, &amp;num);
-  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+  /* <span style="color: #b22222;">To be set by generator : number of unique dimensions</span>
+<span style="color: #b22222;">     (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) </span>*/
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">unique_rank</span> = $group_dset_unique_rank$;
+  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">unique_dims</span>[$group_dset_unique_rank$];
+
+  // <span style="color: #b22222;">Below part is populated by the generator when unique_rank &gt; 1</span>
+  rc = trexio_read_$group_dset_unique_dim$_64(file, &amp;unique_dims[$dim_id$]); <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+  /* <span style="color: #b22222;">Find the maximal value along all dimensions to define the compression technique in the back end </span>*/
+  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">max_dim</span> = unique_dims[0];
+  <span style="color: #a020f0;">if</span> (unique_rank != 1) {
+    <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">i</span> = 1; i &lt; unique_rank; i++) {
+      <span style="color: #a020f0;">if</span> (unique_dims[i] &gt; max_dim) max_dim = unique_dims[i];
+    }
+  }
 
   // <span style="color: #b22222;">introduce a new variable which will be modified with the number of integrals being read if EOF is encountered</span>
   <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">eof_read_size</span> = 0L;
@@ -4386,12 +4405,12 @@ This section concerns API calls related to sparse data structures.
   <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
 
   <span style="color: #a020f0;">case</span> TREXIO_TEXT:
-    rc = trexio_text_read_$group_dset$(file, offset_file, *buffer_size, num, &amp;eof_read_size, index_sparse, value_sparse);
+    rc = trexio_text_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &amp;eof_read_size, index_sparse, value_sparse);
     <span style="color: #a020f0;">break</span>;
 
   <span style="color: #a020f0;">case</span> TREXIO_HDF5:
 <span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
-    rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, num, &amp;eof_read_size, index_sparse, value_sparse);
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &amp;eof_read_size, index_sparse, value_sparse);
     <span style="color: #a020f0;">break</span>;
 <span style="color: #483d8b;">#else</span>
     rc = TREXIO_BACK_END_MISSING;
@@ -4487,9 +4506,10 @@ This section concerns API calls related to sparse data structures.
   <span style="color: #a020f0;">if</span> (index_sparse == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
   <span style="color: #a020f0;">if</span> (value_sparse == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
 
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = $group_dset_rank$;  // <span style="color: #b22222;">To be set by generator : number of indices</span>
+  /* <span style="color: #b22222;">To be set by generator : number of indices </span>*/
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = $group_dset_rank$;
 
-  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">size_max</span>=0L;         // <span style="color: #b22222;">Max number of integrals (already in the file)</span>
+  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">size_max</span> = 0L; // <span style="color: #b22222;">Max number of integrals (already in the file)</span>
   <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
 
   /* <span style="color: #b22222;">Read the max number of integrals stored in the file </span>*/
@@ -4497,9 +4517,21 @@ This section concerns API calls related to sparse data structures.
   <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS &amp;&amp; rc != TREXIO_DSET_MISSING) <span style="color: #a020f0;">return</span> rc;
   <span style="color: #a020f0;">if</span> (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
-  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">num</span>;
-  rc = trexio_read_$group_dset_sparse_dim$_64(file, &amp;num);
-  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+  /* <span style="color: #b22222;">To be set by generator : number of unique dimensions</span>
+<span style="color: #b22222;">     (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) </span>*/
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">unique_rank</span> = $group_dset_unique_rank$;
+  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">unique_dims</span>[$group_dset_unique_rank$];
+
+  // <span style="color: #b22222;">Below part is populated by the generator when unique_rank &gt; 1</span>
+  rc = trexio_read_$group_dset_unique_dim$_64(file, &amp;unique_dims[$dim_id$]); <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> rc;
+
+  /* <span style="color: #b22222;">Find the maximal value along all dimensions to define the compression technique in the back end </span>*/
+  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">max_dim</span> = unique_dims[0];
+  <span style="color: #a020f0;">if</span> (unique_rank != 1) {
+    <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">i</span> = 1; i &lt; unique_rank; i++) {
+      <span style="color: #a020f0;">if</span> (unique_dims[i] &gt; max_dim) max_dim = unique_dims[i];
+    }
+  }
 
   // <span style="color: #b22222;">shift indices to be zero-based if Fortran API is used</span>
   <span style="color: #a020f0;">if</span> (file-&gt;one_based) {
@@ -4516,13 +4548,13 @@ This section concerns API calls related to sparse data structures.
     <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
 
     <span style="color: #a020f0;">case</span> TREXIO_TEXT:
-      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           size_max, index_sparse_p, value_sparse);
       <span style="color: #a020f0;">break</span>;
 
     <span style="color: #a020f0;">case</span> TREXIO_HDF5:
 <span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
-      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           index_sparse_p, value_sparse);
       <span style="color: #a020f0;">break</span>;
 <span style="color: #483d8b;">#else</span>
@@ -4547,13 +4579,13 @@ This section concerns API calls related to sparse data structures.
     <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
 
     <span style="color: #a020f0;">case</span> TREXIO_TEXT:
-      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           size_max, index_sparse, value_sparse);
       <span style="color: #a020f0;">break</span>;
 
     <span style="color: #a020f0;">case</span> TREXIO_HDF5:
 <span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
-      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, num,
+      rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           index_sparse, value_sparse);
       <span style="color: #a020f0;">break</span>;
 <span style="color: #483d8b;">#else</span>
@@ -4613,8 +4645,8 @@ This section concerns API calls related to sparse data structures.
 </div>
 </div>
 
-<div id="outline-container-org9c81eaf" class="outline-4">
-<h4 id="org9c81eaf"><span class="section-number-4">3.5.3</span> Fortran templates for front end</h4>
+<div id="outline-container-orgd794ce1" class="outline-4">
+<h4 id="orgd794ce1"><span class="section-number-4">3.5.3</span> Fortran templates for front end</h4>
 <div class="outline-text-4" id="text-3-5-3">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from <code>Fortran</code>.
@@ -4715,8 +4747,8 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-orgf66bc80" class="outline-4">
-<h4 id="orgf66bc80"><span class="section-number-4">3.5.4</span> Python templates for front end</h4>
+<div id="outline-container-orgde68388" class="outline-4">
+<h4 id="orgde68388"><span class="section-number-4">3.5.4</span> Python templates for front end</h4>
 <div class="outline-text-4" id="text-3-5-4">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_</span>$group_dset$(trexio_file: File, offset_file: <span style="color: #483d8b;">int</span>, buffer_size: <span style="color: #483d8b;">int</span>, indices: <span style="color: #483d8b;">list</span>, values: <span style="color: #483d8b;">list</span>) -&gt; <span style="color: #008b8b;">None</span>:
@@ -4918,12 +4950,12 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-orgca91f4b" class="outline-3">
-<h3 id="orgca91f4b"><span class="section-number-3">3.6</span> Templates for front end has/read/write a dataset of strings</h3>
+<div id="outline-container-org4ac0e74" class="outline-3">
+<h3 id="org4ac0e74"><span class="section-number-3">3.6</span> Templates for front end has/read/write a dataset of strings</h3>
 <div class="outline-text-3" id="text-3-6">
 </div>
-<div id="outline-container-orgfbad944" class="outline-4">
-<h4 id="orgfbad944"><span class="section-number-4">3.6.1</span> Introduction</h4>
+<div id="outline-container-org3cc1c08" class="outline-4">
+<h4 id="org3cc1c08"><span class="section-number-4">3.6.1</span> Introduction</h4>
 <div class="outline-text-4" id="text-3-6-1">
 <p>
 This section concerns API calls related to datasets of strings.
@@ -4963,8 +4995,8 @@ This section concerns API calls related to datasets of strings.
 </div>
 </div>
 
-<div id="outline-container-org0f7d852" class="outline-4">
-<h4 id="org0f7d852"><span class="section-number-4">3.6.2</span> C templates for front end</h4>
+<div id="outline-container-org7dd54a1" class="outline-4">
+<h4 id="org7dd54a1"><span class="section-number-4">3.6.2</span> C templates for front end</h4>
 <div class="outline-text-4" id="text-3-6-2">
 <p>
 First parameter is the <code>TREXIO</code> file handle. Second parameter is the variable to be written/read
@@ -4972,12 +5004,12 @@ to/from the <code>TREXIO</code> file (except for <code>trexio_has_</code> functi
 </p>
 </div>
 
-<div id="outline-container-orgfcedafa" class="outline-5">
-<h5 id="orgfcedafa"><span class="section-number-5">3.6.2.1</span> Function declarations</h5>
+<div id="outline-container-orgfb30d31" class="outline-5">
+<h5 id="orgfb30d31"><span class="section-number-5">3.6.2.1</span> Function declarations</h5>
 </div>
 
-<div id="outline-container-org1921e8a" class="outline-5">
-<h5 id="org1921e8a"><span class="section-number-5">3.6.2.2</span> Source code for default functions</h5>
+<div id="outline-container-orgadcd500" class="outline-5">
+<h5 id="orgadcd500"><span class="section-number-5">3.6.2.2</span> Source code for default functions</h5>
 <div class="outline-text-5" id="text-3-6-2-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -5227,8 +5259,8 @@ to/from the <code>TREXIO</code> file (except for <code>trexio_has_</code> functi
 </div>
 </div>
 
-<div id="outline-container-orgc47c28f" class="outline-4">
-<h4 id="orgc47c28f"><span class="section-number-4">3.6.3</span> Fortran templates for front end</h4>
+<div id="outline-container-orga9bad93" class="outline-4">
+<h4 id="orga9bad93"><span class="section-number-4">3.6.3</span> Fortran templates for front end</h4>
 <div class="outline-text-4" id="text-3-6-3">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from <code>Fortran</code>.
@@ -5327,8 +5359,8 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org435bb6a" class="outline-4">
-<h4 id="org435bb6a"><span class="section-number-4">3.6.4</span> Python templates for front end</h4>
+<div id="outline-container-org609780e" class="outline-4">
+<h4 id="org609780e"><span class="section-number-4">3.6.4</span> Python templates for front end</h4>
 <div class="outline-text-4" id="text-3-6-4">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_</span>$group_dset$(trexio_file, dset_w: <span style="color: #483d8b;">list</span>) -&gt; <span style="color: #008b8b;">None</span>:
@@ -5429,13 +5461,499 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org7bc5bc0" class="outline-3">
-<h3 id="org7bc5bc0"><span class="section-number-3">3.7</span> Templates for front end has/read/write a single string attribute</h3>
+<div id="outline-container-org714ef6f" class="outline-3">
+<h3 id="org714ef6f"><span class="section-number-3">3.7</span> Templates for front end has/read/write a buffered vector</h3>
 <div class="outline-text-3" id="text-3-7">
+<p>
+This corresponds to the <code>buffer</code> data type and is particularly useful for incremental additiona of values like
+it was done for <code>sparse</code> data but without the need to supply tuples of indices.
+</p>
+
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Function name</th>
+<th scope="col" class="org-left">Description</th>
+<th scope="col" class="org-left">Precision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>trexio_has_$group_dset$</code></td>
+<td class="org-left">Check if a buffered dset is present in a file</td>
+<td class="org-left">---</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group_dset$</code></td>
+<td class="org-left">Read values of a vector in buffers</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_$group_dset$_size</code></td>
+<td class="org-left">Read the number of elements stored in the file</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_$group_dset$</code></td>
+<td class="org-left">Write values of a vector in buffers</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_read_safe_$group_dset$</code></td>
+<td class="org-left">Safe (bounded) read  (for Python API)</td>
+<td class="org-left">Double</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>trexio_write_safe_$group_dset$</code></td>
+<td class="org-left">Safe (bounded) write (for Python API)</td>
+<td class="org-left">Double</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="outline-container-orgd714eda" class="outline-4">
-<h4 id="orgd714eda"><span class="section-number-4">3.7.1</span> Introduction</h4>
+
+<div id="outline-container-org527e7a6" class="outline-4">
+<h4 id="org527e7a6"><span class="section-number-4">3.7.1</span> C source code</h4>
 <div class="outline-text-4" id="text-3-7-1">
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">buffer_size_read</span>, <span style="color: #228b22;">double</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">dset</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (dset  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> TREXIO_DSET_MISSING;
+
+  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
+
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = 1;
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">det_size</span> = (<span style="color: #228b22;">uint64_t</span>) (*buffer_size_read);
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[1] = {det_size};
+
+  // <span style="color: #b22222;">introduce a new variable which will be modified with the number of integrals being read if EOF is encountered</span>
+  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">eof_read_size</span> = 0L;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    rc = trexio_text_read_$group_dset$(file, offset_file, rank, dims, &amp;eof_read_size, dset);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
+    rc = trexio_hdf5_read_$group_dset$(file, offset_file, rank, dims, &amp;eof_read_size, dset);
+    <span style="color: #a020f0;">break</span>;
+<span style="color: #483d8b;">#else</span>
+    rc = TREXIO_BACK_END_MISSING;
+    <span style="color: #a020f0;">break</span>;
+<span style="color: #483d8b;">#endif</span>
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    return trexio_json_read_$group_dset$(...);</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    rc = TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+    <span style="color: #a020f0;">break</span>;
+  }
+
+  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS &amp;&amp; rc != TREXIO_END) <span style="color: #a020f0;">return</span> rc;
+
+  <span style="color: #a020f0;">if</span> (rc == TREXIO_END) *buffer_size_read = eof_read_size;
+
+  <span style="color: #a020f0;">return</span> rc;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_$group_dset$_size</span>(<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">size_max</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (size_max == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> TREXIO_DSET_MISSING;
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    <span style="color: #a020f0;">return</span> trexio_text_read_$group_dset$_size(file, size_max);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
+    <span style="color: #a020f0;">return</span> trexio_hdf5_read_$group_dset$_size(file, size_max);
+    <span style="color: #a020f0;">break</span>;
+<span style="color: #483d8b;">#else</span>
+    <span style="color: #a020f0;">return</span> TREXIO_BACK_END_MISSING;
+<span style="color: #483d8b;">#endif</span>
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    return trexio_json_read_</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  <span style="color: #a020f0;">default</span>:
+    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
+  }
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_read_safe_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">buffer_size_read</span>, <span style="color: #228b22;">double</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">dset_out</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">dim_out</span>)
+{
+  <span style="color: #a020f0;">return</span> trexio_read_$group_dset$(file, offset_file, buffer_size_read, dset_out);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">buffer_size</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">double</span>* <span style="color: #a0522d;">dset</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (dset == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+
+  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = 1;
+  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[1] = {buffer_size};
+
+  assert(file-&gt;back_end &lt; TREXIO_INVALID_BACK_END);
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    <span style="color: #a020f0;">return</span> trexio_text_write_$group_dset$(file, offset_file, rank, dims, dset);
+    <span style="color: #a020f0;">break</span>;
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
+    <span style="color: #a020f0;">return</span> trexio_hdf5_write_$group_dset$(file, offset_file, rank, dims, dset);
+    <span style="color: #a020f0;">break</span>;
+<span style="color: #483d8b;">#else</span>
+    <span style="color: #a020f0;">return</span> TREXIO_BACK_END_MISSING;
+    <span style="color: #a020f0;">break</span>;
+<span style="color: #483d8b;">#endif</span>
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    rc = trexio_json_read_</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_write_safe_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">buffer_size</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">double</span>* <span style="color: #a0522d;">dset_in</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">dim_in</span>)
+{
+  <span style="color: #a020f0;">return</span> trexio_write_$group_dset$(file, offset_file, buffer_size, dset_in);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
+<span style="color: #0000ff;">trexio_has_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+{
+
+  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+
+  assert(file-&gt;back_end &lt; TREXIO_INVALID_BACK_END);
+
+  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
+
+  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
+    <span style="color: #a020f0;">return</span> trexio_text_has_$group_dset$(file);
+
+  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
+<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
+    <span style="color: #a020f0;">return</span> trexio_hdf5_has_$group_dset$(file);
+<span style="color: #483d8b;">#else</span>
+    <span style="color: #a020f0;">return</span> TREXIO_BACK_END_MISSING;
+<span style="color: #483d8b;">#endif</span>
+/*
+<span style="color: #b22222;">  case TREXIO_JSON:</span>
+<span style="color: #b22222;">    return trexio_json_has_</span>
+<span style="color: #b22222;">    break;</span>
+*/
+  }
+
+  <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0ef1f8a" class="outline-4">
+<h4 id="org0ef1f8a"><span class="section-number-4">3.7.2</span> Fortran interface</h4>
+<div class="outline-text-4" id="text-3-7-2">
+<p>
+The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from Fortran.
+These templates are based on the use of <code>iso_c_binding</code>. Pointers have to be passed by value.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_write_$group_dset$(trex_file, </span><span style="color: #a020f0;">&amp;</span>
+                                               offset_file, buffer_size, dset) <span style="color: #a020f0;">bind</span>(C)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">import</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> buffer_size</span>
+     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(in)            ::<span style="color: #a0522d;"> dset(*)</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+
+<span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_write_safe_$group_dset$ (trex_file, </span><span style="color: #a020f0;">&amp;</span>
+                                                    offset_file, buffer_size, <span style="color: #a020f0;">&amp;</span>
+                                                    dset, dset_size) <span style="color: #a020f0;">bind</span>(C)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">import</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> buffer_size</span>
+     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(in)            ::<span style="color: #a0522d;"> dset(*)</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> dset_size</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_safe_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_read_safe_$group_dset$ (trex_file, </span><span style="color: #a020f0;">&amp;</span>
+                                                   offset_file, buffer_size, <span style="color: #a020f0;">&amp;</span>
+                                                   dset, dset_size) <span style="color: #a020f0;">bind</span>(C)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">import</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(inout)     ::<span style="color: #a0522d;"> buffer_size</span>
+     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(out)           ::<span style="color: #a0522d;"> dset(*)</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> dset_size</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_safe_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+
+<span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_read_$group_dset$(trex_file, </span><span style="color: #a020f0;">&amp;</span>
+                                              offset_file, buffer_size, dset) <span style="color: #a020f0;">bind</span>(C)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">import</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(inout)     ::<span style="color: #a0522d;"> buffer_size</span>
+     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(out)           ::<span style="color: #a0522d;"> dset(*)</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+
+<span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_read_$group_dset$_size (trex_file, </span><span style="color: #a020f0;">&amp;</span>
+                                                   size_max) <span style="color: #a020f0;">bind</span>(C)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">import</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> size_max</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_$group_dset$_size</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-f90"><span style="color: #a020f0;">interface</span>
+   <span style="color: #228b22;">integer</span>(trexio_exit_code) <span style="color: #a020f0;">function</span> <span style="color: #0000ff;">trexio_has_$group_dset$</span> (trex_file) <span style="color: #a020f0;">bind</span>(C)
+     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
+     <span style="color: #a020f0;">import</span>
+     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
+   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_has_$group_dset$</span>
+<span style="color: #a020f0;">end interface</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org774ec41" class="outline-4">
+<h4 id="org774ec41"><span class="section-number-4">3.7.3</span> Python interface</h4>
+<div class="outline-text-4" id="text-3-7-3">
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_</span>$group_dset$(trexio_file: File, offset_file: <span style="color: #483d8b;">int</span>, buffer_size: <span style="color: #483d8b;">int</span>, dset) -&gt; <span style="color: #008b8b;">None</span>:
+    <span style="color: #8b2252;">"""Write the $group_dset$ in the TREXIO file.</span>
+
+<span style="color: #8b2252;">    Parameters:</span>
+
+<span style="color: #8b2252;">    trexio_file:</span>
+<span style="color: #8b2252;">        TREXIO File object.</span>
+
+<span style="color: #8b2252;">    offset_file: int</span>
+<span style="color: #8b2252;">        The number of values to be skipped in the file when writing.</span>
+
+<span style="color: #8b2252;">    buffer_size: int</span>
+<span style="color: #8b2252;">        The number of values to write in the file.</span>
+
+<span style="color: #8b2252;">    dset: list OR numpy.ndarray</span>
+<span style="color: #8b2252;">        Array of $group_dset$ to be written. If array data type does not correspond to int64, the conversion is performed.</span>
+
+<span style="color: #8b2252;">    Raises:</span>
+<span style="color: #8b2252;">        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.</span>
+<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
+<span style="color: #8b2252;">    """</span>
+
+    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(offset_file, <span style="color: #483d8b;">int</span>):
+        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"offset_file argument has to be an integer."</span>)
+    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(buffer_size, <span style="color: #483d8b;">int</span>):
+        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"buffer_size argument has to be an integer."</span>)
+    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(dset, (<span style="color: #483d8b;">list</span>, <span style="color: #483d8b;">tuple</span>, np.ndarray)):
+        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"dset argument has to be an array (list, tuple or NumPy ndarray)."</span>)
+
+    <span style="color: #a020f0;">if</span> <span style="color: #483d8b;">isinstance</span>(dset, np.ndarray) <span style="color: #a020f0;">and</span> <span style="color: #a020f0;">not</span> coefficients.dtype==np.float64:
+        # <span style="color: #b22222;">convert to float64 if input is in a different precision</span>
+        <span style="color: #a0522d;">dset_64</span> = np.float64(dset)
+        <span style="color: #a0522d;">rc</span> = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, dset_64)
+    <span style="color: #a020f0;">else</span>:
+        <span style="color: #a0522d;">rc</span> = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, dset)
+
+    <span style="color: #a020f0;">if</span> rc != TREXIO_SUCCESS:
+        <span style="color: #a020f0;">raise</span> Error(rc)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">read_</span>$group_dset$(trexio_file: File, offset_file: <span style="color: #483d8b;">int</span>, buffer_size: <span style="color: #483d8b;">int</span>) -&gt; <span style="color: #483d8b;">tuple</span>:
+    <span style="color: #8b2252;">"""Read $group_dset$ from the TREXIO file.</span>
+
+<span style="color: #8b2252;">    Parameters:</span>
+
+<span style="color: #8b2252;">    trexio_file:</span>
+<span style="color: #8b2252;">        TREXIO File object.</span>
+
+<span style="color: #8b2252;">    offset_file: int</span>
+<span style="color: #8b2252;">        The number of values to be skipped in the file when reading.</span>
+
+<span style="color: #8b2252;">    buffer_size: int</span>
+<span style="color: #8b2252;">        The number of values to read from the file.</span>
+
+<span style="color: #8b2252;">    Returns:</span>
+<span style="color: #8b2252;">        (dset, n_int_read, eof_flag) tuple where</span>
+<span style="color: #8b2252;">          - dset is the NumPy array [numpy.ndarray] with the default int64 precision;</span>
+<span style="color: #8b2252;">          - n_int_read [int] is the number of coefficients read from the trexio_file</span>
+<span style="color: #8b2252;">            (either strictly equal to buffer_size or less than buffer_size if EOF has been reached);</span>
+<span style="color: #8b2252;">          - eof_flag [bool] is True when EOF has been reached (i.e. when call to low-level pytrexio API returns TREXIO_END)</span>
+<span style="color: #8b2252;">                               False otherwise.</span>
+
+<span style="color: #8b2252;">    Raises:</span>
+<span style="color: #8b2252;">        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.</span>
+<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
+<span style="color: #8b2252;">    """</span>
+
+    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(offset_file, <span style="color: #483d8b;">int</span>):
+        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"offset_file argument has to be an integer."</span>)
+    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(buffer_size, <span style="color: #483d8b;">int</span>):
+        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"buffer_size argument has to be an integer."</span>)
+
+
+    # <span style="color: #b22222;">read the number of values already in the file</span>
+    <span style="color: #a0522d;">det_num</span> = read_$group_dset$_size(trexio_file)
+
+    # <span style="color: #b22222;">additional modification needed to avoid allocating more memory than needed if EOF will be reached during read</span>
+    <span style="color: #a0522d;">overflow</span> = offset_file + buffer_size - det_num
+    <span style="color: #a0522d;">eof_flag</span> = <span style="color: #008b8b;">False</span>
+    <span style="color: #a020f0;">if</span> overflow &gt; 0:
+        <span style="color: #a0522d;">verified_size</span> = buffer_size - overflow
+        <span style="color: #a0522d;">eof_flag</span> = <span style="color: #008b8b;">True</span>
+    <span style="color: #a020f0;">else</span>:
+        <span style="color: #a0522d;">verified_size</span> = buffer_size
+
+    # <span style="color: #b22222;">main call to the low-level (SWIG-wrapped) trexio_read function, which also requires the sizes of the output to be provided</span>
+    # <span style="color: #b22222;">read_buf_size contains the number of elements being read from the file, useful when EOF has been reached</span>
+    <span style="color: #a0522d;">rc</span>, <span style="color: #a0522d;">n_int_read</span>, <span style="color: #a0522d;">dset</span> = pytr.trexio_read_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, verified_size, verified_size)
+
+    <span style="color: #a020f0;">if</span> rc != TREXIO_SUCCESS:
+        <span style="color: #a020f0;">raise</span> Error(rc)
+    <span style="color: #a020f0;">if</span> n_int_read == 0:
+        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">ValueError</span>(<span style="color: #8b2252;">"No integrals have been read from the file."</span>)
+    <span style="color: #a020f0;">if</span> dset <span style="color: #a020f0;">is</span> <span style="color: #008b8b;">None</span>:
+        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">ValueError</span>(<span style="color: #8b2252;">"Returned NULL array from the low-level pytrexio API."</span>)
+
+    <span style="color: #a020f0;">return</span> (dset, n_int_read, eof_flag)
+
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">read_</span>$group_dset$_size(trexio_file) -&gt; <span style="color: #483d8b;">int</span>:
+    <span style="color: #8b2252;">"""Read the number of elements stored in the TREXIO file.</span>
+
+<span style="color: #8b2252;">    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.</span>
+
+<span style="color: #8b2252;">    Returns:</span>
+<span style="color: #8b2252;">        ~num~: int</span>
+<span style="color: #8b2252;">        Integer value of corresponding to the size of the $group_dset$ array from ~trexio_file~.</span>
+
+<span style="color: #8b2252;">    Raises:</span>
+<span style="color: #8b2252;">        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.</span>
+<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
+<span style="color: #8b2252;">    """</span>
+
+    <span style="color: #a0522d;">rc</span>, <span style="color: #a0522d;">num</span> = pytr.trexio_read_$group_dset$_size(trexio_file.pytrexio_s)
+    <span style="color: #a020f0;">if</span> rc != TREXIO_SUCCESS:
+        <span style="color: #a020f0;">raise</span> Error(rc)
+
+    <span style="color: #a020f0;">return</span> num
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">has_</span>$group_dset$(trexio_file) -&gt; <span style="color: #483d8b;">bool</span>:
+    <span style="color: #8b2252;">"""Check that $group_dset$ exists in the TREXIO file.</span>
+
+<span style="color: #8b2252;">    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.</span>
+
+<span style="color: #8b2252;">    Returns:</span>
+<span style="color: #8b2252;">          True if the variable exists, False otherwise</span>
+
+<span style="color: #8b2252;">    Raises:</span>
+<span style="color: #8b2252;">        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.</span>
+<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
+<span style="color: #8b2252;">    """</span>
+
+    <span style="color: #a0522d;">rc</span> = pytr.trexio_has_$group_dset$(trexio_file.pytrexio_s)
+    <span style="color: #a020f0;">if</span> rc == TREXIO_FAILURE:
+        <span style="color: #a020f0;">raise</span> Error(rc)
+
+    <span style="color: #a020f0;">return</span> rc == TREXIO_SUCCESS
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org43c47cd" class="outline-3">
+<h3 id="org43c47cd"><span class="section-number-3">3.8</span> Templates for front end has/read/write a single string attribute</h3>
+<div class="outline-text-3" id="text-3-8">
+</div>
+<div id="outline-container-org218b97c" class="outline-4">
+<h4 id="org218b97c"><span class="section-number-4">3.8.1</span> Introduction</h4>
+<div class="outline-text-4" id="text-3-8-1">
 <p>
 This section concerns API calls related to string attributes.
 </p>
@@ -5474,17 +5992,17 @@ This section concerns API calls related to string attributes.
 </div>
 </div>
 
-<div id="outline-container-org8fdeda1" class="outline-4">
-<h4 id="org8fdeda1"><span class="section-number-4">3.7.2</span> C templates for front end</h4>
-<div class="outline-text-4" id="text-3-7-2">
+<div id="outline-container-orgcae6c48" class="outline-4">
+<h4 id="orgcae6c48"><span class="section-number-4">3.8.2</span> C templates for front end</h4>
+<div class="outline-text-4" id="text-3-8-2">
 </div>
-<div id="outline-container-orgd71be3c" class="outline-5">
-<h5 id="orgd71be3c"><span class="section-number-5">3.7.2.1</span> Function declarations</h5>
+<div id="outline-container-org7d988ba" class="outline-5">
+<h5 id="org7d988ba"><span class="section-number-5">3.8.2.1</span> Function declarations</h5>
 </div>
 
-<div id="outline-container-orgc416f02" class="outline-5">
-<h5 id="orgc416f02"><span class="section-number-5">3.7.2.2</span> Source code for default functions</h5>
-<div class="outline-text-5" id="text-3-7-2-2">
+<div id="outline-container-org1485946" class="outline-5">
+<h5 id="org1485946"><span class="section-number-5">3.8.2.2</span> Source code for default functions</h5>
+<div class="outline-text-5" id="text-3-8-2-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_read_$group_str$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">char</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">str_out</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int32_t</span> <span style="color: #a0522d;">max_str_len</span>)
@@ -5587,9 +6105,9 @@ This section concerns API calls related to string attributes.
 </div>
 </div>
 
-<div id="outline-container-orgec13b7a" class="outline-4">
-<h4 id="orgec13b7a"><span class="section-number-4">3.7.3</span> Fortran templates for front end</h4>
-<div class="outline-text-4" id="text-3-7-3">
+<div id="outline-container-org7f85f82" class="outline-4">
+<h4 id="org7f85f82"><span class="section-number-4">3.8.3</span> Fortran templates for front end</h4>
+<div class="outline-text-4" id="text-3-8-3">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from Fortran.
 These templates are based on the use of <code>iso_c_binding</code>. Pointers have to be passed by value.
@@ -5668,9 +6186,9 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-orgdd47005" class="outline-4">
-<h4 id="orgdd47005"><span class="section-number-4">3.7.4</span> Python templates for front end</h4>
-<div class="outline-text-4" id="text-3-7-4">
+<div id="outline-container-orgc03623c" class="outline-4">
+<h4 id="orgc03623c"><span class="section-number-4">3.8.4</span> Python templates for front end</h4>
+<div class="outline-text-4" id="text-3-8-4">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_</span>$group_str$(trexio_file, str_w: <span style="color: #483d8b;">str</span>) -&gt; <span style="color: #008b8b;">None</span>:
     <span style="color: #8b2252;">"""Write the $group_str$ variable in the TREXIO file.</span>
@@ -5744,13 +6262,13 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org87e41f5" class="outline-3">
-<h3 id="org87e41f5"><span class="section-number-3">3.8</span> Templates for front end delete an entire group (UNSAFE MODE)</h3>
-<div class="outline-text-3" id="text-3-8">
+<div id="outline-container-org6b68701" class="outline-3">
+<h3 id="org6b68701"><span class="section-number-3">3.9</span> Templates for front end delete an entire group (UNSAFE MODE)</h3>
+<div class="outline-text-3" id="text-3-9">
 </div>
-<div id="outline-container-org4f2fe11" class="outline-4">
-<h4 id="org4f2fe11"><span class="section-number-4">3.8.1</span> Introduction</h4>
-<div class="outline-text-4" id="text-3-8-1">
+<div id="outline-container-orgbe55d43" class="outline-4">
+<h4 id="orgbe55d43"><span class="section-number-4">3.9.1</span> Introduction</h4>
+<div class="outline-text-4" id="text-3-9-1">
 <p>
 This section concerns API calls related to string attributes.
 </p>
@@ -5779,9 +6297,9 @@ This section concerns API calls related to string attributes.
 </div>
 </div>
 
-<div id="outline-container-orgf3c47b8" class="outline-4">
-<h4 id="orgf3c47b8"><span class="section-number-4">3.8.2</span> C templates for front end</h4>
-<div class="outline-text-4" id="text-3-8-2">
+<div id="outline-container-orga26fd43" class="outline-4">
+<h4 id="orga26fd43"><span class="section-number-4">3.9.2</span> C templates for front end</h4>
+<div class="outline-text-4" id="text-3-9-2">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_delete_$group$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
@@ -5815,9 +6333,9 @@ This section concerns API calls related to string attributes.
 </div>
 </div>
 
-<div id="outline-container-org494b59b" class="outline-4">
-<h4 id="org494b59b"><span class="section-number-4">3.8.3</span> Fortran templates for front end</h4>
-<div class="outline-text-4" id="text-3-8-3">
+<div id="outline-container-org9f95887" class="outline-4">
+<h4 id="org9f95887"><span class="section-number-4">3.9.3</span> Fortran templates for front end</h4>
+<div class="outline-text-4" id="text-3-9-3">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from Fortran.
 These templates are based on the use of <code>iso_c_binding</code>. Pointers have to be passed by value.
@@ -5836,9 +6354,9 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org1ed1529" class="outline-4">
-<h4 id="org1ed1529"><span class="section-number-4">3.8.4</span> Python templates for front end</h4>
-<div class="outline-text-4" id="text-3-8-4">
+<div id="outline-container-org2647175" class="outline-4">
+<h4 id="org2647175"><span class="section-number-4">3.9.4</span> Python templates for front end</h4>
+<div class="outline-text-4" id="text-3-9-4">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">delete_</span>$group$(trexio_file) -&gt; <span style="color: #008b8b;">None</span>:
     <span style="color: #8b2252;">"""Delete the entire $group$ group from the TREXIO file.</span>
@@ -5862,8 +6380,9 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 </div>
-<div id="outline-container-org968282e" class="outline-2">
-<h2 id="org968282e"><span class="section-number-2">4</span> Source code for the determinant part</h2>
+
+<div id="outline-container-orgce72114" class="outline-2">
+<h2 id="orgce72114"><span class="section-number-2">4</span> Source code for the determinant part</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Storage of the determinants is a particular case,
@@ -5892,18 +6411,8 @@ This section concerns API calls related to Slater determinants.
 </thead>
 <tbody>
 <tr>
-<td class="org-left"><code>trexio_has_determinant_coefficient</code></td>
-<td class="org-left">Check if an attribute exists in a file</td>
-</tr>
-
-<tr>
 <td class="org-left"><code>trexio_has_determinant_list</code></td>
 <td class="org-left">Check if an attribute exists in a file</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>trexio_write_determinant_coefficient</code></td>
-<td class="org-left">Write an attribute</td>
 </tr>
 
 <tr>
@@ -5912,18 +6421,8 @@ This section concerns API calls related to Slater determinants.
 </tr>
 
 <tr>
-<td class="org-left"><code>trexio_read_determinant_coefficient</code></td>
-<td class="org-left">Read an attribute</td>
-</tr>
-
-<tr>
 <td class="org-left"><code>trexio_read_determinant_list</code></td>
 <td class="org-left">Read an attribute</td>
-</tr>
-
-<tr>
-<td class="org-left"><code>trexio_read_determinant_coefficient_size</code></td>
-<td class="org-left">Get the number of the coefficients</td>
 </tr>
 
 <tr>
@@ -5934,8 +6433,8 @@ This section concerns API calls related to Slater determinants.
 </table>
 </div>
 
-<div id="outline-container-orgd787a39" class="outline-4">
-<h4 id="orgd787a39"><span class="section-number-4">4.0.1</span> C source code</h4>
+<div id="outline-container-org677e5fd" class="outline-4">
+<h4 id="org677e5fd"><span class="section-number-4">4.0.1</span> C source code</h4>
 <div class="outline-text-4" id="text-4-0-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -6018,100 +6517,9 @@ This section concerns API calls related to Slater determinants.
 
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_read_determinant_coefficient</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">buffer_size_read</span>, <span style="color: #228b22;">double</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">dset</span>)
-{
-
-  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
-  <span style="color: #a020f0;">if</span> (dset  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
-  <span style="color: #a020f0;">if</span> (trexio_has_determinant_coefficient(file) != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> TREXIO_DSET_MISSING;
-
-  <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
-
-  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = 1;
-  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">det_size</span> = (<span style="color: #228b22;">uint64_t</span>) (*buffer_size_read);
-  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[1] = {det_size};
-
-  // <span style="color: #b22222;">introduce a new variable which will be modified with the number of integrals being read if EOF is encountered</span>
-  <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">eof_read_size</span> = 0L;
-
-  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
-
-  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
-    rc = trexio_text_read_determinant_coefficient(file, offset_file, rank, dims, &amp;eof_read_size, dset);
-    <span style="color: #a020f0;">break</span>;
-
-  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
-<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
-    rc = trexio_hdf5_read_determinant_coefficient(file, offset_file, rank, dims, &amp;eof_read_size, dset);
-    <span style="color: #a020f0;">break</span>;
-<span style="color: #483d8b;">#else</span>
-    rc = TREXIO_BACK_END_MISSING;
-    <span style="color: #a020f0;">break</span>;
-<span style="color: #483d8b;">#endif</span>
-/*
-<span style="color: #b22222;">  case TREXIO_JSON:</span>
-<span style="color: #b22222;">    return trexio_json_read_$group_dset$(...);</span>
-<span style="color: #b22222;">    break;</span>
-*/
-  <span style="color: #a020f0;">default</span>:
-    rc = TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
-    <span style="color: #a020f0;">break</span>;
-  }
-
-  <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS &amp;&amp; rc != TREXIO_END) <span style="color: #a020f0;">return</span> rc;
-
-  <span style="color: #a020f0;">if</span> (rc == TREXIO_END) *buffer_size_read = eof_read_size;
-
-  <span style="color: #a020f0;">return</span> rc;
-}
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_read_determinant_coefficient_size</span>(<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">size_max</span>)
-{
-
-  <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
-  <span style="color: #a020f0;">if</span> (size_max == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
-  <span style="color: #a020f0;">if</span> (trexio_has_determinant_coefficient(file) != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> TREXIO_DSET_MISSING;
-
-  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
-
-  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
-    <span style="color: #a020f0;">return</span> trexio_text_read_determinant_coefficient_size(file, size_max);
-    <span style="color: #a020f0;">break</span>;
-
-  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
-<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
-    <span style="color: #a020f0;">return</span> trexio_hdf5_read_determinant_coefficient_size(file, size_max);
-    <span style="color: #a020f0;">break</span>;
-<span style="color: #483d8b;">#else</span>
-    <span style="color: #a020f0;">return</span> TREXIO_BACK_END_MISSING;
-<span style="color: #483d8b;">#endif</span>
-/*
-<span style="color: #b22222;">  case TREXIO_JSON:</span>
-<span style="color: #b22222;">    return trexio_json_read_</span>
-<span style="color: #b22222;">    break;</span>
-*/
-  <span style="color: #a020f0;">default</span>:
-    <span style="color: #a020f0;">return</span> TREXIO_FAILURE;  /* <span style="color: #b22222;">Impossible case </span>*/
-  }
-}
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_read_safe_determinant_list</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">buffer_size_read</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">dset_out</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">dim_out</span>)
 {
   <span style="color: #a020f0;">return</span> trexio_read_determinant_list(file, offset_file, buffer_size_read, dset_out);
-}
-
-<span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_read_safe_determinant_coefficient</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">buffer_size_read</span>, <span style="color: #228b22;">double</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">dset_out</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">dim_out</span>)
-{
-  <span style="color: #a020f0;">return</span> trexio_read_determinant_coefficient(file, offset_file, buffer_size_read, dset_out);
 }
 </pre>
 </div>
@@ -6185,54 +6593,9 @@ This section concerns API calls related to Slater determinants.
 
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_write_determinant_coefficient</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">buffer_size</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">double</span>* <span style="color: #a0522d;">dset</span>)
-{
-
-  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
-  <span style="color: #a020f0;">if</span> (dset == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
-
-  <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span> = 1;
-  <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims</span>[1] = {buffer_size};
-
-  assert(file-&gt;back_end &lt; TREXIO_INVALID_BACK_END);
-
-  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
-
-  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
-    <span style="color: #a020f0;">return</span> trexio_text_write_determinant_coefficient(file, offset_file, rank, dims, dset);
-    <span style="color: #a020f0;">break</span>;
-
-  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
-<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
-    <span style="color: #a020f0;">return</span> trexio_hdf5_write_determinant_coefficient(file, offset_file, rank, dims, dset);
-    <span style="color: #a020f0;">break</span>;
-<span style="color: #483d8b;">#else</span>
-    <span style="color: #a020f0;">return</span> TREXIO_BACK_END_MISSING;
-    <span style="color: #a020f0;">break</span>;
-<span style="color: #483d8b;">#endif</span>
-/*
-<span style="color: #b22222;">  case TREXIO_JSON:</span>
-<span style="color: #b22222;">    rc = trexio_json_read_</span>
-<span style="color: #b22222;">    break;</span>
-*/
-  }
-
-  <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
-}
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_write_safe_determinant_list</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">buffer_size</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span>* <span style="color: #a0522d;">dset_in</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">dim_in</span>)
 {
   <span style="color: #a020f0;">return</span> trexio_write_determinant_list(file, offset_file, buffer_size, dset_in);
-}
-
-<span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_write_safe_determinant_coefficient</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">offset_file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">buffer_size</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">double</span>* <span style="color: #a0522d;">dset_in</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">dim_in</span>)
-{
-  <span style="color: #a020f0;">return</span> trexio_write_determinant_coefficient(file, offset_file, buffer_size, dset_in);
 }
 </pre>
 </div>
@@ -6266,42 +6629,13 @@ This section concerns API calls related to Slater determinants.
 
   <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 }
-
-<span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_has_determinant_coefficient</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
-{
-
-  <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
-
-  assert(file-&gt;back_end &lt; TREXIO_INVALID_BACK_END);
-
-  <span style="color: #a020f0;">switch</span> (file-&gt;back_end) {
-
-  <span style="color: #a020f0;">case</span> TREXIO_TEXT:
-    <span style="color: #a020f0;">return</span> trexio_text_has_determinant_coefficient(file);
-
-  <span style="color: #a020f0;">case</span> TREXIO_HDF5:
-<span style="color: #483d8b;">#ifdef</span> HAVE_HDF5
-    <span style="color: #a020f0;">return</span> trexio_hdf5_has_determinant_coefficient(file);
-<span style="color: #483d8b;">#else</span>
-    <span style="color: #a020f0;">return</span> TREXIO_BACK_END_MISSING;
-<span style="color: #483d8b;">#endif</span>
-/*
-<span style="color: #b22222;">  case TREXIO_JSON:</span>
-<span style="color: #b22222;">    return trexio_json_has_</span>
-<span style="color: #b22222;">    break;</span>
-*/
-  }
-
-  <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
-}
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org57b582b" class="outline-4">
-<h4 id="org57b582b"><span class="section-number-4">4.0.2</span> Fortran interface</h4>
+<div id="outline-container-org08a404a" class="outline-4">
+<h4 id="org08a404a"><span class="section-number-4">4.0.2</span> Fortran interface</h4>
 <div class="outline-text-4" id="text-4-0-2">
 <p>
 The <code>Fortran</code> templates that provide an access to the <code>C</code> API calls from Fortran.
@@ -6334,32 +6668,6 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
      <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> list_size</span>
    <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_safe_determinant_list</span>
 <span style="color: #a020f0;">end interface</span>
-
-<span style="color: #a020f0;">interface</span>
-   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_write_determinant_coefficient(trex_file, </span><span style="color: #a020f0;">&amp;</span>
-                                               offset_file, buffer_size, coefficient) <span style="color: #a020f0;">bind</span>(C)
-     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
-     <span style="color: #a020f0;">import</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> buffer_size</span>
-     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(in)            ::<span style="color: #a0522d;"> coefficient(*)</span>
-   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_determinant_coefficient</span>
-<span style="color: #a020f0;">end interface</span>
-
-<span style="color: #a020f0;">interface</span>
-   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_write_safe_determinant_coefficient (trex_file, </span><span style="color: #a020f0;">&amp;</span>
-                                                    offset_file, buffer_size, <span style="color: #a020f0;">&amp;</span>
-                                                    coefficient, coefficient_size) <span style="color: #a020f0;">bind</span>(C)
-     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
-     <span style="color: #a020f0;">import</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> buffer_size</span>
-     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(in)            ::<span style="color: #a0522d;"> coefficient(*)</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> coefficient_size</span>
-   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_write_safe_determinant_coefficient</span>
-<span style="color: #a020f0;">end interface</span>
 </pre>
 </div>
 
@@ -6389,42 +6697,6 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
      <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> list_size</span>
    <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_safe_determinant_list</span>
 <span style="color: #a020f0;">end interface</span>
-
-<span style="color: #a020f0;">interface</span>
-   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_read_safe_determinant_coefficient (trex_file, </span><span style="color: #a020f0;">&amp;</span>
-                                                   offset_file, buffer_size, <span style="color: #a020f0;">&amp;</span>
-                                                   coefficient, coefficient_size) <span style="color: #a020f0;">bind</span>(C)
-     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
-     <span style="color: #a020f0;">import</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(inout)     ::<span style="color: #a0522d;"> buffer_size</span>
-     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(out)           ::<span style="color: #a0522d;"> coefficient(*)</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> coefficient_size</span>
-   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_safe_determinant_coefficient</span>
-<span style="color: #a020f0;">end interface</span>
-
-<span style="color: #a020f0;">interface</span>
-   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_read_determinant_coefficient(trex_file, </span><span style="color: #a020f0;">&amp;</span>
-                                              offset_file, buffer_size, coefficient) <span style="color: #a020f0;">bind</span>(C)
-     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
-     <span style="color: #a020f0;">import</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> offset_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(inout)     ::<span style="color: #a0522d;"> buffer_size</span>
-     <span style="color: #228b22;">real</span>(<span style="color: #008b8b;">c_double</span>), <span style="color: #a020f0;">intent</span>(out)           ::<span style="color: #a0522d;"> coefficient(*)</span>
-   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_determinant_coefficient</span>
-<span style="color: #a020f0;">end interface</span>
-
-<span style="color: #a020f0;">interface</span>
-   <span style="color: #228b22;">integer</span>(trexio_exit_code)<span style="color: #a0522d;"> function trexio_read_determinant_coefficient_size (trex_file, </span><span style="color: #a020f0;">&amp;</span>
-                                                   size_max) <span style="color: #a020f0;">bind</span>(C)
-     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
-     <span style="color: #a020f0;">import</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> size_max</span>
-   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_read_determinant_coefficient_size</span>
-<span style="color: #a020f0;">end interface</span>
 </pre>
 </div>
 
@@ -6435,14 +6707,6 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
      <span style="color: #a020f0;">import</span>
      <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
    <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_has_determinant_list</span>
-<span style="color: #a020f0;">end interface</span>
-
-<span style="color: #a020f0;">interface</span>
-   <span style="color: #228b22;">integer</span>(trexio_exit_code) <span style="color: #a020f0;">function</span> <span style="color: #0000ff;">trexio_has_determinant_coefficient</span> (trex_file) <span style="color: #a020f0;">bind</span>(C)
-     <span style="color: #a020f0;">use</span>, <span style="color: #a020f0;">intrinsic</span> :: <span style="color: #0000ff;">iso_c_binding</span>
-     <span style="color: #a020f0;">import</span>
-     <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_int64_t</span>), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">value</span> ::<span style="color: #a0522d;"> trex_file</span>
-   <span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">trexio_has_determinant_coefficient</span>
 <span style="color: #a020f0;">end interface</span>
 
 <span style="color: #a020f0;">interface</span>
@@ -6458,8 +6722,8 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
 </div>
 </div>
 
-<div id="outline-container-org384c1ac" class="outline-4">
-<h4 id="org384c1ac"><span class="section-number-4">4.0.3</span> Python interface</h4>
+<div id="outline-container-org69af729" class="outline-4">
+<h4 id="org69af729"><span class="section-number-4">4.0.3</span> Python interface</h4>
 <div class="outline-text-4" id="text-4-0-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_determinant_list</span>(trexio_file: File, offset_file: <span style="color: #483d8b;">int</span>, buffer_size: <span style="color: #483d8b;">int</span>, determinants: <span style="color: #483d8b;">list</span>) -&gt; <span style="color: #008b8b;">None</span>:
@@ -6521,46 +6785,6 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
         <span style="color: #a0522d;">rc</span> = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, dets_64)
     <span style="color: #a020f0;">else</span>:
         <span style="color: #a0522d;">rc</span> = pytr.trexio_write_safe_determinant_list(trexio_file.pytrexio_s, offset_file, buffer_size, determinants)
-
-    <span style="color: #a020f0;">if</span> rc != TREXIO_SUCCESS:
-        <span style="color: #a020f0;">raise</span> Error(rc)
-
-
-<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">write_determinant_coefficient</span>(trexio_file: File, offset_file: <span style="color: #483d8b;">int</span>, buffer_size: <span style="color: #483d8b;">int</span>, coefficients: <span style="color: #483d8b;">list</span>) -&gt; <span style="color: #008b8b;">None</span>:
-    <span style="color: #8b2252;">"""Write the determinant coefficients in the TREXIO file.</span>
-
-<span style="color: #8b2252;">    Parameters:</span>
-
-<span style="color: #8b2252;">    trexio_file:</span>
-<span style="color: #8b2252;">        TREXIO File object.</span>
-
-<span style="color: #8b2252;">    offset_file: int</span>
-<span style="color: #8b2252;">        The number of coefficients to be skipped in the file when writing.</span>
-
-<span style="color: #8b2252;">    buffer_size: int</span>
-<span style="color: #8b2252;">        The number of coefficients to write in the file.</span>
-
-<span style="color: #8b2252;">    coefficients: list OR numpy.ndarray</span>
-<span style="color: #8b2252;">        Array of determinant_coefficient to be written. If array data type does not correspond to int64, the conversion is performed.</span>
-
-<span style="color: #8b2252;">    Raises:</span>
-<span style="color: #8b2252;">        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.</span>
-<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
-<span style="color: #8b2252;">    """</span>
-
-    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(offset_file, <span style="color: #483d8b;">int</span>):
-        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"offset_file argument has to be an integer."</span>)
-    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(buffer_size, <span style="color: #483d8b;">int</span>):
-        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"buffer_size argument has to be an integer."</span>)
-    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(coefficients, (<span style="color: #483d8b;">list</span>, <span style="color: #483d8b;">tuple</span>, np.ndarray)):
-        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"coefficients argument has to be an array (list, tuple or NumPy ndarray)."</span>)
-
-    <span style="color: #a020f0;">if</span> <span style="color: #483d8b;">isinstance</span>(coefficients, np.ndarray) <span style="color: #a020f0;">and</span> <span style="color: #a020f0;">not</span> coefficients.dtype==np.float64:
-        # <span style="color: #b22222;">convert to float64 if input is in a different precision</span>
-        <span style="color: #a0522d;">coefficients_64</span> = np.float64(coefficients)
-        <span style="color: #a0522d;">rc</span> = pytr.trexio_write_safe_determinant_coefficient(trexio_file.pytrexio_s, offset_file, buffer_size, coefficients_64)
-    <span style="color: #a020f0;">else</span>:
-        <span style="color: #a0522d;">rc</span> = pytr.trexio_write_safe_determinant_coefficient(trexio_file.pytrexio_s, offset_file, buffer_size, coefficients)
 
     <span style="color: #a020f0;">if</span> rc != TREXIO_SUCCESS:
         <span style="color: #a020f0;">raise</span> Error(rc)
@@ -6634,88 +6858,6 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
     <span style="color: #a020f0;">return</span> (dets_reshaped, n_int_read, eof_flag)
 
 
-<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">read_determinant_coefficient</span>(trexio_file: File, offset_file: <span style="color: #483d8b;">int</span>, buffer_size: <span style="color: #483d8b;">int</span>) -&gt; <span style="color: #483d8b;">tuple</span>:
-    <span style="color: #8b2252;">"""Read determinant_coefficient from the TREXIO file.</span>
-
-<span style="color: #8b2252;">    Parameters:</span>
-
-<span style="color: #8b2252;">    trexio_file:</span>
-<span style="color: #8b2252;">        TREXIO File object.</span>
-
-<span style="color: #8b2252;">    offset_file: int</span>
-<span style="color: #8b2252;">        The number of coefficient to be skipped in the file when reading.</span>
-
-<span style="color: #8b2252;">    buffer_size: int</span>
-<span style="color: #8b2252;">        The number of coefficients to read from the file.</span>
-
-<span style="color: #8b2252;">    Returns:</span>
-<span style="color: #8b2252;">        (coefficients, n_int_read, eof_flag) tuple where</span>
-<span style="color: #8b2252;">          - coefficients are NumPy arrays [numpy.ndarray] with the default int64 precision;</span>
-<span style="color: #8b2252;">          - n_int_read [int] is the number of coefficients read from the trexio_file</span>
-<span style="color: #8b2252;">            (either strictly equal to buffer_size or less than buffer_size if EOF has been reached);</span>
-<span style="color: #8b2252;">          - eof_flag [bool] is True when EOF has been reached (i.e. when call to low-level pytrexio API returns TREXIO_END)</span>
-<span style="color: #8b2252;">                               False otherwise.</span>
-
-<span style="color: #8b2252;">    Raises:</span>
-<span style="color: #8b2252;">        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.</span>
-<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
-<span style="color: #8b2252;">    """</span>
-
-    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(offset_file, <span style="color: #483d8b;">int</span>):
-        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"offset_file argument has to be an integer."</span>)
-    <span style="color: #a020f0;">if</span> <span style="color: #a020f0;">not</span> <span style="color: #483d8b;">isinstance</span>(buffer_size, <span style="color: #483d8b;">int</span>):
-        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">TypeError</span>(<span style="color: #8b2252;">"buffer_size argument has to be an integer."</span>)
-
-
-    # <span style="color: #b22222;">read the number of determinants already in the file</span>
-    <span style="color: #a0522d;">det_num</span> = read_determinant_coefficient_size(trexio_file)
-
-    # <span style="color: #b22222;">additional modification needed to avoid allocating more memory than needed if EOF will be reached during read</span>
-    <span style="color: #a0522d;">overflow</span> = offset_file + buffer_size - det_num
-    <span style="color: #a0522d;">eof_flag</span> = <span style="color: #008b8b;">False</span>
-    <span style="color: #a020f0;">if</span> overflow &gt; 0:
-        <span style="color: #a0522d;">verified_size</span> = buffer_size - overflow
-        <span style="color: #a0522d;">eof_flag</span> = <span style="color: #008b8b;">True</span>
-    <span style="color: #a020f0;">else</span>:
-        <span style="color: #a0522d;">verified_size</span> = buffer_size
-
-    # <span style="color: #b22222;">main call to the low-level (SWIG-wrapped) trexio_read function, which also requires the sizes of the output to be provided</span>
-    # <span style="color: #b22222;">read_buf_size contains the number of elements being read from the file, useful when EOF has been reached</span>
-    <span style="color: #a0522d;">rc</span>, <span style="color: #a0522d;">n_int_read</span>, <span style="color: #a0522d;">coefficients</span> = pytr.trexio_read_safe_determinant_coefficient(trexio_file.pytrexio_s,
-                                                                                 offset_file,
-                                                                                 verified_size,
-                                                                                 verified_size)
-    <span style="color: #a020f0;">if</span> rc != TREXIO_SUCCESS:
-        <span style="color: #a020f0;">raise</span> Error(rc)
-    <span style="color: #a020f0;">if</span> n_int_read == 0:
-        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">ValueError</span>(<span style="color: #8b2252;">"No integrals have been read from the file."</span>)
-    <span style="color: #a020f0;">if</span> coefficients <span style="color: #a020f0;">is</span> <span style="color: #008b8b;">None</span>:
-        <span style="color: #a020f0;">raise</span> <span style="color: #228b22;">ValueError</span>(<span style="color: #8b2252;">"Returned NULL array from the low-level pytrexio API."</span>)
-
-    <span style="color: #a020f0;">return</span> (coefficients, n_int_read, eof_flag)
-
-
-<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">read_determinant_coefficient_size</span>(trexio_file) -&gt; <span style="color: #483d8b;">int</span>:
-    <span style="color: #8b2252;">"""Read the number of determinant coefficients stored in the TREXIO file.</span>
-
-<span style="color: #8b2252;">    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.</span>
-
-<span style="color: #8b2252;">    Returns:</span>
-<span style="color: #8b2252;">        ~num~: int</span>
-<span style="color: #8b2252;">        Integer value of corresponding to the size of the determinant_coefficient array from ~trexio_file~.</span>
-
-<span style="color: #8b2252;">    Raises:</span>
-<span style="color: #8b2252;">        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.</span>
-<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
-<span style="color: #8b2252;">    """</span>
-
-    <span style="color: #a0522d;">rc</span>, <span style="color: #a0522d;">num</span> = pytr.trexio_read_determinant_coefficient_size(trexio_file.pytrexio_s)
-    <span style="color: #a020f0;">if</span> rc != TREXIO_SUCCESS:
-        <span style="color: #a020f0;">raise</span> Error(rc)
-
-    <span style="color: #a020f0;">return</span> num
-
-
 <span style="color: #a020f0;">def</span> <span style="color: #0000ff;">get_int64_num</span>(trexio_file) -&gt; <span style="color: #483d8b;">int</span>:
     <span style="color: #8b2252;">"""Compute the number of int64 bit fields corresponding to the TREXIO file.</span>
 
@@ -6757,34 +6899,14 @@ These templates are based on the use of <code>iso_c_binding</code>. Pointers hav
         <span style="color: #a020f0;">raise</span> Error(rc)
 
     <span style="color: #a020f0;">return</span> rc == TREXIO_SUCCESS
-
-
-<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">has_determinant_coefficient</span>(trexio_file) -&gt; <span style="color: #483d8b;">bool</span>:
-    <span style="color: #8b2252;">"""Check that determinant_coefficient exists in the TREXIO file.</span>
-
-<span style="color: #8b2252;">    Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.</span>
-
-<span style="color: #8b2252;">    Returns:</span>
-<span style="color: #8b2252;">          True if the variable exists, False otherwise</span>
-
-<span style="color: #8b2252;">    Raises:</span>
-<span style="color: #8b2252;">        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.</span>
-<span style="color: #8b2252;">        - Exception from some other error (e.g. RuntimeError).</span>
-<span style="color: #8b2252;">    """</span>
-
-    <span style="color: #a0522d;">rc</span> = pytr.trexio_has_determinant_coefficient(trexio_file.pytrexio_s)
-    <span style="color: #a020f0;">if</span> rc == TREXIO_FAILURE:
-        <span style="color: #a020f0;">raise</span> Error(rc)
-
-    <span style="color: #a020f0;">return</span> rc == TREXIO_SUCCESS
 </pre>
 </div>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org5c89251" class="outline-2">
-<h2 id="org5c89251"><span class="section-number-2">5</span> General helper functions</h2>
+<div id="outline-container-orgf4faf5f" class="outline-2">
+<h2 id="orgf4faf5f"><span class="section-number-2">5</span> General helper functions</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 This section contains general helper functions like <code>trexio_info</code>.
@@ -6823,8 +6945,8 @@ into the corresponding <code>int64_t</code> bitfield representation of the deter
 </p>
 </div>
 
-<div id="outline-container-orgbaaf471" class="outline-3">
-<h3 id="orgbaaf471"><span class="section-number-3">5.1</span> C</h3>
+<div id="outline-container-org9c6e647" class="outline-3">
+<h3 id="org9c6e647"><span class="section-number-3">5.1</span> C</h3>
 <div class="outline-text-3" id="text-5-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span> <span style="color: #0000ff;">trexio_info</span>(<span style="color: #228b22;">void</span>);
@@ -7055,8 +7177,8 @@ into the corresponding <code>int64_t</code> bitfield representation of the deter
 </div>
 </div>
 
-<div id="outline-container-org9e60a29" class="outline-3">
-<h3 id="org9e60a29"><span class="section-number-3">5.2</span> Fortran</h3>
+<div id="outline-container-org6c369cf" class="outline-3">
+<h3 id="org6c369cf"><span class="section-number-3">5.2</span> Fortran</h3>
 <div class="outline-text-3" id="text-5-2">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">interface</span>
@@ -7116,8 +7238,8 @@ into the corresponding <code>int64_t</code> bitfield representation of the deter
 </div>
 </div>
 
-<div id="outline-container-orgb753fca" class="outline-3">
-<h3 id="orgb753fca"><span class="section-number-3">5.3</span> Python</h3>
+<div id="outline-container-orgb69def2" class="outline-3">
+<h3 id="orgb69def2"><span class="section-number-3">5.3</span> Python</h3>
 <div class="outline-text-3" id="text-5-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">info</span>():
@@ -7224,8 +7346,8 @@ into the corresponding <code>int64_t</code> bitfield representation of the deter
 </div>
 </div>
 
-<div id="outline-container-org9780577" class="outline-2">
-<h2 id="org9780577"><span class="section-number-2">6</span> Fortran helper/wrapper functions</h2>
+<div id="outline-container-org720f590" class="outline-2">
+<h2 id="org720f590"><span class="section-number-2">6</span> Fortran helper/wrapper functions</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 The function below adapts the original C-based <code>trexio_open</code> for Fortran.
@@ -7454,7 +7576,7 @@ two code are identical, i.e. if the <code>assert</code> statement pass.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2022-10-04 Tue 15:30</p>
+<p class="date">Created: 2022-10-06 Thu 13:35</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
