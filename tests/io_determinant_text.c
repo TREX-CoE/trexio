@@ -66,7 +66,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   // write the state_id of a given file: 0 is ground state
   if (trexio_has_state_id(file) == TREXIO_HAS_NOT) {
-    rc = trexio_write_state_id(file, 0);
+    rc = trexio_write_state_id(file, STATE_TEST);
     assert(rc == TREXIO_SUCCESS);
   }
 
@@ -78,15 +78,6 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
     rc = trexio_write_determinant_coefficient(file, offset_f, chunk_size, &det_coef[offset_d]);
     assert(rc == TREXIO_SUCCESS);
-
-    // The block below will check the set_state
-    rc = trexio_set_state(file, STATE_TEST);
-    assert(rc == TREXIO_SUCCESS);
-
-    // set state back to the default 0 (ground state)
-    rc = trexio_set_state(file, 0);
-    assert(rc == TREXIO_SUCCESS);
-    // =================================================
 
     offset_d += chunk_size;
     offset_f += chunk_size;
@@ -132,6 +123,9 @@ static int test_has_determinant(const char* file_name, const back_end_t backend)
 
   // now check that previously written determinant_list exists
   rc = trexio_has_determinant_list(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  rc = trexio_has_state_id(file);
   assert(rc==TREXIO_SUCCESS);
 
   // now check that previously written determinant_coefficient exists
@@ -209,10 +203,10 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   //printf("%lf %lf\n", check_diff, det_coef_read[offset_data_read]);
   assert(check_diff*check_diff < 1e-14);
 
-  int32_t read_state_id = 666;
-  rc = trexio_read_state_id(file, &read_state_id);
+  int32_t state_id = 666;
+  rc = trexio_read_state_id(file, &state_id);
   assert(rc == TREXIO_SUCCESS);
-  assert(read_state_id == 0);
+  assert(state_id == STATE_TEST);
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
   offset_file_read = 97L;

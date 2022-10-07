@@ -766,7 +766,7 @@ class File:
         One of the currently supported TREXIO open modes.
         For example, 'r' or 'w'.
     state: int
-        Active state of the file (needed to write $group_dset$).
+        Active (excited or ground) state of the file.
         Default is 0.
     isOpen: bool
         Flag indicating whether the current object is still open for I/O
@@ -1587,12 +1587,20 @@ def _inquire(file_name: str) -> bool:
 
 ** File state
 
-    ~trexio_set_state~ set an existing ~trexio_t~ file handle to a given state.
+    **Note:** the use of the functions below is discouraged as of version 2.3.0.
+    Please use ~trexio_write_state_id~ and ~trexio_read_state_id~ to get the state
+    corresponding to a given ~trexio_t~ file. There can be only one ~state_id~ per file,
+    namely data for excited state wave functions have to go in a file different from
+    the ground state one (see the ~state~ group description for more info about how
+    you can link the ground state TREXIO file with its excited states).
+
+    ~trexio_set_state~ set an existing ~trexio_t~ file handle to a given state
+    and write it as ~state_id~ attribute.
     ~trexio_get_state~ returns current state of the ~trexio_t~ file handle.
 
     input parameters:
       ~file~  -- TREXIO file handle.
-      ~state~ -- ~int32_t~ number of state.
+      ~state~ -- ~int32_t~ ID of a state (0 for ground state).
 
     output:
       ~trexio_exit_code~ exit code.
@@ -1610,6 +1618,13 @@ trexio_set_state (trexio_t* file, const int32_t num)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
+  /* Write state_id in the file (as of v.2.3.0) */
+  trexio_exit_code rc = trexio_has_state_id(file);
+  if (rc == TREXIO_HAS_NOT || file->mode == 'u') {
+    trexio_exit_code rc_w = trexio_write_state_id(file, num);
+    if (rc_w != TREXIO_SUCCESS) return rc_w;
+  }
+
   file->state = num;
 
   return TREXIO_SUCCESS;
@@ -1621,7 +1636,16 @@ trexio_get_state (trexio_t* file, int32_t* const num)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (num  == NULL) return TREXIO_INVALID_ARG_2;
 
-  *num = file->state;
+  /* Read state_id from the file (as of v.2.3.0) */
+  int32_t state_id = 0;
+  trexio_exit_code rc = trexio_has_state_id(file);
+  if (rc == TREXIO_SUCCESS) {
+    trexio_exit_code rc_r = trexio_read_state_id(file, &state_id);
+    if (rc_r != TREXIO_SUCCESS) return rc_r;
+  }
+
+  /* If the state is not in a file then state_id=0, i.e. ground state */
+  *num = state_id;
 
   return TREXIO_SUCCESS;
 }
