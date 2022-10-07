@@ -87,7 +87,7 @@ module trexio
 
   integer, parameter :: trexio_exit_code  = c_int32_t
   integer, parameter :: trexio_back_end_t = c_int32_t
-  integer, parameter :: trexio_t          = c_int64_t
+  integer, parameter :: trexio_t          = c_size_t
 
   character(kind=c_char), parameter :: TREXIO_DELIM = c_new_line
   #+end_src
@@ -1297,7 +1297,7 @@ interface
    integer(trexio_exit_code) function trexio_set_one_based(trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_set_one_based
 end interface
    #+end_src
@@ -1405,7 +1405,7 @@ interface
    integer(trexio_exit_code) function trexio_close (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_close
 end interface
     #+end_src
@@ -1483,7 +1483,7 @@ interface
    integer(trexio_exit_code) function trexio_flush (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_flush
 end interface
     #+end_src
@@ -1634,7 +1634,7 @@ interface
    integer(trexio_exit_code) function trexio_set_state (trex_file, state) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(in), value :: state
    end function trexio_set_state
 end interface
@@ -1643,7 +1643,7 @@ interface
    integer(trexio_exit_code) function trexio_get_state (trex_file, state) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(out)       :: state
    end function trexio_get_state
 end interface
@@ -1897,7 +1897,7 @@ interface
    integer(trexio_exit_code) function trexio_has_$group$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group$
 end interface
      #+end_src
@@ -2155,7 +2155,7 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(in), value :: num
    end function trexio_write_$group_num$_64
 end interface
@@ -2166,7 +2166,7 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_num$_64 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(out) :: num
    end function trexio_read_$group_num$_64
 end interface
@@ -2177,7 +2177,7 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(in), value :: num
    end function trexio_write_$group_num$_32
 end interface
@@ -2188,7 +2188,7 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_num$_32 (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(out) :: num
    end function trexio_read_$group_num$_32
 end interface
@@ -2199,7 +2199,7 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(in), value :: num
    end function trexio_write_$group_num$
 end interface
@@ -2210,7 +2210,7 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_num$ (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(out) :: num
    end function trexio_read_$group_num$
 end interface
@@ -2221,7 +2221,7 @@ interface
    integer(trexio_exit_code) function trexio_has_$group_num$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_num$
 end interface
      #+end_src
@@ -2813,7 +2813,7 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(in) :: dset$group_dset_f_dims$
    end function trexio_write_$group_dset$_64
 end interface
@@ -2824,7 +2824,7 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_64 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(out) :: dset$group_dset_f_dims$
    end function trexio_read_$group_dset$_64
 end interface
@@ -2835,7 +2835,7 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(in) :: dset$group_dset_f_dims$
    end function trexio_write_$group_dset$_32
 end interface
@@ -2846,7 +2846,7 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_32 (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(out) :: dset$group_dset_f_dims$
    end function trexio_read_$group_dset$_32
 end interface
@@ -2857,7 +2857,7 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(in) :: dset$group_dset_f_dims$
    end function trexio_write_$group_dset$
 end interface
@@ -2868,7 +2868,7 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_dset$ (trex_file, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(out) :: dset$group_dset_f_dims$
    end function trexio_read_$group_dset$
 end interface
@@ -2879,7 +2879,7 @@ interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
      #+end_src
@@ -3434,7 +3434,7 @@ interface
                                                index_sparse, value_sparse) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
      integer(c_int32_t), intent(in)        :: index_sparse(*)
@@ -3449,7 +3449,7 @@ interface
                                                     value_sparse, value_size) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
      integer(c_int32_t), intent(in)        :: index_sparse(*)
@@ -3467,7 +3467,7 @@ interface
                                               index_sparse, value_sparse) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
      integer(c_int32_t), intent(out)       :: index_sparse(*)
@@ -3482,7 +3482,7 @@ interface
                                                    value_sparse, value_size) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
      integer(c_int32_t), intent(out)       :: index_sparse(*)
@@ -3499,7 +3499,7 @@ interface
                                                    size_max) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(out) :: size_max
    end function trexio_read_$group_dset$_size
 end interface
@@ -3510,7 +3510,7 @@ interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
      #+end_src
@@ -3990,7 +3990,7 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      character(kind=c_char), intent(in)    :: dset(*)
      integer(c_int32_t), intent(in), value :: max_str_len
    end function trexio_write_$group_dset$_low
@@ -4014,7 +4014,7 @@ interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
      #+end_src
@@ -4022,7 +4022,7 @@ end interface
   #+begin_src f90 :tangle helper_read_dset_str_front_fortran.fh_90
    integer(trexio_exit_code) function trexio_read_$group_dset$ (trex_file, dset, max_str_len)
      implicit none
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(in), value :: max_str_len
      character(len=*), intent(inout) :: dset(*)
 
@@ -4051,7 +4051,7 @@ end interface
   #+begin_src f90 :tangle helper_write_dset_str_front_fortran.fh_90
    integer(trexio_exit_code) function trexio_write_$group_dset$ (trex_file, dset, max_str_len)
      implicit none
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(in), value :: max_str_len
      character(len=*), intent(in) :: dset(*)
 
@@ -4370,7 +4370,7 @@ interface
                                                offset_file, buffer_size, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
      real(c_double), intent(in)            :: dset(*)
@@ -4383,7 +4383,7 @@ interface
                                                     dset, dset_size) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
      real(c_double), intent(in)            :: dset(*)
@@ -4399,7 +4399,7 @@ interface
                                                    dset, dset_size) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
      real(c_double), intent(out)           :: dset(*)
@@ -4412,7 +4412,7 @@ interface
                                               offset_file, buffer_size, dset) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
      real(c_double), intent(out)           :: dset(*)
@@ -4424,7 +4424,7 @@ interface
                                                    size_max) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(out) :: size_max
    end function trexio_read_$group_dset$_size
 end interface
@@ -4435,7 +4435,7 @@ interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
 end interface
      #+end_src
@@ -5153,7 +5153,7 @@ interface
                                                offset_file, buffer_size, list) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
      integer(c_int64_t), intent(in)        :: list(*)
@@ -5166,7 +5166,7 @@ interface
                                                     list, list_size) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(in), value :: buffer_size
      integer(c_int64_t), intent(in)        :: list(*)
@@ -5181,7 +5181,7 @@ interface
                                               offset_file, buffer_size, list) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
      integer(c_int64_t), intent(out)       :: list(*)
@@ -5194,7 +5194,7 @@ interface
                                                    list, list_size) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
      integer(c_int64_t), intent(inout)     :: buffer_size
      integer(c_int64_t), intent(out)       :: list(*)
@@ -5208,7 +5208,7 @@ interface
    integer(trexio_exit_code) function trexio_has_determinant_list (trex_file) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_determinant_list
 end interface
 
@@ -5216,7 +5216,7 @@ interface
    integer(trexio_exit_code) function trexio_get_int64_num (trex_file, num) bind(C)
      use, intrinsic :: iso_c_binding
      import
-     integer(c_int64_t), intent(in), value :: trex_file
+     integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(out) :: num
    end function trexio_get_int64_num
 end interface
