@@ -538,7 +538,7 @@ subroutine test_read_void(file_name, back_end)
   character*(*), intent(in) :: file_name
   integer, intent(in) :: back_end
 
-  integer(8) :: trex_file
+  integer(trexio_t) :: trex_file
   integer :: rc = 1
   character(128) :: str
 
