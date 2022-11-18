@@ -28,7 +28,7 @@
     (inputs `(("hdf5" ,hdf5) ("gfortran", gfortran)))
     (synopsis "TREX I/O library")
     (description "The TREXIO library defines a standard format for storing wave functions, together with
-		 an C-compatible API such that it can be easily used in any programming language.")
+		 a C-compatible API such that it can be easily used in any programming language.")
     (home-page "https://trex-coe.github.io/trexio")
     (license bsd-3)))
 
