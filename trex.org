@@ -651,15 +651,25 @@ prim_factor =
 
 ** Two-electron integrals (~mo_2e_int~ group)
 
-   The operators as the same as those defined in the
+   The operators are the same as those defined in the
    [[#ao_two_e][AO two-electron integrals section]]. Here, the integrals are given in
    the basis of molecular orbitals.
 
+   The Cholesky decomposition of the integrals can also be stored:
+
+   \[
+   \A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
+   \]
+
    #+NAME: mo_2e_int
-  | Variable | Type           | Dimensions                         | Description                             |
-  |----------+----------------+------------------------------------+-----------------------------------------|
-  | ~eri~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Electron repulsion integrals            |
-  | ~eri_lr~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Long-range Electron repulsion integrals |
+  | Variable              | Type           | Dimensions                              | Description                                   |
+  |-----------------------+----------------+-----------------------------------------+-----------------------------------------------|
+  | ~eri~                 | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~      | Electron repulsion integrals                  |
+  | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~      | Long-range Electron repulsion integrals       |
+  | ~eri_cholesky_num~    | ~dim~          |                                         | Number of Cholesky vectors for ERI            |
+  | ~eri_cholesky~        | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~ | Cholesky decomposition of the ERI             |
+  | ~eri_lr_cholesky_num~ | ~dim~          |                                         | Number of Cholesky vectors for long range ERI |
+  | ~eri_lr_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
    #+CALL: json(data=mo_2e_int, title="mo_2e_int")
 
@@ -667,8 +677,12 @@ prim_factor =
    :results:
    #+begin_src python :tangle trex.json
        "mo_2e_int": {
-              "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-         , "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+                           "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]    ]
+         ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]    ]
+         ,    "eri_cholesky_num" : [ "dim"         , []                                            ]
+         ,        "eri_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ] ]
+         , "eri_lr_cholesky_num" : [ "dim"         , []                                            ]
+         ,     "eri_lr_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ] ]
        } ,
    #+end_src
    :end:
@@ -833,17 +847,43 @@ prim_factor =
       \frac{1}{2} \sum_{ijlk} \Gamma_{ijkl} \langle k l | i j \rangle
   \]
 
+
+  To compress the storage, the Cholesky decomposition of the RDMs can
+  be stored:
+
+  \[
+    \Gamma_{ijkl} = \sum_{\alpha} G_{ij\alpha} G_{kl\alpha}
+  \]
+
+  Warning: as opposed to electron repulsion integrals, the
+  decomposition is made such that the Cholesky vectors are expanded
+  in a two-electron basis
+  $f_{ij}(\mathbf{r}_1,\mathbf{r}_2) = \phi_i(\mathbf{r}_1) \phi_j(\mathbf{r}_2)$,
+  whereas in electron repulsion integrals each Cholesky vector is
+  expressed in a basis of a one-electron function
+  $g_{ik}(\mathbf{r}_1) = \phi_i(\mathbf{r}_1) \phi_k(\mathbf{r}_1)$.
+  
   #+NAME: rdm
-  | Variable  | Type           | Dimensions                         | Description                                                           |
-  |-----------+----------------+------------------------------------+-----------------------------------------------------------------------|
-  | ~1e~      | ~float~        | ~(mo.num, mo.num)~                 | One body density matrix                                               |
-  | ~1e_up~   | ~float~        | ~(mo.num, mo.num)~                 | \uparrow-spin component of the one body density matrix                |
-  | ~1e_dn~   | ~float~        | ~(mo.num, mo.num)~                 | \downarrow-spin component of the one body density matrix              |
-  | ~2e~      | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Two-body reduced density matrix (spin trace)                          |
-  | ~2e_upup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\uparrow component of the two-body reduced density matrix     |
-  | ~2e_dndn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\downarrow component of the two-body reduced density matrix |
-  | ~2e_updn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\downarrow component of the two-body reduced density matrix   |
-  | ~2e_dnup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\uparrow component of the two-body reduced density matrix   |
+  | Variable               | Type           | Dimensions                                   | Description                                                           |
+  |------------------------+----------------+----------------------------------------------+-----------------------------------------------------------------------|
+  | ~1e~                   | ~float~        | ~(mo.num, mo.num)~                           | One body density matrix                                               |
+  | ~1e_up~                | ~float~        | ~(mo.num, mo.num)~                           | \uparrow-spin component of the one body density matrix                |
+  | ~1e_dn~                | ~float~        | ~(mo.num, mo.num)~                           | \downarrow-spin component of the one body density matrix              |
+  | ~2e~                   | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | Two-body reduced density matrix (spin trace)                          |
+  | ~2e_upup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\uparrow component of the two-body reduced density matrix     |
+  | ~2e_dndn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\downarrow component of the two-body reduced density matrix |
+  | ~2e_updn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\downarrow component of the two-body reduced density matrix   |
+  | ~2e_dnup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\uparrow component of the two-body reduced density matrix   |
+  | ~2e_cholesky_num~      | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~      | Cholesky decomposition of the Two-body RDM (spin trace)               |
+  | ~2e_upup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_upup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\uparrow)         |
+  | ~2e_dndn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\downarrow)     |
+  | ~2e_updn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\downarrow)       |
+  | ~2e_dnup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_dnup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dnup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\uparrow)       |
 
   #+CALL: json(data=rdm, title="rdm")
 
@@ -851,14 +891,24 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "rdm": {
-               "1e" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        ,   "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        ,   "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        ,      "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+                            "1e" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+        ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+        ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+        ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,      "2e_cholesky_num" : [ "dim"         , []                                                 ]
+        ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]      ]
+        , "2e_upup_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ] ]
+        , "2e_dndn_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ] ]
+        , "2e_updn_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ] ]
+        , "2e_dnup_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_dnup_cholesky" : [ "float sparse", [ "rdm.2e_dnup_cholesky_num", "mo.num", "mo.num" ] ]
       } ,
   #+end_src
   :end:

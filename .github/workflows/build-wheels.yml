@@ -16,7 +16,7 @@ jobs:
   get_commit_message:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Get commit message
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
@@ -39,7 +39,7 @@ jobs:
     if: >-
       contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
       (github.repository == 'TREX-CoE/trexio' && startsWith(github.ref, 'refs/tags/v'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         manylinux_tag: [2010_x86_64, 2014_x86_64, 2_24_x86_64]
@@ -182,7 +182,7 @@ jobs:
   publish_wheels:
     name: Publish all wheels on PyPI
     needs: [build_linux_wheels, build_macos_wheels]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout the branch
