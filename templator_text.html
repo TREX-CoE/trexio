@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-10-07 Fri 12:58 -->
+<!-- 2022-12-01 Thu 18:20 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TEXT back end</title>
@@ -161,6 +161,19 @@
   .footdef  { margin-bottom: 1em; }
   .figure { padding: 1em; }
   .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
   .inlinetask {
     padding: 10px;
     border: 2px solid gray;
@@ -190,7 +203,7 @@
  * @licstart  The following is the entire license notice for the
  *  JavaScript code in org-info.js.
  *
- * Copyright (C) 2012-2019 Free Software Foundation, Inc.
+ * Copyright (C) 2012-2020 Free Software Foundation, Inc.
  *
  *
  * The JavaScript code in this tag is free software: you can
@@ -219,7 +232,7 @@
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -258,7 +271,7 @@ org_html_manager.setup();  // activate after the parameters are set
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -311,23 +324,23 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgabb7ee6">1. Template for group-related structures in text back end</a></li>
-<li><a href="#orgee08288">2. Template for general structure in text back end</a></li>
-<li><a href="#orgf6035d0">3. Initialize function (constant part)</a></li>
-<li><a href="#orgc1c088a">4. Deinitialize function (templated part)</a></li>
-<li><a href="#orgceb4527">5. Flush function (templated part)</a></li>
-<li><a href="#org1d10350">6. Template for text read a group</a></li>
-<li><a href="#org55eb776">7. Template for text has a group</a></li>
-<li><a href="#org1cdb725">8. Template for text flush a group</a></li>
-<li><a href="#org9e652ed">9. Template for text free memory</a></li>
-<li><a href="#orgc9f2279">10. Template for has/read/write a numerical attribute</a></li>
-<li><a href="#org2a87578">11. Template for has/read/write a dataset of numerical data</a></li>
-<li><a href="#org03e99e6">12. Template for has/read/write a dataset of strings</a></li>
-<li><a href="#orga08a62c">13. Template for has/read/write a string attribute</a></li>
-<li><a href="#org8598d7b">14. Template for has/read/write the dataset of sparse data</a></li>
-<li><a href="#org4fe5dd5">15. Template for has/read/write a buffered vector</a></li>
-<li><a href="#orga61866b">16. Template for text delete a group (UNSAFE mode)</a></li>
-<li><a href="#org3637809">17. Source code for the determinant part</a></li>
+<li><a href="#orgab9a8cf">1. Template for group-related structures in text back end</a></li>
+<li><a href="#org2732ee1">2. Template for general structure in text back end</a></li>
+<li><a href="#org609bac6">3. Initialize function (constant part)</a></li>
+<li><a href="#org19c424d">4. Deinitialize function (templated part)</a></li>
+<li><a href="#org3f85835">5. Flush function (templated part)</a></li>
+<li><a href="#org4db0173">6. Template for text read a group</a></li>
+<li><a href="#orge1203b0">7. Template for text has a group</a></li>
+<li><a href="#org55dbfd8">8. Template for text flush a group</a></li>
+<li><a href="#org7289503">9. Template for text free memory</a></li>
+<li><a href="#org80193ee">10. Template for has/read/write a numerical attribute</a></li>
+<li><a href="#org82c1d66">11. Template for has/read/write a dataset of numerical data</a></li>
+<li><a href="#org576aebd">12. Template for has/read/write a dataset of strings</a></li>
+<li><a href="#org2411c23">13. Template for has/read/write a string attribute</a></li>
+<li><a href="#orgcfd7a26">14. Template for has/read/write the dataset of sparse data</a></li>
+<li><a href="#org843f230">15. Template for has/read/write a buffered vector</a></li>
+<li><a href="#org4d2acd7">16. Template for text delete a group (UNSAFE mode)</a></li>
+<li><a href="#org71815ba">17. Source code for the determinant part</a></li>
 </ul>
 </div>
 </div>
@@ -349,8 +362,8 @@ directory.
 The file is written when closed, or when the flush function is called.
 </p>
 
-<div id="outline-container-orgabb7ee6" class="outline-2">
-<h2 id="orgabb7ee6"><span class="section-number-2">1</span> Template for group-related structures in text back end</h2>
+<div id="outline-container-orgab9a8cf" class="outline-2">
+<h2 id="orgab9a8cf"><span class="section-number-2">1</span> Template for group-related structures in text back end</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> $group$_s {
@@ -369,8 +382,8 @@ The file is written when closed, or when the flush function is called.
 </div>
 </div>
 
-<div id="outline-container-orgee08288" class="outline-2">
-<h2 id="orgee08288"><span class="section-number-2">2</span> Template for general structure in text back end</h2>
+<div id="outline-container-org2732ee1" class="outline-2">
+<h2 id="org2732ee1"><span class="section-number-2">2</span> Template for general structure in text back end</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Polymorphism of the <code>trexio_t</code> type is handled by ensuring that the
@@ -390,14 +403,14 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-orgf6035d0" class="outline-2">
-<h2 id="orgf6035d0"><span class="section-number-2">3</span> Initialize function (constant part)</h2>
+<div id="outline-container-org609bac6" class="outline-2">
+<h2 id="org609bac6"><span class="section-number-2">3</span> Initialize function (constant part)</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">bool</span>
 <span style="color: #0000ff;">trexio_text_file_exists</span> (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">file_name</span>)
 {
-  /* <span style="color: #b22222;">Check if the file with "file_name" exists </span>*/
+  /* <span style="color: #b22222;">Check if the file with "file_name" exists</span> */
   <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">stat</span> <span style="color: #a0522d;">st</span>;
 
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span> = stat(file_name, &amp;st);
@@ -413,7 +426,7 @@ corresponding types for all back ends can be safely casted to
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
 <span style="color: #0000ff;">trexio_text_inquire</span> (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">file_name</span>)
 {
-  /* <span style="color: #b22222;">Check if the file with "file_name" exists and that it is a directory </span>*/
+  /* <span style="color: #b22222;">Check if the file with "file_name" exists and that it is a directory</span> */
   <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">stat</span> <span style="color: #a0522d;">st</span>;
 
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span> = stat(file_name, &amp;st);
@@ -450,15 +463,15 @@ corresponding types for all back ends can be safely casted to
 
   <span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_text_t</span>*) file;
 
-  /* <span style="color: #b22222;">Put all pointers to NULL but leave parent untouched </span>*/
+  /* <span style="color: #b22222;">Put all pointers to NULL but leave parent untouched</span> */
   memset(&amp;(f-&gt;parent)+1,0,<span style="color: #a020f0;">sizeof</span>(trexio_text_t)-<span style="color: #a020f0;">sizeof</span>(trexio_t));
 
-  /* <span style="color: #b22222;">Check if directory exists </span>*/
+  /* <span style="color: #b22222;">Check if directory exists</span> */
   <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
   rc = trexio_text_inquire(file-&gt;file_name);
-  /* <span style="color: #b22222;">TREXIO file exists but is not  a directory </span>*/
+  /* <span style="color: #b22222;">TREXIO file exists but is not  a directory</span> */
   <span style="color: #a020f0;">if</span> (rc == TREXIO_FILE_ERROR) <span style="color: #a020f0;">return</span> rc;
-  /* <span style="color: #b22222;">If directory does not exist - create it in write mode </span>*/
+  /* <span style="color: #b22222;">If directory does not exist - create it in write mode</span> */
   <span style="color: #a020f0;">if</span> (rc == TREXIO_FAILURE) {
 
     <span style="color: #a020f0;">if</span> (file-&gt;mode == <span style="color: #8b2252;">'r'</span>) <span style="color: #a020f0;">return</span> TREXIO_READONLY;
@@ -468,7 +481,7 @@ corresponding types for all back ends can be safely casted to
 
   }
 
-  /* <span style="color: #b22222;">Create the lock file in the directory </span>*/
+  /* <span style="color: #b22222;">Create the lock file in the directory</span> */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">lock_file_name</span> = <span style="color: #8b2252;">"/.lock"</span>;
 
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_name</span>[TREXIO_MAX_FILENAME_LENGTH];
@@ -489,7 +502,7 @@ corresponding types for all back ends can be safely casted to
       <span style="color: #a020f0;">if</span> (errno == EACCES) {
         /* <span style="color: #b22222;">The directory is read-only and the lock file can't be written.</span>
 <span style="color: #b22222;">          Create a dummy temporary file for dummy locking.</span>
-<span style="color: #b22222;">        </span>*/
+        */
         <span style="color: #228b22;">char</span> <span style="color: #a0522d;">dirname</span>[TREXIO_MAX_FILENAME_LENGTH] = <span style="color: #8b2252;">"/tmp/trexio.XXXXXX"</span>;
         <span style="color: #a020f0;">if</span> (mkdtemp(dirname) == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_ERRNO;
         strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
@@ -558,8 +571,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-orgc1c088a" class="outline-2">
-<h2 id="orgc1c088a"><span class="section-number-2">4</span> Deinitialize function (templated part)</h2>
+<div id="outline-container-org19c424d" class="outline-2">
+<h2 id="org19c424d"><span class="section-number-2">4</span> Deinitialize function (templated part)</h2>
 <div class="outline-text-2" id="text-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -570,7 +583,7 @@ corresponding types for all back ends can be safely casted to
 
   <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
 
-  /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
+  /* <span style="color: #b22222;">Error handling for this call is added by the generator</span> */
   rc = trexio_text_free_$group$( (<span style="color: #228b22;">trexio_text_t</span>*) file);
 
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
@@ -581,8 +594,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-orgceb4527" class="outline-2">
-<h2 id="orgceb4527"><span class="section-number-2">5</span> Flush function (templated part)</h2>
+<div id="outline-container-org3f85835" class="outline-2">
+<h2 id="org3f85835"><span class="section-number-2">5</span> Flush function (templated part)</h2>
 <div class="outline-text-2" id="text-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -594,7 +607,7 @@ corresponding types for all back ends can be safely casted to
   <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_text_t</span>*) file;
 
-  /* <span style="color: #b22222;">Error handling for this call is added by the generator </span>*/
+  /* <span style="color: #b22222;">Error handling for this call is added by the generator</span> */
   rc = trexio_text_flush_$group$(f);
 
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
@@ -605,8 +618,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org1d10350" class="outline-2">
-<h2 id="org1d10350"><span class="section-number-2">6</span> Template for text read a group</h2>
+<div id="outline-container-org4db0173" class="outline-2">
+<h2 id="org4db0173"><span class="section-number-2">6</span> Template for text read a group</h2>
 <div class="outline-text-2" id="text-6">
 <div class="org-src-container">
 <pre class="src src-c">$group$_t*
@@ -615,18 +628,18 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
 
-  /* <span style="color: #b22222;">If the data structure exists, return it </span>*/
+  /* <span style="color: #b22222;">If the data structure exists, return it</span> */
   <span style="color: #a020f0;">if</span> (file-&gt;$group$ != <span style="color: #008b8b;">NULL</span>) {
     <span style="color: #a020f0;">return</span> file-&gt;$group$;
   }
 
-  /* <span style="color: #b22222;">Allocate the data structure </span>*/
+  /* <span style="color: #b22222;">Allocate the data structure</span> */
   $group$_t* $group$ = MALLOC($group$_t);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
 
   memset($group$,0,<span style="color: #a020f0;">sizeof</span>($group$_t));
 
-  /* <span style="color: #b22222;">Build the file name </span>*/
+  /* <span style="color: #b22222;">Build the file name</span> */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* $group$_file_name = <span style="color: #8b2252;">"/$group$.txt"</span>;
 
   strncpy ($group$-&gt;file_name, file-&gt;parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
@@ -638,11 +651,11 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
     <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
   }
 
-  /* <span style="color: #b22222;">If the file exists, read it </span>*/
+  /* <span style="color: #b22222;">If the file exists, read it</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen($group$-&gt;file_name,<span style="color: #8b2252;">"r"</span>);
   <span style="color: #a020f0;">if</span> (f != <span style="color: #008b8b;">NULL</span>) {
 
-    /* <span style="color: #b22222;">Find size of file to allocate the max size of the string buffer </span>*/
+    /* <span style="color: #b22222;">Find size of file to allocate the max size of the string buffer</span> */
     fseek(f, 0L, SEEK_END);
     <span style="color: #228b22;">size_t</span> <span style="color: #a0522d;">sz</span> = ftell(f);
     fseek(f, 0L, SEEK_SET);
@@ -658,7 +671,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
     <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span> = 0;
     <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc_free</span> = TREXIO_FAILURE;
 
-    /* <span style="color: #b22222;">workaround for the case of missing blocks in the file </span>*/
+    /* <span style="color: #b22222;">workaround for the case of missing blocks in the file</span> */
     // <span style="color: #b22222;">START REPEAT GROUP_DSET_ALL</span>
     <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">size_$group_dset$</span> = 0;
     // <span style="color: #b22222;">END REPEAT GROUP_DSET_ALL</span>
@@ -700,7 +713,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
       // <span style="color: #b22222;">START REPEAT GROUP_DSET_NUM</span>
       } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) == 0) {
 
-        /* <span style="color: #b22222;">Allocate arrays </span>*/
+        /* <span style="color: #b22222;">Allocate arrays</span> */
         $group$-&gt;$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
         <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ == <span style="color: #008b8b;">NULL</span>) {
           trexio_text_free_read_$group$(buffer, f, file, $group$);
@@ -720,7 +733,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
       } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"$group_dset$"</span>) == 0) {
 
         <span style="color: #a020f0;">if</span> (size_$group_dset$ != 0) {
-          /* <span style="color: #b22222;">Allocate arrays </span>*/
+          /* <span style="color: #b22222;">Allocate arrays</span> */
           $group$-&gt;$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
           <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ == <span style="color: #008b8b;">NULL</span>) {
             trexio_text_free_read_$group$(buffer, f, file, $group$);
@@ -729,7 +742,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 
           /* <span style="color: #b22222;">WARNING: this tmp array allows to avoid allocation of space for each element of array of string</span>
 <span style="color: #b22222;">           * BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.</span>
-<span style="color: #b22222;">           </span>*/
+           */
           <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">tmp_$group_dset$</span>;
           tmp_$group_dset$ = CALLOC(size_$group_dset$*32, <span style="color: #228b22;">char</span>);
 
@@ -737,7 +750,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
             $group$-&gt;$group_dset$[i] = tmp_$group_dset$;
             /* <span style="color: #b22222;">conventional fcanf with "%s" only return the string before the first space character</span>
 <span style="color: #b22222;">             * to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"</span>
-<span style="color: #b22222;">             </span>*/
+             */
             rc = fscanf(f, <span style="color: #8b2252;">" %1023[^\n]"</span>, buffer);
             <span style="color: #a020f0;">if</span> (rc != 1) {
               trexio_text_free_read_$group$(buffer, f, file, $group$);
@@ -755,7 +768,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
       } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"$group_num$_isSet"</span>) == 0) {
 
         <span style="color: #228b22;">unsigned</span> <span style="color: #228b22;">int</span> $group_num$_isSet;
-        /* <span style="color: #b22222;">additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d </span>*/
+        /* <span style="color: #b22222;">additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d</span> */
         rc = fscanf(f, <span style="color: #8b2252;">"%u"</span>, &amp;($group_num$_isSet));
         $group$-&gt;$group_num$_isSet = (bool) $group_num$_isSet;
         <span style="color: #a020f0;">if</span> (rc != 1) {
@@ -808,7 +821,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
             trexio_text_free_read_$group$(buffer, f, file, $group$);
             <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
           }
-          /* <span style="color: #b22222;">Safer string conversion to avoid buffer overflow in fscanf </span>*/
+          /* <span style="color: #b22222;">Safer string conversion to avoid buffer overflow in fscanf</span> */
           strncpy($group$-&gt;$group_str$, buffer, $group$-&gt;len_$group_str$);
 
         }
@@ -832,8 +845,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-org55eb776" class="outline-2">
-<h2 id="org55eb776"><span class="section-number-2">7</span> Template for text has a group</h2>
+<div id="outline-container-orge1203b0" class="outline-2">
+<h2 id="orge1203b0"><span class="section-number-2">7</span> Template for text has a group</h2>
 <div class="outline-text-2" id="text-7">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -842,13 +855,13 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
-  /* <span style="color: #b22222;">Flush the group to make sure the group.txt file is created </span>*/
+  /* <span style="color: #b22222;">Flush the group to make sure the group.txt file is created</span> */
   <span style="color: #a020f0;">if</span> (file-&gt;mode != <span style="color: #8b2252;">'r'</span>) {
     <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc</span> = trexio_text_flush_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
     <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
   }
 
-  /* <span style="color: #b22222;">Build the file name </span>*/
+  /* <span style="color: #b22222;">Build the file name</span> */
   <span style="color: #228b22;">char</span> $group$_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* $group$_file_name = <span style="color: #8b2252;">"/$group$.txt"</span>;
@@ -873,8 +886,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-org1cdb725" class="outline-2">
-<h2 id="org1cdb725"><span class="section-number-2">8</span> Template for text flush a group</h2>
+<div id="outline-container-org55dbfd8" class="outline-2">
+<h2 id="org55dbfd8"><span class="section-number-2">8</span> Template for text flush a group</h2>
 <div class="outline-text-2" id="text-8">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -895,7 +908,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen($group$-&gt;file_name, <span style="color: #8b2252;">"w"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
-  /* <span style="color: #b22222;">Write the dimensioning variables </span>*/
+  /* <span style="color: #b22222;">Write the dimensioning variables</span> */
   // <span style="color: #b22222;">START REPEAT GROUP_DSET_ALL</span>
   fprintf(f, <span style="color: #8b2252;">"rank_$group_dset$ %u\n"</span>, $group$-&gt;rank_$group_dset$);
   // <span style="color: #b22222;">workaround for the case of missing blocks in the file</span>
@@ -919,7 +932,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
   <span style="color: #a020f0;">if</span> ($group$-&gt;len_$group_str$ != 0) fprintf(f, <span style="color: #8b2252;">"%s\n"</span>, $group$-&gt;$group_str$);
   // <span style="color: #b22222;">END REPEAT GROUP_ATTR_STR</span>
 
-  /* <span style="color: #b22222;">Write arrays </span>*/
+  /* <span style="color: #b22222;">Write arrays</span> */
   // <span style="color: #b22222;">START REPEAT GROUP_DSET_ALL</span>
 
   fprintf(f, <span style="color: #8b2252;">"$group_dset$\n"</span>);
@@ -938,8 +951,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-org9e652ed" class="outline-2">
-<h2 id="org9e652ed"><span class="section-number-2">9</span> Template for text free memory</h2>
+<div id="outline-container-org7289503" class="outline-2">
+<h2 id="org7289503"><span class="section-number-2">9</span> Template for text free memory</h2>
 <div class="outline-text-2" id="text-9">
 <p>
 Memory is allocated when reading. The following function frees memory.
@@ -996,7 +1009,7 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 
   FREE(buffer);
   fclose(txt_file);
-  /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle </span>*/
+  /* <span style="color: #b22222;">Set pointer to the struct so that the garbage collector can do the job on file handle</span> */
   trexio_file-&gt;$group$ = $group$;
   rc_free = trexio_text_free_$group$(trexio_file);
   assert(rc_free == TREXIO_SUCCESS);
@@ -1008,8 +1021,8 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 
-<div id="outline-container-orgc9f2279" class="outline-2">
-<h2 id="orgc9f2279"><span class="section-number-2">10</span> Template for has/read/write a numerical attribute</h2>
+<div id="outline-container-org80193ee" class="outline-2">
+<h2 id="org80193ee"><span class="section-number-2">10</span> Template for has/read/write a numerical attribute</h2>
 <div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1072,8 +1085,8 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 
-<div id="outline-container-org2a87578" class="outline-2">
-<h2 id="org2a87578"><span class="section-number-2">11</span> Template for has/read/write a dataset of numerical data</h2>
+<div id="outline-container-org82c1d66" class="outline-2">
+<h2 id="org82c1d66"><span class="section-number-2">11</span> Template for has/read/write a dataset of numerical data</h2>
 <div class="outline-text-2" id="text-11">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1169,8 +1182,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org03e99e6" class="outline-2">
-<h2 id="org03e99e6"><span class="section-number-2">12</span> Template for has/read/write a dataset of strings</h2>
+<div id="outline-container-org576aebd" class="outline-2">
+<h2 id="org576aebd"><span class="section-number-2">12</span> Template for has/read/write a dataset of strings</h2>
 <div class="outline-text-2" id="text-12">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1271,8 +1284,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-orga08a62c" class="outline-2">
-<h2 id="orga08a62c"><span class="section-number-2">13</span> Template for has/read/write a string attribute</h2>
+<div id="outline-container-org2411c23" class="outline-2">
+<h2 id="org2411c23"><span class="section-number-2">13</span> Template for has/read/write a string attribute</h2>
 <div class="outline-text-2" id="text-13">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1346,8 +1359,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org8598d7b" class="outline-2">
-<h2 id="org8598d7b"><span class="section-number-2">14</span> Template for has/read/write the dataset of sparse data</h2>
+<div id="outline-container-orgcfd7a26" class="outline-2">
+<h2 id="orgcfd7a26"><span class="section-number-2">14</span> Template for has/read/write the dataset of sparse data</h2>
 <div class="outline-text-2" id="text-14">
 <p>
 Each sparse array is stored in a separate <code>.txt</code> file due to the fact that sparse I/O has to be decoupled
@@ -1373,29 +1386,29 @@ User provides indices and values of the sparse array as two separate variables.
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
   /* <span style="color: #b22222;">Build the name of the file with sparse data</span>*/
-  /* <span style="color: #b22222;">The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed? </span>*/
+  /* <span style="color: #b22222;">The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?</span> */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[256] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* <span style="color: #b22222;">Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes </span>*/
+  /* <span style="color: #b22222;">Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"a"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
   /* <span style="color: #b22222;">Specify the line length in order to offset properly. For example, for 4-index quantities</span>
 <span style="color: #b22222;">     the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char.</span>
 <span style="color: #b22222;">     CURRENTLY NO OFFSET IS USED WHEN WRITING !</span>
-<span style="color: #b22222;">    </span>*/
+    */
   <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">line_length</span> = 0L;
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">format_str</span>[256];
 
-  /* <span style="color: #b22222;">Determine the optimal type for storing indices depending on the size_max (usually mo_num or ao_num) </span>*/
+  /* <span style="color: #b22222;">Determine the optimal type for storing indices depending on the size_max (usually mo_num or ao_num)</span> */
   <span style="color: #a020f0;">if</span> (size_max &lt; UINT8_MAX) {
     line_length = $sparse_line_length_8$; // <span style="color: #b22222;">41 for 4 indices</span>
     strncpy(format_str, $sparse_format_printf_8$, 256);
@@ -1412,10 +1425,10 @@ User provides indices and values of the sparse array as two separate variables.
 <span style="color: #b22222;">     This is error-prone due to the fact that for large files (&gt;2 GB) in 32-bit systems ftell will fail.</span>
 <span style="color: #b22222;">     One can use ftello function which is adapted for large files.</span>
 <span style="color: #b22222;">     For now, we can use front-end-provided size_start, which has been checked for INT64_MAX overflow.</span>
-<span style="color: #b22222;">   </span>*/
+   */
   <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">io_start_pos</span> = size_start * line_length;
 
-  /* <span style="color: #b22222;">Write the data in the file and check the return code of fprintf to verify that &gt; 0 bytes have been written </span>*/
+  /* <span style="color: #b22222;">Write the data in the file and check the return code of fprintf to verify that &gt; 0 bytes have been written</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0UL; i &lt; (<span style="color: #228b22;">uint64_t</span>) size; ++i) {
     rc = fprintf(f, format_str,
@@ -1427,46 +1440,46 @@ User provides indices and values of the sparse array as two separate variables.
     }
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Append .size to the file_full_path in order to write additional info about the written buffer of data </span>*/
+  /* <span style="color: #b22222;">Append .size to the file_full_path in order to write additional info about the written buffer of data</span> */
   strncat(file_full_path, <span style="color: #8b2252;">".size"</span>, 6);
 
-  /* <span style="color: #b22222;">Open the new file in "a" (append) mode to append info about the buffer that has been just written </span>*/
+  /* <span style="color: #b22222;">Open the new file in "a" (append) mode to append info about the buffer that has been just written</span> */
   <span style="color: #228b22;">FILE</span> *<span style="color: #a0522d;">f_wSize</span> = fopen(file_full_path, <span style="color: #8b2252;">"a"</span>);
   <span style="color: #a020f0;">if</span> (f_wSize == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Write the buffer_size </span>*/
+  /* <span style="color: #b22222;">Write the buffer_size</span> */
   rc = fprintf(f_wSize, <span style="color: #8b2252;">"%"</span> PRId64 <span style="color: #8b2252;">" %"</span> PRId64 <span style="color: #8b2252;">"\n"</span>, size, io_start_pos);
   <span style="color: #a020f0;">if</span> (rc &lt;= 0) {
     fclose(f_wSize);
     <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f_wSize);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group$_file_name[256] = <span style="color: #8b2252;">"/$group$.txt"</span>;
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, $group$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
 
   <span style="color: #228b22;">bool</span> <span style="color: #a0522d;">file_exists</span> = trexio_text_file_exists(file_full_path);
 
-  /* <span style="color: #b22222;">Create an empty file for the trexio_text_has_group to work </span>*/
+  /* <span style="color: #b22222;">Create an empty file for the trexio_text_has_group to work</span> */
   <span style="color: #a020f0;">if</span> (!file_exists) {
     <span style="color: #228b22;">FILE</span> *<span style="color: #a0522d;">fp</span> = fopen(file_full_path, <span style="color: #8b2252;">"ab+"</span>);
     fclose(fp);
   }
 
-  /* <span style="color: #b22222;">Exit upon success </span>*/
+  /* <span style="color: #b22222;">Exit upon success</span> */
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 }
 </pre>
@@ -1487,26 +1500,26 @@ User provides indices and values of the sparse array as two separate variables.
 
   /* <span style="color: #b22222;">Build the name of the file with sparse data.</span>
 <span style="color: #b22222;">     The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?</span>
-<span style="color: #b22222;">   </span>*/
+   */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[256] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads </span>*/
+  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"r"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
   /* <span style="color: #b22222;">Specify the line length in order to offset properly. For example, for 4-index quantities</span>
 <span style="color: #b22222;">     the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char</span>
-<span style="color: #b22222;">   </span>*/
+   */
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">line_length</span> = 0UL;
-  /* <span style="color: #b22222;">Determine the line length depending on the size_max (usually mo_num or ao_num) </span>*/
+  /* <span style="color: #b22222;">Determine the line length depending on the size_max (usually mo_num or ao_num)</span> */
   <span style="color: #a020f0;">if</span> (size_max &lt; UINT8_MAX) {
     line_length = $sparse_line_length_8$; // <span style="color: #b22222;">41 for 4 indices</span>
   } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (size_max &lt; UINT16_MAX) {
@@ -1515,10 +1528,10 @@ User provides indices and values of the sparse array as two separate variables.
     line_length = $sparse_line_length_32$; //<span style="color: #b22222;">69 for 4 indices</span>
   }
 
-  /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length </span>*/
+  /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length</span> */
   fseek(f, (<span style="color: #228b22;">long</span>) <span style="color: #228b22;">offset_file</span> * <span style="color: #a0522d;">line_length</span>, <span style="color: #a0522d;">SEEK_SET</span>);
 
-  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF </span>*/
+  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">buffer</span>[1024];
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">count</span> = 0UL;
@@ -1546,7 +1559,7 @@ User provides indices and values of the sparse array as two separate variables.
       }
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
@@ -1563,29 +1576,29 @@ User provides indices and values of the sparse array as two separate variables.
 
   /* <span style="color: #b22222;">Build the name of the file with sparse data.</span>
 <span style="color: #b22222;">     The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?</span>
-<span style="color: #b22222;">   </span>*/
+   */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[256] = <span style="color: #8b2252;">"/$group_dset$.txt.size"</span>;
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads </span>*/
+  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"r"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
 
-  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF </span>*/
+  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">size_item</span>, <span style="color: #a0522d;">offset_item</span>, <span style="color: #a0522d;">size_accum</span>=0L;
 
-  /* <span style="color: #b22222;">Read the values from the file. BEWARE OF POSSIBLE MAX_INT64 OVERFLOW ! </span>*/
+  /* <span style="color: #b22222;">Read the values from the file. BEWARE OF POSSIBLE MAX_INT64 OVERFLOW !</span> */
   <span style="color: #a020f0;">while</span>(fscanf(f, <span style="color: #8b2252;">"%"</span> SCNd64 <span style="color: #8b2252;">" %"</span> SCNd64 <span style="color: #8b2252;">""</span>, &amp;size_item, &amp;offset_item) != EOF) {
-    /* <span style="color: #b22222;">Check that summation will not overflow the int64_t value </span>*/
+    /* <span style="color: #b22222;">Check that summation will not overflow the int64_t value</span> */
     <span style="color: #a020f0;">if</span> (INT64_MAX - size_accum &gt; size_item) {
       size_accum += size_item;
     } <span style="color: #a020f0;">else</span> {
@@ -1595,11 +1608,11 @@ User provides indices and values of the sparse array as two separate variables.
     }
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Overwrite the value at the input address and return TREXIO_SUCCESS </span>*/
+  /* <span style="color: #b22222;">Overwrite the value at the input address and return TREXIO_SUCCESS</span> */
   *size_max = size_accum;
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 
@@ -1614,18 +1627,18 @@ User provides indices and values of the sparse array as two separate variables.
 
   /* <span style="color: #b22222;">Build the name of the file with sparse data.</span>
 <span style="color: #b22222;">     The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?</span>
-<span style="color: #b22222;">   </span>*/
+   */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[256] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with sparse data exists or not </span>*/
+  /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with sparse data exists or not</span> */
   <span style="color: #a020f0;">if</span> (access(file_full_path, F_OK) == 0){
     <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
   } <span style="color: #a020f0;">else</span> {
@@ -1637,8 +1650,8 @@ User provides indices and values of the sparse array as two separate variables.
 </div>
 </div>
 
-<div id="outline-container-org4fe5dd5" class="outline-2">
-<h2 id="org4fe5dd5"><span class="section-number-2">15</span> Template for has/read/write a buffered vector</h2>
+<div id="outline-container-org843f230" class="outline-2">
+<h2 id="org843f230"><span class="section-number-2">15</span> Template for has/read/write a buffered vector</h2>
 <div class="outline-text-2" id="text-15">
 <p>
 Each array is stored in a separate <code>.txt</code> file due to the fact that buffered I/O has to be decoupled
@@ -1661,30 +1674,30 @@ Size specifies the number of vector elements to be written.
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_name</span>[256] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
 
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - <span style="color: #a020f0;">sizeof</span>(file_name));
 
-  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads </span>*/
+  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"r"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
   /* <span style="color: #b22222;">Specify the line length in order to offset properly.</span>
 <span style="color: #b22222;">     Each double value 24 elements + one newline char.</span>
-<span style="color: #b22222;">   </span>*/
+   */
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">line_length</span> = 25UL;
 
-  /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length </span>*/
+  /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length</span> */
   fseek(f, (<span style="color: #228b22;">long</span>) <span style="color: #228b22;">offset_file</span> * <span style="color: #a0522d;">line_length</span>, <span style="color: #a0522d;">SEEK_SET</span>);
 
-  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF </span>*/
+  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">buffer</span>[64];
   <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">buf_size</span> = <span style="color: #a020f0;">sizeof</span>(buffer);
-  /* <span style="color: #b22222;">Counter for number of elements beind processed </span>*/
+  /* <span style="color: #b22222;">Counter for number of elements beind processed</span> */
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">count</span> = 0UL;
 
   <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0UL; i &lt; dims[0]; ++i) {
@@ -1708,7 +1721,7 @@ Size specifies the number of vector elements to be written.
     }
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
@@ -1723,24 +1736,24 @@ Size specifies the number of vector elements to be written.
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_name</span>[256] = <span style="color: #8b2252;">"/$group_dset$.txt.size"</span>;
 
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - <span style="color: #a020f0;">sizeof</span>(file_name));
 
-  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads </span>*/
+  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"r"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF </span>*/
+  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #228b22;">int64_t</span> <span style="color: #a0522d;">size_item</span>, <span style="color: #a0522d;">size_accum</span>=0L;
 
-  /* <span style="color: #b22222;">Read the values from the file. BEWARE OF POSSIBLE MAX_INT64 OVERFLOW ! </span>*/
+  /* <span style="color: #b22222;">Read the values from the file. BEWARE OF POSSIBLE MAX_INT64 OVERFLOW !</span> */
   <span style="color: #a020f0;">while</span>(fscanf(f, <span style="color: #8b2252;">"%"</span> SCNd64, &amp;size_item) != EOF) {
-    /* <span style="color: #b22222;">Check that summation will not overflow the int64_t value </span>*/
+    /* <span style="color: #b22222;">Check that summation will not overflow the int64_t value</span> */
     <span style="color: #a020f0;">if</span> (INT64_MAX - size_accum &gt; size_item) {
       size_accum += size_item;
     } <span style="color: #a020f0;">else</span> {
@@ -1750,11 +1763,11 @@ Size specifies the number of vector elements to be written.
     }
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Overwrite the value at the input address and return TREXIO_SUCCESS </span>*/
+  /* <span style="color: #b22222;">Overwrite the value at the input address and return TREXIO_SUCCESS</span> */
   *size_max = size_accum;
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 }
@@ -1774,18 +1787,18 @@ Size specifies the number of vector elements to be written.
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_name</span>[256] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int</span> <span style="color: #a0522d;">append_str_len</span> = 6;
 
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - <span style="color: #a020f0;">sizeof</span>(file_name));
 
-  /* <span style="color: #b22222;">Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes </span>*/
+  /* <span style="color: #b22222;">Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"a"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Write the data in the file and check the return code of fprintf to verify that &gt; 0 bytes have been written </span>*/
+  /* <span style="color: #b22222;">Write the data in the file and check the return code of fprintf to verify that &gt; 0 bytes have been written</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0UL; i &lt; dims[0]; ++i) {
 
@@ -1797,46 +1810,46 @@ Size specifies the number of vector elements to be written.
 
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Append .size to the file_full_path in order to write additional info about the written buffer of data </span>*/
+  /* <span style="color: #b22222;">Append .size to the file_full_path in order to write additional info about the written buffer of data</span> */
   strncat(file_full_path, <span style="color: #8b2252;">".size"</span>, append_str_len);
 
-  /* <span style="color: #b22222;">Open the new file in "a" (append) mode to append info about the buffer that has been just written </span>*/
+  /* <span style="color: #b22222;">Open the new file in "a" (append) mode to append info about the buffer that has been just written</span> */
   <span style="color: #228b22;">FILE</span> *<span style="color: #a0522d;">f_wSize</span> = fopen(file_full_path, <span style="color: #8b2252;">"a"</span>);
   <span style="color: #a020f0;">if</span> (f_wSize == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Write the buffer_size </span>*/
+  /* <span style="color: #b22222;">Write the buffer_size</span> */
   rc = fprintf(f_wSize, <span style="color: #8b2252;">"%"</span> PRIu64 <span style="color: #8b2252;">"\n"</span>, dims[0]);
   <span style="color: #a020f0;">if</span> (rc &lt;= 0) {
     fclose(f_wSize);
     <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f_wSize);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Additional part for the trexio_text_has_group to work </span>*/
+  /* <span style="color: #b22222;">Additional part for the trexio_text_has_group to work</span> */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">group_file_name</span>[256] = <span style="color: #8b2252;">"/$group$.txt"</span>;
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, group_file_name, TREXIO_MAX_FILENAME_LENGTH - <span style="color: #a020f0;">sizeof</span>(group_file_name));
 
   <span style="color: #228b22;">bool</span> <span style="color: #a0522d;">file_exists</span> = trexio_text_file_exists(file_full_path);
 
-  /* <span style="color: #b22222;">Create an empty file for the trexio_text_has_group to work </span>*/
+  /* <span style="color: #b22222;">Create an empty file for the trexio_text_has_group to work</span> */
   <span style="color: #a020f0;">if</span> (!file_exists) {
     <span style="color: #228b22;">FILE</span> *<span style="color: #a0522d;">fp</span> = fopen(file_full_path, <span style="color: #8b2252;">"ab+"</span>);
     fclose(fp);
   }
 
-  /* <span style="color: #b22222;">Exit upon success </span>*/
+  /* <span style="color: #b22222;">Exit upon success</span> */
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 }
 
@@ -1850,14 +1863,14 @@ Size specifies the number of vector elements to be written.
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_name</span>[256] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
 
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - <span style="color: #a020f0;">sizeof</span>(file_name));
 
-  /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with data exists or not </span>*/
+  /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with data exists or not</span> */
   <span style="color: #a020f0;">if</span> (access(file_full_path, F_OK) == 0){
     <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
   } <span style="color: #a020f0;">else</span> {
@@ -1868,8 +1881,8 @@ Size specifies the number of vector elements to be written.
 </div>
 </div>
 </div>
-<div id="outline-container-orga61866b" class="outline-2">
-<h2 id="orga61866b"><span class="section-number-2">16</span> Template for text delete a group (UNSAFE mode)</h2>
+<div id="outline-container-org4d2acd7" class="outline-2">
+<h2 id="org4d2acd7"><span class="section-number-2">16</span> Template for text delete a group (UNSAFE mode)</h2>
 <div class="outline-text-2" id="text-16">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1897,8 +1910,8 @@ Size specifies the number of vector elements to be written.
 </div>
 </div>
 
-<div id="outline-container-org3637809" class="outline-2">
-<h2 id="org3637809"><span class="section-number-2">17</span> Source code for the determinant part</h2>
+<div id="outline-container-org71815ba" class="outline-2">
+<h2 id="org71815ba"><span class="section-number-2">17</span> Source code for the determinant part</h2>
 <div class="outline-text-2" id="text-17">
 <p>
 Each array is stored in a separate <code>.txt</code> file due to the fact that determinant I/O has to be decoupled
@@ -1921,16 +1934,16 @@ Size specifies the number of data items, e.g. determinants.
   <span style="color: #a020f0;">if</span> (list == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_6;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">determinant_list_file_name</span>[256] = <span style="color: #8b2252;">"/determinant_list.txt"</span>;
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
-  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads </span>*/
+  /* <span style="color: #b22222;">Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"r"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
@@ -1939,21 +1952,21 @@ Size specifies the number of data items, e.g. determinants.
 <span style="color: #b22222;">     we have int_num integers per up-spin determinant,</span>
 <span style="color: #b22222;">     then this number is doubled because we have the same number for down-spin electrons,</span>
 <span style="color: #b22222;">     and then one newline char.</span>
-<span style="color: #b22222;">   </span>*/
+   */
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">line_length</span> = dims[1]*11UL + 1UL; // <span style="color: #b22222;">10 digits per int64_t bitfield + 1 space = 11 spots + 1 newline char</span>
 
-  /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length </span>*/
+  /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length</span> */
   fseek(f, (<span style="color: #228b22;">long</span>) <span style="color: #228b22;">offset_file</span> * <span style="color: #a0522d;">line_length</span>, <span style="color: #a0522d;">SEEK_SET</span>);
 
-  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF </span>*/
+  /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
-  /* <span style="color: #b22222;">Declare fixed buffer which will be used to read the determinant string &lt;a1 a2 ... a/\ b1 b2 ... b\/&gt; </span>*/
+  /* <span style="color: #b22222;">Declare fixed buffer which will be used to read the determinant string &lt;a1 a2 ... a/\ b1 b2 ... b\/&gt;</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">buffer</span>[1024];
   <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">buf_size</span> = <span style="color: #a020f0;">sizeof</span>(buffer);
-  /* <span style="color: #b22222;">Parameters to post-process the buffer and to get bit fields integers </span>*/
+  /* <span style="color: #b22222;">Parameters to post-process the buffer and to get bit fields integers</span> */
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">accum</span> = 0UL;
   <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">shift_int64</span> = 11U;
-  /* <span style="color: #b22222;">Counter for number of elements beind processed </span>*/
+  /* <span style="color: #b22222;">Counter for number of elements beind processed</span> */
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">count</span> = 0UL;
   <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0UL; i &lt; dims[0]; ++i) {
 
@@ -1970,7 +1983,7 @@ Size specifies the number of data items, e.g. determinants.
 
    /* <span style="color: #b22222;">The format string is not anymore static but rather dynamic (the number of ints depend on the mo_num)</span>
 <span style="color: #b22222;">      Thus, we parse the buffer string int_num*2 times to get the bit field determinants.</span>
-<span style="color: #b22222;">    </span>*/
+    */
       <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">j</span>=0; j &lt; (<span style="color: #228b22;">uint32_t</span>) dims[1]; ++j) {
         rc = sscanf(buffer+accum, <span style="color: #8b2252;">"%10"</span> SCNd64, list + dims[1]*i + j);
         <span style="color: #a020f0;">if</span> (rc &lt;= 0) {
@@ -1984,7 +1997,7 @@ Size specifies the number of data items, e.g. determinants.
     }
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
@@ -2004,24 +2017,24 @@ Size specifies the number of data items, e.g. determinants.
   <span style="color: #a020f0;">if</span> (list == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">determinant_list_file_name</span>[256] = <span style="color: #8b2252;">"/determinant_list.txt"</span>;
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
-  /* <span style="color: #b22222;">Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes </span>*/
+  /* <span style="color: #b22222;">Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes</span> */
   <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">f</span> = fopen(file_full_path, <span style="color: #8b2252;">"a"</span>);
   <span style="color: #a020f0;">if</span> (f == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Write the data in the file and check the return code of fprintf to verify that &gt; 0 bytes have been written </span>*/
+  /* <span style="color: #b22222;">Write the data in the file and check the return code of fprintf to verify that &gt; 0 bytes have been written</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
   <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">i</span>=0UL; i &lt; dims[0]; ++i) {
 
-    /* <span style="color: #b22222;">The loop below is needed to write a line with int bit fields for alpha and beta electrons </span>*/
+    /* <span style="color: #b22222;">The loop below is needed to write a line with int bit fields for alpha and beta electrons</span> */
     <span style="color: #a020f0;">for</span> (<span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">j</span>=0; j &lt; (<span style="color: #228b22;">uint32_t</span>) dims[1]; ++j) {
       rc = fprintf(f, <span style="color: #8b2252;">"%10"</span> PRId64 <span style="color: #8b2252;">" "</span>, *(list + i*dims[1] + j));
       <span style="color: #a020f0;">if</span> (rc &lt;= 0) {
@@ -2033,29 +2046,29 @@ Size specifies the number of data items, e.g. determinants.
 
   }
 
-  /* <span style="color: #b22222;">Close the TXT file </span>*/
+  /* <span style="color: #b22222;">Close the TXT file</span> */
   rc = fclose(f);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  /* <span style="color: #b22222;">Additional part for the trexio_text_has_group to work </span>*/
+  /* <span style="color: #b22222;">Additional part for the trexio_text_has_group to work</span> */
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">det_file_name</span>[256] = <span style="color: #8b2252;">"/determinant.txt"</span>;
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, det_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(det_file_name));
 
   <span style="color: #228b22;">bool</span> <span style="color: #a0522d;">file_exists</span> = trexio_text_file_exists(file_full_path);
 
-  /* <span style="color: #b22222;">Create an empty file for the trexio_text_has_group to work </span>*/
+  /* <span style="color: #b22222;">Create an empty file for the trexio_text_has_group to work</span> */
   <span style="color: #a020f0;">if</span> (!file_exists) {
     <span style="color: #228b22;">FILE</span> *<span style="color: #a0522d;">fp</span> = fopen(file_full_path, <span style="color: #8b2252;">"ab+"</span>);
     fclose(fp);
   }
 
-  /* <span style="color: #b22222;">Exit upon success </span>*/
+  /* <span style="color: #b22222;">Exit upon success</span> */
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 }
 </pre>
@@ -2067,16 +2080,16 @@ Size specifies the number of data items, e.g. determinants.
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">determinant_list_file_name</span>[256] = <span style="color: #8b2252;">"/determinant_list.txt"</span>;
-  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name. </span>*/
+  /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  /* <span style="color: #b22222;">Copy directory name in file_full_path </span>*/
+  /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
   strncpy (file_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
-  /* <span style="color: #b22222;">Append name of the file with sparse data </span>*/
+  /* <span style="color: #b22222;">Append name of the file with sparse data</span> */
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
-  /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with data exists or not </span>*/
+  /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with data exists or not</span> */
   <span style="color: #a020f0;">if</span> (access(file_full_path, F_OK) == 0){
     <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
   } <span style="color: #a020f0;">else</span> {
@@ -2090,7 +2103,7 @@ Size specifies the number of data items, e.g. determinants.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2022-10-07 Fri 12:58</p>
+<p class="date">Created: 2022-12-01 Thu 18:20</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-10-07 Fri 12:58 -->
+<!-- 2022-12-01 Thu 18:20 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Examples</title>
@@ -161,6 +161,19 @@
   .footdef  { margin-bottom: 1em; }
   .figure { padding: 1em; }
   .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
   .inlinetask {
     padding: 10px;
     border: 2px solid gray;
@@ -190,7 +203,7 @@
  * @licstart  The following is the entire license notice for the
  *  JavaScript code in org-info.js.
  *
- * Copyright (C) 2012-2019 Free Software Foundation, Inc.
+ * Copyright (C) 2012-2020 Free Software Foundation, Inc.
  *
  *
  * The JavaScript code in this tag is free software: you can
@@ -219,7 +232,7 @@
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -258,7 +271,7 @@ org_html_manager.setup();  // activate after the parameters are set
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -333,31 +346,31 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org5012470">1. Accessing sparse quantities (integrals)</a>
+<li><a href="#org2319ed2">1. Accessing sparse quantities (integrals)</a>
 <ul>
-<li><a href="#orgaf4a4db">1.1. Fortran</a>
+<li><a href="#org9566fea">1.1. Fortran</a>
 <ul>
-<li><a href="#org9987117">1.1.1. Declare Temporary variables</a></li>
-<li><a href="#org3c12ba1">1.1.2. Obtain the name of the TREXIO file from the command line, and open it for reading</a></li>
-<li><a href="#orgf6fd0ec">1.1.3. Read the nuclear repulsion energy</a></li>
-<li><a href="#org1f9100a">1.1.4. Read the number of molecular orbitals</a></li>
-<li><a href="#org07111d0">1.1.5. Allocate memory</a></li>
-<li><a href="#orgc6d76a2">1.1.6. Read one-electron quantities</a></li>
-<li><a href="#orgb95bdc4">1.1.7. Read two-electron quantities</a>
+<li><a href="#orgf6f5710">1.1.1. Declare Temporary variables</a></li>
+<li><a href="#org75d2ef9">1.1.2. Obtain the name of the TREXIO file from the command line, and open it for reading</a></li>
+<li><a href="#orgc52f491">1.1.3. Read the nuclear repulsion energy</a></li>
+<li><a href="#org4a9f1ad">1.1.4. Read the number of molecular orbitals</a></li>
+<li><a href="#org7a548d3">1.1.5. Allocate memory</a></li>
+<li><a href="#org5c60cd0">1.1.6. Read one-electron quantities</a></li>
+<li><a href="#org4c7d5ff">1.1.7. Read two-electron quantities</a>
 <ul>
-<li><a href="#org6e0b0c3">1.1.7.1. Electron repulsion integrals</a></li>
-<li><a href="#org18c6d00">1.1.7.2. Reduced density matrix</a></li>
+<li><a href="#org1af921c">1.1.7.1. Electron repulsion integrals</a></li>
+<li><a href="#orgecf043f">1.1.7.2. Reduced density matrix</a></li>
 </ul>
 </li>
-<li><a href="#org0813d73">1.1.8. Compute the energy</a></li>
-<li><a href="#org1c88523">1.1.9. Terminate</a></li>
+<li><a href="#orgbbb0fc7">1.1.8. Compute the energy</a></li>
+<li><a href="#org3ceecff">1.1.9. Terminate</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org697cb9f">2. Reading determinants</a>
+<li><a href="#org6e27917">2. Reading determinants</a>
 <ul>
-<li><a href="#org8c8c5d9">2.1. Fortran</a></li>
+<li><a href="#org5f01b2d">2.1. Fortran</a></li>
 </ul>
 </li>
 </ul>
@@ -365,12 +378,12 @@ for the JavaScript code in this tag.
 </div>
 
 
-<div id="outline-container-org5012470" class="outline-2">
-<h2 id="org5012470"><span class="section-number-2">1</span> Accessing sparse quantities (integrals)</h2>
+<div id="outline-container-org2319ed2" class="outline-2">
+<h2 id="org2319ed2"><span class="section-number-2">1</span> Accessing sparse quantities (integrals)</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-orgaf4a4db" class="outline-3">
-<h3 id="orgaf4a4db"><span class="section-number-3">1.1</span> Fortran</h3>
+<div id="outline-container-org9566fea" class="outline-3">
+<h3 id="org9566fea"><span class="section-number-3">1.1</span> Fortran</h3>
 <div class="outline-text-3" id="text-1-1">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">program</span> <span style="color: #0000ff;">print_energy</span>
@@ -416,8 +429,8 @@ One needs to read from the TREXIO file:
 </div>
 </div>
 
-<div id="outline-container-org9987117" class="outline-4">
-<h4 id="org9987117"><span class="section-number-4">1.1.1</span> Declare Temporary variables</h4>
+<div id="outline-container-orgf6f5710" class="outline-4">
+<h4 id="orgf6f5710"><span class="section-number-4">1.1.1</span> Declare Temporary variables</h4>
 <div class="outline-text-4" id="text-1-1-1">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #228b22;">integer</span>                       ::<span style="color: #a0522d;"> i, j, k, l, m</span>
@@ -432,8 +445,8 @@ One needs to read from the TREXIO file:
 </div>
 </div>
 
-<div id="outline-container-org3c12ba1" class="outline-4">
-<h4 id="org3c12ba1"><span class="section-number-4">1.1.2</span> Obtain the name of the TREXIO file from the command line, and open it for reading</h4>
+<div id="outline-container-org75d2ef9" class="outline-4">
+<h4 id="org75d2ef9"><span class="section-number-4">1.1.2</span> Obtain the name of the TREXIO file from the command line, and open it for reading</h4>
 <div class="outline-text-4" id="text-1-1-2">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">getarg</span>(1, filename)
@@ -449,8 +462,8 @@ f = trexio_open (filename, <span style="color: #8b2252;">'r'</span>, TREXIO_HDF5
 </div>
 </div>
 
-<div id="outline-container-orgf6fd0ec" class="outline-4">
-<h4 id="orgf6fd0ec"><span class="section-number-4">1.1.3</span> Read the nuclear repulsion energy</h4>
+<div id="outline-container-orgc52f491" class="outline-4">
+<h4 id="orgc52f491"><span class="section-number-4">1.1.3</span> Read the nuclear repulsion energy</h4>
 <div class="outline-text-4" id="text-1-1-3">
 <div class="org-src-container">
 <pre class="src src-f90">rc = trexio_read_nucleus_repulsion(f, E_nn)
@@ -464,8 +477,8 @@ f = trexio_open (filename, <span style="color: #8b2252;">'r'</span>, TREXIO_HDF5
 </div>
 </div>
 
-<div id="outline-container-org1f9100a" class="outline-4">
-<h4 id="org1f9100a"><span class="section-number-4">1.1.4</span> Read the number of molecular orbitals</h4>
+<div id="outline-container-org4a9f1ad" class="outline-4">
+<h4 id="org4a9f1ad"><span class="section-number-4">1.1.4</span> Read the number of molecular orbitals</h4>
 <div class="outline-text-4" id="text-1-1-4">
 <div class="org-src-container">
 <pre class="src src-f90">rc = trexio_read_mo_num(f, n)
@@ -479,8 +492,8 @@ f = trexio_open (filename, <span style="color: #8b2252;">'r'</span>, TREXIO_HDF5
 </div>
 </div>
 
-<div id="outline-container-org07111d0" class="outline-4">
-<h4 id="org07111d0"><span class="section-number-4">1.1.5</span> Allocate memory</h4>
+<div id="outline-container-org7a548d3" class="outline-4">
+<h4 id="org7a548d3"><span class="section-number-4">1.1.5</span> Allocate memory</h4>
 <div class="outline-text-4" id="text-1-1-5">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">allocate</span>( D(n,n), h0(n,n) )
@@ -492,8 +505,8 @@ W(:,:,:,:) = 0.d0
 </div>
 </div>
 
-<div id="outline-container-orgc6d76a2" class="outline-4">
-<h4 id="orgc6d76a2"><span class="section-number-4">1.1.6</span> Read one-electron quantities</h4>
+<div id="outline-container-org5c60cd0" class="outline-4">
+<h4 id="org5c60cd0"><span class="section-number-4">1.1.6</span> Read one-electron quantities</h4>
 <div class="outline-text-4" id="text-1-1-6">
 <div class="org-src-container">
 <pre class="src src-f90">rc = trexio_has_mo_1e_int_core_hamiltonian(f)
@@ -525,8 +538,8 @@ rc = trexio_read_rdm_1e(f, D)
 </div>
 </div>
 
-<div id="outline-container-orgb95bdc4" class="outline-4">
-<h4 id="orgb95bdc4"><span class="section-number-4">1.1.7</span> Read two-electron quantities</h4>
+<div id="outline-container-org4c7d5ff" class="outline-4">
+<h4 id="org4c7d5ff"><span class="section-number-4">1.1.7</span> Read two-electron quantities</h4>
 <div class="outline-text-4" id="text-1-1-7">
 <p>
 Reading is done with OpenMP. Each thread reads its own buffer, and
@@ -542,8 +555,8 @@ to be protected in the critical section when modified.
 </p>
 </div>
 
-<div id="outline-container-org6e0b0c3" class="outline-5">
-<h5 id="org6e0b0c3"><span class="section-number-5">1.1.7.1</span> Electron repulsion integrals</h5>
+<div id="outline-container-org1af921c" class="outline-5">
+<h5 id="org1af921c"><span class="section-number-5">1.1.7.1</span> Electron repulsion integrals</h5>
 <div class="outline-text-5" id="text-1-1-7-1">
 <div class="org-src-container">
 <pre class="src src-f90">rc = trexio_has_mo_2e_int_eri(f)
@@ -592,8 +605,8 @@ icount = BUFSIZE
 </div>
 </div>
 
-<div id="outline-container-org18c6d00" class="outline-5">
-<h5 id="org18c6d00"><span class="section-number-5">1.1.7.2</span> Reduced density matrix</h5>
+<div id="outline-container-orgecf043f" class="outline-5">
+<h5 id="orgecf043f"><span class="section-number-5">1.1.7.2</span> Reduced density matrix</h5>
 <div class="outline-text-5" id="text-1-1-7-2">
 <div class="org-src-container">
 <pre class="src src-f90">rc = trexio_has_rdm_2e(f)
@@ -637,8 +650,8 @@ icount = bufsize
 </div>
 </div>
 
-<div id="outline-container-org0813d73" class="outline-4">
-<h4 id="org0813d73"><span class="section-number-4">1.1.8</span> Compute the energy</h4>
+<div id="outline-container-orgbbb0fc7" class="outline-4">
+<h4 id="orgbbb0fc7"><span class="section-number-4">1.1.8</span> Compute the energy</h4>
 <div class="outline-text-4" id="text-1-1-8">
 <p>
 When the orbitals are real, we can use
@@ -684,8 +697,8 @@ E = E + E_nn
 </div>
 </div>
 
-<div id="outline-container-org1c88523" class="outline-4">
-<h4 id="org1c88523"><span class="section-number-4">1.1.9</span> Terminate</h4>
+<div id="outline-container-org3ceecff" class="outline-4">
+<h4 id="org3ceecff"><span class="section-number-4">1.1.9</span> Terminate</h4>
 <div class="outline-text-4" id="text-1-1-9">
 <div class="org-src-container">
 <pre class="src src-f90">  <span style="color: #a020f0;">deallocate</span>( D, h0, G, W )
@@ -699,12 +712,12 @@ E = E + E_nn
 </div>
 
 
-<div id="outline-container-org697cb9f" class="outline-2">
-<h2 id="org697cb9f"><span class="section-number-2">2</span> Reading determinants</h2>
+<div id="outline-container-org6e27917" class="outline-2">
+<h2 id="org6e27917"><span class="section-number-2">2</span> Reading determinants</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org8c8c5d9" class="outline-3">
-<h3 id="org8c8c5d9"><span class="section-number-3">2.1</span> Fortran</h3>
+<div id="outline-container-org5f01b2d" class="outline-3">
+<h3 id="org5f01b2d"><span class="section-number-3">2.1</span> Fortran</h3>
 <div class="outline-text-3" id="text-2-1">
 <div class="org-src-container">
 <pre class="src src-f90"><span style="color: #a020f0;">program</span> <span style="color: #0000ff;">test</span>
@@ -783,7 +796,7 @@ end
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2022-10-07 Fri 12:58</p>
+<p class="date">Created: 2022-12-01 Thu 18:20</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
