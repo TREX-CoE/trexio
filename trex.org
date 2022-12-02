@@ -662,14 +662,14 @@ prim_factor =
    \]
 
    #+NAME: mo_2e_int
-  | Variable              | Type           | Dimensions                              | Description                                   |
-  |-----------------------+----------------+-----------------------------------------+-----------------------------------------------|
-  | ~eri~                 | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~      | Electron repulsion integrals                  |
-  | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~      | Long-range Electron repulsion integrals       |
-  | ~eri_cholesky_num~    | ~dim~          |                                         | Number of Cholesky vectors for ERI            |
-  | ~eri_cholesky~        | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~ | Cholesky decomposition of the ERI             |
-  | ~eri_lr_cholesky_num~ | ~dim~          |                                         | Number of Cholesky vectors for long range ERI |
-  | ~eri_lr_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
+  | Variable              | Type           | Dimensions                                        | Description                                   |
+  |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
+  | ~eri~                 | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Electron repulsion integrals                  |
+  | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range Electron repulsion integrals       |
+  | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
+  | ~eri_cholesky~        | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
+  | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
+  | ~eri_lr_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
    #+CALL: json(data=mo_2e_int, title="mo_2e_int")
 
@@ -677,12 +677,12 @@ prim_factor =
    :results:
    #+begin_src python :tangle trex.json
        "mo_2e_int": {
-                           "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]    ]
-         ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]    ]
-         ,    "eri_cholesky_num" : [ "dim"         , []                                            ]
-         ,        "eri_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ] ]
-         , "eri_lr_cholesky_num" : [ "dim"         , []                                            ]
-         ,     "eri_lr_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ] ]
+                           "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+         ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+         ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+         ,        "eri_cholesky" : [ "float sparse", [ "mo_2e_int.eri_cholesky_num", "mo.num", "mo.num" ]    ]
+         , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+         ,     "eri_lr_cholesky" : [ "float sparse", [ "mo_2e_int.eri_lr_cholesky_num", "mo.num", "mo.num" ] ]
        } ,
    #+end_src
    :end:
