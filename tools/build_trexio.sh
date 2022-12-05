@@ -19,7 +19,7 @@ function tangle()
   local command="(org-babel-tangle-file \"$1\")"
   emacs --batch \
         --load=${TOOLS}/emacs/config_tangle.el \
-        --eval "$command"
+        --eval "$command" &> /dev/null
 }
 #        --eval "(require 'org)" \
 #        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \

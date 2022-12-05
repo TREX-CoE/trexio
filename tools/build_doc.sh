@@ -80,9 +80,9 @@ function extract_doc()
       --load ${CONFIG_DOC}       \
       ${org}                     \
       --load ${CONFIG_TANGLE}    \
-      -f org-html-export-to-html 
+      -f org-html-export-to-html  &> /dev/null
     mv ${local_html} ${DOCS}
-    rm -f "${local_html}~"
+    rm -f "${local_html}~" 
 
 }
 
