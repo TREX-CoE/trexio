@@ -49,6 +49,7 @@ m4_version_prereq([2.70],[], [AC_PROG_CC_C99])
 AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
       [AC_MSG_ERROR([The compiler does not support C99])])
 AC_PROG_CC_C_O
+AM_PROG_CC_C_O
 
 
 # Fortran API [default: --with-fortran], do not disable in the dev mode
