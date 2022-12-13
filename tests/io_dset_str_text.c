@@ -6,7 +6,7 @@
 
 #define TEST_BACKEND 	TREXIO_TEXT
 #define TREXIO_FILE 	"test_dset_s.dir"
-#define RM_COMMAND 	"rm -rf " TREXIO_FILE
+#define RM_COMMAND 	"rm -f -- " TREXIO_FILE "/*.txt " TREXIO_FILE "/*.txt.size " TREXIO_FILE "/.lock && rm -fd -- " TREXIO_FILE
 
 static int test_write_dset_str (const char* file_name, const back_end_t backend) {
 
@@ -39,7 +39,7 @@ static int test_write_dset_str (const char* file_name, const back_end_t backend)
   // write numerical attribute in an empty file
   rc = trexio_write_nucleus_num(file, num);
   assert (rc == TREXIO_SUCCESS);
-  
+
   // write dataset of string in the file (including FAKE statements)
   int max_str_len = 16;
   rc = trexio_write_nucleus_label(file, labels, max_str_len);
@@ -153,5 +153,3 @@ int main(void) {
 
   return 0;
 }
-
-

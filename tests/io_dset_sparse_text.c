@@ -6,7 +6,7 @@
 
 #define TEST_BACKEND  TREXIO_TEXT
 #define TREXIO_FILE   "test_dset_sparse.dir"
-#define RM_COMMAND    "rm -rf " TREXIO_FILE
+#define RM_COMMAND    "rm -f -- " TREXIO_FILE "/*.txt " TREXIO_FILE "/*.txt.size " TREXIO_FILE "/.lock && rm -fd -- " TREXIO_FILE
 #define SIZE          100
 #define N_CHUNKS      5
 
@@ -85,6 +85,14 @@ static int test_has_dset_sparse (const char* file_name, const back_end_t backend
   file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
   assert (rc == TREXIO_SUCCESS);
+
+  // check that the group exists
+  rc = trexio_has_mo_2e_int(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  // check that the group does not exist
+  rc = trexio_has_rdm(file);
+  assert(rc==TREXIO_HAS_NOT);
 
   // first check that mo_2e_int_eri_lr (we only write non-lr component in this unit test)
   rc = trexio_has_mo_2e_int_eri_lr(file);

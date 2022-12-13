@@ -1,5 +1,6 @@
 
 # TREXIO
+<img src="https://trex-coe.eu/sites/default/files/styles/responsive_no_crop/public/2022-01/TREXIO%20Code.png" width=200>
 
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
@@ -9,10 +10,10 @@ TREX library for efficient I/O.
 
 ## Minimal requirements (for users):
 
-- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2)	or	CMake (>= 3.16)
+- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2) or CMake (>= 3.16)
 - C compiler            (gcc/icc/clang)
 - Fortran compiler      (gfortran/ifort)
-- HDF5 library          (>= 1.8)	[optional, recommended for high performance]
+- HDF5 library          (>= 1.8) [optional, recommended for high performance]
 
 
 ## Installation procedure from the tarball (for users):
@@ -34,7 +35,7 @@ TREX library for efficient I/O.
 
 - python3       (>= 3.6)
 - Emacs         (>= 26.0)
-- SWIG          (>= 4.0)
+- SWIG          (>= 4.0)   [required for the Python API]
 
 ## Installation procedure from the GitHub repo clone (for developers):
 
@@ -60,6 +61,48 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 **Note: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.**
 
 **Note: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `-DCMAKE_C_COMPILER=mpicc` to the `cmake` command.**
+
+## Installation procedure for conda users
+
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/trexio/badges/version.svg)](https://anaconda.org/conda-forge/trexio)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/trexio/badges/platforms.svg)](https://anaconda.org/conda-forge/trexio)
+
+The official releases of TREXIO `>2.0.0` are also available via the `conda-forge` channel.
+The pre-compiled stable binaries of `trexio` can be installed as follows:
+
+```
+conda install trexio -c conda-forge
+```
+
+More details can be found in the corresponding [trexio-feedstock](https://github.com/conda-forge/trexio-feedstock).
+Note that both parallel (see `mpi_openmpi` prefix) and serial (`nompi`) variants are provided.
+
+## Installation procedure for Guix users
+
+The official releases of TREXIO `>=2.0.0` can be installed using the
+[GNU Guix](https://guix.gnu.org) functional package manager.
+The [trexio.scm](https://github.com/TREX-CoE/trexio/blob/master/tools/trexio.scm)
+Schema file contains the manifest specification for the `trexio` package.
+It can be installed within the selected `$GUIX_PROFILE` as follows:
+
+```
+guix package \
+	--profile=$GUIX_PROFILE \
+	--cores=<n_cores> \
+	--install-from-file=trexio.scm
+```
+
+## Installation procedure for Spack users
+
+The official releases `>=2.0.0` and the development version of TREXIO can be installed using the
+[Spack](https://spack.io/) package manager.
+The [trexio/package.py](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/trexio/package.py)
+file contains the Spack specifications required to build different variants of `trexio` library.
+It can be installed as follows
+
+```
+spack install --jobs <n_cores> trexio
+```
 
 ## Compilation without the HDF5 library
 
@@ -119,6 +162,24 @@ These quantities can be accessed using the corresponding `trexio_[has|read|write
 
 For more details regarding the installation and usage of the TREXIO Python API,
 see [this page](python/README.md).
+
+The aforementioned instructions are adapted for users installing from the source code distribution (periodically updated).
+In order to install the Python API with the latest changes, follow the developer installation guide and run the following command in the end
+
+```
+make python-install
+```
+
+**Note: this implies that both HDF5 and SWIG are installed and available.
+At the moment, it is not possible to configure the Python API without HDF5 library.**
+
+We rely on the `pytest` package for unit testing. It can be installed via `pip install pytest`. To test the installation, run
+
+```
+make python-test
+```
+
+We highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.
 
 
 ## Tutorial

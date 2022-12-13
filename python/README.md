@@ -12,8 +12,7 @@ can be used to convert data from one input/output file format into another.
 ## Requirements
 
 - python3 	(>= 3.6)
-- numpy		(>= 1.17.3)
-
+- numpy		  (>= 1.17.3)
 
 ## Installation from PyPI
 
@@ -31,10 +30,11 @@ For more details, see the corresponding part of the [Python documentation](https
 
 ## Additional requirements (for installation from source)
 
-- C compiler 	(gcc/icc/clang)
+- C compiler 	  (gcc/icc/clang)
 - HDF5 library	(>= 1.8)
 - pkgconfig     (Python package)
 - build         (Python package)
+- pytest        (Python package)
 
 ## Installation from source
 
@@ -44,10 +44,10 @@ For more details, see the corresponding part of the [Python documentation](https
 4. `pip install -r requirements.txt` (this installs all required python dependencies)
 5. Export custom environment variables needed for the installation following the procedure below and replacing `/path/to/hdf5/` with your paths.
 The following two steps can be skipped if HDF5 is properly configured for `pkg-config` (i.e. if executing `pkg-config --libs hdf5` returns a list of options).
-   1. `export H5_CFLAGS=-I/path/to/hdf5/include`
-   2. `export H5_LDFLAGS=-L/path/to/hdf5/lib`
+   - `export H5_CFLAGS=-I/path/to/hdf5/include`
+   - `export H5_LDFLAGS=-L/path/to/hdf5/lib`
 6. `pip install .` (this installs `trexio` in your environment)
-7. `cd test && python test_api.py` (this executes several tests that verify the installation)
+7. `cd test && python -m pytest -v test_api.py` (this executes several tests that verify the installation)
 
 You are ready to go!
 

@@ -26,11 +26,11 @@ int main() {
     assert (rc == 0);
   }
 
-  rc = system("rm -rf test_all.dir");
+  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir");
   assert (rc == 0);
   test_write("test_all.dir", TREXIO_TEXT);
   test_read ("test_all.dir", TREXIO_TEXT);
-  rc = system("rm -rf test_all.dir");
+  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir");
   assert (rc == 0);
 
   return 0;
@@ -92,6 +92,10 @@ int test_write(const char* file_name, const back_end_t backend) {
   rc = trexio_write_nucleus_num(file,num);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_nucleus_coord(file,coord);
+  assert (rc == TREXIO_SUCCESS);
+
+  // check the force flushing
+  rc = trexio_flush(file);
   assert (rc == TREXIO_SUCCESS);
 
   rc = trexio_write_nucleus_label(file, label, 32);

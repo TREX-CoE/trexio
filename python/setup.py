@@ -9,7 +9,7 @@ from setuptools import setup, Extension
 
 def parse_setuppy_commands():
     """Check the commands and respond appropriately.
-    At the moment it is adapted to ignore checks for numpy, plgconfig, HDF5 flags
+    At the moment it is adapted to ignore checks for numpy, pkgconfig, HDF5 flags
     when building the distribution tarball with sdist option.
     """
     args = sys.argv[1:]
@@ -93,7 +93,12 @@ pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [h5_cflags, srcpath, numpy_includedir],
                             libraries = ['hdf5', 'hdf5_hl'],
-                            extra_compile_args = ['-Wno-discarded-qualifiers'],
+                            extra_compile_args = [
+                                '-std=c99',
+                                '-Wno-discarded-qualifiers',
+                                '-Wno-unused-variable',
+                                '-Wno-unused-but-set-variable'
+                                ],
                             extra_link_args = [h5_ldflags]
                             )
 

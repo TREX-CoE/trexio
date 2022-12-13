@@ -34,7 +34,11 @@
 
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
+if HAVE_FORTRAN
 BUILT_SOURCES = trexio.mod
+else
+BUILT_SOURCES = 
+endif
 EXTRA_DIST = .git_hash
 
 PACKAGE_VERSION = @PACKAGE_VERSION@
@@ -45,10 +49,13 @@ pkgconfig_DATA = pkgconfig/trexio.pc
 
 # =============== BUILD =============== #
 
-trexio_h = $(srcdir)/include/trexio.h
-trexio_f = $(srcdir)/include/trexio_f.f90
+trexio_h = include/trexio.h
+include_HEADERS = $(trexio_h)
 
-include_HEADERS = $(trexio_h) $(trexio_f)
+if HAVE_FORTRAN
+trexio_f = include/trexio_f.f90
+include_HEADERS += $(trexio_f)
+endif
 
 AM_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/include
 
@@ -56,7 +63,6 @@ lib_LTLIBRARIES = src/libtrexio.la
 
 
 SOURCES = \
-  $(trexio_h) \
   src/trexio.c \
   src/trexio_private.h \
   src/trexio_s.h \
@@ -75,7 +81,7 @@ ORG_FILES = \
   trex.org
 
 
-src_libtrexio_la_SOURCES = $(SOURCES)
+src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
@@ -85,25 +91,6 @@ EXTRA_DIST += CMakeLists.txt \
               cmake/FindTREXIO.cmake
 
 
-# Include files needed to produce the debian package.
-DEB_FILES = \
-  debian/changelog     \
-  debian/compat        \
-  debian/control       \
-  debian/copyright     \
-  debian/patches       \
-  debian/README.Debian \
-  debian/README.md     \
-  debian/rules         \
-  debian/source        \
-  debian/watch
-
-EXTRA_DIST += $(DEB_FILES)
-
-debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
-	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
-	debuild
-
 # =============== TESTS =============== #
 
 TESTS_C = \
@@ -112,6 +99,7 @@ TESTS_C = \
   tests/io_dset_float_text \
   tests/io_dset_int_text \
   tests/io_dset_sparse_text \
+  tests/io_determinant_text \
   tests/io_safe_dset_float_text \
   tests/io_str_text \
   tests/io_dset_str_text \
@@ -127,6 +115,7 @@ TESTS_C += \
   tests/io_dset_float_hdf5 \
   tests/io_dset_int_hdf5 \
   tests/io_dset_sparse_hdf5 \
+  tests/io_determinant_hdf5 \
   tests/io_safe_dset_float_hdf5 \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
@@ -134,17 +123,20 @@ TESTS_C += \
   tests/overwrite_all_hdf5
 endif
 
-TESTS_F = \
-  tests/test_f
+TESTS = $(TESTS_C)
 
-TESTS = $(TESTS_C) $(TESTS_F)
+if HAVE_FORTRAN
+TESTS_F = tests/test_f
+TESTS += $(TESTS_F)
+endif
+
 check_PROGRAMS = $(TESTS)
 
 # specify common LDADD options for all tests
 LDADD = src/libtrexio.la
 
-test_trexio_f = $(srcdir)/tests/trexio_f.f90
-CLEANFILES += $(test_trexio_f)
+if HAVE_FORTRAN
+test_trexio_f = tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
 	cp $(trexio_f) $(test_trexio_f)
@@ -152,9 +144,15 @@ $(test_trexio_f): $(trexio_f)
 trexio.mod: tests/trexio_f.o
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
+endif
 
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/
+
+# =============== GUIX MANIFEST =============== #
+
+trexio_scm = $(srcdir)/tools/trexio.scm
+EXTRA_DIST += $(trexio_scm)
 
 # =============== DOCUMENTATION =============== #
 
@@ -193,9 +191,15 @@ HDF5_CPPFLAGS = @HDF5_CPPFLAGS@
 
 if TREXIO_DEVEL
 
-CLEANFILES += $(SOURCES) $(trexio_f) $(trexio_h) $(HTML_TANGLED) $(htmlizer) .git_hash
+CLEANFILES += $(SOURCES) $(trexio_h) $(HTML_TANGLED) $(htmlizer) .git_hash
 
-BUILT_SOURCES += $(SOURCES) $(trexio_f) $(test_trexio_f)
+BUILT_SOURCES += $(SOURCES) $(trexio_h)
+
+if HAVE_FORTRAN
+CLEANFILES += $(trexio_f)
+BUILT_SOURCES += $(trexio_f) $(test_trexio_f)
+$(trexio_f): $(trexio_h)
+endif
 
 .git_hash: FORCE
 	git log | head -1 | cut -d ' ' -f 2 > .git_hash
@@ -205,10 +209,10 @@ all: .git_hash
 GENERATOR_FILES = $(srcdir)/tools/generator.py \
 		  $(srcdir)/tools/generator_tools.py
 
-$(SOURCES): $(trexio_f)
+$(SOURCES): $(trexio_h)
 src/trexio.c: $(trexio_h)
 
-$(trexio_f): $(ORG_FILES) $(GENERATOR_FILES)
+$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
@@ -225,6 +229,22 @@ cppcheck.out: $(trexio_h)
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
 
+#################
+# OCaml binding #
+#################
+
+ocaml/trexio/_build/default/lib/trexio.cma:
+	$(MAKE) -C ocaml/trexio
+
+ocaml: ocaml/trexio/_build/default/lib/trexio.cma
+
+ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
+	opam install ocaml/trexio
+
+##################
+# Python binding #
+##################
+
 setup_py      = $(srcdir)/python/setup.py
 setup_cfg     = $(srcdir)/python/setup.cfg
 pytrexio_py   = $(srcdir)/python/pytrexio/pytrexio.py
@@ -236,8 +256,9 @@ numpy_i       = $(srcdir)/src/numpy.i
 
 
 python-test: $(TEST_PY)
-	python3 $(TEST_PY)
+	python3 -m pytest -v $(TEST_PY)
 	$(RM) -r -- __pycache__
+	$(RM) -f -- test_file_py.h5 unsafe_test_file_py.h5
 
 python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
@@ -269,12 +290,30 @@ $(numpy_i):
 check-numpy:
 	cd tools && ./check_numpy_i.sh
 
+# Include files needed to produce the debian package.
+DEB_FILES = \
+  helpers-debian/changelog     \
+  helpers-debian/compat        \
+  helpers-debian/control       \
+  helpers-debian/copyright     \
+  helpers-debian/rules         \
+  helpers-debian/source        \
+  helpers-debian/libtrexio0.install \
+  helpers-debian/libtrexio-dev.install \
+  helpers-debian/source        \
+  helpers-debian/README.source 
+
+debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
+	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
+	debuild
+
+
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
               $(trexio_py) \
               python/src/*.c \
               python/src/*.h
 
-.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE
+.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE ocaml
 
 endif

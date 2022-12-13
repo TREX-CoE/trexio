@@ -38,9 +38,18 @@ echo "" >> trexio_f.f90
 # c front end
 cat populated/pop_*.c >> trexio.c
 cat populated/pop_*.h >> trexio.h
+# add determinant part
+cat hrw_determinant_front.h >> trexio.h
+cat *_determinant_front.c >> trexio.c
+
+# private API header file
+cat populated/private_pop_front.h >> trexio_private.h
+echo "#endif" >> trexio_private.h
 
 # fortran front end
 cat populated/pop_*.f90  >> trexio_f.f90
+# add determinant part
+cat *_determinant_front_fortran.f90 >> trexio_f.f90
 # add helper functions
 cat helper_fortran.f90 >> trexio_f.f90
 cat populated/pop_*.fh_90 >> trexio_f.f90
@@ -48,6 +57,7 @@ cat populated/pop_*.fh_90 >> trexio_f.f90
 # python front end
 cat basic_python.py >> trexio.py
 cat populated/pop_*.py >> trexio.py
+cat *_determinant_front.py >> trexio.py
 
 # suffixes
 cat suffix_s_front.h >> trexio_s.h

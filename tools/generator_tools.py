@@ -37,8 +37,11 @@ def get_files_todo(source_files: dict) -> dict:
         all_files += source_files[key]
 
     files_todo = {}
-    files_todo['all'] = [f for f in all_files if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f or 'delete' in f]
-    for key in ['dset_data', 'dset_str', 'dset_sparse', 'attr_num', 'attr_str', 'group']:
+    files_todo['all'] = [
+        f for f in all_files
+        if 'read' in f or 'write' in f or 'has' in f or 'flush' in f or 'free' in f or 'hrw' in f or 'delete' in f
+        ]
+    for key in ['dset_data', 'dset_str', 'dset_sparse', 'attr_num', 'attr_str', 'group', 'buffered']:
         files_todo[key] = list(filter(lambda x: key in x, files_todo['all']))
 
     files_todo['group'].append('struct_text_group_dset.h')
@@ -105,17 +108,23 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
     triggers = ['group_dset_dtype', 'group_dset_py_dtype', 'group_dset_h5_dtype', 'default_prec', 'is_index',
                 'group_dset_f_dtype_default', 'group_dset_f_dtype_double', 'group_dset_f_dtype_single',
                 'group_dset_dtype_default', 'group_dset_dtype_double', 'group_dset_dtype_single',
-                'group_dset_rank', 'group_dset_dim_list', 'group_dset_f_dims',
+                'group_dset_rank', 'group_dset_unique_rank', 'group_dset_dim_list', 'group_dset_f_dims',
                 'group_num_f_dtype_default', 'group_num_f_dtype_double', 'group_num_f_dtype_single',
                 'group_num_dtype_default', 'group_num_dtype_double', 'group_num_dtype_single',
-                'group_num_h5_dtype', 'group_num_py_dtype',
-                'group_dset_format_scanf', 'group_dset_format_printf', 'group_dset_sparse_dim',
+                'group_num_h5_dtype', 'group_num_py_dtype', 'group_dset_format_scanf', 'group_dset_format_printf',
                 'group_dset_sparse_indices_printf', 'group_dset_sparse_indices_scanf',
                 'sparse_format_printf_8', 'sparse_format_printf_16', 'sparse_format_printf_32',
                 'sparse_line_length_8', 'sparse_line_length_16', 'sparse_line_length_32',
                 'group_dset', 'group_num', 'group_str', 'group']
 
     for item in detailed_source.keys():
+
+        # special case to exclude write functions for readonly dimensions (like determinant_num) from the public API
+        if 'write' in fname and 'front' in fname and ('.f90' in fname or '.py' in fname):
+            if 'trex_json_int_type' in detailed_source[item].keys():
+                if 'readonly' in detailed_source[item]['trex_json_int_type']:
+                    continue
+
         with open(join(templ_path,fname), 'r') as f_in :
             with open(join(templ_path,fname_new), 'a') as f_out :
                 num_written = []
@@ -137,14 +146,27 @@ def recursive_populate_file(fname: str, paths: dict, detailed_source: dict) -> N
                         continue
                     # special case to uncomment check for positive dimensioning variables in templates
                     elif 'uncommented by the generator for dimensioning' in line:
-                        # only uncomment and write the line if `num` is in the name
+                        # only uncomment and write the line if `dim` is in the name
                         if 'dim' in detailed_source[item]['trex_json_int_type']:
                             templine = line.replace('//', '')
+                            f_out.write(templine)
+                    # special case to get the max dimension of sparse datasets with different dimensions
+                    elif 'trexio_read_$group_dset_unique_dim$_64' in line:
+                        for i in range(int(detailed_source[item]['group_dset_unique_rank'])):
+                            templine = line.replace('$group_dset_unique_dim$', detailed_source[item]['unique_dims'][i]).replace('$dim_id$', str(i))
                             f_out.write(templine)
                     # general case of recursive replacement of inline triggers
                     else:
                         populated_line = recursive_replace_line(line, triggers, detailed_source[item])
-                        f_out.write(populated_line)
+                        # special case to include some functions in the private header
+                        if 'trex_json_int_type' in detailed_source[item].keys():
+                            if 'readonly' in detailed_source[item]['trex_json_int_type'] and 'write' in line and 'front.h' in fname:
+                                with open(join(templ_path,'populated/private_pop_front.h'), 'a') as f_priv:
+                                    f_priv.write(populated_line)
+                            else:
+                                f_out.write(populated_line)
+                        else:
+                            f_out.write(populated_line)
 
                 f_out.write("\n")
 
@@ -214,7 +236,7 @@ def iterative_populate_file (filename: str, paths: dict, detailed_all: dict) -> 
             for line in f_in :
                 id = check_triggers(line, triggers)
                 if id == 0:
-                    # special case for proper error handling when deallocting text groups
+                    # special case for proper error handling when deallocating text groups
                     error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
                     populated_line = iterative_replace_line(line, '$group$', detailed_all['groups'], add_line=error_handler)
                     f_out.write(populated_line)
@@ -477,7 +499,22 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
             f'group_{target}_format_scanf'    : 'lf',
             f'group_{target}_py_dtype'        : 'float'
         })
-    elif dtype in ['int', 'dim', 'index']:
+    elif 'buffered' in dtype:
+        dtype_dict.update({
+            'default_prec'                    : '64',
+            f'group_{target}_dtype'           : 'double',
+            f'group_{target}_h5_dtype'        : 'native_double',
+            f'group_{target}_f_dtype_default' : 'real(c_double)',
+            f'group_{target}_f_dtype_double'  : 'real(c_double)',
+            f'group_{target}_f_dtype_single'  : 'real(c_float)',
+            f'group_{target}_dtype_default'   : 'double',
+            f'group_{target}_dtype_double'    : 'double',
+            f'group_{target}_dtype_single'    : 'float',
+            f'group_{target}_format_printf'   : '24.16e',
+            f'group_{target}_format_scanf'    : 'lf',
+            f'group_{target}_py_dtype'        : 'float'
+        })
+    elif dtype in ['int', 'dim', 'dim readonly', 'index']:
         dtype_dict.update({
             'default_prec'                    : '32',
             f'group_{target}_dtype'           : 'int64_t',
@@ -517,7 +554,7 @@ def get_dtype_dict (dtype: str, target: str, rank = None, int_len_printf = None)
         group_dset_format_printf_16 = '"'
         group_dset_format_printf_32 = '"'
         group_dset_format_scanf  = ''
-        for i in range(rank):
+        for _ in range(rank):
             group_dset_format_printf_8  += item_printf_8
             group_dset_format_printf_16 += item_printf_16
             group_dset_format_printf_32 += item_printf_32
@@ -568,15 +605,16 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                 tmp_num = f'{k1}_{k2}'
                 if not 'str' in v2[0]:
                     tmp_dict = {}
+
                     tmp_dict['group'] = k1
                     tmp_dict['group_num'] = tmp_num
-                    num_dict[tmp_num] = tmp_dict
-
                     tmp_dict.update(get_dtype_dict(v2[0], 'num'))
-                    if v2[0] in ['int', 'dim']:
+                    if v2[0] in ['int', 'dim', 'dim readonly']:
                         tmp_dict['trex_json_int_type'] = v2[0]
                     else:
                         tmp_dict['trex_json_int_type'] = ''
+
+                    num_dict[tmp_num] = tmp_dict
 
     return num_dict
 
@@ -638,16 +676,22 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
                     configuration (dict) : configuration from `trex.json`
 
             Returns:
-                    dset_numeric_dict, dset_string_dict (tuple) : dictionaries corresponding to all numeric- and string-based datasets, respectively.
+                    (tuple) : dictionaries corresponding to all types of datasets in trexio.
     """
     dset_numeric_dict = {}
-    dset_string_dict = {}
-    dset_sparse_dict = {}
+    dset_string_dict  = {}
+    dset_sparse_dict  = {}
+    dset_buffer_dict  = {}
     for k,v in datasets.items():
+
         # create a temp dictionary
         tmp_dict = {}
         rank = len(v[1])
         datatype = v[0]
+
+        # skip the data which has 'special' datatype (e.g. determinants for which the code is not templated)
+        if 'special' in datatype:
+            continue
 
         # define whether the dset is sparse
         is_sparse = False
@@ -674,11 +718,18 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         else:
             tmp_dict['is_index'] = 'false'
 
+        # add the list of dimensions
+        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+
+        # get a list of unique dimensions for sparse datasets
+        if is_sparse:
+            tmp_dict['unique_dims'] = list(set(tmp_dict['dims']))
+            tmp_dict['group_dset_unique_rank'] = str(len(tmp_dict['unique_dims']))
+
         # add the rank
         tmp_dict['rank'] = rank
         tmp_dict['group_dset_rank'] = str(rank)
-        # add the list of dimensions
-        tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
+
         # build a list of dimensions to be inserted in the dims array initialization, e.g. {ao_num, ao_num}
         dim_list = tmp_dict['dims'][0]
         if rank > 1:
@@ -695,8 +746,6 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         tmp_dict['group_dset_f_dims'] = dim_f_list
 
         if is_sparse:
-            # store the max possible dim of the sparse dset (e.g. mo_num)
-            tmp_dict['group_dset_sparse_dim'] = tmp_dict['dims'][0]
             # build printf/scanf sequence and compute line length for n-index sparse quantity
             index_printf = f'*(index_sparse + {str(rank)}*i'
             index_scanf  = f'index_sparse + {str(rank)}*i'
@@ -731,12 +780,14 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         # split datasets in numeric- and string- based
         if 'str' in datatype:
             dset_string_dict[k] = tmp_dict
+        elif 'buffered' in datatype:
+            dset_buffer_dict[k] = tmp_dict
         elif is_sparse:
             dset_sparse_dict[k] = tmp_dict
         else:
             dset_numeric_dict[k] = tmp_dict
 
-    return (dset_numeric_dict, dset_string_dict, dset_sparse_dict)
+    return (dset_numeric_dict, dset_string_dict, dset_sparse_dict, dset_buffer_dict)
 
 
 def check_dim_consistency(num: dict, dset: dict) -> None:
@@ -757,7 +808,10 @@ def check_dim_consistency(num: dict, dset: dict) -> None:
             if dim not in dim_tocheck:
                 dim_tocheck.append(dim)
 
-    num_onlyDim = [attr_name for attr_name, specs in num.items() if specs['trex_json_int_type']=='dim']
+    num_onlyDim = [
+        attr_name for attr_name, specs in num.items()
+        if 'dim' in specs['trex_json_int_type']
+        ]
 
     for dim in dim_tocheck:
         if not dim in num_onlyDim:

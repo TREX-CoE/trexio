@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([trexio],[2.2.0],[https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio],[2.3.0],[https://github.com/TREX-CoE/trexio/issues])
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
@@ -16,11 +16,11 @@ AM_PROG_AR
 LT_PREREQ([2.2])
 LT_INIT
 
-# Activate developer mode when the source is the git repository.
+# Activate developer mode if a dummy file is present (true when cloning the git repository).
 # Otherwise, it is the source distribution and the developer mode should not be activated.
-TEST_IFEXISTS=".git"
-AC_CHECK_FILE([$TEST_IFEXISTS],
-        [enable_maintainer_mode="yes"],
+TEST_IFEXISTS=".devel"
+AS_IF([test -f $TEST_IFEXISTS],
+        [enable_maintainer_mode="yes"]
 )
 
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
@@ -50,12 +50,18 @@ AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
       [AC_MSG_ERROR([The compiler does not support C99])])
 AC_PROG_CC_C_O
 
-# Fortran
-AC_PROG_FC
-AC_FC_FREEFORM
-AC_FC_SRCEXT([f90])
-AC_PROG_FC_C_O
-AC_FC_LIBRARY_LDFLAGS
+
+# Fortran API [default: --with-fortran], do not disable in the dev mode
+AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
+if test "$ok" = "yes"; then
+        AC_PROG_FC
+        AC_FC_FREEFORM
+        AC_FC_SRCEXT([f90])
+        AC_PROG_FC_C_O
+        AC_FC_LIBRARY_LDFLAGS
+fi
+
+AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
 
 # pkg-config
 PKG_PROG_PKG_CONFIG()
@@ -65,6 +71,31 @@ PKG_LIBS=""
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_GREP
+
+# Specific options required with some compilers
+case $FC in
+ *gfortran*)
+      FCFLAGS="$FCFLAGS -fPIC"
+      ;;
+ *flang*)
+      FCFLAGS="$FCFLAGS -fPIC"
+      ;;
+ *ifort*)
+      FCFLAGS="$FCFLAGS -fPIC"
+      ;;
+esac
+
+case $CC in
+  *gcc*)
+        CFLAGS="$CFLAGS -fPIC"
+        ;;
+  *clang*)
+        CFLAGS="$CFLAGS -fPIC"
+        ;;
+  *icc*)
+        CFLAGS="$CFLAGS -fPIC"
+        ;;
+esac
 
 
 ## ---------
@@ -144,7 +175,7 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 
 # Checks for library functions.
-AC_FUNC_MALLOC
+# AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
 if test "x$enable_maintainer_mode" == "xyes"; then
@@ -152,6 +183,27 @@ if test "x$enable_maintainer_mode" == "xyes"; then
 else
   TREXIO_DEVEL=""
 fi
+
+
+AC_ARG_WITH(efence, [AS_HELP_STRING([--with-efence],[use ElectricFence library])], ok=$withval, ok=no)
+if test "$ok" = "yes"; then
+        AC_CHECK_LIB([efence], [malloc])
+        ARGS="${ARGS} efence"
+fi
+
+AC_ARG_ENABLE(malloc-trace, [AS_HELP_STRING([--enable-malloc-trace],[use debug malloc/free])], ok=$enableval, ok=no)
+if test "$ok" = "yes"; then
+        AC_DEFINE(MALLOC_TRACE,"malloc_trace.dat",[Define to use debugging malloc/free])
+        ARGS="${ARGS} malloc-trace"
+fi
+
+AC_ARG_ENABLE(prof, [AS_HELP_STRING([--enable-prof],[compile for profiling])], ok=$enableval, ok=no)
+if test "$ok" = "yes"; then
+        CFLAGS="${CFLAGS} -pg"
+        AC_DEFINE(ENABLE_PROF,1,[Define when using the profiler tool])
+        ARGS="${ARGS} prof"
+fi
+
 
 AM_CONDITIONAL([TREXIO_DEVEL],[test "x$TREXIO_DEVEL" != x])
 

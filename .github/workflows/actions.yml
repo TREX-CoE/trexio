@@ -15,7 +15,7 @@ jobs:
 
   get_commit_message:
     name: Get commit message
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
@@ -34,8 +34,8 @@ jobs:
 
   trexio_ubuntu:
 
-    runs-on: ubuntu-latest
-    name: x86 Ubuntu latest
+    runs-on: ubuntu-20.04
+    name: x86 Ubuntu 20.04
     needs: get_commit_message
 
     steps:
@@ -52,10 +52,10 @@ jobs:
           ./configure --enable-silent-rules
 
       - name: compile TREXIO
-        run: make -j 2
+        run: make -j2
 
       - name: check TREXIO
-        run: make check
+        run: make -j2 check
 
       - name: create virtual environment
         run: |
@@ -82,13 +82,27 @@ jobs:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
 
-      - name: clean
-        run: make clean
+      - name: maintainer clean
+        run: make maintainer-clean
+
+      - name: reconfigure with clang and AddressSanitizer
+        run: |
+          ./autogen.sh
+          ./configure CC=clang-11 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
+
+      - name: recompile TREXIO
+        run: make -j2
+
+      - name: recheck TREXIO for memory leaks
+        run: make -j2 check
+
+      - name: maintainer clean
+        run: make maintainer-clean
 
   trexio_macos:
 
-    runs-on: macos-latest
-    name: x86 MacOS latest
+    runs-on: macos-11
+    name: x86 MacOS 11
 
     steps:
       - uses: actions/checkout@v2

@@ -12,12 +12,12 @@ detailed_nums = get_detailed_num_dict(trex_config)
 detailed_strs = get_detailed_str_dict(trex_config)
 # helper dictionaries that contain names of groups, nums or dsets as keys
 dsets = get_dset_dict(trex_config)
-detailed_dsets_nostr, detailed_dsets_str, detailed_dsets_sparse = split_dset_dict_detailed(dsets)
+detailed_dsets_nostr, detailed_dsets_str, detailed_dsets_sparse, detailed_dsets_buf = split_dset_dict_detailed(dsets)
 detailed_dsets = detailed_dsets_nostr.copy()
 detailed_dsets.update(detailed_dsets_str)
 # build a big dictionary with all pre-processed data
 detailed_all = {
-    'datasets' : dict(detailed_dsets_nostr, **detailed_dsets_str, **detailed_dsets_sparse),
+    'datasets' : dict(detailed_dsets_nostr, **detailed_dsets_str, **detailed_dsets_sparse, **detailed_dsets_buf),
     'groups'   : group_dict,
     'numbers'  : detailed_nums,
     'strings'  : detailed_strs
@@ -62,10 +62,14 @@ for fname in files_todo['dset_str']:
 for fname in files_todo['dset_sparse']:
     recursive_populate_file(fname, template_paths, detailed_dsets_sparse)
 
+# populate has/read/write_buffered functions with recursive scheme
+for fname in files_todo['buffered']:
+    recursive_populate_file(fname, template_paths, detailed_dsets_buf)
+
 # populate group-related functions with mixed scheme
 for fname in files_todo['group']:
     # recursive scheme for delete_group functions
-    if 'delete' in fname:
+    if 'delete' in fname or 'has' in fname:
         recursive_populate_file(fname, template_paths, group_dict)
     # mixed (iterative+recursive) scheme [text backend]
     else:

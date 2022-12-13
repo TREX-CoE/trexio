@@ -5,7 +5,7 @@
 
 #define TEST_BACKEND 	TREXIO_TEXT
 #define TREXIO_FILE 	"test_dset_f.dir"
-#define RM_COMMAND 	"rm -rf " TREXIO_FILE
+#define RM_COMMAND 	"rm -f -- " TREXIO_FILE "/*.txt " TREXIO_FILE "/*.txt.size " TREXIO_FILE "/.lock && rm -fd -- " TREXIO_FILE
 
 static int test_write_dset (const char* file_name, const back_end_t backend) {
 
@@ -40,7 +40,7 @@ static int test_write_dset (const char* file_name, const back_end_t backend) {
   // write numerical attribute in an empty file
   rc = trexio_write_nucleus_num(file, num);
   assert (rc == TREXIO_SUCCESS);
-  
+
   // write numerical dataset in a file
   rc = trexio_write_nucleus_coord(file, coord);
   assert (rc == TREXIO_SUCCESS);
@@ -144,5 +144,3 @@ int main(void) {
 
   return 0;
 }
-
-

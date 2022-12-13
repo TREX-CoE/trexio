@@ -36,6 +36,10 @@
 /* Return num variables as part of the output tuple */
 %apply int *OUTPUT { int32_t* const num};
 %apply int *OUTPUT { int64_t* const num};
+%apply int *OUTPUT { int32_t* const num_up};
+%apply int *OUTPUT { int32_t* const num_dn};
+%apply int *OUTPUT { int64_t* const num_up};
+%apply int *OUTPUT { int64_t* const num_dn};
 %apply float *OUTPUT { float* const num};
 %apply float *OUTPUT { double* const num};
 /* Return TREXIO exit code from trexio_open as part of the output tuple */
@@ -75,6 +79,7 @@ import_array();
 %numpy_typemaps(float, NPY_FLOAT, int64_t)
 %numpy_typemaps(int32_t, NPY_INT32, int64_t)
 %numpy_typemaps(int64_t, NPY_INT64, int64_t)
+%numpy_typemaps(bitfield_t, NPY_INT64, int64_t)
 /* Enable write|read_safe functions to convert numpy arrays from/to double arrays */
 %apply (double* ARGOUT_ARRAY1, int64_t DIM1) {(double* const dset_out, const int64_t dim_out)};
 %apply (double* IN_ARRAY1, int64_t DIM1) {(const double* dset_in, const int64_t dim_in)};
@@ -93,6 +98,15 @@ import_array();
 
 %apply (double* ARGOUT_ARRAY1, int64_t DIM1) {(double* const value_sparse_read, const int64_t size_value_read)};
 %apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const index_sparse_read, const int64_t size_index_read)};
+/* Enable write|read_safe functions to convert numpy arrays from orbital list arrays */
+%apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const dset_up_out, const int64_t dim_up_out)};
+%apply (int32_t* ARGOUT_ARRAY1, int64_t DIM1) {(int32_t* const dset_dn_out, const int64_t dim_dn_out)};
+%apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t* const dset_up_out, const int64_t dim_up_out)};
+%apply (int64_t* ARGOUT_ARRAY1, int64_t DIM1) {(int64_t* const dset_dn_out, const int64_t dim_dn_out)};
+%apply (bitfield_t* IN_ARRAY1, int64_t DIM1) {(const bitfield_t* dset_in, const int64_t dim_in)};
+%apply (int32_t* IN_ARRAY1, int32_t DIM1) {(const int32_t* orb_list, const int32_t occupied_num)};
+/* For some reasons SWIG does not apply the proper bitfield_t typemap, so one has to manually specify int64_t* ARGOUT_ARRAY1 below */
+%apply (int64_t* ARGOUT_ARRAY1, int32_t DIM1) {(bitfield_t* const bit_list, const int32_t N_int)};
 
 /* This tells SWIG to treat char ** dset_in pattern as a special case
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.

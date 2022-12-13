@@ -5,7 +5,7 @@
 
 #define TEST_BACKEND 	TREXIO_TEXT
 #define TREXIO_FILE 	"test_dset_i.dir"
-#define RM_COMMAND 	"rm -rf " TREXIO_FILE
+#define RM_COMMAND 	"rm -f -- " TREXIO_FILE "/*.txt " TREXIO_FILE "/*.txt.size " TREXIO_FILE "/.lock && rm -fd -- " TREXIO_FILE
 
 static int test_write_dset (const char* file_name, const back_end_t backend) {
 
@@ -27,7 +27,7 @@ static int test_write_dset (const char* file_name, const back_end_t backend) {
   // write numerical attribute in an empty file
   rc = trexio_write_basis_shell_num(file, num);
   assert (rc == TREXIO_SUCCESS);
-  
+
   // write numerical (integer) dataset in a file
   rc = trexio_write_basis_nucleus_index(file, nucl_index);
   assert (rc == TREXIO_SUCCESS);
@@ -51,9 +51,17 @@ static int test_has_dset (const char* file_name, const back_end_t backend) {
 
 /*================= START OF TEST ==================*/
 
-  // open file 
+  // open file
   file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
+
+  // check that the group exists
+  rc = trexio_has_basis(file);
+  assert(rc==TREXIO_SUCCESS);
+
+  // check that the group does not exist
+  rc = trexio_has_mo(file);
+  assert(rc==TREXIO_HAS_NOT);
 
   // check that the previously written dataset exists
   rc = trexio_has_basis_nucleus_index(file);
@@ -130,5 +138,3 @@ int main(void) {
 
   return 0;
 }
-
-

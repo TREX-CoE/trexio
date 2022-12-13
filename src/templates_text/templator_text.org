@@ -3,6 +3,18 @@
 #+SETUPFILE: ../../docs/theme.setup
 # -*- mode: org -*-
 
+  The "file" produced by the text back end is a directory with one
+  file per group.
+
+  When the file is open, it is locked by the current process. No other
+  process can read/write the same file. This guarantees that the
+  representation in memory is consistent with the file and avoid
+  re-reading the file before writing.
+  To lock the file, we lock the =.lock= file which is present in the
+  directory.
+
+  The file is written when closed, or when the flush function is called.
+
 * Constant file prefixes (not used by the generator)               :noexport:
 
   #+begin_src emacs-lisp
@@ -61,21 +73,7 @@
 
   #+end_src
 
-* TEXT back end
-
-  The "file" produced by the text back end is a directory with one
-  file per group.
-
-  When the file is open, it is locked by the current process. No other
-  process can read/write the same file. This guarantees that the
-  representation in memory is consistent with the file and avoid
-  re-reading the file before writing.
-  To lock the file, we lock the =.lock= file which is present in the
-  directory.
-
-  The file is written when closed, or when the flush function is called.
-
-** Template for group-related structures in text back end
+* Template for group-related structures in text back end
 
     #+begin_src c :tangle struct_text_group_dset.h
 typedef struct $group$_s {
@@ -91,7 +89,12 @@ typedef struct $group$_s {
 } $group$_t;
     #+end_src
 
-** Template for general structure in text back end
+* Template for general structure in text back end
+
+   Polymorphism of the ~trexio_t~ type is handled by ensuring that the
+   corresponding types for all back ends can be safely casted to
+   ~trexio_t~. This is done by making the back-end structs start with
+   ~trexio_t parent~ attribute:
 
     #+begin_src c :tangle struct_text_group.h
 typedef struct trexio_text_s {
@@ -101,7 +104,7 @@ typedef struct trexio_text_s {
 } trexio_text_t;
     #+end_src
 
-** Initialize function (constant part)
+* Initialize function (constant part)
 
     #+begin_src c :tangle basic_text.h :exports none
 trexio_exit_code trexio_text_init(trexio_t* const file);
@@ -109,6 +112,23 @@ trexio_exit_code trexio_text_inquire(const char* file_name);
 trexio_exit_code trexio_text_deinit(trexio_t* const file);
 trexio_exit_code trexio_text_lock(trexio_t* const file);
 trexio_exit_code trexio_text_unlock(trexio_t* const file);
+trexio_exit_code trexio_text_flush(trexio_t* const file);
+bool trexio_text_file_exists(const char* file_name);
+    #+end_src
+
+    #+begin_src c :tangle basic_text.c
+bool
+trexio_text_file_exists (const char* file_name)
+{
+  /* Check if the file with "file_name" exists */
+  struct stat st;
+
+  int rc = stat(file_name, &st);
+
+  bool file_exists = rc == 0;
+
+  return file_exists;
+}
     #+end_src
 
     #+begin_src c :tangle basic_text.c
@@ -124,7 +144,15 @@ trexio_text_inquire (const char* file_name)
 
   if (file_exists) {
 
-    bool is_a_directory = st.st_mode & S_IFDIR;
+    bool is_a_directory = false;
+#ifdef S_IFDIR
+    is_a_directory = st.st_mode & S_IFDIR;
+#elif S_ISDIR
+    is_a_directory = S_ISDIR(s.st_mode);
+#else
+    printf("Some important macros are missing for directory handling.\n");
+    return TREXIO_FAILURE;
+#endif
     if (!is_a_directory) return TREXIO_FILE_ERROR;
 
     return TREXIO_SUCCESS;
@@ -246,7 +274,7 @@ trexio_text_unlock (trexio_t* const file)
 }
     #+end_src
 
-** Deinitialize function (templated part)
+* Deinitialize function (templated part)
 
     #+begin_src c :tangle basic_text_group.c
 trexio_exit_code
@@ -265,7 +293,27 @@ trexio_text_deinit (trexio_t* const file)
 }
     #+end_src
 
-** Template for text read a group
+* Flush function (templated part)
+
+    #+begin_src c :tangle basic_text_group.c
+trexio_exit_code
+trexio_text_flush (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_exit_code rc;
+  trexio_text_t* f = (trexio_text_t*) file;
+
+  /* Error handling for this call is added by the generator */
+  rc = trexio_text_flush_$group$(f);
+
+  return TREXIO_SUCCESS;
+
+}
+    #+end_src
+
+* Template for text read a group
 
     #+begin_src c :tangle read_group_text.h :exports none
 $group$_t* trexio_text_read_$group$(trexio_text_t* const file);
@@ -335,12 +383,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
         rc = fscanf(f, "%u", &($group$->rank_$group_dset$));
         if (rc != 1) {
-          FREE(buffer);
-          fclose(f);
-          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-          file->$group$ = $group$;
-          rc_free = trexio_text_free_$group$(file);
-          assert(rc_free == TREXIO_SUCCESS);
+          trexio_text_free_read_$group$(buffer, f, file, $group$);
           return NULL;
         }
 
@@ -351,24 +394,14 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           uint32_t j=0;
           rc = fscanf(f, "%1023s %u", buffer, &j);
           if ((rc != 2) || (strcmp(buffer, "dims_$group_dset$") != 0) || (j!=i)) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
 
           rc = fscanf(f, "%" SCNu64 "\n", &($group$->dims_$group_dset$[i]));
           assert(!(rc != 1));
           if (rc != 1) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
 
@@ -381,24 +414,14 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         /* Allocate arrays */
         $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
         if ($group$->$group_dset$ == NULL) {
-          FREE(buffer);
-          fclose(f);
-          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-          file->$group$ = $group$;
-          rc_free = trexio_text_free_$group$(file);
-          assert(rc_free == TREXIO_SUCCESS);
+          trexio_text_free_read_$group$(buffer, f, file, $group$);
           return NULL;
         }
 
         for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
           rc = fscanf(f, "%$group_dset_format_scanf$", &($group$->$group_dset$[i]));
           if (rc != 1) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
         }
@@ -407,43 +430,33 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       // START REPEAT GROUP_DSET_STR
       } else if (strcmp(buffer, "$group_dset$") == 0) {
 
-        if(size_$group_dset$ != 0) {
+        if (size_$group_dset$ != 0) {
           /* Allocate arrays */
           $group$->$group_dset$ = CALLOC(size_$group_dset$, $group_dset_dtype$);
           if ($group$->$group_dset$ == NULL) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
 
           /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
-             BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
-           ,*/
+           * BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+           */
           char* tmp_$group_dset$;
           tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
 
           for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
             $group$->$group_dset$[i] = tmp_$group_dset$;
             /* conventional fcanf with "%s" only return the string before the first space character
-             ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
-             ,* Q: depending on what ? */
-            rc = fscanf(f, " %1023[^\n]", tmp_$group_dset$);
-            assert(!(rc != 1));
+             * to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
+             */
+            rc = fscanf(f, " %1023[^\n]", buffer);
             if (rc != 1) {
-              FREE(buffer);
-              fclose(f);
-              /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-              file->$group$ = $group$;
-              rc_free = trexio_text_free_$group$(file);
-              assert(rc_free == TREXIO_SUCCESS);
+              trexio_text_free_read_$group$(buffer, f, file, $group$);
               return NULL;
             }
 
-            size_t tmp_$group_dset$_len = strlen($group$->$group_dset$[i]);
+            size_t tmp_$group_dset$_len = strlen(buffer);
+            strncpy(tmp_$group_dset$, buffer, 32);
             tmp_$group_dset$ += tmp_$group_dset$_len + 1;
           }
         }
@@ -456,41 +469,25 @@ trexio_text_read_$group$ (trexio_text_t* const file)
         /* additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d */
         rc = fscanf(f, "%u", &($group_num$_isSet));
         $group$->$group_num$_isSet = (bool) $group_num$_isSet;
-        assert(!(rc != 1));
         if (rc != 1) {
-          FREE(buffer);
-          fclose(f);
-          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-          file->$group$ = $group$;
-          rc_free = trexio_text_free_$group$(file);
-          assert(rc_free == TREXIO_SUCCESS);
+          trexio_text_free_read_$group$(buffer, f, file, $group$);
           return NULL;
         }
 
         if ($group$->$group_num$_isSet == true) {
+
           rc = fscanf(f, "%1023s", buffer);
-          assert(!((rc != 1) || (strcmp(buffer, "$group_num$") != 0)));
           if ((rc != 1) || (strcmp(buffer, "$group_num$") != 0)) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
 
           rc = fscanf(f, "%$group_num_format_scanf$", &($group$->$group_num$));
-          assert(!(rc != 1));
           if (rc != 1) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
+
         }
 
       // END REPEAT GROUP_NUM
@@ -498,57 +495,34 @@ trexio_text_read_$group$ (trexio_text_t* const file)
       } else if (strcmp(buffer, "len_$group_str$") == 0) {
 
         rc = fscanf(f, "%" SCNu64 "", &($group$->len_$group_str$));
-        assert(!(rc != 1));
         if (rc != 1) {
-          FREE(buffer);
-          fclose(f);
-          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-          file->$group$ = $group$;
-          rc_free = trexio_text_free_$group$(file);
-          assert(rc_free == TREXIO_SUCCESS);
+          trexio_text_free_read_$group$(buffer, f, file, $group$);
           return NULL;
         }
 
         rc = fscanf(f, "%1023s", buffer);
-        assert(!((rc != 1) || (strcmp(buffer, "$group_str$") != 0)));
         if ((rc != 1) || (strcmp(buffer, "$group_str$") != 0)) {
-          FREE(buffer);
-          fclose(f);
-          /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-          file->$group$ = $group$;
-          rc_free = trexio_text_free_$group$(file);
-          assert(rc_free == TREXIO_SUCCESS);
+          trexio_text_free_read_$group$(buffer, f, file, $group$);
           return NULL;
         }
 
         if ($group$->len_$group_str$ != 0) {
 
           $group$->$group_str$ = CALLOC($group$->len_$group_str$, char);
-          assert (!($group$->$group_str$ == NULL));
           if ($group$->$group_str$ == NULL) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
 
-          rc = fscanf(f, " %1023[^\n]", $group$->$group_str$);
-          assert(!(rc != 1));
+          rc = fscanf(f, " %1023[^\n]", buffer);
           if (rc != 1) {
-            FREE(buffer);
-            fclose(f);
-            /* Set pointer to the struct so that the garbage collector can do the job on file handle */
-            file->$group$ = $group$;
-            rc_free = trexio_text_free_$group$(file);
-            assert(rc_free == TREXIO_SUCCESS);
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
             return NULL;
           }
+          /* Safer string conversion to avoid buffer overflow in fscanf */
+          strncpy($group$->$group_str$, buffer, $group$->len_$group_str$);
 
         }
-
       // END REPEAT GROUP_ATTR_STR
       } else {
         continue;
@@ -563,11 +537,51 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
   file->$group$ = $group$;
   return $group$;
-
 }
    #+end_src
 
-** Template for text flush a group
+* Template for text has a group
+
+    #+begin_src c :tangle hrw_group_text.h :exports none
+trexio_exit_code trexio_text_has_$group$(trexio_t* const file);
+    #+end_src
+
+    #+begin_src c :tangle has_group_text.c
+trexio_exit_code
+trexio_text_has_$group$ (trexio_t* const file)
+{
+
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+
+  /* Flush the group to make sure the group.txt file is created */
+  if (file->mode != 'r') {
+    trexio_exit_code rc = trexio_text_flush_$group$((trexio_text_t*) file);
+    if (rc != TREXIO_SUCCESS) return TREXIO_FAILURE;
+  }
+
+  /* Build the file name */
+  char $group$_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  const char* $group$_file_name = "/$group$.txt";
+
+  strncpy ($group$_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  strncat ($group$_full_path, $group$_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
+
+  if ($group$_full_path[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') return TREXIO_FAILURE;
+
+  bool file_exists;
+  file_exists = trexio_text_file_exists($group$_full_path);
+
+  if (file_exists) {
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
+}
+   #+end_src
+
+* Template for text flush a group
 
     #+begin_src c :tangle flush_group_text.h :exports none
 trexio_exit_code trexio_text_flush_$group$(trexio_text_t* const file);
@@ -632,7 +646,7 @@ trexio_text_flush_$group$ (trexio_text_t* const file)
 }
    #+end_src
 
-** Template for text free memory
+* Template for text free memory
 
      Memory is allocated when reading. The following function frees memory.
 
@@ -661,7 +675,7 @@ trexio_text_free_$group$ (trexio_text_t* const file)
 
   // START REPEAT GROUP_DSET_STR
   if ($group$->$group_dset$ != NULL) {
-    if($group$->rank_$group_dset$ != 0) FREE ($group$->$group_dset$[0]);
+    if ($group$->rank_$group_dset$ != 0) FREE ($group$->$group_dset$[0]);
     FREE ($group$->$group_dset$);
   }
   // END REPEAT GROUP_DSET_STR
@@ -678,7 +692,26 @@ trexio_text_free_$group$ (trexio_text_t* const file)
 }
     #+end_src
 
-** Template for has/read/write a numerical attribute
+  This function is called upon the non-successful exit from the ~trexio_text_read_group~ function.
+
+    #+begin_src c :tangle free_group_text.c
+trexio_exit_code
+trexio_text_free_read_$group$ (char* buffer, FILE* txt_file, trexio_text_t* trexio_file, $group$_t* $group$)
+{
+  trexio_exit_code rc_free;
+
+  FREE(buffer);
+  fclose(txt_file);
+  /* Set pointer to the struct so that the garbage collector can do the job on file handle */
+  trexio_file->$group$ = $group$;
+  rc_free = trexio_text_free_$group$(trexio_file);
+  assert(rc_free == TREXIO_SUCCESS);
+
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+
+* Template for has/read/write a numerical attribute
 
     #+begin_src c :tangle hrw_attr_num_text.h :exports none
 trexio_exit_code trexio_text_has_$group_num$ (trexio_t* const file);
@@ -742,7 +775,7 @@ trexio_text_has_$group_num$ (trexio_t* const file)
 }
    #+end_src
 
-** Template for has/read/write a dataset of numerical data
+* Template for has/read/write a dataset of numerical data
 
      The ~group_dset~ array is assumed allocated with the appropriate size.
 
@@ -837,7 +870,7 @@ trexio_text_has_$group_dset$ (trexio_t* const file)
 
 }
    #+end_src
-** Template for has/read/write a dataset of strings
+* Template for has/read/write a dataset of strings
 
      The ~group_dset~ array is assumed allocated with the appropriate size.
 
@@ -937,7 +970,7 @@ trexio_text_has_$group_dset$ (trexio_t* const file)
 
 }
    #+end_src
-** Template for has/read/write a string attribute
+* Template for has/read/write a string attribute
 
    #+begin_src c :tangle hrw_attr_str_text.h :exports none
 trexio_exit_code trexio_text_has_$group_str$ (trexio_t* const file);
@@ -1012,7 +1045,7 @@ trexio_text_has_$group_str$ (trexio_t* const file)
 
 }
    #+end_src
-** Template for has/read/write the dataset of sparse data
+* Template for has/read/write the dataset of sparse data
 
    Each sparse array is stored in a separate =.txt= file due to the fact that sparse I/O has to be decoupled
    from conventional write/read/flush behaviour of the TEXT back end. Chunks are used to read/write sparse data
@@ -1055,8 +1088,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
 
   /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
   FILE* f = fopen(file_full_path, "a");
-  if(f == NULL) return TREXIO_FILE_ERROR;
-
+  if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char.
@@ -1091,7 +1123,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
     rc = fprintf(f, format_str,
        $group_dset_sparse_indices_printf$,
        ,*(value_sparse + i));
-    if(rc <= 0) {
+    if (rc <= 0) {
       fclose(f);
       return TREXIO_FAILURE;
     }
@@ -1118,6 +1150,23 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* Close the TXT file */
   rc = fclose(f_wSize);
   if (rc != 0) return TREXIO_FILE_ERROR;
+
+  const char $group$_file_name[256] = "/$group$.txt";
+
+  memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, $group$_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
+
+  bool file_exists = trexio_text_file_exists(file_full_path);
+
+  /* Create an empty file for the trexio_text_has_group to work */
+  if (!file_exists) {
+    FILE *fp = fopen(file_full_path, "ab+");
+    fclose(fp);
+  }
 
   /* Exit upon success */
   return TREXIO_SUCCESS;
@@ -1152,7 +1201,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
-  if(f == NULL) return TREXIO_FILE_ERROR;
+  if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char
@@ -1178,7 +1227,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
       memset(buffer, 0, sizeof(buffer));
 
-      if(fgets(buffer, 1023, f) == NULL){
+      if (fgets(buffer, 1023, f) == NULL){
 
         fclose(f);
         ,*eof_read_size = count;
@@ -1189,7 +1238,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
         rc = sscanf(buffer, "$group_dset_format_scanf$",
                     $group_dset_sparse_indices_scanf$,
                     value_sparse + i);
-        if(rc <= 0) {
+        if (rc <= 0) {
           fclose(f);
           return TREXIO_FAILURE;
         }
@@ -1200,7 +1249,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
   /* Close the TXT file */
   rc = fclose(f);
-  if(rc != 0) return TREXIO_FILE_ERROR;
+  if (rc != 0) return TREXIO_FILE_ERROR;
 
   return TREXIO_SUCCESS;
 }
@@ -1227,7 +1276,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
 
   /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
   FILE* f = fopen(file_full_path, "r");
-  if(f == NULL) return TREXIO_FILE_ERROR;
+  if (f == NULL) return TREXIO_FILE_ERROR;
 
 
   /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
@@ -1248,7 +1297,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
 
   /* Close the TXT file */
   rc = fclose(f);
-  if(rc != 0) return TREXIO_FILE_ERROR;
+  if (rc != 0) return TREXIO_FILE_ERROR;
 
   /* Overwrite the value at the input address and return TREXIO_SUCCESS */
   ,*size_max = size_accum;
@@ -1284,7 +1333,237 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
 }
    #+end_src
 
-** Template for text delete a group (UNSAFE mode)
+* Template for has/read/write a buffered vector
+
+   Each array is stored in a separate =.txt= file due to the fact that buffered I/O has to be decoupled
+   from conventional write/read/flush behaviour of the TEXT back end. Chunks are used to read/write the data
+   to prevent memory overflow. Chunks have a given ~int64_t size~.
+   Size specifies the number of vector elements to be written.
+
+   #+begin_src c :tangle hrw_buffered_text.h :exports none
+trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, double* const dset);
+trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const double* dset);
+trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
+   #+end_src
+
+   #+begin_src c :tangle read_buffered_text.c
+trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
+                                               const int64_t offset_file,
+                                               const uint32_t rank,
+                                               const uint64_t* dims,
+                                               int64_t* const eof_read_size,
+                                               double* const dset)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+  if (dset == NULL) return TREXIO_INVALID_ARG_6;
+
+  const char file_name[256] = "/$group_dset$.txt";
+
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
+
+  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
+  FILE* f = fopen(file_full_path, "r");
+  if (f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Specify the line length in order to offset properly.
+     Each double value 24 elements + one newline char.
+   ,*/
+  uint64_t line_length = 25UL;
+
+  /* Offset in the file according to the provided  value of offset_file and optimal line_length */
+  fseek(f, (long) offset_file * line_length, SEEK_SET);
+
+  /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
+  int rc;
+  char buffer[64];
+  uint32_t buf_size = sizeof(buffer);
+  /* Counter for number of elements beind processed */
+  uint64_t count = 0UL;
+
+  for (uint64_t i=0UL; i < dims[0]; ++i) {
+
+    memset(buffer, 0, buf_size);
+    if (fgets(buffer, buf_size-1, f) == NULL){
+
+      fclose(f);
+      ,*eof_read_size = count;
+      return TREXIO_END;
+
+    } else {
+
+      rc = sscanf(buffer, "%lf", dset + i);
+      if (rc <= 0) {
+        fclose(f);
+        return TREXIO_FAILURE;
+      }
+      count += 1UL;
+
+    }
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (size_max == NULL) return TREXIO_INVALID_ARG_2;
+
+  const char file_name[256] = "/$group_dset$.txt.size";
+
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
+
+  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
+  FILE* f = fopen(file_full_path, "r");
+  if (f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
+  int rc;
+  int64_t size_item, size_accum=0L;
+
+  /* Read the values from the file. BEWARE OF POSSIBLE MAX_INT64 OVERFLOW ! */
+  while(fscanf(f, "%" SCNd64, &size_item) != EOF) {
+    /* Check that summation will not overflow the int64_t value */
+    if (INT64_MAX - size_accum > size_item) {
+      size_accum += size_item;
+    } else {
+      fclose(f);
+      ,*size_max = -1L;
+      return TREXIO_INT_SIZE_OVERFLOW;
+    }
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  /* Overwrite the value at the input address and return TREXIO_SUCCESS */
+  ,*size_max = size_accum;
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   #+begin_src c :tangle write_buffered_text.c
+trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
+                                                const int64_t offset_file,
+                                                const uint32_t rank,
+                                                const uint64_t* dims,
+                                                const double* dset)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (dset == NULL) return TREXIO_INVALID_ARG_5;
+
+  const char file_name[256] = "/$group_dset$.txt";
+  const int append_str_len = 6;
+
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
+
+  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
+  FILE* f = fopen(file_full_path, "a");
+  if (f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
+  int rc;
+  for (uint64_t i=0UL; i < dims[0]; ++i) {
+
+    rc = fprintf(f, "%24.16e\n", *(dset+ i));
+    if (rc <= 0) {
+      fclose(f);
+      return TREXIO_FAILURE;
+    }
+
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  /* Append .size to the file_full_path in order to write additional info about the written buffer of data */
+  strncat(file_full_path, ".size", append_str_len);
+
+  /* Open the new file in "a" (append) mode to append info about the buffer that has been just written */
+  FILE *f_wSize = fopen(file_full_path, "a");
+  if (f_wSize == NULL) return TREXIO_FILE_ERROR;
+
+  /* Write the buffer_size */
+  rc = fprintf(f_wSize, "%" PRIu64 "\n", dims[0]);
+  if (rc <= 0) {
+    fclose(f_wSize);
+    return TREXIO_FAILURE;
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f_wSize);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  /* Additional part for the trexio_text_has_group to work */
+  const char group_file_name[256] = "/$group$.txt";
+
+  memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, group_file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(group_file_name));
+
+  bool file_exists = trexio_text_file_exists(file_full_path);
+
+  /* Create an empty file for the trexio_text_has_group to work */
+  if (!file_exists) {
+    FILE *fp = fopen(file_full_path, "ab+");
+    fclose(fp);
+  }
+
+  /* Exit upon success */
+  return TREXIO_SUCCESS;
+}
+
+   #+end_src
+
+   #+begin_src c :tangle has_buffered_text.c
+trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const char file_name[256] = "/$group_dset$.txt";
+
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
+
+  /* Check the return code of access function to determine whether the file with data exists or not */
+  if (access(file_full_path, F_OK) == 0){
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
+}
+   #+end_src
+* Template for text delete a group (UNSAFE mode)
 
   #+begin_src c :tangle delete_group_text.h :exports none
 trexio_exit_code trexio_text_delete_$group$ (trexio_t* const file);
@@ -1310,6 +1589,195 @@ trexio_text_delete_$group$ (trexio_t* const file)
   if (rc_free != TREXIO_SUCCESS) return rc_free;
 
   return TREXIO_SUCCESS;
+}
+   #+end_src
+
+* Source code for the determinant part
+
+   Each array is stored in a separate =.txt= file due to the fact that determinant I/O has to be decoupled
+   from conventional write/read/flush behaviour of the TEXT back end. Chunks are used to read/write the data
+   to prevent memory overflow. Chunks have a given ~int64_t size~.
+   Size specifies the number of data items, e.g. determinants.
+
+
+   #+begin_src c :tangle hrw_determinant_text.h :exports none
+trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file);
+trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, int64_t* const list);
+trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const int64_t* list);
+   #+end_src
+
+   #+begin_src c :tangle read_determinant_text.c
+trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
+                                                   const int64_t offset_file,
+                                                   const uint32_t rank,
+                                                   const uint64_t* dims,
+                                                   int64_t* const eof_read_size,
+                                                   int64_t* const list)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+  if (list == NULL) return TREXIO_INVALID_ARG_6;
+
+  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, determinant_list_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
+
+  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
+  FILE* f = fopen(file_full_path, "r");
+  if (f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Specify the line length in order to offset properly.
+     Each 64-bit integer takes at most 10 slots and requires one space,
+     we have int_num integers per up-spin determinant,
+     then this number is doubled because we have the same number for down-spin electrons,
+     and then one newline char.
+   ,*/
+  uint64_t line_length = dims[1]*11UL + 1UL; // 10 digits per int64_t bitfield + 1 space = 11 spots + 1 newline char
+
+  /* Offset in the file according to the provided  value of offset_file and optimal line_length */
+  fseek(f, (long) offset_file * line_length, SEEK_SET);
+
+  /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
+  int rc;
+  /* Declare fixed buffer which will be used to read the determinant string <a1 a2 ... a/\ b1 b2 ... b\/> */
+  char buffer[1024];
+  uint32_t buf_size = sizeof(buffer);
+  /* Parameters to post-process the buffer and to get bit fields integers */
+  uint64_t accum = 0UL;
+  uint32_t shift_int64 = 11U;
+  /* Counter for number of elements beind processed */
+  uint64_t count = 0UL;
+  for (uint64_t i=0UL; i < dims[0]; ++i) {
+
+    accum = 0UL;
+    memset(buffer, 0, buf_size);
+
+    if (fgets(buffer, buf_size-1, f) == NULL){
+
+      fclose(f);
+      ,*eof_read_size = count;
+      return TREXIO_END;
+
+    } else {
+
+   /* The format string is not anymore static but rather dynamic (the number of ints depend on the mo_num)
+      Thus, we parse the buffer string int_num*2 times to get the bit field determinants.
+    ,*/
+      for (uint32_t j=0; j < (uint32_t) dims[1]; ++j) {
+        rc = sscanf(buffer+accum, "%10" SCNd64, list + dims[1]*i + j);
+        if (rc <= 0) {
+          fclose(f);
+          return TREXIO_FAILURE;
+        }
+        accum += shift_int64;
+      }
+      count += 1UL;
+
+    }
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   #+begin_src c :tangle write_determinant_text.c
+trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
+                                                    const int64_t offset_file,
+                                                    const uint32_t rank,
+                                                    const uint64_t* dims,
+                                                    const int64_t* list)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (list == NULL) return TREXIO_INVALID_ARG_5;
+
+  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, determinant_list_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
+
+  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
+  FILE* f = fopen(file_full_path, "a");
+  if (f == NULL) return TREXIO_FILE_ERROR;
+
+  /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
+  int rc;
+  for (uint64_t i=0UL; i < dims[0]; ++i) {
+
+    /* The loop below is needed to write a line with int bit fields for alpha and beta electrons */
+    for (uint32_t j=0; j < (uint32_t) dims[1]; ++j) {
+      rc = fprintf(f, "%10" PRId64 " ", *(list + i*dims[1] + j));
+      if (rc <= 0) {
+        fclose(f);
+        return TREXIO_FAILURE;
+      }
+    }
+    fprintf(f, "%s", "\n");
+
+  }
+
+  /* Close the TXT file */
+  rc = fclose(f);
+  if (rc != 0) return TREXIO_FILE_ERROR;
+
+  /* Additional part for the trexio_text_has_group to work */
+  const char det_file_name[256] = "/determinant.txt";
+
+  memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, det_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(det_file_name));
+
+  bool file_exists = trexio_text_file_exists(file_full_path);
+
+  /* Create an empty file for the trexio_text_has_group to work */
+  if (!file_exists) {
+    FILE *fp = fopen(file_full_path, "ab+");
+    fclose(fp);
+  }
+
+  /* Exit upon success */
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   #+begin_src c :tangle has_determinant_text.c
+trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
+  char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
+
+  /* Copy directory name in file_full_path */
+  strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  /* Append name of the file with sparse data */
+  strncat (file_full_path, determinant_list_file_name,
+           TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
+
+  /* Check the return code of access function to determine whether the file with data exists or not */
+  if (access(file_full_path, F_OK) == 0){
+    return TREXIO_SUCCESS;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
 }
    #+end_src
 

@@ -22,6 +22,10 @@ variables cannot be negative. This additional constraint is required
 because ~dim~ attributes are used internally to allocate memory and to
 check array boundaries in the memory-safe API. Most of the times, the
 ~dim~ variables contain the ~num~ suffix.
+You may also encounter some ~dim readonly~ variables.
+It means that the value is automatically computed and written by the
+TREXIO library, thus it is read-only and cannot be (over)written by the
+user.
 
 In Fortran, arrays are 1-based and in most other languages the
 arrays are 0-based. Hence, we introduce the ~index~ type which is a
@@ -31,8 +35,16 @@ For sparse data structures such as electron replusion integrals,
 the data can be too large to fit in memory and the data needs to be
 fetched using multiple function calls to perform I/O on buffers.
 For more information on how to read/write sparse data structures, see
-the [[./examples.html][examples]].
+the [[./examples.html][examples]]. The ~sparse~ data representation implies the
+[[https://en.wikipedia.org/wiki/Sparse_matrix#Coordinate_list_(COO)][coordinate list]] representation, namely the user has to write a list
+of indices and values.
 
+For the Configuration Interfaction (CI) and Configuration State Function (CSF)
+groups, the ~buffered~ data type is introduced, which allows similar incremental
+I/O as for ~sparse~ data but without the need to write indices of the sparse values.
+
+For determinant lists (integer bit fields), the ~special~ attribute is present in the type.
+This means that the source code is not produced by the generator, but hand-written.
 
   #+begin_src python :tangle trex.json :exports none
 {
@@ -64,19 +76,19 @@ the [[./examples.html][examples]].
 
   #+CALL: json(data=metadata, title="metadata")
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "metadata": {
-		 "code_num" : [ "dim", []                        ]
-	,            "code" : [ "str", [ "metadata.code_num" ]   ]
-	,      "author_num" : [ "dim", []                        ]
-	,          "author" : [ "str", [ "metadata.author_num" ] ]
-	, "package_version" : [ "str", []                        ]
-	,     "description" : [ "str", []                        ]
-	,          "unsafe" : [ "int", []                        ]
+                 "code_num" : [ "dim", []                        ]
+        ,            "code" : [ "str", [ "metadata.code_num" ]   ]
+        ,      "author_num" : [ "dim", []                        ]
+        ,          "author" : [ "str", [ "metadata.author_num" ] ]
+        , "package_version" : [ "str", []                        ]
+        ,     "description" : [ "str", []                        ]
+        ,          "unsafe" : [ "int", []                        ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 * Electron (electron group)
 
@@ -191,20 +203,20 @@ If you encounter the aforementioned issue, please report it to our [[https://git
   #+CALL: json(data=ecp, title="ecp")
 
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "ecp": {
-	  "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
-	,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
-	,                "num" : [ "dim"  , []                ]
-	,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
-	,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
-	,           "exponent" : [ "float", [ "ecp.num" ]     ]
-	,        "coefficient" : [ "float", [ "ecp.num" ]     ]
-	,              "power" : [ "int"  , [ "ecp.num" ]     ]
+          "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
+        ,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
+        ,                "num" : [ "dim"  , []                ]
+        ,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+        ,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
+        ,           "exponent" : [ "float", [ "ecp.num" ]     ]
+        ,        "coefficient" : [ "float", [ "ecp.num" ]     ]
+        ,              "power" : [ "int"  , [ "ecp.num" ]     ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 ** Example
 
@@ -310,6 +322,7 @@ power = [
   | ~nucleus_index~ | ~index~ | ~(basis.shell_num)~ | One-to-one correspondence between shells and atomic indices  |
   | ~shell_ang_mom~ | ~int~   | ~(basis.shell_num)~ | One-to-one correspondence between shells and angular momenta |
   | ~shell_factor~  | ~float~ | ~(basis.shell_num)~ | Normalization factor of each shell ($\mathcal{N}_s$)         |
+  | ~r_power~       | ~int~   | ~(basis.shell_num)~ | Power to which $r$ is raised ($n_s$)                         |
   | ~shell_index~   | ~index~ | ~(basis.prim_num)~  | One-to-one correspondence between primitives and shell index |
   | ~exponent~      | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives ($\gamma_{ks}$)                  |
   | ~coefficient~   | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives ($a_{ks}$)                    |
@@ -318,22 +331,23 @@ power = [
   #+CALL: json(data=basis, title="basis")
 
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "basis": {
-		   "type" : [ "str"  , []                    ]
-	,      "prim_num" : [ "dim"  , []                    ]
-	,     "shell_num" : [ "dim"  , []                    ]
-	, "nucleus_index" : [ "index", [ "basis.shell_num" ] ]
-	, "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ] ]
-	,  "shell_factor" : [ "float", [ "basis.shell_num" ] ]
-	,   "shell_index" : [ "index", [ "basis.prim_num" ]  ]
-	,      "exponent" : [ "float", [ "basis.prim_num" ]  ]
-	,   "coefficient" : [ "float", [ "basis.prim_num" ]  ]
-	,   "prim_factor" : [ "float", [ "basis.prim_num" ]  ]
+                   "type" : [ "str"  , []                    ]
+        ,      "prim_num" : [ "dim"  , []                    ]
+        ,     "shell_num" : [ "dim"  , []                    ]
+        , "nucleus_index" : [ "index", [ "basis.shell_num" ] ]
+        , "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ] ]
+        ,  "shell_factor" : [ "float", [ "basis.shell_num" ] ]
+        ,       "r_power" : [ "int"  , [ "basis.shell_num" ] ]
+        ,   "shell_index" : [ "index", [ "basis.prim_num" ]  ]
+        ,      "exponent" : [ "float", [ "basis.prim_num" ]  ]
+        ,   "coefficient" : [ "float", [ "basis.prim_num" ]  ]
+        ,   "prim_factor" : [ "float", [ "basis.prim_num" ]  ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 ** Example
 
@@ -464,16 +478,16 @@ prim_factor =
   #+CALL: json(data=ao, title="ao")
 
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "ao": {
-	      "cartesian" : [ "int"  , []           ]
-	,           "num" : [ "dim"  , []           ]
-	,         "shell" : [ "index", [ "ao.num" ] ]
-	, "normalization" : [ "float", [ "ao.num" ] ]
+              "cartesian" : [ "int"  , []           ]
+        ,           "num" : [ "dim"  , []           ]
+        ,         "shell" : [ "index", [ "ao.num" ] ]
+        , "normalization" : [ "float", [ "ao.num" ] ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 ** One-electron integrals (~ao_1e_int~ group)
    :PROPERTIES:
@@ -492,13 +506,18 @@ prim_factor =
    over atomic orbitals.
 
    #+NAME: ao_1e_int
-  | Variable           | Type    | Dimensions         | Description                                            |
-  |--------------------+---------+--------------------+--------------------------------------------------------|
-  | ~overlap~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                            |
-  | ~kinetic~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$            |
-  | ~potential_n_e~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  |
-  | ~ecp~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$ |
-  | ~core_hamiltonian~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$              |
+  | Variable              | Type    | Dimensions         | Description                                                                       |
+  |-----------------------+---------+--------------------+-----------------------------------------------------------------------------------|
+  | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$  (real part, general case)                            |
+  | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$  (real part, general case)            |
+  | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (real part, general case)  |
+  | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$  (real part, general case) |
+  | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$  (real part, general case)              |
+  | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)  (imaginary part)                    |
+  | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)                    |
+  | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)           |
+  | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part)          |
+  | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)                        |
 
    #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -506,11 +525,16 @@ prim_factor =
    :results:
    #+begin_src python :tangle trex.json
        "ao_1e_int": {
-                    "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
-         ,          "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
-         ,    "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
-         ,              "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
-         , "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+                       "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,             "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
+         ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
+         , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
        } ,
    #+end_src
    :end:
@@ -556,30 +580,36 @@ prim_factor =
 * Molecular orbitals (mo group)
 
   #+NAME: mo
-  | Variable      | Type    | Dimensions         | Description                                                              |
-  |---------------+---------+--------------------+--------------------------------------------------------------------------|
-  | ~type~        | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
-  | ~num~         | ~dim~   |                    | Number of MOs                                                            |
-  | ~coefficient~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                                                          |
-  | ~class~       | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
-  | ~symmetry~    | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
-  | ~occupation~  | ~float~ | ~(mo.num)~         | Occupation number                                                        |
+  | Variable         | Type    | Dimensions         | Description                                                              |
+  |------------------+---------+--------------------+--------------------------------------------------------------------------|
+  | ~type~           | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
+  | ~num~            | ~dim~   |                    | Number of MOs                                                            |
+  | ~coefficient~    | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (real part, general case)                                |
+  | ~coefficient_im~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (imaginary part, for periodic calculations)              |
+  | ~class~          | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
+  | ~symmetry~       | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
+  | ~occupation~     | ~float~ | ~(mo.num)~         | Occupation number                                                        |
+  | ~energy~         | ~float~ | ~(mo.num)~         | For canonical MOs, corresponding eigenvalue                              |
+  | ~spin~           | ~int~   | ~(mo.num)~         | For UHF wave functions, 0 is $\alpha$ and 1 is $\beta$                   |
 
   #+CALL: json(data=mo, title="mo")
 
   #+RESULTS:
-  :RESULTS:
+  :results:
   #+begin_src python :tangle trex.json
       "mo": {
-		 "type" : [ "str"  , []                     ]
-	,         "num" : [ "dim"  , []                     ]
-	, "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
-	,       "class" : [ "str"  , [ "mo.num" ]           ]
-	,    "symmetry" : [ "str"  , [ "mo.num" ]           ]
-	,  "occupation" : [ "float", [ "mo.num" ]           ]
+                    "type" : [ "str"  , []                     ]
+        ,            "num" : [ "dim"  , []                     ]
+        ,    "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
+        , "coefficient_im" : [ "float", [ "mo.num", "ao.num" ] ]
+        ,          "class" : [ "str"  , [ "mo.num" ]           ]
+        ,       "symmetry" : [ "str"  , [ "mo.num" ]           ]
+        ,     "occupation" : [ "float", [ "mo.num" ]           ]
+        ,         "energy" : [ "float", [ "mo.num" ]           ]
+        ,           "spin" : [ "int"  , [ "mo.num" ]           ]
       } ,
   #+end_src
-  :END:
+  :end:
 
 ** One-electron integrals (~mo_1e_int~ group)
 
@@ -588,13 +618,18 @@ prim_factor =
    the basis of molecular orbitals.
 
    #+NAME: mo_1e_int
-  | Variable           | Type    | Dimensions         | Description                                            |
-  |--------------------+---------+--------------------+--------------------------------------------------------|
-  | ~overlap~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                            |
-  | ~kinetic~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$            |
-  | ~potential_n_e~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  |
-  | ~ecp~              | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$ |
-  | ~core_hamiltonian~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$              |
+  | Variable              | Type    | Dimensions         | Description                                                                       |
+  |-----------------------+---------+--------------------+-----------------------------------------------------------------------------------|
+  | ~overlap~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$  (real part, general case)                            |
+  | ~kinetic~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$ (real part, general case)             |
+  | ~potential_n_e~       | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (real part, general case)  |
+  | ~ecp~                 | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (real part, general case) |
+  | ~core_hamiltonian~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$  (real part, general case)              |
+  | ~overlap_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$ (imaginary part)  (imaginary part)                    |
+  | ~kinetic_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)                    |
+  | ~potential_n_e_im~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)           |
+  | ~ecp_im~              | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part)          |
+  | ~core_hamiltonian_im~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)                        |
 
    #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
@@ -602,26 +637,41 @@ prim_factor =
    :results:
    #+begin_src python :tangle trex.json
        "mo_1e_int": {
-                    "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
-         ,          "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
-         ,    "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
-         ,              "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
-         , "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+                       "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,             "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
+         ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
+         , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
        } ,
    #+end_src
    :end:
 
 ** Two-electron integrals (~mo_2e_int~ group)
 
-   The operators as the same as those defined in the
+   The operators are the same as those defined in the
    [[#ao_two_e][AO two-electron integrals section]]. Here, the integrals are given in
    the basis of molecular orbitals.
 
+   The Cholesky decomposition of the integrals can also be stored:
+
+   \[
+   \A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
+   \]
+
    #+NAME: mo_2e_int
-  | Variable | Type           | Dimensions                         | Description                             |
-  |----------+----------------+------------------------------------+-----------------------------------------|
-  | ~eri~    | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Electron repulsion integrals            |
-  | ~eri_lr~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Long-range Electron repulsion integrals |
+  | Variable              | Type           | Dimensions                                        | Description                                   |
+  |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
+  | ~eri~                 | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Electron repulsion integrals                  |
+  | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range Electron repulsion integrals       |
+  | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
+  | ~eri_cholesky~        | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
+  | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
+  | ~eri_lr_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
    #+CALL: json(data=mo_2e_int, title="mo_2e_int")
 
@@ -629,19 +679,141 @@ prim_factor =
    :results:
    #+begin_src python :tangle trex.json
        "mo_2e_int": {
-              "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-         , "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+                           "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+         ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+         ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+         ,        "eri_cholesky" : [ "float sparse", [ "mo_2e_int.eri_cholesky_num", "mo.num", "mo.num" ]    ]
+         , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+         ,     "eri_lr_cholesky" : [ "float sparse", [ "mo_2e_int.eri_lr_cholesky_num", "mo.num", "mo.num" ] ]
        } ,
    #+end_src
    :end:
 
-* TODO Slater determinants
+* Slater determinants (determinant group)
+
+  The configuration interaction (CI) wave function $\Psi$
+  can be expanded in the basis of Slater determinants $D_I$ as follows
+
+  \[
+  \Psi = \sum_I C_I D_I
+  \]
+
+  For relatively small expansions, a given determinant can be represented as a list of occupied orbitals.
+  However, this becomes unfeasible for larger expansions and requires more advanced data structures.
+  The bit field representation is used here, namely a given determinant is represented as $N_{\text{int}}$
+  64-bit integers where j-th bit is set to 1 if there is an electron in the j-th orbital and 0 otherwise.
+  This gives access to larger determinant expansions by optimising the storage of the determinant lists
+  in the memory.
+
+  \[
+  D_I = \alpha_1 \alpha_2 \ldots \alpha_{n_\uparrow} \beta_1 \beta_2 \ldots \beta_{n_\downarrow}
+  \]
+
+  where $\alpha$ and $\beta$ denote \uparrow-spin and \downarrow-spin electrons, respectively,
+  $n_\uparrow$ and $n_\downarrow$ correspond to ~electron.up_num~ and ~electron.dn_num~, respectively.
+
+  Note: the ~special~ attribute is present in the types, meaning that the source node is not
+  produced by the code generator.
+
+  An illustration on how to read determinants is presented in the [[./examples.html][examples]].
+
+  #+NAME: determinant
+  | Variable      | Type             | Dimensions          | Description                                            |
+  |---------------+------------------+---------------------+--------------------------------------------------------|
+  | ~num~         | ~dim readonly~   |                     | Number of determinants                                 |
+  | ~list~        | ~int special~    | ~(determinant.num)~ | List of determinants as integer bit fields             |
+  | ~coefficient~ | ~float buffered~ | ~(determinant.num)~ | Coefficients of the determinants from the CI expansion |
+
+  #+CALL: json(data=determinant, title="determinant")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "determinant": {
+		  "num" : [ "dim readonly"  , []                    ]
+	,        "list" : [ "int special"   , [ "determinant.num" ] ]
+	, "coefficient" : [ "float buffered", [ "determinant.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+* Configuration state functions (csf group)
+
+  The configuration interaction (CI) wave function $\Psi$ can be
+  expanded in the basis of [[https://en.wikipedia.org/wiki/Configuration_state_function][configuration state functions]] (CSFs)
+  $\Psi_I$ as follows
+
+  \[
+  \Psi = \sum_I C_I \psi_I.
+  \]
+
+  Each CSF is a linear combination of Slater determinants. Slater
+  determinants are stored in the =determinant= section. In this group
+  we store the CI coefficients in the basis of CSFs, and the
+  matrix $\langle D_I | \psi_J \rangle$ needed to project the CSFs in
+  the basis of Slater determinants.
+
+  #+NAME: csf
+  | Variable          | Type             | Dimensions                  | Description                                    |
+  |-------------------+------------------+-----------------------------+------------------------------------------------|
+  | ~num~             | ~dim readonly~   |                             | Number of CSFs                                 |
+  | ~coefficient~     | ~float buffered~ | ~(csf.num)~                 | Coefficients of the CSFs from the CI expansion |
+  | ~det_coefficient~ | ~float sparse~   | ~(determinant.num,csf.num)~ | Projection on the determinant basis            |
+
+  #+CALL: json(data=csf, title="csf")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "csf": {
+		      "num" : [ "dim readonly"  , []                               ]
+	,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
+	, "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+* Excited states (state group)
+
+  This group contains information about excited state. Since TREXIO version 2.3.0
+  the state-specific data (e.g. CI/CSF coeffcients, RDMs) is written in a separate
+  file in order to avoid over-complicated internal logics and global state switches.
+
+  The ~file_name~ and ~label~ arrays have to be written only for the master file,
+  e.g. the one containing the ground state wave function.
+  The ~id~ and ~current_label~ attributes have to be specified for each file
+  (containing both ground and excited state data).
+
+  #+NAME: state
+  | Variable        | Type  | Dimensions    | Description                                                                                   |
+  |-----------------+-------+---------------+-----------------------------------------------------------------------------------------------|
+  | ~num~           | ~dim~ |               | Number of states (including the ground state)                                                 |
+  | ~id~            | ~int~ |               | Index of a current state (0 is ground state)                                                  |
+  | ~label~         | ~str~ | ~(state.num)~ | Labels of all states related to this file (e.g. 'S' for singlets)                             |
+  | ~current_label~ | ~str~ |               | Labels of the current state that is in a file                                                 |
+  | ~file_name~     | ~str~ | ~(state.num)~ | Names of the TREXIO files linked to the current one (i.e. containing data for excited states) |
+
+  #+CALL: json(data=state, title="state")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "state": {
+		    "num" : [ "dim", []              ]
+	,            "id" : [ "int", []              ]
+	,         "label" : [ "str", [ "state.num" ] ]
+	, "current_label" : [ "str", []              ]
+	,     "file_name" : [ "str", [ "state.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
 * Reduced density matrices (rdm group)
 
   The reduced density matrices are defined in the basis of molecular
   orbitals.
 
-  The $\uparrow$-spin and $\downarrow$-spin components of the one-body
+  The \uparrow-spin and \downarrow-spin components of the one-body
   density matrix are given by
   \begin{eqnarray*}
     \gamma_{ij}^{\uparrow}   &=& \langle \Psi | \hat{a}^{\dagger}_{j\alpha}\, \hat{a}_{i\alpha} | \Psi \rangle \\
@@ -677,17 +849,43 @@ prim_factor =
       \frac{1}{2} \sum_{ijlk} \Gamma_{ijkl} \langle k l | i j \rangle
   \]
 
+
+  To compress the storage, the Cholesky decomposition of the RDMs can
+  be stored:
+
+  \[
+    \Gamma_{ijkl} = \sum_{\alpha} G_{ij\alpha} G_{kl\alpha}
+  \]
+
+  Warning: as opposed to electron repulsion integrals, the
+  decomposition is made such that the Cholesky vectors are expanded
+  in a two-electron basis
+  $f_{ij}(\mathbf{r}_1,\mathbf{r}_2) = \phi_i(\mathbf{r}_1) \phi_j(\mathbf{r}_2)$,
+  whereas in electron repulsion integrals each Cholesky vector is
+  expressed in a basis of a one-electron function
+  $g_{ik}(\mathbf{r}_1) = \phi_i(\mathbf{r}_1) \phi_k(\mathbf{r}_1)$.
+  
   #+NAME: rdm
-  | Variable  | Type           | Dimensions                         | Description                                                           |
-  |-----------+----------------+------------------------------------+-----------------------------------------------------------------------|
-  | ~1e~      | ~float~        | ~(mo.num, mo.num)~                 | One body density matrix                                               |
-  | ~1e_up~   | ~float~        | ~(mo.num, mo.num)~                 | \uparrow-spin component of the one body density matrix                |
-  | ~1e_dn~   | ~float~        | ~(mo.num, mo.num)~                 | \downarrow-spin component of the one body density matrix              |
-  | ~2e~      | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | Two-body reduced density matrix (spin trace)                          |
-  | ~2e_upup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\uparrow component of the two-body reduced density matrix     |
-  | ~2e_dndn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\downarrow component of the two-body reduced density matrix |
-  | ~2e_updn~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \uparrow\downarrow component of the two-body reduced density matrix   |
-  | ~2e_dnup~ | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~ | \downarrow\uparrow component of the two-body reduced density matrix   |
+  | Variable               | Type           | Dimensions                                   | Description                                                           |
+  |------------------------+----------------+----------------------------------------------+-----------------------------------------------------------------------|
+  | ~1e~                   | ~float~        | ~(mo.num, mo.num)~                           | One body density matrix                                               |
+  | ~1e_up~                | ~float~        | ~(mo.num, mo.num)~                           | \uparrow-spin component of the one body density matrix                |
+  | ~1e_dn~                | ~float~        | ~(mo.num, mo.num)~                           | \downarrow-spin component of the one body density matrix              |
+  | ~2e~                   | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | Two-body reduced density matrix (spin trace)                          |
+  | ~2e_upup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\uparrow component of the two-body reduced density matrix     |
+  | ~2e_dndn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\downarrow component of the two-body reduced density matrix |
+  | ~2e_updn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\downarrow component of the two-body reduced density matrix   |
+  | ~2e_dnup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\uparrow component of the two-body reduced density matrix   |
+  | ~2e_cholesky_num~      | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~      | Cholesky decomposition of the Two-body RDM (spin trace)               |
+  | ~2e_upup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_upup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\uparrow)         |
+  | ~2e_dndn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\downarrow)     |
+  | ~2e_updn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\downarrow)       |
+  | ~2e_dnup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
+  | ~2e_dnup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dnup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\uparrow)       |
 
   #+CALL: json(data=rdm, title="rdm")
 
@@ -695,14 +893,66 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "rdm": {
-               "1e" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        ,   "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        ,   "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                     ]
-        ,      "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-        , "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+                            "1e" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+        ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+        ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+        ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,              "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+        ,      "2e_cholesky_num" : [ "dim"         , []                                                 ]
+        ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]      ]
+        , "2e_upup_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ] ]
+        , "2e_dndn_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ] ]
+        , "2e_updn_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ] ]
+        , "2e_dnup_cholesky_num" : [ "dim"         , []                                                 ]
+        ,     "2e_dnup_cholesky" : [ "float sparse", [ "rdm.2e_dnup_cholesky_num", "mo.num", "mo.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+* Cell (cell group)
+
+  #+NAME: cell
+  | Variable | Type    | Dimensions | Description             |
+  |----------+---------+------------+-------------------------|
+  | ~a~      | ~float~ | ~(3)~      | First unit cell vector  |
+  | ~b~      | ~float~ | ~(3)~      | Second unit cell vector |
+  | ~c~      | ~float~ | ~(3)~      | Third unit cell vector  |
+
+  #+CALL: json(data=cell, title="cell")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "cell": {
+          "a" : [ "float", [ "3" ] ]
+        , "b" : [ "float", [ "3" ] ]
+        , "c" : [ "float", [ "3" ] ]
+      } ,
+  #+end_src
+  :end:
+
+* Periodic boundary calculations (pbc group)
+
+  #+NAME: pbc
+  | Variable   | Type    | Dimensions | Description             |
+  |------------+---------+------------+-------------------------|
+  | ~periodic~ | ~int~   |            | ~1~: true or ~0~: false |
+  | ~k_point~  | ~float~ | ~(3)~      | k-point sampling        |
+
+  #+CALL: json(data=pbc, title="pbc")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "pbc": {
+          "periodic" : [ "int"  , []      ]
+        ,  "k_point" : [ "float", [ "3" ] ]
       } ,
   #+end_src
   :end:
@@ -724,9 +974,9 @@ prim_factor =
   | ~point~  | ~float~ | ~(3, electron.num, qmc.num)~ | 3N-dimensional points                 |
   | ~psi~    | ~float~ | ~(qmc.num)~                  | Wave function evaluated at the points |
   | ~e_loc~  | ~float~ | ~(qmc.num)~                  | Local energy evaluated at the points  |
-   
+
    #+CALL: json(data=qmc, title="qmc", last=1)
-   
+
    #+RESULTS:
    :results:
    #+begin_src python :tangle trex.json
