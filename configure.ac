@@ -97,6 +97,12 @@ if test "x${with_hdf5}" = xno; then
     Configuring with the HDF5 library is
     recommended to build efficient TREXIO.
     ------------------------------------------])
+else
+    AC_HAVE_LIBRARY([hdf5_hl], [], AC_MSG_ERROR([
+-----------------------------------
+Error: hdf5_hl library is required
+-----------------------------------
+]), [])
 fi
 
 CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
