@@ -73,7 +73,7 @@ python3 -m pip install dist/trexio-*.whl --force-reinstall
 #python3 -m twine upload dist/trexio-*.tar.gz
 
 # Cleaning
-rm -rf build dist trexio.egg-info
+#rm -rf build dist trexio.egg-info
 
 # Additional information related to the installation of the TREXIO Python API
 
