@@ -49,6 +49,7 @@ m4_version_prereq([2.70],[], [AC_PROG_CC_C99])
 AS_IF([test "$ac_cv_prog_cc_c99" = "no"],
       [AC_MSG_ERROR([The compiler does not support C99])])
 AC_PROG_CC_C_O
+AM_PROG_CC_C_O
 
 
 # Fortran API [default: --with-fortran], do not disable in the dev mode
@@ -128,6 +129,12 @@ if test "x${with_hdf5}" = xno; then
     Configuring with the HDF5 library is
     recommended to build efficient TREXIO.
     ------------------------------------------])
+else
+    AC_HAVE_LIBRARY([hdf5_hl], [], AC_MSG_ERROR([
+-----------------------------------
+Error: hdf5_hl library is required
+-----------------------------------
+]), [])
 fi
 
 CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
