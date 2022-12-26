@@ -766,18 +766,18 @@ prim_factor =
   \Psi = \sum_I C_I \psi_I.
   \]
 
-  Each CSF is a linear combination of Slater determinants. Slater
+  Each CSF $\psi_I$ is a linear combination of Slater determinants. Slater
   determinants are stored in the =determinant= section. In this group
   we store the CI coefficients in the basis of CSFs, and the
   matrix $\langle D_I | \psi_J \rangle$ needed to project the CSFs in
   the basis of Slater determinants.
 
   #+NAME: csf
-  | Variable          | Type             | Dimensions                  | Description                                    |
-  |-------------------+------------------+-----------------------------+------------------------------------------------|
-  | ~num~             | ~dim readonly~   |                             | Number of CSFs                                 |
-  | ~coefficient~     | ~float buffered~ | ~(csf.num)~                 | Coefficients of the CSFs from the CI expansion |
-  | ~det_coefficient~ | ~float sparse~   | ~(determinant.num,csf.num)~ | Projection on the determinant basis            |
+  | Variable          | Type             | Dimensions                  | Description                             |
+  |-------------------+------------------+-----------------------------+-----------------------------------------|
+  | ~num~             | ~dim readonly~   |                             | Number of CSFs                          |
+  | ~coefficient~     | ~float buffered~ | ~(csf.num)~                 | Coefficients $C_I$ of the CSF expansion |
+  | ~det_coefficient~ | ~float sparse~   | ~(determinant.num,csf.num)~ | Projection on the determinant basis     |
 
   #+CALL: json(data=csf, title="csf")
 
@@ -794,23 +794,25 @@ prim_factor =
 
 * Excited states (state group)
 
-  This group contains information about excited state. Since TREXIO version 2.3.0
-  the state-specific data (e.g. CI/CSF coeffcients, RDMs) is written in a separate
-  file in order to avoid over-complicated internal logics and global state switches.
+  This group contains information about excited states. Since only a
+  single state can be stored in a TREXIO file, it is possible to store
+  in the main TREXIO file the names of auxiliary files containing the
+  information of the other states.
 
-  The ~file_name~ and ~label~ arrays have to be written only for the master file,
-  e.g. the one containing the ground state wave function.
-  The ~id~ and ~current_label~ attributes have to be specified for each file
-  (containing both ground and excited state data).
+  The ~file_name~ and ~label~ arrays have to be written only for the
+  main file, e.g. the one containing the ground state wave function
+  together with the basis set parameters, molecular orbitals,
+  integrals, etc.
+  The ~id~ and ~current_label~ attributes need to be specified for each file.
 
   #+NAME: state
-  | Variable        | Type  | Dimensions    | Description                                                                                   |
-  |-----------------+-------+---------------+-----------------------------------------------------------------------------------------------|
-  | ~num~           | ~dim~ |               | Number of states (including the ground state)                                                 |
-  | ~id~            | ~int~ |               | Index of a current state (0 is ground state)                                                  |
-  | ~label~         | ~str~ | ~(state.num)~ | Labels of all states related to this file (e.g. 'S' for singlets)                             |
-  | ~current_label~ | ~str~ |               | Labels of the current state that is in a file                                                 |
-  | ~file_name~     | ~str~ | ~(state.num)~ | Names of the TREXIO files linked to the current one (i.e. containing data for excited states) |
+  | Variable        | Type  | Dimensions    | Description                                                                                 |
+  |-----------------+-------+---------------+---------------------------------------------------------------------------------------------|
+  | ~num~           | ~dim~ |               | Number of states (including the ground state)                                               |
+  | ~id~            | ~int~ |               | Index of the current state (0 is ground state)                                              |
+  | ~current_label~ | ~str~ |               | Label of the current state                                                                  |
+  | ~label~         | ~str~ | ~(state.num)~ | Labels of all states                                                                        |
+  | ~file_name~     | ~str~ | ~(state.num)~ | Names of the TREXIO files linked to the current one (i.e. containing data for other states) |
 
   #+CALL: json(data=state, title="state")
 
@@ -818,11 +820,11 @@ prim_factor =
   :results:
   #+begin_src python :tangle trex.json
       "state": {
-		    "num" : [ "dim", []              ]
-	,            "id" : [ "int", []              ]
-	,         "label" : [ "str", [ "state.num" ] ]
-	, "current_label" : [ "str", []              ]
-	,     "file_name" : [ "str", [ "state.num" ] ]
+                    "num" : [ "dim", []              ]
+        ,            "id" : [ "int", []              ]
+        , "current_label" : [ "str", []              ]
+        ,         "label" : [ "str", [ "state.num" ] ]
+        ,     "file_name" : [ "str", [ "state.num" ] ]
       } ,
   #+end_src
   :end:
