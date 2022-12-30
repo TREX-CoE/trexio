@@ -679,7 +679,7 @@ prim_factor =
    The Cholesky decomposition of the integrals can also be stored:
 
    \[
-   \A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
+   A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
    \]
 
    #+NAME: mo_2e_int
@@ -788,6 +788,81 @@ prim_factor =
 		      "num" : [ "dim readonly"  , []                               ]
 	,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
 	, "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+* Amplitudes (amplitude group)
+
+  The wave function may be expressed in terms of action of the cluster
+  operator $\hat{T}$:
+
+  \[
+  \hat{T} = \hat{T}_1 + \hat{T}_2 + \hat{T}_3 + \dots
+  \]
+
+  on a reference wave function $\Psi$, where $\hat{T}_1$ is the single excitation operator,
+
+  \[
+  \hat{T}_1 = \sum_{ia} t_{i}^{a}\, \hat{a}^\dagger_a \hat{a}_i 
+  \],
+
+  $\hat{T}_2$ is the double excitation operator,
+
+  \[
+  \hat{T}_2 = \frac{1}{4} \sum_{ijab} t_{ij}^{ab}\, \hat{a}^\dagger_a \hat{a}^\dagger_b \hat{a}_j \hat{a}_i 
+  \],
+
+  /etc/.
+
+  Wave functions obtained with perturbation theory of configuration
+  interaction are of the form
+  [\
+  \Phi = \hat{T} \Psi
+  \]
+
+  and coupled-cluster wave functions are of the form
+  [\
+  \Phi = e^{\hat{T}} \Psi
+  \]
+
+  The reference wave function is stored using the ~determinant~ and/or 
+  ~csf~ groups, and the amplitudes are stored using the current group.
+  The attributes with the ~exp~ suffix correspond to exponentialized operators.
+
+  The order of the indices is chosen such that
+  - ~t(i,a)~ = $t_{i}^{a}$.
+  - ~t(i,j,a,b)~ = $t_{ij}^{ab}$,
+  - ~t(i,j,k,a,b,c)~ = $t_{ijk}^{abc}$,
+  - ~t(i,j,k,l,a,b,c,d)~ = $t_{ijkl}^{abcd}$,
+  - $\dots$
+  
+  #+NAME: amplitude
+  | Variable        | Type           | Dimensions                                                  | Description                                     |
+  |-----------------+----------------+-------------------------------------------------------------+-------------------------------------------------|
+  | ~single~        | ~float~        | ~(mo.num,mo.num)~                                           | Single excitation amplitudes                    |
+  | ~single_exp~    | ~float~        | ~(mo.num,mo.num)~                                           | Exponentialized single excitation amplitudes    |
+  | ~double~        | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num)~                             | Double excitation amplitudes                    |
+  | ~double_exp~    | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num)~                             | Exponentialized double excitation amplitudes    |
+  | ~triple~        | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~               | Triple excitation amplitudes                    |
+  | ~triple_exp~    | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~               | Exponentialized triple excitation amplitudes    |
+  | ~quadruple~     | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~ | Quadruple excitation amplitudes                 |
+  | ~quadruple_exp~ | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~ | Exponentialized quadruple excitation amplitudes |
+
+  #+CALL: json(data=amplitude, title="amplitude")
+
+  #+RESULTS:
+  :results:
+  #+begin_src python :tangle trex.json
+      "amplitude": {
+                 "single" : [ "float"       , [ "mo.num", "mo.num" ]                                                             ]
+        ,    "single_exp" : [ "float"       , [ "mo.num", "mo.num" ]                                                             ]
+        ,        "double" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+        ,    "double_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+        ,        "triple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+        ,    "triple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+        ,     "quadruple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+        , "quadruple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
       } ,
   #+end_src
   :end:
@@ -967,10 +1042,10 @@ prim_factor =
   defined in this group.
 
   #+NAME: pbc
-  | Variable      | Type    | Dimensions | Description             |
-  |---------------+---------+------------+-------------------------|
-  | ~periodic~    | ~int~   |            | ~1~: true or ~0~: false |
-  | ~k_point~     | ~float~ | ~(3)~      | $k$-point sampling      |
+  | Variable   | Type    | Dimensions | Description             |
+  |------------+---------+------------+-------------------------|
+  | ~periodic~ | ~int~   |            | ~1~: true or ~0~: false |
+  | ~k_point~  | ~float~ | ~(3)~      | $k$-point sampling      |
 
   #+CALL: json(data=pbc, title="pbc")
 
