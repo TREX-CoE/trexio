@@ -46,17 +46,21 @@ I/O as for ~sparse~ data but without the need to write indices of the sparse val
 For determinant lists (integer bit fields), the ~special~ attribute is present in the type.
 This means that the source code is not produced by the generator, but hand-written.
 
+Some data may be complex. In that case, the real part should be stored
+in the variable, and the imaginary part will be stored in the variable
+with the same name suffixed by ~_im~.
+
   #+begin_src python :tangle trex.json :exports none
 {
   #+end_src
 
 * Metadata (metadata group)
 
-  As we expect our files to be archived in open-data repositories, we
-  need to give the possibility to the users to store some metadata
-  inside the files. We propose to store the list of names of the codes
-  which have participated to the creation of the file, a list of
-  authors of the file, and a textual description.
+  As we expect TREXIO files to be archived in open-data repositories,
+  we give the possibility to the users to store some metadata inside
+  the files. We propose to store the list of names of the codes which
+  have participated to the creation of the file, a list of authors of
+  the file, and a textual description.
 
   #+NAME: metadata
   | Variable          | Type  | Dimensions (for arrays) | Description                              |
@@ -69,7 +73,7 @@ This means that the source code is not produced by the generator, but hand-writt
   | ~description~     | ~str~ |                         | Text describing the content of file      |
   | ~unsafe~          | ~int~ |                         | ~1~: true, ~0~: false                    |
 
-  **Note:** ~unsafe~ attribute of the ~metadata~ group indicates
+  **Note:** The ~unsafe~ attribute of the ~metadata~ group indicates
   whether the file has been previously opened with ~'u'~ mode.  It is
   automatically written in the file upon the first unsafe opening.  If
   the user has checked that the TREXIO file is valid (e.g. using
@@ -181,7 +185,7 @@ This means that the source code is not produced by the generator, but hand-writt
    The structure of this group is adapted for the [[https://github.com/dftlibs/numgrid][numgrid]] library.
    Feel free to submit a PR if you find missing options/functionalities.
 
-    #+name: grid
+    #+NAME: grid
    | Variable        | Type    | Dimensions       | Description                                                             |
    |-----------------+---------+------------------+-------------------------------------------------------------------------|
    | ~description~   | ~str~   |                  | Details about the used quadratures can go here                          |
@@ -485,23 +489,25 @@ prim_factor =
    | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
 
 
- There might be some confusion in the meaning of the $\ell_{\max}$.
- It can be attributed to the maximum angular momentum occupied
- in the core orbitals, which are removed by the ECP.
- On the other hand, it can be attributed to the maximum angular momentum of the
- ECP that replaces the core electrons.
- *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
-
-
- *Note for developers*: avoid having variables with similar prefix in their name.
- HDF5 back end might cause issues due to the way ~find_dataset~ function works.
- For example, in the ECP group we use ~max_ang_mom~ and not ~ang_mom_max~.
- The latter causes issues when written before the ~ang_mom~ array in the TREXIO file.
- *Update*: in fact, the aforementioned issue has only been observed when using HDF5 version 1.10.4
- installed via ~apt-get~. Installing the same version from the ~conda-forge~ channel and running it in
- an isolated ~conda~ environment works just fine. Thus, it seems to be a bug in the ~apt~-provided package.
- If you encounter the aforementioned issue, please report it to our [[https://github.com/TREX-CoE/trexio/issues][issue tracker on GitHub]].
-
+   There might be some confusion in the meaning of the $\ell_{\max}$.
+   It can be attributed to the maximum angular momentum occupied in
+   the core orbitals, which are removed by the ECP. On the other
+   hand, it can be attributed to the maximum angular momentum of the
+   ECP that replaces the core electrons.
+   *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
+   
+   *Note for developers*: avoid having variables with similar prefix
+   in their name. The HDF5 back end might cause issues due to the way
+   ~find_dataset~ function works.  For example, in the ECP group we
+   use ~max_ang_mom~ and not ~ang_mom_max~. The latter causes issues
+   when written before the ~ang_mom~ array in the TREXIO file.
+   *Update*: in fact, the aforementioned issue has only been observed
+   when using HDF5 version 1.10.4 installed via ~apt-get~. Installing
+   the same version from the ~conda-forge~ channel and running it in
+   an isolated ~conda~ environment works just fine. Thus, it seems to
+   be a bug in the ~apt~-provided package.
+   If you encounter the aforementioned issue, please report it to our
+   [[https://github.com/TREX-CoE/trexio/issues][issue tracker on GitHub]].
 
    #+CALL: json(data=ecp, title="ecp")
 
@@ -663,18 +669,18 @@ power = [
     over atomic orbitals.
 
     #+NAME: ao_1e_int
-   | Variable              | Type    | Dimensions         | Description                                                                       |
-   |-----------------------+---------+--------------------+-----------------------------------------------------------------------------------|
-   | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$  (real part, general case)                            |
-   | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$  (real part, general case)            |
-   | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (real part, general case)  |
-   | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$  (real part, general case) |
-   | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$  (real part, general case)              |
-   | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)  (imaginary part)                    |
-   | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)                    |
-   | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)           |
-   | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part)          |
-   | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)                        |
+   | Variable              | Type    | Dimensions         | Description                                                              |
+   |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
+   | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                                              |
+   | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$                              |
+   | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
+   | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
+   | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                                |
+   | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)                             |
+   | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
+   | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
+   | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
+   | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
 
     #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -716,11 +722,21 @@ power = [
       \sum_{j=1}^{i-1} \frac{\text{erf}(\vert \mathbf{r}_i -
       \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential
 
+    The Cholesky decomposition of the integrals can also be stored:
+
+    \[
+    A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
+    \]
+
     #+NAME: ao_2e_int
-   | Variable | Type           | Dimensions                         | Description                             |
-   |----------+----------------+------------------------------------+-----------------------------------------|
-   | ~eri~    | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Electron repulsion integrals            |
-   | ~eri_lr~ | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~ | Long-range Electron repulsion integrals |
+   | Variable              | Type           | Dimensions                                        | Description                                   |
+   |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
+   | ~eri~                 | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
+   | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range Electron repulsion integrals       |
+   | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
+   | ~eri_cholesky~        | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
+   | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
+   | ~eri_lr_cholesky~     | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
     #+CALL: json(data=ao_2e_int, title="ao_2e_int")
 
@@ -728,8 +744,12 @@ power = [
     :results:
     #+begin_src python :tangle trex.json
         "ao_2e_int": {
-               "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
-          , "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ] ]
+                            "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+          ,              "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+          ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+          ,        "eri_cholesky" : [ "float sparse", [ "ao_2e_int.eri_cholesky_num", "ao.num", "ao.num" ]    ]
+          , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+          ,     "eri_lr_cholesky" : [ "float sparse", [ "ao_2e_int.eri_lr_cholesky_num", "ao.num", "ao.num" ] ]
         } ,
     #+end_src
     :end:
@@ -741,8 +761,8 @@ power = [
    |------------------+---------+--------------------+--------------------------------------------------------------------------|
    | ~type~           | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
    | ~num~            | ~dim~   |                    | Number of MOs                                                            |
-   | ~coefficient~    | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (real part, general case)                                |
-   | ~coefficient_im~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (imaginary part, for periodic calculations)              |
+   | ~coefficient~    | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                                                          |
+   | ~coefficient_im~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (imaginary part)                                         |
    | ~class~          | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
    | ~symmetry~       | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
    | ~occupation~     | ~float~ | ~(mo.num)~         | Occupation number                                                        |
@@ -775,18 +795,18 @@ power = [
     the basis of molecular orbitals.
 
     #+NAME: mo_1e_int
-   | Variable              | Type    | Dimensions         | Description                                                                       |
-   |-----------------------+---------+--------------------+-----------------------------------------------------------------------------------|
-   | ~overlap~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$  (real part, general case)                            |
-   | ~kinetic~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$ (real part, general case)             |
-   | ~potential_n_e~       | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (real part, general case)  |
-   | ~ecp~                 | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (real part, general case) |
-   | ~core_hamiltonian~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$  (real part, general case)              |
-   | ~overlap_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$ (imaginary part)  (imaginary part)                    |
-   | ~kinetic_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)                    |
-   | ~potential_n_e_im~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)           |
-   | ~ecp_im~              | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part)          |
-   | ~core_hamiltonian_im~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)                        |
+   | Variable              | Type    | Dimensions         | Description                                                              |
+   |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
+   | ~overlap~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                                              |
+   | ~kinetic~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$                              |
+   | ~potential_n_e~       | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$                    |
+   | ~ecp~                 | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$                   |
+   | ~core_hamiltonian~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$                                |
+   | ~overlap_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$ (imaginary part)                             |
+   | ~kinetic_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)           |
+   | ~potential_n_e_im~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)  |
+   | ~ecp_im~              | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part) |
+   | ~core_hamiltonian_im~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)               |
 
     #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
@@ -814,12 +834,6 @@ power = [
     [[#ao_two_e][AO two-electron integrals section]]. Here, the integrals are given in
     the basis of molecular orbitals.
 
-    The Cholesky decomposition of the integrals can also be stored:
-
-    \[
-    A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
-    \]
-
     #+NAME: mo_2e_int
    | Variable              | Type           | Dimensions                                        | Description                                   |
    |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
@@ -845,18 +859,6 @@ power = [
         } ,
     #+end_src
     :end:
-    :results:
-    #+begin_src python :tangle trex.json
-       "mo_2e_int": {
-                           "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
-         ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
-         ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
-         ,        "eri_cholesky" : [ "float sparse", [ "mo_2e_int.eri_cholesky_num", "mo.num", "mo.num" ]    ]
-         , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
-         ,     "eri_lr_cholesky" : [ "float sparse", [ "mo_2e_int.eri_lr_cholesky_num", "mo.num", "mo.num" ] ]
-       } ,
-    #+end_src
-    :
    
 * N-electron basis
 ** Slater determinants (determinant group)
@@ -1228,7 +1230,7 @@ power = [
   | ~en_nucleus~  | ~index~  | ~(jastrow.en_num)~  | Nucleus relative to the eN parameter                            |
   | ~een_nucleus~ | ~index~  | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                           |
   | ~ee_scaling~  | ~float~  |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
-  | ~eN_scaling~  | ~float~  | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
+  | ~en_scaling~  | ~float~  | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
    
 * Quantum Monte Carlo data (qmc group)
 
