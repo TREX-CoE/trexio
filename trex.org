@@ -175,56 +175,6 @@ with the same name suffixed by ~_im~.
    #+end_src
    :end:
 
-** Numerical integration grid (grid group)
-
-   The molecular integrals have to be computed numerically on a grid in many applications.
-   A common choice for the angular grid is the one proposed by Lebedev and Laikov
-   [Russian Academy of Sciences Doklady Mathematics, Volume 59, Number 3, 1999, pages 477-481].
-   For the radial grids, many approaches have been developed over the years.
-
-   The structure of this group is adapted for the [[https://github.com/dftlibs/numgrid][numgrid]] library.
-   Feel free to submit a PR if you find missing options/functionalities.
-
-    #+NAME: grid
-   | Variable        | Type    | Dimensions       | Description                                                             |
-   |-----------------+---------+------------------+-------------------------------------------------------------------------|
-   | ~description~   | ~str~   |                  | Details about the used quadratures can go here                          |
-   | ~rad_precision~ | ~float~ |                  | Radial precision parameter (not used in some schemes like Krack-Köster) |
-   | ~num~           | ~dim~   |                  | Number of grid points                                                   |
-   | ~max_ang_num~   | ~int~   |                  | Maximum number of angular grid points (for pruning)                     |
-   | ~min_ang_num~   | ~int~   |                  | Minimum number of angular grid points (for pruning)                     |
-   | ~coord~         | ~float~ | ~(grid.num)~     | Discretized coordinate space                                            |
-   | ~weight~        | ~float~ | ~(grid.num)~     | Grid weights according to a given partitioning (e.g. Becke)             |
-   | ~ang_num~       | ~dim~   |                  | Number of angular integration points (if used)                          |
-   | ~ang_coord~     | ~float~ | ~(grid.ang_num)~ | Discretized angular space (if used)                                     |
-   | ~ang_weight~    | ~float~ | ~(grid.ang_num)~ | Angular grid weights (if used)                                          |
-   | ~rad_num~       | ~dim~   |                  | Number of radial integration points (if used)                           |
-   | ~rad_coord~     | ~float~ | ~(grid.rad_num)~ | Discretized radial space (if used)                                      |
-   | ~rad_weight~    | ~float~ | ~(grid.rad_num)~ | Radial grid weights  (if used)                                          |
-
-    #+CALL: json(data=grid, title="grid")
-
-    #+RESULTS:
-    :results:
-    #+begin_src python :tangle trex.json
-        "grid": {
-              "description" : [ "str"  , []                 ]
-          , "rad_precision" : [ "float", []                 ]
-          ,           "num" : [ "dim"  , []                 ]
-          ,   "max_ang_num" : [ "int"  , []                 ]
-          ,   "min_ang_num" : [ "int"  , []                 ]
-          ,         "coord" : [ "float", [ "grid.num" ]     ]
-          ,        "weight" : [ "float", [ "grid.num" ]     ]
-          ,       "ang_num" : [ "dim"  , []                 ]
-          ,     "ang_coord" : [ "float", [ "grid.ang_num" ] ]
-          ,    "ang_weight" : [ "float", [ "grid.ang_num" ] ]
-          ,       "rad_num" : [ "dim"  , []                 ]
-          ,     "rad_coord" : [ "float", [ "grid.rad_num" ] ]
-          ,    "rad_weight" : [ "float", [ "grid.rad_num" ] ]
-        } ,
-    #+end_src
-    :end:
-
 ** Electron (electron group)
 
     We consider wave functions expressed in the spin-free formalism, where
@@ -286,7 +236,7 @@ with the same name suffixed by ~_im~.
    #+end_src
    :end:
 
-* One-electron basis
+* Basis functions
 ** Basis set (basis group)
 
 *** Gaussian and Slater-type orbitals
@@ -583,6 +533,58 @@ power = [
   ]
     #+END_EXAMPLE
 
+** Numerical integration grid (grid group)
+
+   In some applications, such as DFT calculations, integrals have to
+   be computed numerically on a grid.  A common choice for the angular
+   grid is the one proposed by Lebedev and Laikov
+   [Russian Academy of Sciences Doklady Mathematics, Volume 59, Number 3, 1999, pages 477-481].
+   For the radial grids, many approaches have been developed over the years.
+
+   The structure of this group is adapted for the [[https://github.com/dftlibs/numgrid][numgrid]] library.
+   Feel free to submit a PR if you find missing options/functionalities.
+
+    #+NAME: grid
+   | Variable        | Type    | Dimensions       | Description                                                             |
+   |-----------------+---------+------------------+-------------------------------------------------------------------------|
+   | ~description~   | ~str~   |                  | Details about the used quadratures can go here                          |
+   | ~rad_precision~ | ~float~ |                  | Radial precision parameter (not used in some schemes like Krack-Köster) |
+   | ~num~           | ~dim~   |                  | Number of grid points                                                   |
+   | ~max_ang_num~   | ~int~   |                  | Maximum number of angular grid points (for pruning)                     |
+   | ~min_ang_num~   | ~int~   |                  | Minimum number of angular grid points (for pruning)                     |
+   | ~coord~         | ~float~ | ~(grid.num)~     | Discretized coordinate space                                            |
+   | ~weight~        | ~float~ | ~(grid.num)~     | Grid weights according to a given partitioning (e.g. Becke)             |
+   | ~ang_num~       | ~dim~   |                  | Number of angular integration points (if used)                          |
+   | ~ang_coord~     | ~float~ | ~(grid.ang_num)~ | Discretized angular space (if used)                                     |
+   | ~ang_weight~    | ~float~ | ~(grid.ang_num)~ | Angular grid weights (if used)                                          |
+   | ~rad_num~       | ~dim~   |                  | Number of radial integration points (if used)                           |
+   | ~rad_coord~     | ~float~ | ~(grid.rad_num)~ | Discretized radial space (if used)                                      |
+   | ~rad_weight~    | ~float~ | ~(grid.rad_num)~ | Radial grid weights  (if used)                                          |
+
+    #+CALL: json(data=grid, title="grid")
+
+    #+RESULTS:
+    :results:
+    #+begin_src python :tangle trex.json
+        "grid": {
+              "description" : [ "str"  , []                 ]
+          , "rad_precision" : [ "float", []                 ]
+          ,           "num" : [ "dim"  , []                 ]
+          ,   "max_ang_num" : [ "int"  , []                 ]
+          ,   "min_ang_num" : [ "int"  , []                 ]
+          ,         "coord" : [ "float", [ "grid.num" ]     ]
+          ,        "weight" : [ "float", [ "grid.num" ]     ]
+          ,       "ang_num" : [ "dim"  , []                 ]
+          ,     "ang_coord" : [ "float", [ "grid.ang_num" ] ]
+          ,    "ang_weight" : [ "float", [ "grid.ang_num" ] ]
+          ,       "rad_num" : [ "dim"  , []                 ]
+          ,     "rad_coord" : [ "float", [ "grid.rad_num" ] ]
+          ,    "rad_weight" : [ "float", [ "grid.rad_num" ] ]
+        } ,
+    #+end_src
+    :end:
+
+* Orbitals
 ** Atomic orbitals (ao group)
 
    Going from the atomic basis set to AOs implies a systematic
@@ -860,7 +862,7 @@ power = [
     #+end_src
     :end:
    
-* N-electron basis
+* Multi-determinant information
 ** Slater determinants (determinant group)
 
    The configuration interaction (CI) wave function $\Psi$
@@ -1144,8 +1146,8 @@ power = [
    TREXIO files, and are described in the following sections. These
    are identified by the ~type~ attribute. The type can be one of the
    following:
-   - ~champ~
-   - ~mu~
+   - ~CHAMP~
+   - ~Mu~
    
 *** CHAMP
 
@@ -1214,16 +1216,15 @@ power = [
 #  J_{\text{eeN}}(\mathbf{r}) =
 #  \]
 
-    
 *** Table of values
    
    #+name: jastrow
   | Variable      | Type     | Dimensions          | Description                                                     |
   |---------------+----------+---------------------+-----------------------------------------------------------------|
-  | ~type~        | ~string~ |                     | Type of Jastrow factor: ~champ~ or ~mu~                         |
+  | ~type~        | ~string~ |                     | Type of Jastrow factor: ~CHAMP~ or ~Mu~                         |
   | ~ee_num~      | ~dim~    |                     | Number of Electron-electron parameters                          |
-  | ~en_num~      | ~dim~    | ~(nucleus.num)~     | Number of Electron-nucleus parameters, per nucleus              |
-  | ~een_num~     | ~dim~    | ~(nucleus.num)~     | Number of Electron-electron-nucleus parameters, per nucleus     |
+  | ~en_num~      | ~dim~    |                     | Number of Electron-nucleus parameters                           |
+  | ~een_num~     | ~dim~    |                     | Number of Electron-electron-nucleus parameters                  |
   | ~ee~          | ~float~  | ~(jastrow.ee_num)~  | Electron-electron parameters                                    |
   | ~en~          | ~float~  | ~(jastrow.en_num)~  | Electron-nucleus parameters                                     |
   | ~een~         | ~float~  | ~(jastrow.een_num)~ | Electron-electron-nucleus parameters                            |
@@ -1232,6 +1233,27 @@ power = [
   | ~ee_scaling~  | ~float~  |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
   | ~en_scaling~  | ~float~  | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
    
+   #+CALL: json(data=jastrow, title="jastrow")
+
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+       "jastrow": {
+                  "type" : [ "string", []                    ]
+         ,      "ee_num" : [ "dim"   , []                    ]
+         ,      "en_num" : [ "dim"   , []                    ]
+         ,     "een_num" : [ "dim"   , []                    ]
+         ,          "ee" : [ "float" , [ "jastrow.ee_num" ]  ]
+         ,          "en" : [ "float" , [ "jastrow.en_num" ]  ]
+         ,         "een" : [ "float" , [ "jastrow.een_num" ] ]
+         ,  "en_nucleus" : [ "index" , [ "jastrow.en_num" ]  ]
+         , "een_nucleus" : [ "index" , [ "jastrow.een_num" ] ]
+         ,  "ee_scaling" : [ "float" , []                    ]
+         ,  "en_scaling" : [ "float" , [ "nucleus.num" ]     ]
+       } ,
+   #+end_src
+   :end:
+
 * Quantum Monte Carlo data (qmc group)
 
    In quantum Monte Carlo calculations, the wave function is evaluated
@@ -1263,7 +1285,7 @@ power = [
        }
    #+end_src
    :end:
-
+   
 * Appendix    :noexport:
 ** Python script from table to json
 
