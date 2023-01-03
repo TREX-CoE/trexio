@@ -14,12 +14,18 @@ program test_trexio
 
   rc = trexio_info()
 
-  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock && rm -fd -- test_write_f.dir')
+  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock ' &
+      // 'test_write_f2.dir/*.txt test_write_f2.dir/*.txt.size test_write_f2.dir/.lock && ' &
+      // 'rm -fd -- test_write_f.dir test_write_f2.dir')
   print *, 'call test_write(''test_write_f.dir'', TREXIO_TEXT)'
   call test_write('test_write_f.dir', TREXIO_TEXT)
-  print *, 'call test_read(''test_write_f.dir'', TREXIO_TEXT)'
-  call test_read('test_write_f.dir', TREXIO_TEXT)
-  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock && rm -fd -- test_write_f.dir')
+  rc = trexio_cp('test_write_f.dir', 'test_write_f2.dir')
+  call trexio_assert(rc, TREXIO_SUCCESS)
+  print *, 'call test_read(''test_write_f2.dir'', TREXIO_TEXT)'
+  call test_read('test_write_f2.dir', TREXIO_TEXT)
+  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock ' &
+      // 'test_write_f2.dir/*.txt test_write_f2.dir/*.txt.size test_write_f2.dir/.lock && ' &
+      // 'rm -fd -- test_write_f.dir test_write_f2.dir')
 
   call test_read_void('test_write_f.dir', TREXIO_TEXT)
 
@@ -27,12 +33,14 @@ program test_trexio
   ! So temporarily disable the test for HDF5 back end at the moment
   have_hdf5 = trexio_has_backend(TREXIO_HDF5)
   if (have_hdf5) then
-    call system('rm -f -- test_write_f.h5')
+    call system('rm -f -- test_write_f.h5 test_write_f2.h5')
     print *, 'call test_write(''test_write_f.h5'', TREXIO_HDF5)'
     call test_write('test_write_f.h5', TREXIO_HDF5)
-    print *, 'call test_read(''test_write_f.h5'', TREXIO_HDF5)'
-    call test_read('test_write_f.h5', TREXIO_HDF5)
-    call system('rm -f -- test_write_f.h5')
+    rc = trexio_cp('test_write_f.h5', 'test_write_f2.h5')
+    call trexio_assert(rc, TREXIO_SUCCESS)
+    print *, 'call test_read(''test_write_f2.h5'', TREXIO_HDF5)'
+    call test_read('test_write_f2.h5', TREXIO_HDF5)
+    call system('rm -f -- test_write_f.h5 test_write_f2.h5')
 
     call test_read_void('test_write_f.h5', TREXIO_HDF5)
   endif
