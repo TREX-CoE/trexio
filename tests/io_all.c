@@ -18,19 +18,25 @@ int main() {
 
   bool have_hdf5 = trexio_has_backend(TREXIO_HDF5);
   if(have_hdf5) {
-    rc = system("rm -f -- test_all.h5");
+    rc = system("rm -f -- test_all.h5 test_all2.h5");
     assert (rc == 0);
-    test_write("test_all.h5", TREXIO_HDF5);
-    test_read ("test_all.h5", TREXIO_HDF5);
-    rc = system("rm -f -- test_all.h5");
+    test_write("test_all.h5" , TREXIO_HDF5);
+    rc = trexio_cp ("test_all.h5", "test_all2.h5");
+    assert (rc == TREXIO_SUCCESS);
+    test_read ("test_all2.h5", TREXIO_HDF5);
+    rc = system("rm -f -- test_all.h5 test_all2.h5");
     assert (rc == 0);
   }
 
-  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir");
+  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir && \
+               rm -f -- test_all2.dir/*.txt test_all2.dir/*.txt.size test_all2.dir/.lock && rm -fd -- test_all2.dir");
   assert (rc == 0);
-  test_write("test_all.dir", TREXIO_TEXT);
-  test_read ("test_all.dir", TREXIO_TEXT);
-  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir");
+  test_write("test_all.dir" , TREXIO_TEXT);
+  rc = trexio_cp ("test_all.dir" , "test_all2.dir");
+  assert (rc == TREXIO_SUCCESS);
+  test_read ("test_all2.dir", TREXIO_TEXT);
+  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir && \
+               rm -f -- test_all2.dir/*.txt test_all2.dir/*.txt.size test_all2.dir/.lock && rm -fd -- test_all2.dir");
   assert (rc == 0);
 
   return 0;
@@ -138,6 +144,7 @@ int test_write(const char* file_name, const back_end_t backend) {
   // open file again in 'write' mode
   file = trexio_open(file_name, 'w', backend, &rc);
   assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
 
   // write some missing blocks (e.g. if forgot last time)
   rc = trexio_write_nucleus_charge(file,charge);
@@ -169,6 +176,7 @@ int test_read(const char* file_name, const back_end_t backend) {
   // open existing file on 'read' mode [created by test_write]
   file = trexio_open(file_name, 'r', TREXIO_AUTO, &rc);
   assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
 
   // read nucleus_num
   rc = trexio_read_nucleus_num(file,&num);
