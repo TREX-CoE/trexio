@@ -1691,19 +1691,6 @@ interface
      character(kind=c_char), dimension(*)          :: source, destination
    end function trexio_cp_c
 end interface
-
-integer(trexio_exit_code) function trexio_cp (source, destination)
-   use, intrinsic :: iso_c_binding
-   implicit none
-   character(len=*), intent(in)           :: source
-   character(len=*), intent(in)           :: destination
-   character(len=len_trim(source)+1)      :: source_c
-   character(len=len_trim(destination)+1) :: destination_c
-
-   source_c = trim(source) // c_null_char
-   destination_c = trim(destination) // c_null_char
-   trexio_cp = trexio_cp_c(source_c, destination_c)
-end function trexio_cp
    #+end_src
 
 *** Python
@@ -6019,6 +6006,23 @@ contains
      trexio_inquire = trexio_inquire_c(filename_c)
    end function trexio_inquire
   #+end_src
+
+  Similarly, the following function adapts ~trexio_cp~.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+  integer(trexio_exit_code) function trexio_cp (source, destination)
+    use, intrinsic :: iso_c_binding
+    implicit none
+    character(len=*), intent(in)           :: source
+    character(len=*), intent(in)           :: destination
+    character(len=len_trim(source)+1)      :: source_c
+    character(len=len_trim(destination)+1) :: destination_c
+
+    source_c = trim(source) // c_null_char
+    destination_c = trim(destination) // c_null_char
+    trexio_cp = trexio_cp_c(source_c, destination_c)
+  end function trexio_cp
+   #+end_src
 
   The subroutines below wrap the ~to_orbital_list~ functions to shift the MO indices
   by 1 since in Fortran arrays are 1-based and C/Python they are 0-based.
