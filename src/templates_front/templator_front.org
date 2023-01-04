@@ -44,6 +44,9 @@ typedef int32_t trexio_exit_code;
 #include <stdbool.h>
 #include <string.h>
 #include <err.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 #include "trexio.h"
 #include "trexio_private.h"
@@ -1583,6 +1586,139 @@ def _inquire(file_name: str) -> bool:
         return False
     else:
         raise Error(rc)
+   #+end_src
+
+** File copy
+
+   ~trexio_cp~ copies a TREXIO file using =/bin/cp=.
+
+   **Input parameters:**
+     1) ~source_file_name~       - string containing the name of the source file
+     2) ~destination_file_name~  - string containing the name of the new file
+
+   **Output:**
+     - ~trexio_exit_code~
+
+*** C
+
+   #+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_cp(const char* source_file_name, const char* dest_file_name);
+   #+end_src
+
+   #+begin_src c :tangle prefix_front.c
+
+trexio_exit_code
+trexio_cp(const char* source, const char* dest)
+{
+
+  if (source == NULL || source[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+
+  if (dest == NULL || dest[0] == '\0') {
+    return TREXIO_INVALID_ARG_2;
+  }
+
+
+  back_end_t back_end_local = TREXIO_AUTO;
+  /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
+#ifdef HAVE_HDF5
+  /* Check if the TREXIO file exists and if it is a directory */
+  trexio_exit_code rc_text = trexio_text_inquire(source);
+  if (rc_text == TREXIO_SUCCESS) {
+    back_end_local = TREXIO_TEXT;
+  } else {
+    /* If not, check if it is an HDF5 file */
+    trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(source);
+    if (rc_hdf5 == TREXIO_SUCCESS) {
+      back_end_local = TREXIO_HDF5;
+    } else {
+      /* File is neither a directory nor an HDF5 file -> return an error */
+      return TREXIO_FILE_ERROR;
+    }
+#else
+    /* In the current implementation if HDF5 back end is not available - then there is only back end left */
+    back_end_local = TREXIO_TEXT;
+#endif
+  }
+  assert (back_end_local != TREXIO_AUTO);
+
+  if (trexio_inquire(dest) == TREXIO_SUCCESS) {
+    /* Destination file already exists */
+    return TREXIO_FILE_ERROR;
+  }
+
+  /* Call cp */
+
+  pid_t pid = fork();
+  if (pid == 0) {
+    switch (back_end_local) {
+    case TREXIO_TEXT:
+      execl("/bin/cp", "/bin/cp", "-r", "-n", source, dest, (char *)0);
+    case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+      execl("/bin/cp", "/bin/cp", "-n", source, dest, (char *)0);
+#else
+      return TREXIO_FILE_ERROR;
+#endif
+/*
+    case TREXIO_JSON:
+      execl("/bin/cp", "/bin/cp", source, dest, (char *)0);
+,*/
+    default:
+      return TREXIO_FILE_ERROR;
+    }
+  } else if (pid < 0) {
+    return TREXIO_FILE_ERROR;
+  } else {
+    int wstatus;
+    pid_t ws = waitpid( pid, &wstatus, 0);
+    if (ws != pid || !WIFEXITED(wstatus) )
+      return TREXIO_FILE_ERROR;
+  }
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+*** Fortran
+
+   #+begin_src f90 :tangle prefix_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_cp_c (source, destination) bind(C, name="trexio_cp")
+     use, intrinsic :: iso_c_binding
+     import
+     character(kind=c_char), dimension(*)          :: source, destination
+   end function trexio_cp_c
+end interface
+   #+end_src
+
+*** Python
+
+   #+begin_src python :tangle basic_python.py
+def _cp(source: str, destination: str):
+    """Copies a TREXIO file
+
+    Parameters:
+
+    source: str
+        Name of the source file
+
+    destination: str
+        Name of the destination file
+
+    Examples:
+    >>> from trexio import cp as tr_cp
+    >>> tr_cp("example.h5", "new.h5")
+    """
+
+    from shutil import copytree, copyfile
+
+    f = File(filename=source, mode='r', back_end=TREXIO_AUTO)
+    if f.back_end == TREXIO_TEXT:
+      copytree(source, destination)
+    elif f.back_end == TREXIO_HDF5:
+      copyfile(source, destination)
    #+end_src
 
 ** File state
@@ -5870,6 +6006,23 @@ contains
      trexio_inquire = trexio_inquire_c(filename_c)
    end function trexio_inquire
   #+end_src
+
+  Similarly, the following function adapts ~trexio_cp~.
+
+  #+begin_src f90 :tangle helper_fortran.f90
+  integer(trexio_exit_code) function trexio_cp (source, destination)
+    use, intrinsic :: iso_c_binding
+    implicit none
+    character(len=*), intent(in)           :: source
+    character(len=*), intent(in)           :: destination
+    character(len=len_trim(source)+1)      :: source_c
+    character(len=len_trim(destination)+1) :: destination_c
+
+    source_c = trim(source) // c_null_char
+    destination_c = trim(destination) // c_null_char
+    trexio_cp = trexio_cp_c(source_c, destination_c)
+  end function trexio_cp
+   #+end_src
 
   The subroutines below wrap the ~to_orbital_list~ functions to shift the MO indices
   by 1 since in Fortran arrays are 1-based and C/Python they are 0-based.

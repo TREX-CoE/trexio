@@ -104,7 +104,7 @@ esac
 ## ---------
 
 # Checks for basic header files.
-AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd.h sys/types.h sys/wait.h ])
 
 
 ### HDF5
@@ -130,11 +130,12 @@ if test "x${with_hdf5}" = xno; then
     recommended to build efficient TREXIO.
     ------------------------------------------])
 else
-    AC_HAVE_LIBRARY([hdf5_hl], [], AC_MSG_ERROR([
+    AC_CHECK_LIB([hdf5_hl],[main],[],[AC_MSG_ERROR(
 -----------------------------------
 Error: hdf5_hl library is required
 -----------------------------------
-]), [])
+)],[])ac_cv_lib_hdf5_hl=ac_cv_lib_hdf5_hl_main
+
 fi
 
 CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
