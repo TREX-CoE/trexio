@@ -236,6 +236,194 @@ with the same name suffixed by ~_im~.
    #+end_src
    :end:
 
+
+* Hamiltonian
+
+  The type of Hamiltonian can be:
+  - ~Standard~: The non-relativistic electronic Hamiltonian
+  - ~DFT~: Density functional theory (DFT)
+  - ~RSDFT~: Range-separated DFT
+    
+  The description of the DFT Hamiltonian is still
+  minimal. Contributions are welcome to develop that part.
+
+** Range-separated potential
+
+   The electron-electron Coulomb operator can be split into a short-range and
+   a long-range potential (see Sav-INC-96a,Toulouse_2004)
+
+   \[
+   \frac{1}{r} = w_{\text{ee}}^{\text{sr}, \mu}(r) + w_{\text{ee}}^{\text{lr}, \mu}(r),
+   \]
+   where
+   \[
+   w_{\text{ee}}^{\text{sr},\mu}(r) = \frac{\text{erfc}(\mu\, r)}{r}
+   \]
+   and
+   \[
+   w_{\text{ee}}^{\text{lr},\mu}(r) = \frac{\text{erf}(\mu\, r)}{r}
+   \]
+
+   are the singular short-range (sr) part and the non-singular
+   long-range (lr) part, respectively, $\mu$ is the range-separation
+   parameter which controls how rapidly the short-range part decays,
+   $\text{erf}(x)$ is the error function, and $\text{erfc}(x) = 1 - \erf(x)$ is its
+   complementary version.
+   
+   
+** Parameters of the Hamiltonian
+
+   #+NAME: hamiltonian
+   | Variable | Type    | Dimensions | Description                                |
+   |----------+---------+------------+--------------------------------------------|
+   | ~type~   | ~str~   |            | Type of Hamiltonian (Standard, DFT, RSDFT) |
+   | ~mu_rs~  | ~float~ |            | Range-separation parameter                 |
+   
+   #+CALL: json(data=hamiltonian, title="hamiltonian")
+
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+       "hamiltonian": {
+            "type" : [ "str"  , []  ]
+         , "mu_rs" : [ "float", []  ]
+       } ,
+   #+end_src
+   :end:
+
+** Effective core potentials (ecp group)
+
+   An effective core potential (ECP) $V_A^{\text{ECP}}$ replacing the
+   core electrons of atom $A$ can be expressed as
+   \[
+   V_A^{\text{ECP}} =
+   V_{A \ell_{\max}+1} +
+   \sum_{\ell=0}^{\ell_{\max}}
+   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
+   V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} |
+   \]
+
+   The first term in the equation above is sometimes attributed to the local channel,
+   while the remaining terms correspond to the non-local channel projections.
+
+   The functions $V_{A\ell}$ are parameterized as:
+   \[
+   V_{A \ell}(\mathbf{r}) =
+   \sum_{q=1}^{N_{q \ell}}
+   \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
+   e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
+   \]
+
+   See http://dx.doi.org/10.1063/1.4984046 or https://doi.org/10.1063/1.5121006 for more info.
+
+   #+NAME: ecp
+   | Variable             | Type    | Dimensions      | Description                                                                            |
+   |----------------------+---------+-----------------+----------------------------------------------------------------------------------------|
+   | ~max_ang_mom_plus_1~ | ~int~   | ~(nucleus.num)~ | $\ell_{\max}+1$, one higher than the max angular momentum in the removed core orbitals |
+   | ~z_core~             | ~int~   | ~(nucleus.num)~ | Number of core electrons to remove per atom                                            |
+   | ~num~                | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$                   |
+   | ~ang_mom~            | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$            |
+   | ~nucleus_index~      | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index                         |
+   | ~exponent~           | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                                  |
+   | ~coefficient~        | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                                |
+   | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
+
+
+   There might be some confusion in the meaning of the $\ell_{\max}$.
+   It can be attributed to the maximum angular momentum occupied in
+   the core orbitals, which are removed by the ECP. On the other
+   hand, it can be attributed to the maximum angular momentum of the
+   ECP that replaces the core electrons.
+   *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
+   
+   *Note for developers*: avoid having variables with similar prefix
+   in their name. The HDF5 back end might cause issues due to the way
+   ~find_dataset~ function works.  For example, in the ECP group we
+   use ~max_ang_mom~ and not ~ang_mom_max~. The latter causes issues
+   when written before the ~ang_mom~ array in the TREXIO file.
+   *Update*: in fact, the aforementioned issue has only been observed
+   when using HDF5 version 1.10.4 installed via ~apt-get~. Installing
+   the same version from the ~conda-forge~ channel and running it in
+   an isolated ~conda~ environment works just fine. Thus, it seems to
+   be a bug in the ~apt~-provided package.
+   If you encounter the aforementioned issue, please report it to our
+   [[https://github.com/TREX-CoE/trexio/issues][issue tracker on GitHub]].
+
+   #+CALL: json(data=ecp, title="ecp")
+
+   #+RESULTS:
+   :results:
+   #+begin_src python :tangle trex.json
+       "ecp": {
+           "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
+         ,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
+         ,                "num" : [ "dim"  , []                ]
+         ,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+         ,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
+         ,           "exponent" : [ "float", [ "ecp.num" ]     ]
+         ,        "coefficient" : [ "float", [ "ecp.num" ]     ]
+         ,              "power" : [ "int"  , [ "ecp.num" ]     ]
+       } ,
+   #+end_src
+   :end:
+
+*** Example
+
+   For example, consider H_2 molecule with the following
+   [[https://pseudopotentiallibrary.org/recipes/H/ccECP/H.ccECP.gamess][effective core potential]]
+   (in GAMESS input format for the H atom):
+
+    #+BEGIN_EXAMPLE
+H-ccECP GEN 0 1
+3
+1.00000000000000    1 21.24359508259891
+21.24359508259891   3 21.24359508259891
+-10.85192405303825  2 21.77696655044365
+1
+0.00000000000000    2 1.000000000000000
+    #+END_EXAMPLE
+
+    In TREXIO representation this would be:
+
+    #+BEGIN_EXAMPLE
+num = 8
+
+# lmax+1 per atom
+max_ang_mom_plus_1 = [ 1, 1 ]
+
+# number of core electrons to remove per atom
+zcore = [ 0, 0 ]
+
+# first 4 ECP elements correspond to the first H atom ; the remaining 4 elements are for the second H atom
+nucleus_index = [
+  0, 0, 0, 0,
+  1, 1, 1, 1
+  ]
+
+# 3 first ECP elements correspond to potential of the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom
+ang_mom = [
+  1, 1, 1, 0,
+  1, 1, 1, 0
+  ]
+
+# ECP quantities that can be attributed to atoms and/or angular momenta based on the aforementioned ecp_nucleus and ecp_ang_mom arrays
+coefficient = [
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000,
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000
+  ]
+
+exponent = [
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000,
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000
+  ]
+
+power = [
+  -1, 1, 0, 0,
+  -1, 1, 0, 0
+  ]
+    #+END_EXAMPLE
+
+
 * Basis functions
 ** Basis set (basis group)
 
@@ -401,138 +589,6 @@ prim_factor =
   4.3649547399719840e-01, 1.8135965626177861e+00 ]
     #+END_EXAMPLE
 
-** Effective core potentials (ecp group)
-
-   An effective core potential (ECP) $V_A^{\text{ECP}}$ replacing the
-   core electrons of atom $A$ can be expressed as
-   \[
-   V_A^{\text{ECP}} =
-   V_{A \ell_{\max}+1} +
-   \sum_{\ell=0}^{\ell_{\max}}
-   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
-   V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} |
-   \]
-
-   The first term in the equation above is sometimes attributed to the local channel,
-   while the remaining terms correspond to the non-local channel projections.
-
-   The functions $V_{A\ell}$ are parameterized as:
-   \[
-   V_{A \ell}(\mathbf{r}) =
-   \sum_{q=1}^{N_{q \ell}}
-   \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
-   e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
-   \]
-
-   See http://dx.doi.org/10.1063/1.4984046 or https://doi.org/10.1063/1.5121006 for more info.
-
-   #+NAME: ecp
-   | Variable             | Type    | Dimensions      | Description                                                                            |
-   |----------------------+---------+-----------------+----------------------------------------------------------------------------------------|
-   | ~max_ang_mom_plus_1~ | ~int~   | ~(nucleus.num)~ | $\ell_{\max}+1$, one higher than the max angular momentum in the removed core orbitals |
-   | ~z_core~             | ~int~   | ~(nucleus.num)~ | Number of core electrons to remove per atom                                            |
-   | ~num~                | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$                   |
-   | ~ang_mom~            | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$            |
-   | ~nucleus_index~      | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index                         |
-   | ~exponent~           | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                                  |
-   | ~coefficient~        | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                                |
-   | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
-
-
-   There might be some confusion in the meaning of the $\ell_{\max}$.
-   It can be attributed to the maximum angular momentum occupied in
-   the core orbitals, which are removed by the ECP. On the other
-   hand, it can be attributed to the maximum angular momentum of the
-   ECP that replaces the core electrons.
-   *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
-   
-   *Note for developers*: avoid having variables with similar prefix
-   in their name. The HDF5 back end might cause issues due to the way
-   ~find_dataset~ function works.  For example, in the ECP group we
-   use ~max_ang_mom~ and not ~ang_mom_max~. The latter causes issues
-   when written before the ~ang_mom~ array in the TREXIO file.
-   *Update*: in fact, the aforementioned issue has only been observed
-   when using HDF5 version 1.10.4 installed via ~apt-get~. Installing
-   the same version from the ~conda-forge~ channel and running it in
-   an isolated ~conda~ environment works just fine. Thus, it seems to
-   be a bug in the ~apt~-provided package.
-   If you encounter the aforementioned issue, please report it to our
-   [[https://github.com/TREX-CoE/trexio/issues][issue tracker on GitHub]].
-
-   #+CALL: json(data=ecp, title="ecp")
-
-   #+RESULTS:
-   :results:
-   #+begin_src python :tangle trex.json
-       "ecp": {
-           "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
-         ,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
-         ,                "num" : [ "dim"  , []                ]
-         ,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
-         ,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
-         ,           "exponent" : [ "float", [ "ecp.num" ]     ]
-         ,        "coefficient" : [ "float", [ "ecp.num" ]     ]
-         ,              "power" : [ "int"  , [ "ecp.num" ]     ]
-       } ,
-   #+end_src
-   :end:
-
-*** Example
-
-   For example, consider H_2 molecule with the following
-   [[https://pseudopotentiallibrary.org/recipes/H/ccECP/H.ccECP.gamess][effective core potential]]
-   (in GAMESS input format for the H atom):
-
-    #+BEGIN_EXAMPLE
-H-ccECP GEN 0 1
-3
-1.00000000000000    1 21.24359508259891
-21.24359508259891   3 21.24359508259891
--10.85192405303825  2 21.77696655044365
-1
-0.00000000000000    2 1.000000000000000
-    #+END_EXAMPLE
-
-    In TREXIO representation this would be:
-
-    #+BEGIN_EXAMPLE
-num = 8
-
-# lmax+1 per atom
-max_ang_mom_plus_1 = [ 1, 1 ]
-
-# number of core electrons to remove per atom
-zcore = [ 0, 0 ]
-
-# first 4 ECP elements correspond to the first H atom ; the remaining 4 elements are for the second H atom
-nucleus_index = [
-  0, 0, 0, 0,
-  1, 1, 1, 1
-  ]
-
-# 3 first ECP elements correspond to potential of the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom
-ang_mom = [
-  1, 1, 1, 0,
-  1, 1, 1, 0
-  ]
-
-# ECP quantities that can be attributed to atoms and/or angular momenta based on the aforementioned ecp_nucleus and ecp_ang_mom arrays
-coefficient = [
-  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000,
-  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000
-  ]
-
-exponent = [
-  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000,
-  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000
-  ]
-
-power = [
-  -1, 1, 0, 0,
-  -1, 1, 0, 0
-  ]
-    #+END_EXAMPLE
-
 ** Numerical integration grid (grid group)
 
    In some applications, such as DFT calculations, integrals have to
@@ -584,6 +640,7 @@ power = [
     #+end_src
     :end:
 
+   
 * Orbitals
 ** Atomic orbitals (ao group)
 
