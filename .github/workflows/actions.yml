@@ -57,6 +57,13 @@ jobs:
       - name: check TREXIO
         run: make -j2 check
 
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        with:
+          name: test-report-ubuntu-debug
+          path: test-suite.log
+
       - name: create virtual environment
         run: |
           python3 -m venv --clear pytrexio-venv
@@ -96,6 +103,13 @@ jobs:
       - name: recheck TREXIO for memory leaks
         run: make -j2 check
 
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        with:
+          name: test-report-ubuntu-debug
+          path: test-suite.log
+
       - name: maintainer clean
         run: make maintainer-clean
 
@@ -123,6 +137,13 @@ jobs:
 
       - name: check TREXIO
         run: make check
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        with:
+          name: test-report-ubuntu-debug
+          path: test-suite.log
 
       - name: clean
         run: make clean
