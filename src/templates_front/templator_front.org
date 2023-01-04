@@ -1593,7 +1593,7 @@ def _inquire(file_name: str) -> bool:
    ~trexio_cp~ copies a TREXIO file using =/bin/cp=.
 
    **Input parameters:**
-     1) ~source_file_name~       - string containing the name of the source file 
+     1) ~source_file_name~       - string containing the name of the source file
      2) ~destination_file_name~  - string containing the name of the new file
 
    **Output:**
@@ -1646,12 +1646,12 @@ trexio_cp(const char* source, const char* dest)
   if (trexio_inquire(dest) == TREXIO_SUCCESS) {
     /* Destination file already exists */
     return TREXIO_FILE_ERROR;
-  };
+  }
 
   /* Call cp */
 
   pid_t pid = fork();
-  if (pid == 0) { 
+  if (pid == 0) {
     switch (back_end_local) {
     case TREXIO_TEXT:
       execl("/bin/cp", "/bin/cp", "-r", "-n", source, dest, (char *)0);
@@ -1685,12 +1685,25 @@ trexio_cp(const char* source, const char* dest)
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_cp (source, destination) bind(C, name="trexio_cp")
+   integer(trexio_exit_code) function trexio_cp_c (source, destination) bind(C, name="trexio_cp")
      use, intrinsic :: iso_c_binding
      import
      character(kind=c_char), dimension(*)          :: source, destination
-   end function trexio_cp
+   end function trexio_cp_c
 end interface
+
+integer(trexio_exit_code) function trexio_cp (source, destination)
+   use, intrinsic :: iso_c_binding
+   implicit none
+   character(len=*), intent(in)           :: source
+   character(len=*), intent(in)           :: destination
+   character(len=len_trim(source)+1)      :: source_c
+   character(len=len_trim(destination)+1) :: destination_c
+
+   source_c = trim(source) // c_null_char
+   destination_c = trim(destination) // c_null_char
+   trexio_cp = trexio_cp_c(source_c, destination_c)
+end function trexio_cp
    #+end_src
 
 *** Python
@@ -1812,7 +1825,7 @@ end interface
 *** Python
 
     See TREXIO File Python class.
-    
+
 ** Tasks to be done before closing
 
     #+begin_src c :tangle trexio_private.h :exports none
