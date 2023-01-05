@@ -1652,22 +1652,7 @@ trexio_cp(const char* source, const char* dest)
 
   pid_t pid = fork();
   if (pid == 0) {
-    switch (back_end_local) {
-    case TREXIO_TEXT:
-      execlp("cp", CP_COMMAND, source, dest, (char *)0);
-    case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-      execlp("cp", CP_COMMAND, source, dest, (char *)0);
-#else
-      return TREXIO_FILE_ERROR;
-#endif
-/*
-    case TREXIO_JSON:
-      execlp("cp", CP_COMMAND, source, dest, (char *)0);
-,*/
-    default:
-      return TREXIO_FILE_ERROR;
-    }
+    execlp("cp", CP_COMMAND, source, dest, (char *)0);
   } else if (pid < 0) {
     return TREXIO_FILE_ERROR;
   } else {
