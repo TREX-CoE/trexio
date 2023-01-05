@@ -1590,7 +1590,7 @@ def _inquire(file_name: str) -> bool:
 
 ** File copy
 
-   ~trexio_cp~ copies a TREXIO file using =/bin/cp=.
+   ~trexio_cp~ copies a TREXIO file using =cp=.
 
    **Input parameters:**
      1) ~source_file_name~       - string containing the name of the source file
@@ -1654,16 +1654,16 @@ trexio_cp(const char* source, const char* dest)
   if (pid == 0) {
     switch (back_end_local) {
     case TREXIO_TEXT:
-      execl("/bin/cp", "/bin/cp", "-r", "-n", source, dest, (char *)0);
+      execlp("cp", CP_COMMAND, source, dest, (char *)0);
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-      execl("/bin/cp", "/bin/cp", "-n", source, dest, (char *)0);
+      execlp("cp", CP_COMMAND, source, dest, (char *)0);
 #else
       return TREXIO_FILE_ERROR;
 #endif
 /*
     case TREXIO_JSON:
-      execl("/bin/cp", "/bin/cp", source, dest, (char *)0);
+      execlp("cp", CP_COMMAND, source, dest, (char *)0);
 ,*/
     default:
       return TREXIO_FILE_ERROR;

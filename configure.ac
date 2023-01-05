@@ -98,6 +98,31 @@ case $CC in
         ;;
 esac
 
+# Check if `cp -r -n` works, otherwise use `cp -r`
+AC_CHECK_PROGS(CP_PROG, [cp])
+
+AC_MSG_CHECKING([for cp -r -n option])
+AC_RUN_IFELSE(
+    [AC_LANG_PROGRAM([
+#include <unistd.h>
+],[
+execl("/bin/sh", "sh", "-c", "mkdir tmpdir1 && \
+touch tmpdir1/test_file && \
+$CP_PROG -r -n tmpdir1 tmpdir2 && \
+exec ls tmpdir2/test_file", NULL);
+])],
+[ rm -rf tmpdir1 tmpdir2
+  CP_COMMAND="\"$CP_PROG\", \"-r\", \"-n\""
+  AC_MSG_RESULT([yes])],
+[ rm -rf tmpdir1 tmpdir2
+  CP_COMMAND="\"$CP_PROG\", \"-r\""
+  AC_MSG_RESULT([no])],
+[ rm -rf tmpdir1 tmpdir2
+  CP_COMMAND="\"$CP_PROG\", \"-r\""
+  AC_MSG_RESULT([no])]
+)
+AC_DEFINE_UNQUOTED([CP_COMMAND], [$CP_COMMAND], [Command used for trexio_cp])
+
 
 ## ---------
 ## Libraries
@@ -175,6 +200,9 @@ AC_TYPE_INT64_T
 AC_TYPE_SIZE_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
+AC_TYPE_PID_T
+AC_C_CONST
+AC_C_INLINE
 
 # Checks for library functions.
 # AC_FUNC_MALLOC
