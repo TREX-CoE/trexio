@@ -154,14 +154,14 @@ with the same name suffixed by ~_im~.
 
 ** Periodic boundary calculations (pbc group)
 
-   A single k-point per TREXIO file can be stored. The k-point is
+   A single $k$-point per TREXIO file can be stored. The $k$-point is
    defined in this group.
 
    #+NAME: pbc
    | Variable   | Type    | Dimensions | Description             |
    |------------+---------+------------+-------------------------|
    | ~periodic~ | ~int~   |            | ~1~: true or ~0~: false |
-   | ~k_point~  | ~float~ | ~(3)~      | k-point sampling        |
+   | ~k_point~  | ~float~ | ~(3)~      | $k$-point sampling      |
 
    #+CALL: json(data=pbc, title="pbc")
 
@@ -285,7 +285,7 @@ with the same name suffixed by ~_im~.
        \chi_j(r) = \exp \left( -i \mathbf{k}_j \mathbf{r} \right)
     \]
 
-    The basis set is defined as the array of k-points in the
+    The basis set is defined as the array of $k$-points in the
     reciprocal space, defined in the ~pbc~ group. The kinetic energy
     cutoff ~e_cut~ is the only input data relevant to plane waves.
 
@@ -612,7 +612,8 @@ power = [
    \chi_i (\mathbf{r}) = \mathcal{N}_i\, P_{\eta(i)}(\mathbf{r})\, R_{\theta(i)} (\mathbf{r})
    \]
 
-   where $i$ is the atomic orbital index, $P$ refers to either the
+   where $i$ is the atomic orbital index,
+   $P$ encodes for either the
    polynomials or the spherical harmonics, $\theta(i)$ returns the
    shell on which the AO is expanded, and $\eta(i)$ denotes which
    angular function is chosen.
@@ -1129,7 +1130,7 @@ power = [
 * Correlation factors
 ** Jastrow factor (jastrow group)
 
-   The Jastrow factor is an N-electron function to which the CI
+   The Jastrow factor is an $N$-electron function to which the CI
    expansion is multiplied: $\Psi = \Phi \times \exp(J)$,
    where
 
@@ -1189,7 +1190,7 @@ power = [
    The terms $J_{\text{ee}}^\infty$ and $J_{\text{eN}}^\infty$ are shifts to ensure that
    $J_{\text{ee}}$ and $J_{\text{eN}}$ have an asymptotic value of zero.
 
-   $f$ and $g$ are scaling functions defined as
+   $f$ and $g$ are scaling function defined as
 
    \[
    f(r) = \frac{1-e^{-\kappa\, r}}{\kappa} \text{ and }
@@ -1198,34 +1199,66 @@ power = [
 
 *** Mu
 
-    The "mu" Jastrow factor has only a single parameter $\mu$ for the
- [[https://doi.org/10.1063/5.0044683][electron-electron term]]: 
+   [[https://aip.scitation.org/doi/10.1063/5.0044683][Mu-Jastrow]] is based on a one-parameter correlation factor that has been introduced in the context of transcorrelated methods.
+   This correlation factor imposes the electron-electron cusp and it is built such that the leading order in $1/r_{12}$ of the 
+   effective two-electron potential reproduces the long-range interaction of the range-separated density functional theory. 
+   Its analytical expression reads as
+
+   \[
+   J_{\text{eeN}}(\mathbf{r}) = 
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) \,
+   \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha})
+   \]
+
+   where the electron-electron function $u$ is given by the symetric function
+
+   \[
+   u\left(\mu, r\right) = \frac{r}{2} \, \left[ 1 - \text{erf}(\mu\, r) \right] - \frac{1}{2 \, \mu \, \sqrt{\pi}} \exp \left[ -(\mu \, r)^2 \right].
+   \]
+
+   This electron-electron term is tunned by the parameter $\mu$ which controls the depth and the range of the coulomb hole between electrons.
+
+   An enveloppe function has been introduced to cancel out the Jastrow effects between two-electrons when they are both close 
+   to a nucleus (to perform a frozen-core calculation). The envelop function is given by
+
+   \[
+   E_\alpha(R) = 1 - \exp\left( - \gamma_{\alpha} \, R^2 \right).
+   \]
+   
+   In particular, if the parameters $\gamma$ tends to zero, the Mu-Jastrow factor becomes
 
    \[
    J_{\text{ee}}(\mathbf{r}) = 
-   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} r_{ij}
-   \left( 1 - \text{erf}(\mu\, r_{ij})\right) - \frac{1}{\mu\sqrt{\pi}}
-   e^{-(\mu\,r_{ij})^2}
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) 
    \]
 
-*** Mu with frozen core
+   and for large $\gamma$ it becomes zero.
+   
+   To increase the flexibility of the Jastrow and improve the electronic density we add the following electron-nucleus term
+
+   \[
+   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}} \,
+   \left[ \exp\left( \kappa_{\alpha} R_{i \alpha}^2 \right) - 1\right].
+   \]
 
 *** Table of values
    
    #+name: jastrow
-  | Variable      | Type     | Dimensions          | Description                                                     |
-  |---------------+----------+---------------------+-----------------------------------------------------------------|
-  | ~type~        | ~string~ |                     | Type of Jastrow factor: ~CHAMP~, ~Mu~ or ~MuFC~                 |
-  | ~ee_num~      | ~dim~    |                     | Number of Electron-electron parameters                          |
-  | ~en_num~      | ~dim~    |                     | Number of Electron-nucleus parameters                           |
-  | ~een_num~     | ~dim~    |                     | Number of Electron-electron-nucleus parameters                  |
-  | ~ee~          | ~float~  | ~(jastrow.ee_num)~  | Electron-electron parameters                                    |
-  | ~en~          | ~float~  | ~(jastrow.en_num)~  | Electron-nucleus parameters                                     |
-  | ~een~         | ~float~  | ~(jastrow.een_num)~ | Electron-electron-nucleus parameters                            |
-  | ~en_nucleus~  | ~index~  | ~(jastrow.en_num)~  | Nucleus relative to the eN parameter                            |
-  | ~een_nucleus~ | ~index~  | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                           |
-  | ~ee_scaling~  | ~float~  |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
-  | ~en_scaling~  | ~float~  | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
+  | Variable       | Type     | Dimensions          | Description                                                           |
+  |----------------+----------+---------------------+-----------------------------------------------------------------------|
+  | ~type~         | ~string~ |                     | Type of Jastrow factor: ~CHAMP~ or ~Mu~                               |
+  | ~ee_num~       | ~dim~    |                     | Number of Electron-electron parameters                                |
+  | ~en_num~       | ~dim~    |                     | Number of Electron-nucleus parameters                                 |
+  | ~een_num~      | ~dim~    |                     | Number of Electron-electron-nucleus parameters                        |
+  | ~ee~           | ~float~  | ~(jastrow.ee_num)~  | Electron-electron parameters                                          |
+  | ~en~           | ~float~  | ~(jastrow.en_num)~  | Electron-nucleus parameters                                           |
+  | ~een~          | ~float~  | ~(jastrow.een_num)~ | Electron-electron-nucleus parameters                                  |
+  | ~en_nucleus~   | ~index~  | ~(jastrow.en_num)~  | Nucleus relative to the eN parameter                                  |
+  | ~een_nucleus~  | ~index~  | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                                 |
+  | ~ee_scaling~   | ~float~  |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances       |
+  | ~en_scaling~   | ~float~  | ~(nucleus.num)~     | $\kappa$ value in CHAMP and Mu Jastrow for electron-nucleus distances |
+  | ~ee_hole~      | ~float~  |                     | $\mu$    value in           Mu Jastrow                                |
+  | ~en_enveloppe~ | ~float~  | ~(nucleus.num)~     | $\gamma$ value in           Mu Jastrow                                |
    
    #+CALL: json(data=jastrow, title="jastrow")
 
