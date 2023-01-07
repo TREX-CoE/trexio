@@ -1132,12 +1132,7 @@ power = [
 
    The Jastrow factor is an $N$-electron function to which the CI
    expansion is multiplied: $\Psi = \Phi \times \exp(J)$,
-   where
 
-   \[
-   J(\mathbf{r},\mathbf{R}) = J_{\text{eN}}(\mathbf{r},\mathbf{R}) + J_{\text{ee}}(\mathbf{r}) + J_{\text{eeN}}(\mathbf{r},\mathbf{R})
-   \]
-   
    In the following, we use the notations $r_{ij} = |\mathbf{r}_i - \mathbf{r}_j|$ and
    $R_{i\alpha} = |\mathbf{r}_i - \mathbf{R}_\alpha|$, where indices
    $i$ and $j$ correspond to electrons and $\alpha$ to nuclei.
@@ -1152,7 +1147,12 @@ power = [
 *** CHAMP
 
     The first form of Jastrow factor is the one used in
-    the [[https://trex-coe.eu/trex-quantum-chemistry-codes/champ][CHAMP]] program.
+    the [[https://trex-coe.eu/trex-quantum-chemistry-codes/champ][CHAMP]] program:
+
+   \[
+   J(\mathbf{r},\mathbf{R}) = J_{\text{eN}}(\mathbf{r},\mathbf{R}) + J_{\text{ee}}(\mathbf{r}) + J_{\text{eeN}}(\mathbf{r},\mathbf{R})
+   \]
+   
 
    $J_{\text{eN}}$ contains electron-nucleus  terms:
 
@@ -1197,25 +1197,71 @@ power = [
    g_\alpha(r) = e^{-\kappa_\alpha\, r}.
    \]
 
-*** mu
+*** Mu
 
-    The "mu" Jastrow factor has only a single parameter $\mu$ for the
- [[https://doi.org/10.1063/5.0044683][electron-electron term]]: 
+   [[https://aip.scitation.org/doi/10.1063/5.0044683][Mu-Jastrow]] is based on a one-parameter correlation factor that has
+   been introduced in the context of transcorrelated methods.  This
+   correlation factor imposes the electron-electron cusp and it is
+   built such that the leading order in $1/r_{12}$ of the effective
+   two-electron potential reproduces the long-range interaction of the
+   range-separated density functional theory. Its analytical
+   expression reads 
+
+   \[
+   J(\mathbf{r}, \mathbf{R}) = J_{\text{eeN}}(\mathbf{r}, \mathbf{R}) + 
+                               J_{\text{eN}}(\mathbf{r}, \mathbf{R})
+   \].
+
+   The electron-electron cusp is incorporated in the three-body term.
+   
+   \[
+   J_\text{eeN} (\mathbf{r}, \mathbf{R}) = 
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) \,
+   \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha})
+   \]
+
+   $u$ is an electron-electron function given by the symetric function
+
+   \[
+   u\left(\mu, r\right) = \frac{r}{2} \, \left[ 1 - \text{erf}(\mu\, r) \right] - \frac{1}{2 \, \mu \, \sqrt{\pi}} \exp \left[ -(\mu \, r)^2 \right].
+   \]
+
+   This electron-electron term is tuned by the parameter $\mu$ which
+   controls the depth and the range of the Coulomb hole between
+   electrons.
+
+   An envelope function has been introduced to cancel out the Jastrow
+   effects between two-electrons when they are both close to a nucleus
+   (to perform a frozen-core calculation). The envelope function is
+   given by
+
+   \[
+   E_\alpha(R) = 1 - \exp\left( - \gamma_{\alpha} \, R^2 \right).
+   \]
+   
+   In particular, if the parameters $\gamma_\alpha$ tend to zero, the
+   Mu-Jastrow factor becomes a two-body Jastrow factor:
 
    \[
    J_{\text{ee}}(\mathbf{r}) = 
-   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} r_{ij}
-   \left( 1 - \text{erf}(\mu\, r_{ij})\right) - \frac{1}{\mu\sqrt{\pi}}
-   e^{-(\mu\,r_{ij})^2}
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) 
    \]
 
-#  It was then updated for frozen-core calculations by introducing a
-#  set of electron-electron-nucleus terms with one parameter per nucleus:
+   and for large $\gamma_\alpha$ it becomes zero.
+   
+   To increase the flexibility of the Jastrow and improve the
+   electron density the following electron-nucleus term is added
 
-#  \[
-#  J_{\text{eeN}}(\mathbf{r}) =
-#  \]
+   \[
+   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}} \,
+   \left[ \exp\left( a_{\alpha} R_{i \alpha}^2 \right) - 1\right].
+   \]
 
+
+   The parameter $\mu$ is stored in the ~ee~ array, the parameters
+   $\gamma_\alpha$ are stored in the ~een~ array, and the parameters
+   $a_\alpha$ are stored in the ~en~ array.
+   
 *** Table of values
    
    #+name: jastrow
