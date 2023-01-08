@@ -508,6 +508,24 @@ subroutine test_read(file_name, back_end)
     call exit(-1)
   endif
 
+  occ_num_dn = occ_num_up
+  orb_list_dn(:) = orb_list_up(:)
+  orb_list_dn(2) = orb_list_up(1)
+  orb_list_dn(1) = orb_list_up(2)
+  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn, det_list_check, 3)
+  call trexio_assert(rc, TREXIO_PHASE_CHANGE)
+
+  do i=1,occ_num_dn
+    orb_list_dn(occ_num_up-i+1) = orb_list_up(i)
+  enddo
+
+  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn, det_list_check, 3)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
+  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn-1, det_list_check, 3)
+  call trexio_assert(rc, TREXIO_PHASE_CHANGE)
+
+
   rc = trexio_read_mo_num(trex_file, mo_num)
   call trexio_assert(rc, TREXIO_SUCCESS)
 
