@@ -133,11 +133,15 @@ with the same name suffixed by ~_im~.
    used in periodic calculations.
 
    #+NAME: cell
-   | Variable | Type    | Dimensions | Description           |
-   |----------+---------+------------+-----------------------|
-   | ~a~      | ~float~ | ~(3)~      | First lattice vector  |
-   | ~b~      | ~float~ | ~(3)~      | Second lattice vector |
-   | ~c~      | ~float~ | ~(3)~      | Third lattice vector  |
+   | Variable | Type    | Dimensions | Description                                                              |
+   |----------+---------+------------+--------------------------------------------------------------------------|
+   | ~a~      | ~float~ | ~(3)~      | First real space lattice vector                                          |
+   | ~b~      | ~float~ | ~(3)~      | Second real space lattice vector                                         |
+   | ~c~      | ~float~ | ~(3)~      | Third real space lattice vector                                          |
+   | ~G_a~    | ~float~ | ~(3)~      | First reciprocal space lattice vector                                    |
+   | ~G_b~    | ~float~ | ~(3)~      | Second reciprocal space lattice vector                                   |
+   | ~G_c~    | ~float~ | ~(3)~      | Third reciprocal space lattice vector                                    |
+   | ~two_pi~ | ~int~   |            | ~0~ or ~1~. If ~two_pi=1~, $2\pi$ is included in the reciprocal vectors. |
 
    #+CALL: json(data=cell, title="cell")
 
@@ -145,9 +149,13 @@ with the same name suffixed by ~_im~.
    :results:
    #+begin_src python :tangle trex.json
        "cell": {
-           "a" : [ "float", [ "3" ] ]
-         , "b" : [ "float", [ "3" ] ]
-         , "c" : [ "float", [ "3" ] ]
+                "a" : [ "float", [ "3" ] ]
+         ,      "b" : [ "float", [ "3" ] ]
+         ,      "c" : [ "float", [ "3" ] ]
+         ,    "G_a" : [ "float", [ "3" ] ]
+         ,    "G_b" : [ "float", [ "3" ] ]
+         ,    "G_c" : [ "float", [ "3" ] ]
+         , "two_pi" : [ "int"  , []      ]
        } ,
    #+end_src
    :end:
@@ -282,12 +290,13 @@ with the same name suffixed by ~_im~.
     A plane wave is defined as
 
     \[
-       \chi_j(r) = \exp \left( -i \mathbf{k}_j \mathbf{r} \right)
+       \chi_j(\mathbf{r}) = \exp \left( -i \mathbf{G}_j \cdot \mathbf{r} \right)
     \]
 
     The basis set is defined as the array of $k$-points in the
-    reciprocal space, defined in the ~pbc~ group. The kinetic energy
-    cutoff ~e_cut~ is the only input data relevant to plane waves.
+    reciprocal space $\mathbf{G}_j$, defined in the ~pbc~ group. The
+    kinetic energy cutoff ~e_cut~ is the only input data relevant to
+    plane waves.
 
 *** Data definitions
 
@@ -390,7 +399,7 @@ exponent =
 coefficient =
 [ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0,
   0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-`
+
 prim_factor =
 [ 1.0006253235944540e+01, 2.4169531573445120e+00, 7.9610924849766440e-01
   3.0734305383061117e-01, 1.2929684417481876e-01, 3.0734305383061117e-01,
@@ -408,21 +417,20 @@ prim_factor =
    \[
    V_A^{\text{ECP}} =
    V_{A \ell_{\max}+1} +
-   \sum_{\ell=0}^{\ell_{\max}}
-   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
-   V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} |
+   \sum_{\ell=0}^{\ell_{\max}} V_{A \ell}
+   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle  \langle Y_{\ell m} |
    \]
 
    The first term in the equation above is sometimes attributed to the local channel,
    while the remaining terms correspond to the non-local channel projections.
 
-   The functions $V_{A\ell}$ are parameterized as:
+   All the functions $V_{A\ell}$ are parameterized as:
    \[
-   V_{A \ell}(\mathbf{r}) =
+   V_{A \ell}(\mathbf{r}) = 
    \sum_{q=1}^{N_{q \ell}}
    \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
    e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
-   \]
+   \].
 
    See http://dx.doi.org/10.1063/1.4984046 or https://doi.org/10.1063/1.5121006 for more info.
 
@@ -437,7 +445,6 @@ prim_factor =
    | ~exponent~           | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                                  |
    | ~coefficient~        | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                                |
    | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
-
 
    There might be some confusion in the meaning of the $\ell_{\max}$.
    It can be attributed to the maximum angular momentum occupied in
