@@ -5,7 +5,7 @@
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
-TREX library for efficient I/O. 
+TREX library for efficient I/O.
 
 
 ## Minimal requirements (for users):
@@ -36,8 +36,6 @@ TREX library for efficient I/O.
 - python3       (>= 3.6)
 - Emacs         (>= 26.0)
 - SWIG          (>= 4.0)   [required for the Python API]
-
-**Note:** The source code is auto-generated from the Emacs org-mode (`.org`) files following the literate programming approach. This is why the `src` directory is initially empty.
 
 ## Installation procedure from the GitHub repo clone (for developers):
 
@@ -85,10 +83,13 @@ The official releases of TREXIO `>=2.0.0` can be installed using the
 [GNU Guix](https://guix.gnu.org) functional package manager.
 The [trexio.scm](https://github.com/TREX-CoE/trexio/blob/master/tools/trexio.scm)
 Schema file contains the manifest specification for the `trexio` package.
-It can be installed as follows:
+It can be installed within the selected `$GUIX_PROFILE` as follows:
 
 ```
-guix package --cores=<n_cores> --install-from-file=trexio.scm
+guix package \
+	--profile=$GUIX_PROFILE \
+	--cores=<n_cores> \
+	--install-from-file=trexio.scm
 ```
 
 ## Installation procedure for Spack users
@@ -101,18 +102,6 @@ It can be installed as follows
 
 ```
 spack install --jobs <n_cores> trexio
-```
-
-## Installation procedure for Debian/Ubuntu users
-
-The official release of TREXIO `2.2.0` is available as a Debian (`.deb`) package thanks to the [Debichem Team](https://wiki.debian.org/Debichem).
-The source code is hosted [here](https://salsa.debian.org/debichem-team/libtrexio) and 
-the pre-built binary files are available via the [Debian package registry](https://packages.debian.org/bookworm/libtrexio-dev).
-
-TREXIO is also available on [Ubuntu 23.04 (Lunar Lobster)](https://packages.ubuntu.com/lunar/libtrexio-dev) and newer and can be installed as follows:
-
-```
-sudo apt-get update && sudo apt-get install libtrexio-dev
 ```
 
 ## Compilation without the HDF5 library
