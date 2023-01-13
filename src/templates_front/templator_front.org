@@ -1626,12 +1626,13 @@ trexio_cp(const char* source, const char* dest)
 
   back_end_t back_end_local = TREXIO_AUTO;
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
-#ifdef HAVE_HDF5
   /* Check if the TREXIO file exists and if it is a directory */
   trexio_exit_code rc_text = trexio_text_inquire(source);
   if (rc_text == TREXIO_SUCCESS) {
     back_end_local = TREXIO_TEXT;
-  } else {
+  }
+#ifdef HAVE_HDF5
+  else {
     /* If not, check if it is an HDF5 file */
     trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(source);
     if (rc_hdf5 == TREXIO_SUCCESS) {
@@ -1640,11 +1641,12 @@ trexio_cp(const char* source, const char* dest)
       /* File is neither a directory nor an HDF5 file -> return an error */
       return TREXIO_FILE_ERROR;
     }
-#else
-    /* In the current implementation if HDF5 back end is not available - then there is only back end left */
-    back_end_local = TREXIO_TEXT;
-#endif
   }
+#else
+  else {
+    return TREXIO_FILE_ERROR;
+  }
+#endif
   assert (back_end_local != TREXIO_AUTO);
 
   if (trexio_inquire(dest) == TREXIO_SUCCESS) {

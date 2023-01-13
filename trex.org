@@ -616,21 +616,21 @@ power = [
    AOs are defined as
 
    \[
-   \chi_i (\mathbf{r}) = \mathcal{N}_i\, P_{\eta(i)}(\mathbf{r})\, R_{\theta(i)} (\mathbf{r})
+   \chi_i (\mathbf{r}) = \mathcal{N}_i\, P_{\eta(i)}(\mathbf{r})\, R_{s(i)} (\mathbf{r})
    \]
 
    where $i$ is the atomic orbital index,
    $P$ encodes for either the
-   polynomials or the spherical harmonics, $\theta(i)$ returns the
+   polynomials or the spherical harmonics, $s(i)$ returns the
    shell on which the AO is expanded, and $\eta(i)$ denotes which
    angular function is chosen.
    $\mathcal{N}_i$ is a normalization factor that enables the
    possibility to have different normalization coefficients within a
    shell, as in the GAMESS convention where
    $\mathcal{N}_{x^2} \ne \mathcal{N}_{xy}$ because
-   \[ \left[ \iiint \left(x-X_A \right)^2 R_{\theta(i)}
+   \[ \left[ \iiint \left(x-X_A \right)^2 R_{s(i)}
    (\mathbf{r}) dx\, dy\, dz \right]^{-1/2} \ne
-    \left[ \iiint \left( x-X_A \right) \left( y-Y_A \right) R_{\theta(i)}
+    \left[ \iiint \left( x-X_A \right) \left( y-Y_A \right) R_{s(i)}
    (\mathbf{r}) dx\, dy\, dz \right]^{-1/2}.  \]
 
    In such a case, one should set the normalization of the shell (in
@@ -640,12 +640,12 @@ power = [
    introduced here should be $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
 
    #+NAME: ao
-   | Variable        | Type    | Dimensions | Description                     |
-   |-----------------+---------+------------+---------------------------------|
-   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false           |
-   | ~num~           | ~dim~   |            | Total number of atomic orbitals |
-   | ~shell~         | ~index~ | ~(ao.num)~ | basis set shell for each AO     |
-   | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factors           |
+   | Variable        | Type    | Dimensions | Description                          |
+   |-----------------+---------+------------+--------------------------------------|
+   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false                |
+   | ~num~           | ~dim~   |            | Total number of atomic orbitals      |
+   | ~shell~         | ~index~ | ~(ao.num)~ | Basis set shell for each AO          |
+   | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factor $\mathcal{N}_i$ |
 
    #+CALL: json(data=ao, title="ao")
 
@@ -741,7 +741,7 @@ power = [
    | Variable              | Type           | Dimensions                                        | Description                                   |
    |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
    | ~eri~                 | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
-   | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range Electron repulsion integrals       |
+   | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range electron repulsion integrals       |
    | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
    | ~eri_cholesky~        | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
    | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
@@ -847,7 +847,7 @@ power = [
    | Variable              | Type           | Dimensions                                        | Description                                   |
    |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
    | ~eri~                 | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Electron repulsion integrals                  |
-   | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range Electron repulsion integrals       |
+   | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range electron repulsion integrals       |
    | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
    | ~eri_cholesky~        | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
    | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
@@ -1096,15 +1096,15 @@ power = [
    | ~2e_updn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\downarrow component of the two-body reduced density matrix   |
    | ~2e_dnup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\uparrow component of the two-body reduced density matrix   |
    | ~2e_cholesky_num~      | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~      | Cholesky decomposition of the Two-body RDM (spin trace)               |
+   | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~      | Cholesky decomposition of the two-body RDM (spin trace)               |
    | ~2e_upup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_upup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\uparrow)         |
+   | ~2e_upup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~ | Cholesky decomposition of the two-body RDM (\uparrow\uparrow)         |
    | ~2e_dndn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\downarrow)     |
+   | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~ | Cholesky decomposition of the two-body RDM (\downarrow\downarrow)     |
    | ~2e_updn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\downarrow)       |
+   | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~ | Cholesky decomposition of the two-body RDM (\uparrow\downarrow)       |
    | ~2e_dnup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_dnup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dnup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\uparrow)       |
+   | ~2e_dnup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dnup_cholesky_num)~ | Cholesky decomposition of the two-body RDM (\downarrow\uparrow)       |
 
    #+CALL: json(data=rdm, title="rdm")
 
