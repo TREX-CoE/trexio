@@ -39,7 +39,6 @@
 #include <sys/stat.h>
 
 #include "hdf5.h"
-#include "hdf5_hl.h"
 
   #+end_src
 
@@ -380,18 +379,21 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
   }
 
   FREE(ddims);
+
+  /* Read dataset */
+  herr_t status = H5Dread(dset_id,
+                          H5T_$GROUP_DSET_H5_DTYPE$,
+                          H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+                          $group_dset$);
+
   H5Sclose(dspace_id);
   H5Dclose(dset_id);
 
-  /* High-level H5LT API. No need to deal with dataspaces and datatypes */
-  herr_t status = H5LTread_dataset(f->$group$_group,
-                                   $GROUP_DSET$_NAME,
-                                   H5T_$GROUP_DSET_H5_DTYPE$,
-                                   $group_dset$);
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
 }
+
    #+end_src
 
    #+begin_src c :tangle write_dset_data_hdf5.c

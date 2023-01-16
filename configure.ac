@@ -131,18 +131,15 @@ AS_IF([test "x$with_hdf5" == "xno"], [
            AC_DEFINE([HAVE_HDF5], 0, [Define to 1 if HDF5 is available]) ],
       [test "x$with_hdf5" != "xyes"], [
            HDF5_PATH="$with_hdf5"
-           HDF5_LIBS="-L$HDF5_PATH/lib -lhdf5 -lhdf5_hl"
+           HDF5_LIBS="-L$HDF5_PATH/lib -lhdf5"
            HDF5_CFLAGS="-I$HDF5_PATH/include"
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available]) ],
       [
            PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
            AS_IF([ test "${HDF5_LIBS}" == "" ], [
              AC_CHECK_LIB([hdf5], [H5Fcreate], [ HDF5_LIBS="-lhdf5" ])
-             AC_CHECK_HEADER([hdf5.h], [HDF5_CFLAGS=""], [AC_MSG_ERROR([HDF5 header not found]) ])
-             AC_CHECK_HEADER([hdf5_hl.h], [HDF5_CFLAGS=""], [AC_MSG_ERROR([HDF5 header not found]) ])
-           ])
+             AC_CHECK_HEADER([hdf5.h], [HDF5_CFLAGS=""], [AC_MSG_ERROR([HDF5 header not found]) ]) ])
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
-           HDF5_LIBS="$HDF5_LIBS -lhdf5_hl"
       ])
 
 AM_CONDITIONAL([HAVE_HDF5],[test "x$with_hdf5" != "xno"])
