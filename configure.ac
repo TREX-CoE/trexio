@@ -134,13 +134,14 @@ AS_IF([test "x$with_hdf5" == "xno"], [
            HDF5_LIBS="-L$HDF5_PATH/lib -lhdf5"
            HDF5_CFLAGS="-I$HDF5_PATH/include"
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available]) ],
-      [ 
+      [
+           PKG_CHECK_EXISTS([hdf5], [
+             PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+           ])
            AC_CHECK_LIB([hdf5], [H5Fcreate], [ HDF5_LIBS="-lhdf5" ], [
-             PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-           ])
+              AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=...]) ])
            AC_CHECK_HEADER([hdf5.h], [HDF5_CFLAGS=""], [
-             PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-           ])
+              AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
       ])
 
