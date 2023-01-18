@@ -131,17 +131,23 @@ AS_IF([test "x$with_hdf5" == "xno"], [
            AC_DEFINE([HAVE_HDF5], 0, [Define to 1 if HDF5 is available]) ],
       [test "x$with_hdf5" != "xyes"], [
            HDF5_PATH="$with_hdf5"
-           HDF5_LIBS="-L$HDF5_PATH/lib -lhdf5"
+           HDF5_LIBS="-L$HDF5_PATH/lib"
            HDF5_CFLAGS="-I$HDF5_PATH/include"
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available]) ],
       [
            PKG_CHECK_EXISTS([hdf5], [
              PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+           ],
+           [ AC_PATH_PROG([H5CC],[h5cc],[not_found])
+             AS_IF([test "$H5CC" != "not_found"], [
+             eval "$(grep '^prefix=' $H5CC)"
+             eval "$(grep '^exec_prefix=' $H5CC)"
+             eval "$(grep '^libdevdir=' $H5CC)"
+             eval "$(grep '^includedir=' $H5CC)"
+             HDF5_CFLAGS="-I$includedir"
+             HDF5_LIBS="-L$libdevdir"
+             ])
            ])
-           AC_CHECK_LIB([hdf5], [H5Fcreate], [ HDF5_LIBS="-lhdf5" ], [
-              AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=...]) ])
-           AC_CHECK_HEADER([hdf5.h], [HDF5_CFLAGS=""], [
-              AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
       ])
 
@@ -153,6 +159,12 @@ AC_SUBST([HDF5_CPPFLAGS])
 CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
 LIBS="${HDF5_LIBS} ${LIBS}"
 
+AS_IF([test "x$with_hdf5" != "xno"], [
+  AC_CHECK_LIB([hdf5], [H5Fcreate], [], [
+    AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=...]) ])
+  AC_CHECK_HEADER([hdf5.h], [], [
+    AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
+])
 
 # The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
 # It is only needed to manually build Python API because setup.py depends on HDF5.
