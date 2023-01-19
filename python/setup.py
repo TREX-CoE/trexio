@@ -92,7 +92,7 @@ h5_ldflags = h5_ldflags_withl.split(" ")[0] if not do_sdist else ""
 pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [h5_cflags, srcpath, numpy_includedir],
-                            libraries = ['hdf5', 'hdf5_hl'],
+                            libraries = ['hdf5' ],
                             extra_compile_args = [
                                 '-std=c99',
                                 '-Wno-discarded-qualifiers',

@@ -95,7 +95,7 @@ AC_RUN_IFELSE(
 execl("/bin/sh", "sh", "-c", "mkdir tmpdir1 && \
 touch tmpdir1/test_file && \
 $CP_PROG -r -n tmpdir1 tmpdir2 && \
-exec ls tmpdir2/test_file", NULL);
+exec ls tmpdir2/test_file > /dev/null", NULL);
 ])],
 [ rm -rf tmpdir1 tmpdir2
   CP_COMMAND="\"$CP_PROG\", \"-r\", \"-n\""
@@ -122,7 +122,9 @@ AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd
 ### ----
 
 HDF5_LIBS=""
+HDF5_LDFLAGS=""
 HDF5_CFLAGS=""
+HDF5_CPPFLAGS=""
 AC_ARG_WITH([hdf5],
   AS_HELP_STRING([--with-hdf5=PATH], [Path to HDF5 library and headers]), [
   with_hdf5="$withval"], [with_hdf5="yes"])
@@ -130,29 +132,87 @@ AC_ARG_WITH([hdf5],
 AS_IF([test "x$with_hdf5" == "xno"], [
            AC_DEFINE([HAVE_HDF5], 0, [Define to 1 if HDF5 is available]) ],
       [test "x$with_hdf5" != "xyes"], [
+           HDF5_LIBS="-lhdf5"
            HDF5_PATH="$with_hdf5"
-           HDF5_LIBS="-L$HDF5_PATH/lib -lhdf5 -lhdf5_hl"
-           HDF5_CFLAGS="-I$HDF5_PATH/include"
+           HDF5_LDFLAGS="-L$HDF5_PATH/lib"
+           HDF5_CPPFLAGS="-I$HDF5_PATH/include"
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available]) ],
       [
-           PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-           AS_IF([ test "${HDF5_LIBS}" == "" ], [
-             AC_CHECK_LIB([hdf5], [H5Fcreate], [ HDF5_LIBS="-lhdf5" ])
-             AC_CHECK_HEADER([hdf5.h], [HDF5_CFLAGS=""], [AC_MSG_ERROR([HDF5 header not found]) ])
-             AC_CHECK_HEADER([hdf5_hl.h], [HDF5_CFLAGS=""], [AC_MSG_ERROR([HDF5 header not found]) ])
+           PKG_CHECK_EXISTS([hdf5], [
+             PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+           ],
+           [ AC_PATH_PROG([H5CC],[h5cc],[not_found])
+             AS_IF([test "$H5CC" != "not_found"], [
+              HDF5_LIBS="-lhdf5"
+              AC_REQUIRE([AC_PROG_SED])
+              AC_REQUIRE([AC_PROG_AWK])
+              AC_REQUIRE([AC_PROG_GREP])
+              # Look for "HDF5 Version: X.Y.Z"
+              HDF5_VERSION=$(eval $H5CC -showconfig | $GREP 'HDF5 Version:' \
+                  | $AWK '{print $[]3}')
+
+              # A ideal situation would be where everything we needed was
+              # in the AM_* variables. However most systems are not like this
+              # and seem to have the values in the non-AM variables.
+              #
+              # We try the following to find the flags:
+              # (1) Look for "NAME:" tags
+              # (2) Look for "H5_NAME:" tags
+              # (3) Look for "AM_NAME:" tags
+              #
+              HDF5_tmp_flags=$(eval $H5CC -showconfig \
+                  | $GREP 'FLAGS\|Extra libraries:' \
+                  | $AWK -F: '{printf("%s "), $[]2}' )
+
+              dnl Find the installation directory and append include/
+              HDF5_tmp_inst=$(eval $H5CC -showconfig \
+                  | $GREP 'Installation point:' \
+                  | $AWK '{print $[]NF}' )
+
+              dnl Add this to the CPPFLAGS
+              HDF5_CPPFLAGS="-I${HDF5_tmp_inst}/include"
+
+              HDF5_SHOW=$(eval $H5CC -show)
+
+              dnl Now sort the flags out based upon their prefixes
+              for arg in $HDF5_SHOW $HDF5_tmp_flags ; do
+                case "$arg" in
+                  -I*) echo $HDF5_CPPFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_CPPFLAGS="$HDF5_CPPFLAGS $arg"
+                    ;;
+                  -L*) echo $HDF5_LDFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_LDFLAGS="$HDF5_LDFLAGS $arg"
+                    ;;
+                  -l*) echo $HDF5_LIBS | $GREP -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_LIBS="$HDF5_LIBS $arg"
+                    ;;
+                esac
+              done
+
+             ])
            ])
            AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
-           HDF5_LIBS="$HDF5_LIBS -lhdf5_hl"
       ])
 
 AM_CONDITIONAL([HAVE_HDF5],[test "x$with_hdf5" != "xno"])
 
 AC_SUBST([HDF5_LDFLAGS])
+AC_SUBST([HDF5_LIBS])
 AC_SUBST([HDF5_CFLAGS])
 AC_SUBST([HDF5_CPPFLAGS])
+CPPFLAGS="${HDF5_CPPFLAGS} ${CPPFLAGS}"
 CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
+LDFLAGS="${HDF5_LDFLAGS} ${LDFLAGS}"
 LIBS="${HDF5_LIBS} ${LIBS}"
 
+AS_IF([test "x$with_hdf5" != "xno"], [
+  OLD_LIBS=$LIBS
+  AC_CHECK_LIB([hdf5], [H5Fcreate], [], [
+    AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=...]) ])
+  LIBS=$OLD_LIBS
+  AC_CHECK_HEADER([hdf5.h], [], [
+    AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
+])
 
 # The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
 # It is only needed to manually build Python API because setup.py depends on HDF5.
