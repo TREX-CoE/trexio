@@ -121,6 +121,7 @@ AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd
 ### HDF5
 ### ----
 
+PKG_HDF5=""
 HDF5_LIBS=""
 HDF5_LDFLAGS=""
 HDF5_CFLAGS=""
@@ -140,6 +141,7 @@ AS_IF([test "x$with_hdf5" == "xno"], [
       [
            PKG_CHECK_EXISTS([hdf5], [
              PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+             PKG_HDF5="hdf5"
            ],
            [ AC_PATH_PROG([H5CC],[h5cc],[not_found])
              AS_IF([test "$H5CC" != "not_found"], [
@@ -196,6 +198,7 @@ AS_IF([test "x$with_hdf5" == "xno"], [
 
 AM_CONDITIONAL([HAVE_HDF5],[test "x$with_hdf5" != "xno"])
 
+AC_SUBST([PKG_HDF5])
 AC_SUBST([HDF5_LDFLAGS])
 AC_SUBST([HDF5_LIBS])
 AC_SUBST([HDF5_CFLAGS])
@@ -209,9 +212,9 @@ AS_IF([test "x$with_hdf5" != "xno"], [
   OLD_LIBS=$LIBS
   AC_CHECK_LIB([hdf5], [H5Fcreate], [], [
     AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=...]) ])
-  LIBS=$OLD_LIBS
   AC_CHECK_HEADER([hdf5.h], [], [
     AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
+  LIBS=$OLD_LIBS
 ])
 
 # The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
