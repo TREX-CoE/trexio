@@ -426,7 +426,7 @@ prim_factor =
 
    All the functions $V_{A\ell}$ are parameterized as:
    \[
-   V_{A \ell}(\mathbf{r}) = 
+   V_{A \ell}(\mathbf{r}) =
    \sum_{q=1}^{N_{q \ell}}
    \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
    e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
@@ -452,7 +452,7 @@ prim_factor =
    hand, it can be attributed to the maximum angular momentum of the
    ECP that replaces the core electrons.
    *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
-   
+
    *Note for developers*: avoid having variables with similar prefix
    in their name. The HDF5 back end might cause issues due to the way
    ~find_dataset~ function works.  For example, in the ECP group we
@@ -868,7 +868,7 @@ power = [
         } ,
     #+end_src
     :end:
-   
+
 * Multi-determinant information
 ** Slater determinants (determinant group)
 
@@ -966,7 +966,7 @@ power = [
    on a reference wave function $\Psi$, where $\hat{T}_1$ is the single excitation operator,
 
    \[
-   \hat{T}_1 = \sum_{ia} t_{i}^{a}\, \hat{a}^\dagger_a \hat{a}_i, 
+   \hat{T}_1 = \sum_{ia} t_{i}^{a}\, \hat{a}^\dagger_a \hat{a}_i,
    \]
 
    $\hat{T}_2$ is the double excitation operator,
@@ -986,7 +986,7 @@ power = [
 
    \[ |\Phi\rangle = e^{\hat{T}}| \Psi \rangle \]
 
-   The reference wave function is stored using the ~determinant~ and/or 
+   The reference wave function is stored using the ~determinant~ and/or
    ~csf~ groups, and the amplitudes are stored using the current group.
    The attributes with the ~exp~ suffix correspond to exponentialized operators.
 
@@ -1043,8 +1043,7 @@ power = [
    \gamma_{ij} = \gamma^{\uparrow}_{ij} + \gamma^{\downarrow}_{ij}
    \]
 
-   The $\uparrow \uparrow$,  $\downarrow \downarrow$, $\uparrow \downarrow$, $\downarrow \uparrow$
-   components of the two-body density matrix are given by
+   The $\uparrow \uparrow$,  $\downarrow \downarrow$, $\uparrow \downarrow$ components of the two-body density matrix are given by
    \begin{eqnarray*}
      \Gamma_{ijkl}^{\uparrow \uparrow} &=&
         \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\alpha} \hat{a}_{j\alpha}\, \hat{a}_{i\alpha} | \Psi \rangle \\
@@ -1052,15 +1051,19 @@ power = [
         \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\beta} | \Psi \rangle \\
      \Gamma_{ijkl}^{\uparrow \downarrow} &=&
         \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle \\
-     \Gamma_{ijkl}^{\downarrow \uparrow} &=&
-        \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\alpha} \hat{a}_{j\alpha}\, \hat{a}_{i\beta} | \Psi \rangle \\
    \end{eqnarray*}
    and the spin-summed one-body density matrix is
    \[
    \Gamma_{ijkl} = \Gamma_{ijkl}^{\uparrow \uparrow} +
-     \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow} +
-     \Gamma_{ijkl}^{\downarrow \uparrow}
+     \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow}.
    \]
+   The density matrices are normalized such that
+   \begin{eqnarray*}
+   \sum_{ij} \Gamma_{ijij}^{\uparrow \uparrow} & = & N_\uparrow\, (N_\uparrow-1)/2 \\
+   \sum_{ij} \Gamma_{ijij}^{\downarrow \downarrow} & = & N_\downarrow\, (N_\downarrow-1)/2 \\
+   \sum_{ij} \Gamma_{ijij}^{\uparrow \downarrow} & = & N_\uparrow\, N_\downarrow \\
+   \sum_{ij} \Gamma_{ijij} & = & (N_\uparrow+N_\downarrow)\, (N_\uparrow+N_\downarrow-1)/2.
+   \end{eqnarray*}
 
    The total energy can be computed as:
    \[
@@ -1094,7 +1097,6 @@ power = [
    | ~2e_upup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\uparrow component of the two-body reduced density matrix     |
    | ~2e_dndn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\downarrow component of the two-body reduced density matrix |
    | ~2e_updn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\downarrow component of the two-body reduced density matrix   |
-   | ~2e_dnup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\uparrow component of the two-body reduced density matrix   |
    | ~2e_cholesky_num~      | ~dim~          |                                              | Number of Cholesky vectors                                            |
    | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~      | Cholesky decomposition of the two-body RDM (spin trace)               |
    | ~2e_upup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
@@ -1103,8 +1105,6 @@ power = [
    | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~ | Cholesky decomposition of the two-body RDM (\downarrow\downarrow)     |
    | ~2e_updn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
    | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~ | Cholesky decomposition of the two-body RDM (\uparrow\downarrow)       |
-   | ~2e_dnup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_dnup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dnup_cholesky_num)~ | Cholesky decomposition of the two-body RDM (\downarrow\uparrow)       |
 
    #+CALL: json(data=rdm, title="rdm")
 
@@ -1119,7 +1119,6 @@ power = [
          ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
          ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
          ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
-         ,              "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
          ,      "2e_cholesky_num" : [ "dim"         , []                                                 ]
          ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]      ]
          , "2e_upup_cholesky_num" : [ "dim"         , []                                                 ]
@@ -1128,8 +1127,6 @@ power = [
          ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ] ]
          , "2e_updn_cholesky_num" : [ "dim"         , []                                                 ]
          ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ] ]
-         , "2e_dnup_cholesky_num" : [ "dim"         , []                                                 ]
-         ,     "2e_dnup_cholesky" : [ "float sparse", [ "rdm.2e_dnup_cholesky_num", "mo.num", "mo.num" ] ]
        } ,
    #+end_src
    :end:
@@ -1150,7 +1147,7 @@ power = [
    following:
    - ~CHAMP~
    - ~Mu~
-   
+
 *** CHAMP
 
     The first form of Jastrow factor is the one used in
@@ -1159,7 +1156,7 @@ power = [
    \[
    J(\mathbf{r},\mathbf{R}) = J_{\text{eN}}(\mathbf{r},\mathbf{R}) + J_{\text{ee}}(\mathbf{r}) + J_{\text{eeN}}(\mathbf{r},\mathbf{R})
    \]
-   
+
 
    $J_{\text{eN}}$ contains electron-nucleus  terms:
 
@@ -1212,17 +1209,17 @@ power = [
    built such that the leading order in $1/r_{12}$ of the effective
    two-electron potential reproduces the long-range interaction of the
    range-separated density functional theory. Its analytical
-   expression reads 
+   expression reads
 
    \[
-   J(\mathbf{r}, \mathbf{R}) = J_{\text{eeN}}(\mathbf{r}, \mathbf{R}) + 
+   J(\mathbf{r}, \mathbf{R}) = J_{\text{eeN}}(\mathbf{r}, \mathbf{R}) +
                                J_{\text{eN}}(\mathbf{r}, \mathbf{R})
    \].
 
    The electron-electron cusp is incorporated in the three-body term.
-   
+
    \[
-   J_\text{eeN} (\mathbf{r}, \mathbf{R}) = 
+   J_\text{eeN} (\mathbf{r}, \mathbf{R}) =
    \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) \,
    \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha})
    \]
@@ -1245,17 +1242,17 @@ power = [
    \[
    E_\alpha(R) = 1 - \exp\left( - \gamma_{\alpha} \, R^2 \right).
    \]
-   
+
    In particular, if the parameters $\gamma_\alpha$ tend to zero, the
    Mu-Jastrow factor becomes a two-body Jastrow factor:
 
    \[
-   J_{\text{ee}}(\mathbf{r}) = 
-   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) 
+   J_{\text{ee}}(\mathbf{r}) =
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right)
    \]
 
    and for large $\gamma_\alpha$ it becomes zero.
-   
+
    To increase the flexibility of the Jastrow and improve the
    electron density the following electron-nucleus term is added
 
@@ -1268,9 +1265,9 @@ power = [
    The parameter $\mu$ is stored in the ~ee~ array, the parameters
    $\gamma_\alpha$ are stored in the ~een~ array, and the parameters
    $a_\alpha$ are stored in the ~en~ array.
-   
+
 *** Table of values
-   
+
    #+name: jastrow
   | Variable      | Type     | Dimensions          | Description                                                     |
   |---------------+----------+---------------------+-----------------------------------------------------------------|
@@ -1285,7 +1282,7 @@ power = [
   | ~een_nucleus~ | ~index~  | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                           |
   | ~ee_scaling~  | ~float~  |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
   | ~en_scaling~  | ~float~  | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
-   
+
    #+CALL: json(data=jastrow, title="jastrow")
 
    #+RESULTS:
@@ -1338,7 +1335,7 @@ power = [
        }
    #+end_src
    :end:
-   
+
 * Appendix    :noexport:
 ** Python script from table to json
 
