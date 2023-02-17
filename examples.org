@@ -1,0 +1,490 @@
+#+TITLE: Examples
+#+STARTUP: latexpreview
+#+SETUPFILE: ./theme.setup
+
+* Writing nuclear coordinates
+  
+  Here is a demonstration of how to use TREXIO to write the nuclear
+  coordinates of a water molecule to a file. It shows the basic steps
+  involved in opening a file, writing the data, and closing the file,
+  as well as the necessary TREXIO functions to perform these actions.
+
+** C
+   #+begin_src c
+#include <stdio.h>
+#include <trexio.h>
+
+int main() {
+  int num = 3;  // Number of atoms
+  double coord[][3] = {
+    // xyz coordinates in atomic units
+    0.  ,  0.        , -0.24962655,
+    0.  ,  2.70519714,  1.85136466,
+    0.  , -2.70519714,  1.85136466 };
+
+  trexio_exit_code rc;
+
+  // Open the TREXIO file
+  trexio_t* f = trexio_open("water.trexio", 'w', TREXIO_HDF5, &rc);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+
+  // Write the number of nuclei
+  rc = trexio_write_nucleus_num (f, num);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+
+  // Write the nuclear coordinates
+  rc = trexio_write_nucleus_coord (f, &coord[0][0]);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+
+  // Close the TREXIO file
+  rc = trexio_close(f);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+  return 0;
+}
+   #+end_src
+
+** Python
+
+   This code uses the TREXIO Python binding to create a new TREXIO file named
+   =water.trexio=, and write the nuclear coordinates of a water molecule.
+
+   The ~coord~ variable is a list of three lists, each containing the x, y,
+   and z coordinates of the water molecule's nuclei.
+
+   The ~with~ statement is used to ensure the file is properly closed after
+   the write is complete.
+
+   The ~trexio.write_nucleus_num~ function is used to write the number of
+   nuclei in the system.
+
+   The ~trexio.write_nucleus_coord~ function is used to write the nuclear
+   coordinates of the system.
+
+   #+begin_src python
+import trexio
+coord = [    # xyz coordinates in atomic units
+    [0. , 0., -0.24962655],
+    [0. , 2.70519714, 1.85136466],
+    [0. , -2.70519714, 1.85136466]
+]
+# The Python API calls can raise `trexio.Error`
+# exceptions to be handled via try/except clauses
+# in the user application
+with trexio.File("water.trexio", 'w',
+                 back_end=trexio.TREXIO_HDF5) as f:
+    trexio.write_nucleus_num(f, len(coord))
+    trexio.write_nucleus_coord(f, coord)
+    
+   #+end_src
+
+** Fortran
+   #+begin_src f90
+program trexio_water
+  use trexio
+
+  integer, parameter        :: num=3       ! Number of nuclei
+  double precision          :: coord(3,3)  ! Array of atom coordinates
+
+  integer(trexio_t)         :: f        ! The TREXIO file handle
+  integer(trexio_exit_code) :: rc       ! TREXIO return code
+  character*(128)           :: err_msg  ! String holding the error message
+
+  coord(:,:) = reshape( (/ 0.d0  ,  0.d0        , -0.24962655d0, &
+                           0.d0  ,  2.70519714d0,  1.85136466d0, &
+                           0.d0  , -2.70519714d0,  1.85136466d0  /), &
+                         shape(coord) )
+
+  ! Open the TREXIO file
+  f = trexio_open ('water.trexio', 'w', TREXIO_HDF5, rc)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+  ! Write the number of nuclei
+  rc = trexio_write_nucleus_num (f, num)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+  ! Write the nuclear coordinates
+  rc = trexio_write_nucleus_coord (f, coord)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+  ! Close the TREXIO file
+  rc = trexio_close(f)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+end program
+   #+end_src
+
+* Accessing sparse quantities (integrals)
+
+** Fortran
+  :PROPERTIES:
+  :header-args:    :tangle  print_energy.f90
+  :END:
+   
+   #+begin_src f90
+program print_energy
+  use trexio
+  implicit none
+
+  character*(128)  :: filename   ! Name of the input file
+  integer          :: rc         ! Return code for error checking
+  integer(8)       :: f          ! TREXIO file handle
+  character*(128)  :: err_msg    ! Error message
+   #+end_src
+
+   This program computes the energy as:
+
+   \[
+   E = E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
+   \rangle\; \textrm{ with } \; 0 < i,j,k,l \le n
+   \]
+   One needs to read from the TREXIO file:
+
+   - $n$ :: The number of molecular orbitals
+   - $E_{\text{NN}}$ :: The nuclear repulsion energy 
+   - $\gamma_{ij}$ :: The one-body reduced density matrix 
+   - $\langle j |h| i \rangle$ :: The one-electron Hamiltonian integrals 
+   - $\Gamma_{ijkl}$ :: The two-body reduced density matrix 
+   - $\langle k l  | i j \rangle$ :: The electron repulsion integrals
+
+
+   #+begin_src f90
+  integer                       :: n
+  double precision              :: E, E_nn
+  double precision, allocatable :: D(:,:), h0(:,:)
+  double precision, allocatable :: G(:,:,:,:), W(:,:,:,:)
+   #+end_src
+
+*** Declare Temporary variables
+
+   #+begin_src f90
+  integer                       :: i, j, k, l, m
+  integer(8), parameter         :: BUFSIZE = 100000_8
+  integer(8)                    :: offset, icount, size_max
+  integer                       :: buffer_index(4,BUFSIZE)
+  double precision              :: buffer_values(BUFSIZE)
+
+  double precision, external    :: ddot   ! BLAS dot product
+   #+end_src
+
+*** Obtain the name of the TREXIO file from the command line, and open it for reading
+
+   #+begin_src f90
+  call getarg(1, filename)
+
+  f = trexio_open (filename, 'r', TREXIO_HDF5, rc)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error opening TREXIO file: '//trim(err_msg)
+     stop
+  end if
+   #+end_src
+
+*** Read the nuclear repulsion energy
+
+   #+begin_src f90
+  rc = trexio_read_nucleus_repulsion(f, E_nn)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading nuclear repulsion: '//trim(err_msg)
+     stop
+  end if
+   #+end_src
+
+*** Read the number of molecular orbitals
+
+    #+begin_src f90
+  rc = trexio_read_mo_num(f, n)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading number of MOs: '//trim(err_msg)
+     stop
+  end if
+    #+end_src
+
+*** Allocate memory
+
+    #+begin_src f90
+  allocate( D(n,n), h0(n,n) )
+  allocate( G(n,n,n,n), W(n,n,n,n) )
+  G(:,:,:,:) = 0.d0
+  W(:,:,:,:) = 0.d0
+    #+end_src
+
+*** Read one-electron quantities
+    
+    #+begin_src f90
+  rc = trexio_has_mo_1e_int_core_hamiltonian(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No core hamiltonian in file'
+  end if
+  
+  rc = trexio_read_mo_1e_int_core_hamiltonian(f, h0)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading core Hamiltonian: '//trim(err_msg)
+     stop
+  end if
+  
+  
+  rc = trexio_has_rdm_1e(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No 1e RDM in file'
+  end if
+  
+  rc = trexio_read_rdm_1e(f, D)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading one-body RDM: '//trim(err_msg)
+     stop
+  end if
+    #+end_src
+  
+*** Read two-electron quantities
+    
+    Reading is done with OpenMP. Each thread reads its own buffer, and
+    the buffers are then processed in parallel.
+
+    Reading the file requires a lock, so it is done in a critical
+    section. The ~offset~ variable is shared, and it is incremented in
+    the critical section. For each read, the function returns in
+    ~icount~ the number of read integrals, so this variable needs also
+    to be protected in the critical section when modified.
+    
+**** Electron repulsion integrals
+
+     #+begin_src f90
+  rc = trexio_has_mo_2e_int_eri(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No electron repulsion integrals in file'
+  end if
+
+  rc = trexio_read_mo_2e_int_eri_size (f, size_max)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading number of ERIs: '//trim(err_msg)
+     stop
+  end if
+
+  offset = 0_8
+  !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(icount, i, j, k, l, &
+  !$OMP   buffer_index, buffer_values, m)
+  icount = BUFSIZE
+  do while (icount == BUFSIZE)
+    !$OMP CRITICAL
+    if (offset < size_max) then
+      rc = trexio_read_mo_2e_int_eri(f, offset, icount, buffer_index, buffer_values)
+      offset = offset + icount
+    else
+      icount = 0
+    end if
+    !$OMP END CRITICAL
+    do m=1,icount
+      i = buffer_index(1,m)
+      j = buffer_index(2,m)
+      k = buffer_index(3,m)
+      l = buffer_index(4,m)
+      W(i,j,k,l) = buffer_values(m)
+      W(k,j,i,l) = buffer_values(m)
+      W(i,l,k,j) = buffer_values(m)
+      W(k,l,i,j) = buffer_values(m)
+      W(j,i,l,k) = buffer_values(m)
+      W(j,k,l,i) = buffer_values(m)
+      W(l,i,j,k) = buffer_values(m)
+      W(l,k,j,i) = buffer_values(m)
+    end do
+  end do
+  !$OMP END PARALLEL
+     #+end_src
+
+**** Reduced density matrix
+     
+     #+begin_src f90
+  rc = trexio_has_rdm_2e(f)
+  if (rc /= TREXIO_SUCCESS) then
+     stop 'No two-body density matrix in file'
+  end if
+
+  rc = trexio_read_rdm_2e_size (f, size_max)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading number of 2-RDM elements: '//trim(err_msg)
+     stop
+  end if
+
+  offset = 0_8
+  !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(icount, i, j, k, l, &
+  !$OMP   buffer_index, buffer_values, m)
+  icount = bufsize
+  do while (offset < size_max)
+    !$OMP CRITICAL
+    if (offset < size_max) then
+      rc = trexio_read_rdm_2e(f, offset, icount, buffer_index, buffer_values)
+      offset = offset + icount
+    else
+      icount = 0
+    end if
+    !$OMP END CRITICAL
+    do m=1,icount
+      i = buffer_index(1,m)
+      j = buffer_index(2,m)
+      k = buffer_index(3,m)
+      l = buffer_index(4,m)
+      G(i,j,k,l) = buffer_values(m)
+    end do
+  end do
+  !$OMP END PARALLEL
+
+     #+end_src
+    
+*** Compute the energy
+    
+    When the orbitals are real, we can use
+   \begin{eqnarray*}
+   E &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
+   \rangle \\
+     &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle i | h | j \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle i j | k l
+   \rangle \\
+   \end{eqnarray*}
+
+    As $(n,m)$ 2D arrays are stored in memory as $(n \times m)$ 1D
+    arrays, we could pass the matrices to the ~ddot~ BLAS function to
+    perform the summations in a single call for the 1-electron quantities.
+    Instead, we prefer to interleave the 1-electron (negative) and
+    2-electron (positive) summations to have a better cancellation of
+    numerical errors.
+    
+    Here $n^4$ can be larger than the largest possible 32-bit integer,
+    so it is not safe to pass $n^4$ to the ~ddot~ BLAS
+    function. Hence, we perform $n^2$ loops, using vectors of size $n^2$.
+    
+    #+begin_src f90
+
+  E = 0.d0
+  do l=1,n
+    E = E + ddot( n, D(1,l), 1, h0(1,l), 1 ) 
+    do k=1,n
+       E = E + 0.5d0 * ddot( n*n, G(1,1,k,l), 1, W(1,1,k,l),  1 )
+    end do
+  end do
+  E = E + E_nn
+
+  print *, 'Energy: ', E
+    #+end_src
+
+*** Terminate
+    
+    #+begin_src f90
+  deallocate( D, h0, G, W )
+
+end program
+    #+end_src
+
+* Reading determinants
+  
+** Fortran
+  :PROPERTIES:
+  :header-args:    :tangle  print_dets.f90
+  :END:
+   
+   #+begin_src f90
+program test
+
+  use trexio
+  implicit none
+  
+  character*(128)           :: filename               ! Name of the input file
+  integer(trexio_exit_code) :: rc                     ! Return code for error checking
+  integer(trexio_t)         :: trex_determinant_file  ! TREXIO file handle
+  character*(128)           :: err_msg                ! Error message
+
+
+  integer*8, allocatable :: buffer(:,:,:)
+  integer(8) :: offset, icount, BUFSIZE
+  integer :: ndet, int64_num, m
+
+  integer :: occ_num_up, occ_num_dn
+  integer, allocatable :: orb_list_up(:), orb_list_dn(:)
+
+  call getarg(1, filename)
+
+  trex_determinant_file = trexio_open(filename, 'r', TREXIO_AUTO, rc)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error opening TREXIO file: '//trim(err_msg)
+     stop
+  end if
+  
+  rc = trexio_read_determinant_num(trex_determinant_file, ndet)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading determinant_num: '//trim(err_msg)
+     stop
+  end if
+  print *, 'ndet', ndet
+
+  rc = trexio_get_int64_num(trex_determinant_file, int64_num)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error reading int64_num: '//trim(err_msg)
+     stop
+  end if
+  print *, 'int64_num', int64_num
+
+  BUFSIZE = 1000_8
+  allocate(buffer(int64_num, 2, BUFSIZE))
+  allocate(orb_list_up(int64_num*64), orb_list_dn(int64_num*64))
+
+  offset = 0_8
+  icount = BUFSIZE
+  do while (icount == BUFSIZE)
+    if (offset < ndet) then
+      rc = trexio_read_determinant_list(trex_determinant_file, offset, icount, buffer)
+      offset = offset + icount
+    else
+      icount = 0
+    end if
+    print *, '---'
+    do m=1,icount
+      rc = trexio_to_orbital_list_up_dn(int64_num, buffer(1,1,m), &
+           orb_list_up, orb_list_dn, occ_num_up, occ_num_dn)
+      print '(100(I3,X))', (orb_list_up(1:occ_num_up)), (orb_list_dn(1:occ_num_dn))
+      print *, ''
+    end do
+  end do
+
+  deallocate(buffer, orb_list_dn, orb_list_up)
+
+end
+   #+end_src
+  
