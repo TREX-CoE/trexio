@@ -1,58 +1,17 @@
-#+TITLE: TREX Configuration file
+#+TITLE: Data stored in TREXIO
 #+STARTUP: latexpreview
 #+SETUPFILE: docs/theme.setup
 
-This page contains information about the general structure of the
-TREXIO library. The source code of the library can be automatically
-generated based on the contents of the ~trex.json~ configuration file,
-which itself is generated from different sections (groups) presented
-below.
+  For simplicity, the singular form is always used for the names of
+  groups and attributes, and all data are stored in atomic units.
+  The dimensions of the arrays in the tables below are given in
+  column-major order (as in Fortran), and the ordering of the dimensions
+  is reversed in the produced ~trex.json~ configuration file as the
+  library is written in C.
 
-All quantities are saved in TREXIO files in atomic units. The
-dimensions of the arrays in the tables below are given in column-major
-order (as in Fortran), and the ordering of the dimensions is reversed
-in the produced ~trex.json~ configuration file as the library is
-written in C.
-
-TREXIO currently supports ~int~, ~float~ and ~str~ types for both
-single attributes and arrays.  Note, that some attributes might have
-~dim~ type (e.g. ~num~ of the ~nucleus~ group).  This type is treated
-exactly in the same way as ~int~ with the only difference that ~dim~
-variables cannot be negative. This additional constraint is required
-because ~dim~ attributes are used internally to allocate memory and to
-check array boundaries in the memory-safe API. Most of the times, the
-~dim~ variables contain the ~num~ suffix.
-You may also encounter some ~dim readonly~ variables.
-It means that the value is automatically computed and written by the
-TREXIO library, thus it is read-only and cannot be (over)written by the
-user.
-
-In Fortran, arrays are 1-based and in most other languages the
-arrays are 0-based. Hence, we introduce the ~index~ type which is a
-1-based ~int~ in the Fortran interface and 0-based otherwise.
-
-For sparse data structures such as electron replusion integrals,
-the data can be too large to fit in memory and the data needs to be
-fetched using multiple function calls to perform I/O on buffers.
-For more information on how to read/write sparse data structures, see
-the [[./examples.html][examples]]. The ~sparse~ data representation implies the
-[[https://en.wikipedia.org/wiki/Sparse_matrix#Coordinate_list_(COO)][coordinate list]] representation, namely the user has to write a list
-of indices and values.
-
-For the Configuration Interaction (CI) and Configuration State Function (CSF)
-groups, the ~buffered~ data type is introduced, which allows similar incremental
-I/O as for ~sparse~ data but without the need to write indices of the sparse values.
-
-For determinant lists (integer bit fields), the ~special~ attribute is present in the type.
-This means that the source code is not produced by the generator, but hand-written.
-
-Some data may be complex. In that case, the real part should be stored
-in the variable, and the imaginary part will be stored in the variable
-with the same name suffixed by ~_im~.
-
-  #+begin_src python :tangle trex.json :exports none
+   #+begin_src python :tangle trex.json :exports none
 {
-  #+end_src
+   #+end_src
 
 * Metadata (metadata group)
 
