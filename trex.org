@@ -677,23 +677,21 @@ power = [
 
     The two-electron integrals for a two-electron operator $\hat{O}$ are
     \[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
-    notation or \[ ( pr \vert \hat{O} \vert qs ) \] in chemists
     notation, where $p,q,r,s$ are indices over atomic orbitals.
 
-    Functions are provided to get the indices in physicists or chemists
-    notation.
-
-    # TODO: Physicist / Chemist functions
+#   TODO: Physicist / Chemist functions
+#   Functions are provided to get the indices in physicists or chemists
+#   notation.
 
     - \[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.
     - \[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
-      \sum_{j=1}^{i-1} \frac{\text{erf}(\vert \mathbf{r}_i -
+      \sum_{j=1}^{i-1} \frac{\text{erf}(\mu\, \vert \mathbf{r}_i -
       \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential
 
     The Cholesky decomposition of the integrals can also be stored:
 
     \[
-    A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
+    \langle ij | kl \rangle = \sum_{\alpha} G_{ik\alpha} G_{jl\alpha}
     \]
 
     #+NAME: ao_2e_int
@@ -1009,20 +1007,14 @@ power = [
      \Gamma_{ijkl}^{\downarrow \downarrow} &=&
         \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\beta} | \Psi \rangle \\
      \Gamma_{ijkl}^{\uparrow \downarrow} &=&
-        \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle \\
+        \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle 
+        + \langle \Psi | \hat{a}^{\dagger}_{l\alpha}\, \hat{a}^{\dagger}_{k\beta} \hat{a}_{i\beta}\, \hat{a}_{j\alpha} | \Psi \rangle \\
    \end{eqnarray*}
    and the spin-summed one-body density matrix is
    \[
    \Gamma_{ijkl} = \Gamma_{ijkl}^{\uparrow \uparrow} +
      \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow}.
    \]
-   The density matrices are normalized such that
-   \begin{eqnarray*}
-   \sum_{ij} \Gamma_{ijij}^{\uparrow \uparrow} & = & N_\uparrow\, (N_\uparrow-1)/2 \\
-   \sum_{ij} \Gamma_{ijij}^{\downarrow \downarrow} & = & N_\downarrow\, (N_\downarrow-1)/2 \\
-   \sum_{ij} \Gamma_{ijij}^{\uparrow \downarrow} & = & N_\uparrow\, N_\downarrow \\
-   \sum_{ij} \Gamma_{ijij} & = & (N_\uparrow+N_\downarrow)\, (N_\uparrow+N_\downarrow-1)/2.
-   \end{eqnarray*}
 
    The total energy can be computed as:
    \[
