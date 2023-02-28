@@ -144,8 +144,18 @@
 
 ** Electron (electron group)
 
-    We consider wave functions expressed in the spin-free formalism, where
-    the number of \uparrow and \downarrow electrons is fixed.
+   The chemical system consists of nuclei and electrons, where the
+   nuclei are considered as fixed point charges with Cartesian
+   coordinates.  The wave function is stored in the spin-free
+   formalism, and therefore, it is necessary for the user to
+   explicitly store the number of electrons with spin up
+   ($N_\uparrow$) and spin down ($N_\downarrow$).  These numbers
+   correspond to the normalization of the spin-up and spin-down
+   single-particle reduced density matrices.
+
+   We consider wave functions expressed in the spin-free formalism, where
+   the number of \uparrow and \downarrow electrons is fixed.
+
 
    #+NAME:electron
    | Variable | Type  | Dimensions | Description                         |
@@ -208,9 +218,9 @@
 
 *** Gaussian and Slater-type orbitals
 
-    We consider here basis functions centered on nuclei. Hence, we enable
-    the possibility to define /dummy atoms/ to place basis functions in
-    random positions.
+    We consider here basis functions centered on nuclei. Hence, it is 
+    possibile to define /dummy atoms/ to place basis functions in
+    arbitrary positions.
 
     The atomic basis set is defined as a list of shells. Each shell $s$ is
     centered on a center $A$, possesses a given angular momentum $l$ and a
@@ -553,50 +563,42 @@ power = [
 * Orbitals
 ** Atomic orbitals (ao group)
 
-   Going from the atomic basis set to AOs implies a systematic
-   construction of all the angular functions of each shell.  We
-   consider two cases for the angular functions: the real-valued
-   spherical harmonics, and the polynomials in Cartesian coordinates.
-   In the case of real spherical harmonics, the AOs are ordered as
-   $0, +1, -1, +2, -2, \dots, +m, -m$ (see [[https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics][Wikipedia]]).
-   In the case of polynomials we
-   impose the canonical (or alphabetical) ordering), i.e
-
-   \begin{eqnarray}
-   p & : & p_x, p_y, p_z \nonumber \\
-   d & : & d_{xx}, d_{xy}, d_{xz}, d_{yy}, d_{yz}, d_{zz} \nonumber \\
-   f & : & f_{xxx}, f_{xxy}, f_{xxz}, f_{xyy}, f_{xyz}, f_{xzz}, f_{yyy}, f_{yyz}, f_{yzz},      …f_{zzz} \nonumber \\
-   {\rm etc.} \nonumber
-   \end{eqnarray}
-
-   Note that there is no exception for $p$ orbitals in spherical
-   coordinates: the ordering is $0,+1,-1$ which corresponds $p_z, p_x, p_y$.
-
    AOs are defined as
 
    \[
-   \chi_i (\mathbf{r}) = \mathcal{N}_i\, P_{\eta(i)}(\mathbf{r})\, R_{s(i)} (\mathbf{r})
+   \chi_i (\mathbf{r}) = \mathcal{N}_i'\, P_{\eta(i)}(\mathbf{r})\, R_{s(i)} (\mathbf{r})
    \]
 
-   where $i$ is the atomic orbital index,
-   $P$ encodes for either the
-   polynomials or the spherical harmonics, $s(i)$ returns the
-   shell on which the AO is expanded, and $\eta(i)$ denotes which
-   angular function is chosen.
-   $\mathcal{N}_i$ is a normalization factor that enables the
-   possibility to have different normalization coefficients within a
-   shell, as in the GAMESS convention where
-   $\mathcal{N}_{x^2} \ne \mathcal{N}_{xy}$ because
-   \[ \left[ \iiint \left(x-X_A \right)^2 R_{s(i)}
-   (\mathbf{r}) dx\, dy\, dz \right]^{-1/2} \ne
-    \left[ \iiint \left( x-X_A \right) \left( y-Y_A \right) R_{s(i)}
-   (\mathbf{r}) dx\, dy\, dz \right]^{-1/2}.  \]
+   where $i$ is the atomic orbital index, $P$ refers to either
+   polynomials or spherical harmonics, and $s(i)$ specifies the shell
+   on which the AO is expanded.
 
-   In such a case, one should set the normalization of the shell (in
-   the [[Basis set (basis group)][Basis set]] section) to $\mathcal{N}_{z^2}$, which is the
-   normalization factor of the atomic orbitals in spherical coordinates.
-   The normalization factor of the $xy$ function which should be
-   introduced here should be $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
+   $\eta(i)$ denotes the chosen angular function.  The AOs can be
+   expressed using real spherical harmonics or polynomials in Cartesian
+   coordinates.  In the case of real spherical harmonics, the AOs are
+   ordered as $0, +1, -1, +2, -2, \dots, + m, -m$ (see [[https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics][Wikipedia]]).  In
+   the case of polynomials, the canonical (or alphabetical) ordering is
+   used,
+
+   | $p$      | $p_x, p_y, p_z$                                  |
+   | $d$      | $d_{xx}, d_{xy}, d_{xz}, d_{yy}, d_{yz}, d_{zz}$ |
+   | $f$      | $f_{xxx}, f_{xxy}, f_{xxz}, f_{xyy}, f_{xyz}$,   |
+   |          | $f_{xzz}, f_{yyy}, f_{yyz}, f_{yzz}, f_{zzz}$    |
+   | $\vdots$ |                                                  |
+
+   Note that for \(p\) orbitals in spherical coordinates, the ordering
+   is $0,+1,-1$ which corresponds to $p_z, p_x, p_y$.
+
+   $\mathcal{N}_i'$ is a normalization factor that allows for different
+   normalization coefficients within a single shell, as in the GAMESS
+   convention where each individual function is unit-normalized.
+   Using GAMESS convention, the normalization factor of the shell
+   $\mathcal{N}_d$ in the ~basis~ group is appropriate for instance
+   for the $d_z^2$ function (i.e.
+   $\mathcal{N}_{d}\equiv\mathcal{N}_{z^2}$) but not for the $d_{xy}$
+   AO, so the correction factor $\mathcal{N}_i'$ for $d_{xy}$ in the
+   ~ao~ groups is the ratio $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
+
 
    #+NAME: ao
    | Variable        | Type    | Dimensions | Description                          |
@@ -637,18 +639,18 @@ power = [
     over atomic orbitals.
 
     #+NAME: ao_1e_int
-   | Variable              | Type    | Dimensions         | Description                                                              |
-   |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
-   | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                                              |
-   | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$                              |
-   | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
-   | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
-   | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                                |
-   | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)                             |
-   | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
-   | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
-   | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
-   | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
+    | Variable              | Type    | Dimensions         | Description                                                              |
+    |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
+    | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                                              |
+    | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$                              |
+    | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
+    | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
+    | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                                |
+    | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)                             |
+    | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
+    | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
+    | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
+    | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
 
     #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -679,9 +681,9 @@ power = [
     \[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
     notation, where $p,q,r,s$ are indices over atomic orbitals.
 
-#   TODO: Physicist / Chemist functions
-#   Functions are provided to get the indices in physicists or chemists
-#   notation.
+    #   TODO: Physicist / Chemist functions
+    #   Functions are provided to get the indices in physicists or chemists
+    #   notation.
 
     - \[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.
     - \[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
@@ -695,14 +697,14 @@ power = [
     \]
 
     #+NAME: ao_2e_int
-   | Variable              | Type           | Dimensions                                        | Description                                   |
-   |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
-   | ~eri~                 | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
-   | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range electron repulsion integrals       |
-   | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
-   | ~eri_cholesky~        | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
-   | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
-   | ~eri_lr_cholesky~     | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
+    | Variable              | Type           | Dimensions                                        | Description                                   |
+    |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
+    | ~eri~                 | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
+    | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range electron repulsion integrals       |
+    | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
+    | ~eri_cholesky~        | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
+    | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
+    | ~eri_lr_cholesky~     | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
     #+CALL: json(data=ao_2e_int, title="ao_2e_int")
 
@@ -1085,12 +1087,12 @@ power = [
 * Correlation factors
 ** Jastrow factor (jastrow group)
 
-   The Jastrow factor is an $N$-electron function to which the CI
-   expansion is multiplied: $\Psi = \Phi \times \exp(J)$,
+   The Jastrow factor is an $N$-electron function which multiplies the CI
+   expansion: $\Psi = \Phi \times \exp(J)$,
 
    In the following, we use the notations $r_{ij} = |\mathbf{r}_i - \mathbf{r}_j|$ and
    $R_{i\alpha} = |\mathbf{r}_i - \mathbf{R}_\alpha|$, where indices
-   $i$ and $j$ correspond to electrons and $\alpha$ to nuclei.
+   $i$ and $j$ refer to electrons and $\alpha$ to nuclei.
 
    Parameters for multiple forms of Jastrow factors can be saved in
    TREXIO files, and are described in the following sections. These
@@ -1109,54 +1111,74 @@ power = [
    \]
 
 
-   $J_{\text{eN}}$ contains electron-nucleus  terms:
+   $J_{\text{eN}}$ contains electron-nucleus terms:
 
    \[
-   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}}
-   \frac{a_{1,\alpha}\, g_\alpha(R_{i\alpha})}{1+a_{2,\alpha}\, g_\alpha(R_{i\alpha})} +
-   \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, [g_\alpha(R_{i\alpha})]^p - J_{eN}^\infty
+   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}}\left[
+   \frac{a_{1,\alpha}\, f_\alpha(R_{i\alpha})}{1+a_{2,\alpha}\,
+   f_\alpha(R_{i\alpha})} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, [f_\alpha(R_{i\alpha})]^p - J_{\text{eN}}^\infty
+   \right]
    \]
 
    $J_{\text{ee}}$ contains electron-electron terms:
+
    \[
    J_{\text{ee}}(\mathbf{r}) =
    \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1}
-   \frac{b_1\, f(r_{ij})}{1+b_2\, f(r_{ij})} +
-   \sum_{p=2}^{N_\text{ord}^b} a_{p+1}\, [f(r_{ij})]^p  - J_{ee}^\infty
+   \left[
+   \frac{\frac{1}{2}\big(1 + \delta^{\uparrow\downarrow}_{ij}\big)\,b_1\, f_{\text{ee}}(r_{ij})}{1+b_2\, f_{\text{ee}}(r_{ij})} +
+   \sum_{p=2}^{N_\text{ord}^b} b_{p+1}\, [f_{\text{ee}}(r_{ij})]^p  - J_{\text{ee},ij}^\infty
+   \right]
    \]
+   
+   $\delta^{\uparrow\downarrow}_{ij}$ is zero when the electrons $i$ and
+   $j$ have the same spin, and one otherwise.
 
-   and $J_{\text{eeN}}$ contains electron-electron-Nucleus terms:
+   $J_{\text{eeN}}$ contains electron-electron-Nucleus terms:
 
    \[
-   J_{\text{eeN}}(\mathbf{r},\mathbf{R}) =
+    J_{\text{eeN}}(\mathbf{r},\mathbf{R}) =
     \sum_{\alpha=1}^{N_{\text{nucl}}}
      \sum_{i=1}^{N_{\text{elec}}}
       \sum_{j=1}^{i-1}
        \sum_{p=2}^{N_{\text{ord}}}
         \sum_{k=0}^{p-1}
          \sum_{l=0}^{p-k-2\delta_{k,0}}
-           c_{lkp\alpha} \left[ f({r}_{ij}) \right]^k
-             \left[ \left[ g_\alpha({R}_{i\alpha}) \right]^l + \left[ g_\alpha({R}_{j\alpha}) \right]^l \right]
-             \left[ g_\alpha({R}_{i\,\alpha}) \, g_\alpha({R}_{j\alpha}) \right]^{(p-k-l)/2}
+           c_{lkp\alpha} \left[ g_{\text{ee}}({r}_{ij}) \right]^k \nonumber \\
+            \left[ \left[ g_\alpha({R}_{i\alpha}) \right]^l + \left[ g_\alpha({R}_{j\alpha}) \right]^l \right]
+             \left[ g_\alpha({R}_{i\,\alpha}) \,
+  g_\alpha({R}_{j\alpha}) \right]^{(p-k-l)/2}
    \]
-
    $c_{lkp\alpha}$ are non-zero only when $p-k-l$ is even.
 
-   The terms $J_{\text{ee}}^\infty$ and $J_{\text{eN}}^\infty$ are shifts to ensure that
-   $J_{\text{ee}}$ and $J_{\text{eN}}$ have an asymptotic value of zero.
+   The terms $J_{\text{ee},ij}^\infty$ and $J_{\text{eN}}^\infty$ are shifts to ensure that
+   $J_{\text{eN}}$ and $J_{\text{ee}}$ have an asymptotic value of zero:
+
+   \[
+   J_{\text{eN}}^{\infty} = 
+   \frac{a_{1,\alpha}\, \kappa_\alpha^{-1}}{1+a_{2,\alpha}\,
+   \kappa_\alpha^{-1}} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, \kappa_\alpha^{-p} 
+   \]
+   \[
+   J_{\text{ee},ij}^{\infty} =
+   \frac{\frac{1}{2}\big(1 + \delta^{\uparrow\downarrow}_{ij}\big)\,b_1\,
+   \kappa_{\text{ee}}^{-1}}{1+b_2\, \kappa_{\text{ee}}^{-1}} +
+   \sum_{p=2}^{N_\text{ord}^b} b_{p+1}\, \kappa_{\text{ee}}^{-p}
+   \]
 
    $f$ and $g$ are scaling function defined as
 
    \[
-   f(r) = \frac{1-e^{-\kappa\, r}}{\kappa} \text{ and }
-   g_\alpha(r) = e^{-\kappa_\alpha\, r}.
+   f_\alpha(r) = \frac{1-e^{-\kappa_\alpha\, r}}{\kappa_\alpha} \text{ and }
+   g_\alpha(r) = e^{-\kappa_\alpha\, r},
    \]
+
 
 *** Mu
 
    [[https://aip.scitation.org/doi/10.1063/5.0044683][Mu-Jastrow]] is based on a one-parameter correlation factor that has
    been introduced in the context of transcorrelated methods.  This
-   correlation factor imposes the electron-electron cusp and it is
+   correlation factor imposes the electron-electron cusp, and it is
    built such that the leading order in $1/r_{12}$ of the effective
    two-electron potential reproduces the long-range interaction of the
    range-separated density functional theory. Its analytical
@@ -1167,15 +1189,15 @@ power = [
                                J_{\text{eN}}(\mathbf{r}, \mathbf{R})
    \].
 
-   The electron-electron cusp is incorporated in the three-body term.
+   The electron-electron cusp is incorporated in the three-body term
 
    \[
    J_\text{eeN} (\mathbf{r}, \mathbf{R}) =
    \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) \,
-   \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha})
+   \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha}),
    \]
 
-   $u$ is an electron-electron function given by the symmetric function
+   where ww$u$ is an electron-electron function
 
    \[
    u\left(\mu, r\right) = \frac{r}{2} \, \left[ 1 - \text{erf}(\mu\, r) \right] - \frac{1}{2 \, \mu \, \sqrt{\pi}} \exp \left[ -(\mu \, r)^2 \right].
@@ -1186,7 +1208,7 @@ power = [
    electrons.
 
    An envelope function has been introduced to cancel out the Jastrow
-   effects between two-electrons when they are both close to a nucleus
+   effects between two-electrons when at least one is close to a nucleus
    (to perform a frozen-core calculation). The envelope function is
    given by
 
@@ -1223,11 +1245,11 @@ power = [
   | Variable      | Type     | Dimensions          | Description                                                     |
   |---------------+----------+---------------------+-----------------------------------------------------------------|
   | ~type~        | ~string~ |                     | Type of Jastrow factor: ~CHAMP~ or ~Mu~                         |
-  | ~ee_num~      | ~dim~    |                     | Number of Electron-electron parameters                          |
   | ~en_num~      | ~dim~    |                     | Number of Electron-nucleus parameters                           |
+  | ~ee_num~      | ~dim~    |                     | Number of Electron-electron parameters                          |
   | ~een_num~     | ~dim~    |                     | Number of Electron-electron-nucleus parameters                  |
-  | ~ee~          | ~float~  | ~(jastrow.ee_num)~  | Electron-electron parameters                                    |
   | ~en~          | ~float~  | ~(jastrow.en_num)~  | Electron-nucleus parameters                                     |
+  | ~ee~          | ~float~  | ~(jastrow.ee_num)~  | Electron-electron parameters                                    |
   | ~een~         | ~float~  | ~(jastrow.een_num)~ | Electron-electron-nucleus parameters                            |
   | ~en_nucleus~  | ~index~  | ~(jastrow.en_num)~  | Nucleus relative to the eN parameter                            |
   | ~een_nucleus~ | ~index~  | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                           |
@@ -1241,11 +1263,11 @@ power = [
    #+begin_src python :tangle trex.json
        "jastrow": {
                   "type" : [ "string", []                    ]
-         ,      "ee_num" : [ "dim"   , []                    ]
          ,      "en_num" : [ "dim"   , []                    ]
+         ,      "ee_num" : [ "dim"   , []                    ]
          ,     "een_num" : [ "dim"   , []                    ]
-         ,          "ee" : [ "float" , [ "jastrow.ee_num" ]  ]
          ,          "en" : [ "float" , [ "jastrow.en_num" ]  ]
+         ,          "ee" : [ "float" , [ "jastrow.ee_num" ]  ]
          ,         "een" : [ "float" , [ "jastrow.een_num" ] ]
          ,  "en_nucleus" : [ "index" , [ "jastrow.en_num" ]  ]
          , "een_nucleus" : [ "index" , [ "jastrow.een_num" ] ]
