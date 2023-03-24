@@ -497,7 +497,8 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
   hid_t index_dtype;
-  void* index_p = NULL;
+  const void* index_p = NULL;
+  void* index_p_non_const = NULL;
   uint64_t size_ranked = (uint64_t) size * $group_dset_rank$;
   /* Determine the optimal type for storing indices depending on the size_max (usually mo_num or ao_num) */
   if (size_max < UINT8_MAX) {
@@ -507,6 +508,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
       index[i] = (uint8_t) index_sparse[i];
     }
     index_p = index;
+    index_p_non_const = index;
     index_dtype = H5T_NATIVE_UINT8;
   } else if (size_max < UINT16_MAX) {
     uint16_t* index = CALLOC(size_ranked, uint16_t);
@@ -515,9 +517,10 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
       index[i] = (uint16_t) index_sparse[i];
     }
     index_p = index;
+    index_p_non_const = index;
     index_dtype = H5T_NATIVE_UINT16;
   } else {
-    index_p = (int32_t*) index_sparse;
+    index_p = index_sparse;
     index_dtype = H5T_NATIVE_INT32;
   }
 
@@ -541,7 +544,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
 
   /* Create chunked dataset with index_dtype datatype and write indices into it */
     rc_write = trexio_hdf5_create_write_dset_sparse(f->$group$_group, dset_index_name, index_dtype, chunk_i_dims, index_p);
-    if (index_p != index_sparse) FREE(index_p);
+    if (index_p != index_sparse) FREE(index_p_non_const);
     if (rc_write != TREXIO_SUCCESS) return rc_write;
 
   /* Create chunked dataset with value_dtype datatype and write values into it */
@@ -555,7 +558,7 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
 
   /* Create chunked dataset with index_dtype datatype and write indices into it */
     rc_write = trexio_hdf5_open_write_dset_sparse(f->$group$_group, dset_index_name, index_dtype, chunk_i_dims, offset_i, index_p);
-    if (index_p != index_sparse) FREE(index_p);
+    if (index_p != index_sparse) FREE(index_p_non_const);
     if (rc_write != TREXIO_SUCCESS) return rc_write;
 
   /* Create chunked dataset with value_dtype datatype and write values into it */
@@ -1465,8 +1468,6 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
       uint16_t* index = CALLOC(size_ranked, uint16_t);
       if (index == NULL) return TREXIO_ALLOCATION_FAILED;
       index_p = index;
-    } else {
-      index_p = data_sparse;
     }
   }
 
@@ -1474,7 +1475,7 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
   if (status < 0) {
     H5Sclose(fspace_id);
     H5Dclose(dset_id);
-    if (index_p != data_sparse) FREE(index_p);
+    if (index_p != NULL) FREE(index_p);
     return TREXIO_INVALID_ID;
   }
 
@@ -1482,7 +1483,7 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
   if (memspace_id < 0) {
     H5Sclose(fspace_id);
     H5Dclose(dset_id);
-    if (index_p != data_sparse) FREE(index_p);
+    if (index_p != NULL) FREE(index_p);
     return TREXIO_INVALID_ID;
   }
 
@@ -1502,7 +1503,7 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
   H5Sclose(memspace_id);
   H5Dclose(dset_id);
   if (status < 0) {
-    if (index_p != data_sparse) FREE(index_p);
+    if (index_p != NULL) FREE(index_p);
     return TREXIO_FAILURE;
   }
 
