@@ -3327,7 +3327,7 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
-  const uint32_t unique_rank = $group_dset_unique_rank$;
+#define unique_rank $group_dset_unique_rank$
   int64_t unique_dims[$group_dset_unique_rank$];
 
   // Below part is populated by the generator when unique_rank > 1
@@ -3335,11 +3335,12 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-  if (unique_rank != 1) {
-    for (uint32_t i = 1; i < unique_rank; i++) {
-      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
-    }
+#if (unique_rank != 1) 
+  for (uint32_t i = 1; i < unique_rank; i++) {
+    if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
+#endif
+#undef unique_rank
 
   // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
   int64_t eof_read_size = 0L;
@@ -3459,7 +3460,7 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
-  const uint32_t unique_rank = $group_dset_unique_rank$;
+#define unique_rank $group_dset_unique_rank$
   int64_t unique_dims[$group_dset_unique_rank$];
 
   // Below part is populated by the generator when unique_rank > 1
@@ -3467,11 +3468,12 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-  if (unique_rank != 1) {
-    for (uint32_t i = 1; i < unique_rank; i++) {
-      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
-    }
+#if (unique_rank != 1) 
+  for (uint32_t i = 1; i < unique_rank; i++) {
+    if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
+#endif
+#undef unique_rank
 
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
