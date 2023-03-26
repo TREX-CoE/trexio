@@ -5619,19 +5619,15 @@ trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list,
       bit_list[j] = (bitfield_t) 0;
   }
 
-  uint32_t i;
-  uint32_t k;
-  uint32_t iorb;
-  bitfield_t mask;
   uint32_t nswaps = 0;
 
   for (int32_t pos = 0 ; pos < occupied_num ; pos++) {
-    iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
+    const uint32_t iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
 
     // Set the bit of to one
-    i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
-    k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
-    mask = ((bitfield_t) 1) << k;
+    const uint32_t i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
+    const uint32_t k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
+    bitfield_t mask = ((bitfield_t) 1) << k;
     bit_list[i] |= mask;
 
     // Check for phase changes
@@ -5662,21 +5658,16 @@ trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
   if (list == NULL) return TREXIO_INVALID_ARG_3;
   if (occupied_num == NULL) return TREXIO_INVALID_ARG_4;
 
-  bitfield_t  tmp;
-  int32_t     shift;
-  int32_t     k;
-  int32_t     pos;
-
-  k = 0;
-  shift = TREXIO_ORBITAL_SHIFT;
+  int32_t k = 0;
+  int32_t shift = TREXIO_ORBITAL_SHIFT;
 
   for (int32_t i=0 ; i<N_int ; i++)
   {
-      tmp = d1[i];
+      bitfield_t tmp = d1[i];
 
       while (tmp != (bitfield_t) 0)
       {
-          pos = trailz(tmp);
+          const int32_t pos = trailz(tmp);
           if (pos < 0) return TREXIO_FAILURE;
 
           list[k] = ( (int32_t) pos) + shift - 1;
