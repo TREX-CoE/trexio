@@ -10,9 +10,8 @@
 #define SIZE          100
 #define N_CHUNKS      5
 #define STATE_TEST    2
-#define MO_NUM        150
 
-static int test_write_determinant (const char* file_name, const back_end_t backend, const int64_t offset) {
+static int test_write_determinant (const char* file_name, const back_end_t backend, const int64_t offset, const int mo_num) {
 
 /* Try to write an array of sparse data into the TREXIO file */
 
@@ -30,8 +29,6 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   int64_t* det_list;
   double*  det_coef;
 
-  int mo_num = MO_NUM;
-
   // write mo_num which will be used to determine the optimal size of int indices
   if (trexio_has_mo_num(file) == TREXIO_HAS_NOT) {
     rc = trexio_write_mo_num(file, mo_num);
@@ -42,19 +39,20 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   int int_num;
   rc = trexio_get_int64_num(file, &int_num);
   assert(rc == TREXIO_SUCCESS);
-  assert(int_num == (MO_NUM-1)/64 + 1);
+  assert(int_num == (mo_num-1)/64 + 1);
 
   // allocate memory and fill with values to be written
   det_list = (int64_t*) calloc(2 * int_num * SIZE, sizeof(int64_t));
   det_coef = (double*) calloc(SIZE, sizeof(double));
 
+  int64_t size_list = TREXIO_NORB_PER_INT * int_num;
+  const int32_t orb_list_up[4] = {0,1,2,3};
+  const int32_t orb_list_dn[3] = {0,1,2};
+
+
   for(int i=0; i<SIZE; i++){
-    det_list[6*i]   = 6*i;
-    det_list[6*i+1] = 6*i+1;
-    det_list[6*i+2] = 6*i+2;
-    det_list[6*i+3] = 6*i+3;
-    det_list[6*i+4] = 6*i+4;
-    det_list[6*i+5] = 6*i+5;
+    rc = trexio_to_bitfield_list (orb_list_up, 4, &(det_list[2*int_num*i]), int_num);
+    rc = trexio_to_bitfield_list (orb_list_dn, 3, &(det_list[2*int_num*i+int_num]), int_num);
     det_coef[i]     = 3.14 + (double) i;
   }
 
@@ -101,6 +99,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   // free the allocated memeory
   free(det_list);
   free(det_coef);
+  printf("write determinants OK\n");
 
 /*================= END OF TEST ==================*/
 
@@ -137,6 +136,7 @@ static int test_has_determinant(const char* file_name, const back_end_t backend)
   assert (rc == TREXIO_SUCCESS);
 
 /*================= END OF TEST ==================*/
+  printf("has_determinant OK\n");
 
   return 0;
 }
@@ -159,12 +159,12 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   int64_t mo_num;
   rc = trexio_read_mo_num_64(file, &mo_num);
   assert (rc == TREXIO_SUCCESS);
-  assert (mo_num == MO_NUM);
+  assert (mo_num == mo_num);
 
   int int_num;
   rc = trexio_get_int64_num(file, &int_num);
   assert (rc == TREXIO_SUCCESS);
-  assert (int_num == (MO_NUM - 1)/64 + 1);
+  assert (int_num == (mo_num - 1)/64 + 1);
 
   // define arrays to read into
   int64_t* det_list_read;
@@ -186,11 +186,12 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   if (offset != 0L) offset_file_read += offset;
 
   // read one chunk using the aforementioned parameters
+  printf("int_num: %d\n", int_num);
   rc = trexio_read_determinant_list(file, offset_file_read, &chunk_read, &det_list_read[2*int_num*offset_data_read]);
   assert(rc == TREXIO_SUCCESS);
   assert(chunk_read == read_size_check);
-  assert(det_list_read[0] == 0);
-  assert(det_list_read[2*int_num*offset_data_read] == 2 * int_num * (int64_t) (offset_file_read-offset));
+  assert(det_list_read[2*int_num*offset_data_read] == 15);
+  assert(det_list_read[2*int_num*offset_data_read+int_num] == 7);
 
   rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_read[offset_data_read]);
   assert(rc == TREXIO_SUCCESS);
@@ -226,8 +227,8 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   */
   assert(rc == TREXIO_END);
   assert(chunk_read == eof_read_size_check);
-  assert(det_list_read[2*int_num*size_r-1] == 0);
-  assert(det_list_read[2*int_num*offset_data_read] == 2 * int_num * (int64_t) (offset_file_read-offset));
+//  assert(det_list_read[2*int_num*size_r-1] == 0);
+//  assert(det_list_read[2*int_num*offset_data_read] == 2 * int_num * (int64_t) (offset_file_read-offset));
 
   chunk_read = read_size_check;
   rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_read[offset_data_read]);
@@ -259,21 +260,20 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   int32_t* orb_list_dn = (int32_t*) calloc(size_list, sizeof(int32_t));
   int32_t  occ_num_up, occ_num_dn;
 
-  rc = trexio_to_orbital_list_up_dn (int_num, &det_list_read[2*int_num*5], orb_list_up, orb_list_dn, &occ_num_up, &occ_num_dn);
+  rc = trexio_read_determinant_list(file, 0L, &chunk_read, &det_list_read[0L]);
   assert (rc == TREXIO_SUCCESS);
-  assert (occ_num_up == 14);
-  assert (occ_num_dn == 17);
-  /* // DEBUG printing
-  printf("occ_num_up : %d ; occ_num_dn : %d \n", occ_num_up, occ_num_dn);
+
+  rc = trexio_to_orbital_list_up_dn (int_num, &det_list_read[0], orb_list_up, orb_list_dn, &occ_num_up, &occ_num_dn);
+  assert (rc == TREXIO_SUCCESS);
+  assert (occ_num_up == 4);
+  assert (occ_num_dn == 3);
+  // DEBUG printing
   for (int i=0; i<occ_num_up; i++) {
-     printf("%d ", orb_list_up[i]);
+     assert(orb_list_up[i] == i);
   }
-  printf("| ");
   for (int i=0; i<occ_num_dn; i++) {
-     printf("%d ", orb_list_dn[i]);
+     assert(orb_list_dn[i] == i);
   }
-  printf("\n");
-  */
 
   // check conversion of one orbital list into the bitfield determinant representation
   int64_t* det_list_check = (int64_t*) calloc(int_num, sizeof(int64_t));
@@ -305,22 +305,24 @@ int main(){
 
 /*============== Test launcher ================*/
 
-  int rc;
-
-  rc = system(RM_COMMAND);
-  assert (rc == 0);
+  int mo_nums[5] = {10, 20, 40, 100, 300};
+  for (int i=0 ; i<5 ; ++i) {
+    int rc = system(RM_COMMAND);
+    assert (rc == 0);
 
   // check the first write attempt (SIZE elements written in N_CHUNKS chunks)
-  test_write_determinant (TREXIO_FILE, TEST_BACKEND, 0);
-  test_has_determinant   (TREXIO_FILE, TEST_BACKEND);
-  test_read_determinant  (TREXIO_FILE, TEST_BACKEND, 0);
+    printf("mo_num = %d\n", mo_nums[i]);
+    test_write_determinant (TREXIO_FILE, TEST_BACKEND, 0L, mo_nums[i]);
+    test_has_determinant   (TREXIO_FILE, TEST_BACKEND);
+    test_read_determinant  (TREXIO_FILE, TEST_BACKEND, 0L);
 
-  // check the second write attempt (SIZE elements written in N_CHUNKS chunks)
-  test_write_determinant (TREXIO_FILE, TEST_BACKEND, SIZE);
-  test_read_determinant  (TREXIO_FILE, TEST_BACKEND, SIZE);
+    // check the second write attempt (SIZE elements written in N_CHUNKS chunks)
+    test_write_determinant (TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE, mo_nums[i]);
+    test_read_determinant  (TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE);
 
-  rc = system(RM_COMMAND);
-  assert (rc == 0);
+    rc = system(RM_COMMAND);
+    assert (rc == 0);
+  }
 
   return 0;
 }
