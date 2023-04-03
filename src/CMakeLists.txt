@@ -66,7 +66,7 @@ option(ENABLE_HDF5 "Enable HDF5 support" ON)
 
 if(ENABLE_HDF5)
   # Try to detect HDF5 installation using built-in FindHDF5.cmake macro.
-  find_package(HDF5 REQUIRED COMPONENTS C HL)
+  find_package(HDF5 REQUIRED COMPONENTS C)
 
   if(HDF5_FOUND)
     message(STATUS "HDF5 version     :: ${HDF5_VERSION}")
@@ -87,9 +87,7 @@ if(ENABLE_HDF5)
   # - include directories with HDF5 header files
   target_include_directories(trexio PRIVATE ${HDF5_C_INCLUDE_DIRS})
   # - link to HDF5 C libraries
-  target_link_libraries(trexio PRIVATE
-         ${HDF5_C_HL_LIBRARIES}
-         ${HDF5_C_LIBRARIES})
+  target_link_libraries(trexio PRIVATE ${HDF5_C_LIBRARIES})
 endif()
 
 # Private headers have to be listed as sources, otherwise they are installed
