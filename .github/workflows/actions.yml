@@ -31,11 +31,9 @@ jobs:
           COMMIT_MSG=$(git log --no-merges -1 --oneline)
           echo "::set-output name=message::$COMMIT_MSG"
 
-
   trexio_ubuntu:
-
-    runs-on: ubuntu-20.04
     name: x86 Ubuntu 20.04
+    runs-on: ubuntu-20.04
     needs: get_commit_message
 
     steps:
@@ -114,9 +112,8 @@ jobs:
         run: make maintainer-clean
 
   trexio_macos:
-
-    runs-on: macos-11
     name: x86 MacOS 11
+    runs-on: macos-11
 
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
@@ -133,10 +130,10 @@ jobs:
           ./configure FC=gfortran-10 --enable-silent-rules
 
       - name: compile TREXIO
-        run: make -j 2
+        run: make -j3
 
       - name: check TREXIO
-        run: make check
+        run: make -j3 check
 
       - name: Archive test log file
         if: failure()
