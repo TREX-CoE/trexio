@@ -60,8 +60,22 @@
 		"1n9n1gbk5hgvg73am991xrv7ap002rz719a3nvh8m8ff9x10qd76"
                 ))))))
 
+(define-public trexio-2.3
+  (package/inherit trexio-2.0
+    (version "2.3.0")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append "https://github.com/TREX-CoE/trexio/releases/download/v" version
+				  "/trexio-" version
+                                  ".tar.gz"))
+              (sha256
+               (base32
+		;; the hash below is produced by guix download <url>
+		"183wljg1avsia2pf2wb59s2i2qw6y19qfw164ffy1g024b6362ii"
+                ))))))
+
 (define-public trexio
   ;; Default version of TREXIO.
-  trexio-2.2)
+  trexio-2.3)
 
 trexio

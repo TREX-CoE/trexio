@@ -22,8 +22,8 @@ TREX library for efficient I/O.
 2. `gzip -cd trexio-<version>.tar.gz | tar xvf -`
 3. `cd trexio-<version>`
 4. `./configure`
-5. `make`
-6. `make check`
+5. ```make -j`getconf _NPROCESSORS_ONLN` ```
+6. ```make -j`getconf _NPROCESSORS_ONLN` check```
 7. `sudo make install`
 
 
@@ -45,8 +45,8 @@ TREX library for efficient I/O.
 2. `cd trexio`
 3. `./autogen.sh`
 4. `./configure`
-5. `make`
-6. `make check`
+5. ```make -j`getconf _NPROCESSORS_ONLN` ```
+6. ```make -j`getconf _NPROCESSORS_ONLN` check```
 7. `sudo make install`
 
 ## Installation procedure for CMake users (from the tarball or GitHub repo clone):
@@ -56,8 +56,8 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 
 1. `cmake -S. -Bbuild`
 2. `cd build`
-3. `make`
-4. `ctest` (or `make test`)
+3. ```make -j`getconf _NPROCESSORS_ONLN` ```
+4. ```ctest -j`getconf _NPROCESSORS_ONLN` ```
 5. `sudo make install`
 
 **Note: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.**
@@ -73,7 +73,7 @@ The official releases of TREXIO `>2.0.0` are also available via the `conda-forge
 The pre-compiled stable binaries of `trexio` can be installed as follows:
 
 ```
-conda install trexio -c conda-forge
+conda install -c conda-forge trexio
 ```
 
 More details can be found in the corresponding [trexio-feedstock](https://github.com/conda-forge/trexio-feedstock).
@@ -88,7 +88,7 @@ Schema file contains the manifest specification for the `trexio` package.
 It can be installed as follows:
 
 ```
-guix package --cores=<n_cores> --install-from-file=trexio.scm
+guix package --cores=`getconf _NPROCESSORS_ONLN` --install-from-file=trexio.scm
 ```
 
 ## Installation procedure for Spack users
@@ -100,7 +100,7 @@ file contains the Spack specifications required to build different variants of `
 It can be installed as follows
 
 ```
-spack install --jobs <n_cores> trexio
+spack install --jobs `getconf _NPROCESSORS_ONLN` trexio
 ```
 
 ## Installation procedure for Debian/Ubuntu users
@@ -127,14 +127,14 @@ To build TREXIO without HDF5 back end, append `--without-hdf5` option to `config
 ## Linking to your program
 
 The `make install` command takes care of installing the TREXIO shared library on the user machine.
-Once installed, add `-ltrexio` to the list of compiler options.
+After installation, append `-ltrexio` to the list of compiler  (`$LIBS`) options.
 
-In some cases (e.g. when using custom `prefix` during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LIBRARY_PATH`.
-In order to link the program against TREXIO, the search paths can be modified as follows:
+In some cases (e.g. when using custom installation prefix during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LD_LIBRARY_PATH`.
+In order to link the program against TREXIO, the search path can be modified as follows:
 
-`export LIBRARY_PATH=$LIBRARY_PATH:<path_to_trexio>/lib`
+`export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_trexio>/lib`
 
-(same holds for `$LD_LIBRARY_PATH`). The `<path_to_trexio>` has to be replaced by the prefix used during the installation.
+where the `<path_to_trexio>` has to be replaced by the prefix used during the installation.
 
 If your project relies on CMake build system, feel free to use the
 [FindTREXIO.cmake](https://github.com/TREX-CoE/trexio/blob/master/cmake/FindTREXIO.cmake)
