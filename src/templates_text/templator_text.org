@@ -162,6 +162,29 @@ trexio_text_inquire (const char* file_name)
 }
     #+end_src
 
+On non-POSIX file systems, the function ~mkdtemp~ might is not defined.
+In that case, we define an alternate one, which is not as safe as the original one.
+
+    #+begin_src c :tangle basic_text.c
+#if defined _POSIX_C_SOURCE && (_POSIX_C_SOURCE - 0) >= 200809L
+#else
+
+char* mkdtemp(char* template) {
+    char* dir = NULL;
+    dir = tmpnam(dir);
+    if (dir == NULL) return NULL;
+
+    if (mkdir(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+        return NULL;
+    }
+
+    strcpy(template, dir);
+    return template;
+}
+
+#endif
+    #+end_src
+
     #+begin_src c :tangle basic_text.c
 trexio_exit_code
 trexio_text_init (trexio_t* const file)
