@@ -159,7 +159,6 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   int64_t mo_num;
   rc = trexio_read_mo_num_64(file, &mo_num);
   assert (rc == TREXIO_SUCCESS);
-  assert (mo_num == mo_num);
 
   int int_num;
   rc = trexio_get_int64_num(file, &int_num);
@@ -227,8 +226,6 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   */
   assert(rc == TREXIO_END);
   assert(chunk_read == eof_read_size_check);
-//  assert(det_list_read[2*int_num*size_r-1] == 0);
-//  assert(det_list_read[2*int_num*offset_data_read] == 2 * int_num * (int64_t) (offset_file_read-offset));
 
   chunk_read = read_size_check;
   rc = trexio_read_determinant_coefficient(file, offset_file_read, &chunk_read, &det_coef_read[offset_data_read]);

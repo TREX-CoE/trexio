@@ -1488,10 +1488,17 @@ trexio_hdf5_open_read_dset_sparse (const hid_t group_id,
   }
 
   if (is_index == 1) {
-    status = H5Dread(dset_id,
-                     dtype,
-                     memspace_id, fspace_id, H5P_DEFAULT,
-                     index_p);
+    if (index_p != NULL) {
+      status = H5Dread(dset_id,
+                       dtype,
+                       memspace_id, fspace_id, H5P_DEFAULT,
+                       index_p);
+    } else {
+      status = H5Dread(dset_id,
+                       dtype,
+                       memspace_id, fspace_id, H5P_DEFAULT,
+                       data_sparse);
+    }
   } else {
     status = H5Dread(dset_id,
                      dtype,
