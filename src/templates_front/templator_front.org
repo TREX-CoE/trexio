@@ -3327,7 +3327,7 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
-  const uint32_t unique_rank = $group_dset_unique_rank$;
+#define unique_rank $group_dset_unique_rank$
   int64_t unique_dims[$group_dset_unique_rank$];
 
   // Below part is populated by the generator when unique_rank > 1
@@ -3335,11 +3335,12 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-  if (unique_rank != 1) {
-    for (uint32_t i = 1; i < unique_rank; i++) {
-      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
-    }
+#if (unique_rank != 1) 
+  for (uint32_t i = 1; i < unique_rank; i++) {
+    if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
+#endif
+#undef unique_rank
 
   // introduce a new variable which will be modified with the number of integrals being read if EOF is encountered
   int64_t eof_read_size = 0L;
@@ -3459,7 +3460,7 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
-  const uint32_t unique_rank = $group_dset_unique_rank$;
+#define unique_rank $group_dset_unique_rank$
   int64_t unique_dims[$group_dset_unique_rank$];
 
   // Below part is populated by the generator when unique_rank > 1
@@ -3467,11 +3468,12 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-  if (unique_rank != 1) {
-    for (uint32_t i = 1; i < unique_rank; i++) {
-      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
-    }
+#if (unique_rank != 1) 
+  for (uint32_t i = 1; i < unique_rank; i++) {
+    if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
+#endif
+#undef unique_rank
 
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
@@ -5619,19 +5621,15 @@ trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list,
       bit_list[j] = (bitfield_t) 0;
   }
 
-  uint32_t i;
-  uint32_t k;
-  uint32_t iorb;
-  bitfield_t mask;
   uint32_t nswaps = 0;
 
   for (int32_t pos = 0 ; pos < occupied_num ; pos++) {
-    iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
+    const uint32_t iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
 
     // Set the bit of to one
-    i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
-    k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
-    mask = ((bitfield_t) 1) << k;
+    const uint32_t i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
+    const uint32_t k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
+    bitfield_t mask = ((bitfield_t) 1) << k;
     bit_list[i] |= mask;
 
     // Check for phase changes
@@ -5662,21 +5660,16 @@ trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
   if (list == NULL) return TREXIO_INVALID_ARG_3;
   if (occupied_num == NULL) return TREXIO_INVALID_ARG_4;
 
-  bitfield_t  tmp;
-  int32_t     shift;
-  int32_t     k;
-  int32_t     pos;
-
-  k = 0;
-  shift = TREXIO_ORBITAL_SHIFT;
+  int32_t k = 0;
+  int32_t shift = TREXIO_ORBITAL_SHIFT;
 
   for (int32_t i=0 ; i<N_int ; i++)
   {
-      tmp = d1[i];
+      bitfield_t tmp = d1[i];
 
       while (tmp != (bitfield_t) 0)
       {
-          pos = trailz(tmp);
+          const int32_t pos = trailz(tmp);
           if (pos < 0) return TREXIO_FAILURE;
 
           list[k] = ( (int32_t) pos) + shift - 1;
