@@ -200,7 +200,7 @@ program print_energy
    #+begin_src f90
   call getarg(1, filename)
 
-  f = trexio_open (filename, 'r', TREXIO_HDF5, rc)
+  f = trexio_open (filename, 'r', TREXIO_AUTO, rc)
   if (rc /= TREXIO_SUCCESS) then
      call trexio_string_of_error(rc, err_msg)
      print *, 'Error opening TREXIO file: '//trim(err_msg)
@@ -408,6 +408,139 @@ program print_energy
   deallocate( D, h0, G, W )
 
 end program
+    #+end_src
+
+** Python
+  :PROPERTIES:
+  :header-args:    :tangle  print_energy.py
+  :END:
+   
+  #+begin_src python
+import sys
+import trexio
+import numpy as np
+
+BUFSIZE = 100000
+  #+end_src
+
+   This program computes the energy as:
+
+   \[
+   E = E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
+   \rangle\; \textrm{ with } \; 0 < i,j,k,l \le n
+   \]
+   One needs to read from the TREXIO file:
+
+   - $n$ :: The number of molecular orbitals
+   - $E_{\text{NN}}$ :: The nuclear repulsion energy 
+   - $\gamma_{ij}$ :: The one-body reduced density matrix 
+   - $\langle j |h| i \rangle$ :: The one-electron Hamiltonian integrals 
+   - $\Gamma_{ijkl}$ :: The two-body reduced density matrix 
+   - $\langle k l  | i j \rangle$ :: The electron repulsion integrals
+
+*** Obtain the name of the TREXIO file from the command line, and open it for reading
+
+    #+begin_src python
+filename = sys.argv[1]
+f = trexio.File(filename, 'r', trexio.TREXIO_AUTO)
+    #+end_src
+
+*** Read the nuclear repulsion energy
+
+    #+begin_src python
+E_nn = trexio.read_nucleus_repulsion(f)
+    #+end_src
+
+*** Read the number of molecular orbitals
+
+    #+begin_src python
+n = trexio.read_mo_num(f)
+    #+end_src
+
+*** Read one-electron quantities
+    
+    #+begin_src python
+if not trexio.has_mo_1e_int_core_hamiltonian(f):
+  print("No core hamiltonian in file")
+  sys.exit(-1)
+  
+h0 = trexio.read_mo_1e_int_core_hamiltonian(f)
+
+if not trexio.has_rdm_1e(f):
+  print("No 1e RDM in file")
+  sys.exit(-1)
+  
+D = trexio.read_rdm_1e(f)
+    #+end_src
+  
+*** Read two-electron quantities
+    
+**** Electron repulsion integrals
+
+     #+begin_src python
+if not trexio.has_mo_2e_int_eri(f):
+  print("No electron repulsion integrals in file")
+  sys.exit(-1)
+
+size_max = trexio.read_mo_2e_int_eri_size(f)
+
+offset = 0
+icount = BUFSIZE
+feof = False
+W = np.zeros( (n,n,n,n) )
+while not feof:
+  buffer_index, buffer_values, icount, feof = trexio.read_mo_2e_int_eri(f, offset, icount)
+  for m in range(icount):
+    i, j, k, l = buffer_index[m]
+    W[i,j,k,l] = buffer_values[m]
+    W[k,j,i,l] = buffer_values[m]
+    W[i,l,k,j] = buffer_values[m]
+    W[k,l,i,j] = buffer_values[m]
+    W[j,i,l,k] = buffer_values[m]
+    W[j,k,l,i] = buffer_values[m]
+    W[l,i,j,k] = buffer_values[m]
+    W[l,k,j,i] = buffer_values[m]
+     #+end_src
+
+**** Reduced density matrix
+     
+     #+begin_src python
+if not trexio.has_rdm_2e(f):
+  print("No two-body density matrix in file")
+
+offset = 0
+icount = BUFSIZE
+feof = False
+G = np.zeros( (n,n,n,n) )
+while not feof:
+  buffer_index, buffer_values, icount, feof = trexio.read_rdm_2e(f, offset, icount)
+  for m in range(icount):
+    i, j, k, l = buffer_index[m]
+    G[i,j,k,l] = buffer_values[m]
+
+     #+end_src
+    
+*** Compute the energy
+    
+    When the orbitals are real, we can use
+   \begin{eqnarray*}
+   E &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
+   \rangle \\
+     &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle i | h | j \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle i j | k l
+   \rangle \\
+   \end{eqnarray*}
+
+    #+begin_src python
+G = np.reshape(G, (n*n, n*n) )
+W = np.reshape(W, (n*n, n*n) )
+E = E_nn
+E += 0.5*sum( [ np.dot(G[:,l], W[:,l]) for l in range(n*n) ] )
+E += sum( [ np.dot(D[:,l], h0[:,l]) for l in range(n) ] )
+
+print (f"Energy: {E}")
     #+end_src
 
 * Reading determinants
