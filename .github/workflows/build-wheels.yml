@@ -21,7 +21,7 @@ jobs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # Gets the correct commit message for pull request
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -42,14 +42,14 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        manylinux_tag: [2010_x86_64, 2014_x86_64, 2_24_x86_64]
+        manylinux_tag: [2014_x86_64, 2_24_x86_64]
 
     steps:
       - name: Checkout the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
@@ -103,8 +103,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-10.15]
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        os: [macos-11, macos-12]
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
 # TODO: normally, one could include macos-11 and the OS list above but the produced wheels receive an error upon installation:
 # ERROR: trexio-1.1.0-cp39-cp39-macosx_11_0_x86_64.whl is not a supported wheel on this platform.
 # This happens even with the MACOSX_DEPLOYMENT_TARGET trick. Perhaps it can be solved by configuring the build system
@@ -115,10 +115,10 @@ jobs:
         H5_LDFLAGS: '-L/usr/local/Cellar/hdf5/1.12.1/lib'
         H5_CFLAGS: '-I/usr/local/Cellar/hdf5/1.12.1/include'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -126,7 +126,7 @@ jobs:
         run: python --version
 
       - name: Install HDF5
-        run: brew install hdf5@1.12
+        run: brew install hdf5@1.14
 
       # This step is needed to produce wheels with the correct platform tag for MacOS-11 (Big Sur)
       #- name: Set MACOSX_DEPLOYMENT_TARGET environment variable
@@ -186,10 +186,10 @@ jobs:
 
     steps:
       - name: Checkout the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
