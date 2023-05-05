@@ -41,7 +41,7 @@
 %apply int *OUTPUT { int64_t* const num_up};
 %apply int *OUTPUT { int64_t* const num_dn};
 %apply float *OUTPUT { float* const num};
-%apply float *OUTPUT { double* const num};
+%apply double *OUTPUT { double* const num};
 /* Return TREXIO exit code from trexio_open as part of the output tuple */
 %apply int *OUTPUT { trexio_exit_code* const rc_open};
 /* Return number of sparse data points stored in the file as part of the output tuple */
