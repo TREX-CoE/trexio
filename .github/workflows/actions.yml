@@ -112,8 +112,8 @@ jobs:
         run: make maintainer-clean
 
   trexio_macos:
-    name: x86 MacOS 11
-    runs-on: macos-11
+    name: x86 MacOS 12
+    runs-on: macos-12
 
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
@@ -121,8 +121,9 @@ jobs:
       - name: install dependencies
         run: |
           brew install emacs
-          brew install hdf5
+          brew install hdf5@1.12
           brew install automake
+          brew --prefix hdf5
 
       - name: configure with autotools
         run: |
@@ -134,6 +135,15 @@ jobs:
 
       - name: check TREXIO
         run: make -j3 check
+      
+      - name: compile Python API
+        run: |
+          export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
+          export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          make python-install
+      
+      - name: test Python API
+        run: make python-test
 
       - name: Archive test log file
         if: failure()
