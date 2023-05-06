@@ -215,6 +215,7 @@ __trexio_path__ = None
    | ~TREXIO_INVALID_STATE~           |   35 | 'Inconsistent state of the file'               |
    | ~TREXIO_VERSION_PARSING_ISSUE~   |   36 | 'Failed to parse package_version'              |
    | ~TREXIO_PHASE_CHANGE~            |   37 | 'The function succeeded with a change of sign' |
+   | ~TREXIO_NOT_SUPPORTED~           |   38 | 'This functionality is not supported yet'      |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -225,8 +226,8 @@ __trexio_path__ = None
    and the corresponding message are not propagated to the source code.
 
    #+begin_src python :var table=table-exit-codes :results drawer
-""" This script generates the C and Fortran constants for the error
-    codes from the org-mode table.
+""" This script generates the C, Fortran and Python constants
+    for the error codes from the org-mode table.
 """
 
 result = [ "#+begin_src c :tangle prefix_front.h :exports none" ]
@@ -253,7 +254,6 @@ for (text, code,_) in table:
 result += [ "#+end_src" ]
 
 return '\n'.join(result)
-
    #+end_src
 
 
@@ -299,6 +299,7 @@ return '\n'.join(result)
    #define TREXIO_INVALID_STATE           ((trexio_exit_code) 35)
    #define TREXIO_VERSION_PARSING_ISSUE   ((trexio_exit_code) 36)
    #define TREXIO_PHASE_CHANGE            ((trexio_exit_code) 37)
+   #define TREXIO_NOT_SUPPORTED           ((trexio_exit_code) 38)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -341,6 +342,7 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_STATE           = 35
       integer(trexio_exit_code), parameter :: TREXIO_VERSION_PARSING_ISSUE   = 36
       integer(trexio_exit_code), parameter :: TREXIO_PHASE_CHANGE            = 37
+      integer(trexio_exit_code), parameter :: TREXIO_NOT_SUPPORTED           = 38
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
@@ -384,6 +386,7 @@ return '\n'.join(result)
    TREXIO_INVALID_STATE           = 35
    TREXIO_VERSION_PARSING_ISSUE   = 36
    TREXIO_PHASE_CHANGE            = 37
+   TREXIO_NOT_SUPPORTED           = 38
    #+end_src
    :end:
 
@@ -539,6 +542,12 @@ return '\n'.join(result)
      break;
    case TREXIO_VERSION_PARSING_ISSUE:
      return "Failed to parse package_version";
+     break;
+   case TREXIO_PHASE_CHANGE:
+     return "The function succeeded with a change of sign";
+     break;
+   case TREXIO_NOT_SUPPORTED:
+     return "This functionality is not supported yet";
      break;
    #+end_example
 
@@ -1911,6 +1920,155 @@ trexio_pre_close (trexio_t* file)
   return TREXIO_SUCCESS;
 }
     #+end_src
+
+** External group (generic I/O of arbitrary data)
+
+   ~trexio_[write|read|has]_external_[datatype]_array~
+   ~trexio_[write|read|has]_external_[datatype]_attribute~
+   write|read|check for existence of an arbitrary data block in a given TREXIO file.
+
+   ~external~ here means that the data does not correspond to the TREXIO format definition.
+   Thus, it is not present in the =trex.json= specification and does not support any of the
+   advanced TREXIO capabilities (e.g. sparse I/O, verification of dimensions etc).
+
+   **Input parameters:**
+     1) ~trexio_file~   - ~trexio_t*~ pointer to the TREXIO file
+     2) ~array~         - ~void*~ pointer to the flat array of data to be written
+     3) ~rank~          - ~uint32_t~ value: rank (number of dimensions) of an array
+     4) ~dimensions~    - ~uint64_t*~ pointer to the array with the number of elements per dimension
+     4) ~datatype~      - ~char*~ string specifying the datatype (e.g. ~double/float~, ~int32/int64~)
+     5) ~name~          - ~char*~ lowercase string with the name of the data block (e.g. how it will appear in the TREXIO file)
+			  **important for ~trexio_has_external~ to work!**
+
+   **Output:**
+     - ~trexio_exit_code~
+
+   **Note 1:** experimental functionality. Please report any issues that occur.
+   **Note 2:** I/O of strings is not supported yet.
+
+      #+NAME: table-external-datatypes
+   | TREXIO suffix | C         | Fortran | Python |
+   |---------------+-----------+---------+--------|
+   | ~int32~       | ~int32_t~ |         |        |
+   | ~int64~       | ~int64_t~ |         |        |
+   | ~float32~     | ~float~   |         |        |
+   | ~float64~     | ~double~  |         |        |
+
+*** C
+
+   #+begin_src python :var table=table-external-datatypes :results drawer
+""" This script generates the C and Fortran functions for generic I/O """
+
+template_write_func = "trexio_exit_code trexio_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name);"
+template_read_func  = "trexio_exit_code trexio_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name);"
+
+result = []
+result.append("#+begin_src c :tangle prefix_front.h :exports none")
+for (suffix, c_type, _, _) in table:
+    result.append(template_write_func.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+    result.append(template_read_func.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+
+# trexio_has function does not require datatype and is thus unique
+result.append("trexio_exit_code trexio_has_external_array(trexio_t* const file, const char* name);")
+result.append("#+end_src")
+return '\n'.join(result)
+#+end_src
+
+#+RESULTS:
+:results:
+#+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name);
+trexio_exit_code trexio_write_external_int64_array(trexio_t* const file, const int64_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_int64_array(trexio_t* const file, int64_t* const array, const char* name);
+trexio_exit_code trexio_write_external_float32_array(trexio_t* const file, const float* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_float32_array(trexio_t* const file, float* const array, const char* name);
+trexio_exit_code trexio_write_external_float64_array(trexio_t* const file, const double* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_float64_array(trexio_t* const file, double* const array, const char* name);
+trexio_exit_code trexio_has_external_array(trexio_t* const file, const char* name);
+#+end_src
+:end:
+
+
+   #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (array == NULL)      return TREXIO_INVALID_ARG_2;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_3;
+  if (dimensions == NULL) return TREXIO_INVALID_ARG_4;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_5;
+  for (uint32_t i=0; i<rank; i++){
+    if (dimensions[i] == 0) return TREXIO_INVALID_ARG_4;
+  }
+
+  trexio_exit_code rc = trexio_has_external_array(file, name)
+  if (rc == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_write_external_int32_array(file, array, rank, dimensions, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name);
+{
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (array == NULL) return TREXIO_INVALID_ARG_2;
+  if (name  == NULL) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc = trexio_has_external_array(file, name)
+  if (rc == TREXIO_HAS_NOT) return TREXIO_DSET_MISSING;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_external_int32_array(file, array, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_has_external_array(trexio_t* const file, const char* name);
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (name == NULL) return TREXIO_INVALID_ARG_2;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_has_external_array(file, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+   #+end_src
 
 * Templates for front end
 ** Description
@@ -3335,7 +3493,7 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-#if (unique_rank != 1) 
+#if (unique_rank != 1)
   for (uint32_t i = 1; i < unique_rank; i++) {
     if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
@@ -3468,7 +3626,7 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-#if (unique_rank != 1) 
+#if (unique_rank != 1)
   for (uint32_t i = 1; i < unique_rank; i++) {
     if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
