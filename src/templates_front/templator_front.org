@@ -1950,54 +1950,34 @@ trexio_pre_close (trexio_t* file)
    | TREXIO suffix | C         | Fortran | Python |
    |---------------+-----------+---------+--------|
    | ~int32~       | ~int32_t~ |         |        |
-   | ~int64~       | ~int64_t~ |         |        |
    | ~float32~     | ~float~   |         |        |
+   | ~int64~       | ~int64_t~ |         |        |
    | ~float64~     | ~double~  |         |        |
 
 *** C
 
-   #+begin_src python :var table=table-external-datatypes :results drawer
-""" This script generates the C and Fortran functions for generic I/O """
+The Python code below will generate the C function headers and source code for I/O of different datatypes (see table above).
+The C source code templates are inserted into Python code from the corresponding org-mode blocks before execution.
 
-template_write_func = "trexio_exit_code trexio_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name);"
-template_read_func  = "trexio_exit_code trexio_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name);"
+**Note:** the source code for ~has~ functions is written only once (manually) in the end, it is not auto-generated.
 
-result = []
-result.append("#+begin_src c :tangle prefix_front.h :exports none")
-for (suffix, c_type, _, _) in table:
-    result.append(template_write_func.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
-    result.append(template_read_func.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
-
-# trexio_has function does not require datatype and is thus unique
-result.append("trexio_exit_code trexio_has_external_array(trexio_t* const file, const char* name);")
-result.append("trexio_exit_code trexio_has_external(trexio_t* const file);")
-result.append("#+end_src")
-return '\n'.join(result)
-#+end_src
-
-#+RESULTS:
-:results:
-#+begin_src c :tangle prefix_front.h :exports none
-trexio_exit_code trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
-trexio_exit_code trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name);
-trexio_exit_code trexio_write_external_int64_array(trexio_t* const file, const int64_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
-trexio_exit_code trexio_read_external_int64_array(trexio_t* const file, int64_t* const array, const char* name);
-trexio_exit_code trexio_write_external_float32_array(trexio_t* const file, const float* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
-trexio_exit_code trexio_read_external_float32_array(trexio_t* const file, float* const array, const char* name);
-trexio_exit_code trexio_write_external_float64_array(trexio_t* const file, const double* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
-trexio_exit_code trexio_read_external_float64_array(trexio_t* const file, double* const array, const char* name);
-trexio_exit_code trexio_has_external_array(trexio_t* const file, const char* name);
-trexio_exit_code trexio_has_external(trexio_t* const file);
-#+end_src
-:end:
-
-   #+begin_src c :tangle prefix_front.c
+  #+NAME:template_write_func_c
+  #+begin_src c
 trexio_exit_code
-trexio_has_external(trexio_t* const file)
+trexio_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
 {
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (array == NULL)      return TREXIO_INVALID_ARG_2;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_3;
+  if (dimensions == NULL) return TREXIO_INVALID_ARG_4;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_5;
+  for (uint32_t i=0; i<rank; i++){
+    if (dimensions[i] == 0) return TREXIO_INVALID_ARG_4;
+  }
 
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
-  assert(file->back_end < TREXIO_INVALID_BACK_END);
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
 
   switch (file->back_end) {
 
@@ -2005,7 +1985,7 @@ trexio_has_external(trexio_t* const file)
     return TREXIO_NOT_SUPPORTED;
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_has_external(file);
+    return trexio_hdf5_write_external_$suffix$_array(file, array, rank, dimensions, name);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
@@ -2013,9 +1993,87 @@ trexio_has_external(trexio_t* const file)
 
   return TREXIO_FAILURE;
 }
-   #+end_src
+  #+end_src
 
-   #+begin_src c :tangle prefix_front.c
+  #+NAME:template_read_func_c
+  #+begin_src c
+trexio_exit_code
+trexio_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name)
+{
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (array == NULL) return TREXIO_INVALID_ARG_2;
+  if (name  == NULL) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_HAS_NOT) return TREXIO_DSET_MISSING;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_external_$suffix$_array(file, array, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+  #+end_src
+
+   #+begin_src python :var table=table-external-datatypes :results drawer :noweb yes
+""" This script generates the C functions for generic I/O (external group) """
+
+template_write_func_h = "trexio_exit_code trexio_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name);"
+template_read_func_h  = "trexio_exit_code trexio_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name);"
+template_write_func_c = """
+<<template_write_func_c>>
+"""
+template_read_func_c = """
+<<template_read_func_c>>
+"""
+
+result_h = ["#+begin_src c :tangle prefix_front.h :exports none"]
+result_c = ["#+begin_src c :tangle prefix_front.c"]
+for (suffix, c_type, _, _) in table:
+    # populate C headers
+    result_h.append(template_write_func_h.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+    result_h.append(template_read_func_h.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+    # populate C source code
+    result_c.append(template_write_func_c.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+    result_c.append(template_read_func_c.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+
+# trexio_has functions do not require datatype and are thus unique
+result_h.append("trexio_exit_code trexio_has_external_array(trexio_t* const file, const char* name);")
+result_h.append("trexio_exit_code trexio_has_external(trexio_t* const file);")
+result_h.append("#+end_src")
+
+result_c.append("#+end_src")
+
+return '\n'.join(result_h + ['\n'] + result_c)
+#+end_src
+
+#+RESULTS:
+:results:
+#+begin_src c :tangle prefix_front.h :exports none
+trexio_exit_code trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name);
+trexio_exit_code trexio_write_external_float32_array(trexio_t* const file, const float* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_float32_array(trexio_t* const file, float* const array, const char* name);
+trexio_exit_code trexio_write_external_int64_array(trexio_t* const file, const int64_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_int64_array(trexio_t* const file, int64_t* const array, const char* name);
+trexio_exit_code trexio_write_external_float64_array(trexio_t* const file, const double* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_read_external_float64_array(trexio_t* const file, double* const array, const char* name);
+trexio_exit_code trexio_has_external_array(trexio_t* const file, const char* name);
+trexio_exit_code trexio_has_external(trexio_t* const file);
+#+end_src
+
+
+#+begin_src c :tangle prefix_front.c
+
 trexio_exit_code
 trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
 {
@@ -2047,6 +2105,7 @@ trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, co
   return TREXIO_FAILURE;
 }
 
+
 trexio_exit_code
 trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name)
 {
@@ -2065,6 +2124,209 @@ trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, con
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_read_external_int32_array(file, array, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+
+trexio_exit_code
+trexio_write_external_float32_array(trexio_t* const file, const float* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (array == NULL)      return TREXIO_INVALID_ARG_2;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_3;
+  if (dimensions == NULL) return TREXIO_INVALID_ARG_4;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_5;
+  for (uint32_t i=0; i<rank; i++){
+    if (dimensions[i] == 0) return TREXIO_INVALID_ARG_4;
+  }
+
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_write_external_float32_array(file, array, rank, dimensions, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+
+trexio_exit_code
+trexio_read_external_float32_array(trexio_t* const file, float* const array, const char* name)
+{
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (array == NULL) return TREXIO_INVALID_ARG_2;
+  if (name  == NULL) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_HAS_NOT) return TREXIO_DSET_MISSING;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_external_float32_array(file, array, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+
+trexio_exit_code
+trexio_write_external_int64_array(trexio_t* const file, const int64_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (array == NULL)      return TREXIO_INVALID_ARG_2;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_3;
+  if (dimensions == NULL) return TREXIO_INVALID_ARG_4;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_5;
+  for (uint32_t i=0; i<rank; i++){
+    if (dimensions[i] == 0) return TREXIO_INVALID_ARG_4;
+  }
+
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_write_external_int64_array(file, array, rank, dimensions, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+
+trexio_exit_code
+trexio_read_external_int64_array(trexio_t* const file, int64_t* const array, const char* name)
+{
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (array == NULL) return TREXIO_INVALID_ARG_2;
+  if (name  == NULL) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_HAS_NOT) return TREXIO_DSET_MISSING;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_external_int64_array(file, array, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+
+trexio_exit_code
+trexio_write_external_float64_array(trexio_t* const file, const double* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (array == NULL)      return TREXIO_INVALID_ARG_2;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_3;
+  if (dimensions == NULL) return TREXIO_INVALID_ARG_4;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_5;
+  for (uint32_t i=0; i<rank; i++){
+    if (dimensions[i] == 0) return TREXIO_INVALID_ARG_4;
+  }
+
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_write_external_float64_array(file, array, rank, dimensions, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+
+trexio_exit_code
+trexio_read_external_float64_array(trexio_t* const file, double* const array, const char* name)
+{
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (array == NULL) return TREXIO_INVALID_ARG_2;
+  if (name  == NULL) return TREXIO_INVALID_ARG_3;
+
+  trexio_exit_code rc = trexio_has_external_array(file, name);
+  if (rc == TREXIO_HAS_NOT) return TREXIO_DSET_MISSING;
+  if (rc != TREXIO_HAS_NOT && rc != TREXIO_SUCCESS) return rc;
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_read_external_float64_array(file, array, name);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+  }
+
+  return TREXIO_FAILURE;
+}
+
+#+end_src
+:end:
+
+   #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_has_external(trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    return TREXIO_NOT_SUPPORTED;
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    return trexio_hdf5_has_external(file);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif

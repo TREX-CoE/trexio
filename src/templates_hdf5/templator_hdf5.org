@@ -45,13 +45,12 @@
   #+begin_src c :tangle prefix_hdf5.c :noweb yes
 <<header>>
 #include "trexio_hdf5.h"
-
-#define EXTERNAL_GROUP_NAME  "external"
   #+end_src
 
 * Template for HDF5 definitions
 
   #+begin_src c :tangle def_hdf5.c
+#define EXTERNAL_GROUP_NAME         "external"
 #define $GROUP$_GROUP_NAME          "$group$"
 #define $GROUP_NUM$_NAME            "$group_num$"
 #define $GROUP_DSET$_NAME           "$group_dset$"
@@ -1309,32 +1308,114 @@ trexio_exit_code trexio_hdf5_has_determinant_list(trexio_t* const file)
    **Note 2:** I/O of strings is not supported yet.
 
       #+NAME: table-external-datatypes
-   | TREXIO suffix | C         | Fortran | Python |
-   |---------------+-----------+---------+--------|
-   | ~int32~       | ~int32_t~ |         |        |
-   | ~int64~       | ~int64_t~ |         |        |
-   | ~float32~     | ~float~   |         |        |
-   | ~float64~     | ~double~  |         |        |
+   | TREXIO suffix | C         | HDF5     | Fortran | Python |
+   |---------------+-----------+----------+---------+--------|
+   | ~int32~       | ~int32_t~ | ~INT32~  |         |        |
+   | ~int64~       | ~int64_t~ | ~INT64~  |         |        |
+   | ~float32~     | ~float~   | ~FLOAT~  |         |        |
+   | ~float64~     | ~double~  | ~DOUBLE~ |         |        |
 
 *** C
 
-   #+begin_src python :var table=table-external-datatypes :results drawer
-""" This script generates the C and Fortran functions for generic I/O """
+The Python code below will generate the C function headers and source code for I/O of different datatypes (see table above).
+The C source code templates are inserted into Python code from the corresponding org-mode blocks before execution.
 
-template_write_func = "trexio_exit_code trexio_hdf5_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name);"
-template_read_func  = "trexio_exit_code trexio_hdf5_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name);"
+**Note:** the source code for ~has~ functions is written only once (manually) in the end, it is not auto-generated.
 
-result = []
-result.append("#+begin_src c :tangle prefix_hdf5.h :exports none")
-for (suffix, c_type, _, _) in table:
-    result.append(template_write_func.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
-    result.append(template_read_func.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+  #+NAME:template_write_hdf5_func_c
+  #+begin_src c
+trexio_exit_code
+trexio_hdf5_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
+{
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
-# trexio_has function does not require datatype and is thus unique
-result.append("trexio_exit_code trexio_hdf5_has_external_array(trexio_t* const file, const char* name);")
-result.append("trexio_exit_code trexio_hdf5_has_external(trexio_t* const file);")
-result.append("#+end_src")
-return '\n'.join(result)
+  if ((trexio_hdf5_has_external_array(file, name) == TREXIO_SUCCESS) && (file->mode == 'u')) {
+    herr_t status_del = H5Ldelete(f->external_group, name, H5P_DEFAULT);
+    if (status_del < 0) return TREXIO_FAILURE;
+  }
+
+  hid_t dspace_id = H5Screate_simple( (int) rank, (const hsize_t*) dimensions, NULL);
+  if (dspace_id <= 0) return TREXIO_INVALID_ID;
+
+  hid_t dset_id = H5Dcreate(f->external_group,
+                            name,
+                            H5T_NATIVE_$HDF5_TYPE$,
+                            dspace_id,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (dset_id <= 0) {
+    H5Sclose(dspace_id);
+    return TREXIO_INVALID_ID;
+  }
+
+  herr_t status = H5Dwrite(dset_id,
+                           H5T_NATIVE_$HDF5_TYPE$,
+                           H5S_ALL,
+                           dspace_id,
+                           H5P_DEFAULT,
+                           array);
+  H5Dclose(dset_id);
+  H5Sclose(dspace_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+  #+end_src
+
+  #+NAME:template_read_hdf5_func_c
+  #+begin_src c
+trexio_exit_code
+trexio_hdf5_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name)
+{
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  // open the dataset to get its dimensions
+  hid_t dset_id = H5Dopen(f->external_group, name, H5P_DEFAULT);
+  if (dset_id <= 0) return TREXIO_INVALID_ID;
+
+  /* Read dataset */
+  herr_t status = H5Dread(dset_id,
+                          H5T_NATIVE_$HDF5_TYPE$,
+                          H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                          array);
+
+  H5Dclose(dset_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+  #+end_src
+
+   #+begin_src python :var table=table-external-datatypes :results drawer :noweb yes
+""" This script generates the C functions for generic I/O (external group) """
+
+template_write_func_h = "trexio_exit_code trexio_hdf5_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name);"
+template_read_func_h  = "trexio_exit_code trexio_hdf5_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name);"
+template_write_func_c = """
+<<template_write_hdf5_func_c>>
+"""
+template_read_func_c = """
+<<template_read_hdf5_func_c>>
+"""
+
+result_h = ["#+begin_src c :tangle prefix_hdf5.h :exports none"]
+result_c = ["#+begin_src c :tangle basic_hdf5.c"]
+for (suffix, c_type, hdf5_type, _, _) in table:
+    # populate C headers
+    result_h.append(template_write_func_h.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+    result_h.append(template_read_func_h.replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+    # populate C source code
+    result_c.append(template_write_func_c.replace("$HDF5_TYPE$", hdf5_type.replace("~","")).replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+    result_c.append(template_read_func_c.replace("$HDF5_TYPE$", hdf5_type.replace("~","")).replace("$suffix$", suffix.replace("~","")).replace("$c_type$", c_type.replace("~","")))
+
+# trexio_has functions do not require datatype and are thus unique
+result_h.append("trexio_exit_code trexio_hdf5_has_external_array(trexio_t* const file, const char* name);")
+result_h.append("trexio_exit_code trexio_hdf5_has_external(trexio_t* const file);")
+result_h.append("#+end_src")
+
+result_c.append("#+end_src")
+
+return '\n'.join(result_h + ['\n'] + result_c)
 #+end_src
 
 #+RESULTS:
@@ -1351,85 +1432,15 @@ trexio_exit_code trexio_hdf5_read_external_float64_array(trexio_t* const file, d
 trexio_exit_code trexio_hdf5_has_external_array(trexio_t* const file, const char* name);
 trexio_exit_code trexio_hdf5_has_external(trexio_t* const file);
 #+end_src
-:end:
 
-#+begin_src c :tangle basic_hdf5.c :exports none
-trexio_exit_code
-trexio_hdf5_has_external (trexio_t* const file)
-{
 
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
-
-  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
-
-  struct H5G_info_t group_info;
-
-  /* H5Gget_info return info about the HDF5 group as a group_info struct */
-  herr_t status = H5Gget_info(f->external_group, &group_info);
-  if (status < 0) return TREXIO_FAILURE;
-
-  /* If nlinks==0 --> the group is empty, i.e. non-existent */
-  if (group_info.nlinks == (hsize_t) 0) {
-    return TREXIO_HAS_NOT;
-  } else {
-    return TREXIO_SUCCESS;
-  }
-
-}
-#+end_src
-
-#+begin_src c :tangle basic_hdf5.c :exports none
-trexio_exit_code
-trexio_hdf5_has_external_array(trexio_t* const file, const char* name)
-{
-
-  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
-  if (f->external_group == (hsize_t) 0) return TREXIO_HAS_NOT;
-
-  htri_t exists = H5Lexists(f->external_group, name, H5P_DEFAULT);
-  if (exists > 0) {
-    return TREXIO_SUCCESS;
-  } else if (exists < 0) {
-    return TREXIO_FAILURE;
-  } else {
-    return TREXIO_HAS_NOT;
-  }
-
-}
-
-trexio_exit_code
-trexio_hdf5_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name)
-{
-
-  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
-
-  // open the dataset to get its dimensions
-  hid_t dset_id = H5Dopen(f->external_group, name, H5P_DEFAULT);
-  if (dset_id <= 0) return TREXIO_INVALID_ID;
-
-  /* Read dataset */
-  herr_t status = H5Dread(dset_id,
-                          H5T_NATIVE_INT32,
-                          H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                          array);
-
-  H5Dclose(dset_id);
-  if (status < 0) return TREXIO_FAILURE;
-
-  return TREXIO_SUCCESS;
-}
+#+begin_src c :tangle basic_hdf5.c
 
 trexio_exit_code
 trexio_hdf5_write_external_int32_array(trexio_t* const file, const int32_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
 {
-
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
-  /*
-     Try to delete an existing dataset by unlinking it from the group (UNSAFE mode).
-     NOTE: In principle, HDF5 should see the deallocated (unused) file space and free it,
-     thus reducing the size of the HDF5 file. In practic, this is not always the case.
-     Consider using HDF5-native h5repack utility after deleting/overwriting big datasets.
-  ,*/
+
   if ((trexio_hdf5_has_external_array(file, name) == TREXIO_SUCCESS) && (file->mode == 'u')) {
     herr_t status_del = H5Ldelete(f->external_group, name, H5P_DEFAULT);
     if (status_del < 0) return TREXIO_FAILURE;
@@ -1459,6 +1470,255 @@ trexio_hdf5_write_external_int32_array(trexio_t* const file, const int32_t* arra
   if (status < 0) return TREXIO_FAILURE;
 
   return TREXIO_SUCCESS;
+}
+
+
+trexio_exit_code
+trexio_hdf5_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name)
+{
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  // open the dataset to get its dimensions
+  hid_t dset_id = H5Dopen(f->external_group, name, H5P_DEFAULT);
+  if (dset_id <= 0) return TREXIO_INVALID_ID;
+
+  /* Read dataset */
+  herr_t status = H5Dread(dset_id,
+                          H5T_NATIVE_INT32,
+                          H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                          array);
+
+  H5Dclose(dset_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+
+
+trexio_exit_code
+trexio_hdf5_write_external_int64_array(trexio_t* const file, const int64_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
+{
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  if ((trexio_hdf5_has_external_array(file, name) == TREXIO_SUCCESS) && (file->mode == 'u')) {
+    herr_t status_del = H5Ldelete(f->external_group, name, H5P_DEFAULT);
+    if (status_del < 0) return TREXIO_FAILURE;
+  }
+
+  hid_t dspace_id = H5Screate_simple( (int) rank, (const hsize_t*) dimensions, NULL);
+  if (dspace_id <= 0) return TREXIO_INVALID_ID;
+
+  hid_t dset_id = H5Dcreate(f->external_group,
+                            name,
+                            H5T_NATIVE_INT64,
+                            dspace_id,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (dset_id <= 0) {
+    H5Sclose(dspace_id);
+    return TREXIO_INVALID_ID;
+  }
+
+  herr_t status = H5Dwrite(dset_id,
+                           H5T_NATIVE_INT64,
+                           H5S_ALL,
+                           dspace_id,
+                           H5P_DEFAULT,
+                           array);
+  H5Dclose(dset_id);
+  H5Sclose(dspace_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+
+
+trexio_exit_code
+trexio_hdf5_read_external_int64_array(trexio_t* const file, int64_t* const array, const char* name)
+{
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  // open the dataset to get its dimensions
+  hid_t dset_id = H5Dopen(f->external_group, name, H5P_DEFAULT);
+  if (dset_id <= 0) return TREXIO_INVALID_ID;
+
+  /* Read dataset */
+  herr_t status = H5Dread(dset_id,
+                          H5T_NATIVE_INT64,
+                          H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                          array);
+
+  H5Dclose(dset_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+
+
+trexio_exit_code
+trexio_hdf5_write_external_float32_array(trexio_t* const file, const float* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
+{
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  if ((trexio_hdf5_has_external_array(file, name) == TREXIO_SUCCESS) && (file->mode == 'u')) {
+    herr_t status_del = H5Ldelete(f->external_group, name, H5P_DEFAULT);
+    if (status_del < 0) return TREXIO_FAILURE;
+  }
+
+  hid_t dspace_id = H5Screate_simple( (int) rank, (const hsize_t*) dimensions, NULL);
+  if (dspace_id <= 0) return TREXIO_INVALID_ID;
+
+  hid_t dset_id = H5Dcreate(f->external_group,
+                            name,
+                            H5T_NATIVE_FLOAT,
+                            dspace_id,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (dset_id <= 0) {
+    H5Sclose(dspace_id);
+    return TREXIO_INVALID_ID;
+  }
+
+  herr_t status = H5Dwrite(dset_id,
+                           H5T_NATIVE_FLOAT,
+                           H5S_ALL,
+                           dspace_id,
+                           H5P_DEFAULT,
+                           array);
+  H5Dclose(dset_id);
+  H5Sclose(dspace_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+
+
+trexio_exit_code
+trexio_hdf5_read_external_float32_array(trexio_t* const file, float* const array, const char* name)
+{
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  // open the dataset to get its dimensions
+  hid_t dset_id = H5Dopen(f->external_group, name, H5P_DEFAULT);
+  if (dset_id <= 0) return TREXIO_INVALID_ID;
+
+  /* Read dataset */
+  herr_t status = H5Dread(dset_id,
+                          H5T_NATIVE_FLOAT,
+                          H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                          array);
+
+  H5Dclose(dset_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+
+
+trexio_exit_code
+trexio_hdf5_write_external_float64_array(trexio_t* const file, const double* array, const uint32_t rank, const uint64_t* dimensions, const char* name)
+{
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+
+  if ((trexio_hdf5_has_external_array(file, name) == TREXIO_SUCCESS) && (file->mode == 'u')) {
+    herr_t status_del = H5Ldelete(f->external_group, name, H5P_DEFAULT);
+    if (status_del < 0) return TREXIO_FAILURE;
+  }
+
+  hid_t dspace_id = H5Screate_simple( (int) rank, (const hsize_t*) dimensions, NULL);
+  if (dspace_id <= 0) return TREXIO_INVALID_ID;
+
+  hid_t dset_id = H5Dcreate(f->external_group,
+                            name,
+                            H5T_NATIVE_DOUBLE,
+                            dspace_id,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (dset_id <= 0) {
+    H5Sclose(dspace_id);
+    return TREXIO_INVALID_ID;
+  }
+
+  herr_t status = H5Dwrite(dset_id,
+                           H5T_NATIVE_DOUBLE,
+                           H5S_ALL,
+                           dspace_id,
+                           H5P_DEFAULT,
+                           array);
+  H5Dclose(dset_id);
+  H5Sclose(dspace_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+
+
+trexio_exit_code
+trexio_hdf5_read_external_float64_array(trexio_t* const file, double* const array, const char* name)
+{
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  // open the dataset to get its dimensions
+  hid_t dset_id = H5Dopen(f->external_group, name, H5P_DEFAULT);
+  if (dset_id <= 0) return TREXIO_INVALID_ID;
+
+  /* Read dataset */
+  herr_t status = H5Dread(dset_id,
+                          H5T_NATIVE_DOUBLE,
+                          H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                          array);
+
+  H5Dclose(dset_id);
+  if (status < 0) return TREXIO_FAILURE;
+
+  return TREXIO_SUCCESS;
+}
+
+#+end_src
+:end:
+
+
+#+begin_src c :tangle basic_hdf5.c
+trexio_exit_code
+trexio_hdf5_has_external (trexio_t* const file)
+{
+
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
+
+  struct H5G_info_t group_info;
+
+  /* H5Gget_info return info about the HDF5 group as a group_info struct */
+  herr_t status = H5Gget_info(f->external_group, &group_info);
+  if (status < 0) return TREXIO_FAILURE;
+
+  /* If nlinks==0 --> the group is empty, i.e. non-existent */
+  if (group_info.nlinks == (hsize_t) 0) {
+    return TREXIO_HAS_NOT;
+  } else {
+    return TREXIO_SUCCESS;
+  }
+
+}
+
+trexio_exit_code
+trexio_hdf5_has_external_array(trexio_t* const file, const char* name)
+{
+
+  trexio_hdf5_t* f = (trexio_hdf5_t*) file;
+  if (f->external_group == (hsize_t) 0) return TREXIO_HAS_NOT;
+
+  htri_t exists = H5Lexists(f->external_group, name, H5P_DEFAULT);
+  if (exists > 0) {
+    return TREXIO_SUCCESS;
+  } else if (exists < 0) {
+    return TREXIO_FAILURE;
+  } else {
+    return TREXIO_HAS_NOT;
+  }
+
 }
 #+end_src
 
