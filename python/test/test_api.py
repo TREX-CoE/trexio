@@ -149,6 +149,19 @@ class TestIO:
         assert trexio.has_nucleus_coord(self.test_file)
 
 
+    def test_external_array(self):
+        """Write external arrays."""
+        self.open()
+
+        assert not trexio.has_external_array(self.test_file, external_2Dfloat_name)
+        trexio.write_external_array(self.test_file, nucleus_coord, external_2Dfloat_name)
+        assert trexio.has_external_array(self.test_file, external_2Dfloat_name)
+
+        assert not trexio.has_external_array(self.test_file, external_1Dint32_name)
+        trexio.write_external_array(self.test_file, np.array(nucleus_charge,dtype=np.int32), external_1Dint32_name)
+        assert trexio.has_external_array(self.test_file, external_1Dint32_name)
+
+
     def test_indices(self):
         """Write array of indices."""
         self.open()
@@ -250,6 +263,21 @@ class TestIO:
         assert coords_np.dtype is np.dtype(np.float64)
         assert coords_np.size == nucleus_num * 3
         np.testing.assert_array_almost_equal(coords_np, np.array(nucleus_coord).reshape(nucleus_num,3), decimal=8)
+
+
+    def test_read_external_array(self):
+        """Read external arrays."""
+        self.open(mode='r')
+        # read nuclear coordinates without providing optional argument dim
+        coords_external_np = trexio.read_external_array(self.test_file, name=external_2Dfloat_name, dtype="float64", size=nucleus_num*3)
+        assert coords_external_np.dtype is np.dtype(np.float64)
+        assert coords_external_np.size == nucleus_num * 3
+        np.testing.assert_array_almost_equal(coords_external_np.reshape(nucleus_num,3), np.array(nucleus_coord).reshape(nucleus_num,3), decimal=8)
+
+        charge_external_np = trexio.read_external_array(self.test_file, name=external_1Dint32_name, dtype="int32", size=nucleus_num)
+        assert charge_external_np.dtype is np.dtype(np.int32)
+        assert charge_external_np.size == nucleus_num
+        np.testing.assert_array_almost_equal(charge_external_np, np.array(nucleus_charge, dtype=np.int32))
 
 
     def test_read_errors(self):

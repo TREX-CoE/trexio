@@ -47,3 +47,6 @@ det_test  = [1, 2, 3, 2, 1, 3]
 
 orb_up_test = [0, 65, 128, 129]
 orb_dn_test = [1, 64, 128, 129]
+
+external_2Dfloat_name = "test external float matrix"
+external_1Dint32_name = "test external int32 vector"

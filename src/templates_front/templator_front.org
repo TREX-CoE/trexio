@@ -1993,6 +1993,23 @@ trexio_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array
 
   return TREXIO_FAILURE;
 }
+
+trexio_exit_code
+trexio_write_safe_external_$suffix$_array(trexio_t* const file, const $c_type$* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL)    return TREXIO_INVALID_ARG_2;
+  if (dim_in <= 0)        return TREXIO_INVALID_ARG_3;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_4;
+  if (dims_in == NULL)    return TREXIO_INVALID_ARG_5;
+  if (dims_dim_in == 0)   return TREXIO_INVALID_ARG_6;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_7;
+  for (uint32_t i=0; i<rank; i++){
+    if (dims_in[i] == 0) return TREXIO_INVALID_ARG_5;
+  }
+
+  return trexio_write_external_$suffix$_array(file, dset_in, rank, dims_in, name);
+}
   #+end_src
 
   #+NAME:template_read_func_c
@@ -2022,13 +2039,26 @@ trexio_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array,
 
   return TREXIO_FAILURE;
 }
+
+trexio_exit_code
+trexio_read_safe_external_$suffix$_array(trexio_t* const file, $c_type$* const dset_out, const int64_t dim_out, const char* name)
+{
+  if (file  == NULL)    return TREXIO_INVALID_ARG_1;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+  if (dim_out <= 0)     return TREXIO_INVALID_ARG_3;
+  if (name  == NULL)    return TREXIO_INVALID_ARG_4;
+
+  return trexio_read_external_$suffix$_array(file, dset_out, name);
+}
   #+end_src
 
    #+begin_src python :var table=table-external-datatypes :results drawer :noweb yes
 """ This script generates the C functions for generic I/O (external group) """
 
-template_write_func_h = "trexio_exit_code trexio_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name);"
-template_read_func_h  = "trexio_exit_code trexio_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name);"
+template_write_func_h  = "trexio_exit_code trexio_write_external_$suffix$_array(trexio_t* const file, const $c_type$* array, const uint32_t rank, const uint64_t* dimensions, const char* name);\n"
+template_write_func_h += "trexio_exit_code trexio_write_safe_external_$suffix$_array(trexio_t* const file, const $c_type$* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name);"
+template_read_func_h   = "trexio_exit_code trexio_read_external_$suffix$_array(trexio_t* const file, $c_type$* const array, const char* name);\n"
+template_read_func_h  += "trexio_exit_code trexio_read_safe_external_$suffix$_array(trexio_t* const file, $c_type$* const dset_out, const int64_t dim_out, const char* name);"
 template_write_func_c = """
 <<template_write_func_c>>
 """
@@ -2060,13 +2090,21 @@ return '\n'.join(result_h + ['\n'] + result_c)
 :results:
 #+begin_src c :tangle prefix_front.h :exports none
 trexio_exit_code trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_write_safe_external_int32_array(trexio_t* const file, const int32_t* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name);
 trexio_exit_code trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name);
+trexio_exit_code trexio_read_safe_external_int32_array(trexio_t* const file, int32_t* const dset_out, const int64_t dim_out, const char* name);
 trexio_exit_code trexio_write_external_float32_array(trexio_t* const file, const float* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_write_safe_external_float32_array(trexio_t* const file, const float* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name);
 trexio_exit_code trexio_read_external_float32_array(trexio_t* const file, float* const array, const char* name);
+trexio_exit_code trexio_read_safe_external_float32_array(trexio_t* const file, float* const dset_out, const int64_t dim_out, const char* name);
 trexio_exit_code trexio_write_external_int64_array(trexio_t* const file, const int64_t* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_write_safe_external_int64_array(trexio_t* const file, const int64_t* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name);
 trexio_exit_code trexio_read_external_int64_array(trexio_t* const file, int64_t* const array, const char* name);
+trexio_exit_code trexio_read_safe_external_int64_array(trexio_t* const file, int64_t* const dset_out, const int64_t dim_out, const char* name);
 trexio_exit_code trexio_write_external_float64_array(trexio_t* const file, const double* array, const uint32_t rank, const uint64_t* dimensions, const char* name);
+trexio_exit_code trexio_write_safe_external_float64_array(trexio_t* const file, const double* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name);
 trexio_exit_code trexio_read_external_float64_array(trexio_t* const file, double* const array, const char* name);
+trexio_exit_code trexio_read_safe_external_float64_array(trexio_t* const file, double* const dset_out, const int64_t dim_out, const char* name);
 trexio_exit_code trexio_has_external_array(trexio_t* const file, const char* name);
 trexio_exit_code trexio_has_external(trexio_t* const file);
 #+end_src
@@ -2105,6 +2143,23 @@ trexio_write_external_int32_array(trexio_t* const file, const int32_t* array, co
   return TREXIO_FAILURE;
 }
 
+trexio_exit_code
+trexio_write_safe_external_int32_array(trexio_t* const file, const int32_t* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL)    return TREXIO_INVALID_ARG_2;
+  if (dim_in <= 0)        return TREXIO_INVALID_ARG_3;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_4;
+  if (dims_in == NULL)    return TREXIO_INVALID_ARG_5;
+  if (dims_dim_in == 0)   return TREXIO_INVALID_ARG_6;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_7;
+  for (uint32_t i=0; i<rank; i++){
+    if (dims_in[i] == 0) return TREXIO_INVALID_ARG_5;
+  }
+
+  return trexio_write_external_int32_array(file, dset_in, rank, dims_in, name);
+}
+
 
 trexio_exit_code
 trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, const char* name)
@@ -2130,6 +2185,17 @@ trexio_read_external_int32_array(trexio_t* const file, int32_t* const array, con
   }
 
   return TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_read_safe_external_int32_array(trexio_t* const file, int32_t* const dset_out, const int64_t dim_out, const char* name)
+{
+  if (file  == NULL)    return TREXIO_INVALID_ARG_1;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+  if (dim_out <= 0)     return TREXIO_INVALID_ARG_3;
+  if (name  == NULL)    return TREXIO_INVALID_ARG_4;
+
+  return trexio_read_external_int32_array(file, dset_out, name);
 }
 
 
@@ -2164,6 +2230,23 @@ trexio_write_external_float32_array(trexio_t* const file, const float* array, co
   return TREXIO_FAILURE;
 }
 
+trexio_exit_code
+trexio_write_safe_external_float32_array(trexio_t* const file, const float* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL)    return TREXIO_INVALID_ARG_2;
+  if (dim_in <= 0)        return TREXIO_INVALID_ARG_3;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_4;
+  if (dims_in == NULL)    return TREXIO_INVALID_ARG_5;
+  if (dims_dim_in == 0)   return TREXIO_INVALID_ARG_6;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_7;
+  for (uint32_t i=0; i<rank; i++){
+    if (dims_in[i] == 0) return TREXIO_INVALID_ARG_5;
+  }
+
+  return trexio_write_external_float32_array(file, dset_in, rank, dims_in, name);
+}
+
 
 trexio_exit_code
 trexio_read_external_float32_array(trexio_t* const file, float* const array, const char* name)
@@ -2189,6 +2272,17 @@ trexio_read_external_float32_array(trexio_t* const file, float* const array, con
   }
 
   return TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_read_safe_external_float32_array(trexio_t* const file, float* const dset_out, const int64_t dim_out, const char* name)
+{
+  if (file  == NULL)    return TREXIO_INVALID_ARG_1;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+  if (dim_out <= 0)     return TREXIO_INVALID_ARG_3;
+  if (name  == NULL)    return TREXIO_INVALID_ARG_4;
+
+  return trexio_read_external_float32_array(file, dset_out, name);
 }
 
 
@@ -2223,6 +2317,23 @@ trexio_write_external_int64_array(trexio_t* const file, const int64_t* array, co
   return TREXIO_FAILURE;
 }
 
+trexio_exit_code
+trexio_write_safe_external_int64_array(trexio_t* const file, const int64_t* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL)    return TREXIO_INVALID_ARG_2;
+  if (dim_in <= 0)        return TREXIO_INVALID_ARG_3;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_4;
+  if (dims_in == NULL)    return TREXIO_INVALID_ARG_5;
+  if (dims_dim_in == 0)   return TREXIO_INVALID_ARG_6;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_7;
+  for (uint32_t i=0; i<rank; i++){
+    if (dims_in[i] == 0) return TREXIO_INVALID_ARG_5;
+  }
+
+  return trexio_write_external_int64_array(file, dset_in, rank, dims_in, name);
+}
+
 
 trexio_exit_code
 trexio_read_external_int64_array(trexio_t* const file, int64_t* const array, const char* name)
@@ -2248,6 +2359,17 @@ trexio_read_external_int64_array(trexio_t* const file, int64_t* const array, con
   }
 
   return TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_read_safe_external_int64_array(trexio_t* const file, int64_t* const dset_out, const int64_t dim_out, const char* name)
+{
+  if (file  == NULL)    return TREXIO_INVALID_ARG_1;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+  if (dim_out <= 0)     return TREXIO_INVALID_ARG_3;
+  if (name  == NULL)    return TREXIO_INVALID_ARG_4;
+
+  return trexio_read_external_int64_array(file, dset_out, name);
 }
 
 
@@ -2282,6 +2404,23 @@ trexio_write_external_float64_array(trexio_t* const file, const double* array, c
   return TREXIO_FAILURE;
 }
 
+trexio_exit_code
+trexio_write_safe_external_float64_array(trexio_t* const file, const double* dset_in, const int64_t dim_in, const uint32_t rank, const uint64_t* dims_in, const int32_t dims_dim_in, const char* name)
+{
+  if (file  == NULL)      return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL)    return TREXIO_INVALID_ARG_2;
+  if (dim_in <= 0)        return TREXIO_INVALID_ARG_3;
+  if (rank  == 0)         return TREXIO_INVALID_ARG_4;
+  if (dims_in == NULL)    return TREXIO_INVALID_ARG_5;
+  if (dims_dim_in == 0)   return TREXIO_INVALID_ARG_6;
+  if (name  == NULL)      return TREXIO_INVALID_ARG_7;
+  for (uint32_t i=0; i<rank; i++){
+    if (dims_in[i] == 0) return TREXIO_INVALID_ARG_5;
+  }
+
+  return trexio_write_external_float64_array(file, dset_in, rank, dims_in, name);
+}
+
 
 trexio_exit_code
 trexio_read_external_float64_array(trexio_t* const file, double* const array, const char* name)
@@ -2307,6 +2446,17 @@ trexio_read_external_float64_array(trexio_t* const file, double* const array, co
   }
 
   return TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_read_safe_external_float64_array(trexio_t* const file, double* const dset_out, const int64_t dim_out, const char* name)
+{
+  if (file  == NULL)    return TREXIO_INVALID_ARG_1;
+  if (dset_out == NULL) return TREXIO_INVALID_ARG_2;
+  if (dim_out <= 0)     return TREXIO_INVALID_ARG_3;
+  if (name  == NULL)    return TREXIO_INVALID_ARG_4;
+
+  return trexio_read_external_float64_array(file, dset_out, name);
 }
 
 #+end_src
@@ -2356,6 +2506,156 @@ trexio_has_external_array(trexio_t* const file, const char* name)
   return TREXIO_FAILURE;
 }
    #+end_src
+
+*** Python
+
+   #+begin_src python :tangle basic_python.py
+def write_external_array(trexio_file, dset_w, name) -> None:
+    """Write an arbitrary array of numbers in the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+
+    dset_w: list, tuple OR numpy.ndarray
+        Array of values to be written.
+
+    name: string
+        Name of the array as it will be stored in the external group of TREXIO file
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    # get dimensions and rank from input array
+    if not isinstance(dset_w, (list, tuple)):
+       # if input array is not a list or tuple then it is probably a numpy array
+       rank = len(dset_w.shape)
+       dimensions = np.array(dset_w.shape, dtype=np.uint64)
+    else:
+       get_shape = lambda l: [len(l)] + get_shape(l[0]) if (type(l) == list or type(l) == tuple) else []
+       get_type = lambda l: [type(l)] + get_type(l[0]) if (type(l) == list or type(l) == tuple) else [type(l)]
+       dset_shape = get_shape(dset_w)
+       dset_dtype = get_type(dset_w)[-1]
+       rank = len(dset_shape)
+       dimensions = np.array(dset_shape, dtype=np.uint64)
+
+    # decide whether to flatten or not
+    doFlatten = False
+    if rank > 1:
+        doFlatten = True
+
+    # handle list/typle
+    if isinstance(dset_w, (list, tuple)):
+        if dset_dtype is int:
+            if doFlatten:
+                rc = pytr.trexio_write_safe_external_int64_array(trexio_file.pytrexio_s, np.array(dset_w, dtype=np.int64).flatten(), rank, dimensions, name)
+            else:
+                rc = pytr.trexio_write_safe_external_int64_array(trexio_file.pytrexio_s, dset_w, rank, dimensions, name)
+        elif dset_dtype is float:
+            if doFlatten:
+                rc = pytr.trexio_write_safe_external_float64_array(trexio_file.pytrexio_s, np.array(dset_w, dtype=np.float64).flatten(), rank, dimensions, name)
+            else:
+                rc = pytr.trexio_write_safe_external_float64_array(trexio_file.pytrexio_s, dset_w, rank, dimensions, name)
+        else:
+            raise TypeError("Unsupported type of a list/tuple for generic I/O of arrays.")
+
+    # handle numpy array
+    elif isinstance(dset_w, np.ndarray):
+        if dset_w.dtype==np.int64:
+            if doFlatten:
+                rc = pytr.trexio_write_safe_external_int64_array(trexio_file.pytrexio_s, dset_w.flatten(), rank, dimensions, name)
+            else:
+                rc = pytr.trexio_write_safe_external_int64_array(trexio_file.pytrexio_s, dset_w, rank, dimensions, name)
+        elif dset_w.dtype==np.int32:
+            if doFlatten:
+                rc = pytr.trexio_write_safe_external_int32_array(trexio_file.pytrexio_s, dset_w.flatten(), rank, dimensions, name)
+            else:
+                rc = pytr.trexio_write_safe_external_int32_array(trexio_file.pytrexio_s, dset_w, rank, dimensions, name)
+        elif dset_w.dtype==np.float64:
+            if doFlatten:
+                rc = pytr.trexio_write_safe_external_float64_array(trexio_file.pytrexio_s, dset_w.flatten(), rank, dimensions, name)
+            else:
+                rc = pytr.trexio_write_safe_external_float64_array(trexio_file.pytrexio_s, dset_w, rank, dimensions, name)
+        elif dset_w.dtype==np.float32:
+            if doFlatten:
+                rc = pytr.trexio_write_safe_external_float32_array(trexio_file.pytrexio_s, dset_w.flatten(), rank, dimensions, name)
+            else:
+                rc = pytr.trexio_write_safe_external_float32_array(trexio_file.pytrexio_s, dset_w, rank, dimensions, name)
+        else:
+            raise TypeError("Unsupported type of a NumPy array for generic I/O of arrays.")
+    else:
+        raise TypeError("Unsupported array type for generic I/O.")
+
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+     #+end_src
+
+     #+begin_src python :tangle basic_python.py
+def read_external_array(trexio_file, name, size, dtype):
+    """Read an external array of numbers from the TREXIO file.
+
+    Parameters:
+
+    trexio_file:
+        TREXIO File object.
+    name:
+        string name of an array
+    size:
+        integer value corresponding to the total number of elements to read
+    dtype:
+        string indicating the datatype of the array (int/int32/int64/float/float32/float64/double)
+
+    Returns:
+        ~dset_r~: 1D NumPy array with ~dim~ elements corresponding to of "name" array read from the TREXIO file.
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
+        - Exception from some other error (e.g. RuntimeError).
+"""
+
+    if dtype in ['int', 'int64']:
+        rc, dset_r = pytr.trexio_read_safe_external_int64_array(trexio_file.pytrexio_s, size, name)
+    elif dtype in ['int32']:
+        rc, dset_r = pytr.trexio_read_safe_external_int32_array(trexio_file.pytrexio_s, size, name)
+    elif dtype in ['float', 'float64', 'double']:
+        rc, dset_r = pytr.trexio_read_safe_external_float64_array(trexio_file.pytrexio_s, size, name)
+    elif dtype in ['float32']:
+        rc, dset_r = pytr.trexio_read_safe_external_float32_array(trexio_file.pytrexio_s, size, name)
+    else:
+        raise ValueError("Unsupported dtype passed to read_external_array.")
+
+    if rc != TREXIO_SUCCESS:
+        raise Error(rc)
+
+    return dset_r
+     #+end_src
+
+     #+begin_src python :tangle basic_python.py
+def has_external_array(trexio_file, name) -> bool:
+    """Check that external array exists in the TREXIO file.
+
+    trexio_file:
+          Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
+    name:
+          String name of the array from the TREXIO file
+
+    Returns:
+          True if the variable exists, False otherwise
+
+    Raises:
+        - trexio.Error if TREXIO return code ~rc~ is TREXIO_FAILURE and prints the error message using string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+    """
+
+    rc = pytr.trexio_has_external_array(trexio_file.pytrexio_s, name)
+    if rc == TREXIO_FAILURE:
+        raise Error(rc)
+
+    return rc == TREXIO_SUCCESS
+     #+end_src
 
 * Templates for front end
 ** Description
