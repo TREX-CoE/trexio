@@ -230,11 +230,12 @@ The journal article reference describing TREXIO can be cited as follows:
 ```
 
 Journal paper: [![doi](https://img.shields.io/badge/doi-10.1063/5.0148161-5077AB.svg)](https://doi.org/10.1063/5.0148161)
+
 ArXiv paper: [![arXiv](https://img.shields.io/badge/arXiv-2302.14793-b31b1b.svg)](https://arxiv.org/abs/2302.14793)
 
 ### Miscellaneous
 
-Note: The code should be compliant with the C99
+The code should be compliant with the C99
 [CERT C coding standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf).
 This can be checked with the `cppcheck` tool.
 
