@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 
 # Initialize the CMake project.
 project(Trexio
-	VERSION 2.3.1
+	VERSION 2.3.2
 	DESCRIPTION "TREX I/O library"
 	LANGUAGES C Fortran
 	)
