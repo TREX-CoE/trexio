@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([trexio],[2.3.1],[https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio],[2.4.0],[https://github.com/TREX-CoE/trexio/issues])
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
@@ -130,8 +130,7 @@ AC_ARG_WITH([hdf5],
   AS_HELP_STRING([--with-hdf5=PATH], [Path to HDF5 library and headers]), [
   with_hdf5="$withval"], [with_hdf5="yes"])
 
-AS_IF([test "x$with_hdf5" == "xno"], [
-           AC_DEFINE([HAVE_HDF5], 0, [Define to 1 if HDF5 is available]) ],
+AS_IF([test "x$with_hdf5" == "xno"], [], 
       [test "x$with_hdf5" != "xyes"], [
            HDF5_LIBS="-lhdf5"
            HDF5_PATH="$with_hdf5"

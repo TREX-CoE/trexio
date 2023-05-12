@@ -1732,6 +1732,12 @@ def _cp(source: str, destination: str):
     and write it as ~state_id~ attribute.
     ~trexio_get_state~ returns current state of the ~trexio_t~ file handle.
 
+    **Warning:** The ~trexio_set_state~ and ~trexio_get_state~ functions still
+    use the old convention where the ground state was state ~0~. From version 2.4.0,
+    the ~state_id~ variable has changed to ~index~ type, so using the more recent
+    ~trexio_write_state_id~ and ~trexio_read_state_id~ will give different results
+    in Fortran.
+
     input parameters:
       ~file~  -- TREXIO file handle.
       ~state~ -- ~int32_t~ ID of a state (0 for ground state).
@@ -2132,24 +2138,35 @@ trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* cons
   if (num  == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_num$(file) != TREXIO_SUCCESS) return TREXIO_ATTR_MISSING;
 
+  trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
+    
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_num$(file, num);
+    rc = trexio_text_read_$group_num$(file, num);
+    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_read_$group_num$(file, num);
+    rc = trexio_hdf5_read_$group_num$(file, num);
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
 #endif
+    break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_$group_num$(file, num);
+    rc = trexio_json_read_$group_num$(file, num);
+    break;
 ,*/
   }
 
-  return TREXIO_FAILURE;
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Handle index type */
+  if ($is_index$) {
+    ,*num += ($group_num_dtype_double$) 1;
+  }
+  return rc;
 }
      #+end_src
 
@@ -2161,20 +2178,26 @@ trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double
   //if (num <= 0L) return TREXIO_INVALID_NUM; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_ATTR_ALREADY_EXISTS;
 
+  /* Handle index type */
+  $group_num_dtype_double$ num_write = num;
+  if ($is_index$) {
+    num_write -= ($group_num_dtype_double$) 1;
+  }
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_num$(file, num);
+    return trexio_text_write_$group_num$(file, num_write);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_$group_num$(file, num);
+    return trexio_hdf5_write_$group_num$(file, num_write);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_num$(file, num);
+    return trexio_json_write_$group_num$(file, num_write);
 ,*/
   }
 
@@ -2219,6 +2242,12 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
   if (rc != TREXIO_SUCCESS) return rc;
 
   ,*num = ($group_num_dtype_single$) num_64;
+
+  /* Handle index type */
+  if ($is_index$) {
+    ,*num += ($group_num_dtype_single$) 1;
+  }
+
   return TREXIO_SUCCESS;
 }
      #+end_src
@@ -2232,20 +2261,26 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
   //if (num <= 0) return TREXIO_INVALID_NUM; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_ATTR_ALREADY_EXISTS;
 
+  /* Handle index type */
+  $group_num_dtype_single$ num_write = num;
+  if ($is_index$) {
+    num_write -= ($group_num_dtype_single$) 1;
+  }
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num);
+    return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num_write);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num);
+    return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num_write);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_num$(file, ($group_num_dtype_double$) num);
+    return trexio_json_write_$group_num$(file, ($group_num_dtype_double$) num_write);
     break;
 ,*/
   }

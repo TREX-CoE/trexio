@@ -13,6 +13,7 @@ static int test_write_dset (const char* file_name, const back_end_t backend) {
   // parameters to be written
   int num = 12;
   int nucl_index[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+  int state_id = 2;
 
 /*================= START OF TEST ==================*/
 
@@ -26,6 +27,10 @@ static int test_write_dset (const char* file_name, const back_end_t backend) {
 
   // write numerical (integer) dataset in a file
   rc = trexio_write_basis_nucleus_index(file, nucl_index);
+  assert (rc == TREXIO_SUCCESS);
+
+  // write index attribute in a file
+  rc = trexio_write_state_id(file, state_id);
   assert (rc == TREXIO_SUCCESS);
 
   // close current session
@@ -85,8 +90,9 @@ static int test_read_dset (const char* file_name, const back_end_t backend) {
   trexio_exit_code rc;
 
   // parameters to be read
-  int num;
-  int* nucl_index;
+  int num = 0;
+  int* nucl_index = NULL;
+  int state_id = 0;
 
 /*================= START OF TEST ==================*/
 
@@ -98,6 +104,11 @@ static int test_read_dset (const char* file_name, const back_end_t backend) {
   rc = trexio_read_basis_shell_num(file, &num);
   assert (rc == TREXIO_SUCCESS);
   assert (num == 12);
+
+  // read index attribute from the file
+  rc = trexio_read_state_id(file, &state_id);
+  assert (rc == TREXIO_SUCCESS);
+  assert (state_id == 2);
 
   // read numerical dataset from the file
   nucl_index = (int*) calloc(num, sizeof(int));
