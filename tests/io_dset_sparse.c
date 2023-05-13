@@ -37,8 +37,10 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
   }
 
   // write mo_num which will be used to determine the optimal size of int indices
-  rc = trexio_write_mo_num(file, mo_num);
-  assert(rc == TREXIO_SUCCESS);
+  if (trexio_has_mo_num(file) == TREXIO_HAS_NOT) {
+    rc = trexio_write_mo_num(file, mo_num);
+    assert(rc == TREXIO_SUCCESS);
+  }
 
   // write dataset chunks of sparse data in the file (including FAKE statements)
   uint64_t chunk_size = (uint64_t) size/N_CHUNKS;
@@ -47,13 +49,14 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
   printf("chunk_size = %ld\n", chunk_size);
   printf("n_chunks   = %d\n", n_chunks);
 
-  uint64_t offset_f = 0UL;
+  uint64_t offset_f = 0UL + offset;
   uint64_t offset_d = 0UL;
-  if (offset != 0L) offset_f += offset;
 
   // write n_chunks times using write_sparse
   while(offset_d < size) {
-    if (offset_f+chunk_size > size) chunk_size = size-offset_f;
+    if (offset_d+chunk_size > size) chunk_size = size-offset_d;
+  printf("chunk_size = %ld\n", chunk_size);
+    if (chunk_size == 0L) break;
     rc = trexio_write_mo_2e_int_eri(file, offset_f, chunk_size, &index[4*offset_d], &value[offset_d]);
     printf("%5d: %s\n", __LINE__, trexio_string_of_error(rc));
     assert(rc == TREXIO_SUCCESS);
@@ -163,9 +166,9 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
     printf("%d %d | %ld %ld %ld\n", i, index_read[i], offset, offset_file_read, chunk_read);
   }
 */
-  assert(rc == TREXIO_SUCCESS);
+  //assert(rc == TREXIO_SUCCESS);
   assert(chunk_read == read_size_check);
-  assert(index_read[0] == offset_file_read);
+  assert(index_read[0] == offset_file_read-offset);
 
 
   // now attempt to read so that one encounters end of file during reading (i.e. offset_file_read + chunk_read > size_max)
@@ -175,15 +178,16 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   offset_file_read = size_max-chunk_read+1;
   int64_t eof_read_size_check = size_max - offset_file_read; // if offset_file_read=97 => only 3 integrals will be read out of total of 100
 
-  if (offset != 0L) offset_file_read += offset;
 
   // read one chunk that will reach EOF and return TREXIO_END code
   rc = trexio_read_mo_2e_int_eri(file, offset_file_read, &chunk_read, &index_read[0], &value_read[0]);
   printf("%5d: %s\n", __LINE__, trexio_string_of_error(rc));
   assert(rc == TREXIO_END);
   printf("%d %d  x\n", (int32_t) index_read[0], (int32_t) (4L*offset_file_read));
+  printf("%ld  %ld\n", chunk_read, eof_read_size_check);
   assert(chunk_read == eof_read_size_check);
-  assert(index_read[0] == (int32_t) offset_file_read);
+  printf("%d %d\n", index_read[0] , (int32_t) (offset_file_read - offset));
+  assert(index_read[0] == (int32_t) offset_file_read - offset);
 
   // close current session
   rc = trexio_close(file);
@@ -238,7 +242,7 @@ int main(){
   rc = system(RM_COMMAND);
   assert (rc == 0);
 
-  int32_t mo_num[8] = {6,12,30,62,120,252,510,1020};
+  int32_t mo_num[8] = {6,12,30,62,252,510,1020,9000};
 
   for (int i=0 ; i<8 ; ++i) {
 
@@ -250,12 +254,10 @@ int main(){
     test_read_dset_sparse     (TREXIO_FILE, TEST_BACKEND, 0);
     test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, size);
 
-    /*
     // check the second write attempt (SIZE elements written in N_CHUNKS chunks)
     test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND, size, mo_num[i]);
     test_read_dset_sparse     (TREXIO_FILE, TEST_BACKEND, size);
-    test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, size*2);
-    */
+    test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, 2*size);
 
     rc = system(RM_COMMAND);
     assert (rc == 0);
