@@ -266,16 +266,19 @@
     Where $u_i(\mathbf{r})$ is numerically tabulated on a dense logarithmic
     grid. It is constructed to vanish for any $\mathbf{r}$
     outside of the grid. The reference points are stored in ~numgrid_r~
-    and ~numgrid_phi~. Additionaly, a separate spline for the kinetic energy
-    can be stored in ~numgrid_kin~. The index of the first data point for
-    each shell is stored in ~numgrid_start~.
+    and ~numgrid_phi~. Additionaly, a separate spline for the gradient and Laplacian
+    can be stored in ~numgrid_grad~ and ~numgrid_lap~. The index of the first data point for
+    each shell is stored in ~numgrid_start~, the number of data points per spline
+    is stored in ~numgrid_size~ for convenience.
 
-    FHI-aims uses cubic interpolation between the reference points.
-    The interpolation coefficients are given in the ~interpolator~ array.
-    The number of coefficients per interpolation point is stored as
-    ~interp_coeff_cnt~ so that other interpolation functions can be
-    implemented if needed. The ~interpolator_kin~ array provides a spline for 
-    the kinetic energy.
+    What kind of spline is used can be provided in the ~interpolator_kind~ field.
+    For example, FHI-aims uses a cubic spline, so the ~interpolator_kind~ is
+    \"polynomial\" and the ~interp_coeff_cnt~ is $4$. In this case, the first
+    interpolation coefficient per data point is the absolute term, the second is for
+    the linear term etc.
+    The interpolation coefficients for the wave function are given in the
+     ~interpolator_phi~ array. The ~interpolator_grad~ and ~interpolator_lap~
+    arrays provide a spline for the gradient and Laplacian, respectively.
     The argument passed to the interpolants is on the logarithmic scale of
     the reference points: If the argument is an integer $i$, the interpolant
     will return the value of $u(\mathbf{r})$ at the $i$th reference point.
@@ -308,29 +311,32 @@
 *** Data definitions
 
     #+NAME: basis
-    | Variable           | Type    | Dimensions                                   | Description                                                                  |   |
-    |--------------------+---------+----------------------------------------------+------------------------------------------------------------------------------+---|
-    | ~type~             | ~str~   |                                              | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |   |
-    | ~prim_num~         | ~dim~   |                                              | Total number of primitives                                                   |   |
-    | ~shell_num~        | ~dim~   |                                              | Total number of shells                                                       |   |
-    | ~numgrid_num~      | ~dim~   |                                              | Total number of grid points for numerical orbitals                           |   |
-    | ~interp_coeff_cnt~ | ~dim~   |                                              | Number of coefficients for the numerical orbital interpolator                |   |
-    | ~nucleus_index~    | ~index~ | ~(basis.shell_num)~                          | One-to-one correspondence between shells and atomic indices                  |   |
-    | ~shell_ang_mom~    | ~int~   | ~(basis.shell_num)~                          | One-to-one correspondence between shells and angular momenta                 |   |
-    | ~shell_factor~     | ~float~ | ~(basis.shell_num)~                          | Normalization factor of each shell ($\mathcal{N}_s$)                         |   |
-    | ~r_power~          | ~int~   | ~(basis.shell_num)~                          | Power to which $r$ is raised ($n_s$)                                         |   |
-    | ~numgrid_start~    | ~index~ | ~(basis.shell_num)~                          | Index of the first data point for a given numerical orbital                  |   |
-    | ~numgrid_size~     | ~dim~   | ~(basis.shell_num)~                          | Number of data points per numerical orbital                                  |   |
-    | ~shell_index~      | ~index~ | ~(basis.prim_num)~                           | One-to-one correspondence between primitives and shell index                 |   |
-    | ~exponent~         | ~float~ | ~(basis.prim_num)~                           | Exponents of the primitives ($\gamma_{ks}$)                                  |   |
-    | ~coefficient~      | ~float~ | ~(basis.prim_num)~                           | Coefficients of the primitives ($a_{ks}$)                                    |   |
-    | ~prim_factor~      | ~float~ | ~(basis.prim_num)~                           | Normalization coefficients for the primitives ($f_{ks}$)                     |   |
-    | ~e_cut~            | ~float~ |                                              | Energy cut-off for plane-wave calculations                                   |   |
-    | ~numgrid_radius~   | ~float~ | ~(basis.numgrid_num)~                        | Radii of grid points for numerical orbitals                                  |   |
-    | ~numgrid_phi~      | ~float~ | ~(basis.numgrid_num)~                        | Wave function values for numerical orbitals                                  |   |
-    | ~numgrid_kin~      | ~float~ | ~(basis.numgrid_num)~                        | Kinetic energy of numerical orbitals                                         |   |
-    | ~interpolator~     | ~float~ | ~(basis.interp_coeff_cnt,basis.numgrid_num)~ | Coefficients for numerical orbital interpolation function                    |   |
-    | ~interpolator_kin~ | ~float~ | ~(basis.interp_coeff_cnt,basis.numgrid_num)~ | Coefficients for numerical orbital kinetic energy interpolation function     |   |
+    | Variable            | Type    | Dimensions                                   | Description                                                                  |   |
+    |---------------------+---------+----------------------------------------------+------------------------------------------------------------------------------+---|
+    | ~type~              | ~str~   |                                              | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |   |
+    | ~prim_num~          | ~dim~   |                                              | Total number of primitives                                                   |   |
+    | ~shell_num~         | ~dim~   |                                              | Total number of shells                                                       |   |
+    | ~numgrid_num~       | ~dim~   |                                              | Total number of grid points for numerical orbitals                           |   |
+    | ~interp_coeff_cnt~  | ~dim~   |                                              | Number of coefficients for the numerical orbital interpolator                |   |
+    | ~nucleus_index~     | ~index~ | ~(basis.shell_num)~                          | One-to-one correspondence between shells and atomic indices                  |   |
+    | ~shell_ang_mom~     | ~int~   | ~(basis.shell_num)~                          | One-to-one correspondence between shells and angular momenta                 |   |
+    | ~shell_factor~      | ~float~ | ~(basis.shell_num)~                          | Normalization factor of each shell ($\mathcal{N}_s$)                         |   |
+    | ~r_power~           | ~int~   | ~(basis.shell_num)~                          | Power to which $r$ is raised ($n_s$)                                         |   |
+    | ~numgrid_start~     | ~index~ | ~(basis.shell_num)~                          | Index of the first data point for a given numerical orbital                  |   |
+    | ~numgrid_size~      | ~dim~   | ~(basis.shell_num)~                          | Number of data points per numerical orbital                                  |   |
+    | ~shell_index~       | ~index~ | ~(basis.prim_num)~                           | One-to-one correspondence between primitives and shell index                 |   |
+    | ~exponent~          | ~float~ | ~(basis.prim_num)~                           | Exponents of the primitives ($\gamma_{ks}$)                                  |   |
+    | ~coefficient~       | ~float~ | ~(basis.prim_num)~                           | Coefficients of the primitives ($a_{ks}$)                                    |   |
+    | ~prim_factor~       | ~float~ | ~(basis.prim_num)~                           | Normalization coefficients for the primitives ($f_{ks}$)                     |   |
+    | ~e_cut~             | ~float~ |                                              | Energy cut-off for plane-wave calculations                                   |   |
+    | ~numgrid_radius~    | ~float~ | ~(basis.numgrid_num)~                        | Radii of grid points for numerical orbitals                                  |   |
+    | ~numgrid_phi~       | ~float~ | ~(basis.numgrid_num)~                        | Wave function values for numerical orbitals                                  |   |
+    | ~numgrid_grad~      | ~float~ | ~(basis.numgrid_num)~                        | Radial gradient of numerical orbitals                                        |   |
+    | ~numgrid_lap~       | ~float~ | ~(basis.numgrid_num)~                        | Laplacian of numerical orbitals                                              |   |
+    | ~interpolator_kind~ | ~str~   |                                              | Kind of spline, e.g. "polynomial"                                            |   |
+    | ~interpolator_phi~  | ~float~ | ~(basis.interp_coeff_cnt,basis.numgrid_num)~ | Coefficients for numerical orbital interpolation function                    |   |
+    | ~interpolator_grad~ | ~float~ | ~(basis.interp_coeff_cnt,basis.numgrid_num)~ | Coefficients for numerical orbital gradient interpolation function           |   |
+    | ~interpolator_lap~  | ~float~ | ~(basis.interp_coeff_cnt,basis.numgrid_num)~ | Coefficients for numerical orbital laplacian interpolation function          |   |
 
 
 
@@ -340,27 +346,30 @@
     :results:
     #+begin_src python :tangle trex.json
 	"basis": {
-			"type" : [ "str"  , []                                                ]
-	  ,         "prim_num" : [ "dim"  , []                                                ]
-	  ,        "shell_num" : [ "dim"  , []                                                ]
-	  ,      "numgrid_num" : [ "dim"  , []                                                ]
-	  , "interp_coeff_cnt" : [ "dim"  , []                                                ]
-	  ,    "nucleus_index" : [ "index", [ "basis.shell_num" ]                             ]
-	  ,    "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                             ]
-	  ,     "shell_factor" : [ "float", [ "basis.shell_num" ]                             ]
-	  ,          "r_power" : [ "int"  , [ "basis.shell_num" ]                             ]
-	  ,    "numgrid_start" : [ "index", [ "basis.shell_num" ]                             ]
-	  ,     "numgrid_size" : [ "dim"  , [ "basis.shell_num" ]                             ]
-	  ,      "shell_index" : [ "index", [ "basis.prim_num" ]                              ]
-	  ,         "exponent" : [ "float", [ "basis.prim_num" ]                              ]
-	  ,      "coefficient" : [ "float", [ "basis.prim_num" ]                              ]
-	  ,      "prim_factor" : [ "float", [ "basis.prim_num" ]                              ]
-	  ,            "e_cut" : [ "float", []                                                ]
-	  ,   "numgrid_radius" : [ "float", [ "basis.numgrid_num" ]                           ]
-	  ,      "numgrid_phi" : [ "float", [ "basis.numgrid_num" ]                           ]
-	  ,      "numgrid_kin" : [ "float", [ "basis.numgrid_num" ]                           ]
-	  ,     "interpolator" : [ "float", [ "basis.numgrid_num", "basis.interp_coeff_cnt" ] ]
-	  , "interpolator_kin" : [ "float", [ "basis.numgrid_num", "basis.interp_coeff_cnt" ] ]
+			 "type" : [ "str"  , []                                                ]
+	  ,          "prim_num" : [ "dim"  , []                                                ]
+	  ,         "shell_num" : [ "dim"  , []                                                ]
+	  ,       "numgrid_num" : [ "dim"  , []                                                ]
+	  ,  "interp_coeff_cnt" : [ "dim"  , []                                                ]
+	  ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                             ]
+	  ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                             ]
+	  ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                             ]
+	  ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                             ]
+	  ,     "numgrid_start" : [ "index", [ "basis.shell_num" ]                             ]
+	  ,      "numgrid_size" : [ "dim"  , [ "basis.shell_num" ]                             ]
+	  ,       "shell_index" : [ "index", [ "basis.prim_num" ]                              ]
+	  ,          "exponent" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,       "coefficient" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,             "e_cut" : [ "float", []                                                ]
+	  ,    "numgrid_radius" : [ "float", [ "basis.numgrid_num" ]                           ]
+	  ,       "numgrid_phi" : [ "float", [ "basis.numgrid_num" ]                           ]
+	  ,      "numgrid_grad" : [ "float", [ "basis.numgrid_num" ]                           ]
+	  ,       "numgrid_lap" : [ "float", [ "basis.numgrid_num" ]                           ]
+	  , "interpolator_kind" : [ "str"  , []                                                ]
+	  ,  "interpolator_phi" : [ "float", [ "basis.numgrid_num", "basis.interp_coeff_cnt" ] ]
+	  , "interpolator_grad" : [ "float", [ "basis.numgrid_num", "basis.interp_coeff_cnt" ] ]
+	  ,  "interpolator_lap" : [ "float", [ "basis.numgrid_num", "basis.interp_coeff_cnt" ] ]
 	} ,
     #+end_src
     :end:
