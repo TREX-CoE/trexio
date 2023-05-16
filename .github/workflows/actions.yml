@@ -20,7 +20,7 @@ jobs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
         # Gets the correct commit message for pull request
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -31,15 +31,13 @@ jobs:
           COMMIT_MSG=$(git log --no-merges -1 --oneline)
           echo "::set-output name=message::$COMMIT_MSG"
 
-
   trexio_ubuntu:
-
-    runs-on: ubuntu-20.04
     name: x86 Ubuntu 20.04
+    runs-on: ubuntu-20.04
     needs: get_commit_message
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
 
       - name: install dependencies
         run: |
@@ -84,7 +82,7 @@ jobs:
         if: >-
           contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
           github.event_name == 'release'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
         with:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
@@ -114,29 +112,38 @@ jobs:
         run: make maintainer-clean
 
   trexio_macos:
-
-    runs-on: macos-11
-    name: x86 MacOS 11
+    name: x86 MacOS 12
+    runs-on: macos-12
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
 
       - name: install dependencies
         run: |
           brew install emacs
-          brew install hdf5
+          brew install hdf5@1.12
           brew install automake
+          brew --prefix hdf5
 
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure FC=gfortran-10 --enable-silent-rules
+          ./configure FC=gfortran-12 --enable-silent-rules
 
       - name: compile TREXIO
-        run: make -j 2
+        run: make -j3
 
       - name: check TREXIO
-        run: make check
+        run: make -j3 check
+      
+      - name: compile Python API
+        run: |
+          export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
+          export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          make python-install
+      
+      - name: test Python API
+        run: make python-test
 
       - name: Archive test log file
         if: failure()
