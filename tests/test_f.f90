@@ -69,8 +69,8 @@ subroutine test_write(file_name, back_end)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
-  character(len=:), allocatable :: sym_str
-  character(len=:), allocatable :: label(:)
+  character(len=32), allocatable :: sym_str
+  character(len=8), allocatable :: label(:)
   double precision, allocatable :: energy(:)
   integer         , allocatable :: spin(:)
 
@@ -129,7 +129,7 @@ subroutine test_write(file_name, back_end)
   basis_shell_num = 24
   basis_nucleus_index = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 /)
 
-  allocate(character(len=8) :: label(12))
+  allocate(label(12))
   label(1) = 'C'
   label(2) = 'Na'
   label(3) = 'C'
