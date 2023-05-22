@@ -131,7 +131,19 @@ subroutine test_write(file_name, back_end)
   basis_shell_num = 24
   basis_nucleus_index = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 /)
 
-  label = [character(len=8) :: 'C', 'Na','C', 'C 66', 'C','C', 'H 99', 'Ru', 'H', 'H',  'H', 'H' ]
+  allocate(character(len=8) :: label(12))
+  label(1) = 'C'
+  label(2) = 'Na'
+  label(3) = 'C'
+  label(4) = 'C 66'
+  label(5) = 'C'
+  label(6) = 'C'
+  label(7) = 'H 99'
+  label(8) = 'Ru'
+  label(9) = 'H'
+  label(10)= 'H'
+  label(11)= 'H'
+  label(12)= 'H'
 
   sym_str = 'B3U with some comments'
 
