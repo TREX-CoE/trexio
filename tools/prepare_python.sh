@@ -45,25 +45,6 @@ export LINE_NO=$(($(awk '/stdint.h/{print NR}' ${PYDIR_TREXIO_H}) + 1))
 
 if [[ ${DO_HDF5} == 0 ]] ; then
     cp ${SRC}/trexio_hdf5.{c,h} ${PYDIR}/src
-    # add "#define HAVE_HDF5 1" line after "#include stdint.h" using awk and sed
-    # sed on MacOS is different from GNU sed on Linux and requires special treatment
-#   if [[ "$OSTYPE" == "darwin"* ]]; then
-#       sed -i '' -e "$LINE_NO"'i \
-# #define HAVE_HDF5 1' "${PYDIR_TREXIO_H}"
-#   else
-#       sed -i -e "$LINE_NO"'i \
-# #define HAVE_HDF5 1' "${PYDIR_TREXIO_H}"
-#   fi
-#else
-    # add "#undef HAVE_HDF5" line after "#include stdint.h" using awk and sed
-    # sed on MacOS is different from GNU sed on Linux and requires special treatment
-#   if [[ "$OSTYPE" == "darwin"* ]]; then
-#       sed -i '' -e "$LINE_NO"'i \
-# #undef HAVE_HDF5' "${PYDIR_TREXIO_H}"
-#   else
-#       sed -i -e "$LINE_NO"'i \
-# #undef HAVE_HDF5' "${PYDIR_TREXIO_H}"
-#   fi
 fi
 
 # Copy additional info
