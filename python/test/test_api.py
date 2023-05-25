@@ -6,19 +6,22 @@ import trexio
 from benzene_data import *
 
 
-FILENAME = 'test_file_py.h5'
-BACK_END = trexio.TREXIO_HDF5
-
-
-def clean():
+def clean(back_end, filename):
     """Remove test files."""
-    import os
-
-    try:
-        os.remove(FILENAME)
-        os.remove('unsafe_' + FILENAME)
-    except FileNotFoundError:
-        pass
+    if back_end == trexio.TREXIO_HDF5:
+        import os
+        try:
+            os.remove(filename)
+            os.remove('unsafe_' + filename)
+        except FileNotFoundError:
+            pass
+    else:
+        import shutil
+        try:
+            shutil.rmtree(filename)
+            shutil.rmtree('unsafe_' + filename)
+        except FileNotFoundError:
+            pass
 
 
 def test_info():
@@ -29,7 +32,7 @@ def test_info():
 def test_void():
     """Check raise of an error upon I/O on non-existing file."""
     with pytest.raises(trexio.Error):
-        _ = trexio.File('void.file', 'r', BACK_END)
+        _ = trexio.File('void.file', 'r', trexio.TREXIO_TEXT)
 
 
 def test_orbital_list():
@@ -53,20 +56,30 @@ def test_bitfield_list():
 class TestIO:
     """Unit tests for writing/reading different blocks of the TREXIO file."""
 
-    filename  = FILENAME
-    back_end  = BACK_END
-    mode      = 'w'
-    test_file = None
+    @pytest.fixture(autouse=True)
+    def setup(self, backend):
+        self.mode      = 'w'
+        self.test_file = None
+        if backend == 'hdf5':
+            self.back_end = trexio.TREXIO_HDF5
+            self.filename = 'test_file_py.h5'
+        elif backend == 'text':
+            self.back_end = trexio.TREXIO_TEXT
+            self.filename = 'test_file_py.dir'
+        else:
+            raise ValueError("Wrong TREXIO back-end supplied to pytest.")
 
-    clean()
+
+    def test_clean(self):
+        """Clean existing files."""
+        clean(self.back_end, self.filename)
 
 
-    def __del__(self):
-        if self.test_file:
-            if self.test_file.isOpen:
-                self.test_file.close()
-
-
+    #def __del__(self):
+    #    """Class destructor."""
+    #    if self.test_file:
+    #        if self.test_file.isOpen:
+    #            self.test_file.close()
     def open(self, filename=None, mode=None, back_end=None):
         """Create a TREXIO file and open it for writing."""
         if not filename:
@@ -107,12 +120,17 @@ class TestIO:
         with pytest.raises(trexio.Error):
             trexio.write_nucleus_num(self.test_file, nucleus_num * 2)
 
+        if self.test_file.isOpen:
+            self.test_file.close()
+
 
     def test_num(self):
         """Write a number."""
         self.open()
         trexio.write_nucleus_num(self.test_file, nucleus_num)
         assert trexio.has_nucleus_num(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_str(self):
@@ -120,6 +138,8 @@ class TestIO:
         self.open()
         trexio.write_nucleus_point_group(self.test_file, point_group)
         assert trexio.has_nucleus_point_group(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_array_str(self):
@@ -129,6 +149,8 @@ class TestIO:
             self.test_num()
         trexio.write_nucleus_label(self.test_file, nucleus_label)
         assert trexio.has_nucleus_label(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_array_1D(self):
@@ -138,6 +160,8 @@ class TestIO:
             self.test_num()
         trexio.write_nucleus_charge(self.test_file, nucleus_charge)
         assert trexio.has_nucleus_charge(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_array_2D(self):
@@ -147,6 +171,8 @@ class TestIO:
             self.test_num()
         trexio.write_nucleus_coord(self.test_file, nucleus_coord)
         assert trexio.has_nucleus_coord(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_indices(self):
@@ -159,6 +185,8 @@ class TestIO:
         # now write the indices
         trexio.write_basis_nucleus_index(self.test_file, indices_np)
         assert trexio.has_basis_nucleus_index(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_sparse(self):
@@ -170,6 +198,8 @@ class TestIO:
         offset = 0
         trexio.write_ao_2e_int_eri(self.test_file, offset, num_integrals, indices, values)
         assert trexio.has_ao_2e_int_eri(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_determinant(self):
@@ -189,24 +219,30 @@ class TestIO:
         assert trexio.has_determinant_coefficient(self.test_file)
         # manually check the consistency between coefficient_size and number of determinants
         assert trexio.read_determinant_coefficient_size(self.test_file) == trexio.read_determinant_num(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_delete_group(self):
         """Delete a group."""
         self.open(filename='unsafe_' + self.filename, mode='u', back_end=self.back_end)
 
-        self.test_num()
-        self.test_array_1D()
-        self.test_array_2D()
+        trexio.write_nucleus_num(self.test_file, nucleus_num)
+        trexio.write_nucleus_charge(self.test_file, nucleus_charge)
+        trexio.flush(self.test_file)
 
+        assert trexio.has_nucleus_num(self.test_file)
+        assert trexio.has_nucleus_charge(self.test_file)
         assert trexio.has_nucleus(self.test_file)
 
         trexio.delete_nucleus(self.test_file)
 
         assert not trexio.has_nucleus_num(self.test_file)
         assert not trexio.has_nucleus_charge(self.test_file)
-        assert not trexio.has_nucleus_coord(self.test_file)
         assert not trexio.has_nucleus(self.test_file)
+
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_has_group(self):
@@ -214,6 +250,8 @@ class TestIO:
         self.open()
         assert trexio.has_nucleus(self.test_file)
         assert not trexio.has_rdm(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_context_manager(self):
@@ -231,6 +269,8 @@ class TestIO:
         self.open(mode='r')
         num_r = trexio.read_nucleus_num(self.test_file)
         assert num_r == nucleus_num
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_read_array_1D(self):
@@ -240,6 +280,8 @@ class TestIO:
         assert charges_np_r.dtype is np.dtype(np.float64)
         assert charges_np_r.size == nucleus_num
         np.testing.assert_array_almost_equal(charges_np_r, np.array(nucleus_charge), decimal=8)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_read_array_2D(self):
@@ -250,6 +292,8 @@ class TestIO:
         assert coords_np.dtype is np.dtype(np.float64)
         assert coords_np.size == nucleus_num * 3
         np.testing.assert_array_almost_equal(coords_np, np.array(nucleus_coord).reshape(nucleus_num,3), decimal=8)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_read_errors(self):
@@ -258,6 +302,8 @@ class TestIO:
         # unsafe call to read_safe should fail with error message corresponding to TREXIO_UNSAFE_ARRAY_DIM
         with pytest.raises(trexio.Error):
             _ = trexio.read_nucleus_charge(self.test_file, dim=nucleus_num/2)
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_read_integers(self):
@@ -276,7 +322,8 @@ class TestIO:
         assert indices_np_64.dtype is np.dtype(np.int64)
         assert indices_np_64.size == basis_shell_num
         assert (indices_np_64 == np.array(nucleus_index)).all()
-
+        if self.test_file.isOpen:
+            self.test_file.close()
 
     def test_sparse_read(self):
         """Read a sparse array."""
@@ -300,7 +347,8 @@ class TestIO:
         assert read_buf_size == (num_integrals - buf_size)
         assert indices_sparse_np[0][0] == offset_file * 4
         assert indices_sparse_np[read_buf_size-1][3] == (offset_file + read_buf_size) * 4 - 1
-
+        if self.test_file.isOpen:
+            self.test_file.close()
 
     def test_determinant_read(self):
         """Read the CI determinants."""
@@ -320,7 +368,8 @@ class TestIO:
         #print(f'First complete read of determinant coefficients: {read_buf_size}')
         assert not eof
         assert read_buf_size == buf_size
-
+        if self.test_file.isOpen:
+            self.test_file.close()
 
     def test_array_str_read(self):
         """Read an array of strings."""
@@ -328,6 +377,8 @@ class TestIO:
         labels_r = trexio.read_nucleus_label(self.test_file)
         assert len(labels_r) == nucleus_num
         assert labels_r == nucleus_label
+        if self.test_file.isOpen:
+            self.test_file.close()
 
 
     def test_str_read(self):
@@ -335,3 +386,5 @@ class TestIO:
         self.open(mode='r')
         point_group_r = trexio.read_nucleus_point_group(self.test_file)
         assert point_group_r == point_group
+        if self.test_file.isOpen:
+            self.test_file.close()

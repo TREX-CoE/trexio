@@ -40,7 +40,7 @@ if numpy_isUndefined and not do_sdist:
 
 rootpath = os.path.dirname(os.path.abspath(__file__))
 srcpath = os.path.join(rootpath, 'src')
-c_files = ['trexio.c', 'trexio_hdf5.c', 'trexio_text.c', 'pytrexio_wrap.c']
+c_files = ['trexio.c', 'trexio_text.c']
 
 
 with open("README.md", "r") as fh:
@@ -61,11 +61,14 @@ if not version_r:
 # The block below is needed to derive additional flags related to the HDF5 library,
 # which is required to build pytrexio extension module during the setup.py execution
 
+h5_present = False
 h5_ldflags_withl = os.environ.get("H5_LDFLAGS", None)
 h5_cflags_withI  = os.environ.get("H5_CFLAGS", None)
 
 h5_ldflags_isUndefined = h5_ldflags_withl is None or h5_ldflags_withl==""
 h5_cflags_isUndefined = h5_cflags_withI is None or h5_cflags_withI==""
+
+h5_present = (not h5_ldflags_isUndefined) & (not h5_cflags_isUndefined)
 
 if (h5_ldflags_isUndefined or h5_cflags_isUndefined) and not do_sdist:
 
@@ -76,20 +79,26 @@ if (h5_ldflags_isUndefined or h5_cflags_isUndefined) and not do_sdist:
 
     try:
         assert pk.exists('hdf5')
+        h5_present = True
     except AssertionError:
-        raise Exception("pkg-config could not locate HDF5")
+        print("pkg-config could not locate HDF5; installing TREXIO with TEXT back-end only!")
 
-    h5_cflags_withI = pk.cflags('hdf5')
-    h5_ldflags_withl = pk.libs('hdf5')
+    if h5_present:
+        h5_cflags_withI = pk.cflags('hdf5')
+        h5_ldflags_withl = pk.libs('hdf5')
 
-
-h5_cflags = h5_cflags_withI.replace("-I","").split(" ")[0] if not do_sdist else ""
-h5_ldflags = h5_ldflags_withl.split(" ")[0] if not do_sdist else ""
+if h5_present:
+    h5_cflags = h5_cflags_withI.replace("-I","").split(" ")[0] if not do_sdist else ""
+    h5_ldflags = h5_ldflags_withl.split(" ")[0] if not do_sdist else ""
+    c_files.append('trexio_hdf5.c')
 
 # ============================ End of the HDF5 block ============================ #
 
 # Define pytrexio extension module based on TREXIO source codes + SWIG-generated wrapper
-pytrexio_module = Extension('pytrexio._pytrexio',
+c_files.append('pytrexio_wrap.c')
+
+if h5_present:
+    pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [h5_cflags, srcpath, numpy_includedir],
                             libraries = ['hdf5' ],
@@ -100,6 +109,17 @@ pytrexio_module = Extension('pytrexio._pytrexio',
                                 '-Wno-unused-but-set-variable'
                                 ],
                             extra_link_args = [h5_ldflags]
+                            )
+else:
+    pytrexio_module = Extension('pytrexio._pytrexio',
+                            sources = [os.path.join(srcpath, code) for code in c_files],
+                            include_dirs = [srcpath, numpy_includedir],
+                            extra_compile_args = [
+                                '-std=c99',
+                                '-Wno-discarded-qualifiers',
+                                '-Wno-unused-variable',
+                                '-Wno-unused-but-set-variable'
+                                ]
                             )
 
 
