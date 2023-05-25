@@ -96,30 +96,33 @@ if h5_present:
 
 # Define pytrexio extension module based on TREXIO source codes + SWIG-generated wrapper
 c_files.append('pytrexio_wrap.c')
+compile_args = [
+        '-std=c99',
+        '-Wno-discarded-qualifiers',
+        '-Wno-unused-variable',
+        '-Wno-unused-but-set-variable'
+        ]
+# if config.h is present then we are building via Autotools
+if os.path.isfile(os.path.join(srcpath, "config.h")):
+        compile_args.append('-DHAVE_CONFIG_H')
+# explicit hack needed when building from sdist tarball
+if h5_present:
+        compile_args.append('-DHAVE_HDF5')
 
+# define C extension module
 if h5_present:
     pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [h5_cflags, srcpath, numpy_includedir],
                             libraries = ['hdf5' ],
-                            extra_compile_args = [
-                                '-std=c99',
-                                '-Wno-discarded-qualifiers',
-                                '-Wno-unused-variable',
-                                '-Wno-unused-but-set-variable'
-                                ],
+                            extra_compile_args = compile_args,
                             extra_link_args = [h5_ldflags]
                             )
 else:
     pytrexio_module = Extension('pytrexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [srcpath, numpy_includedir],
-                            extra_compile_args = [
-                                '-std=c99',
-                                '-Wno-discarded-qualifiers',
-                                '-Wno-unused-variable',
-                                '-Wno-unused-but-set-variable'
-                                ]
+                            extra_compile_args = compile_args
                             )
 
 
