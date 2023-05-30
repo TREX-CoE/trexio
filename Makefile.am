@@ -77,9 +77,11 @@ endif
 ORG_FILES = \
   src/templates_front/templator_front.org \
   src/templates_text/templator_text.org \
-  src/templates_hdf5/templator_hdf5.org \
   trex.org
 
+if HAVE_HDF5
+ORG_FILES += src/templates_hdf5/templator_hdf5.org
+endif
 
 src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 
@@ -160,11 +162,13 @@ EXTRA_DIST += $(trexio_scm)
 
 HTML_TANGLED = docs/index.html            \
                docs/examples.html         \
-               docs/templator_hdf5.html   \
                docs/trex.html             \
                docs/README.html           \
                docs/templator_front.html  \
                docs/templator_text.html
+if HAVE_HDF5
+HTML_TANGLED += docs/templator_hdf5.html
+endif
 
 htmldir = $(docdir)
 # This $(htmlizer) file and the corresponding target rule allow to avoid circular dependency,
