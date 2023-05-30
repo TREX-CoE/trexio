@@ -257,7 +257,9 @@
 *** Numerical orbitals
     
     Trexio supports numerical atom centered orbitals. The implementation is
-    based on the approach of FHI-aims [Reference to paper]. These orbitals are
+    based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular 
+    simulations with numeric atom-centered orbitals; Computer Physics 
+    Communications 2009]. These orbitals are
     defined by the atom they are centered on, their angular momentum and a
     radial function $R_s$, which is of the form
     \[
@@ -266,9 +268,20 @@
     Where $u_i(\mathbf{r})$ is numerically tabulated on a dense logarithmic
     grid. It is constructed to vanish for any $\mathbf{r}$
     outside of the grid. The reference points are stored in ~numgrid_r~
-    and ~numgrid_phi~. Additionaly, a separate spline for the gradient and Laplacian
-    can be stored in ~numgrid_grad~ and ~numgrid_lap~. The index of the first data point for
-    each shell is stored in ~numgrid_start~, the number of data points per spline
+    and ~numgrid_phi~. Additionaly, a separate spline for the first and second
+    derivative of $u(\mathbf{r})$ can be stored in ~numgrid_grad~ and ~numgrid_lap~. 
+    Storing them in this form allows to calculate the actual gradients and 
+    Laplacian easily as follows:
+
+    \[
+      \grad_{x_i} \phi = \frac{x_i}{r^2}\left u\prime(r) - \frac{u(r)}{r}\right
+    \]
+    \[
+      \Delta \phi = \frac{1}{r^3}\left x^2 u''(r) + \left3x^2-r^2\right \left \frac{u(r)}{r^2} - \frac{u'(r)}{r}\right \right
+    \]
+
+    The index of the first data point for each shell is stored in 
+    ~numgrid_start~, the number of data points per spline
     is stored in ~numgrid_size~ for convenience.
 
     What kind of spline is used can be provided in the ~interpolator_kind~ field.
