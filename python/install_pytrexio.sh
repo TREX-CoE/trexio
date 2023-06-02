@@ -16,8 +16,10 @@ done
 # check that both variables are set
 if [[ -z ${H5_LDFLAGS_LOCAL} ]] || [[ -z ${H5_CFLAGS_LOCAL} ]]; then
     if [[ -z ${H5_LDFLAGS} ]] || [[ -z ${H5_CFLAGS} ]]; then
-        which h5cc &> /dev/null
-        if [[ $? -eq 0 ]] ; then
+        # If pkg-config fails, try to locate hdf5 using h5cc
+        which h5cc &> /dev/null && HAS_H5CC=1
+        pkg-config --libs hdf5
+        if [[ $? -ne 0 && $HAS_H5CC == "1" ]] ; then
               HDF5_tmp_flags=$(h5cc -showconfig \
                   | grep  'FLAGS\|Extra libraries:' \
                   | awk  -F: '{printf("%s "), $2}' )
