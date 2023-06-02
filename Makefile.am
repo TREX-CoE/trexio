@@ -37,7 +37,7 @@ CLEANFILES = trexio.mod
 if HAVE_FORTRAN
 BUILT_SOURCES = trexio.mod
 else
-BUILT_SOURCES = 
+BUILT_SOURCES =
 endif
 EXTRA_DIST = .git_hash
 
@@ -118,6 +118,7 @@ TESTS_C += \
   tests/io_dset_float_hdf5 \
   tests/io_dset_int_hdf5 \
   tests/io_dset_sparse_hdf5 \
+  tests/io_dset_external_hdf5 \
   tests/io_determinant_hdf5 \
   tests/io_jastrow_hdf5 \
   tests/io_safe_dset_float_hdf5 \
@@ -307,7 +308,7 @@ DEB_FILES = \
   helpers-debian/libtrexio0.install \
   helpers-debian/libtrexio-dev.install \
   helpers-debian/source        \
-  helpers-debian/README.source 
+  helpers-debian/README.source
 
 debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
 	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz

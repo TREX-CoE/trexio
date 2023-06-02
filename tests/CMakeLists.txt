@@ -24,6 +24,7 @@ if(ENABLE_HDF5)
     io_dset_float_hdf5
     io_dset_str_hdf5
     io_dset_sparse_hdf5
+    io_dset_external_hdf5
     io_determinant_hdf5
     io_safe_dset_float_hdf5
     io_dset_int_hdf5

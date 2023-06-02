@@ -108,6 +108,9 @@ import_array();
 /* For some reasons SWIG does not apply the proper bitfield_t typemap, so one has to manually specify int64_t* ARGOUT_ARRAY1 below */
 %apply (int64_t* ARGOUT_ARRAY1, int32_t DIM1) {(bitfield_t* const bit_list, const int32_t N_int)};
 
+/* For passing dimensions of external arrays fron Python front to C back */
+%apply (uint64_t* IN_ARRAY1, int32_t DIM1) {(const uint64_t* dims_in, const int32_t dims_dim_in)};
+
 /* This tells SWIG to treat char ** dset_in pattern as a special case
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.
    by converting input list of strings from Python into char ** of C
