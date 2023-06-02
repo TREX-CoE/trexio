@@ -46,7 +46,7 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
   uint64_t chunk_size = (uint64_t) size/N_CHUNKS;
   chunk_size = chunk_size > 0 ? chunk_size : (uint64_t) size;
   int n_chunks = size/chunk_size;
-  printf("chunk_size = %lld\n", chunk_size);
+  printf("chunk_size = %ld\n", (long) chunk_size);
   printf("n_chunks   = %d\n", n_chunks);
 
   uint64_t offset_f = 0UL + offset;
@@ -55,7 +55,7 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
   // write n_chunks times using write_sparse
   while(offset_d < size) {
     if (offset_d+chunk_size > size) chunk_size = size-offset_d;
-  printf("chunk_size = %lld\n", chunk_size);
+  printf("chunk_size = %ld\n", (long) chunk_size);
     if (chunk_size == 0L) break;
     rc = trexio_write_mo_2e_int_eri(file, offset_f, chunk_size, &index[4*offset_d], &value[offset_d]);
     printf("%5d: %s\n", __LINE__, trexio_string_of_error(rc));
@@ -163,7 +163,7 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   printf("%5d: %s\n", __LINE__, trexio_string_of_error(rc));
 /*
   for (int i=0 ; i<chunk_read ; ++i) {
-    printf("%d %d | %lld %lld %lld\n", i, index_read[i], offset, offset_file_read, chunk_read);
+    printf("%d %d | %ld %ld %ld\n", i, index_read[i], (long) offset, (long) offset_file_read, (long) chunk_read);
   }
 */
   //assert(rc == TREXIO_SUCCESS);
@@ -184,7 +184,7 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   printf("%5d: %s\n", __LINE__, trexio_string_of_error(rc));
   assert(rc == TREXIO_END);
   printf("%d %d  x\n", (int32_t) index_read[0], (int32_t) (4L*offset_file_read));
-  printf("%lld  %lld\n", chunk_read, eof_read_size_check);
+  printf("%ld  %ld\n", (long) chunk_read, (long) eof_read_size_check);
   assert(chunk_read == eof_read_size_check);
   printf("%d %d\n", index_read[0] , (int32_t) (offset_file_read - offset));
   assert(index_read[0] == (int32_t) offset_file_read - offset);
@@ -222,7 +222,7 @@ static int test_read_dset_sparse_size (const char* file_name, const back_end_t b
   // read one chunk using the aforementioned parameters
   rc = trexio_read_mo_2e_int_eri_size(file, &size_written);
   assert(rc == TREXIO_SUCCESS);
-  printf("%5d: %lld %lld\n", __LINE__, size_written, size_check);
+  printf("%5d: %ld %ld\n", __LINE__, (long) size_written, (long) size_check);
   assert(size_written == size_check);
 
   // close current session

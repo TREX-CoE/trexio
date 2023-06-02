@@ -31,6 +31,10 @@ static int test_write_dset (const char* file_name, const back_end_t backend) {
 
   // open file in 'write' mode
   file = trexio_open(file_name, 'w', backend, &rc);
+  if (rc != TREXIO_SUCCESS) {
+    printf("%s\n", trexio_string_of_error(rc));
+  }
+  assert (rc == TREXIO_SUCCESS);
   assert (file != NULL);
 
   // write numerical attribute in an empty file
