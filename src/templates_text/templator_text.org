@@ -166,7 +166,11 @@ On non-POSIX file systems, the function ~mkdtemp~ might is not defined.
 In that case, we define an alternate one, which is not as safe as the original one.
 
     #+begin_src c :tangle basic_text.c
-#if defined _POSIX_C_SOURCE && (_POSIX_C_SOURCE - 0) >= 200809L
+#if  /* Since glibc 2.19: */ _DEFAULT_SOURCE \
+           || /* Glibc 2.19 and earlier: */ _BSD_SOURCE \
+           || /* Since glibc 2.10: */ _POSIX_C_SOURCE >= 200809L
+
+/* mkdtemp is defined */
 #else
 
 char* mkdtemp(char* template) {

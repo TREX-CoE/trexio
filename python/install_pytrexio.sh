@@ -16,7 +16,43 @@ done
 # check that both variables are set
 if [[ -z ${H5_LDFLAGS_LOCAL} ]] || [[ -z ${H5_CFLAGS_LOCAL} ]]; then
     if [[ -z ${H5_LDFLAGS} ]] || [[ -z ${H5_CFLAGS} ]]; then
-        echo "Paths to the HDF5 installation are not provided. pkgconfig will try to detect them."
+        which h5cc &> /dev/null
+        if [[ $? -eq 0 ]] ; then
+              HDF5_tmp_flags=$(h5cc -showconfig \
+                  | grep  'FLAGS\|Extra libraries:' \
+                  | awk  -F: '{printf("%s "), $2}' )
+              echo $HDF5_tmp_flags
+
+              # Find the installation directory and append include/
+              HDF5_tmp_inst=$(h5cc -showconfig \
+                  | grep  'Installation point:' \
+                  | awk  '{print $NF}' )
+              echo $HDF5_tmp_inst
+
+              # Add this to the CPPFLAGS
+              HDF5_CPPFLAGS="-I${HDF5_tmp_inst}/include"
+
+              HDF5_SHOW=$(h5cc -show)
+
+              # Now sort the flags out based upon their prefixes
+              for arg in $HDF5_SHOW $HDF5_tmp_flags ; do
+                case "$arg" in
+                  -I*) echo $HDF5_CPPFLAGS | grep -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_CPPFLAGS="$HDF5_CPPFLAGS $arg"
+                    ;;
+                  -L*) echo $HDF5_LDFLAGS | grep -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_LDFLAGS="$HDF5_LDFLAGS $arg"
+                    ;;
+                  -l*) echo $HDF5_LIBS | grep -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_LIBS="$HDF5_LIBS $arg"
+                    ;;
+                esac
+              done
+              export H5_LDFLAGS="$HDF5_LDFLAGS"
+              export H5_CFLAGS="$HDF5_CPPFLAGS"
+        else
+            echo "Paths to the HDF5 installation are not provided. pkgconfig will try to detect them."
+        fi
     else
         echo "Using exported H5_LDFLAGS and H5_CFLAGS environment variables."
     fi
