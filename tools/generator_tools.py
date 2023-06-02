@@ -611,13 +611,13 @@ def get_detailed_num_dict (configuration: dict) -> dict:
                     tmp_dict.update(get_dtype_dict(v2[0], 'num'))
                     if v2[0] in ['int', 'dim', 'dim readonly']:
                         tmp_dict['trex_json_int_type'] = v2[0]
-                        tmp_dict['is_index'] = 'false'
+                        tmp_dict['is_index'] = '(false)'
                     elif v2[0] in ['index']:
                         tmp_dict['trex_json_int_type'] = v2[0]
                         tmp_dict['is_index'] = 'file->one_based'
                     else:
                         tmp_dict['trex_json_int_type'] = ''
-                        tmp_dict['is_index'] = 'false'
+                        tmp_dict['is_index'] = '(false)'
 
                     num_dict[tmp_num] = tmp_dict
 
@@ -721,7 +721,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
         if 'index' in datatype:
             tmp_dict['is_index'] = 'file->one_based'
         else:
-            tmp_dict['is_index'] = 'false'
+            tmp_dict['is_index'] = '(false)'
 
         # add the list of dimensions
         tmp_dict['dims'] = [dim.replace('.','_') for dim in v[1]]
