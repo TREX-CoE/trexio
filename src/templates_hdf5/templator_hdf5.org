@@ -38,6 +38,11 @@
 #include <assert.h>
 #include <sys/stat.h>
 
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+#
+#ifdef HAVE_HDF5
 #include "hdf5.h"
 
   #+end_src
@@ -45,7 +50,11 @@
   #+begin_src c :tangle prefix_hdf5.c :noweb yes
 <<header>>
 #include "trexio_hdf5.h"
-
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+#
+#ifdef HAVE_HDF5
   #+end_src
 
 * Template for HDF5 definitions
@@ -1543,5 +1552,6 @@ trexio_exit_code trexio_hdf5_create_write_dset_sparse (const hid_t group_id, con
 trexio_exit_code trexio_hdf5_open_write_dset_sparse (const hid_t group_id, const char* dset_name, const hid_t dtype_id, const hsize_t* chunk_dims, const hsize_t* offset_file, const void* data_sparse);
 trexio_exit_code trexio_hdf5_open_read_dset_sparse (const hid_t group_id, const char* dset_name, const uint32_t dset_rank, const hsize_t* offset_file, hsize_t* const size_read, int64_t* const eof_read_size, const int is_index, void* const data_sparse);
 
+#endif
 #endif
   #+end_src
