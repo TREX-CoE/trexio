@@ -42,7 +42,6 @@ typedef int32_t trexio_exit_code;
   #include "config.h"
 #endif
 
-#define _USE_MATH_DEFINES
 #include <math.h>
 #include <pthread.h>
 #include <assert.h>
@@ -5818,6 +5817,7 @@ trexio_convert_nao_radius_32 (const float r, const float* const grid_r, float* c
 {
   if (r < 0) return TREXIO_INVALID_ARG_1;
   if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
 
   *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
 
@@ -5829,6 +5829,7 @@ trexio_convert_nao_radius_64 (const double r, const double* const grid_r, double
 {
   if (r < 0) return TREXIO_INVALID_ARG_1;
   if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
 
   *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
 
@@ -5840,6 +5841,7 @@ trexio_convert_nao_radius_py (const double r, double* grid_r, int32_t n_grid, do
 {
   if (r < 0) return TREXIO_INVALID_ARG_1;
   if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
 
   *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
 
@@ -5864,7 +5866,7 @@ trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int
   const int32_t i0 = 4*grid_start[shell_index];
 
   // Convert radius to logarithmic units 
-  double r_log = 0;
+  double r_log = 0.0;
   trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
   int32_t i_log = (int32_t) r_log;
   if (i_log < 0)
@@ -5896,6 +5898,8 @@ trexio_evaluate_nao_radial_all (const int32_t shell_num, const int32_t* const nu
   if (interpolator == 0) return TREXIO_INVALID_ARG_7;
   if (normalization == 0) return TREXIO_INVALID_ARG_8;
 
+  trexio_exit_code rc;
+
   for (int shell_index = 0; shell_index < shell_num; shell_index++) {
     const int32_t nuc_index = nucleus_index[shell_index];
     const double dx = nucleus_coords[3*nuc_index + 0] - rx;
@@ -5904,8 +5908,11 @@ trexio_evaluate_nao_radial_all (const int32_t shell_num, const int32_t* const nu
     const double r = sqrt(dx*dx + dy*dy + dz*dz);
 
     // All possibly reported errors have been caught above
-    trexio_evaluate_nao_radial(shell_index, r, grid_start, 
+    rc = trexio_evaluate_nao_radial(shell_index, r, grid_start, 
       grid_size, grid_r, interpolator, normalization, &amplitude[shell_index]);
+
+    if (rc != TREXIO_SUCCESS)
+      return rc;
   }
 
   return TREXIO_SUCCESS;
@@ -5929,13 +5936,16 @@ trexio_exit_code trexio_evaluate_nao_radial_py (const int shell_index,
   const int32_t i0 = 4*grid_start[shell_index];
 
   // Convert radius to logarithmic units 
-  double r_log = 0;
+  double r_log = 0.0;
   trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
   int32_t i_log = (int32_t) r_log;
-  if (i_log < 0)
-    i_log = 0;
-  else if (i_log >= grid_size[shell_index])
-    return 0; // NAOs vanish at the boundary by definition
+  if (i_log < 0) {
+    *amplitude = interpolator[i0] * normalization[shell_index] / r;
+    return TREXIO_SUCCESS;
+  } else if (i_log >= grid_size[shell_index]) {
+    *amplitude = 0.0;
+    return TREXIO_SUCCESS; // NAOs vanish at the boundary by definition
+  }
 
   double t = r_log - (double) i_log;
   double val_spline = interpolator[i0 + 4*i_log + 0];
@@ -5963,6 +5973,8 @@ trexio_exit_code trexio_evaluate_nao_radial_all_py (const int32_t shell_num,
   if (interpolator == 0) return TREXIO_INVALID_ARG_7;
   if (normalization == 0) return TREXIO_INVALID_ARG_8;
 
+  trexio_exit_code rc;
+
   for (int shell_index = 0; shell_index < shell_num; shell_index++) {
     const int32_t nuc_index = nucleus_index[shell_index];
     const double dx = nucleus_coords[3*nuc_index + 0] - rx;
@@ -5971,8 +5983,10 @@ trexio_exit_code trexio_evaluate_nao_radial_all_py (const int32_t shell_num,
     const double r = sqrt(dx*dx + dy*dy + dz*dz);
 
     // All possibly reported errors have been caught above
-    trexio_evaluate_nao_radial_py(shell_index, r, grid_start, n_grid_st, 
+    rc = trexio_evaluate_nao_radial_py(shell_index, r, grid_start, n_grid_st, 
       grid_size, n_grid_si, grid_r, n_grid_r, interpolator, n_interp, normalization, n_norm, &amplitudes[shell_index]);
+    if (rc != TREXIO_SUCCESS)
+      return rc;
   }
 
   return TREXIO_SUCCESS;
@@ -6298,7 +6312,7 @@ def convert_nao_radius(r: float, grid_r) -> float:
   rc, r_log = pytr.trexio_convert_nao_radius_py(r, grid_r)
 
   if rc != TREXIO_SUCCESS:
-    raise Exception(rc)
+    raise Error(rc)
 
   return r_log
 
@@ -6320,8 +6334,8 @@ def evaluate_nao_radial(shell_index, r, grid_start, grid_size, grid_r, interpola
         Value of the spline at the given radius 
 
       Raises:
-        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
-        - Exception from some other error (e.g. RuntimeError).
+        - Error from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Error from some other error (e.g. RuntimeError).
 
   """
   rc, amplitude = pytr.trexio_evaluate_nao_radial_py(shell_index, r, grid_start, grid_size, grid_r, interpolator.flatten(), normalization)
@@ -6351,9 +6365,9 @@ def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
         Array of spline values at ~r~ 
 
       Raises:
-        - Exception if ~r~ is not three dimensional
-        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
-        - Exception from some other error (e.g. RuntimeError).
+        - Error if ~r~ is not three dimensional
+        - Error from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Error from some other error (e.g. RuntimeError).
 
   """
   if len(r) != 3:
@@ -6364,7 +6378,7 @@ def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
     interpolator.flatten(), normalization, r[0], r[1], r[2], shell_cnt)
 
   if rc != TREXIO_SUCCESS:
-    raise Exception(rc)
+    raise Error(rc)
 
   return amplitudes
    #+end_src
