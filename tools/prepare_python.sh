@@ -40,8 +40,6 @@ cp ${SRC}/pytrexio_wrap.c ${PYDIR}/src/pytrexio_wrap.c
 cp ${INCLUDIR}/trexio.h ${PYDIR}/src
 cp ${INCLUDIR}/config.h ${PYDIR}/src
 
-# fix needed for HAVE_HDF5 symbol so that Python extension can be compiled without config.h
-export LINE_NO=$(($(awk '/stdint.h/{print NR}' ${PYDIR_TREXIO_H}) + 1))
 
 if [[ ${DO_HDF5} == 0 ]] ; then
     cp ${SRC}/trexio_hdf5.{c,h} ${PYDIR}/src
