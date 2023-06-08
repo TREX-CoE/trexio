@@ -37,7 +37,7 @@ CLEANFILES = trexio.mod
 if HAVE_FORTRAN
 BUILT_SOURCES = trexio.mod
 else
-BUILT_SOURCES = 
+BUILT_SOURCES =
 endif
 EXTRA_DIST = .git_hash
 
@@ -261,10 +261,18 @@ pytrexio_i    = $(srcdir)/src/pytrexio.i
 numpy_i       = $(srcdir)/src/numpy.i
 
 
+if HAVE_HDF5
+python-test: $(TEST_PY)
+	python3 -m pytest -v --all $(TEST_PY)
+	$(RM) -r  -- __pycache__
+	$(RM) -f  -- test_file_py.h5 unsafe_test_file_py.h5
+	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
+else
 python-test: $(TEST_PY)
 	python3 -m pytest -v $(TEST_PY)
-	$(RM) -r -- __pycache__
-	$(RM) -f -- test_file_py.h5 unsafe_test_file_py.h5
+	$(RM) -r  -- __pycache__
+	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
+endif
 
 python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
@@ -274,11 +282,15 @@ python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
 		python3 -m build --sdist
 
+if HAVE_HDF5
 $(pytrexio_py): $(pytrexio_c)
 	cd tools && ./prepare_python.sh
+else
+$(pytrexio_py): $(pytrexio_c)
+	cd tools && ./prepare_python.sh --without-hdf5
+endif
 
 # Build Python module and C wrapper code for TREXIO using SWIG
-# [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
 $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	@if [[ $(SWIG).x != ".x" ]] ; then \
 	cp $(trexio_h) src/ ; \
@@ -307,7 +319,7 @@ DEB_FILES = \
   helpers-debian/libtrexio0.install \
   helpers-debian/libtrexio-dev.install \
   helpers-debian/source        \
-  helpers-debian/README.source 
+  helpers-debian/README.source
 
 debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
 	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
@@ -317,6 +329,9 @@ debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
               $(trexio_py) \
+              $(srcdir)/src/trexio.py \
+              $(srcdir)/src/pytrexio.py \
+              $(srcdir)/src/trexio.h \
               python/src/*.c \
               python/src/*.h
 
