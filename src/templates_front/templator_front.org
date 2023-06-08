@@ -42,6 +42,7 @@ typedef int32_t trexio_exit_code;
   #include "config.h"
 #endif
 
+#include <math.h>
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -5628,6 +5629,12 @@ def has_determinant_list(trexio_file) -> bool:
   bitfield representation of the determinant. If the creation of the bitfield requires a change of sign, the return code is
   ~TREXIO_PHASE_CHANGE~.
 
+  ~trexio_convert_nao_radius~ functions convert a radius from the center of an NAO to its logarithmic interpolation grid.
+
+  ~trexio_evaluate_nao_radial~ function evaluates the radial function of an NAO for a given distance from the center.
+
+  ~trexio_evaluate_nao_radial_all~ evaluates all radial functions at a given position in space.
+
 ** C
 
      #+begin_src c :tangle prefix_front.h
@@ -5646,6 +5653,35 @@ trexio_exit_code trexio_to_orbital_list_up_dn (const int32_t N_int, const bitfie
 trexio_exit_code trexio_safe_to_orbital_list (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_out, const int64_t dim_out, int32_t* const num);
 trexio_exit_code trexio_safe_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_up_out, const int64_t dim_up_out, int32_t* const dset_dn_out, const int64_t dim_dn_out, int32_t* const num_up, int32_t* const num_dn);
 trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list, const int32_t occupied_num, bitfield_t* const bit_list, const int32_t N_int);
+
+trexio_exit_code trexio_convert_nao_radius_32 (const float r,
+  const float* const grid_r, float* const log_r_out);
+trexio_exit_code trexio_convert_nao_radius_64 (const double r,
+  const double* const grid_r, double* const log_r_out);
+trexio_exit_code trexio_convert_nao_radius_py (const double r,
+  double* grid_r, int32_t n_grid_r, double* const log_r_out);
+trexio_exit_code trexio_evaluate_nao_radial (const int32_t shell_index,
+  const double r, const int32_t* const grid_start, const int32_t* const grid_size,
+  const double* const grid_r, const double* const interpolator, 
+  const double* const normalization, double* const amplitude);
+
+trexio_exit_code trexio_evaluate_nao_radial_all (const int32_t shell_num,
+  const int32_t* const nucleus_index, const double* const nucleus_coords, 
+  const int32_t* const grid_start, const int32_t* const grid_size, 
+  const double* const grid_r, const double* const interpolator, const double* const normalization, 
+  const double rx, const double ry, const double rz, double* const amplitude);
+
+trexio_exit_code trexio_evaluate_nao_radial_py (const int shell_index, 
+  const double r, int64_t* grid_start, int n_grid_st, int64_t* grid_size,
+  int n_grid_si, double* grid_r, int n_grid_r, double* interpolator, 
+  int n_interp, double* normalization, int n_norm, double* const amplitude);
+
+trexio_exit_code trexio_evaluate_nao_radial_all_py (const int32_t shell_num,
+  int64_t* nucleus_index, int n_nuc_id, double* nucleus_coords, int n_nuc_co,
+  int64_t* grid_start, int n_grid_st, int64_t* grid_size, int n_grid_si,
+  double* grid_r, int n_grid_r, double* interpolator, int n_interp, double* normalization, int n_norm,
+  const double rx, const double ry, const double rz, double* const amplitudes, int amplitude_cnt);
+
      #+end_src
 
 
@@ -5783,7 +5819,189 @@ trexio_safe_to_orbital_list_up_dn (const int32_t N_int,
 }
     #+end_src
 
-     #+begin_src c :tangle trexio_private.h
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_convert_nao_radius_32 (const float r, const float* const grid_r, float* const log_r_out)
+{
+  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
+
+  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_convert_nao_radius_64 (const double r, const double* const grid_r, double* const log_r_out)
+{
+  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
+
+  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_convert_nao_radius_py (const double r, double* grid_r, int32_t n_grid, double* const log_r_out)
+{
+  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
+
+  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+
+  return TREXIO_SUCCESS;
+}
+
+  #+end_src
+
+  #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int32_t* const grid_start,
+                            const int32_t* const grid_size, const double* const grid_r, const double* const interpolator, const double* const normalization, double* const amplitude)
+{
+  if (shell_index < 0) return TREXIO_INVALID_ARG_1;
+  if (r < 0) return TREXIO_INVALID_ARG_2;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_5;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_6;
+  if (normalization == 0) return TREXIO_INVALID_ARG_7;
+
+  const int32_t i0 = 4*grid_start[shell_index];
+
+  // Convert radius to logarithmic units 
+  double r_log = 0.0;
+  trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
+  int32_t i_log = (int32_t) r_log;
+  if (i_log < 0)
+    i_log = 0;
+  else if (i_log >= grid_size[shell_index])
+    return 0; // NAOs vanish at the boundary by definition
+
+  double t = r_log - (double) i_log;
+  double val_spline = interpolator[i0 + 4*i_log + 0];
+  val_spline += t * interpolator[i0 + 4*i_log + 1];
+  val_spline += t * t * interpolator[i0 + 4*i_log + 2];
+  val_spline += t * t * t * interpolator[i0 + 4*i_log + 3];
+
+  *amplitude = val_spline * normalization[shell_index] / r;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_evaluate_nao_radial_all (const int32_t shell_num, const int32_t* const nucleus_index, const double* const nucleus_coords, const int32_t* const grid_start,
+                            const int32_t* const grid_size, const double* const grid_r, const double* const interpolator, 
+                            const double* const normalization,  const double rx, const double ry, const double rz, double* const amplitude)
+{
+  if (shell_num < 0) return TREXIO_INVALID_ARG_1;
+  if (nucleus_index == 0) return TREXIO_INVALID_ARG_2;
+  if (nucleus_coords == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_5;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_6;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_7;
+  if (normalization == 0) return TREXIO_INVALID_ARG_8;
+
+  trexio_exit_code rc;
+
+  for (int shell_index = 0; shell_index < shell_num; shell_index++) {
+    const int32_t nuc_index = nucleus_index[shell_index];
+    const double dx = nucleus_coords[3*nuc_index + 0] - rx;
+    const double dy = nucleus_coords[3*nuc_index + 1] - ry;
+    const double dz = nucleus_coords[3*nuc_index + 2] - rz;
+    const double r = sqrt(dx*dx + dy*dy + dz*dz);
+
+    // All possibly reported errors have been caught above
+    rc = trexio_evaluate_nao_radial(shell_index, r, grid_start, 
+      grid_size, grid_r, interpolator, normalization, &amplitude[shell_index]);
+
+    if (rc != TREXIO_SUCCESS)
+      return rc;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code trexio_evaluate_nao_radial_py (const int shell_index, 
+  const double r, int64_t* grid_start, int n_grid_st,
+  int64_t* grid_size, int n_grid_si, double* grid_r, int n_grid_r, 
+  double* interpolator, int n_interp, double* normalization, int n_norm, double* const amplitude)
+{
+  // Code needs to be copied because of the use of int64_t mandated by Python
+  // If a 64-bit version is implemented, this can be avoided
+  if (shell_index < 0) return TREXIO_INVALID_ARG_1;
+  if (r < 0) return TREXIO_INVALID_ARG_2;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_5;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_6;
+  if (normalization == 0) return TREXIO_INVALID_ARG_7;
+
+  const int32_t i0 = 4*grid_start[shell_index];
+
+  // Convert radius to logarithmic units 
+  double r_log = 0.0;
+  trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
+  int32_t i_log = (int32_t) r_log;
+  if (i_log < 0) {
+    *amplitude = interpolator[i0] * normalization[shell_index] / r;
+    return TREXIO_SUCCESS;
+  } else if (i_log >= grid_size[shell_index]) {
+    *amplitude = 0.0;
+    return TREXIO_SUCCESS; // NAOs vanish at the boundary by definition
+  }
+
+  double t = r_log - (double) i_log;
+  double val_spline = interpolator[i0 + 4*i_log + 0];
+  val_spline += t * interpolator[i0 + 4*i_log + 1];
+  val_spline += t * t * interpolator[i0 + 4*i_log + 2];
+  val_spline += t * t * t * interpolator[i0 + 4*i_log + 3];
+
+  *amplitude = val_spline * normalization[shell_index] / r;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code trexio_evaluate_nao_radial_all_py (const int32_t shell_num,
+  int64_t* nucleus_index, int n_nuc_id, double* nucleus_coords, int n_nuc_co,
+  int64_t* grid_start, int n_grid_st, int64_t* grid_size, int n_grid_si,
+  double* grid_r, int n_grid_r, double* interpolator, int n_interp,
+  double* normalization, int n_norm,
+  const double rx, const double ry, const double rz, double* const amplitudes, int amplitude_cnt)
+{
+  if (shell_num < 0) return TREXIO_INVALID_ARG_1;
+  if (nucleus_index == 0) return TREXIO_INVALID_ARG_2;
+  if (nucleus_coords == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_5;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_6;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_7;
+  if (normalization == 0) return TREXIO_INVALID_ARG_8;
+
+  trexio_exit_code rc;
+
+  for (int shell_index = 0; shell_index < shell_num; shell_index++) {
+    const int32_t nuc_index = nucleus_index[shell_index];
+    const double dx = nucleus_coords[3*nuc_index + 0] - rx;
+    const double dy = nucleus_coords[3*nuc_index + 1] - ry;
+    const double dz = nucleus_coords[3*nuc_index + 2] - rz;
+    const double r = sqrt(dx*dx + dy*dy + dz*dz);
+
+    // All possibly reported errors have been caught above
+    rc = trexio_evaluate_nao_radial_py(shell_index, r, grid_start, n_grid_st, 
+      grid_size, n_grid_si, grid_r, n_grid_r, interpolator, n_interp, normalization, n_norm, &amplitudes[shell_index]);
+    if (rc != TREXIO_SUCCESS)
+      return rc;
+  }
+
+  return TREXIO_SUCCESS;
+}
+  #+end_src
+
+  #+begin_src c :tangle trexio_private.h
 /* Popcount and trailz */
 #if TREXIO_INT_SIZE == 64
 
@@ -5910,6 +6128,76 @@ interface
 end interface
    #+end_src
 
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_convert_nao_radius_32(r, grid_r, log_r_out) &
+  bind(C, name="trexio_convert_nao_radius_32")
+    use, intrinsic :: iso_c_binding
+    import
+    real(c_float), intent(in), value  :: r
+    real(c_float), intent(in)  :: grid_r(*)
+    real(c_float), intent(out)        :: log_r_out
+  end function trexio_convert_nao_radius_32
+end interface
+  #+end_src
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_convert_nao_radius_64(r, grid_r, log_r_out) &
+  bind(C, name="trexio_convert_nao_radius_64")
+    use, intrinsic :: iso_c_binding
+    import
+    real(c_double), intent(in), value  :: r
+    real(c_double), intent(in)  :: grid_r(*)
+    real(c_double), intent(out)        :: log_r_out
+  end function trexio_convert_nao_radius_64
+end interface
+  #+end_src
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_evaluate_nao_radial (shell_index, r, &
+          grid_start, grid_size, grid_r, interpolator, normalization, amplitude) &
+  bind(C, name="trexio_evaluate_nao_radial")
+    use, intrinsic :: iso_c_binding
+    import
+    integer(c_int32_t), intent(in), value  :: shell_index
+    real(c_double), intent(in), value   :: r
+    integer(c_int32_t), intent(in)  :: grid_start(*)
+    integer(c_int32_t), intent(in)  :: grid_size(*)
+    real(c_double), intent(in)  :: grid_r(*)
+    real(c_double), intent(in)  :: interpolator(*)
+    real(c_double), intent(in)  :: normalization(*)
+    real(c_double), intent(out)         :: amplitude
+  end function trexio_evaluate_nao_radial
+end interface
+  #+end_src
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_evaluate_nao_radial_all (shell_num, &
+          nucleus_index, nucleus_coords, &
+          grid_start, grid_size, grid_r, interpolator, &
+          normalization, rx, ry, rz, amplitudes) &
+  bind(C, name="trexio_evaluate_nao_radial_all")
+    use, intrinsic :: iso_c_binding
+    import
+    integer(c_int32_t), intent(in), value  :: shell_num
+    integer(c_int32_t), intent(in) :: nucleus_index(*)
+    real(c_double), intent(in)  :: nucleus_coords(*)
+    integer(c_int32_t), intent(in)  :: grid_start(*)
+    integer(c_int32_t), intent(in)  :: grid_size(*)
+    real(c_double), intent(in)  :: grid_r(*)
+    real(c_double), intent(in)  :: interpolator(*)
+    real(c_double), intent(in)  :: normalization(*)
+    real(c_double), intent(in), value   :: rx
+    real(c_double), intent(in), value   :: ry
+    real(c_double), intent(in), value   :: rz
+    real(c_double), intent(out)         :: amplitudes(*)
+  end function trexio_evaluate_nao_radial_all
+end interface
+  #+end_src
+
 ** Python
 
    #+begin_src python :tangle basic_python.py
@@ -6008,6 +6296,99 @@ def to_orbital_list_up_dn(n_int: int, determinant: list) -> tuple:
         raise Exception("Inconsistent size of the orbital_list for down-spin electrons.")
 
     return (orbital_list_up[0:occ_num_up], orbital_list_dn[0:occ_num_dn])
+   #+end_src
+
+   #+begin_src python :tangle basic_python.py
+def convert_nao_radius(r: float, grid_r) -> float:
+  """Converts the radius r as a distance from a nucleus to the shell
+  s logarithmic grid.
+  
+  Input:
+      ~r~ - the radius to be converted
+      ~grid_r~ - The radial grid of the shell. Note that this is only the
+                 grid of the shell of interest, not the array of all shells.
+
+      Returns:
+        Float that gives the radius in the shell's logarithmic units 
+
+      Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+
+  """
+
+  rc, r_log = pytr.trexio_convert_nao_radius_py(r, grid_r)
+
+  if rc != TREXIO_SUCCESS:
+    raise Error(rc)
+
+  return r_log
+
+def evaluate_nao_radial(shell_index, r, grid_start, grid_size, grid_r, interpolator, normalization) -> float:
+  """Evaluates the radial function of a given NAO shell at a distance from its center.
+  
+  Input:
+      ~shell_index~ - index of the shell of interest
+      ~r~ - distance from the shell center
+      ~grid_start~ - array of starting points of the individual splines
+      ~grid_size~ - array of number of data points per spline
+      ~grid_r~ - The radial grid of the shell. Note that this is only the
+                 grid of the shell of interest, not the array of all shells.
+      ~interpolator~ - Interpolator of the spline. It is assumed to contain a cubic spline.
+                       An interpolator for a kinetic energy spline can also be passed.
+      ~normalization~ - array of radial function normalization constants.
+
+      Returns:
+        Value of the spline at the given radius 
+
+      Raises:
+        - Error from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Error from some other error (e.g. RuntimeError).
+
+  """
+  rc, amplitude = pytr.trexio_evaluate_nao_radial_py(shell_index, r, grid_start, grid_size, grid_r, interpolator.flatten(), normalization)
+
+  if rc != TREXIO_SUCCESS:
+    raise Error(rc)
+
+  return amplitude
+
+def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
+  grid_size, grid_r, interpolator, normalization, r) -> float:
+  """Evaluates the radial functions of all NAO shells at a given position in space.
+  
+  Input:
+      ~nucleus_index~ - array giving the centers of the NAO
+      ~nucleus_coords~ - array giving the coordinates of the NAO centers
+      ~grid_start~ - array of starting points of the individual splines
+      ~grid_size~ - array of number of data points per spline
+      ~grid_r~ - The radial grid of the shell. Note that this is only the
+                 grid of the shell of interest, not the array of all shells.
+      ~interpolator~ - Interpolator of the spline. It is assumed to contain a cubic spline.
+                       An interpolator for a kinetic energy spline can also be passed.
+      ~normalization~ - array of radial function normalization constants.
+      ~r~ - the position in space at which the functions are evaluated
+
+      Returns:
+        Array of spline values at ~r~ 
+
+      Raises:
+        - Error if ~r~ is not three dimensional
+        - Error from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Error from some other error (e.g. RuntimeError).
+
+  """
+  if len(r) != 3:
+    raise Error(TREXIO_INVALID_ARG7)
+  shell_cnt = len(nucleus_index)
+  rc, amplitudes = pytr.trexio_evaluate_nao_radial_all_py(shell_cnt, \
+    nucleus_index, nucleus_coords.flatten(), grid_start, grid_size, grid_r, \
+    interpolator.flatten(), normalization, r[0], r[1], r[2], shell_cnt)
+
+  if rc != TREXIO_SUCCESS:
+    raise Error(rc)
+
+  return amplitudes
    #+end_src
 
 * Fortran helper/wrapper functions

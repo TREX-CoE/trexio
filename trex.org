@@ -256,6 +256,60 @@
 
     All the basis set parameters are stored in one-dimensional arrays.
 
+*** Numerical orbitals
+    
+    Trexio supports numerical atom centered orbitals. The implementation is
+    based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular 
+    simulations with numeric atom-centered orbitals; Computer Physics 
+    Communications 2009]. These orbitals are
+    defined by the atom they are centered on, their angular momentum and a
+    radial function $R_s$, which is of the form
+    \[
+    R_s(\mathbf{r}) = \mathcal{N}_s \frac{u_i(\mathbf{r})}{r^{-n_s}}.
+    \]
+    Where $u_i(\mathbf{r})$ is numerically tabulated on a dense logarithmic
+    grid. It is constructed to vanish for any $\mathbf{r}$
+    outside of the grid. The reference points are stored in ~nao_grid_r~
+    and ~nao_grid_phi~. Additionaly, a separate spline for the first and second
+    derivative of $u(\mathbf{r})$ can be stored in ~nao_grid_grad~ and ~nao_grid_lap~. 
+    Storing them in this form allows to calculate the actual gradients and 
+    Laplacian easily as follows:
+
+    \[
+      \grad_{x_i} \phi = \frac{x_i}{r^2}\left u\prime(r) - \frac{u(r)}{r}\right
+    \]
+    \[
+      \Delta \phi = \frac{1}{r^3}\left x^2 u''(r) + \left3x^2-r^2\right \left \frac{u(r)}{r^2} - \frac{u'(r)}{r}\right \right
+    \]
+
+    The index of the first data point for each shell is stored in 
+    ~nao_grid_start~, the number of data points per spline
+    is stored in ~nao_grid_size~ for convenience.
+
+    What kind of spline is used can be provided in the ~interpolator_kind~ field.
+    For example, FHI-aims uses a cubic spline, so the ~interpolator_kind~ is
+    \"Polynomial\" and the ~interp_coeff_cnt~ is $4$. In this case, the first
+    interpolation coefficient per data point is the absolute term, the second is for
+    the linear term etc.
+    The interpolation coefficients for the wave function are given in the
+     ~interpolator_phi~ array. The ~interpolator_grad~ and ~interpolator_lap~
+    arrays provide a spline for the gradient and Laplacian, respectively.
+    The argument passed to the interpolants is on the logarithmic scale of
+    the reference points: If the argument is an integer $i$, the interpolant
+    will return the value of $u(\mathbf{r})$ at the $i$th reference point.
+    A radius is converted to this scale by (note the zero-indexing)
+    \[
+    i_{log} = \frac{1}{c} \cdot \log{\frac{r}{r_0}}
+    \]
+    where
+    \[
+    c = \log\left \frac{r_1}{r_0}\right.
+    \]
+    For convenience, this conversion and functions to evaluate the splines
+    are provided with trexio. Since these implementations are not adapted to
+    a specific software architecture, a programm using these orbitals should 
+    reimplement them with consideration for its specific needs.
+
 *** Plane waves
 
     A plane wave is defined as
@@ -272,20 +326,33 @@
 *** Data definitions
 
     #+NAME: basis
-    | Variable        | Type    | Dimensions          | Description                                                     |
-    |-----------------+---------+---------------------+-----------------------------------------------------------------|
-    | ~type~          | ~str~   |                     | Type of basis set: "Gaussian", "Slater" or "PW" for plane waves |
-    | ~prim_num~      | ~dim~   |                     | Total number of primitives                                      |
-    | ~shell_num~     | ~dim~   |                     | Total number of shells                                          |
-    | ~nucleus_index~ | ~index~ | ~(basis.shell_num)~ | One-to-one correspondence between shells and atomic indices     |
-    | ~shell_ang_mom~ | ~int~   | ~(basis.shell_num)~ | One-to-one correspondence between shells and angular momenta    |
-    | ~shell_factor~  | ~float~ | ~(basis.shell_num)~ | Normalization factor of each shell ($\mathcal{N}_s$)            |
-    | ~r_power~       | ~int~   | ~(basis.shell_num)~ | Power to which $r$ is raised ($n_s$)                            |
-    | ~shell_index~   | ~index~ | ~(basis.prim_num)~  | One-to-one correspondence between primitives and shell index    |
-    | ~exponent~      | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives ($\gamma_{ks}$)                     |
-    | ~coefficient~   | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives ($a_{ks}$)                       |
-    | ~prim_factor~   | ~float~ | ~(basis.prim_num)~  | Normalization coefficients for the primitives ($f_{ks}$)        |
-    | ~e_cut~         | ~float~ |                     | Energy cut-off for plane-wave calculations                      |
+    | Variable            | Type    | Dimensions                                   | Description                                                                  |   |
+    |---------------------+---------+----------------------------------------------+------------------------------------------------------------------------------+---|
+    | ~type~              | ~str~   |                                              | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |   |
+    | ~prim_num~          | ~dim~   |                                              | Total number of primitives                                                   |   |
+    | ~shell_num~         | ~dim~   |                                              | Total number of shells                                                       |   |
+    | ~nao_grid_num~       | ~dim~   |                                              | Total number of grid points for numerical orbitals                           |   |
+    | ~interp_coeff_cnt~  | ~dim~   |                                              | Number of coefficients for the numerical orbital interpolator                |   |
+    | ~nucleus_index~     | ~index~ | ~(basis.shell_num)~                          | One-to-one correspondence between shells and atomic indices                  |   |
+    | ~shell_ang_mom~     | ~int~   | ~(basis.shell_num)~                          | One-to-one correspondence between shells and angular momenta                 |   |
+    | ~shell_factor~      | ~float~ | ~(basis.shell_num)~                          | Normalization factor of each shell ($\mathcal{N}_s$)                         |   |
+    | ~r_power~           | ~int~   | ~(basis.shell_num)~                          | Power to which $r$ is raised ($n_s$)                                         |   |
+    | ~nao_grid_start~     | ~index~ | ~(basis.shell_num)~                          | Index of the first data point for a given numerical orbital                  |   |
+    | ~nao_grid_size~      | ~dim~   | ~(basis.shell_num)~                          | Number of data points per numerical orbital                                  |   |
+    | ~shell_index~       | ~index~ | ~(basis.prim_num)~                           | One-to-one correspondence between primitives and shell index                 |   |
+    | ~exponent~          | ~float~ | ~(basis.prim_num)~                           | Exponents of the primitives ($\gamma_{ks}$)                                  |   |
+    | ~coefficient~       | ~float~ | ~(basis.prim_num)~                           | Coefficients of the primitives ($a_{ks}$)                                    |   |
+    | ~prim_factor~       | ~float~ | ~(basis.prim_num)~                           | Normalization coefficients for the primitives ($f_{ks}$)                     |   |
+    | ~e_cut~             | ~float~ |                                              | Energy cut-off for plane-wave calculations                                   |   |
+    | ~nao_grid_radius~    | ~float~ | ~(basis.nao_grid_num)~                        | Radii of grid points for numerical orbitals                                  |   |
+    | ~nao_grid_phi~       | ~float~ | ~(basis.nao_grid_num)~                        | Wave function values for numerical orbitals                                  |   |
+    | ~nao_grid_grad~      | ~float~ | ~(basis.nao_grid_num)~                        | Radial gradient of numerical orbitals                                        |   |
+    | ~nao_grid_lap~       | ~float~ | ~(basis.nao_grid_num)~                        | Laplacian of numerical orbitals                                              |   |
+    | ~interpolator_kind~ | ~str~   |                                              | Kind of spline, e.g. "Polynomial"                                            |   |
+    | ~interpolator_phi~  | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital interpolation function                    |   |
+    | ~interpolator_grad~ | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital gradient interpolation function           |   |
+    | ~interpolator_lap~  | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital laplacian interpolation function          |   |
+
 
 
     #+CALL: json(data=basis, title="basis")
@@ -293,20 +360,32 @@
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "basis": {
-                     "type" : [ "str"  , []                    ]
-          ,      "prim_num" : [ "dim"  , []                    ]
-          ,     "shell_num" : [ "dim"  , []                    ]
-          , "nucleus_index" : [ "index", [ "basis.shell_num" ] ]
-          , "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ] ]
-          ,  "shell_factor" : [ "float", [ "basis.shell_num" ] ]
-          ,       "r_power" : [ "int"  , [ "basis.shell_num" ] ]
-          ,   "shell_index" : [ "index", [ "basis.prim_num" ]  ]
-          ,      "exponent" : [ "float", [ "basis.prim_num" ]  ]
-          ,   "coefficient" : [ "float", [ "basis.prim_num" ]  ]
-          ,   "prim_factor" : [ "float", [ "basis.prim_num" ]  ]
-          ,         "e_cut" : [ "float", []                    ]
-        } ,
+	"basis": {
+			 "type" : [ "str"  , []                                                ]
+	  ,          "prim_num" : [ "dim"  , []                                                ]
+	  ,         "shell_num" : [ "dim"  , []                                                ]
+	  ,       "nao_grid_num" : [ "dim"  , []                                                ]
+	  ,  "interp_coeff_cnt" : [ "dim"  , []                                                ]
+	  ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                             ]
+	  ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                             ]
+	  ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                             ]
+	  ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                             ]
+	  ,     "nao_grid_start" : [ "index", [ "basis.shell_num" ]                             ]
+	  ,      "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                             ]
+	  ,       "shell_index" : [ "index", [ "basis.prim_num" ]                              ]
+	  ,          "exponent" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,       "coefficient" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,             "e_cut" : [ "float", []                                                ]
+	  ,    "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,       "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,      "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,       "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  , "interpolator_kind" : [ "str"  , []                                                ]
+	  ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	  , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	  ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	} ,
     #+end_src
     :end:
 
