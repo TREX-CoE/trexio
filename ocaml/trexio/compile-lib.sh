@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PREFIX=$1
+TASK=$2
 PKGCONFIG_COMMAND="pkg-config --libs --cflags trexio"
 
 INSTALLED="no"
@@ -16,10 +17,15 @@ if eval $PKGCONFIG_COMMAND >/dev/null 2>&1; then
 fi
 
 # Compile C library
-cd vendor
-tar -zxf trexio-*.tar.gz
-cd trexio-*
-./configure --prefix=${PREFIX}
-$(MAKE) install && \
-rm -rf trexio-*/
-
+set -e
+if test "$TASK" = "build" ; then
+  tar -zxf trexio-*.tar.gz
+  cd trexio-*
+  ./configure --prefix=${PREFIX}
+  make -j 4
+  cd ../
+elif test "$TASK" = "install" ; then
+  cd trexio-*
+  make install
+  rm -rf trexio-*/
+fi

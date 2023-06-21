@@ -6,4 +6,7 @@ lib/trexio.ml: ../../trex.json read_json.py src/trexio.ml src/trexio.mli src/tre
 
 sources: lib/trexio.ml
 
+clean:
+	dune clean
+
 .PHONY: sources default
