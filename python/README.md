@@ -27,6 +27,10 @@ However, it is good practice to first check for updates of the build-system pack
 **Note: we highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.**
 For more details, see the corresponding part of the [Python documentation](https://docs.python.org/3/library/venv.html#creating-virtual-environments).
 
+**Note: our build farm (GitHub Actions) does not support ARM64 architectures (including the Mac M1/M2 chips). Therefore, `pip install trexio` does not work on an ARM64-based machine. Thus, we recommend to install TREXIO from source on an ARM64-based machine. If one uses a Mac where HDF5 is installed with brew (i.e., `brew install hdf5`), a workaround is to execute the following 2 lines before doing `pip install trexio`:**
+
+- `export H5_CFLAGS="-I$(brew --prefix hdf5)/include"`
+- `export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"`
 
 ## Additional requirements (for installation from source)
 
