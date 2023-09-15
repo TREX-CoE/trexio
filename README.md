@@ -180,8 +180,7 @@ In order to install the Python API with the latest changes, follow the developer
 make python-install
 ```
 
-**Note: this implies that both HDF5 and SWIG are installed and available.
-At the moment, it is not possible to configure the Python API without HDF5 library.**
+**Note: this implies that both SWIG is installed and available.
 
 We rely on the `pytest` package for unit testing. It can be installed via `pip install pytest`. To test the installation, run
 
