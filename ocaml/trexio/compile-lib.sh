@@ -21,8 +21,10 @@ set -e
 if test "$TASK" = "build" ; then
   tar -zxf trexio-*.tar.gz
   cd trexio-*
-  ./configure --prefix=${PREFIX}
+# ./configure --prefix=${PREFIX} --without-fortran --enable-static --disable-shared
+  ./configure --prefix=${PWD}/.. --without-fortran --enable-static --disable-shared
   make -j 4
+  make -j install
   cd ../
 elif test "$TASK" = "install" ; then
   cd trexio-*

@@ -4,7 +4,10 @@ default: sources
 lib/trexio.ml: ../../trex.json read_json.py src/trexio.ml src/trexio.mli src/trexio_stubs.c
 	./read_json.py
 
-sources: lib/trexio.ml
+lib/trexio.h:
+	cp ../../include/trexio.h lib/
+
+sources: lib/trexio.ml lib/trexio.h
 
 clean:
 	dune clean
