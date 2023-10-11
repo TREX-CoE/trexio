@@ -40,19 +40,18 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
     let basis_nucleus_index = vec!([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ]);
 
     let label = vec![
-          "C       ",
-          "Na      ",
-          "C       ",
-          "C 66    ",
-          "C       ",
-          "C       ",
-          "H 99    ",
-          "Ru      ",
-          "H       ",
-          "H       ",
-          "H       ",
-          "H       " ];
-    let mut label = label.concat();
+          "C",
+          "Na",
+          "C",
+          "C 66",
+          "C",
+          "C",
+          "H 99",
+          "Ru",
+          "H",
+          "H",
+          "H",
+          "H" ];
     let sym_str = "B3U with some comments";
 
 
@@ -71,10 +70,8 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
     trexio::write_nucleus_num(trex_file, nucleus_num).unwrap();
     trexio::write_nucleus_charge(trex_file, charge).unwrap();
     trexio::write_nucleus_point_group(trex_file, sym_str).unwrap();
-    /*
     trexio::write_nucleus_coord(trex_file, coord).unwrap();
     trexio::write_nucleus_label(trex_file, label).unwrap();
-    */
 
 /*
     let rc = unsafe { trexio_write_nucleus_label(trex_file, label.as_ptr(), label[0].len().try_into().unwrap()) };

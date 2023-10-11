@@ -63,14 +63,6 @@ pub fn inquire(file_name: &str) -> Result<bool, ExitCode> {
 include!("generated.rs");
 
 
-pub fn write_nucleus_charge(trex_file: File, data: Vec<f64>) -> Result<(), ExitCode> {
-    let size: i64 = data.len().try_into().unwrap();
-    let rc = unsafe { c::trexio_write_safe_nucleus_charge_64(trex_file, data.as_ptr() as *const f64, size) };
-    rc_return(rc, ())
-}
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;

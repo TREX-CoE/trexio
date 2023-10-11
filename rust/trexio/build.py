@@ -121,8 +121,8 @@ pub fn has_{group_l}_{element_l}(trex_file: File) -> Result<bool, ExitCode> {
             if data[group][element][0] in [ "int", "float", "dim", "index" ]:
                r += [ """
 pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode> {
+   let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
-      let mut data_c: {type_c} = 0{type_c};
       let rc = c::trexio_read_{group}_{element}_64(trex_file, &mut data_c);
       (rc, data_c.try_into().unwrap())
    };
@@ -146,9 +146,9 @@ pub fn write_{group_l}_{element_l}<T>(trex_file: File, data: T) -> Result<(), Ex
             elif data[group][element][0] in [ "str" ]:
                r += [ """
 pub fn read_{group_l}_{element_l}(trex_file: File, capacity: usize) -> Result<String, ExitCode> {
+   let mut data_c = String::with_capacity(capacity);
+   let data_c = data_c.as_mut_ptr() as *mut c_char;
    let (rc, data) = unsafe {
-      let mut data_c = String::with_capacity(capacity);
-      let data_c = data_c.as_mut_ptr() as *mut c_char;
       let rc = c::trexio_read_{group}_{element}(trex_file, data_c, capacity.try_into().unwrap());
       (rc, String::from_raw_parts(data_c as *mut u8, capacity, capacity))
    };
@@ -174,8 +174,8 @@ pub fn write_{group_l}_{element_l}(trex_file: File, data: &str) -> Result<(), Ex
             elif data[group][element][0] in [ "dim readonly" ]:
                r += [ """
 pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode> {
+   let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
-      let mut data_c: {type_c} = 0{type_c};
       let rc = c::trexio_read_{group}_{element}_64(trex_file, &mut data_c);
       (rc, data_c.try_into().unwrap())
    };
@@ -188,6 +188,109 @@ pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode>
 .replace("{group_l}",group_l)
 .replace("{element}",element)
 .replace("{element_l}",element_l) ]
+
+         # Array elements
+         else:
+
+            if data[group][element][0] in [ "int", "float", "dim", "index" ]:
+               t = [ """pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<Vec<{type_r}>, ExitCode> {
+  let size = 1;""" ]
+               t_prime = []
+               for dim in data[group][element][1]:
+                   try:    # A dimensioning variable
+                     dim_group, dim_element = dim.split('.')
+                     t_prime += [f"  let size = size * read_{dim_group}_{dim_element}(trex_file).unwrap();" ]
+                   except: # Only an integer
+                     t_prime += [f"  let size = size * {dim};"]
+               t += t_prime
+               t += [ """
+   let data: Vec<{type_r}> = Vec::with_capacity(size);
+   let data_c = data.as_ptr() as *mut {type_c};
+   let (rc, data) = unsafe {
+      let rc = c::trexio_read_safe_{group}_{element}_64(trex_file, data_c, size.try_into().unwrap());
+      (rc, data)
+   };
+   rc_return(rc, data)
+}
+""" ]
+               r += [ '\n'.join(t)
+.replace("{type_c}",type_c)
+.replace("{type_r}",type_r)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+               r += [ """
+pub fn write_{group_l}_{element_l}(trex_file: File, data: Vec<{type_r}>) -> Result<(), ExitCode> {
+    let size: i64 = data.len().try_into().unwrap();
+    let data = data.as_ptr() as *const {type_c};
+    let rc = unsafe { c::trexio_write_safe_{group}_{element}_64(trex_file, data, size) };
+    rc_return(rc, ())
+}
+"""
+.replace("{type_c}",type_c)
+.replace("{type_r}",type_r)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+            elif data[group][element][0] in [ "str" ]:
+               t = [ """pub fn read_{group_l}_{element_l}(trex_file: File, capacity: usize) -> Result<Vec<String>, ExitCode> {
+  let size = 1;""" ]
+               t_prime = []
+               for dim in data[group][element][1]:
+                   try:    # A dimensioning variable
+                     dim_group, dim_element = dim.split('.')
+                     t_prime += [f"  let size = size * read_{dim_group}_{dim_element}(trex_file).unwrap();" ]
+                   except: # Only an integer
+                     t_prime += [f"  let size = size * {dim};"]
+               t += t_prime
+               t += [ """
+   let data = vec![ String::with_capacity(capacity) ; size ];
+   let data_c = data.as_ptr() as *mut *mut c_char;
+      
+   let (rc, data) = unsafe {
+      let rc = c::trexio_read_{group}_{element}(trex_file, data_c, capacity.try_into().unwrap() );
+      (rc, data)
+   };
+   rc_return(rc, data)
+}
+""" ]
+               r += [ '\n'.join(t)
+.replace("{type_c}",type_c)
+.replace("{type_r}",type_r)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+               r += [ """
+pub fn write_{group_l}_{element_l}(trex_file: File, data: Vec<&str>) -> Result<(), ExitCode> {
+    let mut size = 0;
+    for s in data.iter() {
+       let l = s.len();
+       size = if l>size {l} else {size};
+    }
+    size = size+1;
+    let data_c : Vec<std::ffi::CString> = data.iter().map(|&x| string_to_c(x)).collect::<Vec<_>>();
+    let data_c : Vec<*const c_char> = data_c.iter().map(|x| x.as_ptr() as *const c_char).collect::<Vec<_>>();
+    let size : i32 = size.try_into().unwrap();
+    let data_c = data_c.as_ptr() as *mut *const c_char;
+    let rc = unsafe { c::trexio_write_{group}_{element}(trex_file, data_c, size) };
+    rc_return(rc, ())
+}
+"""
+.replace("{type_c}",type_c)
+.replace("{type_r}",type_r)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+            elif data[group][element][0] in [ "float sparse" ]:
+               pass
 
 
 
