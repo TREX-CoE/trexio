@@ -22,7 +22,7 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
     let nucleus_num = 12;
     let state_id = 2;
     let charge = vec![6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.0f64];
-    let coord = vec![ 0.00000000,  1.39250319 ,  0.00 ,
+    let coord = vec![ 0.00000000f64,  1.39250319 ,  0.00 ,
                        -1.20594314,  0.69625160 ,  0.00 ,
                        -1.20594314, -0.69625160 ,  0.00 ,
                        0.00000000, -1.39250319 ,  0.00 ,
@@ -83,6 +83,13 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
     if ! trexio::has_mo_num(trex_file).unwrap() {
         trexio::write_mo_num(trex_file, mo_num).unwrap();
     }
+
+    let mut energy = Vec::with_capacity(mo_num);
+    for i in 0..mo_num {
+        let e: f64 = i as f64 -100.0f64;
+        energy.push(e);
+    }
+    println!("{:#?}", energy);
 
     trexio::close(trex_file).expect("Unable to close File");
 

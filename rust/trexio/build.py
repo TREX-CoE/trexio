@@ -129,8 +129,7 @@ pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode>
    rc_return(rc, data)
 }
 
-pub fn write_{group_l}_{element_l}<T>(trex_file: File, data: T) -> Result<(), ExitCode>
-               where {type_c}: From<T> {
+pub fn write_{group_l}_{element_l}(trex_file: File, data: {type_r}) -> Result<(), ExitCode> {
     let data: {type_c} = data.try_into().unwrap();
     let rc = unsafe { c::trexio_write_{group}_{element}_64(trex_file, data) };
     rc_return(rc, ())
