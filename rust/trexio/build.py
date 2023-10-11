@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+import json
 
 json_file = "../../trex.json"
 trexio_h = "../../include/trexio.h"
+wrapper_h = "wrapper.h"
+generated_rs = "src/generated.rs"
 
 def check_version():
    with open('Cargo.toml','r') as f:
@@ -37,7 +40,7 @@ def make_interface():
                 buf2 = buf.replace(")","").replace("(","").split()
                 be[buf2[1]] = int(buf2[3].strip())
 
-    with open("wrapper.h",'w') as f:
+    with open(wrapper_h,'w') as f:
         f.write("#include <trexio.h>\n")
 
         # Write exit codes
@@ -56,7 +59,47 @@ def make_interface():
 
 
 def make_functions():
-  pass
+   with open(json_file,'r') as f:
+      data = json.load(f)
+
+   r = []
+
+   for group in data:
+      group_l = group.lower()
+      r += [ """
+pub fn has_{group_l}(trex_file: File) -> Result<bool, ExitCode> {
+    let rc = unsafe { c::trexio_has_{group}(trex_file) };
+    match rc {
+        c::TREXIO_SUCCESS   =>  Ok(true),
+        c::TREXIO_HAS_NOT   =>  Ok(false),
+        x                   =>  Err(ExitCode::from(x)),
+    }
+}
+"""
+.replace("{group}",group)
+.replace("{group_l}",group_l) ]
+      for element in data[group]:
+         element_l = element.lower()
+         r += [ """
+pub fn has_{group_l}_{element_l}(trex_file: File) -> Result<bool, ExitCode> {
+    let rc = unsafe { c::trexio_has_{group}_{element}(trex_file) };
+    match rc {
+        c::TREXIO_SUCCESS   =>  Ok(true),
+        c::TREXIO_HAS_NOT   =>  Ok(false),
+        x                   =>  Err(ExitCode::from(x)),
+    }
+}
+"""
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+
+   with open(generated_rs,'w') as f:
+      f.write('\n'.join(r))
+
+
 
 if __name__ == '__main__':
    check_version()

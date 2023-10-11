@@ -60,23 +60,7 @@ pub fn inquire(file_name: &str) -> Result<bool, ExitCode> {
 }
 
 
-pub fn has_nucleus_num(trex_file: File) -> Result<bool, ExitCode> {
-    let rc = unsafe { c::trexio_has_nucleus_num(trex_file) };
-    match rc {
-        c::TREXIO_SUCCESS   =>  Ok(true),
-        c::TREXIO_HAS_NOT   =>  Ok(false),
-        x                   =>  Err(ExitCode::from(x)),
-    }
-}
-
-pub fn has_nucleus_charge(trex_file: File) -> Result<bool, ExitCode> {
-    let rc = unsafe { c::trexio_has_nucleus_charge(trex_file) };
-    match rc {
-        c::TREXIO_SUCCESS   =>  Ok(true),
-        c::TREXIO_HAS_NOT   =>  Ok(false),
-        x                   =>  Err(ExitCode::from(x)),
-    }
-}
+include!("generated.rs");
 
 
 pub fn write_nucleus_num(trex_file: File, data: usize) -> Result<(), ExitCode> {

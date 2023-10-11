@@ -61,22 +61,12 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
 
     let trex_file = trexio::open(file_name, 'w', back_end).unwrap();
 
-    assert( ! trexio::has_nucleus_num(trex_file).unwrap() );
-    assert( ! trexio::has_nucleus_charge(trex_file).unwrap() );
-
-/*
-    let rc = unsafe { trexio_has_ao_2e_int_eri(trex_file) };
-    assert!(rc == TREXIO_HAS_NOT);
-
-    let rc = unsafe { trexio_has_determinant_list(trex_file) };
-    assert!(rc == TREXIO_HAS_NOT);
-
-    let rc = unsafe { trexio_has_nucleus(trex_file) };
-    assert!(rc == TREXIO_HAS_NOT);
-
-    let rc = unsafe { trexio_has_ao_2e_int(trex_file) };
-    assert!(rc == TREXIO_HAS_NOT);
-    */
+    assert!( ! trexio::has_nucleus(trex_file).unwrap() );
+    assert!( ! trexio::has_nucleus_num(trex_file).unwrap() );
+    assert!( ! trexio::has_nucleus_charge(trex_file).unwrap() );
+    assert!( ! trexio::has_ao_2e_int(trex_file).unwrap() );
+    assert!( ! trexio::has_ao_2e_int_eri(trex_file).unwrap() );
+    assert!( ! trexio::has_determinant_list(trex_file).unwrap() );
 
     trexio::write_nucleus_num(trex_file, nucleus_num).unwrap();
     trexio::write_nucleus_charge(trex_file, charge).unwrap();
