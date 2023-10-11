@@ -70,7 +70,7 @@ def make_functions():
                  "dim" : "usize",
                  "dim readonly" : "usize",
                  "index" : "usize",
-                 "string" : "string"}
+                 "str" : "str"}
 
    convert_c = { "int": "i64",
                  "int special" : "i64",
@@ -80,7 +80,7 @@ def make_functions():
                  "dim" : "i64",
                  "dim readonly" : "i64",
                  "index" : "i64",
-                 "string" : "string"}
+                 "str" : "str"}
    r = []
 
    for group in data:
@@ -121,10 +121,10 @@ pub fn has_{group_l}_{element_l}(trex_file: File) -> Result<bool, ExitCode> {
             if data[group][element][0] in [ "int", "float", "dim", "index" ]:
                r += [ """
 pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode> {
-   let data = unsafe {
-      let data_c: {type_c};
-      let rc = c::trexio_read_{group}_{element}_64(trex_file, &data);
-      data_c.try_into().unwrap();
+   let (rc, data) = unsafe {
+      let mut data_c: {type_c} = 0{type_c};
+      let rc = c::trexio_read_{group}_{element}_64(trex_file, &mut data_c);
+      (rc, data_c.try_into().unwrap())
    };
    rc_return(rc, data)
 }
@@ -137,23 +137,52 @@ pub fn write_{group_l}_{element_l}<T>(trex_file: File, data: T) -> Result<(), Ex
 }
 """
 .replace("{type_c}",type_c)
+.replace("{type_r}",type_r)
 .replace("{group}",group)
 .replace("{group_l}",group_l)
 .replace("{element}",element)
 .replace("{element_l}",element_l) ]
 
-            elif data[group][element][0] in [ "string" ]:
-               pass  # TODO
-
-            elif data[group][element][0] in [ "dim readonly" ]:
+            elif data[group][element][0] in [ "str" ]:
                r += [ """
-pub fn write_{group_l}_{element_l}<T>(trex_file: File, data: T) -> Result<(), ExitCode>
-               where {type_c}: From<T> {
-    let data: {type_c} = data.try_into().unwrap();
-    let rc = unsafe { c::trexio_write_{group}_{element}_64(trex_file, data) };
+pub fn read_{group_l}_{element_l}(trex_file: File, capacity: usize) -> Result<String, ExitCode> {
+   let (rc, data) = unsafe {
+      let mut data_c = String::with_capacity(capacity);
+      let data_c = data_c.as_mut_ptr() as *mut c_char;
+      let rc = c::trexio_read_{group}_{element}(trex_file, data_c, capacity.try_into().unwrap());
+      (rc, String::from_raw_parts(data_c as *mut u8, capacity, capacity))
+   };
+   rc_return(rc, data)
+}
+
+pub fn write_{group_l}_{element_l}(trex_file: File, data: &str) -> Result<(), ExitCode> {
+    let size : i32 = data.len().try_into().unwrap();
+    let data = string_to_c(data);
+    let data = data.as_ptr() as *const c_char;
+    let rc = unsafe { c::trexio_write_{group}_{element}(trex_file, data, size) };
     rc_return(rc, ())
 }
 """
+.replace("{type_c}",type_c)
+.replace("{type_r}",type_r)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+
+            elif data[group][element][0] in [ "dim readonly" ]:
+               r += [ """
+pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode> {
+   let (rc, data) = unsafe {
+      let mut data_c: {type_c} = 0{type_c};
+      let rc = c::trexio_read_{group}_{element}_64(trex_file, &mut data_c);
+      (rc, data_c.try_into().unwrap())
+   };
+   rc_return(rc, data)
+}
+"""
+.replace("{type_r}",type_r)
 .replace("{type_c}",type_c)
 .replace("{group}",group)
 .replace("{group_l}",group_l)

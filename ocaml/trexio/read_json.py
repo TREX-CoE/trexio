@@ -663,6 +663,7 @@ def main():
         data = json.load(f)
         for group in data:
           for element in data[group]:
+             print(f"{group}_{element}")
              if data[group][element][0] == "str":
                   data[group][element][0] = "string"
 

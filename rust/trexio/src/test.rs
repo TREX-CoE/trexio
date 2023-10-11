@@ -53,7 +53,7 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
           "H       ",
           "H       " ];
     let mut label = label.concat();
-    let sym_str = b"B3U with some comments";
+    let sym_str = "B3U with some comments";
 
 
     println!("{}", file_name);
@@ -70,11 +70,13 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
 
     trexio::write_nucleus_num(trex_file, nucleus_num).unwrap();
     trexio::write_nucleus_charge(trex_file, charge).unwrap();
+    trexio::write_nucleus_point_group(trex_file, sym_str).unwrap();
+    /*
+    trexio::write_nucleus_coord(trex_file, coord).unwrap();
+    trexio::write_nucleus_label(trex_file, label).unwrap();
+    */
 
 /*
-    let rc = unsafe { trexio_write_nucleus_coord(trex_file, coord.as_ptr() as *const f64) };
-    assert!(rc == TREXIO_SUCCESS);
-
     let rc = unsafe { trexio_write_nucleus_label(trex_file, label.as_ptr(), label[0].len().try_into().unwrap()) };
     assert!(rc == TREXIO_SUCCESS);
 

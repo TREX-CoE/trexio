@@ -24,8 +24,8 @@ fn rc_return<T>(rc : c::trexio_exit_code, result: T) -> Result<T,ExitCode> {
     }
 }
 
-fn file_name_to_c(file_name: &str) -> std::ffi::CString {
-    std::ffi::CString::new(file_name).unwrap()
+fn string_to_c(s: &str) -> std::ffi::CString {
+    std::ffi::CString::new(s).unwrap()
 }
 
 
@@ -33,7 +33,7 @@ fn file_name_to_c(file_name: &str) -> std::ffi::CString {
 
 
 pub fn open(file_name: &str, mode: char, back_end: BackEnd) -> Result<File, ExitCode> {
-    let file_name_c = file_name_to_c(file_name);
+    let file_name_c = string_to_c(file_name);
     let file_name_c = file_name_c.as_ptr() as *const c_char;
     let mode = mode as c_char;
     let back_end = back_end.to_c();
@@ -49,7 +49,7 @@ pub fn close(file: File) -> Result<(), ExitCode> {
 }
 
 pub fn inquire(file_name: &str) -> Result<bool, ExitCode> {
-    let file_name_c = file_name_to_c(file_name);
+    let file_name_c = string_to_c(file_name);
     let file_name_c = file_name_c.as_ptr() as *const c_char;
     let rc = unsafe { c::trexio_inquire(file_name_c) };
     match ExitCode::from(rc) {
