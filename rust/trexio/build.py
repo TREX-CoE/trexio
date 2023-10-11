@@ -62,6 +62,25 @@ def make_functions():
    with open(json_file,'r') as f:
       data = json.load(f)
 
+   convert_r = { "int": "i64",
+                 "int special" : "usize",
+                 "float" : "f64",
+                 "float sparse" : "f64",
+                 "float buffered" : "f64",
+                 "dim" : "usize",
+                 "dim readonly" : "usize",
+                 "index" : "usize",
+                 "string" : "string"}
+
+   convert_c = { "int": "i64",
+                 "int special" : "i64",
+                 "float" : "f64",
+                 "float sparse" : "f64",
+                 "float buffered" : "f64",
+                 "dim" : "i64",
+                 "dim readonly" : "i64",
+                 "index" : "i64",
+                 "string" : "string"}
    r = []
 
    for group in data:
@@ -79,6 +98,8 @@ pub fn has_{group_l}(trex_file: File) -> Result<bool, ExitCode> {
 .replace("{group}",group)
 .replace("{group_l}",group_l) ]
       for element in data[group]:
+         type_c = convert_c[data[group][element][0]]
+         type_r = convert_r[data[group][element][0]]
          element_l = element.lower()
          r += [ """
 pub fn has_{group_l}_{element_l}(trex_file: File) -> Result<bool, ExitCode> {
@@ -94,6 +115,51 @@ pub fn has_{group_l}_{element_l}(trex_file: File) -> Result<bool, ExitCode> {
 .replace("{group_l}",group_l)
 .replace("{element}",element)
 .replace("{element_l}",element_l) ]
+
+         # Scalar elements
+         if data[group][element][1] == []:
+            if data[group][element][0] in [ "int", "float", "dim", "index" ]:
+               r += [ """
+pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode> {
+   let data = unsafe {
+      let data_c: {type_c};
+      let rc = c::trexio_read_{group}_{element}_64(trex_file, &data);
+      data_c.try_into().unwrap();
+   };
+   rc_return(rc, data)
+}
+
+pub fn write_{group_l}_{element_l}<T>(trex_file: File, data: T) -> Result<(), ExitCode>
+               where {type_c}: From<T> {
+    let data: {type_c} = data.try_into().unwrap();
+    let rc = unsafe { c::trexio_write_{group}_{element}_64(trex_file, data) };
+    rc_return(rc, ())
+}
+"""
+.replace("{type_c}",type_c)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+            elif data[group][element][0] in [ "string" ]:
+               pass  # TODO
+
+            elif data[group][element][0] in [ "dim readonly" ]:
+               r += [ """
+pub fn write_{group_l}_{element_l}<T>(trex_file: File, data: T) -> Result<(), ExitCode>
+               where {type_c}: From<T> {
+    let data: {type_c} = data.try_into().unwrap();
+    let rc = unsafe { c::trexio_write_{group}_{element}_64(trex_file, data) };
+    rc_return(rc, ())
+}
+"""
+.replace("{type_c}",type_c)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
 
 
    with open(generated_rs,'w') as f:

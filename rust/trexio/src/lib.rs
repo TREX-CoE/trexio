@@ -63,12 +63,6 @@ pub fn inquire(file_name: &str) -> Result<bool, ExitCode> {
 include!("generated.rs");
 
 
-pub fn write_nucleus_num(trex_file: File, data: usize) -> Result<(), ExitCode> {
-    let data: i64 = data.try_into().unwrap();
-    let rc = unsafe { c::trexio_write_nucleus_num_64(trex_file, data) };
-    rc_return(rc, ())
-}
-
 pub fn write_nucleus_charge(trex_file: File, data: Vec<f64>) -> Result<(), ExitCode> {
     let size: i64 = data.len().try_into().unwrap();
     let rc = unsafe { c::trexio_write_safe_nucleus_charge_64(trex_file, data.as_ptr() as *const f64, size) };
