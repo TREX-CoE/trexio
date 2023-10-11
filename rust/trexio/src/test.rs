@@ -37,7 +37,7 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
     let mo_num = 150;
     let ao_num = 1000;
     let basis_shell_num = 24;
-    let basis_nucleus_index = vec!([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ]);
+    let basis_nucleus_index = vec![ 0usize, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ];
 
     let label = vec![
           "C",
@@ -72,33 +72,17 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
     trexio::write_nucleus_point_group(trex_file, sym_str).unwrap();
     trexio::write_nucleus_coord(trex_file, coord).unwrap();
     trexio::write_nucleus_label(trex_file, label).unwrap();
+    trexio::write_basis_shell_num(trex_file, basis_shell_num).unwrap();
+    trexio::write_basis_nucleus_index(trex_file, basis_nucleus_index).unwrap();
+    trexio::write_state_id(trex_file, state_id).unwrap();
 
-/*
-    let rc = unsafe { trexio_write_nucleus_label(trex_file, label.as_ptr(), label[0].len().try_into().unwrap()) };
-    assert!(rc == TREXIO_SUCCESS);
-
-    let rc = unsafe { trexio_write_nucleus_point_group(trex_file, sym_str.as_ptr() as *const i8, sym_str.len().try_into().unwrap()) };
-    assert!(rc == TREXIO_SUCCESS);
-
-    let rc = unsafe { trexio_write_basis_shell_num(trex_file, basis_shell_num) };
-    assert!(rc == TREXIO_SUCCESS);
-
-    let rc = unsafe { trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index.as_ptr() as *const i32) };
-    assert!(rc == TREXIO_SUCCESS);
-
-    let rc = unsafe { trexio_write_state_id(trex_file, state_id) };
-    assert!(rc == TREXIO_SUCCESS);
-
-    if (unsafe { trexio_has_ao_num(trex_file) } == TREXIO_HAS_NOT) {
-        let rc = unsafe { trexio_write_ao_num(trex_file, ao_num) };
-        assert!(rc == TREXIO_SUCCESS);
+    if ! trexio::has_ao_num(trex_file).unwrap() {
+        trexio::write_ao_num(trex_file, ao_num).unwrap();
     }
 
-    if (unsafe { trexio_has_mo_num(trex_file) } == TREXIO_HAS_NOT) {
-        let rc = unsafe { trexio_write_mo_num(trex_file, mo_num) };
-        assert!(rc == TREXIO_SUCCESS);
+    if ! trexio::has_mo_num(trex_file).unwrap() {
+        trexio::write_mo_num(trex_file, mo_num).unwrap();
     }
-    */
 
     trexio::close(trex_file).expect("Unable to close File");
 
