@@ -2,6 +2,8 @@ use trexio::back_end::BackEnd;
 
 pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
+    let () = trexio::info()?;
+
     // Prepare data to be written
     let n_buffers = 5;
     let buf_size_sparse = 100/n_buffers;
@@ -10,9 +12,8 @@ pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::Exit
     let mut index_sparse_ao_2e_int_eri = vec![0i32 ; 400];
     for i in 0..100 {
         let i : usize = i;
-        let j : i32 = i.try_into().unwrap();
-        let fj : f64 = j.try_into().unwrap();
-        value_sparse_ao_2e_int_eri[i] = 3.14 + fj;
+        let j : i32 = i as i32;
+        value_sparse_ao_2e_int_eri[i] = 3.14 + (j as f64);
         index_sparse_ao_2e_int_eri[4*i + 0] = 4*j   - 3;
         index_sparse_ao_2e_int_eri[4*i + 1] = 4*j+1 - 3;
         index_sparse_ao_2e_int_eri[4*i + 2] = 4*j+2 - 3;
@@ -90,6 +91,18 @@ pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::Exit
         energy.push(e);
     }
     trex_file.write_mo_energy(energy)?;
+
+    let mut spin = vec![0 ; mo_num];
+    for i in mo_num/2..mo_num {
+        spin[i] = 1;
+    }
+    trex_file.write_mo_spin(spin)?;
+
+    let (det, phase) = trexio::Bitfield::from(4, vec![0, 1, 2, 3, 4, 5, 6, 151, 152, 153, 154])?;
+    println!("{} {:?}", phase, det);
+    println!("{:?}", det.to_orbital_list().unwrap());
+    println!("{:?}", det.to_orbital_list().unwrap());
+    println!("{:?}", det.to_orbital_list_up_dn().unwrap());
 
     trex_file.close()
 

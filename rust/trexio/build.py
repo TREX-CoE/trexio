@@ -128,13 +128,13 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
       let rc = c::trexio_read_{group}_{element}_64(self.ptr, &mut data_c);
       (rc, data_c.try_into().expect("try_into failed in read_{group_l}_{element_l}"))
    };
-   rc_return(rc, data)
+   rc_return(data, rc)
 }
 
 pub fn write_{group_l}_{element_l}(&self, data: {type_r}) -> Result<(), ExitCode> {
     let data: {type_c} = data.try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let rc = unsafe { c::trexio_write_{group}_{element}_64(self.ptr, data) };
-    rc_return(rc, ())
+    rc_return((), rc)
 }
 """
 .replace("{type_c}",type_c)
@@ -153,7 +153,7 @@ pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<String, Exit
       let rc = c::trexio_read_{group}_{element}(self.ptr, data_c, capacity.try_into().expect("try_into failed in read_{group_l}_{element_l}"));
       (rc, String::from_raw_parts(data_c as *mut u8, capacity, capacity))
    };
-   rc_return(rc, data)
+   rc_return(data, rc)
 }
 
 pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
@@ -161,7 +161,7 @@ pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
     let data = string_to_c(data);
     let data = data.as_ptr() as *const c_char;
     let rc = unsafe { c::trexio_write_{group}_{element}(self.ptr, data, size) };
-    rc_return(rc, ())
+    rc_return((), rc)
 }
 """
 .replace("{type_c}",type_c)
@@ -180,7 +180,7 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
       let rc = c::trexio_read_{group}_{element}_64(self.ptr, &mut data_c);
       (rc, data_c.try_into().expect("try_into failed in read_{group_l}_{element_l}"))
    };
-   rc_return(rc, data)
+   rc_return(data, rc)
 }
 """
 .replace("{type_r}",type_r)
@@ -211,7 +211,7 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
       let rc = c::trexio_read_safe_{group}_{element}_64(self.ptr, data_c, size.try_into().expect("try_into failed in read_{group}_{element}"));
       (rc, data)
    };
-   rc_return(rc, data)
+   rc_return(data, rc)
 }
 """ ]
                r += [ '\n'.join(t)
@@ -227,7 +227,7 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<{type_r}>) -> Result<(), Exi
     let size: i64 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let data = data.as_ptr() as *const {type_c};
     let rc = unsafe { c::trexio_write_safe_{group}_{element}_64(self.ptr, data, size) };
-    rc_return(rc, ())
+    rc_return((), rc)
 }
 """
 .replace("{type_c}",type_c)
@@ -256,7 +256,7 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<{type_r}>) -> Result<(), Exi
       let rc = c::trexio_read_{group}_{element}(self.ptr, data_c, capacity.try_into().expect("try_into failed in read_{group}_{element}") );
       (rc, data)
    };
-   rc_return(rc, data)
+   rc_return(data, rc)
 }
 """ ]
                r += [ '\n'.join(t)
@@ -280,7 +280,7 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<&str>) -> Result<(), ExitCod
     let size : i32 = size.try_into().expect("try_into failed in write_{group}_{element}");
     let data_c = data_c.as_ptr() as *mut *const c_char;
     let rc = unsafe { c::trexio_write_{group}_{element}(self.ptr, data_c, size) };
-    rc_return(rc, ())
+    rc_return((), rc)
 }
 """
 .replace("{type_c}",type_c)
