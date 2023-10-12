@@ -124,13 +124,13 @@ pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode>
    let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
       let rc = c::trexio_read_{group}_{element}_64(trex_file, &mut data_c);
-      (rc, data_c.try_into().unwrap())
+      (rc, data_c.try_into().expect("try_into failed in read_{group_l}_{element_l}"))
    };
    rc_return(rc, data)
 }
 
 pub fn write_{group_l}_{element_l}(trex_file: File, data: {type_r}) -> Result<(), ExitCode> {
-    let data: {type_c} = data.try_into().unwrap();
+    let data: {type_c} = data.try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let rc = unsafe { c::trexio_write_{group}_{element}_64(trex_file, data) };
     rc_return(rc, ())
 }
@@ -148,14 +148,14 @@ pub fn read_{group_l}_{element_l}(trex_file: File, capacity: usize) -> Result<St
    let mut data_c = String::with_capacity(capacity);
    let data_c = data_c.as_mut_ptr() as *mut c_char;
    let (rc, data) = unsafe {
-      let rc = c::trexio_read_{group}_{element}(trex_file, data_c, capacity.try_into().unwrap());
+      let rc = c::trexio_read_{group}_{element}(trex_file, data_c, capacity.try_into().expect("try_into failed in read_{group_l}_{element_l}"));
       (rc, String::from_raw_parts(data_c as *mut u8, capacity, capacity))
    };
    rc_return(rc, data)
 }
 
 pub fn write_{group_l}_{element_l}(trex_file: File, data: &str) -> Result<(), ExitCode> {
-    let size : i32 = data.len().try_into().unwrap();
+    let size : i32 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let data = string_to_c(data);
     let data = data.as_ptr() as *const c_char;
     let rc = unsafe { c::trexio_write_{group}_{element}(trex_file, data, size) };
@@ -176,7 +176,7 @@ pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode>
    let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
       let rc = c::trexio_read_{group}_{element}_64(trex_file, &mut data_c);
-      (rc, data_c.try_into().unwrap())
+      (rc, data_c.try_into().expect("try_into failed in read_{group_l}_{element_l}"))
    };
    rc_return(rc, data)
 }
@@ -198,7 +198,7 @@ pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode>
                for dim in data[group][element][1]:
                    try:    # A dimensioning variable
                      dim_group, dim_element = dim.split('.')
-                     t_prime += [f"  let size = size * read_{dim_group}_{dim_element}(trex_file).unwrap();" ]
+                     t_prime += [f"  let size = size * read_{dim_group}_{dim_element}(trex_file)?;" ]
                    except: # Only an integer
                      t_prime += [f"  let size = size * {dim};"]
                t += t_prime
@@ -206,7 +206,7 @@ pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode>
    let data: Vec<{type_r}> = Vec::with_capacity(size);
    let data_c = data.as_ptr() as *mut {type_c};
    let (rc, data) = unsafe {
-      let rc = c::trexio_read_safe_{group}_{element}_64(trex_file, data_c, size.try_into().unwrap());
+      let rc = c::trexio_read_safe_{group}_{element}_64(trex_file, data_c, size.try_into().expect("try_into failed in read_{group}_{element}"));
       (rc, data)
    };
    rc_return(rc, data)
@@ -222,7 +222,7 @@ pub fn read_{group_l}_{element_l}(trex_file: File) -> Result<{type_r}, ExitCode>
 
                r += [ """
 pub fn write_{group_l}_{element_l}(trex_file: File, data: Vec<{type_r}>) -> Result<(), ExitCode> {
-    let size: i64 = data.len().try_into().unwrap();
+    let size: i64 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let data = data.as_ptr() as *const {type_c};
     let rc = unsafe { c::trexio_write_safe_{group}_{element}_64(trex_file, data, size) };
     rc_return(rc, ())
@@ -242,7 +242,7 @@ pub fn write_{group_l}_{element_l}(trex_file: File, data: Vec<{type_r}>) -> Resu
                for dim in data[group][element][1]:
                    try:    # A dimensioning variable
                      dim_group, dim_element = dim.split('.')
-                     t_prime += [f"  let size = size * read_{dim_group}_{dim_element}(trex_file).unwrap();" ]
+                     t_prime += [f"  let size = size * read_{dim_group}_{dim_element}(trex_file)?;" ]
                    except: # Only an integer
                      t_prime += [f"  let size = size * {dim};"]
                t += t_prime
@@ -251,7 +251,7 @@ pub fn write_{group_l}_{element_l}(trex_file: File, data: Vec<{type_r}>) -> Resu
    let data_c = data.as_ptr() as *mut *mut c_char;
       
    let (rc, data) = unsafe {
-      let rc = c::trexio_read_{group}_{element}(trex_file, data_c, capacity.try_into().unwrap() );
+      let rc = c::trexio_read_{group}_{element}(trex_file, data_c, capacity.try_into().expect("try_into failed in read_{group}_{element}") );
       (rc, data)
    };
    rc_return(rc, data)
@@ -275,7 +275,7 @@ pub fn write_{group_l}_{element_l}(trex_file: File, data: Vec<&str>) -> Result<(
     size = size+1;
     let data_c : Vec<std::ffi::CString> = data.iter().map(|&x| string_to_c(x)).collect::<Vec<_>>();
     let data_c : Vec<*const c_char> = data_c.iter().map(|x| x.as_ptr() as *const c_char).collect::<Vec<_>>();
-    let size : i32 = size.try_into().unwrap();
+    let size : i32 = size.try_into().expect("try_into failed in write_{group}_{element}");
     let data_c = data_c.as_ptr() as *mut *const c_char;
     let rc = unsafe { c::trexio_write_{group}_{element}(trex_file, data_c, size) };
     rc_return(rc, ())
