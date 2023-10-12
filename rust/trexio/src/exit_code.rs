@@ -93,7 +93,7 @@ impl ExitCode {
     }
 
     /// Conversion to a C value
-    pub fn to_c(self) -> c::trexio_exit_code  {
+    pub fn to_c(&self) -> c::trexio_exit_code  {
         match self {
             Self::Failure                =>  c::TREXIO_FAILURE,
             Self::Success                =>  c::TREXIO_SUCCESS,
@@ -135,5 +135,30 @@ impl ExitCode {
             Self::VersionParsingIssue    =>  c::TREXIO_VERSION_PARSING_ISSUE,
             Self::PhaseChange            =>  c::TREXIO_PHASE_CHANGE,
         }
+    }
+
+    pub fn to_str(&self) -> Result<&'static str, Utf8Error> {
+        let c_error = self.to_c();
+        let c_buf: *const c_char = unsafe { c::trexio_string_of_error( c_error ) };
+        let c_str: &CStr = unsafe { CStr::from_ptr(c_buf) };
+        c_str.to_str()
+    }
+}
+
+use std::fmt;
+use std::error::Error;
+use std::ffi::CStr;
+use std::ffi::c_char;
+use std::str::Utf8Error;
+
+impl fmt::Display for ExitCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_str().unwrap())
+    }
+}
+
+impl Error for ExitCode {
+    fn description(&self) -> &str {
+        self.to_str().unwrap()
     }
 }

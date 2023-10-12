@@ -1,6 +1,6 @@
 use trexio::back_end::BackEnd;
 
-pub fn test_write(file_name: &str, back_end: BackEnd) {
+pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
     // Prepare data to be written
     let n_buffers = 5;
@@ -56,32 +56,32 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
 
 
     println!("{}", file_name);
-    assert!( ! trexio::inquire(file_name).unwrap() );
+    assert!( ! trexio::inquire(file_name)? );
 
-    let trex_file = trexio::open(file_name, 'w', back_end).unwrap();
+    let trex_file = trexio::open(file_name, 'w', back_end)?;
 
-    assert!( ! trexio::has_nucleus(trex_file).unwrap() );
-    assert!( ! trexio::has_nucleus_num(trex_file).unwrap() );
-    assert!( ! trexio::has_nucleus_charge(trex_file).unwrap() );
-    assert!( ! trexio::has_ao_2e_int(trex_file).unwrap() );
-    assert!( ! trexio::has_ao_2e_int_eri(trex_file).unwrap() );
-    assert!( ! trexio::has_determinant_list(trex_file).unwrap() );
+    assert!( ! trexio::has_nucleus(trex_file)? );
+    assert!( ! trexio::has_nucleus_num(trex_file)? );
+    assert!( ! trexio::has_nucleus_charge(trex_file)? );
+    assert!( ! trexio::has_ao_2e_int(trex_file)? );
+    assert!( ! trexio::has_ao_2e_int_eri(trex_file)? );
+    assert!( ! trexio::has_determinant_list(trex_file)? );
 
-    trexio::write_nucleus_num(trex_file, nucleus_num).unwrap();
-    trexio::write_nucleus_charge(trex_file, charge).unwrap();
-    trexio::write_nucleus_point_group(trex_file, sym_str).unwrap();
-    trexio::write_nucleus_coord(trex_file, coord).unwrap();
-    trexio::write_nucleus_label(trex_file, label).unwrap();
-    trexio::write_basis_shell_num(trex_file, basis_shell_num).unwrap();
-    trexio::write_basis_nucleus_index(trex_file, basis_nucleus_index).unwrap();
-    trexio::write_state_id(trex_file, state_id).unwrap();
+    trexio::write_nucleus_num(trex_file, nucleus_num)?;
+    trexio::write_nucleus_charge(trex_file, charge)?;
+    trexio::write_nucleus_point_group(trex_file, sym_str)?;
+    trexio::write_nucleus_coord(trex_file, coord)?;
+    trexio::write_nucleus_label(trex_file, label)?;
+    trexio::write_basis_shell_num(trex_file, basis_shell_num)?;
+    trexio::write_basis_nucleus_index(trex_file, basis_nucleus_index)?;
+    trexio::write_state_id(trex_file, state_id)?;
 
-    if ! trexio::has_ao_num(trex_file).unwrap() {
-        trexio::write_ao_num(trex_file, ao_num).unwrap();
+    if ! trexio::has_ao_num(trex_file)? {
+        trexio::write_ao_num(trex_file, ao_num)?;
     }
 
-    if ! trexio::has_mo_num(trex_file).unwrap() {
-        trexio::write_mo_num(trex_file, mo_num).unwrap();
+    if ! trexio::has_mo_num(trex_file)? {
+        trexio::write_mo_num(trex_file, mo_num)?;
     }
 
     let mut energy = Vec::with_capacity(mo_num);
@@ -91,6 +91,6 @@ pub fn test_write(file_name: &str, back_end: BackEnd) {
     }
     println!("{:#?}", energy);
 
-    trexio::close(trex_file).expect("Unable to close File");
+    trexio::close(trex_file)
 
 }
