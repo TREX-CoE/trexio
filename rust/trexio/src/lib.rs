@@ -113,17 +113,3 @@ impl File {
 include!("generated.rs");
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::mem;
-    use c::*;
-
-    #[test]
-    fn read_trexio_file() {
-        println!("============================================");
-        println!("         TREXIO MAJOR VERSION  : {}", TREXIO_VERSION_MAJOR);
-        println!("============================================");
-
-    }
-}

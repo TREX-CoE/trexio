@@ -98,11 +98,6 @@ pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::Exit
     }
     trex_file.write_mo_spin(spin)?;
 
-    let (det, phase) = trexio::Bitfield::from(4, vec![0, 1, 2, 3, 4, 5, 6, 151, 152, 153, 154])?;
-    println!("{} {:?}", phase, det);
-    println!("{:?}", det.to_orbital_list().unwrap());
-    println!("{:?}", det.to_orbital_list().unwrap());
-    println!("{:?}", det.to_orbital_list_up_dn().unwrap());
 
     trex_file.close()
 
