@@ -2,6 +2,7 @@ use crate::c;
 
 /// Exit codes
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum ExitCode {
     Failure,
     Success,

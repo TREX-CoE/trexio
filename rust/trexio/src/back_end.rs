@@ -2,6 +2,7 @@ use crate::c;
 
 /// Possible back ends
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum BackEnd {
   Text,
   Hdf5,
