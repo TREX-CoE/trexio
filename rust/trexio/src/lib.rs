@@ -98,18 +98,31 @@ impl File {
          rc_return(num, rc)
     }
 
-/*
-    pub fn read_determinant_list(&self, offset_file: usize, dset: Vec<Bitfield>) -> Result<usize, ExitCode> {
+    pub fn write_determinant_list(&self, offset_file: usize, determinants: &[Bitfield]) -> Result<(), ExitCode> {
+        let n_int = self.get_int64_num()?;
+        match determinants.len() {
+            0 => return Ok(()),
+            _ => if determinants[0].as_vec().len() != 2*n_int {
+                panic!("Inconsistent values of n_int")
+            }
+        };
+        let offset_file: i64 = offset_file.try_into().expect("try_into failed in read_determinant_list");
+        let buffer_size: i64 = determinants.len().try_into().expect("try_into failed in read_determinant_list");
+        let mut one_d_array: Vec<i64> = Vec::with_capacity(determinants.len() * n_int);
+        for det in determinants.iter() {
+          for i in det.as_vec().iter() {
+            one_d_array.push(i.clone());
+          }
+        }
+        let dset: *const i64 = one_d_array.as_ptr() as *const i64;
         let rc = unsafe {
-            let offset_file: i64 = offset_file;
-            let buffer_size: *mut i64 = dset.len().try_into().expect("try_into failed in read_determinant_list");
-            let dset: *mut i64 = dset.to_c().as_mut_ptr();
-            c::trexio_read_determinant_list(self.ptr, offset_file, buffer_size, dset)
+            c::trexio_write_determinant_list(self.ptr, offset_file, buffer_size, dset)
          };
+         rc_return((), rc)
     }
-    */
 
 }
+
 include!("generated.rs");
 
 

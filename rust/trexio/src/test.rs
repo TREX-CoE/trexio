@@ -1,13 +1,14 @@
 use trexio::back_end::BackEnd;
+use trexio::bitfield::Bitfield;
 
 pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
     let () = trexio::info()?;
 
     // Prepare data to be written
+
     let n_buffers = 5;
     let buf_size_sparse = 100/n_buffers;
-    let buf_size_det    = 50/n_buffers;
     let mut value_sparse_ao_2e_int_eri = vec![0.0f64 ; 100];
     let mut index_sparse_ao_2e_int_eri = vec![0i32 ; 400];
     for i in 0..100 {
@@ -97,6 +98,26 @@ pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::Exit
         spin[i] = 1;
     }
     trex_file.write_mo_spin(spin)?;
+
+    // Determinants
+    //
+    let det_num = 50;
+    let mut det_list = Vec::with_capacity(det_num);
+    for i in 0..det_num {
+        let mut d = [0i64 ; 6 ];
+        for j in 0..6 {
+            d[j] = 6*(i as i64)+(j as i64);
+        }
+        det_list.push( Bitfield::from_vec(&d) );
+    }
+
+    let n_buffers = 5;
+    let buf_size_det    = 50/n_buffers;
+    let mut offset = 0;
+    for i in 0..n_buffers {
+        trex_file.write_determinant_list(offset, &det_list[offset..offset+buf_size_det])?;
+        offset += buf_size_det;
+    }
 
 
     trex_file.close()

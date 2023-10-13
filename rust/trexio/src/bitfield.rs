@@ -35,6 +35,10 @@ impl Bitfield {
         }
     }
 
+    pub fn from_vec(v: &[i64]) -> Bitfield {
+        Bitfield { data: v.to_vec() }
+    }
+
     pub fn from_alpha_beta(alpha: &Bitfield, beta: &Bitfield) -> Bitfield {
         if alpha.data.len() != beta.data.len() {
             panic!("alpha and beta parts have different lengths");
@@ -96,6 +100,11 @@ impl Bitfield {
             result.push( *i as usize );
         }
         result
+    }
+
+    /// Converts the bitfield into a vector
+    pub fn as_vec(&self) -> &[i64] {
+        &self.data
     }
 
     /// Converts the determinant into a list of orbital indices (0-based)
