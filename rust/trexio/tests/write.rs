@@ -1,9 +1,8 @@
 use trexio::back_end::BackEnd;
 use trexio::bitfield::Bitfield;
 
-pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
-    let () = trexio::info()?;
+fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
     // Prepare data to be written
 
@@ -123,3 +122,19 @@ pub fn test_write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::Exit
     trex_file.close()
 
 }
+
+#[test]
+pub fn info() {
+    trexio::info();
+}
+
+#[test]
+pub fn wite_text() {
+    write("test_write.dir", trexio::BackEnd::Text);
+}
+
+#[test]
+pub fn wite_hdf5() {
+    write("test_write.hdf5", trexio::BackEnd::Hdf5);
+}
+
