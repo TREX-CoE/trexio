@@ -6,20 +6,6 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
     // Prepare data to be written
 
-    let n_buffers = 5;
-    let buf_size_sparse = 100/n_buffers;
-    let mut value_sparse_ao_2e_int_eri = vec![0.0f64 ; 100];
-    let mut index_sparse_ao_2e_int_eri = vec![0i32 ; 400];
-    for i in 0..100 {
-        let i : usize = i;
-        let j : i32 = i as i32;
-        value_sparse_ao_2e_int_eri[i] = 3.14 + (j as f64);
-        index_sparse_ao_2e_int_eri[4*i + 0] = 4*j   - 3;
-        index_sparse_ao_2e_int_eri[4*i + 1] = 4*j+1 - 3;
-        index_sparse_ao_2e_int_eri[4*i + 2] = 4*j+2 - 3;
-        index_sparse_ao_2e_int_eri[4*i + 3] = 4*j+3 - 3;
-    }
-
     let nucleus_num = 12;
     let state_id = 2;
     let charge = vec![6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.0f64];
@@ -38,21 +24,11 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let mo_num = 150;
     let ao_num = 1000;
     let basis_shell_num = 24;
-    let basis_nucleus_index = vec![ 0usize, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ];
+    let basis_nucleus_index: Vec<usize> = (0..24).collect();
 
-    let label = vec![
-          "C",
-          "Na",
-          "C",
-          "C 66",
-          "C",
-          "C",
-          "H 99",
-          "Ru",
-          "H",
-          "H",
-          "H",
-          "H" ];
+    let label = vec![ "C", "Na", "C", "C 66", "C",
+          "C", "H 99", "Ru", "H", "H", "H", "H" ];
+
     let sym_str = "B3U with some comments";
 
 
@@ -98,8 +74,27 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     }
     trex_file.write_mo_spin(spin)?;
 
+    // Integrals
+    let nmax = 100;
+    let mut ao_2e_int_eri = Vec::<(usize,usize,usize,usize,f64)>::with_capacity(nmax);
+
+    let n_buffers = 5;
+    let bufsize = nmax/n_buffers;
+
+    for i in 0..100 {
+        // Quadruplet of indices + value
+        let data = (4*i, 4*i+1, 4*i+2, 4*i+3, 3.14 + (i as f64));
+        ao_2e_int_eri.push(data);
+    }
+
+    let mut offset = 0;
+    for i in 0..n_buffers {
+        trex_file.write_ao_2e_int_eri(offset, &ao_2e_int_eri[offset..offset+bufsize])?;
+        offset += bufsize;
+    }
+
+
     // Determinants
-    //
     let det_num = 50;
     let mut det_list = Vec::with_capacity(det_num);
     for i in 0..det_num {
@@ -111,11 +106,11 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     }
 
     let n_buffers = 5;
-    let buf_size_det    = 50/n_buffers;
+    let bufsize = 50/n_buffers;
     let mut offset = 0;
     for i in 0..n_buffers {
-        trex_file.write_determinant_list(offset, &det_list[offset..offset+buf_size_det])?;
-        offset += buf_size_det;
+        trex_file.write_determinant_list(offset, &det_list[offset..offset+bufsize])?;
+        offset += bufsize;
     }
 
 
@@ -125,16 +120,21 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
 #[test]
 pub fn info() {
-    trexio::info();
+    let _ = trexio::info();
+}
+
+
+use std::fs;
+
+#[test]
+pub fn text_backend() {
+    let _ = write("tmp/test_write.dir", trexio::BackEnd::Text);
+    fs::remove_dir_all("tmp/test_write.dir").unwrap()
 }
 
 #[test]
-pub fn wite_text() {
-    write("test_write.dir", trexio::BackEnd::Text);
-}
-
-#[test]
-pub fn wite_hdf5() {
-    write("test_write.hdf5", trexio::BackEnd::Hdf5);
+pub fn hdf5_backend() {
+    let _ = write("tmp/test_write.hdf5", trexio::BackEnd::Hdf5);
+    fs::remove_file("tmp/test_write.hdf5").unwrap()
 }
 

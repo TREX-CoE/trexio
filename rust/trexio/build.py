@@ -260,8 +260,6 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<{type_r}>) -> Result<(), Exi
 }
 """ ]
                r += [ '\n'.join(t)
-.replace("{type_c}",type_c)
-.replace("{type_r}",type_r)
 .replace("{group}",group)
 .replace("{group_l}",group_l)
 .replace("{element}",element)
@@ -270,6 +268,7 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<{type_r}>) -> Result<(), Exi
                r += [ """
 pub fn write_{group_l}_{element_l}(&self, data: Vec<&str>) -> Result<(), ExitCode> {
     let mut size = 0;
+    // Find longest string
     for s in data.iter() {
        let l = s.len();
        size = if l>size {l} else {size};
@@ -283,6 +282,38 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<&str>) -> Result<(), ExitCod
     rc_return((), rc)
 }
 """
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+            elif data[group][element][0] in [ "float sparse" ]:
+               size = len(data[group][element][1])
+               typ = "&[(" + ",".join( [ "usize" for _ in range(size) ]) + ", f64)]"
+               r += [ ("""
+pub fn write_{group_l}_{element_l}(&self, offset: usize, data: {typ}) -> Result<(), ExitCode> {
+    let mut idx = Vec::<i32>::with_capacity({size}*data.len());
+    let mut val = Vec::<f64>::with_capacity(data.len());
+    // Array of indices
+    for d in data.iter() {
+""" +
+'\n'.join([ f"       idx.push(d.{i}.try_into().unwrap());" for i in range(size) ]) +
+f"\n       val.push(d.{size});" +
+"""
+    }
+
+    let size_max: i64 = data.len().try_into().expect("try_into failed in write_{group}_{element}");
+    let buffer_size = size_max;
+    let idx_ptr = idx.as_ptr() as *const i32;
+    let val_ptr = val.as_ptr() as *const f64;
+    let offset: i64 = offset.try_into().expect("try_into failed in write_{group}_{element}");
+    let rc = unsafe { c::trexio_write_safe_{group}_{element}(self.ptr,
+           offset, buffer_size, idx_ptr, size_max, val_ptr, size_max) };
+    rc_return((), rc)
+}
+""")
+.replace("{size}",str(size))
+.replace("{typ}",typ)
 .replace("{type_c}",type_c)
 .replace("{type_r}",type_r)
 .replace("{group}",group)
@@ -290,8 +321,6 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<&str>) -> Result<(), ExitCod
 .replace("{element}",element)
 .replace("{element_l}",element_l) ]
 
-            elif data[group][element][0] in [ "float sparse" ]:
-               pass
 
 
 
