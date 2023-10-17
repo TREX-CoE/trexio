@@ -106,8 +106,8 @@ impl File {
                 panic!("Inconsistent values of n_int")
             }
         };
-        let offset_file: i64 = offset_file.try_into().expect("try_into failed in read_determinant_list");
-        let buffer_size: i64 = determinants.len().try_into().expect("try_into failed in read_determinant_list");
+        let offset_file: i64 = offset_file.try_into().expect("try_into failed in write_determinant_list");
+        let buffer_size: i64 = determinants.len().try_into().expect("try_into failed in write_determinant_list");
         let mut one_d_array: Vec<i64> = Vec::with_capacity(determinants.len() * n_int);
         for det in determinants.iter() {
           for i in det.as_vec().iter() {
@@ -119,6 +119,26 @@ impl File {
             c::trexio_write_determinant_list(self.ptr, offset_file, buffer_size, dset)
          };
          rc_return((), rc)
+    }
+
+    pub fn read_determinant_list(&self, offset_file: usize, buffer_size: usize) -> Result<Vec<Bitfield>, ExitCode> {
+        let n_int = self.get_int64_num()?;
+        let mut one_d_array: Vec<i64> = Vec::with_capacity(buffer_size * n_int);
+        let one_d_array_ptr = one_d_array.as_ptr() as *mut i64;
+        let rc = unsafe {
+            let offset_file: i64 = offset_file.try_into().expect("try_into failed in read_determinant_list (offset_file)");
+            let mut buffer_size_read: i64 = buffer_size.try_into().expect("try_into failed in read_determinant_list (buffer_size)");
+            let rc = c::trexio_read_determinant_list(self.ptr, offset_file, &mut buffer_size_read, one_d_array_ptr);
+            one_d_array.set_len(buffer_size_read.try_into()
+                                                .expect("try_into failed in read_determinant_list (buffer_size_read)"));
+            rc
+         };
+         let result: Vec::<Bitfield> = one_d_array.chunks(n_int)
+                                                     .collect::<Vec<_>>()
+                                                     .iter()
+                                                     .map(|x| (Bitfield::from_vec(&x)))
+                                                     .collect::<Vec<_>>();
+         rc_return(result, rc)
     }
 
 }

@@ -195,12 +195,13 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let nmax = 100;
     let mut ao_2e_int_eri_ref = Vec::<(usize,usize,usize,usize,f64)>::with_capacity(nmax);
 
-    let n_buffers = 4;
-    let bufsize = nmax/n_buffers;
+    let n_buffers = 8;
+    let bufsize = nmax/n_buffers+10;
 
+/* TODO: check from here */
     for i in 0..100 {
         // Quadruplet of indices + value
-        let data = (4*i, 4*i+1, 4*i+2, 4*i+3, 3.14 + (i as f64));
+        let data = (4*i, 4*i+1, 4*i+2, 4*i+3, 3.13 + (i as f64));
         ao_2e_int_eri_ref.push(data);
     }
 
@@ -214,26 +215,29 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     assert_eq!(ao_2e_int_eri_ref, ao_2e_int_eri);
 
 
-/*
     // Determinants
-    let det_num = 50;
-    let mut det_list = Vec::with_capacity(det_num);
+    let det_num = trex_file.read_determinant_num()?;
+    assert_eq!(det_num, 50);
+
+    let mut det_list_ref = Vec::with_capacity(det_num);
     for i in 0..det_num {
         let mut d = [0i64 ; 6 ];
         for j in 0..6 {
             d[j] = 6*(i as i64)+(j as i64);
         }
-        det_list.push( Bitfield::from_vec(&d) );
+        det_list_ref.push( Bitfield::from_vec(&d) );
     }
 
-    let n_buffers = 5;
-    let bufsize = 50/n_buffers;
+    let n_buffers = 8;
+    let bufsize = det_num/n_buffers + 10;
     let mut offset = 0;
-    for i in 0..n_buffers {
-        trex_file.write_determinant_list(offset, &det_list[offset..offset+bufsize])?;
+    let mut det_list: Vec<Bitfield> = Vec::with_capacity(det_num);
+    for _ in 0..n_buffers {
+        let buffer = trex_file.read_determinant_list(offset, bufsize)?;
+        det_list.extend(buffer);
         offset += bufsize;
     }
-*/
+    assert_eq!(det_list_ref, det_list);
 
     trex_file.close()
 
