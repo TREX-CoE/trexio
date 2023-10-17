@@ -83,6 +83,9 @@ def make_functions():
                  "str" : "str"}
 
    r = ["""
+use std::iter::zip;
+use std::ffi::CString;
+
 impl File {""" ]
 
    for group in data:
@@ -147,14 +150,16 @@ pub fn write_{group_l}_{element_l}(&self, data: {type_r}) -> Result<(), ExitCode
             elif data[group][element][0] in [ "str" ]:
                r += [ """
 pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<String, ExitCode> {
-   let mut data_c = String::with_capacity(capacity);
-   let data_c = data_c.as_mut_ptr() as *mut c_char;
+   let data_c = CString::new(vec![ b' ' ; capacity]).expect("CString::new failed");
    let (rc, data) = unsafe {
+      let data_c = data_c.into_raw() as *mut c_char;
       let rc = c::trexio_read_{group}_{element}(self.ptr, data_c, capacity.try_into().expect("try_into failed in read_{group_l}_{element_l}"));
-      (rc, String::from_raw_parts(data_c as *mut u8, capacity, capacity))
+      (rc, CString::from_raw(data_c))
    };
-   rc_return(data, rc)
+   let result : String = CString::into_string(data).expect("into_string failed in read_{group_l}_{element_l}");
+   rc_return(result, rc)
 }
+
 
 pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
     let size : i32 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
@@ -205,11 +210,12 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
                      t_prime += [f"  let size = size * {dim};"]
                t += t_prime
                t += [ """
-   let data: Vec<{type_r}> = Vec::with_capacity(size);
-   let data_c = data.as_ptr() as *mut {type_c};
-   let (rc, data) = unsafe {
-      let rc = c::trexio_read_safe_{group}_{element}_64(self.ptr, data_c, size.try_into().expect("try_into failed in read_{group}_{element}"));
-      (rc, data)
+   let mut data: Vec<{type_r}> = Vec::with_capacity(size);
+   let rc = unsafe {
+      let data_c = data.as_mut_ptr() as *mut {type_c};
+      let rc = c::trexio_read_safe_{group}_{element}_64(self.ptr, data_c, size.try_into().expect("try_into failed in read_{group}_{element} (size)"));
+      data.set_len(size);
+      rc
    };
    rc_return(data, rc)
 }
@@ -223,7 +229,7 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
 .replace("{element_l}",element_l) ]
 
                r += [ """
-pub fn write_{group_l}_{element_l}(&self, data: Vec<{type_r}>) -> Result<(), ExitCode> {
+pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitCode> {
     let size: i64 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let data = data.as_ptr() as *const {type_c};
     let rc = unsafe { c::trexio_write_safe_{group}_{element}_64(self.ptr, data, size) };
@@ -249,14 +255,40 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<{type_r}>) -> Result<(), Exi
                      t_prime += [f"  let size = size * {dim};"]
                t += t_prime
                t += [ """
-   let data = vec![ String::with_capacity(capacity) ; size ];
-   let data_c = data.as_ptr() as *mut *mut c_char;
-      
-   let (rc, data) = unsafe {
-      let rc = c::trexio_read_{group}_{element}(self.ptr, data_c, capacity.try_into().expect("try_into failed in read_{group}_{element}") );
-      (rc, data)
+    // Allocate an array of *mut i8 pointers (initialized to null)
+    let mut dset_out: Vec<*mut i8> = vec![std::ptr::null_mut(); size];
+
+    // Allocate C-style strings and populate dset_out
+    for i in 0..size{
+        let c_str: *mut i8 = unsafe { std::alloc::alloc_zeroed(std::alloc::Layout::array::<i8>(capacity).unwrap()) as *mut i8 };
+        if c_str.is_null() {
+            return Err(ExitCode::AllocationFailed);
+        }
+        dset_out[i] = c_str;
+    }
+
+
+   let rc = unsafe {
+      c::trexio_read_{group}_{element}(self.ptr, dset_out.as_mut_ptr(), capacity.try_into().expect("try_into failed in read_{group}_{element} (capacity)") )
    };
-   rc_return(data, rc)
+
+    // Convert the populated C strings to Rust Strings
+    let mut rust_strings = Vec::new();
+    for &c_str in &dset_out {
+        let rust_str = unsafe {
+            std::ffi::CStr::from_ptr(c_str)
+                .to_string_lossy()
+                .into_owned()
+        };
+        rust_strings.push(rust_str);
+    }
+
+    // Clean up allocated C strings
+    for &c_str in &dset_out {
+        unsafe { std::alloc::dealloc(c_str as *mut u8, std::alloc::Layout::array::<i8>(capacity).unwrap()) };
+    }
+
+   rc_return(rust_strings, rc)
 }
 """ ]
                r += [ '\n'.join(t)
@@ -266,7 +298,7 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<{type_r}>) -> Result<(), Exi
 .replace("{element_l}",element_l) ]
 
                r += [ """
-pub fn write_{group_l}_{element_l}(&self, data: Vec<&str>) -> Result<(), ExitCode> {
+pub fn write_{group_l}_{element_l}(&self, data: &[&str]) -> Result<(), ExitCode> {
     let mut size = 0;
     // Find longest string
     for s in data.iter() {
@@ -274,9 +306,9 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<&str>) -> Result<(), ExitCod
        size = if l>size {l} else {size};
     }
     size = size+1;
-    let data_c : Vec<std::ffi::CString> = data.iter().map(|&x| string_to_c(x)).collect::<Vec<_>>();
+    let data_c : Vec<CString> = data.iter().map(|&x| string_to_c(x)).collect::<Vec<_>>();
     let data_c : Vec<*const c_char> = data_c.iter().map(|x| x.as_ptr() as *const c_char).collect::<Vec<_>>();
-    let size : i32 = size.try_into().expect("try_into failed in write_{group}_{element}");
+    let size : i32 = size.try_into().expect("try_into failed in write_{group}_{element} (size)");
     let data_c = data_c.as_ptr() as *mut *const c_char;
     let rc = unsafe { c::trexio_write_{group}_{element}(self.ptr, data_c, size) };
     rc_return((), rc)
@@ -289,12 +321,42 @@ pub fn write_{group_l}_{element_l}(&self, data: Vec<&str>) -> Result<(), ExitCod
 
             elif data[group][element][0] in [ "float sparse" ]:
                size = len(data[group][element][1])
-               typ = "&[(" + ",".join( [ "usize" for _ in range(size) ]) + ", f64)]"
+               typ = "(" + ",".join( [ "usize" for _ in range(size) ]) + ", f64)"
                r += [ ("""
-pub fn write_{group_l}_{element_l}(&self, offset: usize, data: {typ}) -> Result<(), ExitCode> {
+pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Result<Vec<{typ}>, ExitCode> {
+    let idx = Vec::<i32>::with_capacity({size}*buffer_size);
+    let val = Vec::<f64>::with_capacity(buffer_size);
+    let idx_ptr = idx.as_ptr() as *mut i32;
+    let val_ptr = val.as_ptr() as *mut f64;
+    let offset: i64 = offset.try_into().expect("try_into failed in read_{group}_{element} (offset)");
+    let mut buffer_size_read: i64 = buffer_size.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
+    let rc = unsafe { c::trexio_read_safe_{group}_{element}(self.ptr,
+           offset, &mut buffer_size_read, idx_ptr, buffer_size_read, val_ptr, buffer_size_read) };
+    let idx: Vec::<&[i32]> = idx.chunks({size}).collect();
+
+    let mut result = Vec::<{typ}>::with_capacity(buffer_size);
+    for (i, v) in zip(idx, val) {
+      result.push( ( """ +
+','.join([ f"i[{k}].try_into().unwrap()" for k in range(size) ]) +
+""",v) );
+    }
+    rc_return(result, rc)
+}
+""")
+.replace("{size}",str(size))
+.replace("{typ}",typ)
+.replace("{type_c}",type_c)
+.replace("{type_r}",type_r)
+.replace("{group}",group)
+.replace("{group_l}",group_l)
+.replace("{element}",element)
+.replace("{element_l}",element_l) ]
+
+               r += [ ("""
+pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Result<(), ExitCode> {
     let mut idx = Vec::<i32>::with_capacity({size}*data.len());
     let mut val = Vec::<f64>::with_capacity(data.len());
-    // Array of indices
+
     for d in data.iter() {
 """ +
 '\n'.join([ f"       idx.push(d.{i}.try_into().unwrap());" for i in range(size) ]) +
@@ -302,11 +364,11 @@ f"\n       val.push(d.{size});" +
 """
     }
 
-    let size_max: i64 = data.len().try_into().expect("try_into failed in write_{group}_{element}");
+    let size_max: i64 = data.len().try_into().expect("try_into failed in write_{group}_{element} (size_max)");
     let buffer_size = size_max;
     let idx_ptr = idx.as_ptr() as *const i32;
     let val_ptr = val.as_ptr() as *const f64;
-    let offset: i64 = offset.try_into().expect("try_into failed in write_{group}_{element}");
+    let offset: i64 = offset.try_into().expect("try_into failed in write_{group}_{element} (offset)");
     let rc = unsafe { c::trexio_write_safe_{group}_{element}(self.ptr,
            offset, buffer_size, idx_ptr, size_max, val_ptr, size_max) };
     rc_return((), rc)
@@ -320,6 +382,8 @@ f"\n       val.push(d.{size});" +
 .replace("{group_l}",group_l)
 .replace("{element}",element)
 .replace("{element_l}",element_l) ]
+
+
 
 
 
