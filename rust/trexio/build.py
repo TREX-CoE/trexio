@@ -324,14 +324,18 @@ pub fn write_{group_l}_{element_l}(&self, data: &[&str]) -> Result<(), ExitCode>
                typ = "(" + ",".join( [ "usize" for _ in range(size) ]) + ", f64)"
                r += [ ("""
 pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Result<Vec<{typ}>, ExitCode> {
-    let idx = Vec::<i32>::with_capacity({size}*buffer_size);
-    let val = Vec::<f64>::with_capacity(buffer_size);
+    let mut idx = Vec::<i32>::with_capacity({size}*buffer_size);
+    let mut val = Vec::<f64>::with_capacity(buffer_size);
     let idx_ptr = idx.as_ptr() as *mut i32;
     let val_ptr = val.as_ptr() as *mut f64;
     let offset: i64 = offset.try_into().expect("try_into failed in read_{group}_{element} (offset)");
     let mut buffer_size_read: i64 = buffer_size.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
     let rc = unsafe { c::trexio_read_safe_{group}_{element}(self.ptr,
-           offset, &mut buffer_size_read, idx_ptr, buffer_size_read, val_ptr, buffer_size_read) };
+           offset, &mut buffer_size_read, idx_ptr, buffer_size_read, val_ptr, buffer_size_read)
+    };
+      let buffer_size_read: usize = buffer_size_read.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
+    unsafe { idx.set_len({size}*buffer_size_read) };
+    unsafe { val.set_len(buffer_size_read) };
     let idx: Vec::<&[i32]> = idx.chunks({size}).collect();
 
     let mut result = Vec::<{typ}>::with_capacity(buffer_size);

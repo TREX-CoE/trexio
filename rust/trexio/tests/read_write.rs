@@ -191,12 +191,11 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let spin = trex_file.read_mo_spin()?;
     assert_eq!(spin, spin_ref);
 
-/*
     // Integrals
     let nmax = 100;
     let mut ao_2e_int_eri_ref = Vec::<(usize,usize,usize,usize,f64)>::with_capacity(nmax);
 
-    let n_buffers = 5;
+    let n_buffers = 4;
     let bufsize = nmax/n_buffers;
 
     for i in 0..100 {
@@ -206,12 +205,16 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     }
 
     let mut offset = 0;
-    for i in 0..n_buffers {
-        trex_file.read_ao_2e_int_eri(offset, &ao_2e_int_eri[offset..offset+bufsize])?;
+    let mut ao_2e_int_eri = Vec::<(usize,usize,usize,usize,f64)>::with_capacity(nmax);
+    for _ in 0..n_buffers {
+        let buffer = trex_file.read_ao_2e_int_eri(offset, bufsize)?;
         offset += bufsize;
+        ao_2e_int_eri.extend(buffer);
     }
+    assert_eq!(ao_2e_int_eri_ref, ao_2e_int_eri);
 
 
+/*
     // Determinants
     let det_num = 50;
     let mut det_list = Vec::with_capacity(det_num);
