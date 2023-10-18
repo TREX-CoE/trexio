@@ -258,3 +258,4 @@ impl File {
 }
 
 include!("generated.rs");
+include!("generated_py.rs");

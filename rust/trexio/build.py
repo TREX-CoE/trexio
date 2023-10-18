@@ -2,275 +2,38 @@
 import json
 
 json_file = "../../trex.json"
-trexio_h = "../../include/trexio.h"
-wrapper_h = "wrapper.h"
-generated_rs = "src/generated.rs"
+generated_rs = "src/generated_py.rs"
 
-def check_version():
-   with open('Cargo.toml','r') as f:
-      for line in f:
-         if line.startswith("version"):
-            rust_version = line.split('=')[1].strip()[1:-1]
-            break
-   with open('../../configure.ac','r') as f:
-      for line in f:
-         if line.startswith("AC_INIT"):
-            trexio_version = line.split(',')[1].strip()[1:-1]
-            break
-   if rust_version != trexio_version:
-      print(f"Inconsistent versions:\nTREXIO:{trexio_version}\nRust:  {rust_version}\n")
-      raise
+convert_r = { "int": "i64",
+              "int special" : "usize",
+              "float" : "f64",
+              "float sparse" : "f64",
+              "float buffered" : "f64",
+              "dim" : "usize",
+              "dim readonly" : "usize",
+              "index" : "usize",
+              "str" : "str"}
 
+convert_c = { "int": "i64",
+              "int special" : "i64",
+              "float" : "f64",
+              "float sparse" : "f64",
+              "float buffered" : "f64",
+              "dim" : "i64",
+              "dim readonly" : "i64",
+              "index" : "i64",
+              "str" : "str"}
 
-
-def make_interface():
-    err = {}
-    be  = {}
-    with open(trexio_h, 'r') as f:
-        for line in f:
-            buf = line.lstrip()
-
-            # Get exit codes
-            if buf.startswith("#define TREXIO_") and "(trexio_exit_code)" in buf :
-                buf2 = buf.replace(")","").replace("(","").split()
-                err[buf2[1]] = int(buf2[3].strip())
-
-            # Get backends
-            if buf.startswith("#define TREXIO_") and "(back_end_t)" in buf :
-                buf2 = buf.replace(")","").replace("(","").split()
-                be[buf2[1]] = int(buf2[3].strip())
-
-    with open(wrapper_h,'w') as f:
-        f.write("#include <trexio.h>\n")
-
-        # Write exit codes
-        for k, v in err.items():
-            f.write(f"#undef {k}\n")
-            f.write(f"const trexio_exit_code {k} = {v};\n")
-
-        # Write backends
-        for k, v in be.items():
-            f.write(f"#undef {k}\n")
-            f.write(f"const back_end_t {k} = {v};\n")
-
-        f.write(f"#undef TREXIO_AUTO;\n")
-        f.write(f"const back_end_t TREXIO_AUTO = TREXIO_INVALID_BACK_END;\n")
-
-
-
-def make_functions():
-   with open(json_file,'r') as f:
-      data = json.load(f)
-
-   convert_r = { "int": "i64",
-                 "int special" : "usize",
-                 "float" : "f64",
-                 "float sparse" : "f64",
-                 "float buffered" : "f64",
-                 "dim" : "usize",
-                 "dim readonly" : "usize",
-                 "index" : "usize",
-                 "str" : "str"}
-
-   convert_c = { "int": "i64",
-                 "int special" : "i64",
-                 "float" : "f64",
-                 "float sparse" : "f64",
-                 "float buffered" : "f64",
-                 "dim" : "i64",
-                 "dim readonly" : "i64",
-                 "index" : "i64",
-                 "str" : "str"}
-
-   r = ["""
-use std::iter::zip;
-use std::ffi::CString;
-
-/// This implementation block includes additional functions automatically generated from tables.
-/// For more details, refer to [TREXIO tables documentation](https://trex-coe.github.io/trexio/trex.html).
-impl File {
-#![allow(clippy::unnecessary_cast)]
-#![allow(clippy::useless_conversion)]
-#![allow(clippy::type_complexity)]
-""" ]
-
+def make_array_functions(data):
+   r = []
    for group in data:
       group_l = group.lower()
-      r += [ """
-/// Checks if the group `{group}` exists in the file.
-/// # Parameters
-///
-/// None
-///
-/// # Returns
-///
-/// * `Result<bool, ExitCode>` - Returns `Ok(true)` if the element exists in the file,
-/// otherwise returns `Ok(false)`. An error during the execution results in `Err(ExitCode)`.
-pub fn has_{group_l}(&self) -> Result<bool, ExitCode> {
-    let rc = unsafe { c::trexio_has_{group}(self.ptr) };
-    match rc {
-        c::TREXIO_SUCCESS   =>  Ok(true),
-        c::TREXIO_HAS_NOT   =>  Ok(false),
-        x                   =>  Err(ExitCode::from(x)),
-    }
-}
-"""
-.replace("{group}",group)
-.replace("{group_l}",group_l) ]
       for element in data[group]:
          type_c = convert_c[data[group][element][0]]
          type_r = convert_r[data[group][element][0]]
          element_l = element.lower()
-         r += [ """
-/// Checks if the element `{element}` of the group `{group}` exists in the file.
-///
-/// # Parameters
-///
-/// None
-///
-/// # Returns
-///
-/// * `Result<bool, ExitCode>` - Returns `Ok(true)` if the element exists in the file,
-/// otherwise returns `Ok(false)`. An error during the execution results in `Err(ExitCode)`.
-pub fn has_{group_l}_{element_l}(&self) -> Result<bool, ExitCode> {
-    let rc = unsafe { c::trexio_has_{group}_{element}(self.ptr) };
-    match rc {
-        c::TREXIO_SUCCESS   =>  Ok(true),
-        c::TREXIO_HAS_NOT   =>  Ok(false),
-        x                   =>  Err(ExitCode::from(x)),
-    }
-}
-"""
-.replace("{group}",group)
-.replace("{group_l}",group_l)
-.replace("{element}",element)
-.replace("{element_l}",element_l) ]
 
-         # Scalar elements
-         if data[group][element][1] == []:
-            if data[group][element][0] in [ "int", "float", "dim", "index" ]:
-               r += [ """
-/// Reads the scalar element `{element}` from the group `{group}` in the file.
-///
-/// # Parameters
-///
-/// None
-///
-/// # Returns
-///
-/// * `Result<{type_r}, ExitCode>` - Returns the scalar element as a `{type_r}` upon successful 
-/// operation. If the operation fails, it returns `Err(ExitCode)`.
-pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
-   let mut data_c: {type_c} = 0{type_c};
-   let (rc, data) = unsafe {
-      let rc = c::trexio_read_{group}_{element}_64(self.ptr, &mut data_c);
-      (rc, data_c.try_into().expect("try_into failed in read_{group_l}_{element_l}"))
-   };
-   rc_return(data, rc)
-}
-
-/// Writes the scalar element `{element}` into the group `{group}` in the file.
-///
-/// # Parameters
-///
-/// * `data: {type_r}` - A `{type_r}` scalar element that will be written into `{element}` in the group `{group}`.
-///
-/// # Returns
-///
-/// * `Result<(), ExitCode>` - Returns `Ok(())` upon successful operation, otherwise returns `Err(ExitCode)`.
-pub fn write_{group_l}_{element_l}(&self, data: {type_r}) -> Result<(), ExitCode> {
-    let data: {type_c} = data.try_into().expect("try_into failed in write_{group_l}_{element_l}");
-    let rc = unsafe { c::trexio_write_{group}_{element}_64(self.ptr, data) };
-    rc_return((), rc)
-}
-"""
-.replace("{type_c}",type_c)
-.replace("{type_r}",type_r)
-.replace("{group}",group)
-.replace("{group_l}",group_l)
-.replace("{element}",element)
-.replace("{element_l}",element_l) ]
-
-            elif data[group][element][0] in [ "str" ]:
-               r += [ """
-/// Reads the string attribute `{element}` contained in the group `{group}`.
-/// # Parameters
-///
-/// * `capacity: usize` - The maximum buffer size allocated for the string to be read.
-///
-/// # Returns
-///
-/// * `Result<String, ExitCode>` - Returns the attribute as a `String` upon successful operation.
-///   If the operation fails, it returns `Err(ExitCode)`.
-pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<String, ExitCode> {
-   let data_c = CString::new(vec![ b' ' ; capacity]).expect("CString::new failed");
-   let (rc, data) = unsafe {
-      let data_c = data_c.into_raw() as *mut c_char;
-      let rc = c::trexio_read_{group}_{element}(self.ptr, data_c, capacity.try_into().expect("try_into failed in read_{group_l}_{element_l}"));
-      (rc, CString::from_raw(data_c))
-   };
-   let result : String = CString::into_string(data).expect("into_string failed in read_{group_l}_{element_l}");
-   rc_return(result, rc)
-}
-
-
-/// Writes the string attribute `{element}` into the group `{group}`.
-///
-/// # Parameters
-///
-/// * `data: &str` - The string attribute that will be written into the `{element}` field in the `{group}` group.
-///
-/// # Returns
-///
-/// * `Result<(), ExitCode>` - Returns `Ok(())` upon successful operation. 
-///   If the operation fails, it returns `Err(ExitCode)`.
-pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
-    let size : i32 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
-    let data = string_to_c(data);
-    let data = data.as_ptr() as *const c_char;
-    let rc = unsafe { c::trexio_write_{group}_{element}(self.ptr, data, size) };
-    rc_return((), rc)
-}
-"""
-.replace("{type_c}",type_c)
-.replace("{type_r}",type_r)
-.replace("{group}",group)
-.replace("{group_l}",group_l)
-.replace("{element}",element)
-.replace("{element_l}",element_l) ]
-
-
-            elif data[group][element][0] in [ "dim readonly" ]:
-               r += [ """
-/// Reads the dimensioning variable `{element}` from the group `{group}`.
-///
-/// # Parameters
-///
-/// None.
-///
-/// # Returns
-///
-/// * `Result<{type_r}, ExitCode>` - Returns the dimensioning variable `{element}` of type `{type_r}`
-///   upon successful operation. If the operation fails, it returns `Err(ExitCode)`.
-pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
-   let mut data_c: {type_c} = 0{type_c};
-   let (rc, data) = unsafe {
-      let rc = c::trexio_read_{group}_{element}_64(self.ptr, &mut data_c);
-      (rc, data_c.try_into().expect("try_into failed in read_{group_l}_{element_l}"))
-   };
-   rc_return(data, rc)
-}
-"""
-.replace("{type_r}",type_r)
-.replace("{type_c}",type_c)
-.replace("{group}",group)
-.replace("{group_l}",group_l)
-.replace("{element}",element)
-.replace("{element_l}",element_l) ]
-
-         # Array elements
-         else:
-
+         if data[group][element][1] != []:
             if data[group][element][0] in [ "int", "float", "dim", "index" ]:
                t = [ f"""
 /// Reads the `{element}` array from the group `{group}` in the file.
@@ -586,11 +349,25 @@ f"\n       val.push(d.{size});" +
 .replace("{group_l}",group_l)
 .replace("{element}",element)
 .replace("{element_l}",element_l) ]
+   return r
 
 
+def make_functions():
+   with open(json_file,'r') as f:
+      data = json.load(f)
 
+   r = ["""
+use std::iter::zip;
 
+/// This implementation block includes additional functions automatically generated from tables.
+/// For more details, refer to [TREXIO tables documentation](https://trex-coe.github.io/trexio/trex.html).
+impl File {
+#![allow(clippy::unnecessary_cast)]
+#![allow(clippy::useless_conversion)]
+#![allow(clippy::type_complexity)]
+""" ]
 
+   r += make_array_functions(data)
 
    r += [ "}" ]
    with open(generated_rs,'w') as f:
@@ -599,6 +376,4 @@ f"\n       val.push(d.{size});" +
 
 
 if __name__ == '__main__':
-   check_version()
-   make_interface()
    make_functions()

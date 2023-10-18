@@ -5,7 +5,7 @@
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
-TREXIO is an open-source file format and library developed for the storage and manipulation of data produced by quantum chemistry calculations. It is designed with the goal of providing a reliable and efficient method of storing and exchanging wave function parameters and matrix elements, making it an important tool for researchers in the field of quantum chemistry. The library consists of a front-end implemented in the C programming language and two different back-ends: a text back-end and a binary back-end utilizing the HDF5 library which enables fast read and write operations. It is compatible with a variety of platforms and has interfaces for the Fortran, Python, OCaml and Rust programming languages.
+TREXIO is an open-source file format and library developed for the storage and manipulation of data produced by quantum chemistry calculations. It is designed with the goal of providing a reliable and efficient method of storing and exchanging wave function parameters and matrix elements. The library consists of a front-end implemented in the C programming language and two different back-ends: a text back-end and a binary back-end utilizing the HDF5 library which enables fast read and write operations. It is compatible with a variety of platforms and has interfaces for the Fortran, Python, OCaml and Rust programming languages.
 
 ## Minimal requirements (for users):
 
