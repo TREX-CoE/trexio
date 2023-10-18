@@ -333,7 +333,11 @@ pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Re
     let rc = unsafe { c::trexio_read_safe_{group}_{element}(self.ptr,
            offset, &mut buffer_size_read, idx_ptr, buffer_size_read, val_ptr, buffer_size_read)
     };
-      let buffer_size_read: usize = buffer_size_read.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
+    let rc = match ExitCode::from(rc) {
+              ExitCode::End => ExitCode::to_c(&ExitCode::Success),
+              _       => rc
+            };
+    let buffer_size_read: usize = buffer_size_read.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
     unsafe { idx.set_len({size}*buffer_size_read) };
     unsafe { val.set_len(buffer_size_read) };
     let idx: Vec::<&[i32]> = idx.chunks({size}).collect();

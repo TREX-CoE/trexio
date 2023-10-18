@@ -198,10 +198,9 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let n_buffers = 8;
     let bufsize = nmax/n_buffers+10;
 
-/* TODO: check from here */
     for i in 0..100 {
         // Quadruplet of indices + value
-        let data = (4*i, 4*i+1, 4*i+2, 4*i+3, 3.13 + (i as f64));
+        let data = (4*i, 4*i+1, 4*i+2, 4*i+3, 3.14 + (i as f64));
         ao_2e_int_eri_ref.push(data);
     }
 
@@ -209,7 +208,7 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let mut ao_2e_int_eri = Vec::<(usize,usize,usize,usize,f64)>::with_capacity(nmax);
     for _ in 0..n_buffers {
         let buffer = trex_file.read_ao_2e_int_eri(offset, bufsize)?;
-        offset += bufsize;
+        offset += buffer.len();
         ao_2e_int_eri.extend(buffer);
     }
     assert_eq!(ao_2e_int_eri_ref, ao_2e_int_eri);
@@ -229,13 +228,13 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     }
 
     let n_buffers = 8;
-    let bufsize = det_num/n_buffers + 10;
+    let bufsize = det_num/n_buffers + 20;
     let mut offset = 0;
     let mut det_list: Vec<Bitfield> = Vec::with_capacity(det_num);
     for _ in 0..n_buffers {
         let buffer = trex_file.read_determinant_list(offset, bufsize)?;
+        offset += buffer.len();
         det_list.extend(buffer);
-        offset += bufsize;
     }
     assert_eq!(det_list_ref, det_list);
 
@@ -253,15 +252,15 @@ use std::fs;
 
 #[test]
 pub fn text_backend() {
-    let _ = write("tmp/test_write.dir", trexio::BackEnd::Text);
-    let _ = read("tmp/test_write.dir", trexio::BackEnd::Text);
+    let _ = write("tmp/test_write.dir", trexio::BackEnd::Text).unwrap();
+    let _ = read("tmp/test_write.dir", trexio::BackEnd::Text).unwrap();
     fs::remove_dir_all("tmp/test_write.dir").unwrap()
 }
 
 #[test]
 pub fn hdf5_backend() {
-    let _ = write("tmp/test_write.hdf5", trexio::BackEnd::Hdf5);
-    let _ = read("tmp/test_write.hdf5", trexio::BackEnd::Hdf5);
+    let _ = write("tmp/test_write.hdf5", trexio::BackEnd::Hdf5).unwrap();
+    let _ = read("tmp/test_write.hdf5", trexio::BackEnd::Hdf5).unwrap();
     fs::remove_file("tmp/test_write.hdf5").unwrap()
 }
 
