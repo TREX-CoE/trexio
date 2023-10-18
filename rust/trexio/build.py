@@ -86,12 +86,22 @@ def make_functions():
 use std::iter::zip;
 use std::ffi::CString;
 
+/// This implementation block includes additional functions automatically generated from tables.
+/// For more details, refer to [TREXIO tables documentation](https://trex-coe.github.io/trexio/trex.html).
 impl File {""" ]
 
    for group in data:
       group_l = group.lower()
       r += [ """
 /// Checks if the group `{group}` exists in the file.
+/// # Parameters
+///
+/// None
+///
+/// # Returns
+///
+/// * `Result<bool, ExitCode>` - Returns `Ok(true)` if the element exists in the file,
+/// otherwise returns `Ok(false)`. An error during the execution results in `Err(ExitCode)`.
 pub fn has_{group_l}(&self) -> Result<bool, ExitCode> {
     let rc = unsafe { c::trexio_has_{group}(self.ptr) };
     match rc {
@@ -109,6 +119,15 @@ pub fn has_{group_l}(&self) -> Result<bool, ExitCode> {
          element_l = element.lower()
          r += [ """
 /// Checks if the element `{element}` of the group `{group}` exists in the file.
+///
+/// # Parameters
+///
+/// None
+///
+/// # Returns
+///
+/// * `Result<bool, ExitCode>` - Returns `Ok(true)` if the element exists in the file,
+/// otherwise returns `Ok(false)`. An error during the execution results in `Err(ExitCode)`.
 pub fn has_{group_l}_{element_l}(&self) -> Result<bool, ExitCode> {
     let rc = unsafe { c::trexio_has_{group}_{element}(self.ptr) };
     match rc {
@@ -207,24 +226,33 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
 
             if data[group][element][0] in [ "int", "float", "dim", "index" ]:
                t = [ f"""
-/// Reads the array `{element}` contained in the group `{group}`.
+/// Reads the `{element}` array from the group `{group}` in the file.
 ///
-/// Dimensions are `{data[group][element][1]}`.
+/// # Dimensions
+///
+/// The array is of dimension `{data[group][element][1]}`.
+///
+/// # Returns
+///
+/// * `Result<Vec<{type_r}>, ExitCode>` - Returns a flattened one-dimensional vector that contains 
+/// the elements of the `{element}` array. If the operation is unsuccessful, it returns `Err(ExitCode)`.
+///
 /// """ ]
                if len(data[group][element][1]) > 1:
-                    t += [ f"""/// The array is returned as a flattened one-dimensional vector.
-/// To put it back as a multidimensional array, you can use the [`chunks`] method:
+                    t += [ f"""
+/// # Example
 ///
-/// # Example 
+/// To reshape the one-dimensional vector back into a two-dimensional array, you can use the [`chunks`] method:
+///
 /// ```
 /// let one_d_array = trexio_file.read_{group_l}_{element_l}()?;""" ]
                     try:
                         dim_group, dim_element = data[group][element][1][0].split('.')
                         t += [ f"/// let {dim_group}_{dim_element} = trexio_file.read_{dim_group}_{dim_element}()?;",
-f"/// let two_d_array = one_d_array.chunks({dim_group}_{dim_element}).collect();"
+f"/// let two_d_array: Vec<_> = one_d_array.chunks({dim_group}_{dim_element}).collect();"
 ]
                     except:
-                        t += [ f"/// let two_d_array = one_d_array.chunks({data[group][element][1][0]}).collect();" ]
+                        t += [ f"/// let two_d_array: Vec<_> = one_d_array.chunks({data[group][element][1][0]}).collect();" ]
                     t += [ """
 /// ```
 ///
@@ -260,7 +288,19 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<Vec<{type_r}>, ExitCode> {
 .replace("{element}",element)
 .replace("{element_l}",element_l) ]
 
-               r += [ """
+               r += [ f"""
+/// Writes the `{element}` array into the group `{group}` in the file.
+///
+/// # Parameters
+///
+/// * `data: &[{type_r}]` - A one-dimensional vector that contains the elements of the `{element}` array
+/// to be written into the file. The vector should be flattened from a two-dimensional array with 
+/// dimensions `{data[group][element][1]}`.
+///
+/// # Returns
+///
+/// * `Result<(), ExitCode>` - Returns `Ok(())` if the operation is successful,
+/// otherwise returns `Err(ExitCode)`.""", """\
 pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitCode> {
     let size: i64 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let data = data.as_ptr() as *const {type_c};
@@ -276,7 +316,40 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
 .replace("{element_l}",element_l) ]
 
             elif data[group][element][0] in [ "str" ]:
-               t = [ """pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<Vec<String>, ExitCode> {
+               t = [ f"""
+/// Reads the `{element}` array from the group `{group}` in the file.
+///
+/// # Dimensions
+///
+/// The array is of dimension `{data[group][element][1]}`.
+///
+/// # Returns
+///
+/// * `Result<Vec<{type_r}>, ExitCode>` - Returns a flattened one-dimensional vector that contains 
+/// the elements of the `{element}` array. If the operation is unsuccessful, it returns `Err(ExitCode)`.
+///
+/// """ ]
+               if len(data[group][element][1]) > 1:
+                    t += [ f"""
+/// # Example
+///
+/// To reshape the one-dimensional vector back into a two-dimensional array, you can use the [`chunks`] method:
+///
+/// ```
+/// let one_d_array = trexio_file.read_{group_l}_{element_l}()?;""" ]
+                    try:
+                        dim_group, dim_element = data[group][element][1][0].split('.')
+                        t += [ f"/// let {dim_group}_{dim_element} = trexio_file.read_{dim_group}_{dim_element}()?;",
+f"/// let two_d_array: Vec<_> = one_d_array.chunks({dim_group}_{dim_element}).collect();"
+]
+                    except:
+                        t += [ f"/// let two_d_array: Vec<_> = one_d_array.chunks({data[group][element][1][0]}).collect();" ]
+                    t += [ """
+/// ```
+///
+/// [`chunks`]: slice::chunks"""
+]
+               t += [ """pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<Vec<String>, ExitCode> {
   let size = 1;""" ]
                t_prime = []
                for dim in data[group][element][1]:
@@ -330,6 +403,18 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
 .replace("{element_l}",element_l) ]
 
                r += [ """
+/// Writes the `{element}` array into the group `{group}` in the file.
+///
+/// # Parameters
+///
+/// * `data: &[{type_r}]` - A one-dimensional vector that contains the elements of the `{element}` array
+/// to be written into the file. The vector should be flattened from a two-dimensional array with 
+/// dimensions `{data[group][element][1]}`.
+///
+/// # Returns
+///
+/// * `Result<(), ExitCode>` - Returns `Ok(())` if the operation is successful,
+/// otherwise returns `Err(ExitCode)`.""", """\
 pub fn write_{group_l}_{element_l}(&self, data: &[&str]) -> Result<(), ExitCode> {
     let mut size = 0;
     // Find longest string
@@ -355,6 +440,7 @@ pub fn write_{group_l}_{element_l}(&self, data: &[&str]) -> Result<(), ExitCode>
                size = len(data[group][element][1])
                typ = "(" + ",".join( [ "usize" for _ in range(size) ]) + ", f64)"
                r += [ ("""
+// TODO
 pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Result<Vec<{typ}>, ExitCode> {
     let mut idx = Vec::<i32>::with_capacity({size}*buffer_size);
     let mut val = Vec::<f64>::with_capacity(buffer_size);
@@ -393,6 +479,7 @@ pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Re
 .replace("{element_l}",element_l) ]
 
                r += [ ("""
+// TODO
 pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Result<(), ExitCode> {
     let mut idx = Vec::<i32>::with_capacity({size}*data.len());
     let mut val = Vec::<f64>::with_capacity(data.len());
