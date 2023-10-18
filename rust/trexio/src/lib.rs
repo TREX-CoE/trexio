@@ -235,8 +235,6 @@ impl File {
 
 }
 
-/// Inclusion of additional functions automatically generated from tables.
-/// For more details, refer to [TREXIO tables documentation](https://trex-coe.github.io/trexio/trex.html).
 include!("generated.rs");
 
 

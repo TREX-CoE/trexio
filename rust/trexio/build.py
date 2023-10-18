@@ -146,7 +146,16 @@ pub fn has_{group_l}_{element_l}(&self) -> Result<bool, ExitCode> {
          if data[group][element][1] == []:
             if data[group][element][0] in [ "int", "float", "dim", "index" ]:
                r += [ """
-/// Reads the scalar element `{element}` contained in the group `{group}`.
+/// Reads the scalar element `{element}` from the group `{group}` in the file.
+///
+/// # Parameters
+///
+/// None
+///
+/// # Returns
+///
+/// * `Result<{type_r}, ExitCode>` - Returns the scalar element as a `{type_r}` upon successful 
+/// operation. If the operation fails, it returns `Err(ExitCode)`.
 pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
    let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
@@ -156,7 +165,15 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
    rc_return(data, rc)
 }
 
-/// Writes the scalar element `{element}` contained in the group `{group}`.
+/// Writes the scalar element `{element}` into the group `{group}` in the file.
+///
+/// # Parameters
+///
+/// * `data: {type_r}` - A `{type_r}` scalar element that will be written into `{element}` in the group `{group}`.
+///
+/// # Returns
+///
+/// * `Result<(), ExitCode>` - Returns `Ok(())` upon successful operation, otherwise returns `Err(ExitCode)`.
 pub fn write_{group_l}_{element_l}(&self, data: {type_r}) -> Result<(), ExitCode> {
     let data: {type_c} = data.try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let rc = unsafe { c::trexio_write_{group}_{element}_64(self.ptr, data) };
@@ -172,7 +189,15 @@ pub fn write_{group_l}_{element_l}(&self, data: {type_r}) -> Result<(), ExitCode
 
             elif data[group][element][0] in [ "str" ]:
                r += [ """
-/// Reads the string `{element}` contained in the group `{group}`.
+/// Reads the string attribute `{element}` contained in the group `{group}`.
+/// # Parameters
+///
+/// * `capacity: usize` - The maximum buffer size allocated for the string to be read.
+///
+/// # Returns
+///
+/// * `Result<String, ExitCode>` - Returns the attribute as a `String` upon successful operation.
+///   If the operation fails, it returns `Err(ExitCode)`.
 pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<String, ExitCode> {
    let data_c = CString::new(vec![ b' ' ; capacity]).expect("CString::new failed");
    let (rc, data) = unsafe {
@@ -185,7 +210,16 @@ pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<String, Exit
 }
 
 
-/// Writes the string `{element}` contained in the group `{group}`.
+/// Writes the string attribute `{element}` into the group `{group}`.
+///
+/// # Parameters
+///
+/// * `data: &str` - The string attribute that will be written into the `{element}` field in the `{group}` group.
+///
+/// # Returns
+///
+/// * `Result<(), ExitCode>` - Returns `Ok(())` upon successful operation. 
+///   If the operation fails, it returns `Err(ExitCode)`.
 pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
     let size : i32 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let data = string_to_c(data);
@@ -204,7 +238,16 @@ pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
 
             elif data[group][element][0] in [ "dim readonly" ]:
                r += [ """
-/// Reads the dimensioning variable `{element}` contained in group `{group}`.
+/// Reads the dimensioning variable `{element}` from the group `{group}`.
+///
+/// # Parameters
+///
+/// None.
+///
+/// # Returns
+///
+/// * `Result<{type_r}, ExitCode>` - Returns the dimensioning variable `{element}` of type `{type_r}`
+///   upon successful operation. If the operation fails, it returns `Err(ExitCode)`.
 pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
    let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
@@ -440,7 +483,22 @@ pub fn write_{group_l}_{element_l}(&self, data: &[&str]) -> Result<(), ExitCode>
                size = len(data[group][element][1])
                typ = "(" + ",".join( [ "usize" for _ in range(size) ]) + ", f64)"
                r += [ ("""
-// TODO
+/// Reads a buffer of {element} from group {group}.
+///
+/// # Parameters
+///
+/// * `offset: usize` - The starting point in the array from which data will be read.
+/// * `buffer_size: usize` - The size of the buffer in which read data will be stored.
+///
+/// # Returns
+///
+/// * `Result<Vec<{typ}>, ExitCode>` - Returns a vector of tuples containing 
+/// the indices and the value of the element. The vector has a length of at most `buffer_size`.
+///
+/// # Notes
+///
+/// The reading process is a buffered operation, meaning that only a segment of the full array 
+/// is read into the memory.
 pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Result<Vec<{typ}>, ExitCode> {
     let mut idx = Vec::<i32>::with_capacity({size}*buffer_size);
     let mut val = Vec::<f64>::with_capacity(buffer_size);
@@ -479,7 +537,22 @@ pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Re
 .replace("{element_l}",element_l) ]
 
                r += [ ("""
-// TODO
+/// Writes a buffer of {element} from group {group}.
+///
+/// # Parameters
+///
+/// * `offset: usize` - The starting point in the array at which data will be written.
+/// * `data: &[{typ}]` - A slice of tuples containing the indices and the value of the element.
+///
+/// # Returns
+///
+/// * `Result<(), ExitCode>` - Returns `Ok(())` if the writing operation is successful, 
+/// otherwise returns `Err(ExitCode)`.
+///
+/// # Notes
+///
+/// The writing process is a buffered operation, meaning that only a segment of the full array 
+/// is written into the file.
 pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Result<(), ExitCode> {
     let mut idx = Vec::<i32>::with_capacity({size}*data.len());
     let mut val = Vec::<f64>::with_capacity(data.len());
