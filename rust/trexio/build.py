@@ -91,6 +91,7 @@ impl File {""" ]
    for group in data:
       group_l = group.lower()
       r += [ """
+/// Checks if the group `{group}` exists in the file.
 pub fn has_{group_l}(&self) -> Result<bool, ExitCode> {
     let rc = unsafe { c::trexio_has_{group}(self.ptr) };
     match rc {
@@ -107,6 +108,7 @@ pub fn has_{group_l}(&self) -> Result<bool, ExitCode> {
          type_r = convert_r[data[group][element][0]]
          element_l = element.lower()
          r += [ """
+/// Checks if the element `{element}` of the group `{group}` exists in the file.
 pub fn has_{group_l}_{element_l}(&self) -> Result<bool, ExitCode> {
     let rc = unsafe { c::trexio_has_{group}_{element}(self.ptr) };
     match rc {
@@ -125,6 +127,7 @@ pub fn has_{group_l}_{element_l}(&self) -> Result<bool, ExitCode> {
          if data[group][element][1] == []:
             if data[group][element][0] in [ "int", "float", "dim", "index" ]:
                r += [ """
+/// Reads the scalar element `{element}` contained in the group `{group}`.
 pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
    let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
@@ -134,6 +137,7 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
    rc_return(data, rc)
 }
 
+/// Writes the scalar element `{element}` contained in the group `{group}`.
 pub fn write_{group_l}_{element_l}(&self, data: {type_r}) -> Result<(), ExitCode> {
     let data: {type_c} = data.try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let rc = unsafe { c::trexio_write_{group}_{element}_64(self.ptr, data) };
@@ -149,6 +153,7 @@ pub fn write_{group_l}_{element_l}(&self, data: {type_r}) -> Result<(), ExitCode
 
             elif data[group][element][0] in [ "str" ]:
                r += [ """
+/// Reads the string `{element}` contained in the group `{group}`.
 pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<String, ExitCode> {
    let data_c = CString::new(vec![ b' ' ; capacity]).expect("CString::new failed");
    let (rc, data) = unsafe {
@@ -161,6 +166,7 @@ pub fn read_{group_l}_{element_l}(&self, capacity: usize) -> Result<String, Exit
 }
 
 
+/// Writes the string `{element}` contained in the group `{group}`.
 pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
     let size : i32 = data.len().try_into().expect("try_into failed in write_{group_l}_{element_l}");
     let data = string_to_c(data);
@@ -179,6 +185,7 @@ pub fn write_{group_l}_{element_l}(&self, data: &str) -> Result<(), ExitCode> {
 
             elif data[group][element][0] in [ "dim readonly" ]:
                r += [ """
+/// Reads the dimensioning variable `{element}` contained in group `{group}`.
 pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
    let mut data_c: {type_c} = 0{type_c};
    let (rc, data) = unsafe {
@@ -199,7 +206,32 @@ pub fn read_{group_l}_{element_l}(&self) -> Result<{type_r}, ExitCode> {
          else:
 
             if data[group][element][0] in [ "int", "float", "dim", "index" ]:
-               t = [ """pub fn read_{group_l}_{element_l}(&self) -> Result<Vec<{type_r}>, ExitCode> {
+               t = [ f"""
+/// Reads the array `{element}` contained in the group `{group}`.
+///
+/// Dimensions are `{data[group][element][1]}`.
+/// """ ]
+               if len(data[group][element][1]) > 1:
+                    t += [ f"""/// The array is returned as a flattened one-dimensional vector.
+/// To put it back as a multidimensional array, you can use the [`chunks`] method:
+///
+/// # Example 
+/// ```
+/// let one_d_array = trexio_file.read_{group_l}_{element_l}()?;""" ]
+                    try:
+                        dim_group, dim_element = data[group][element][1][0].split('.')
+                        t += [ f"/// let {dim_group}_{dim_element} = trexio_file.read_{dim_group}_{dim_element}()?;",
+f"/// let two_d_array = one_d_array.chunks({dim_group}_{dim_element}).collect();"
+]
+                    except:
+                        t += [ f"/// let two_d_array = one_d_array.chunks({data[group][element][1][0]}).collect();" ]
+                    t += [ """
+/// ```
+///
+/// [`chunks`]: slice::chunks"""
+]
+               t += [ """
+pub fn read_{group_l}_{element_l}(&self) -> Result<Vec<{type_r}>, ExitCode> {
   let size = 1;""" ]
                t_prime = []
                for dim in data[group][element][1]:

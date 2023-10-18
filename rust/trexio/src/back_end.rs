@@ -1,11 +1,16 @@
 use crate::c;
 
-/// Possible back ends
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum BackEnd {
+  /// The TREXIO "file" is a directory with text files for each group.
+  /// A fallback when HDF5 is not available.
   Text,
+
+  /// Should be used for production. The TREXIO file is a single HDF5 file.
   Hdf5,
+
+  /// Automatic discovery of the appropriate backend
   Auto,
 }
 

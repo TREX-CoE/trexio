@@ -1,48 +1,104 @@
 use crate::c;
 
-/// Exit codes
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum ExitCode {
+    /// Unknown failure
     Failure,
+
+    /// Everything went fine
     Success,
-    InvalidArg1,
-    InvalidArg2,
-    InvalidArg3,
-    InvalidArg4,
-    InvalidArg5,
+
+    /// Invalid argument
+    InvalidArg(usize),
+
+    /// End of file
     End,
+
+    /// Read-only file
     ReadOnly,
+
+    /// Error returned by Errno
     Errno,
+
+    /// Invalid ID
     InvalidId,
+
+    /// Allocation failed
     AllocationFailed,
+
+    /// Element absent
     HasNot,
+
+    /// Invalid (negative or 0) dimension
     InvalidNum,
+
+    /// Attribute already exists
     AttrAlreadyExists,
+
+    /// Dataset already exists
     DsetAlreadyExists,
+
+    /// Error opening file
     OpenError,
+
+    /// Error locking file
     LockError,
+
+    /// Error unlocking file
     UnlockError,
+
+    /// Invalid file
     FileError,
+
+    /// Error reading group
     GroupReadError,
+
+    /// Error writing group
     GroupWriteError,
+
+    /// Error reading element
     ElemReadError,
+
+    /// Error writing element
     ElemWriteError,
+
+    /// Access to memory beyond allocated
     UnsafeArrayDim,
+
+    /// Attribute does not exist in the file
     AttrMissing,
+
+    /// Dataset does not exist in the file
     DsetMissing,
+
+    /// Requested back end is disabled
     BackEndMissing,
-    InvalidArg6,
-    InvalidArg7,
-    InvalidArg8,
+
+    /// Invalid max_str_len
     InvalidStrLen,
+
+    /// Possible integer overflow
     IntSizeOverflow,
+
+    /// Unsafe operation in safe mode
     SafeMode,
+
+    /// Inconsistent number of electrons
     InvalidElectronNum,
+
+    /// Inconsistent number of determinants
     InvalidDeterminantNum,
+
+    /// Inconsistent state of the file
     InvalidState,
+
+    /// Failed to parse package_version
     VersionParsingIssue,
+
+    /// The function succeeded with a change of sign
     PhaseChange,
+
 }
 
 impl ExitCode {
@@ -52,11 +108,11 @@ impl ExitCode {
         match rc {
             c::TREXIO_FAILURE                  =>  Self::Failure,
             c::TREXIO_SUCCESS                  =>  Self::Success,
-            c::TREXIO_INVALID_ARG_1            =>  Self::InvalidArg1,
-            c::TREXIO_INVALID_ARG_2            =>  Self::InvalidArg2,
-            c::TREXIO_INVALID_ARG_3            =>  Self::InvalidArg3,
-            c::TREXIO_INVALID_ARG_4            =>  Self::InvalidArg4,
-            c::TREXIO_INVALID_ARG_5            =>  Self::InvalidArg5,
+            c::TREXIO_INVALID_ARG_1            =>  Self::InvalidArg(1),
+            c::TREXIO_INVALID_ARG_2            =>  Self::InvalidArg(2),
+            c::TREXIO_INVALID_ARG_3            =>  Self::InvalidArg(3),
+            c::TREXIO_INVALID_ARG_4            =>  Self::InvalidArg(4),
+            c::TREXIO_INVALID_ARG_5            =>  Self::InvalidArg(5),
             c::TREXIO_END                      =>  Self::End,
             c::TREXIO_READONLY                 =>  Self::ReadOnly,
             c::TREXIO_ERRNO                    =>  Self::Errno,
@@ -78,9 +134,9 @@ impl ExitCode {
             c::TREXIO_ATTR_MISSING             =>  Self::AttrMissing,
             c::TREXIO_DSET_MISSING             =>  Self::DsetMissing,
             c::TREXIO_BACK_END_MISSING         =>  Self::BackEndMissing,
-            c::TREXIO_INVALID_ARG_6            =>  Self::InvalidArg6,
-            c::TREXIO_INVALID_ARG_7            =>  Self::InvalidArg7,
-            c::TREXIO_INVALID_ARG_8            =>  Self::InvalidArg8,
+            c::TREXIO_INVALID_ARG_6            =>  Self::InvalidArg(6),
+            c::TREXIO_INVALID_ARG_7            =>  Self::InvalidArg(7),
+            c::TREXIO_INVALID_ARG_8            =>  Self::InvalidArg(8),
             c::TREXIO_INVALID_STR_LEN          =>  Self::InvalidStrLen,
             c::TREXIO_INT_SIZE_OVERFLOW        =>  Self::IntSizeOverflow,
             c::TREXIO_SAFE_MODE                =>  Self::SafeMode,
@@ -98,11 +154,11 @@ impl ExitCode {
         match self {
             Self::Failure                =>  c::TREXIO_FAILURE,
             Self::Success                =>  c::TREXIO_SUCCESS,
-            Self::InvalidArg1            =>  c::TREXIO_INVALID_ARG_1,
-            Self::InvalidArg2            =>  c::TREXIO_INVALID_ARG_2,
-            Self::InvalidArg3            =>  c::TREXIO_INVALID_ARG_3,
-            Self::InvalidArg4            =>  c::TREXIO_INVALID_ARG_4,
-            Self::InvalidArg5            =>  c::TREXIO_INVALID_ARG_5,
+            Self::InvalidArg(1)          =>  c::TREXIO_INVALID_ARG_1,
+            Self::InvalidArg(2)          =>  c::TREXIO_INVALID_ARG_2,
+            Self::InvalidArg(3)          =>  c::TREXIO_INVALID_ARG_3,
+            Self::InvalidArg(4)          =>  c::TREXIO_INVALID_ARG_4,
+            Self::InvalidArg(5)          =>  c::TREXIO_INVALID_ARG_5,
             Self::End                    =>  c::TREXIO_END,
             Self::ReadOnly               =>  c::TREXIO_READONLY,
             Self::Errno                  =>  c::TREXIO_ERRNO,
@@ -124,9 +180,9 @@ impl ExitCode {
             Self::AttrMissing            =>  c::TREXIO_ATTR_MISSING,
             Self::DsetMissing            =>  c::TREXIO_DSET_MISSING,
             Self::BackEndMissing         =>  c::TREXIO_BACK_END_MISSING,
-            Self::InvalidArg6            =>  c::TREXIO_INVALID_ARG_6,
-            Self::InvalidArg7            =>  c::TREXIO_INVALID_ARG_7,
-            Self::InvalidArg8            =>  c::TREXIO_INVALID_ARG_8,
+            Self::InvalidArg(6)          =>  c::TREXIO_INVALID_ARG_6,
+            Self::InvalidArg(7)          =>  c::TREXIO_INVALID_ARG_7,
+            Self::InvalidArg(8)          =>  c::TREXIO_INVALID_ARG_8,
             Self::InvalidStrLen          =>  c::TREXIO_INVALID_STR_LEN,
             Self::IntSizeOverflow        =>  c::TREXIO_INT_SIZE_OVERFLOW,
             Self::SafeMode               =>  c::TREXIO_SAFE_MODE,
@@ -135,6 +191,7 @@ impl ExitCode {
             Self::InvalidState           =>  c::TREXIO_INVALID_STATE,
             Self::VersionParsingIssue    =>  c::TREXIO_VERSION_PARSING_ISSUE,
             Self::PhaseChange            =>  c::TREXIO_PHASE_CHANGE,
+            _                            =>  panic!("Unknown exit code"),
         }
     }
 
