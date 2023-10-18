@@ -15,7 +15,7 @@ impl Bitfield {
             .len()
             .try_into()
             .expect("try_into failed in Bitfield::from");
-        let orb_list_ptr = orb_list.as_ptr() as *const i32;
+        let orb_list_ptr: *const i32 = orb_list.as_ptr();
         let n_int32: i32 = n_int.try_into().expect("try_into failed in Bitfield::from");
         let mut b = vec![0i64; n_int];
         let bit_list = b.as_mut_ptr() as *mut c::bitfield_t;
@@ -50,7 +50,7 @@ impl Bitfield {
     pub fn alpha(&self) -> Bitfield {
         let n_int = self.data.len() / 2;
         Bitfield {
-            data: (&self.data[0..n_int]).to_vec(),
+            data: (self.data[0..n_int]).to_vec(),
         }
     }
 
@@ -58,7 +58,7 @@ impl Bitfield {
     pub fn beta(&self) -> Bitfield {
         let n_int = self.data.len() / 2;
         Bitfield {
-            data: (&self.data[n_int..2 * n_int]).to_vec(),
+            data: (self.data[n_int..2 * n_int]).to_vec(),
         }
     }
 
@@ -86,7 +86,7 @@ impl Bitfield {
         let d1 = self.as_ptr();
         let cap = self.data.len() * 64;
         let mut list = vec![0i32; cap];
-        let list_c = list.as_mut_ptr() as *mut i32;
+        let list_c: *mut i32 = list.as_mut_ptr();
         std::mem::forget(list);
 
         let mut occ_num: i32 = 0;
@@ -120,10 +120,10 @@ impl Bitfield {
         let d1 = self.as_ptr();
         let cap = self.data.len() / 2 * 64;
         let mut b = vec![0i32; cap];
-        let list_up_c = b.as_mut_ptr() as *mut i32;
+        let list_up_c: *mut i32 = b.as_mut_ptr();
         std::mem::forget(b);
         let mut b = vec![0i32; cap];
-        let list_dn_c = b.as_mut_ptr() as *mut i32;
+        let list_dn_c: *mut i32 = b.as_mut_ptr();
         std::mem::forget(b);
 
         let mut occ_num_up: i32 = 0;

@@ -192,12 +192,12 @@ impl File {
             .try_into()
             .expect("try_into failed in write_determinant_list");
         let mut one_d_array: Vec<i64> = Vec::with_capacity(determinants.len() * n_int);
-        for det in determinants.iter() {
-            for i in det.as_vec().iter() {
-                one_d_array.push(i.clone());
+        for det in determinants {
+            for i in det.as_vec() {
+                one_d_array.push(*i);
             }
         }
-        let dset: *const i64 = one_d_array.as_ptr() as *const i64;
+        let dset: *const i64 = one_d_array.as_ptr();
         let rc = unsafe { c::trexio_write_determinant_list(self.ptr, offset, buffer_size, dset) };
         rc_return((), rc)
     }
@@ -251,7 +251,7 @@ impl File {
             .chunks(2 * n_int)
             .collect::<Vec<_>>()
             .iter()
-            .map(|x| (Bitfield::from_vec(&x)))
+            .map(|x| (Bitfield::from_vec(x)))
             .collect::<Vec<_>>();
         rc_return(result, rc)
     }

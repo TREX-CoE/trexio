@@ -88,7 +88,11 @@ use std::ffi::CString;
 
 /// This implementation block includes additional functions automatically generated from tables.
 /// For more details, refer to [TREXIO tables documentation](https://trex-coe.github.io/trexio/trex.html).
-impl File {""" ]
+impl File {
+#![allow(clippy::unnecessary_cast)]
+#![allow(clippy::useless_conversion)]
+#![allow(clippy::type_complexity)]
+""" ]
 
    for group in data:
       group_l = group.lower()
@@ -407,12 +411,12 @@ f"/// let two_d_array: Vec<_> = one_d_array.chunks({dim_group}_{dim_element}).co
     let mut dset_out: Vec<*mut i8> = vec![std::ptr::null_mut(); size];
 
     // Allocate C-style strings and populate dset_out
-    for i in 0..size{
+    for item in dset_out.iter_mut().take(size){
         let c_str: *mut i8 = unsafe { std::alloc::alloc_zeroed(std::alloc::Layout::array::<i8>(capacity).unwrap()) as *mut i8 };
         if c_str.is_null() {
             return Err(ExitCode::AllocationFailed);
         }
-        dset_out[i] = c_str;
+        *item = c_str;
     }
 
 
@@ -461,11 +465,11 @@ f"/// let two_d_array: Vec<_> = one_d_array.chunks({dim_group}_{dim_element}).co
 pub fn write_{group_l}_{element_l}(&self, data: &[&str]) -> Result<(), ExitCode> {
     let mut size = 0;
     // Find longest string
-    for s in data.iter() {
+    for s in data {
        let l = s.len();
        size = if l>size {l} else {size};
     }
-    size = size+1;
+    size += 1;
     let data_c : Vec<CString> = data.iter().map(|&x| string_to_c(x)).collect::<Vec<_>>();
     let data_c : Vec<*const c_char> = data_c.iter().map(|x| x.as_ptr() as *const c_char).collect::<Vec<_>>();
     let size : i32 = size.try_into().expect("try_into failed in write_{group}_{element} (size)");
@@ -557,7 +561,7 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
     let mut idx = Vec::<i32>::with_capacity({size}*data.len());
     let mut val = Vec::<f64>::with_capacity(data.len());
 
-    for d in data.iter() {
+    for d in data {
 """ +
 '\n'.join([ f"       idx.push(d.{i}.try_into().unwrap());" for i in range(size) ]) +
 f"\n       val.push(d.{size});" +
