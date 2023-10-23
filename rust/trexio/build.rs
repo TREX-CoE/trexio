@@ -697,6 +697,7 @@ fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
 
+    make_interface().unwrap();
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
@@ -719,6 +720,5 @@ fn main() {
         .write_to_file(&bindings_path)
         .expect("Couldn't write bindings!");
     check_version(&bindings_path).unwrap();
-    make_interface().unwrap();
     make_functions(&bindings_path).unwrap();
 }
