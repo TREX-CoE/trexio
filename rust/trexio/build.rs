@@ -1,6 +1,5 @@
 const TREXIO_H: &str = "../../include/trexio.h";
 const WRAPPER_H: &str = "wrapper.h";
-const JSON_FILE: &str = "../../trex.json";
 const GENERATED_RS: &str = "src/generated.rs";
 
 use std::env;
@@ -15,7 +14,7 @@ use std::path::Path;
 
 
 /// Checks that the version specified in the Cargo.toml file is consistent with the version of the TREXIO C library.
-fn check_version(bindings: PathBuf) -> Result<(), String> {
+fn check_version(bindings: &PathBuf) -> Result<(), String> {
     // Read version from Cargo.toml
     let mut rust_version = String::new();
     {
@@ -629,12 +628,27 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
 
 
 /// Reads the JSON file, processes its contents, and generates Rust functions according to the specifications in the JSON data.
-fn make_functions() -> std::io::Result<()> {
-    let json_file = Path::new(JSON_FILE);
-    let generated_rs = Path::new(GENERATED_RS);
-
-    let data: Value = serde_json::from_reader(File::open(&json_file)?)?;
-
+fn make_functions(bindings: &PathBuf) -> std::io::Result<()> {
+    let file = File::open(bindings)?;
+    let reader = io::BufReader::new(file);
+    let mut json_file = String::new();
+    for line in reader.lines() {
+        let line = line?;
+        if line.contains("trexio_json") {
+            let index_start = match line.find('{') {
+                Some(x) => x,
+                _ => panic!("trexio_json not found"),
+            };
+            json_file = line[index_start..line.len()-5]
+                .replace(r#"\""#,"\"")
+                .replace(r#"\n"#,"\n")
+                .replace(r#"\t"#,"");
+            eprintln!("{}", json_file);
+            break;
+        }
+    }
+    let data: Value = serde_json::from_str(&json_file).unwrap();
+    
     let mut r: Vec<String> = vec![
         String::from("
 use std::ffi::CString;
@@ -655,6 +669,7 @@ impl File {
 
     r.push(String::from("}"));
 
+    let generated_rs = Path::new(GENERATED_RS);
     let mut f = File::create(&generated_rs)?;
     f.write_all(r.join("\n").as_bytes())?;
     Ok(())
@@ -665,9 +680,6 @@ impl File {
 
 
 fn main() {
-    make_interface().unwrap();
-    make_functions().unwrap();
-
     // Tell cargo to look for shared libraries in the specified directory
     println!("cargo:rustc-link-search=/usr/local/lib");
 
@@ -676,7 +688,6 @@ fn main() {
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
-    println!("cargo:rerun-if-changed=build.py");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -695,8 +706,12 @@ fn main() {
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let bindings_path = out_path.join("bindings.rs");
     bindings
-        .write_to_file(out_path.join("bindings.rs"))
+        .write_to_file(&bindings_path)
         .expect("Couldn't write bindings!");
-    check_version(out_path.join("bindings.rs")).unwrap();
+    check_version(&bindings_path).unwrap();
+    make_interface().unwrap();
+    make_functions(&bindings_path).unwrap();
+
 }
