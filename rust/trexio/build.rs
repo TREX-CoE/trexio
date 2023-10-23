@@ -15,7 +15,7 @@ use std::path::Path;
 
 
 /// Checks that the version specified in the Cargo.toml file is consistent with the version of the TREXIO C library.
-fn check_version() -> Result<(), String> {
+fn check_version(bindings: PathBuf) -> Result<(), String> {
     // Read version from Cargo.toml
     let mut rust_version = String::new();
     {
@@ -32,19 +32,16 @@ fn check_version() -> Result<(), String> {
         }
     }
 
-    // Read version from ../../configure.ac
+    // Check version from TREXIO
     let mut trexio_version = String::new();
-    {
-        let file = File::open("../../configure.ac").map_err(|e| e.to_string())?;
-        let reader = io::BufReader::new(file);
-
-        for line in reader.lines() {
-            let line = line.map_err(|e| e.to_string())?;
-            if line.starts_with("AC_INIT") {
-                trexio_version = line.split(',').nth(1).unwrap().trim().to_string();
-                trexio_version = trexio_version[1..trexio_version.len() - 1].to_string();
-                break;
-            }
+    let file = File::open(bindings).map_err(|e| e.to_string())?;
+    let reader = io::BufReader::new(file);
+    for line in reader.lines() {
+        let line = line.map_err(|e| e.to_string())?;
+        if line.contains("TREXIO_PACKAGE_VERSION") {
+            trexio_version = line.split('"').nth(1).unwrap().trim().to_string();
+            trexio_version = trexio_version[0..trexio_version.len() - 2].to_string();
+            break;
         }
     }
 
@@ -668,7 +665,6 @@ impl File {
 
 
 fn main() {
-    check_version().unwrap();
     make_interface().unwrap();
     make_functions().unwrap();
 
@@ -702,4 +698,5 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+    check_version(out_path.join("bindings.rs")).unwrap();
 }
