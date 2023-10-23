@@ -1,4 +1,3 @@
-const TREXIO_H: &str = "../../include/trexio.h";
 const WRAPPER_H: &str = "wrapper.h";
 const GENERATED_RS: &str = "src/generated.rs";
 
@@ -59,8 +58,18 @@ fn check_version(bindings: &PathBuf) -> Result<(), String> {
 fn make_interface() -> io::Result<()> {
     let mut err = HashMap::new();
     let mut be = HashMap::new();
-
-    let trexio_file = File::open(TREXIO_H)?;
+    
+    let mut trexio_h = PathBuf::new().join("trexio.h");
+    if let Ok(library) = pkg_config::probe_library("trexio") {
+        for path in &library.include_paths {
+            if path.join("trexio.h").exists() {
+                trexio_h = path.join("trexio.h");
+                break;
+            }
+        }
+    }
+    eprintln!("trexio.h : {:?}", trexio_h);
+    let trexio_file = File::open(trexio_h)?;
     let trexio_reader = BufReader::new(trexio_file);
 
     for line in trexio_reader.lines() {
@@ -643,7 +652,6 @@ fn make_functions(bindings: &PathBuf) -> std::io::Result<()> {
                 .replace(r#"\""#,"\"")
                 .replace(r#"\n"#,"\n")
                 .replace(r#"\t"#,"");
-            eprintln!("{}", json_file);
             break;
         }
     }
@@ -713,5 +721,4 @@ fn main() {
     check_version(&bindings_path).unwrap();
     make_interface().unwrap();
     make_functions(&bindings_path).unwrap();
-
 }
