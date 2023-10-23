@@ -1,5 +1,5 @@
 const WRAPPER_H: &str = "wrapper.h";
-const GENERATED_RS: &str = "src/generated.rs";
+const GENERATED_RS: &str = "generated.rs";
 
 use std::env;
 use std::path::PathBuf;
@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use serde_json::Value;
-use std::path::Path;
 
 
 
@@ -91,7 +90,9 @@ fn make_interface() -> io::Result<()> {
         }
     }
 
-    let mut wrapper_file = File::create(WRAPPER_H)?;
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let wrapper_h = out_path.join(WRAPPER_H);
+    let mut wrapper_file = File::create(wrapper_h)?;
     write!(&mut wrapper_file, "#include <trexio.h>\n")?;
 
     for (k, v) in &err {
@@ -677,7 +678,8 @@ impl File {
 
     r.push(String::from("}"));
 
-    let generated_rs = Path::new(GENERATED_RS);
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let generated_rs = out_path.join(GENERATED_RS);
     let mut f = File::create(&generated_rs)?;
     f.write_all(r.join("\n").as_bytes())?;
     Ok(())
@@ -697,14 +699,17 @@ fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
 
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+
     make_interface().unwrap();
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
+    let wrapper_h = out_path.join("wrapper.h");
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
-        .header("wrapper.h")
+        .header(wrapper_h.to_str().unwrap())
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
@@ -714,7 +719,6 @@ fn main() {
         .expect("Unable to generate bindings");
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     let bindings_path = out_path.join("bindings.rs");
     bindings
         .write_to_file(&bindings_path)

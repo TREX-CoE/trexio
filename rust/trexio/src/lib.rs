@@ -257,4 +257,5 @@ impl File {
     }
 }
 
-include!("generated.rs");
+include!(concat!(env!("OUT_DIR"), "/generated.rs"));
+
