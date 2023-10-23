@@ -363,18 +363,18 @@ fn make_array_functions(data: &serde_json::Value) -> Vec<String> {
 ///
 /// To reshape the one-dimensional vector back into a two-dimensional array, you can use the [`chunks`] method:
 ///
-/// ```
-/// let one_d_array = trexio_file.read_{}_{}()?;\n"#, group_l, element_l));
+/// ```text
+/// let one_d_array = trexio_file.read_{}_{}()?;"#, group_l, element_l));
                             if let Some(dim) = dimensions.first() {
                                 if dim.contains('.') {
                                     let parts: Vec<&str> = dim.split('.').collect();
-                                    r.push(format!("/// let {}_{} = trexio_file.read_{}_{}()?;\n", parts[0], parts[1], parts[0], parts[1]));
-                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}_{}).collect();\n", parts[0], parts[1]));
+                                    r.push(format!("/// let {}_{} = trexio_file.read_{}_{}()?;", parts[0], parts[1], parts[0], parts[1]));
+                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}_{}).collect();", parts[0], parts[1]));
                                 } else {
-                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}).collect();\n", dim));
+                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}).collect();", dim));
                                 }
                             }
-                            r.push(String::from("/// ```\n"));
+                            r.push(String::from("/// ```"));
                             r.push(String::from("///\n/// [`chunks`]: slice::chunks"));
                         }
                         r.push(format!(r#"pub fn read_{}_{}(&self) -> Result<Vec<{}>, ExitCode> {{
@@ -383,9 +383,9 @@ fn make_array_functions(data: &serde_json::Value) -> Vec<String> {
                         for dim in &dimensions {
                             if dim.contains('.') {
                                   let parts: Vec<&str> = dim.split('.').collect();
-                                  r.push(format!("  size *= self.read_{}_{}()?;\n", parts[0], parts[1]));
+                                  r.push(format!("  size *= self.read_{}_{}()?;", parts[0], parts[1]));
                             } else {
-                                  r.push(format!("  size *= {};\n", dim));
+                                  r.push(format!("  size *= {};", dim));
                             }
                         }
                         r.push(format!(r#"   let mut data: Vec<{type_r}> = Vec::with_capacity(size);
@@ -438,18 +438,18 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
 ///
 /// To reshape the one-dimensional vector back into a two-dimensional array, you can use the [`chunks`] method:
 ///
-/// ```
+/// ```text
 /// let one_d_array = trexio_file.read_{}_{}()?;"#, group_l, element_l));
                             if let Some(dim) = dimensions.first() {
                                 if dim.contains('.') {
                                     let parts: Vec<&str> = dim.split('.').collect();
-                                    r.push(format!("/// let {}_{} = trexio_file.read_{}_{}()?;\n", parts[0], parts[1], parts[0], parts[1]));
-                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}_{}).collect();\n", parts[0], parts[1]));
+                                    r.push(format!("/// let {}_{} = trexio_file.read_{}_{}()?;", parts[0], parts[1], parts[0], parts[1]));
+                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}_{}).collect();", parts[0], parts[1]));
                                 } else {
-                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}).collect();\n", dim));
+                                    r.push(format!("/// let two_d_array: Vec<_> = one_d_array.chunks({}).collect();", dim));
                                 }
                             }
-                            r.push(String::from("/// ```\n"));
+                            r.push(String::from("/// ```"));
                             r.push(String::from("///\n/// [`chunks`]: slice::chunks"));
                         }
                         r.push(format!(r#"pub fn read_{}_{}(&self, capacity: usize) -> Result<Vec<String>, ExitCode> {{
@@ -457,9 +457,9 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
                         for dim in &dimensions {
                             if dim.contains('.') {
                                   let parts: Vec<&str> = dim.split('.').collect();
-                                  r.push(format!("  size *= self.read_{}_{}()?;\n", parts[0], parts[1]));
+                                  r.push(format!("  size *= self.read_{}_{}()?;", parts[0], parts[1]));
                             } else {
-                                  r.push(format!("  size *= {};\n", dim));
+                                  r.push(format!("  size *= {};", dim));
                             }
                         }
                         r.push(format!(r#"   // Allocate an array of *mut i8 pointers (initialized to null)
