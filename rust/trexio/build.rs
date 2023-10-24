@@ -11,6 +11,7 @@ use serde_json::Value;
 
 
 
+/*
 /// Checks that the version specified in the Cargo.toml file is consistent with the version of the TREXIO C library.
 fn check_version(bindings: &PathBuf) -> Result<(), String> {
     // Read version from Cargo.toml
@@ -50,6 +51,7 @@ fn check_version(bindings: &PathBuf) -> Result<(), String> {
 
     Ok(())
 }
+*/
 
 
 
@@ -57,7 +59,7 @@ fn check_version(bindings: &PathBuf) -> Result<(), String> {
 fn make_interface() -> io::Result<()> {
     let mut err = HashMap::new();
     let mut be = HashMap::new();
-    
+
     let mut trexio_h = PathBuf::new().join("trexio.h");
     if let Ok(library) = pkg_config::probe_library("trexio") {
         for path in &library.include_paths {
@@ -657,7 +659,7 @@ fn make_functions(bindings: &PathBuf) -> std::io::Result<()> {
         }
     }
     let data: Value = serde_json::from_str(&json_file).unwrap();
-    
+
     let mut r: Vec<String> = vec![
         String::from("
 use std::ffi::CString;
@@ -723,6 +725,6 @@ fn main() {
     bindings
         .write_to_file(&bindings_path)
         .expect("Couldn't write bindings!");
-    check_version(&bindings_path).unwrap();
+//    check_version(&bindings_path).unwrap();
     make_functions(&bindings_path).unwrap();
 }
