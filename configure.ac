@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([trexio],[2.4.1],[https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio],[2.4.2],[https://github.com/TREX-CoE/trexio/issues])
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])

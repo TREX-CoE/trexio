@@ -2,7 +2,7 @@ extern crate reqwest;
 extern crate tar;
 extern crate flate2;
 
-const VERSION: &str = "2.3.2";
+const VERSION: &str = "2.4.2";
 const WRAPPER_H: &str = "wrapper.h";
 const GENERATED_RS: &str = "generated.rs";
 
