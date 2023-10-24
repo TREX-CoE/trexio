@@ -1,3 +1,8 @@
+extern crate reqwest;
+extern crate tar;
+extern crate flate2;
+
+const VERSION: &str = "2.3.2";
 const WRAPPER_H: &str = "wrapper.h";
 const GENERATED_RS: &str = "generated.rs";
 
@@ -7,6 +12,8 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use serde_json::Value;
+use flate2::read::GzDecoder;
+use tar::Archive;
 
 
 
@@ -54,12 +61,62 @@ fn check_version(bindings: &PathBuf) -> Result<(), String> {
 */
 
 
+fn download_trexio() -> PathBuf {
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let trexio_url = format!("https://github.com/TREX-CoE/trexio/releases/download/v{VERSION}/trexio-{VERSION}.tar.gz");
+
+    // Download the .tar.gz archive
+    let tar_gz = out_path.join("trexio.tar.gz");
+    let trexio_dir= out_path.join("trexio_dir");
+    let mut resp = reqwest::blocking::get(trexio_url).expect("Failed to download the archive");
+    let mut out = File::create(tar_gz.clone()).expect("Failed to create archive file");
+    std::io::copy(&mut resp, &mut out).expect("Failed to copy content");
+
+    // Unpack the .tar.gz archive
+    let tar_gz = File::open(tar_gz).unwrap();
+    let tar = GzDecoder::new(tar_gz);
+    let mut archive = Archive::new(tar);
+    archive.unpack(trexio_dir.clone()).expect("Failed to unpack");
+
+    // Assume that the archive extracts to a directory named 'trexio-0.1.0'
+    trexio_dir.join(format!("trexio-{}", VERSION))
+}
+
+
+fn install_trexio(trexio_dir: &PathBuf) -> PathBuf {
+    println!("{}", trexio_dir.display());
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let install_path = out_path.join("trexio_install");
+
+    // Run configure script
+    let configure_status = std::process::Command::new("./configure")
+        .arg(format!("--prefix={}",install_path.display()))
+        .arg("--without-fortran")
+        .current_dir(&trexio_dir)
+        .status()
+        .unwrap();
+
+    assert!(configure_status.success());
+
+    // Run make
+    let make_status = std::process::Command::new("make")
+        .arg("install")
+        .current_dir(&trexio_dir)
+        .status()
+        .unwrap();
+
+    assert!(make_status.success());
+    install_path
+
+}
+
 
 /// This function reads from `trexio.h`, extracts the exit codes and backends, and writes them to `wrapper.h`.
-fn make_interface() -> io::Result<()> {
+fn make_interface(trexio_h: &PathBuf) -> io::Result<()> {
     let mut err = HashMap::new();
     let mut be = HashMap::new();
 
+/*
     let mut trexio_h = PathBuf::new().join("trexio.h");
     if let Ok(library) = pkg_config::probe_library("trexio") {
         for path in &library.include_paths {
@@ -69,7 +126,8 @@ fn make_interface() -> io::Result<()> {
             }
         }
     }
-    eprintln!("trexio.h : {:?}", trexio_h);
+    */
+
     let trexio_file = File::open(trexio_h)?;
     let trexio_reader = BufReader::new(trexio_file);
 
@@ -692,8 +750,11 @@ impl File {
 
 
 fn main() {
+    let path = download_trexio();
+    let install_path = install_trexio(&path);
+
     // Tell cargo to look for shared libraries in the specified directory
-    println!("cargo:rustc-link-search=/usr/local/lib");
+    println!("cargo:rustc-link-search={}/lib", install_path.display());
 
     // Tell cargo to tell rustc to link the system trexio shared library.
     println!("cargo:rustc-link-lib=trexio");
@@ -702,8 +763,9 @@ fn main() {
     println!("cargo:rerun-if-changed=wrapper.h");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let trexio_h = install_path.join("include").join("trexio.h");
 
-    make_interface().unwrap();
+    make_interface(&trexio_h).unwrap();
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
