@@ -17,50 +17,6 @@ use tar::Archive;
 
 
 
-
-/*
-/// Checks that the version specified in the Cargo.toml file is consistent with the version of the TREXIO C library.
-fn check_version(bindings: &PathBuf) -> Result<(), String> {
-    // Read version from Cargo.toml
-    let mut rust_version = String::new();
-    {
-        let file = File::open("Cargo.toml").map_err(|e| e.to_string())?;
-        let reader = io::BufReader::new(file);
-
-        for line in reader.lines() {
-            let line = line.map_err(|e| e.to_string())?;
-            if line.starts_with("version") {
-                rust_version = line.split('=').nth(1).unwrap().trim().to_string();
-                rust_version = rust_version[1..rust_version.len() - 1].to_string();
-                break;
-            }
-        }
-    }
-
-    // Check version from TREXIO
-    let mut trexio_version = String::new();
-    let file = File::open(bindings).map_err(|e| e.to_string())?;
-    let reader = io::BufReader::new(file);
-    for line in reader.lines() {
-        let line = line.map_err(|e| e.to_string())?;
-        if line.contains("TREXIO_PACKAGE_VERSION") {
-            trexio_version = line.split('"').nth(1).unwrap().trim().to_string();
-            trexio_version = trexio_version[0..trexio_version.len() - 2].to_string();
-            break;
-        }
-    }
-
-    // Compare versions
-    if rust_version != trexio_version {
-        eprintln!("Inconsistent versions:\nTREXIO: {}\nRust:   {}\n", trexio_version, rust_version);
-        return Err("Inconsistent versions".to_string());
-    }
-
-    Ok(())
-}
-*/
-
-
 fn download_trexio() -> PathBuf {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     let trexio_url = format!("https://github.com/TREX-CoE/trexio/releases/download/v{VERSION}/trexio-{VERSION}.tar.gz");
@@ -107,7 +63,6 @@ fn install_trexio(trexio_dir: &PathBuf) -> PathBuf {
 
     assert!(make_status.success());
     install_path
-
 }
 
 
@@ -115,18 +70,6 @@ fn install_trexio(trexio_dir: &PathBuf) -> PathBuf {
 fn make_interface(trexio_h: &PathBuf) -> io::Result<()> {
     let mut err = HashMap::new();
     let mut be = HashMap::new();
-
-/*
-    let mut trexio_h = PathBuf::new().join("trexio.h");
-    if let Ok(library) = pkg_config::probe_library("trexio") {
-        for path in &library.include_paths {
-            if path.join("trexio.h").exists() {
-                trexio_h = path.join("trexio.h");
-                break;
-            }
-        }
-    }
-    */
 
     let trexio_file = File::open(trexio_h)?;
     let trexio_reader = BufReader::new(trexio_file);
@@ -165,7 +108,7 @@ fn make_interface(trexio_h: &PathBuf) -> io::Result<()> {
         write!(&mut wrapper_file, "const back_end_t {} = {};\n", k, v)?;
     }
 
-    write!(&mut wrapper_file, "#undef TREXIO_AUTO;\n")?;
+    write!(&mut wrapper_file, "#undef TREXIO_AUTO\n")?;
     write!(&mut wrapper_file, "const back_end_t TREXIO_AUTO = TREXIO_INVALID_BACK_END;\n")?;
 
     Ok(())
@@ -698,25 +641,9 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
 
 
 /// Reads the JSON file, processes its contents, and generates Rust functions according to the specifications in the JSON data.
-fn make_functions(bindings: &PathBuf) -> std::io::Result<()> {
-    let file = File::open(bindings)?;
-    let reader = io::BufReader::new(file);
-    let mut json_file = String::new();
-    for line in reader.lines() {
-        let line = line?;
-        if line.contains("trexio_json") {
-            let index_start = match line.find('{') {
-                Some(x) => x,
-                _ => panic!("trexio_json not found"),
-            };
-            json_file = line[index_start..line.len()-5]
-                .replace(r#"\""#,"\"")
-                .replace(r#"\n"#,"\n")
-                .replace(r#"\t"#,"");
-            break;
-        }
-    }
-    let data: Value = serde_json::from_str(&json_file).unwrap();
+fn make_functions(json_path: &PathBuf) -> std::io::Result<()> {
+    let file = File::open(json_path).unwrap();
+    let data: Value = serde_json::from_reader(file).unwrap();
 
     let mut r: Vec<String> = vec![
         String::from("
@@ -750,8 +677,11 @@ impl File {
 
 
 fn main() {
-    let path = download_trexio();
-    let install_path = install_trexio(&path);
+    let source_path = download_trexio();
+    println!("source path: {}", source_path.display());
+
+    let install_path = install_trexio(&source_path);
+    println!("install path: {}", install_path.display());
 
     // Tell cargo to look for shared libraries in the specified directory
     println!("cargo:rustc-link-search={}/lib", install_path.display());
@@ -759,17 +689,17 @@ fn main() {
     // Tell cargo to tell rustc to link the system trexio shared library.
     println!("cargo:rustc-link-lib=trexio");
 
-    // Tell cargo to invalidate the built crate whenever the wrapper changes
-    println!("cargo:rerun-if-changed=wrapper.h");
-
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     let trexio_h = install_path.join("include").join("trexio.h");
+    println!("trexio.h: {}", trexio_h.display());
 
     make_interface(&trexio_h).unwrap();
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let wrapper_h = out_path.join("wrapper.h");
+    let wrapper_h = out_path.join(WRAPPER_H);
+    println!("wrapper.h: {}", wrapper_h.display());
+
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
@@ -784,9 +714,14 @@ fn main() {
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let bindings_path = out_path.join("bindings.rs");
+    println!("bindings.rs: {}", bindings_path.display());
+
     bindings
         .write_to_file(&bindings_path)
         .expect("Couldn't write bindings!");
-//    check_version(&bindings_path).unwrap();
-    make_functions(&bindings_path).unwrap();
+
+    let json_path = source_path.join("trex.json");
+    println!("json path: {}", json_path.display());
+
+    make_functions(&json_path).unwrap();
 }

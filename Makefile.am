@@ -34,10 +34,9 @@
 
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
+BUILT_SOURCES = trex.json
 if HAVE_FORTRAN
-BUILT_SOURCES = trexio.mod
-else
-BUILT_SOURCES =
+BUILT_SOURCES += trexio.mod
 endif
 EXTRA_DIST = .git_hash
 
@@ -87,13 +86,62 @@ src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
+              trex.json \
               src/CMakeLists.txt \
               tests/CMakeLists.txt \
+              tests/test_macros.h  \
               cmake/cmake_uninstall.cmake.in \
               cmake/FindTREXIO.cmake
 
 
 # =============== TESTS =============== #
+
+TEST_FILES = \
+    tests/delete_group.c \
+    tests/delete_group_hdf5.c \
+    tests/delete_group_text.c \
+    tests/io_all.c \
+    tests/io_determinant.c \
+    tests/io_determinant_hdf5.c \
+    tests/io_determinant_text.c \
+    tests/io_dset_float.c \
+    tests/io_dset_float_hdf5.c \
+    tests/io_dset_float_text.c \
+    tests/io_dset_int.c \
+    tests/io_dset_int_hdf5.c \
+    tests/io_dset_int_text.c \
+    tests/io_dset_sparse.c \
+    tests/io_dset_sparse_hdf5.c \
+    tests/io_dset_sparse_text.c \
+    tests/io_dset_str.c \
+    tests/io_dset_str_hdf5.c \
+    tests/io_dset_str_text.c \
+    tests/io_jastrow.c \
+    tests/io_jastrow_hdf5.c \
+    tests/io_jastrow_text.c \
+    tests/io_num.c \
+    tests/io_num_hdf5.c \
+    tests/io_num_text.c \
+    tests/io_safe_dset_float.c \
+    tests/io_safe_dset_float_hdf5.c \
+    tests/io_safe_dset_float_text.c \
+    tests/io_str.c \
+    tests/io_str_hdf5.c \
+    tests/io_str_text.c \
+    tests/open.c \
+    tests/open_hdf5.c \
+    tests/open_text.c \
+    tests/overwrite_all.c \
+    tests/overwrite_all_hdf5.c \
+    tests/overwrite_all_text.c \
+    tests/pre_close.c \
+    tests/template_hdf5.c \
+    tests/template_text.c \
+    tests/test_f.f90 \
+    tests/test_macros.h \
+    tests/trexio_f.f90
+
+EXTRA_DIST += $(TEST_FILES)
 
 TESTS_C = \
   tests/open_text \
