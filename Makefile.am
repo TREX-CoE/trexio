@@ -269,6 +269,8 @@ src/trexio.c: $(trexio_h)
 $(trexio_h): $(ORG_FILES) $(GENERATOR_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
+trex.json: $(trexio_h)
+
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
 	touch $(htmlizer)
 	cd $(srcdir)/tools && ./build_doc.sh
