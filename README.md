@@ -5,7 +5,7 @@
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
-TREXIO is an open-source file format and library developed for the storage and manipulation of data produced by quantum chemistry calculations. It is designed with the goal of providing a reliable and efficient method of storing and exchanging wave function parameters and matrix elements, making it an important tool for researchers in the field of quantum chemistry. In this work, we present an overview of the TREXIO file format and library. The library consists of a front-end implemented in the C programming language and two different back-ends: a text back-end and a binary back-end utilizing the HDF5 library which enables fast read and write operations. It is compatible with a variety of platforms and has interfaces for the Fortran, Python, and OCaml programming languages. In addition, a suite of tools has been developed to facilitate the use of the TREXIO format and library, including converters for popular quantum chemistry codes and utilities for validating and manipulating data stored in TREXIO files. The simplicity, versatility, and ease of use of TREXIO make it a valuable resource for researchers working with quantum chemistry data.
+TREXIO is an open-source file format and library developed for the storage and manipulation of data produced by quantum chemistry calculations. It is designed with the goal of providing a reliable and efficient method of storing and exchanging wave function parameters and matrix elements. The library consists of a front-end implemented in the C programming language and two different back-ends: a text back-end and a binary back-end utilizing the HDF5 library which enables fast read and write operations. It is compatible with a variety of platforms and has interfaces for the Fortran, Python, OCaml and Rust programming languages.
 
 ## Minimal requirements (for users):
 
@@ -190,6 +190,34 @@ make python-test
 
 We highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.
 
+
+## Rust API
+
+The Rust API is available on Crates.io, so you can simply run 
+```
+cargo add trexio
+```
+to your Rust project.
+
+If you prefer to install the Rust API provided with this repository:
+```
+cargo add --path /path/to/trexio/rust/trexio
+```
+
+## OCaml API
+
+The TREXIO OCaml API is available in OPAM:
+```
+opam install trexio
+```
+
+If you prefer to install it from this repository,
+
+```
+cd ocaml/trexio
+make
+opam install .
+```
 
 ## Tutorial
 
