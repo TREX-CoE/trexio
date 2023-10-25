@@ -26,248 +26,249 @@
 
    #+NAME: trex_json
    #+begin_src python :results drawer
-res = "static const char* trexio_json = "
+res = "/* JSON configuration\n"
 with open('../../trex.json','r') as f:
     for line in f:
-        res += " \" " + line.rstrip().replace('"', '\\"') + "\\n\"\n"
-res += ";\n"
+        res += line.rstrip()+'\n'
+res += "*/"
 return res
    #+end_src 
-   
+
    #+RESULTS: trex_json
    :results:
-    " {\n"
-    " \n"
-    " \"metadata\": {\n"
-    "            \"code_num\" : [ \"dim\", []                        ]\n"
-    "   ,            \"code\" : [ \"str\", [ \"metadata.code_num\" ]   ]\n"
-    "   ,      \"author_num\" : [ \"dim\", []                        ]\n"
-    "   ,          \"author\" : [ \"str\", [ \"metadata.author_num\" ] ]\n"
-    "   , \"package_version\" : [ \"str\", []                        ]\n"
-    "   ,     \"description\" : [ \"str\", []                        ]\n"
-    "   ,          \"unsafe\" : [ \"int\", []                        ]\n"
-    " } ,\n"
-    " \n"
-    " \"nucleus\": {\n"
-    "             \"num\" : [ \"dim\"  , []                     ]\n"
-    "   ,      \"charge\" : [ \"float\", [ \"nucleus.num\" ]      ]\n"
-    "   ,       \"coord\" : [ \"float\", [ \"nucleus.num\", \"3\" ] ]\n"
-    "   ,       \"label\" : [ \"str\"  , [ \"nucleus.num\" ]      ]\n"
-    "   , \"point_group\" : [ \"str\"  , []                     ]\n"
-    "   ,   \"repulsion\" : [ \"float\", []                     ]\n"
-    " } ,\n"
-    " \n"
-    " \"cell\": {\n"
-    "          \"a\" : [ \"float\", [ \"3\" ] ]\n"
-    "   ,      \"b\" : [ \"float\", [ \"3\" ] ]\n"
-    "   ,      \"c\" : [ \"float\", [ \"3\" ] ]\n"
-    "   ,    \"G_a\" : [ \"float\", [ \"3\" ] ]\n"
-    "   ,    \"G_b\" : [ \"float\", [ \"3\" ] ]\n"
-    "   ,    \"G_c\" : [ \"float\", [ \"3\" ] ]\n"
-    "   , \"two_pi\" : [ \"int\"  , []      ]\n"
-    " } ,\n"
-    " \n"
-    " \"pbc\": {\n"
-    "     \"periodic\" : [ \"int\"  , []      ]\n"
-    "   ,  \"k_point\" : [ \"float\", [ \"3\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"electron\": {\n"
-    "        \"num\" : [ \"dim\", []  ]\n"
-    "   , \"up_num\" : [ \"int\", []  ]\n"
-    "   , \"dn_num\" : [ \"int\", []  ]\n"
-    " } ,\n"
-    " \n"
-    " \"state\": {\n"
-    "               \"num\" : [ \"dim\"  , []              ]\n"
-    "   ,            \"id\" : [ \"index\", []              ]\n"
-    "   ,        \"energy\" : [ \"float\", []              ]\n"
-    "   , \"current_label\" : [ \"str\"  , []              ]\n"
-    "   ,         \"label\" : [ \"str\"  , [ \"state.num\" ] ]\n"
-    "   ,     \"file_name\" : [ \"str\"  , [ \"state.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"basis\": {\n"
-    " 		 \"type\" : [ \"str\"  , []                                                ]\n"
-    "   ,          \"prim_num\" : [ \"dim\"  , []                                                ]\n"
-    "   ,         \"shell_num\" : [ \"dim\"  , []                                                ]\n"
-    "   ,       \"nao_grid_num\" : [ \"dim\"  , []                                                ]\n"
-    "   ,  \"interp_coeff_cnt\" : [ \"dim\"  , []                                                ]\n"
-    "   ,     \"nucleus_index\" : [ \"index\", [ \"basis.shell_num\" ]                             ]\n"
-    "   ,     \"shell_ang_mom\" : [ \"int\"  , [ \"basis.shell_num\" ]                             ]\n"
-    "   ,      \"shell_factor\" : [ \"float\", [ \"basis.shell_num\" ]                             ]\n"
-    "   ,           \"r_power\" : [ \"int\"  , [ \"basis.shell_num\" ]                             ]\n"
-    "   ,     \"nao_grid_start\" : [ \"index\", [ \"basis.shell_num\" ]                             ]\n"
-    "   ,      \"nao_grid_size\" : [ \"dim\"  , [ \"basis.shell_num\" ]                             ]\n"
-    "   ,       \"shell_index\" : [ \"index\", [ \"basis.prim_num\" ]                              ]\n"
-    "   ,          \"exponent\" : [ \"float\", [ \"basis.prim_num\" ]                              ]\n"
-    "   ,       \"coefficient\" : [ \"float\", [ \"basis.prim_num\" ]                              ]\n"
-    "   ,       \"prim_factor\" : [ \"float\", [ \"basis.prim_num\" ]                              ]\n"
-    "   ,             \"e_cut\" : [ \"float\", []                                                ]\n"
-    "   ,    \"nao_grid_radius\" : [ \"float\", [ \"basis.nao_grid_num\" ]                           ]\n"
-    "   ,       \"nao_grid_phi\" : [ \"float\", [ \"basis.nao_grid_num\" ]                           ]\n"
-    "   ,      \"nao_grid_grad\" : [ \"float\", [ \"basis.nao_grid_num\" ]                           ]\n"
-    "   ,       \"nao_grid_lap\" : [ \"float\", [ \"basis.nao_grid_num\" ]                           ]\n"
-    "   , \"interpolator_kind\" : [ \"str\"  , []                                                ]\n"
-    "   ,  \"interpolator_phi\" : [ \"float\", [ \"basis.nao_grid_num\", \"basis.interp_coeff_cnt\" ] ]\n"
-    "   , \"interpolator_grad\" : [ \"float\", [ \"basis.nao_grid_num\", \"basis.interp_coeff_cnt\" ] ]\n"
-    "   ,  \"interpolator_lap\" : [ \"float\", [ \"basis.nao_grid_num\", \"basis.interp_coeff_cnt\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"ecp\": {\n"
-    "     \"max_ang_mom_plus_1\" : [ \"int\"  , [ \"nucleus.num\" ] ]\n"
-    "   ,             \"z_core\" : [ \"int\"  , [ \"nucleus.num\" ] ]\n"
-    "   ,                \"num\" : [ \"dim\"  , []                ]\n"
-    "   ,            \"ang_mom\" : [ \"int\"  , [ \"ecp.num\" ]     ]\n"
-    "   ,      \"nucleus_index\" : [ \"index\", [ \"ecp.num\" ]     ]\n"
-    "   ,           \"exponent\" : [ \"float\", [ \"ecp.num\" ]     ]\n"
-    "   ,        \"coefficient\" : [ \"float\", [ \"ecp.num\" ]     ]\n"
-    "   ,              \"power\" : [ \"int\"  , [ \"ecp.num\" ]     ]\n"
-    " } ,\n"
-    " \n"
-    " \"grid\": {\n"
-    "       \"description\" : [ \"str\"  , []                 ]\n"
-    "   , \"rad_precision\" : [ \"float\", []                 ]\n"
-    "   ,           \"num\" : [ \"dim\"  , []                 ]\n"
-    "   ,   \"max_ang_num\" : [ \"int\"  , []                 ]\n"
-    "   ,   \"min_ang_num\" : [ \"int\"  , []                 ]\n"
-    "   ,         \"coord\" : [ \"float\", [ \"grid.num\" ]     ]\n"
-    "   ,        \"weight\" : [ \"float\", [ \"grid.num\" ]     ]\n"
-    "   ,       \"ang_num\" : [ \"dim\"  , []                 ]\n"
-    "   ,     \"ang_coord\" : [ \"float\", [ \"grid.ang_num\" ] ]\n"
-    "   ,    \"ang_weight\" : [ \"float\", [ \"grid.ang_num\" ] ]\n"
-    "   ,       \"rad_num\" : [ \"dim\"  , []                 ]\n"
-    "   ,     \"rad_coord\" : [ \"float\", [ \"grid.rad_num\" ] ]\n"
-    "   ,    \"rad_weight\" : [ \"float\", [ \"grid.rad_num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"ao\": {\n"
-    "         \"cartesian\" : [ \"int\"  , []           ]\n"
-    "   ,           \"num\" : [ \"dim\"  , []           ]\n"
-    "   ,         \"shell\" : [ \"index\", [ \"ao.num\" ] ]\n"
-    "   , \"normalization\" : [ \"float\", [ \"ao.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"ao_1e_int\": {\n"
-    "                 \"overlap\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,             \"kinetic\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,       \"potential_n_e\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,                 \"ecp\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,    \"core_hamiltonian\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,          \"overlap_im\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,          \"kinetic_im\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,    \"potential_n_e_im\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   ,              \"ecp_im\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    "   , \"core_hamiltonian_im\" : [ \"float\", [ \"ao.num\", \"ao.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"ao_2e_int\": {\n"
-    "                     \"eri\" : [ \"float sparse\", [ \"ao.num\", \"ao.num\", \"ao.num\", \"ao.num\" ]              ]\n"
-    "   ,              \"eri_lr\" : [ \"float sparse\", [ \"ao.num\", \"ao.num\", \"ao.num\", \"ao.num\" ]              ]\n"
-    "   ,    \"eri_cholesky_num\" : [ \"dim\"         , []                                                      ]\n"
-    "   ,        \"eri_cholesky\" : [ \"float sparse\", [ \"ao_2e_int.eri_cholesky_num\", \"ao.num\", \"ao.num\" ]    ]\n"
-    "   , \"eri_lr_cholesky_num\" : [ \"dim\"         , []                                                      ]\n"
-    "   ,     \"eri_lr_cholesky\" : [ \"float sparse\", [ \"ao_2e_int.eri_lr_cholesky_num\", \"ao.num\", \"ao.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"mo\": {\n"
-    "               \"type\" : [ \"str\"  , []                     ]\n"
-    "   ,            \"num\" : [ \"dim\"  , []                     ]\n"
-    "   ,    \"coefficient\" : [ \"float\", [ \"mo.num\", \"ao.num\" ] ]\n"
-    "   , \"coefficient_im\" : [ \"float\", [ \"mo.num\", \"ao.num\" ] ]\n"
-    "   ,          \"class\" : [ \"str\"  , [ \"mo.num\" ]           ]\n"
-    "   ,       \"symmetry\" : [ \"str\"  , [ \"mo.num\" ]           ]\n"
-    "   ,     \"occupation\" : [ \"float\", [ \"mo.num\" ]           ]\n"
-    "   ,         \"energy\" : [ \"float\", [ \"mo.num\" ]           ]\n"
-    "   ,           \"spin\" : [ \"int\"  , [ \"mo.num\" ]           ]\n"
-    " } ,\n"
-    " \n"
-    " \"mo_1e_int\": {\n"
-    "                 \"overlap\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,             \"kinetic\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,       \"potential_n_e\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,                 \"ecp\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,    \"core_hamiltonian\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,          \"overlap_im\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,          \"kinetic_im\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,    \"potential_n_e_im\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   ,              \"ecp_im\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    "   , \"core_hamiltonian_im\" : [ \"float\", [ \"mo.num\", \"mo.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"mo_2e_int\": {\n"
-    "                     \"eri\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]              ]\n"
-    "   ,              \"eri_lr\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]              ]\n"
-    "   ,    \"eri_cholesky_num\" : [ \"dim\"         , []                                                      ]\n"
-    "   ,        \"eri_cholesky\" : [ \"float sparse\", [ \"mo_2e_int.eri_cholesky_num\", \"mo.num\", \"mo.num\" ]    ]\n"
-    "   , \"eri_lr_cholesky_num\" : [ \"dim\"         , []                                                      ]\n"
-    "   ,     \"eri_lr_cholesky\" : [ \"float sparse\", [ \"mo_2e_int.eri_lr_cholesky_num\", \"mo.num\", \"mo.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"determinant\": {\n"
-    "             \"num\" : [ \"dim readonly\"  , []                    ]\n"
-    "   ,        \"list\" : [ \"int special\"   , [ \"determinant.num\" ] ]\n"
-    "   , \"coefficient\" : [ \"float buffered\", [ \"determinant.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"csf\": {\n"
-    "                 \"num\" : [ \"dim readonly\"  , []                               ]\n"
-    "   ,     \"coefficient\" : [ \"float buffered\", [ \"csf.num\" ]                    ]\n"
-    "   , \"det_coefficient\" : [ \"float sparse\"  , [ \"csf.num\", \"determinant.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"amplitude\": {\n"
-    "            \"single\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\" ]                                                             ]\n"
-    "   ,    \"single_exp\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\" ]                                                             ]\n"
-    "   ,        \"double\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]                                         ]\n"
-    "   ,    \"double_exp\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]                                         ]\n"
-    "   ,        \"triple\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]                     ]\n"
-    "   ,    \"triple_exp\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]                     ]\n"
-    "   ,     \"quadruple\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ] ]\n"
-    "   , \"quadruple_exp\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"rdm\": {\n"
-    "                       \"1e\" : [ \"float\"       , [ \"mo.num\", \"mo.num\" ]                             ]\n"
-    "   ,                \"1e_up\" : [ \"float\"       , [ \"mo.num\", \"mo.num\" ]                             ]\n"
-    "   ,                \"1e_dn\" : [ \"float\"       , [ \"mo.num\", \"mo.num\" ]                             ]\n"
-    "   ,                   \"2e\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]         ]\n"
-    "   ,              \"2e_upup\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]         ]\n"
-    "   ,              \"2e_dndn\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]         ]\n"
-    "   ,              \"2e_updn\" : [ \"float sparse\", [ \"mo.num\", \"mo.num\", \"mo.num\", \"mo.num\" ]         ]\n"
-    "   ,      \"2e_cholesky_num\" : [ \"dim\"         , []                                                 ]\n"
-    "   ,          \"2e_cholesky\" : [ \"float sparse\", [ \"rdm.2e_cholesky_num\", \"mo.num\", \"mo.num\" ]      ]\n"
-    "   , \"2e_upup_cholesky_num\" : [ \"dim\"         , []                                                 ]\n"
-    "   ,     \"2e_upup_cholesky\" : [ \"float sparse\", [ \"rdm.2e_upup_cholesky_num\", \"mo.num\", \"mo.num\" ] ]\n"
-    "   , \"2e_dndn_cholesky_num\" : [ \"dim\"         , []                                                 ]\n"
-    "   ,     \"2e_dndn_cholesky\" : [ \"float sparse\", [ \"rdm.2e_dndn_cholesky_num\", \"mo.num\", \"mo.num\" ] ]\n"
-    "   , \"2e_updn_cholesky_num\" : [ \"dim\"         , []                                                 ]\n"
-    "   ,     \"2e_updn_cholesky\" : [ \"float sparse\", [ \"rdm.2e_updn_cholesky_num\", \"mo.num\", \"mo.num\" ] ]\n"
-    " } ,\n"
-    " \n"
-    " \"jastrow\": {\n"
-    "            \"type\" : [ \"str\"   , []                    ]\n"
-    "   ,      \"en_num\" : [ \"dim\"   , []                    ]\n"
-    "   ,      \"ee_num\" : [ \"dim\"   , []                    ]\n"
-    "   ,     \"een_num\" : [ \"dim\"   , []                    ]\n"
-    "   ,          \"en\" : [ \"float\" , [ \"jastrow.en_num\" ]  ]\n"
-    "   ,          \"ee\" : [ \"float\" , [ \"jastrow.ee_num\" ]  ]\n"
-    "   ,         \"een\" : [ \"float\" , [ \"jastrow.een_num\" ] ]\n"
-    "   ,  \"en_nucleus\" : [ \"index\" , [ \"jastrow.en_num\" ]  ]\n"
-    "   , \"een_nucleus\" : [ \"index\" , [ \"jastrow.een_num\" ] ]\n"
-    "   ,  \"ee_scaling\" : [ \"float\" , []                    ]\n"
-    "   ,  \"en_scaling\" : [ \"float\" , [ \"nucleus.num\" ]     ]\n"
-    " } ,\n"
-    " \n"
-    " \"qmc\": {\n"
-    "       \"num\" : [ \"dim\"  , []                                 ]\n"
-    "   , \"point\" : [ \"float\", [ \"qmc.num\", \"electron.num\", \"3\" ] ]\n"
-    "   ,   \"psi\" : [ \"float\", [ \"qmc.num\" ]                      ]\n"
-    "   , \"e_loc\" : [ \"float\", [ \"qmc.num\" ]                      ]\n"
-    " }\n"
-    " \n"
-    " }\n"
-   ;
+   /* JSON configuration
+   {
+
+   "metadata": {
+              "code_num" : [ "dim", []                        ]
+     ,            "code" : [ "str", [ "metadata.code_num" ]   ]
+     ,      "author_num" : [ "dim", []                        ]
+     ,          "author" : [ "str", [ "metadata.author_num" ] ]
+     , "package_version" : [ "str", []                        ]
+     ,     "description" : [ "str", []                        ]
+     ,          "unsafe" : [ "int", []                        ]
+   } ,
+
+   "nucleus": {
+               "num" : [ "dim"  , []                     ]
+     ,      "charge" : [ "float", [ "nucleus.num" ]      ]
+     ,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
+     ,       "label" : [ "str"  , [ "nucleus.num" ]      ]
+     , "point_group" : [ "str"  , []                     ]
+     ,   "repulsion" : [ "float", []                     ]
+   } ,
+
+   "cell": {
+            "a" : [ "float", [ "3" ] ]
+     ,      "b" : [ "float", [ "3" ] ]
+     ,      "c" : [ "float", [ "3" ] ]
+     ,    "G_a" : [ "float", [ "3" ] ]
+     ,    "G_b" : [ "float", [ "3" ] ]
+     ,    "G_c" : [ "float", [ "3" ] ]
+     , "two_pi" : [ "int"  , []      ]
+   } ,
+
+   "pbc": {
+       "periodic" : [ "int"  , []      ]
+     ,  "k_point" : [ "float", [ "3" ] ]
+   } ,
+
+   "electron": {
+          "num" : [ "dim", []  ]
+     , "up_num" : [ "int", []  ]
+     , "dn_num" : [ "int", []  ]
+   } ,
+
+   "state": {
+                 "num" : [ "dim"  , []              ]
+     ,            "id" : [ "index", []              ]
+     ,        "energy" : [ "float", []              ]
+     , "current_label" : [ "str"  , []              ]
+     ,         "label" : [ "str"  , [ "state.num" ] ]
+     ,     "file_name" : [ "str"  , [ "state.num" ] ]
+   } ,
+
+   "basis": {
+                    "type" : [ "str"  , []                                                ]
+     ,          "prim_num" : [ "dim"  , []                                                ]
+     ,         "shell_num" : [ "dim"  , []                                                ]
+     ,       "nao_grid_num" : [ "dim"  , []                                                ]
+     ,  "interp_coeff_cnt" : [ "dim"  , []                                                ]
+     ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                             ]
+     ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                             ]
+     ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                             ]
+     ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                             ]
+     ,     "nao_grid_start" : [ "index", [ "basis.shell_num" ]                             ]
+     ,      "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                             ]
+     ,       "shell_index" : [ "index", [ "basis.prim_num" ]                              ]
+     ,          "exponent" : [ "float", [ "basis.prim_num" ]                              ]
+     ,       "coefficient" : [ "float", [ "basis.prim_num" ]                              ]
+     ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                              ]
+     ,             "e_cut" : [ "float", []                                                ]
+     ,    "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     ,       "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     ,      "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     ,       "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     , "interpolator_kind" : [ "str"  , []                                                ]
+     ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+     , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+     ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+   } ,
+
+   "ecp": {
+       "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
+     ,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
+     ,                "num" : [ "dim"  , []                ]
+     ,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+     ,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
+     ,           "exponent" : [ "float", [ "ecp.num" ]     ]
+     ,        "coefficient" : [ "float", [ "ecp.num" ]     ]
+     ,              "power" : [ "int"  , [ "ecp.num" ]     ]
+   } ,
+
+   "grid": {
+         "description" : [ "str"  , []                 ]
+     , "rad_precision" : [ "float", []                 ]
+     ,           "num" : [ "dim"  , []                 ]
+     ,   "max_ang_num" : [ "int"  , []                 ]
+     ,   "min_ang_num" : [ "int"  , []                 ]
+     ,         "coord" : [ "float", [ "grid.num" ]     ]
+     ,        "weight" : [ "float", [ "grid.num" ]     ]
+     ,       "ang_num" : [ "dim"  , []                 ]
+     ,     "ang_coord" : [ "float", [ "grid.ang_num" ] ]
+     ,    "ang_weight" : [ "float", [ "grid.ang_num" ] ]
+     ,       "rad_num" : [ "dim"  , []                 ]
+     ,     "rad_coord" : [ "float", [ "grid.rad_num" ] ]
+     ,    "rad_weight" : [ "float", [ "grid.rad_num" ] ]
+   } ,
+
+   "ao": {
+           "cartesian" : [ "int"  , []           ]
+     ,           "num" : [ "dim"  , []           ]
+     ,         "shell" : [ "index", [ "ao.num" ] ]
+     , "normalization" : [ "float", [ "ao.num" ] ]
+   } ,
+
+   "ao_1e_int": {
+                   "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,             "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
+   } ,
+
+   "ao_2e_int": {
+                       "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+     ,              "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+     ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+     ,        "eri_cholesky" : [ "float sparse", [ "ao_2e_int.eri_cholesky_num", "ao.num", "ao.num" ]    ]
+     , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+     ,     "eri_lr_cholesky" : [ "float sparse", [ "ao_2e_int.eri_lr_cholesky_num", "ao.num", "ao.num" ] ]
+   } ,
+
+   "mo": {
+                 "type" : [ "str"  , []                     ]
+     ,            "num" : [ "dim"  , []                     ]
+     ,    "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
+     , "coefficient_im" : [ "float", [ "mo.num", "ao.num" ] ]
+     ,          "class" : [ "str"  , [ "mo.num" ]           ]
+     ,       "symmetry" : [ "str"  , [ "mo.num" ]           ]
+     ,     "occupation" : [ "float", [ "mo.num" ]           ]
+     ,         "energy" : [ "float", [ "mo.num" ]           ]
+     ,           "spin" : [ "int"  , [ "mo.num" ]           ]
+   } ,
+
+   "mo_1e_int": {
+                   "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,             "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
+   } ,
+
+   "mo_2e_int": {
+                       "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+     ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+     ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+     ,        "eri_cholesky" : [ "float sparse", [ "mo_2e_int.eri_cholesky_num", "mo.num", "mo.num" ]    ]
+     , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+     ,     "eri_lr_cholesky" : [ "float sparse", [ "mo_2e_int.eri_lr_cholesky_num", "mo.num", "mo.num" ] ]
+   } ,
+
+   "determinant": {
+               "num" : [ "dim readonly"  , []                    ]
+     ,        "list" : [ "int special"   , [ "determinant.num" ] ]
+     , "coefficient" : [ "float buffered", [ "determinant.num" ] ]
+   } ,
+
+   "csf": {
+                   "num" : [ "dim readonly"  , []                               ]
+     ,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
+     , "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
+   } ,
+
+   "amplitude": {
+              "single" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
+     ,    "single_exp" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
+     ,        "double" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+     ,    "double_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+     ,        "triple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+     ,    "triple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+     ,     "quadruple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+     , "quadruple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+   } ,
+
+   "rdm": {
+                         "1e" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+     ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+     ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+     ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,      "2e_cholesky_num" : [ "dim"         , []                                                 ]
+     ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]      ]
+     , "2e_upup_cholesky_num" : [ "dim"         , []                                                 ]
+     ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ] ]
+     , "2e_dndn_cholesky_num" : [ "dim"         , []                                                 ]
+     ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ] ]
+     , "2e_updn_cholesky_num" : [ "dim"         , []                                                 ]
+     ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ] ]
+   } ,
+
+   "jastrow": {
+              "type" : [ "str"   , []                    ]
+     ,      "en_num" : [ "dim"   , []                    ]
+     ,      "ee_num" : [ "dim"   , []                    ]
+     ,     "een_num" : [ "dim"   , []                    ]
+     ,          "en" : [ "float" , [ "jastrow.en_num" ]  ]
+     ,          "ee" : [ "float" , [ "jastrow.ee_num" ]  ]
+     ,         "een" : [ "float" , [ "jastrow.een_num" ] ]
+     ,  "en_nucleus" : [ "index" , [ "jastrow.en_num" ]  ]
+     , "een_nucleus" : [ "index" , [ "jastrow.een_num" ] ]
+     ,  "ee_scaling" : [ "float" , []                    ]
+     ,  "en_scaling" : [ "float" , [ "nucleus.num" ]     ]
+   } ,
+
+   "qmc": {
+         "num" : [ "dim"  , []                                 ]
+     , "point" : [ "float", [ "qmc.num", "electron.num", "3" ] ]
+     ,   "psi" : [ "float", [ "qmc.num" ]                      ]
+     , "e_loc" : [ "float", [ "qmc.num" ]                      ]
+   }
+
+   }
+   */
    :end:
 
 
