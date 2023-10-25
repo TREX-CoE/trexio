@@ -191,6 +191,34 @@ make python-test
 We highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.
 
 
+## Rust API
+
+The Rust API is available on Crates.io, so you can simply run 
+```
+cargo add trexio
+```
+to your Rust project.
+
+If you prefer to install the Rust API provided with this repository:
+```
+cargo add --path /path/to/trexio/rust/trexio
+```
+
+## OCaml API
+
+The TREXIO OCaml API is available in OPAM:
+```
+opam install trexio
+```
+
+If you prefer to install it from this repository,
+
+```
+cd ocaml/trexio
+make
+opam install .
+```
+
 ## Tutorial
 
 TREXIO tutorials in Jupyter notebook format can be found in the
