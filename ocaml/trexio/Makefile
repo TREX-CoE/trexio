@@ -10,6 +10,7 @@ lib/trexio.h:
 sources: lib/trexio.ml lib/trexio.h
 
 clean:
+	rm lib/trexio.h lib/trexio.ml lib/trexio.mli lib/trexio_stubs.c
 	dune clean
 
 .PHONY: sources default

@@ -2,7 +2,6 @@ extern crate reqwest;
 extern crate tar;
 extern crate flate2;
 
-const VERSION: &str = "2.4.2";
 const WRAPPER_H: &str = "wrapper.h";
 const GENERATED_RS: &str = "generated.rs";
 
@@ -18,8 +17,11 @@ use tar::Archive;
 
 
 fn download_trexio() -> PathBuf {
+    let version = env::var("CARGO_PKG_VERSION").unwrap();
+    println!("Version : {}", version);
+
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let trexio_url = format!("https://github.com/TREX-CoE/trexio/releases/download/v{VERSION}/trexio-{VERSION}.tar.gz");
+    let trexio_url = format!("https://github.com/TREX-CoE/trexio/releases/download/v{version}/trexio-{version}.tar.gz");
 
     // Download the .tar.gz archive
     let tar_gz = out_path.join("trexio.tar.gz");
@@ -35,7 +37,7 @@ fn download_trexio() -> PathBuf {
     archive.unpack(trexio_dir.clone()).expect("Failed to unpack");
 
     // Assume that the archive extracts to a directory named 'trexio-0.1.0'
-    trexio_dir.join(format!("trexio-{}", VERSION))
+    trexio_dir.join(format!("trexio-{}", version))
 }
 
 
