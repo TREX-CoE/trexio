@@ -180,7 +180,7 @@ In order to install the Python API with the latest changes, follow the developer
 make python-install
 ```
 
-**Note: this implies that both SWIG is installed and available.
+**Note: this implies that SWIG is installed and available.**
 
 We rely on the `pytest` package for unit testing. It can be installed via `pip install pytest`. To test the installation, run
 
