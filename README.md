@@ -46,11 +46,14 @@ requirements.
 
 In environments where `sudo` access is unavailable, a common workaround for
 executing `make install/uninstall` commands without requiring superuser
-privileges involves a modification to the `./configure` command. Specifically,
-one can substitute the standard `./configure` with `./configure
-prefix=$HOME/.local`. The directory `$HOME/.local` is frequently utilized for
-installing software within user space, serving as an alternative to the
-system-wide `/usr/local`.
+privileges involves a modification to the `./configure` command.
+This modification typically includes specifying an installation prefix within
+the user's home directory to circumvent the need for system-wide installation
+permissions. For instance, `./configure prefix=$HOME/.local` can be employed,
+where `$HOME/.local` is often recommended for user-space software installations.
+However, this is merely a suggestion, and users are free to choose any suitable
+directory as their installation prefix, depending on their specific
+requirements and system configurations.
 
 Regarding the integration with an MPI (Message Passing Interface) enabled HDF5
 library, it's typical to specify the MPI compiler wrapper for the C compiler.
