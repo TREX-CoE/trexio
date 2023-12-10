@@ -5,7 +5,26 @@
 [![build](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml/badge.svg)](https://github.com/TREX-CoE/trexio/actions/workflows/actions.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/TREX-CoE/trexio)
 
-TREXIO is an open-source file format and library developed for the storage and manipulation of data produced by quantum chemistry calculations. It is designed with the goal of providing a reliable and efficient method of storing and exchanging wave function parameters and matrix elements. The library consists of a front-end implemented in the C programming language and two different back-ends: a text back-end and a binary back-end utilizing the HDF5 library which enables fast read and write operations. It is compatible with a variety of platforms and has interfaces for the Fortran, Python, OCaml and Rust programming languages.
+TREXIO is an open-source file format and library developed for the storage and
+manipulation of data produced by quantum chemistry calculations. It is designed
+with the goal of providing a reliable and efficient method of storing and
+exchanging wave function parameters and matrix elements. The library consists
+of a front-end implemented in the C programming language and two different
+back-ends: a text back-end and a binary back-end utilizing the HDF5 library
+which enables fast read and write operations. It is compatible with a variety
+of platforms and has interfaces for the Fortran, Python, OCaml and Rust
+programming languages.
+
+## Distributing TREXIO with your code
+
+The TREXIO software is distributed under the 3-clause BSD license, renowned for
+its permissiveness. Consequently, it is entirely acceptable for you to
+provide the TREXIO release tarball in conjunction with your own code.
+Should you opt to include TREXIO with your software, it is recommended to
+distribute the release tarball, instead of the content of the git repository.
+The release tarballs contain pre-generated source files. This not only
+accelerates the compilation process but also significantly reduces dependency
+requirements.
 
 ## Minimal requirements (for users):
 
@@ -15,24 +34,37 @@ TREXIO is an open-source file format and library developed for the storage and m
 - HDF5 library          (>= 1.8) [optional, recommended for high performance]
 
 
-## Installation procedure from the tarball (for users):
+## Installation procedure from the release tarball (for users):
 
-1. Download the `trexio-<version>.tar.gz` file
+1. Download the `trexio-<version>.tar.gz` file from the GitHub release page
 2. `gzip -cd trexio-<version>.tar.gz | tar xvf -`
 3. `cd trexio-<version>`
 4. `./configure`
-5. ```make -j`getconf _NPROCESSORS_ONLN` ```
-6. ```make -j`getconf _NPROCESSORS_ONLN` check```
+5. ```make -j 4 ```
+6. ```make -j 4 check```
 7. `sudo make install`
 
+In environments where `sudo` access is unavailable, a common workaround for
+executing `make install/uninstall` commands without requiring superuser
+privileges involves a modification to the `./configure` command.
+This modification typically includes specifying an installation prefix within
+the user's home directory to circumvent the need for system-wide installation
+permissions. For instance, `./configure prefix=$HOME/.local` can be employed,
+where `$HOME/.local` is often recommended for user-space software installations.
+However, this is merely a suggestion, and users are free to choose any suitable
+directory as their installation prefix, depending on their specific
+requirements and system configurations.
 
-**Note: on systems with no `sudo` access, one can replace `./configure` with `./configure prefix=${PWD}/build` in order to execute `make install/uninstall` commands without `sudo` privileges.**
-
-**Note: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `CC=mpicc` to the `./configure` command.**
+Regarding the integration with an MPI (Message Passing Interface) enabled HDF5
+library, it's typical to specify the MPI compiler wrapper for the C compiler.
+This is done by appending a directive like `CC=mpicc` to the `./configure`
+command. However, as TREXIO does not utilize MPI features, it is advisable to
+link against a non-MPI (serial) version of the HDF5 library for the sake of
+simplicity.
 
 ## Additional requirements (for developers):
 
-- python3       (>= 3.6)
+- Python3       (>= 3.6)
 - Emacs         (>= 26.0)
 - SWIG          (>= 4.0)   [required for the Python API]
 
@@ -44,8 +76,8 @@ TREXIO is an open-source file format and library developed for the storage and m
 2. `cd trexio`
 3. `./autogen.sh`
 4. `./configure`
-5. ```make -j`getconf _NPROCESSORS_ONLN` ```
-6. ```make -j`getconf _NPROCESSORS_ONLN` check```
+5. ```make -j 4```
+6. ```make -j 4 check```
 7. `sudo make install`
 
 ## Installation procedure for CMake users (from the tarball or GitHub repo clone):
@@ -55,8 +87,8 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 
 1. `cmake -S. -Bbuild`
 2. `cd build`
-3. ```make -j`getconf _NPROCESSORS_ONLN` ```
-4. ```ctest -j`getconf _NPROCESSORS_ONLN` ```
+3. ```make -j 4```
+4. ```ctest -j 4```
 5. `sudo make install`
 
 **Note: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.**
