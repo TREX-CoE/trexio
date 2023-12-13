@@ -11,6 +11,7 @@
 # $ export TREXIO_DIR=<custom_path>
 # to indicate the prefix used during the TREXIO installation
 # (typically `./configure prefix=<custom_path> ..` or `cmake -DCMAKE_INSTALL_DIR=<custom_path> ..`)
+# Alternatively, TREXIO_DIR can be provided in a CMake cache.
 
 # This file should be located WITHIN your project source tree.
 # (e.g. in cmake/FindTREXIO.cmake)
@@ -45,9 +46,13 @@ set(TREXIO_SEARCH_PATHS
 	/opt
 )
 
+if (NOT TREXIO_DIR)
+  set(TREXIO_DIR $ENV{TREXIO_DIR})
+endif()
+
 find_path(TREXIO_INCLUDE_DIR
 	  NAMES trexio.h
-	  HINTS $ENV{TREXIO_DIR}
+    HINTS "${TREXIO_DIR}"
 	  PATH_SUFFIXES include/trexio include
 	  PATHS ${TREXIO_SEARCH_PATHS}
 	  )
@@ -57,7 +62,7 @@ find_path(TREXIO_INCLUDE_DIR
 # suffix (e.g. .so on Unix or .dylib on MacOS) in NAMES. CMake takes care of that.
 find_library(TREXIO_LIBRARY
              NAMES trexio
-	     HINTS $ENV{TREXIO_DIR}
+	     HINTS "${TREXIO_DIR}"
 	     PATH_SUFFIXES lib64 lib
 	     PATHS ${TREXIO_SEARCH_PATHS}
 	     )

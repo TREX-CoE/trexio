@@ -19,7 +19,7 @@ set(TREXIO_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio.c
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_text.c
 	)
-set(TREXIO_PUBLIC_HEADERS ${CMAKE_SOURCE_DIR}/include/trexio.h)
+set(TREXIO_PUBLIC_HEADERS ${PROJECT_SOURCE_DIR}/include/trexio.h)
 set(TREXIO_PRIVATE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_s.h
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_private.h
@@ -101,7 +101,7 @@ include(FortranCInterface)
 FortranCInterface_VERIFY()
 
 # Fortran module
-set(TREXIO_MOD_FILE ${CMAKE_SOURCE_DIR}/include/trexio_f.f90)
+set(TREXIO_MOD_FILE ${PROJECT_SOURCE_DIR}/include/trexio_f.f90)
 # Export to parent scope so tests directory picks this up.
 set(TREXIO_MOD_FILE ${TREXIO_MOD_FILE} PARENT_SCOPE)
 # Add TREXIO Fortran module as a library.
@@ -115,7 +115,7 @@ if(TREXIO_DEVEL)
   set(ORG_FILES
 	templates_front/templator_front.org
   	templates_text/templator_text.org
-	${CMAKE_SOURCE_DIR}/trex.org
+    ${PROJECT_SOURCE_DIR}/trex.org
 	)
   if(ENABLE_HDF5)
     list(APPEND ORG_FILES templates_hdf5/templator_hdf5.org)
@@ -127,8 +127,8 @@ if(TREXIO_DEVEL)
 	  ${TREXIO_PRIVATE_HEADERS}
 	  ${TREXIO_MOD_FILE}
       COMMAND ./build_trexio.sh
-      DEPENDS ${ORG_FILES} ${CMAKE_SOURCE_DIR}/include/config.h
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools
+      DEPENDS ${ORG_FILES} ${PROJECT_SOURCE_DIR}/include/config.h
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
       COMMENT "Generating TREXIO source code from org-mode files."
       VERBATIM)
 
@@ -156,7 +156,7 @@ install(FILES ${TREXIO_MOD_FILE} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 # https://gitlab.kitware.com/cmake/community/wikis/FAQ#can-i-do-make-uninstall-with-cmake
 if(NOT TARGET uninstall)
   configure_file(
-    "${CMAKE_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+    "${PROJECT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
 
