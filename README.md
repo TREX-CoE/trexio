@@ -170,9 +170,9 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 4. ```ctest -j 4```
 5. `sudo make install`
 
-**Note: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.**
+**Note**: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.
 
-**Note: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `-DCMAKE_C_COMPILER=mpicc` to the `cmake` command.**
+**Note**: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `-DCMAKE_C_COMPILER=mpicc` to the `cmake` command.
 
 ## Using TREXIO
 ### Naming convention
