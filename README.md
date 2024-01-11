@@ -17,7 +17,7 @@ programming languages.
 
 * [TREXIO](#trexio)
    * [Installation](#installation)
-      * [Installation from a package](#installation-from-a-package)
+      * [Installation using a package manager](#installation-using-a-package-manager)
          * [Debian/Ubuntu](#debianubuntu)
          * [Conda](#conda)
          * [Spack](#spack)
@@ -43,19 +43,7 @@ programming languages.
 
 
 ## Installation
-### Installation from a package
-#### Debian/Ubuntu
-
-The official release of TREXIO `2.2.0` is available as a Debian (`.deb`) package thanks to the [Debichem Team](https://wiki.debian.org/Debichem).
-The source code is hosted [here](https://salsa.debian.org/debichem-team/libtrexio) and 
-the pre-built binary files are available via the [Debian package registry](https://packages.debian.org/bookworm/libtrexio-dev).
-
-TREXIO is also available on [Ubuntu 23.04 (Lunar Lobster)](https://packages.ubuntu.com/lunar/libtrexio-dev) and newer and can be installed as follows:
-
-```
-sudo apt-get update && sudo apt-get install libtrexio-dev
-```
-
+### Installation using a package manager
 #### Conda
 
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/trexio/badges/version.svg)](https://anaconda.org/conda-forge/trexio)
@@ -93,6 +81,18 @@ It can be installed as follows:
 
 ```
 guix package --cores=`getconf _NPROCESSORS_ONLN` --install-from-file=trexio.scm
+```
+
+#### Debian/Ubuntu
+
+The official release of TREXIO `2.2.0` is available as a Debian (`.deb`) package thanks to the [Debichem Team](https://wiki.debian.org/Debichem).
+The source code is hosted [here](https://salsa.debian.org/debichem-team/libtrexio) and
+the pre-built binary files are available via the [Debian package registry](https://packages.debian.org/bookworm/libtrexio-dev).
+
+TREXIO is also available on [Ubuntu 23.04 (Lunar Lobster)](https://packages.ubuntu.com/lunar/libtrexio-dev) and newer and can be installed as follows:
+
+```
+sudo apt-get update && sudo apt-get install libtrexio-dev
 ```
 
 ### Installation from source
@@ -272,7 +272,7 @@ We highly recommend to use virtual environments to avoid compatibility issues an
 
 ### Rust
 
-The Rust API is available on Crates.io, so you can simply run 
+The Rust API is available on Crates.io, so you can simply run
 ```
 cargo add trexio
 ```
