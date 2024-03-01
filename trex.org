@@ -121,14 +121,13 @@
 
 ** Periodic boundary calculations (pbc group)
 
-   A single $k$-point per TREXIO file can be stored. The $k$-point is
-   defined in this group.
 
    #+NAME: pbc
-   | Variable   | Type    | Dimensions | Description             |
-   |------------+---------+------------+-------------------------|
-   | ~periodic~ | ~int~   |            | ~1~: true or ~0~: false |
-   | ~k_point~  | ~float~ | ~(3)~      | $k$-point sampling      |
+   | Variable      | Type    | Dimensions             | Description             |
+   |---------------+---------+------------------------+-------------------------|
+   | ~periodic~    | ~int~   |                        | ~1~: true or ~0~: false |
+   | ~k_point_num~ | ~dim~   |                        | Number of $k$-points    |
+   | ~k_point~     | ~float~ | ~(3, pbc.k_point_num)~ | $k$-point sampling      |
 
    #+CALL: json(data=pbc, title="pbc")
 
@@ -819,7 +818,7 @@ power = [
    | ~occupation~     | ~float~ | ~(mo.num)~         | Occupation number                                                        |
    | ~energy~         | ~float~ | ~(mo.num)~         | For canonical MOs, corresponding eigenvalue                              |
    | ~spin~           | ~int~   | ~(mo.num)~         | For UHF wave functions, 0 is $\alpha$ and 1 is $\beta$                   |
-   | ~kpoint~         | ~int~   | ~(mo.num)~         | For periodic calculations, the $k$ point to which each MO belongs        |
+   | ~k_point~        | ~index~ | ~(mo.num)~         | For periodic calculations, the $k$ point to which each MO belongs        |
 
    **Warning**: ~mo.num~ is the total number of MOs stored in the file.
    For periodic calculations, this group contains all the MOs
