@@ -272,19 +272,19 @@
     outside of the grid. The reference points are stored in ~nao_grid_r~
     and ~nao_grid_phi~. Additionaly, a separate spline for the first and second
     derivative of $u(\mathbf{r})$ can be stored in ~nao_grid_grad~ and ~nao_grid_lap~. 
-    Storing them in this form allows to calculate the actual gradients and 
-    Laplacian easily as follows:
+    Storing them in this form allows to calculate the actual first and
+    second derivatives easily as follows:
 
     \[
-      \grad_{x_i} \phi = \frac{x_i}{r^2}\left u\prime(r) - \frac{u(r)}{r}\right
+      \frac{\partial \phi}{\partial x} = \frac{x}{r^2}\left( u^\prime\left(r\right) - \frac{u\left(r\right)}{r}\right)
     \]
     \[
-      \Delta \phi = \frac{1}{r^3}\left x^2 u''(r) + \left3x^2-r^2\right \left \frac{u(r)}{r^2} - \frac{u'(r)}{r}\right \right
+      \frac{\partial^2 \phi}{\partial x^2} = \frac{1}{r^3}\left(x^2 u^{\prime\prime}(r) + \left( 3x^2-r^2\right) \left( \frac{u(r)}{r^2} - \frac{u'(r)}{r}\right) \right)
     \]
 
-    The index of the first data point for each shell is stored in 
-    ~nao_grid_start~, the number of data points per spline
-    is stored in ~nao_grid_size~ for convenience.
+    The index of the first data point for each shell is stored in
+    ~nao_grid_start~, the number of data points per spline is stored
+    in ~nao_grid_size~ for convenience.
 
     What kind of spline is used can be provided in the ~interpolator_kind~ field.
     For example, FHI-aims uses a cubic spline, so the ~interpolator_kind~ is
@@ -299,11 +299,11 @@
     will return the value of $u(\mathbf{r})$ at the $i$th reference point.
     A radius is converted to this scale by (note the zero-indexing)
     \[
-    i_{log} = \frac{1}{c} \cdot \log{\frac{r}{r_0}}
+    i_{\log} = \frac{1}{c} \cdot \log \left( \frac{r}{r_0} \right)
     \]
     where
     \[
-    c = \log\left \frac{r_1}{r_0}\right.
+    c = \log\left(\frac{r_1}{r_0}\right)
     \]
     For convenience, this conversion and functions to evaluate the splines
     are provided with trexio. Since these implementations are not adapted to
