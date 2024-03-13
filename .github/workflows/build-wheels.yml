@@ -21,7 +21,7 @@ jobs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # Gets the correct commit message for pull request
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -42,14 +42,14 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        manylinux_tag: [2010_x86_64, 2014_x86_64, 2_24_x86_64]
+        manylinux_tag: [2014_x86_64, 2_24_x86_64]
 
     steps:
       - name: Checkout the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
@@ -94,102 +94,18 @@ jobs:
           name: pytrexio-manylinux-${{ matrix.manylinux_tag }}
           path: ./python/wheelhouse/*.whl
 
-  build_macos_wheels:
-    name: Build MacOS wheels for different versions of CPython
-    needs: get_commit_message
-    if: >-
-      contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
-      (github.repository == 'TREX-CoE/trexio' && startsWith(github.ref, 'refs/tags/v'))
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-10.15]
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
-# TODO: normally, one could include macos-11 and the OS list above but the produced wheels receive an error upon installation:
-# ERROR: trexio-1.1.0-cp39-cp39-macosx_11_0_x86_64.whl is not a supported wheel on this platform.
-# This happens even with the MACOSX_DEPLOYMENT_TARGET trick. Perhaps it can be solved by configuring the build system
-# to produce the wheels for MacOS-11 from the very beginning
-        #exclude:
-        #  - os: macos-11
-    env:
-        H5_LDFLAGS: '-L/usr/local/Cellar/hdf5/1.12.1/lib'
-        H5_CFLAGS: '-I/usr/local/Cellar/hdf5/1.12.1/include'
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Display Python version
-        run: python --version
-
-      - name: Install HDF5
-        run: brew install hdf5@1.12
-
-      # This step is needed to produce wheels with the correct platform tag for MacOS-11 (Big Sur)
-      #- name: Set MACOSX_DEPLOYMENT_TARGET environment variable
-      #  if: ${{ matrix.os == 'macos-11' }}
-      #  run: echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
-
-      - name: Compute the PYTREXIO_VERSION environment variable
-        run: echo "PYTREXIO_VERSION=$(grep __version__ python/pytrexio/_version.py | cut -d\  -f3 | tr -d '"')" >> $GITHUB_ENV
-
-      - name: Print the PYTREXIO_VERSION
-        run: echo ${{ env.PYTREXIO_VERSION }}
-
-      - name: Download the Python API distribution tarball
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: actions.yml
-          workflow_conclusion: success
-          name: pytrexio-source
-          path: python
-
-      - name: Extract the Python distribution
-        run: gzip -cd trexio-${{ env.PYTREXIO_VERSION }}.tar.gz | tar xvf -
-        working-directory: python
-
-      - name: Install Python dependencies
-        run: pip install --upgrade pip setuptools build delocate pytest
-
-      - name: Build wheel for a given version of CPython
-        run: |
-          mkdir wheelhouse/
-          cd trexio-${{ env.PYTREXIO_VERSION }}/
-          python -m build --wheel --outdir=./
-          delocate-wheel trexio-*.whl
-          mv trexio-*.whl ../wheelhouse/
-        working-directory: python
-
-      # Some issues with Python 3.10 wheels on MacOS-11
-      - name: Install the wheel
-        run: python -m pip install wheelhouse/trexio-*.whl
-        working-directory: python
-
-      - name: Test the wheel
-        run: pytest -v test_api.py
-        working-directory: python/test
-
-      - name: Upload produced wheels as artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: pytrexio-${{ matrix.os }}
-          path: ./python/wheelhouse/*.whl
-
 
   publish_wheels:
     name: Publish all wheels on PyPI
-    needs: [build_linux_wheels, build_macos_wheels]
+    needs: [build_linux_wheels]
     runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
@@ -215,8 +131,7 @@ jobs:
         run: |
           ls -R
           mv pytrexio-manylinux-*/trexio-*.whl ./
-          mv pytrexio-macos-*/trexio-*.whl ./
-          rm -rf -- pytrexio-manylinux-*/ pytrexio-macos-*/
+          rm -rf -- pytrexio-manylinux-*/
           ls -sh -w 1
         working-directory: dist
 

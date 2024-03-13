@@ -20,14 +20,271 @@
 
 ** C
 
+   We include in thr trexio.h file a text variable that contains the
+   contents of the ~trex.json~ confguration file, generated from the
+   ~trex.org~ file.
+
+   #+NAME: trex_json
+   #+begin_src python :results drawer
+res = "/* JSON configuration\n"
+with open('../../trex.json','r') as f:
+    for line in f:
+        res += line.rstrip()+'\n'
+res += "*/"
+return res
+   #+end_src 
+
+   #+RESULTS: trex_json
+   :results:
+   /* JSON configuration
+   {
+
+   "metadata": {
+              "code_num" : [ "dim", []                        ]
+     ,            "code" : [ "str", [ "metadata.code_num" ]   ]
+     ,      "author_num" : [ "dim", []                        ]
+     ,          "author" : [ "str", [ "metadata.author_num" ] ]
+     , "package_version" : [ "str", []                        ]
+     ,     "description" : [ "str", []                        ]
+     ,          "unsafe" : [ "int", []                        ]
+   } ,
+
+   "nucleus": {
+               "num" : [ "dim"  , []                     ]
+     ,      "charge" : [ "float", [ "nucleus.num" ]      ]
+     ,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
+     ,       "label" : [ "str"  , [ "nucleus.num" ]      ]
+     , "point_group" : [ "str"  , []                     ]
+     ,   "repulsion" : [ "float", []                     ]
+   } ,
+
+   "cell": {
+            "a" : [ "float", [ "3" ] ]
+     ,      "b" : [ "float", [ "3" ] ]
+     ,      "c" : [ "float", [ "3" ] ]
+     ,    "G_a" : [ "float", [ "3" ] ]
+     ,    "G_b" : [ "float", [ "3" ] ]
+     ,    "G_c" : [ "float", [ "3" ] ]
+     , "two_pi" : [ "int"  , []      ]
+   } ,
+
+   "pbc": {
+       "periodic" : [ "int"  , []      ]
+     ,  "k_point" : [ "float", [ "3" ] ]
+   } ,
+
+   "electron": {
+          "num" : [ "dim", []  ]
+     , "up_num" : [ "int", []  ]
+     , "dn_num" : [ "int", []  ]
+   } ,
+
+   "state": {
+                 "num" : [ "dim"  , []              ]
+     ,            "id" : [ "index", []              ]
+     ,        "energy" : [ "float", []              ]
+     , "current_label" : [ "str"  , []              ]
+     ,         "label" : [ "str"  , [ "state.num" ] ]
+     ,     "file_name" : [ "str"  , [ "state.num" ] ]
+   } ,
+
+   "basis": {
+                    "type" : [ "str"  , []                                                ]
+     ,          "prim_num" : [ "dim"  , []                                                ]
+     ,         "shell_num" : [ "dim"  , []                                                ]
+     ,       "nao_grid_num" : [ "dim"  , []                                                ]
+     ,  "interp_coeff_cnt" : [ "dim"  , []                                                ]
+     ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                             ]
+     ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                             ]
+     ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                             ]
+     ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                             ]
+     ,     "nao_grid_start" : [ "index", [ "basis.shell_num" ]                             ]
+     ,      "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                             ]
+     ,       "shell_index" : [ "index", [ "basis.prim_num" ]                              ]
+     ,          "exponent" : [ "float", [ "basis.prim_num" ]                              ]
+     ,       "coefficient" : [ "float", [ "basis.prim_num" ]                              ]
+     ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                              ]
+     ,             "e_cut" : [ "float", []                                                ]
+     ,    "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     ,       "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     ,      "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     ,       "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
+     , "interpolator_kind" : [ "str"  , []                                                ]
+     ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+     , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+     ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+   } ,
+
+   "ecp": {
+       "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
+     ,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
+     ,                "num" : [ "dim"  , []                ]
+     ,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+     ,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
+     ,           "exponent" : [ "float", [ "ecp.num" ]     ]
+     ,        "coefficient" : [ "float", [ "ecp.num" ]     ]
+     ,              "power" : [ "int"  , [ "ecp.num" ]     ]
+   } ,
+
+   "grid": {
+         "description" : [ "str"  , []                 ]
+     , "rad_precision" : [ "float", []                 ]
+     ,           "num" : [ "dim"  , []                 ]
+     ,   "max_ang_num" : [ "int"  , []                 ]
+     ,   "min_ang_num" : [ "int"  , []                 ]
+     ,         "coord" : [ "float", [ "grid.num" ]     ]
+     ,        "weight" : [ "float", [ "grid.num" ]     ]
+     ,       "ang_num" : [ "dim"  , []                 ]
+     ,     "ang_coord" : [ "float", [ "grid.ang_num" ] ]
+     ,    "ang_weight" : [ "float", [ "grid.ang_num" ] ]
+     ,       "rad_num" : [ "dim"  , []                 ]
+     ,     "rad_coord" : [ "float", [ "grid.rad_num" ] ]
+     ,    "rad_weight" : [ "float", [ "grid.rad_num" ] ]
+   } ,
+
+   "ao": {
+           "cartesian" : [ "int"  , []           ]
+     ,           "num" : [ "dim"  , []           ]
+     ,         "shell" : [ "index", [ "ao.num" ] ]
+     , "normalization" : [ "float", [ "ao.num" ] ]
+   } ,
+
+   "ao_1e_int": {
+                   "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,             "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
+     , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
+   } ,
+
+   "ao_2e_int": {
+                       "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+     ,              "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+     ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+     ,        "eri_cholesky" : [ "float sparse", [ "ao_2e_int.eri_cholesky_num", "ao.num", "ao.num" ]    ]
+     , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+     ,     "eri_lr_cholesky" : [ "float sparse", [ "ao_2e_int.eri_lr_cholesky_num", "ao.num", "ao.num" ] ]
+   } ,
+
+   "mo": {
+                 "type" : [ "str"  , []                     ]
+     ,            "num" : [ "dim"  , []                     ]
+     ,    "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
+     , "coefficient_im" : [ "float", [ "mo.num", "ao.num" ] ]
+     ,          "class" : [ "str"  , [ "mo.num" ]           ]
+     ,       "symmetry" : [ "str"  , [ "mo.num" ]           ]
+     ,     "occupation" : [ "float", [ "mo.num" ]           ]
+     ,         "energy" : [ "float", [ "mo.num" ]           ]
+     ,           "spin" : [ "int"  , [ "mo.num" ]           ]
+   } ,
+
+   "mo_1e_int": {
+                   "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,             "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
+     , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
+   } ,
+
+   "mo_2e_int": {
+                       "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+     ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+     ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+     ,        "eri_cholesky" : [ "float sparse", [ "mo_2e_int.eri_cholesky_num", "mo.num", "mo.num" ]    ]
+     , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+     ,     "eri_lr_cholesky" : [ "float sparse", [ "mo_2e_int.eri_lr_cholesky_num", "mo.num", "mo.num" ] ]
+   } ,
+
+   "determinant": {
+               "num" : [ "dim readonly"  , []                    ]
+     ,        "list" : [ "int special"   , [ "determinant.num" ] ]
+     , "coefficient" : [ "float buffered", [ "determinant.num" ] ]
+   } ,
+
+   "csf": {
+                   "num" : [ "dim readonly"  , []                               ]
+     ,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
+     , "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
+   } ,
+
+   "amplitude": {
+              "single" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
+     ,    "single_exp" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
+     ,        "double" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+     ,    "double_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+     ,        "triple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+     ,    "triple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+     ,     "quadruple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+     , "quadruple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+   } ,
+
+   "rdm": {
+                         "1e" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+     ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+     ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
+     ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
+     ,      "2e_cholesky_num" : [ "dim"         , []                                                 ]
+     ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]      ]
+     , "2e_upup_cholesky_num" : [ "dim"         , []                                                 ]
+     ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ] ]
+     , "2e_dndn_cholesky_num" : [ "dim"         , []                                                 ]
+     ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ] ]
+     , "2e_updn_cholesky_num" : [ "dim"         , []                                                 ]
+     ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ] ]
+   } ,
+
+   "jastrow": {
+              "type" : [ "str"   , []                    ]
+     ,      "en_num" : [ "dim"   , []                    ]
+     ,      "ee_num" : [ "dim"   , []                    ]
+     ,     "een_num" : [ "dim"   , []                    ]
+     ,          "en" : [ "float" , [ "jastrow.en_num" ]  ]
+     ,          "ee" : [ "float" , [ "jastrow.ee_num" ]  ]
+     ,         "een" : [ "float" , [ "jastrow.een_num" ] ]
+     ,  "en_nucleus" : [ "index" , [ "jastrow.en_num" ]  ]
+     , "een_nucleus" : [ "index" , [ "jastrow.een_num" ] ]
+     ,  "ee_scaling" : [ "float" , []                    ]
+     ,  "en_scaling" : [ "float" , [ "nucleus.num" ]     ]
+   } ,
+
+   "qmc": {
+         "num" : [ "dim"  , []                                 ]
+     , "point" : [ "float", [ "qmc.num", "electron.num", "3" ] ]
+     ,   "psi" : [ "float", [ "qmc.num" ]                      ]
+     , "e_loc" : [ "float", [ "qmc.num" ]                      ]
+   }
+
+   }
+   */
+   :end:
+
+
   #+begin_src c :tangle prefix_front.h :noweb yes
 <<header>>
 #ifndef TREXIO_H
 #define TREXIO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
+<<trex_json()>>
 typedef int32_t trexio_exit_code;
   #+end_src
 
@@ -38,6 +295,7 @@ typedef int32_t trexio_exit_code;
   #include "config.h"
 #endif
 
+#include <math.h>
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -673,7 +931,6 @@ bool trexio_has_backend(back_end_t back_end) {
   #+begin_src f90 :tangle prefix_fortran.f90
 interface
    logical(c_bool) function trexio_has_back_end (back_end) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_back_end_t), intent(in), value :: back_end
    end function trexio_has_back_end
@@ -681,7 +938,6 @@ end interface
 
 interface
    logical(c_bool) function trexio_has_backend (back_end) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_back_end_t), intent(in), value :: back_end
    end function trexio_has_backend
@@ -738,7 +994,6 @@ typedef struct trexio_s trexio_t;
 
    #+begin_src c :tangle prefix_s_front.h
 struct trexio_s {
-  char              file_name[TREXIO_MAX_FILENAME_LENGTH];
   pthread_mutex_t   thread_lock;
   back_end_t        back_end;
   char              mode;
@@ -748,6 +1003,7 @@ struct trexio_s {
   int16_t           version_minor;
   int16_t           version_patch;
   char              version[16];
+  char              file_name[TREXIO_MAX_FILENAME_LENGTH];
 };
    #+end_src
 
@@ -850,6 +1106,14 @@ class File:
             raise Exception("Inconsistent state of the TREXIO file.")
 
         return self.state
+
+
+    def flush(self):
+        """Flush the data on disk."""
+        rc = pytr.trexio_flush(self.pytrexio_s)
+        if rc != TREXIO_SUCCESS:
+            raise Error(rc)
+
 
     def inquire(self):
         """Inquire whether a TREXIO file exists."""
@@ -1504,7 +1768,7 @@ def flush(trexio_file):
     Parameter is a ~trexio_file~ object that has been created by a call to ~open~ function.
     """
 
-    rc = pytr.trexio_flush(trexio_file)
+    rc = pytr.trexio_flush(trexio_file.pytrexio_s)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
    #+end_src
@@ -1594,7 +1858,8 @@ def _inquire(file_name: str) -> bool:
 
 ** File copy
 
-   ~trexio_cp~ copies a TREXIO file using =cp=.
+   ~trexio_cp~ copies a TREXIO file using =cp=. The destination file
+   is not overwritten if it exists, an error is returned.
 
    **Input parameters:**
      1) ~source_file_name~       - string containing the name of the source file
@@ -1626,12 +1891,13 @@ trexio_cp(const char* source, const char* dest)
 
   back_end_t back_end_local = TREXIO_AUTO;
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
-#ifdef HAVE_HDF5
   /* Check if the TREXIO file exists and if it is a directory */
   trexio_exit_code rc_text = trexio_text_inquire(source);
   if (rc_text == TREXIO_SUCCESS) {
     back_end_local = TREXIO_TEXT;
-  } else {
+  }
+#ifdef HAVE_HDF5
+  else {
     /* If not, check if it is an HDF5 file */
     trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(source);
     if (rc_hdf5 == TREXIO_SUCCESS) {
@@ -1640,11 +1906,12 @@ trexio_cp(const char* source, const char* dest)
       /* File is neither a directory nor an HDF5 file -> return an error */
       return TREXIO_FILE_ERROR;
     }
-#else
-    /* In the current implementation if HDF5 back end is not available - then there is only back end left */
-    back_end_local = TREXIO_TEXT;
-#endif
   }
+#else
+  else {
+    return TREXIO_FILE_ERROR;
+  }
+#endif
   assert (back_end_local != TREXIO_AUTO);
 
   if (trexio_inquire(dest) == TREXIO_SUCCESS) {
@@ -1727,6 +1994,12 @@ def _cp(source: str, destination: str):
     ~trexio_set_state~ set an existing ~trexio_t~ file handle to a given state
     and write it as ~state_id~ attribute.
     ~trexio_get_state~ returns current state of the ~trexio_t~ file handle.
+
+    **Warning:** The ~trexio_set_state~ and ~trexio_get_state~ functions still
+    use the old convention where the ground state was state ~0~. From version 2.4.0,
+    the ~state_id~ variable has changed to ~index~ type, so using the more recent
+    ~trexio_write_state_id~ and ~trexio_read_state_id~ will give different results
+    in Fortran.
 
     input parameters:
       ~file~  -- TREXIO file handle.
@@ -2128,24 +2401,35 @@ trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* cons
   if (num  == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_num$(file) != TREXIO_SUCCESS) return TREXIO_ATTR_MISSING;
 
+  trexio_exit_code rc = TREXIO_GROUP_READ_ERROR;
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_read_$group_num$(file, num);
+    rc = trexio_text_read_$group_num$(file, num);
+    break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_read_$group_num$(file, num);
+    rc = trexio_hdf5_read_$group_num$(file, num);
 #else
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
 #endif
+    break;
 /*
   case TREXIO_JSON:
-    return trexio_json_read_$group_num$(file, num);
+    rc = trexio_json_read_$group_num$(file, num);
+    break;
 ,*/
   }
 
-  return TREXIO_FAILURE;
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Handle index type */
+  if ($is_index$) {
+    ,*num += ($group_num_dtype_double$) 1;
+  }
+  return rc;
 }
      #+end_src
 
@@ -2157,20 +2441,26 @@ trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double
   //if (num <= 0L) return TREXIO_INVALID_NUM; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_ATTR_ALREADY_EXISTS;
 
+  /* Handle index type */
+  $group_num_dtype_double$ num_write = num;
+  if ($is_index$) {
+    num_write -= ($group_num_dtype_double$) 1;
+  }
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_num$(file, num);
+    return trexio_text_write_$group_num$(file, num_write);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_$group_num$(file, num);
+    return trexio_hdf5_write_$group_num$(file, num_write);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_num$(file, num);
+    return trexio_json_write_$group_num$(file, num_write);
 ,*/
   }
 
@@ -2215,6 +2505,12 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
   if (rc != TREXIO_SUCCESS) return rc;
 
   ,*num = ($group_num_dtype_single$) num_64;
+
+  /* Handle index type */
+  if ($is_index$) {
+    ,*num += ($group_num_dtype_single$) 1;
+  }
+
   return TREXIO_SUCCESS;
 }
      #+end_src
@@ -2228,20 +2524,26 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
   //if (num <= 0) return TREXIO_INVALID_NUM; /* this line is uncommented by the generator for dimensioning variables; do NOT remove! */
   if (trexio_has_$group_num$(file) == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_ATTR_ALREADY_EXISTS;
 
+  /* Handle index type */
+  $group_num_dtype_single$ num_write = num;
+  if ($is_index$) {
+    num_write -= ($group_num_dtype_single$) 1;
+  }
+
   switch (file->back_end) {
 
   case TREXIO_TEXT:
-    return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num);
+    return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num_write);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num);
+    return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num_write);
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
 /*
   case TREXIO_JSON:
-    return trexio_json_write_$group_num$(file, ($group_num_dtype_double$) num);
+    return trexio_json_write_$group_num$(file, ($group_num_dtype_double$) num_write);
     break;
 ,*/
   }
@@ -3323,7 +3625,7 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
-  const uint32_t unique_rank = $group_dset_unique_rank$;
+#define unique_rank $group_dset_unique_rank$
   int64_t unique_dims[$group_dset_unique_rank$];
 
   // Below part is populated by the generator when unique_rank > 1
@@ -3331,11 +3633,12 @@ trexio_read_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-  if (unique_rank != 1) {
-    for (uint32_t i = 1; i < unique_rank; i++) {
-      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
-    }
+#if (unique_rank != 1)
+  for (uint32_t i = 1; i < unique_rank; i++) {
+    if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
+#endif
+#undef unique_rank
 
   // introduce a new variable that will be modified with the number of integrals being read if EOF is encountered
   int64_t eof_read_size = 0L;
@@ -3455,7 +3758,7 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
-  const uint32_t unique_rank = $group_dset_unique_rank$;
+#define unique_rank $group_dset_unique_rank$
   int64_t unique_dims[$group_dset_unique_rank$];
 
   // Below part is populated by the generator when unique_rank > 1
@@ -3463,11 +3766,12 @@ trexio_write_$group_dset$(trexio_t* const file,
 
   /* Find the maximal value along all dimensions to define the compression technique in the back end */
   int64_t max_dim = unique_dims[0];
-  if (unique_rank != 1) {
-    for (uint32_t i = 1; i < unique_rank; i++) {
-      if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
-    }
+#if (unique_rank != 1)
+  for (uint32_t i = 1; i < unique_rank; i++) {
+    if (unique_dims[i] > max_dim) max_dim = unique_dims[i];
   }
+#endif
+#undef unique_rank
 
   // shift indices to be zero-based if Fortran API is used
   if (file->one_based) {
@@ -4626,7 +4930,7 @@ def write_$group_dset$(trexio_file: File, offset_file: int, buffer_size: int, ds
     if not isinstance(dset, (list, tuple, np.ndarray)):
         raise TypeError("dset argument has to be an array (list, tuple or NumPy ndarray).")
 
-    if isinstance(dset, np.ndarray) and not coefficients.dtype==np.float64:
+    if isinstance(dset, np.ndarray) and not dset.dtype==np.float64:
         # convert to float64 if input is in a different precision
         dset_64 = np.float64(dset)
         rc = pytr.trexio_write_safe_$group_dset$(trexio_file.pytrexio_s, offset_file, buffer_size, dset_64)
@@ -5579,6 +5883,12 @@ def has_determinant_list(trexio_file) -> bool:
   bitfield representation of the determinant. If the creation of the bitfield requires a change of sign, the return code is
   ~TREXIO_PHASE_CHANGE~.
 
+  ~trexio_convert_nao_radius~ functions convert a radius from the center of an NAO to its logarithmic interpolation grid.
+
+  ~trexio_evaluate_nao_radial~ function evaluates the radial function of an NAO for a given distance from the center.
+
+  ~trexio_evaluate_nao_radial_all~ evaluates all radial functions at a given position in space.
+
 ** C
 
      #+begin_src c :tangle prefix_front.h
@@ -5597,6 +5907,35 @@ trexio_exit_code trexio_to_orbital_list_up_dn (const int32_t N_int, const bitfie
 trexio_exit_code trexio_safe_to_orbital_list (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_out, const int64_t dim_out, int32_t* const num);
 trexio_exit_code trexio_safe_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_up_out, const int64_t dim_up_out, int32_t* const dset_dn_out, const int64_t dim_dn_out, int32_t* const num_up, int32_t* const num_dn);
 trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list, const int32_t occupied_num, bitfield_t* const bit_list, const int32_t N_int);
+
+trexio_exit_code trexio_convert_nao_radius_32 (const float r,
+  const float* const grid_r, float* const log_r_out);
+trexio_exit_code trexio_convert_nao_radius_64 (const double r,
+  const double* const grid_r, double* const log_r_out);
+trexio_exit_code trexio_convert_nao_radius_py (const double r,
+  double* grid_r, int32_t n_grid_r, double* const log_r_out);
+trexio_exit_code trexio_evaluate_nao_radial (const int32_t shell_index,
+  const double r, const int32_t* const grid_start, const int32_t* const grid_size,
+  const double* const grid_r, const double* const interpolator, 
+  const double* const normalization, double* const amplitude);
+
+trexio_exit_code trexio_evaluate_nao_radial_all (const int32_t shell_num,
+  const int32_t* const nucleus_index, const double* const nucleus_coords, 
+  const int32_t* const grid_start, const int32_t* const grid_size, 
+  const double* const grid_r, const double* const interpolator, const double* const normalization, 
+  const double rx, const double ry, const double rz, double* const amplitude);
+
+trexio_exit_code trexio_evaluate_nao_radial_py (const int shell_index, 
+  const double r, int64_t* grid_start, int n_grid_st, int64_t* grid_size,
+  int n_grid_si, double* grid_r, int n_grid_r, double* interpolator, 
+  int n_interp, double* normalization, int n_norm, double* const amplitude);
+
+trexio_exit_code trexio_evaluate_nao_radial_all_py (const int32_t shell_num,
+  int64_t* nucleus_index, int n_nuc_id, double* nucleus_coords, int n_nuc_co,
+  int64_t* grid_start, int n_grid_st, int64_t* grid_size, int n_grid_si,
+  double* grid_r, int n_grid_r, double* interpolator, int n_interp, double* normalization, int n_norm,
+  const double rx, const double ry, const double rz, double* const amplitudes, int amplitude_cnt);
+
      #+end_src
 
 
@@ -5615,19 +5954,15 @@ trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list,
       bit_list[j] = (bitfield_t) 0;
   }
 
-  uint32_t i;
-  uint32_t k;
-  uint32_t iorb;
-  bitfield_t mask;
   uint32_t nswaps = 0;
 
   for (int32_t pos = 0 ; pos < occupied_num ; pos++) {
-    iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
+    const uint32_t iorb = ((uint32_t) (orb_list[pos] + 1)) - TREXIO_ORBITAL_SHIFT;
 
     // Set the bit of to one
-    i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
-    k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
-    mask = ((bitfield_t) 1) << k;
+    const uint32_t i = (uint32_t) (iorb >> TREXIO_NORB_PER_INT_SHIFT);
+    const uint32_t k = (uint32_t) (iorb & (TREXIO_NORB_PER_INT - 1) );
+    bitfield_t mask = ((bitfield_t) 1) << k;
     bit_list[i] |= mask;
 
     // Check for phase changes
@@ -5658,21 +5993,16 @@ trexio_exit_code trexio_to_orbital_list(const int32_t N_int,
   if (list == NULL) return TREXIO_INVALID_ARG_3;
   if (occupied_num == NULL) return TREXIO_INVALID_ARG_4;
 
-  bitfield_t  tmp;
-  int32_t     shift;
-  int32_t     k;
-  int32_t     pos;
-
-  k = 0;
-  shift = TREXIO_ORBITAL_SHIFT;
+  int32_t k = 0;
+  int32_t shift = TREXIO_ORBITAL_SHIFT;
 
   for (int32_t i=0 ; i<N_int ; i++)
   {
-      tmp = d1[i];
+      bitfield_t tmp = d1[i];
 
       while (tmp != (bitfield_t) 0)
       {
-          pos = trailz(tmp);
+          const int32_t pos = trailz(tmp);
           if (pos < 0) return TREXIO_FAILURE;
 
           list[k] = ( (int32_t) pos) + shift - 1;
@@ -5743,7 +6073,189 @@ trexio_safe_to_orbital_list_up_dn (const int32_t N_int,
 }
     #+end_src
 
-     #+begin_src c :tangle trexio_private.h
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_convert_nao_radius_32 (const float r, const float* const grid_r, float* const log_r_out)
+{
+  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
+
+  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_convert_nao_radius_64 (const double r, const double* const grid_r, double* const log_r_out)
+{
+  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
+
+  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_convert_nao_radius_py (const double r, double* grid_r, int32_t n_grid, double* const log_r_out)
+{
+  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
+
+  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+
+  return TREXIO_SUCCESS;
+}
+
+  #+end_src
+
+  #+begin_src c :tangle prefix_front.c
+trexio_exit_code
+trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int32_t* const grid_start,
+                            const int32_t* const grid_size, const double* const grid_r, const double* const interpolator, const double* const normalization, double* const amplitude)
+{
+  if (shell_index < 0) return TREXIO_INVALID_ARG_1;
+  if (r < 0) return TREXIO_INVALID_ARG_2;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_5;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_6;
+  if (normalization == 0) return TREXIO_INVALID_ARG_7;
+
+  const int32_t i0 = 4*grid_start[shell_index];
+
+  // Convert radius to logarithmic units 
+  double r_log = 0.0;
+  trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
+  int32_t i_log = (int32_t) r_log;
+  if (i_log < 0)
+    i_log = 0;
+  else if (i_log >= grid_size[shell_index])
+    return 0; // NAOs vanish at the boundary by definition
+
+  double t = r_log - (double) i_log;
+  double val_spline = interpolator[i0 + 4*i_log + 0];
+  val_spline += t * interpolator[i0 + 4*i_log + 1];
+  val_spline += t * t * interpolator[i0 + 4*i_log + 2];
+  val_spline += t * t * t * interpolator[i0 + 4*i_log + 3];
+
+  *amplitude = val_spline * normalization[shell_index] / r;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_evaluate_nao_radial_all (const int32_t shell_num, const int32_t* const nucleus_index, const double* const nucleus_coords, const int32_t* const grid_start,
+                            const int32_t* const grid_size, const double* const grid_r, const double* const interpolator, 
+                            const double* const normalization,  const double rx, const double ry, const double rz, double* const amplitude)
+{
+  if (shell_num < 0) return TREXIO_INVALID_ARG_1;
+  if (nucleus_index == 0) return TREXIO_INVALID_ARG_2;
+  if (nucleus_coords == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_5;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_6;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_7;
+  if (normalization == 0) return TREXIO_INVALID_ARG_8;
+
+  trexio_exit_code rc;
+
+  for (int shell_index = 0; shell_index < shell_num; shell_index++) {
+    const int32_t nuc_index = nucleus_index[shell_index];
+    const double dx = nucleus_coords[3*nuc_index + 0] - rx;
+    const double dy = nucleus_coords[3*nuc_index + 1] - ry;
+    const double dz = nucleus_coords[3*nuc_index + 2] - rz;
+    const double r = sqrt(dx*dx + dy*dy + dz*dz);
+
+    // All possibly reported errors have been caught above
+    rc = trexio_evaluate_nao_radial(shell_index, r, grid_start, 
+      grid_size, grid_r, interpolator, normalization, &amplitude[shell_index]);
+
+    if (rc != TREXIO_SUCCESS)
+      return rc;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code trexio_evaluate_nao_radial_py (const int shell_index, 
+  const double r, int64_t* grid_start, int n_grid_st,
+  int64_t* grid_size, int n_grid_si, double* grid_r, int n_grid_r, 
+  double* interpolator, int n_interp, double* normalization, int n_norm, double* const amplitude)
+{
+  // Code needs to be copied because of the use of int64_t mandated by Python
+  // If a 64-bit version is implemented, this can be avoided
+  if (shell_index < 0) return TREXIO_INVALID_ARG_1;
+  if (r < 0) return TREXIO_INVALID_ARG_2;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_5;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_6;
+  if (normalization == 0) return TREXIO_INVALID_ARG_7;
+
+  const int32_t i0 = 4*grid_start[shell_index];
+
+  // Convert radius to logarithmic units 
+  double r_log = 0.0;
+  trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
+  int32_t i_log = (int32_t) r_log;
+  if (i_log < 0) {
+    *amplitude = interpolator[i0] * normalization[shell_index] / r;
+    return TREXIO_SUCCESS;
+  } else if (i_log >= grid_size[shell_index]) {
+    *amplitude = 0.0;
+    return TREXIO_SUCCESS; // NAOs vanish at the boundary by definition
+  }
+
+  double t = r_log - (double) i_log;
+  double val_spline = interpolator[i0 + 4*i_log + 0];
+  val_spline += t * interpolator[i0 + 4*i_log + 1];
+  val_spline += t * t * interpolator[i0 + 4*i_log + 2];
+  val_spline += t * t * t * interpolator[i0 + 4*i_log + 3];
+
+  *amplitude = val_spline * normalization[shell_index] / r;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code trexio_evaluate_nao_radial_all_py (const int32_t shell_num,
+  int64_t* nucleus_index, int n_nuc_id, double* nucleus_coords, int n_nuc_co,
+  int64_t* grid_start, int n_grid_st, int64_t* grid_size, int n_grid_si,
+  double* grid_r, int n_grid_r, double* interpolator, int n_interp,
+  double* normalization, int n_norm,
+  const double rx, const double ry, const double rz, double* const amplitudes, int amplitude_cnt)
+{
+  if (shell_num < 0) return TREXIO_INVALID_ARG_1;
+  if (nucleus_index == 0) return TREXIO_INVALID_ARG_2;
+  if (nucleus_coords == 0) return TREXIO_INVALID_ARG_3;
+  if (grid_start == 0) return TREXIO_INVALID_ARG_4;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_5;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_6;
+  if (interpolator == 0) return TREXIO_INVALID_ARG_7;
+  if (normalization == 0) return TREXIO_INVALID_ARG_8;
+
+  trexio_exit_code rc;
+
+  for (int shell_index = 0; shell_index < shell_num; shell_index++) {
+    const int32_t nuc_index = nucleus_index[shell_index];
+    const double dx = nucleus_coords[3*nuc_index + 0] - rx;
+    const double dy = nucleus_coords[3*nuc_index + 1] - ry;
+    const double dz = nucleus_coords[3*nuc_index + 2] - rz;
+    const double r = sqrt(dx*dx + dy*dy + dz*dz);
+
+    // All possibly reported errors have been caught above
+    rc = trexio_evaluate_nao_radial_py(shell_index, r, grid_start, n_grid_st, 
+      grid_size, n_grid_si, grid_r, n_grid_r, interpolator, n_interp, normalization, n_norm, &amplitudes[shell_index]);
+    if (rc != TREXIO_SUCCESS)
+      return rc;
+  }
+
+  return TREXIO_SUCCESS;
+}
+  #+end_src
+
+  #+begin_src c :tangle trexio_private.h
 /* Popcount and trailz */
 #if TREXIO_INT_SIZE == 64
 
@@ -5870,6 +6382,76 @@ interface
 end interface
    #+end_src
 
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_convert_nao_radius_32(r, grid_r, log_r_out) &
+  bind(C, name="trexio_convert_nao_radius_32")
+    use, intrinsic :: iso_c_binding
+    import
+    real(c_float), intent(in), value  :: r
+    real(c_float), intent(in)  :: grid_r(*)
+    real(c_float), intent(out)        :: log_r_out
+  end function trexio_convert_nao_radius_32
+end interface
+  #+end_src
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_convert_nao_radius_64(r, grid_r, log_r_out) &
+  bind(C, name="trexio_convert_nao_radius_64")
+    use, intrinsic :: iso_c_binding
+    import
+    real(c_double), intent(in), value  :: r
+    real(c_double), intent(in)  :: grid_r(*)
+    real(c_double), intent(out)        :: log_r_out
+  end function trexio_convert_nao_radius_64
+end interface
+  #+end_src
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_evaluate_nao_radial (shell_index, r, &
+          grid_start, grid_size, grid_r, interpolator, normalization, amplitude) &
+  bind(C, name="trexio_evaluate_nao_radial")
+    use, intrinsic :: iso_c_binding
+    import
+    integer(c_int32_t), intent(in), value  :: shell_index
+    real(c_double), intent(in), value   :: r
+    integer(c_int32_t), intent(in)  :: grid_start(*)
+    integer(c_int32_t), intent(in)  :: grid_size(*)
+    real(c_double), intent(in)  :: grid_r(*)
+    real(c_double), intent(in)  :: interpolator(*)
+    real(c_double), intent(in)  :: normalization(*)
+    real(c_double), intent(out)         :: amplitude
+  end function trexio_evaluate_nao_radial
+end interface
+  #+end_src
+
+  #+begin_src f90 :tangle prefix_fortran.f90
+interface
+  integer(trexio_exit_code) function trexio_evaluate_nao_radial_all (shell_num, &
+          nucleus_index, nucleus_coords, &
+          grid_start, grid_size, grid_r, interpolator, &
+          normalization, rx, ry, rz, amplitudes) &
+  bind(C, name="trexio_evaluate_nao_radial_all")
+    use, intrinsic :: iso_c_binding
+    import
+    integer(c_int32_t), intent(in), value  :: shell_num
+    integer(c_int32_t), intent(in) :: nucleus_index(*)
+    real(c_double), intent(in)  :: nucleus_coords(*)
+    integer(c_int32_t), intent(in)  :: grid_start(*)
+    integer(c_int32_t), intent(in)  :: grid_size(*)
+    real(c_double), intent(in)  :: grid_r(*)
+    real(c_double), intent(in)  :: interpolator(*)
+    real(c_double), intent(in)  :: normalization(*)
+    real(c_double), intent(in), value   :: rx
+    real(c_double), intent(in), value   :: ry
+    real(c_double), intent(in), value   :: rz
+    real(c_double), intent(out)         :: amplitudes(*)
+  end function trexio_evaluate_nao_radial_all
+end interface
+  #+end_src
+
 ** Python
 
    #+begin_src python :tangle basic_python.py
@@ -5968,6 +6550,99 @@ def to_orbital_list_up_dn(n_int: int, determinant: list) -> tuple:
         raise Exception("Inconsistent size of the orbital_list for down-spin electrons.")
 
     return (orbital_list_up[0:occ_num_up], orbital_list_dn[0:occ_num_dn])
+   #+end_src
+
+   #+begin_src python :tangle basic_python.py
+def convert_nao_radius(r: float, grid_r) -> float:
+  """Converts the radius r as a distance from a nucleus to the shell
+  s logarithmic grid.
+  
+  Input:
+      ~r~ - the radius to be converted
+      ~grid_r~ - The radial grid of the shell. Note that this is only the
+                 grid of the shell of interest, not the array of all shells.
+
+      Returns:
+        Float that gives the radius in the shell's logarithmic units 
+
+      Raises:
+        - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Exception from some other error (e.g. RuntimeError).
+
+  """
+
+  rc, r_log = pytr.trexio_convert_nao_radius_py(r, grid_r)
+
+  if rc != TREXIO_SUCCESS:
+    raise Error(rc)
+
+  return r_log
+
+def evaluate_nao_radial(shell_index, r, grid_start, grid_size, grid_r, interpolator, normalization) -> float:
+  """Evaluates the radial function of a given NAO shell at a distance from its center.
+  
+  Input:
+      ~shell_index~ - index of the shell of interest
+      ~r~ - distance from the shell center
+      ~grid_start~ - array of starting points of the individual splines
+      ~grid_size~ - array of number of data points per spline
+      ~grid_r~ - The radial grid of the shell. Note that this is only the
+                 grid of the shell of interest, not the array of all shells.
+      ~interpolator~ - Interpolator of the spline. It is assumed to contain a cubic spline.
+                       An interpolator for a kinetic energy spline can also be passed.
+      ~normalization~ - array of radial function normalization constants.
+
+      Returns:
+        Value of the spline at the given radius 
+
+      Raises:
+        - Error from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Error from some other error (e.g. RuntimeError).
+
+  """
+  rc, amplitude = pytr.trexio_evaluate_nao_radial_py(shell_index, r, grid_start, grid_size, grid_r, interpolator.flatten(), normalization)
+
+  if rc != TREXIO_SUCCESS:
+    raise Error(rc)
+
+  return amplitude
+
+def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
+  grid_size, grid_r, interpolator, normalization, r) -> float:
+  """Evaluates the radial functions of all NAO shells at a given position in space.
+  
+  Input:
+      ~nucleus_index~ - array giving the centers of the NAO
+      ~nucleus_coords~ - array giving the coordinates of the NAO centers
+      ~grid_start~ - array of starting points of the individual splines
+      ~grid_size~ - array of number of data points per spline
+      ~grid_r~ - The radial grid of the shell. Note that this is only the
+                 grid of the shell of interest, not the array of all shells.
+      ~interpolator~ - Interpolator of the spline. It is assumed to contain a cubic spline.
+                       An interpolator for a kinetic energy spline can also be passed.
+      ~normalization~ - array of radial function normalization constants.
+      ~r~ - the position in space at which the functions are evaluated
+
+      Returns:
+        Array of spline values at ~r~ 
+
+      Raises:
+        - Error if ~r~ is not three dimensional
+        - Error from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
+        - Error from some other error (e.g. RuntimeError).
+
+  """
+  if len(r) != 3:
+    raise Error(TREXIO_INVALID_ARG7)
+  shell_cnt = len(nucleus_index)
+  rc, amplitudes = pytr.trexio_evaluate_nao_radial_all_py(shell_cnt, \
+    nucleus_index, nucleus_coords.flatten(), grid_start, grid_size, grid_r, \
+    interpolator.flatten(), normalization, r[0], r[1], r[2], shell_cnt)
+
+  if rc != TREXIO_SUCCESS:
+    raise Error(rc)
+
+  return amplitudes
    #+end_src
 
 * Permutations of indices
@@ -6165,7 +6840,6 @@ const int32_t* trexio_4_index_4_perm_anti() { return &(trexio_4_index_4_perm_ant
 
  #+end_src
 :end:
-
 
 * Fortran helper/wrapper functions
 
@@ -6394,6 +7068,11 @@ contains
 * File suffixes                                                     :noexport:
 
   #+begin_src c :tangle suffix_front.h
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
   #+end_src
 

@@ -34,10 +34,9 @@
 
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod
+BUILT_SOURCES = trex.json
 if HAVE_FORTRAN
-BUILT_SOURCES = trexio.mod
-else
-BUILT_SOURCES = 
+BUILT_SOURCES += trexio.mod
 endif
 EXTRA_DIST = .git_hash
 
@@ -77,21 +76,72 @@ endif
 ORG_FILES = \
   src/templates_front/templator_front.org \
   src/templates_text/templator_text.org \
-  src/templates_hdf5/templator_hdf5.org \
   trex.org
 
+if HAVE_HDF5
+ORG_FILES += src/templates_hdf5/templator_hdf5.org
+endif
 
 src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
+              trex.json \
               src/CMakeLists.txt \
               tests/CMakeLists.txt \
+              tests/test_macros.h  \
               cmake/cmake_uninstall.cmake.in \
               cmake/FindTREXIO.cmake
 
 
 # =============== TESTS =============== #
+
+TEST_FILES = \
+    tests/delete_group.c \
+    tests/delete_group_hdf5.c \
+    tests/delete_group_text.c \
+    tests/io_all.c \
+    tests/io_determinant.c \
+    tests/io_determinant_hdf5.c \
+    tests/io_determinant_text.c \
+    tests/io_dset_float.c \
+    tests/io_dset_float_hdf5.c \
+    tests/io_dset_float_text.c \
+    tests/io_dset_int.c \
+    tests/io_dset_int_hdf5.c \
+    tests/io_dset_int_text.c \
+    tests/io_dset_sparse.c \
+    tests/io_dset_sparse_hdf5.c \
+    tests/io_dset_sparse_text.c \
+    tests/io_dset_str.c \
+    tests/io_dset_str_hdf5.c \
+    tests/io_dset_str_text.c \
+    tests/io_jastrow.c \
+    tests/io_jastrow_hdf5.c \
+    tests/io_jastrow_text.c \
+    tests/io_num.c \
+    tests/io_num_hdf5.c \
+    tests/io_num_text.c \
+    tests/io_safe_dset_float.c \
+    tests/io_safe_dset_float_hdf5.c \
+    tests/io_safe_dset_float_text.c \
+    tests/io_str.c \
+    tests/io_str_hdf5.c \
+    tests/io_str_text.c \
+    tests/open.c \
+    tests/open_hdf5.c \
+    tests/open_text.c \
+    tests/overwrite_all.c \
+    tests/overwrite_all_hdf5.c \
+    tests/overwrite_all_text.c \
+    tests/pre_close.c \
+    tests/template_hdf5.c \
+    tests/template_text.c \
+    tests/test_f.f90 \
+    tests/test_macros.h \
+    tests/trexio_f.f90
+
+EXTRA_DIST += $(TEST_FILES)
 
 TESTS_C = \
   tests/open_text \
@@ -160,11 +210,13 @@ EXTRA_DIST += $(trexio_scm)
 
 HTML_TANGLED = docs/index.html            \
                docs/examples.html         \
-               docs/templator_hdf5.html   \
                docs/trex.html             \
                docs/README.html           \
                docs/templator_front.html  \
                docs/templator_text.html
+if HAVE_HDF5
+HTML_TANGLED += docs/templator_hdf5.html
+endif
 
 htmldir = $(docdir)
 # This $(htmlizer) file and the corresponding target rule allow to avoid circular dependency,
@@ -217,6 +269,8 @@ src/trexio.c: $(trexio_h)
 $(trexio_h): $(ORG_FILES) $(GENERATOR_FILES)
 	cd $(srcdir)/tools && ./build_trexio.sh
 
+trex.json: $(trexio_h)
+
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
 	touch $(htmlizer)
 	cd $(srcdir)/tools && ./build_doc.sh
@@ -257,10 +311,18 @@ pytrexio_i    = $(srcdir)/src/pytrexio.i
 numpy_i       = $(srcdir)/src/numpy.i
 
 
+if HAVE_HDF5
+python-test: $(TEST_PY)
+	python3 -m pytest -v --all $(TEST_PY)
+	$(RM) -r  -- __pycache__
+	$(RM) -f  -- test_file_py.h5 unsafe_test_file_py.h5
+	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
+else
 python-test: $(TEST_PY)
 	python3 -m pytest -v $(TEST_PY)
-	$(RM) -r -- __pycache__
-	$(RM) -f -- test_file_py.h5 unsafe_test_file_py.h5
+	$(RM) -r  -- __pycache__
+	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
+endif
 
 python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
@@ -270,11 +332,15 @@ python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
 	cd python && \
 		python3 -m build --sdist
 
+if HAVE_HDF5
 $(pytrexio_py): $(pytrexio_c)
 	cd tools && ./prepare_python.sh
+else
+$(pytrexio_py): $(pytrexio_c)
+	cd tools && ./prepare_python.sh --without-hdf5
+endif
 
 # Build Python module and C wrapper code for TREXIO using SWIG
-# [?] swig -python -threads pytrexio.i ----> Add thread support for all the interface
 $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	@if [[ $(SWIG).x != ".x" ]] ; then \
 	cp $(trexio_h) src/ ; \
@@ -303,7 +369,7 @@ DEB_FILES = \
   helpers-debian/libtrexio0.install \
   helpers-debian/libtrexio-dev.install \
   helpers-debian/source        \
-  helpers-debian/README.source 
+  helpers-debian/README.source
 
 debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
 	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
@@ -313,6 +379,9 @@ debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
               $(trexio_py) \
+              $(srcdir)/src/trexio.py \
+              $(srcdir)/src/pytrexio.py \
+              $(srcdir)/src/trexio.h \
               python/src/*.c \
               python/src/*.h
 

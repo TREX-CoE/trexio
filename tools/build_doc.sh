@@ -81,7 +81,7 @@ function extract_doc()
       ${org}                     \
       --load ${CONFIG_TANGLE}    \
       -f org-html-export-to-html  &> /dev/null
-    mv ${local_html} ${DOCS}
+    mv -f ${local_html} ${DOCS}
     rm -f "${local_html}~" 
 
 }
@@ -99,7 +99,7 @@ function main() {
     # Create documentation
     cd ${SRC} 
 
-    for dir in ${SRC}/templates_*/ ${TREXIO_ROOT}/
+    for dir in ${SRC}/templates_*/ ${TREXIO_ROOT}/ ${TREXIO_ROOT}/docs
     do
 	dir=${dir%*/}
 	echo ${dir}

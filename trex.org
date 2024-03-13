@@ -1,58 +1,17 @@
-#+TITLE: TREX Configuration file
+#+TITLE: Data stored in TREXIO
 #+STARTUP: latexpreview
 #+SETUPFILE: docs/theme.setup
 
-This page contains information about the general structure of the
-TREXIO library. The source code of the library can be automatically
-generated based on the contents of the ~trex.json~ configuration file,
-which itself is generated from different sections (groups) presented
-below.
+  For simplicity, the singular form is always used for the names of
+  groups and attributes, and all data are stored in atomic units.
+  The dimensions of the arrays in the tables below are given in
+  column-major order (as in Fortran), and the ordering of the dimensions
+  is reversed in the produced ~trex.json~ configuration file as the
+  library is written in C.
 
-All quantities are saved in TREXIO files in atomic units. The
-dimensions of the arrays in the tables below are given in column-major
-order (as in Fortran), and the ordering of the dimensions is reversed
-in the produced ~trex.json~ configuration file as the library is
-written in C.
-
-TREXIO currently supports ~int~, ~float~ and ~str~ types for both
-single attributes and arrays.  Note, that some attributes might have
-~dim~ type (e.g. ~num~ of the ~nucleus~ group).  This type is treated
-exactly in the same way as ~int~ with the only difference that ~dim~
-variables cannot be negative. This additional constraint is required
-because ~dim~ attributes are used internally to allocate memory and to
-check array boundaries in the memory-safe API. Most of the times, the
-~dim~ variables contain the ~num~ suffix.
-You may also encounter some ~dim readonly~ variables.
-It means that the value is automatically computed and written by the
-TREXIO library, thus it is read-only and cannot be (over)written by the
-user.
-
-In Fortran, arrays are 1-based and in most other languages the
-arrays are 0-based. Hence, we introduce the ~index~ type which is a
-1-based ~int~ in the Fortran interface and 0-based otherwise.
-
-For sparse data structures such as electron replusion integrals,
-the data can be too large to fit in memory and the data needs to be
-fetched using multiple function calls to perform I/O on buffers.
-For more information on how to read/write sparse data structures, see
-the [[./examples.html][examples]]. The ~sparse~ data representation implies the
-[[https://en.wikipedia.org/wiki/Sparse_matrix#Coordinate_list_(COO)][coordinate list]] representation, namely the user has to write a list
-of indices and values.
-
-For the Configuration Interaction (CI) and Configuration State Function (CSF)
-groups, the ~buffered~ data type is introduced, which allows similar incremental
-I/O as for ~sparse~ data but without the need to write indices of the sparse values.
-
-For determinant lists (integer bit fields), the ~special~ attribute is present in the type.
-This means that the source code is not produced by the generator, but hand-written.
-
-Some data may be complex. In that case, the real part should be stored
-in the variable, and the imaginary part will be stored in the variable
-with the same name suffixed by ~_im~.
-
-  #+begin_src python :tangle trex.json :exports none
+   #+begin_src python :tangle trex.json :exports none
 {
-  #+end_src
+   #+end_src
 
 * Metadata (metadata group)
 
@@ -133,11 +92,15 @@ with the same name suffixed by ~_im~.
    used in periodic calculations.
 
    #+NAME: cell
-   | Variable | Type    | Dimensions | Description           |
-   |----------+---------+------------+-----------------------|
-   | ~a~      | ~float~ | ~(3)~      | First lattice vector  |
-   | ~b~      | ~float~ | ~(3)~      | Second lattice vector |
-   | ~c~      | ~float~ | ~(3)~      | Third lattice vector  |
+   | Variable | Type    | Dimensions | Description                                                              |
+   |----------+---------+------------+--------------------------------------------------------------------------|
+   | ~a~      | ~float~ | ~(3)~      | First real space lattice vector                                          |
+   | ~b~      | ~float~ | ~(3)~      | Second real space lattice vector                                         |
+   | ~c~      | ~float~ | ~(3)~      | Third real space lattice vector                                          |
+   | ~G_a~    | ~float~ | ~(3)~      | First reciprocal space lattice vector                                    |
+   | ~G_b~    | ~float~ | ~(3)~      | Second reciprocal space lattice vector                                   |
+   | ~G_c~    | ~float~ | ~(3)~      | Third reciprocal space lattice vector                                    |
+   | ~two_pi~ | ~int~   |            | ~0~ or ~1~. If ~two_pi=1~, $2\pi$ is included in the reciprocal vectors. |
 
    #+CALL: json(data=cell, title="cell")
 
@@ -145,9 +108,13 @@ with the same name suffixed by ~_im~.
    :results:
    #+begin_src python :tangle trex.json
        "cell": {
-           "a" : [ "float", [ "3" ] ]
-         , "b" : [ "float", [ "3" ] ]
-         , "c" : [ "float", [ "3" ] ]
+                "a" : [ "float", [ "3" ] ]
+         ,      "b" : [ "float", [ "3" ] ]
+         ,      "c" : [ "float", [ "3" ] ]
+         ,    "G_a" : [ "float", [ "3" ] ]
+         ,    "G_b" : [ "float", [ "3" ] ]
+         ,    "G_c" : [ "float", [ "3" ] ]
+         , "two_pi" : [ "int"  , []      ]
        } ,
    #+end_src
    :end:
@@ -177,8 +144,18 @@ with the same name suffixed by ~_im~.
 
 ** Electron (electron group)
 
-    We consider wave functions expressed in the spin-free formalism, where
-    the number of \uparrow and \downarrow electrons is fixed.
+   The chemical system consists of nuclei and electrons, where the
+   nuclei are considered as fixed point charges with Cartesian
+   coordinates.  The wave function is stored in the spin-free
+   formalism, and therefore, it is necessary for the user to
+   explicitly store the number of electrons with spin up
+   ($N_\uparrow$) and spin down ($N_\downarrow$).  These numbers
+   correspond to the normalization of the spin-up and spin-down
+   single-particle reduced density matrices.
+
+   We consider wave functions expressed in the spin-free formalism, where
+   the number of \uparrow and \downarrow electrons is fixed.
+
 
    #+NAME:electron
    | Variable | Type  | Dimensions | Description                         |
@@ -213,13 +190,14 @@ with the same name suffixed by ~_im~.
    The ~id~ and ~current_label~ attributes need to be specified for each file.
 
    #+NAME: state
-   | Variable        | Type  | Dimensions    | Description                                                                                 |
-   |-----------------+-------+---------------+---------------------------------------------------------------------------------------------|
-   | ~num~           | ~dim~ |               | Number of states (including the ground state)                                               |
-   | ~id~            | ~int~ |               | Index of the current state (0 is ground state)                                              |
-   | ~current_label~ | ~str~ |               | Label of the current state                                                                  |
-   | ~label~         | ~str~ | ~(state.num)~ | Labels of all states                                                                        |
-   | ~file_name~     | ~str~ | ~(state.num)~ | Names of the TREXIO files linked to the current one (i.e. containing data for other states) |
+   | Variable        | Type    | Dimensions    | Description                                                                                 |
+   |-----------------+---------+---------------+---------------------------------------------------------------------------------------------|
+   | ~num~           | ~dim~   |               | Number of states (including the ground state)                                               |
+   | ~id~            | ~index~ |               | Index of the current state (0 is ground state)                                              |
+   | ~energy~        | ~float~ |               | Energy of the current state                                                                 |
+   | ~current_label~ | ~str~   |               | Label of the current state                                                                  |
+   | ~label~         | ~str~   | ~(state.num)~ | Labels of all states                                                                        |
+   | ~file_name~     | ~str~   | ~(state.num)~ | Names of the TREXIO files linked to the current one (i.e. containing data for other states) |
 
    #+CALL: json(data=state, title="state")
 
@@ -227,11 +205,12 @@ with the same name suffixed by ~_im~.
    :results:
    #+begin_src python :tangle trex.json
        "state": {
-                     "num" : [ "dim", []              ]
-         ,            "id" : [ "int", []              ]
-         , "current_label" : [ "str", []              ]
-         ,         "label" : [ "str", [ "state.num" ] ]
-         ,     "file_name" : [ "str", [ "state.num" ] ]
+                     "num" : [ "dim"  , []              ]
+         ,            "id" : [ "index", []              ]
+         ,        "energy" : [ "float", []              ]
+         , "current_label" : [ "str"  , []              ]
+         ,         "label" : [ "str"  , [ "state.num" ] ]
+         ,     "file_name" : [ "str"  , [ "state.num" ] ]
        } ,
    #+end_src
    :end:
@@ -241,9 +220,9 @@ with the same name suffixed by ~_im~.
 
 *** Gaussian and Slater-type orbitals
 
-    We consider here basis functions centered on nuclei. Hence, we enable
-    the possibility to define /dummy atoms/ to place basis functions in
-    random positions.
+    We consider here basis functions centered on nuclei. Hence, it is 
+    possibile to define /dummy atoms/ to place basis functions in
+    arbitrary positions.
 
     The atomic basis set is defined as a list of shells. Each shell $s$ is
     centered on a center $A$, possesses a given angular momentum $l$ and a
@@ -277,35 +256,103 @@ with the same name suffixed by ~_im~.
 
     All the basis set parameters are stored in one-dimensional arrays.
 
+*** Numerical orbitals
+    
+    Trexio supports numerical atom centered orbitals. The implementation is
+    based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular 
+    simulations with numeric atom-centered orbitals; Computer Physics 
+    Communications 2009]. These orbitals are
+    defined by the atom they are centered on, their angular momentum and a
+    radial function $R_s$, which is of the form
+    \[
+    R_s(\mathbf{r}) = \mathcal{N}_s \frac{u_i(\mathbf{r})}{r^{-n_s}}.
+    \]
+    Where $u_i(\mathbf{r})$ is numerically tabulated on a dense logarithmic
+    grid. It is constructed to vanish for any $\mathbf{r}$
+    outside of the grid. The reference points are stored in ~nao_grid_r~
+    and ~nao_grid_phi~. Additionaly, a separate spline for the first and second
+    derivative of $u(\mathbf{r})$ can be stored in ~nao_grid_grad~ and ~nao_grid_lap~. 
+    Storing them in this form allows to calculate the actual first and
+    second derivatives easily as follows:
+
+    \[
+      \frac{\partial \phi}{\partial x} = \frac{x}{r^2}\left( u^\prime\left(r\right) - \frac{u\left(r\right)}{r}\right)
+    \]
+    \[
+      \frac{\partial^2 \phi}{\partial x^2} = \frac{1}{r^3}\left(x^2 u^{\prime\prime}(r) + \left( 3x^2-r^2\right) \left( \frac{u(r)}{r^2} - \frac{u'(r)}{r}\right) \right)
+    \]
+
+    The index of the first data point for each shell is stored in
+    ~nao_grid_start~, the number of data points per spline is stored
+    in ~nao_grid_size~ for convenience.
+
+    What kind of spline is used can be provided in the ~interpolator_kind~ field.
+    For example, FHI-aims uses a cubic spline, so the ~interpolator_kind~ is
+    \"Polynomial\" and the ~interp_coeff_cnt~ is $4$. In this case, the first
+    interpolation coefficient per data point is the absolute term, the second is for
+    the linear term etc.
+    The interpolation coefficients for the wave function are given in the
+     ~interpolator_phi~ array. The ~interpolator_grad~ and ~interpolator_lap~
+    arrays provide a spline for the gradient and Laplacian, respectively.
+    The argument passed to the interpolants is on the logarithmic scale of
+    the reference points: If the argument is an integer $i$, the interpolant
+    will return the value of $u(\mathbf{r})$ at the $i$th reference point.
+    A radius is converted to this scale by (note the zero-indexing)
+    \[
+    i_{\log} = \frac{1}{c} \cdot \log \left( \frac{r}{r_0} \right)
+    \]
+    where
+    \[
+    c = \log\left(\frac{r_1}{r_0}\right)
+    \]
+    For convenience, this conversion and functions to evaluate the splines
+    are provided with trexio. Since these implementations are not adapted to
+    a specific software architecture, a programm using these orbitals should 
+    reimplement them with consideration for its specific needs.
+
 *** Plane waves
 
     A plane wave is defined as
 
     \[
-       \chi_j(r) = \exp \left( -i \mathbf{k}_j \mathbf{r} \right)
+       \chi_j(\mathbf{r}) = \exp \left( -i \mathbf{G}_j \cdot \mathbf{r} \right)
     \]
 
     The basis set is defined as the array of $k$-points in the
-    reciprocal space, defined in the ~pbc~ group. The kinetic energy
-    cutoff ~e_cut~ is the only input data relevant to plane waves.
+    reciprocal space $\mathbf{G}_j$, defined in the ~pbc~ group. The
+    kinetic energy cutoff ~e_cut~ is the only input data relevant to
+    plane waves.
 
 *** Data definitions
 
     #+NAME: basis
-    | Variable        | Type    | Dimensions          | Description                                                     |
-    |-----------------+---------+---------------------+-----------------------------------------------------------------|
-    | ~type~          | ~str~   |                     | Type of basis set: "Gaussian", "Slater" or "PW" for plane waves |
-    | ~prim_num~      | ~dim~   |                     | Total number of primitives                                      |
-    | ~shell_num~     | ~dim~   |                     | Total number of shells                                          |
-    | ~nucleus_index~ | ~index~ | ~(basis.shell_num)~ | One-to-one correspondence between shells and atomic indices     |
-    | ~shell_ang_mom~ | ~int~   | ~(basis.shell_num)~ | One-to-one correspondence between shells and angular momenta    |
-    | ~shell_factor~  | ~float~ | ~(basis.shell_num)~ | Normalization factor of each shell ($\mathcal{N}_s$)            |
-    | ~r_power~       | ~int~   | ~(basis.shell_num)~ | Power to which $r$ is raised ($n_s$)                            |
-    | ~shell_index~   | ~index~ | ~(basis.prim_num)~  | One-to-one correspondence between primitives and shell index    |
-    | ~exponent~      | ~float~ | ~(basis.prim_num)~  | Exponents of the primitives ($\gamma_{ks}$)                     |
-    | ~coefficient~   | ~float~ | ~(basis.prim_num)~  | Coefficients of the primitives ($a_{ks}$)                       |
-    | ~prim_factor~   | ~float~ | ~(basis.prim_num)~  | Normalization coefficients for the primitives ($f_{ks}$)        |
-    | ~e_cut~         | ~float~ |                     | Energy cut-off for plane-wave calculations                      |
+    | Variable            | Type    | Dimensions                                    | Description                                                                  |   |
+    |---------------------+---------+-----------------------------------------------+------------------------------------------------------------------------------+---|
+    | ~type~              | ~str~   |                                               | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |   |
+    | ~prim_num~          | ~dim~   |                                               | Total number of primitives                                                   |   |
+    | ~shell_num~         | ~dim~   |                                               | Total number of shells                                                       |   |
+    | ~nao_grid_num~      | ~dim~   |                                               | Total number of grid points for numerical orbitals                           |   |
+    | ~interp_coeff_cnt~  | ~dim~   |                                               | Number of coefficients for the numerical orbital interpolator                |   |
+    | ~nucleus_index~     | ~index~ | ~(basis.shell_num)~                           | One-to-one correspondence between shells and atomic indices                  |   |
+    | ~shell_ang_mom~     | ~int~   | ~(basis.shell_num)~                           | One-to-one correspondence between shells and angular momenta                 |   |
+    | ~shell_factor~      | ~float~ | ~(basis.shell_num)~                           | Normalization factor of each shell ($\mathcal{N}_s$)                         |   |
+    | ~r_power~           | ~int~   | ~(basis.shell_num)~                           | Power to which $r$ is raised ($n_s$)                                         |   |
+    | ~nao_grid_start~    | ~index~ | ~(basis.shell_num)~                           | Index of the first data point for a given numerical orbital                  |   |
+    | ~nao_grid_size~     | ~dim~   | ~(basis.shell_num)~                           | Number of data points per numerical orbital                                  |   |
+    | ~shell_index~       | ~index~ | ~(basis.prim_num)~                            | One-to-one correspondence between primitives and shell index                 |   |
+    | ~exponent~          | ~float~ | ~(basis.prim_num)~                            | Exponents of the primitives ($\gamma_{ks}$)                                  |   |
+    | ~coefficient~       | ~float~ | ~(basis.prim_num)~                            | Coefficients of the primitives ($a_{ks}$)                                    |   |
+    | ~prim_factor~       | ~float~ | ~(basis.prim_num)~                            | Normalization coefficients for the primitives ($f_{ks}$)                     |   |
+    | ~e_cut~             | ~float~ |                                               | Energy cut-off for plane-wave calculations                                   |   |
+    | ~nao_grid_radius~   | ~float~ | ~(basis.nao_grid_num)~                        | Radii of grid points for numerical orbitals                                  |   |
+    | ~nao_grid_phi~      | ~float~ | ~(basis.nao_grid_num)~                        | Wave function values for numerical orbitals                                  |   |
+    | ~nao_grid_grad~     | ~float~ | ~(basis.nao_grid_num)~                        | Radial gradient of numerical orbitals                                        |   |
+    | ~nao_grid_lap~      | ~float~ | ~(basis.nao_grid_num)~                        | Laplacian of numerical orbitals                                              |   |
+    | ~interpolator_kind~ | ~str~   |                                               | Kind of spline, e.g. "Polynomial"                                            |   |
+    | ~interpolator_phi~  | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital interpolation function                    |   |
+    | ~interpolator_grad~ | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital gradient interpolation function           |   |
+    | ~interpolator_lap~  | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital laplacian interpolation function          |   |
+
 
 
     #+CALL: json(data=basis, title="basis")
@@ -313,20 +360,32 @@ with the same name suffixed by ~_im~.
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "basis": {
-                     "type" : [ "str"  , []                    ]
-          ,      "prim_num" : [ "dim"  , []                    ]
-          ,     "shell_num" : [ "dim"  , []                    ]
-          , "nucleus_index" : [ "index", [ "basis.shell_num" ] ]
-          , "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ] ]
-          ,  "shell_factor" : [ "float", [ "basis.shell_num" ] ]
-          ,       "r_power" : [ "int"  , [ "basis.shell_num" ] ]
-          ,   "shell_index" : [ "index", [ "basis.prim_num" ]  ]
-          ,      "exponent" : [ "float", [ "basis.prim_num" ]  ]
-          ,   "coefficient" : [ "float", [ "basis.prim_num" ]  ]
-          ,   "prim_factor" : [ "float", [ "basis.prim_num" ]  ]
-          ,         "e_cut" : [ "float", []                    ]
-        } ,
+	"basis": {
+			 "type" : [ "str"  , []                                                ]
+	  ,          "prim_num" : [ "dim"  , []                                                ]
+	  ,         "shell_num" : [ "dim"  , []                                                ]
+	  ,       "nao_grid_num" : [ "dim"  , []                                                ]
+	  ,  "interp_coeff_cnt" : [ "dim"  , []                                                ]
+	  ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                             ]
+	  ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                             ]
+	  ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                             ]
+	  ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                             ]
+	  ,     "nao_grid_start" : [ "index", [ "basis.shell_num" ]                             ]
+	  ,      "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                             ]
+	  ,       "shell_index" : [ "index", [ "basis.prim_num" ]                              ]
+	  ,          "exponent" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,       "coefficient" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                              ]
+	  ,             "e_cut" : [ "float", []                                                ]
+	  ,    "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,       "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,      "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,       "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  , "interpolator_kind" : [ "str"  , []                                                ]
+	  ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	  , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	  ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	} ,
     #+end_src
     :end:
 
@@ -390,7 +449,7 @@ exponent =
 coefficient =
 [ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0,
   0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-`
+
 prim_factor =
 [ 1.0006253235944540e+01, 2.4169531573445120e+00, 7.9610924849766440e-01
   3.0734305383061117e-01, 1.2929684417481876e-01, 3.0734305383061117e-01,
@@ -409,20 +468,21 @@ prim_factor =
    V_A^{\text{ECP}} =
    V_{A \ell_{\max}+1} +
    \sum_{\ell=0}^{\ell_{\max}}
-   \sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \left[
-   V_{A \ell} - V_{A \ell_{\max}+1} \right] \langle Y_{\ell m} |
+   \delta V_{A \ell}\sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \langle Y_{\ell m} |
    \]
 
-   The first term in the equation above is sometimes attributed to the local channel,
-   while the remaining terms correspond to the non-local channel projections.
-
-   The functions $V_{A\ell}$ are parameterized as:
-   \[
-   V_{A \ell}(\mathbf{r}) =
-   \sum_{q=1}^{N_{q \ell}}
-   \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
-   e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 }
-   \]
+   The first term in this equation is attributed to the local channel, while
+   the remaining terms correspond to non-local channel projections.  $\ell_{\max}$
+   refers to the maximum angular momentum in the non-local component of the ECP.
+   The functions \(\delta V_{A \ell}\) and \(V_{A \ell_{\max}+1}\) are parameterized as:
+   \begin{eqnarray}
+      \delta V_{A \ell}(\mathbf{r}) &=&
+      \sum_{q=1}^{N_{q \ell}}
+      \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
+      e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 } \nonumber\\
+      V_{A \ell_{\max}+1}(\mathbf{r}) &=& -\frac{Z_\text{eff}}{|\mathbf{r}-\mathbf{R}_{A}|}+\delta V_{A \ell_{\max}+1}(\mathbf{r})
+   \end{eqnarray}
+   where $Z_\text{eff}$ is the effective nuclear charge of the center.
 
    See http://dx.doi.org/10.1063/1.4984046 or https://doi.org/10.1063/1.5121006 for more info.
 
@@ -438,14 +498,13 @@ prim_factor =
    | ~coefficient~        | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                                |
    | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
 
-
    There might be some confusion in the meaning of the $\ell_{\max}$.
    It can be attributed to the maximum angular momentum occupied in
    the core orbitals, which are removed by the ECP. On the other
    hand, it can be attributed to the maximum angular momentum of the
    ECP that replaces the core electrons.
    *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
-   
+
    *Note for developers*: avoid having variables with similar prefix
    in their name. The HDF5 back end might cause issues due to the way
    ~find_dataset~ function works.  For example, in the ECP group we
@@ -587,58 +646,50 @@ power = [
 * Orbitals
 ** Atomic orbitals (ao group)
 
-   Going from the atomic basis set to AOs implies a systematic
-   construction of all the angular functions of each shell.  We
-   consider two cases for the angular functions: the real-valued
-   spherical harmonics, and the polynomials in Cartesian coordinates.
-   In the case of real spherical harmonics, the AOs are ordered as
-   $0, +1, -1, +2, -2, \dots, +m, -m$ (see [[https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics][Wikipedia]]).
-   In the case of polynomials we
-   impose the canonical (or alphabetical) ordering), i.e
-
-   \begin{eqnarray}
-   p & : & p_x, p_y, p_z \nonumber \\
-   d & : & d_{xx}, d_{xy}, d_{xz}, d_{yy}, d_{yz}, d_{zz} \nonumber \\
-   f & : & f_{xxx}, f_{xxy}, f_{xxz}, f_{xyy}, f_{xyz}, f_{xzz}, f_{yyy}, f_{yyz}, f_{yzz},      …f_{zzz} \nonumber \\
-   {\rm etc.} \nonumber
-   \end{eqnarray}
-
-   Note that there is no exception for $p$ orbitals in spherical
-   coordinates: the ordering is $0,+1,-1$ which corresponds $p_z, p_x, p_y$.
-
    AOs are defined as
 
    \[
-   \chi_i (\mathbf{r}) = \mathcal{N}_i\, P_{\eta(i)}(\mathbf{r})\, R_{\theta(i)} (\mathbf{r})
+   \chi_i (\mathbf{r}) = \mathcal{N}_i'\, P_{\eta(i)}(\mathbf{r})\, R_{s(i)} (\mathbf{r})
    \]
 
-   where $i$ is the atomic orbital index,
-   $P$ encodes for either the
-   polynomials or the spherical harmonics, $\theta(i)$ returns the
-   shell on which the AO is expanded, and $\eta(i)$ denotes which
-   angular function is chosen.
-   $\mathcal{N}_i$ is a normalization factor that enables the
-   possibility to have different normalization coefficients within a
-   shell, as in the GAMESS convention where
-   $\mathcal{N}_{x^2} \ne \mathcal{N}_{xy}$ because
-   \[ \left[ \iiint \left(x-X_A \right)^2 R_{\theta(i)}
-   (\mathbf{r}) dx\, dy\, dz \right]^{-1/2} \ne
-    \left[ \iiint \left( x-X_A \right) \left( y-Y_A \right) R_{\theta(i)}
-   (\mathbf{r}) dx\, dy\, dz \right]^{-1/2}.  \]
+   where $i$ is the atomic orbital index, $P$ refers to either
+   polynomials or spherical harmonics, and $s(i)$ specifies the shell
+   on which the AO is expanded.
 
-   In such a case, one should set the normalization of the shell (in
-   the [[Basis set (basis group)][Basis set]] section) to $\mathcal{N}_{z^2}$, which is the
-   normalization factor of the atomic orbitals in spherical coordinates.
-   The normalization factor of the $xy$ function which should be
-   introduced here should be $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
+   $\eta(i)$ denotes the chosen angular function.  The AOs can be
+   expressed using real spherical harmonics or polynomials in Cartesian
+   coordinates.  In the case of real spherical harmonics, the AOs are
+   ordered as $0, +1, -1, +2, -2, \dots, + m, -m$ (see [[https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics][Wikipedia]]).  In
+   the case of polynomials, the canonical (or alphabetical) ordering is
+   used,
+
+   | $p$      | $p_x, p_y, p_z$                                  |
+   | $d$      | $d_{xx}, d_{xy}, d_{xz}, d_{yy}, d_{yz}, d_{zz}$ |
+   | $f$      | $f_{xxx}, f_{xxy}, f_{xxz}, f_{xyy}, f_{xyz}$,   |
+   |          | $f_{xzz}, f_{yyy}, f_{yyz}, f_{yzz}, f_{zzz}$    |
+   | $\vdots$ |                                                  |
+
+   Note that for \(p\) orbitals in spherical coordinates, the ordering
+   is $0,+1,-1$ which corresponds to $p_z, p_x, p_y$.
+
+   $\mathcal{N}_i'$ is a normalization factor that allows for different
+   normalization coefficients within a single shell, as in the GAMESS
+   convention where each individual function is unit-normalized.
+   Using GAMESS convention, the normalization factor of the shell
+   $\mathcal{N}_d$ in the ~basis~ group is appropriate for instance
+   for the $d_z^2$ function (i.e.
+   $\mathcal{N}_{d}\equiv\mathcal{N}_{z^2}$) but not for the $d_{xy}$
+   AO, so the correction factor $\mathcal{N}_i'$ for $d_{xy}$ in the
+   ~ao~ groups is the ratio $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
+
 
    #+NAME: ao
-   | Variable        | Type    | Dimensions | Description                     |
-   |-----------------+---------+------------+---------------------------------|
-   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false           |
-   | ~num~           | ~dim~   |            | Total number of atomic orbitals |
-   | ~shell~         | ~index~ | ~(ao.num)~ | basis set shell for each AO     |
-   | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factors           |
+   | Variable        | Type    | Dimensions | Description                          |
+   |-----------------+---------+------------+--------------------------------------|
+   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false                |
+   | ~num~           | ~dim~   |            | Total number of atomic orbitals      |
+   | ~shell~         | ~index~ | ~(ao.num)~ | Basis set shell for each AO          |
+   | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factor $\mathcal{N}_i$ |
 
    #+CALL: json(data=ao, title="ao")
 
@@ -671,18 +722,18 @@ power = [
     over atomic orbitals.
 
     #+NAME: ao_1e_int
-   | Variable              | Type    | Dimensions         | Description                                                              |
-   |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
-   | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                                              |
-   | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$                              |
-   | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
-   | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
-   | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                                |
-   | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)                             |
-   | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
-   | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
-   | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
-   | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
+    | Variable              | Type    | Dimensions         | Description                                                              |
+    |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
+    | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                                              |
+    | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$                              |
+    | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
+    | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
+    | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                                |
+    | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)                             |
+    | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
+    | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
+    | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
+    | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
 
     #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -711,34 +762,32 @@ power = [
 
     The two-electron integrals for a two-electron operator $\hat{O}$ are
     \[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
-    notation or \[ ( pr \vert \hat{O} \vert qs ) \] in chemists
     notation, where $p,q,r,s$ are indices over atomic orbitals.
 
-    Functions are provided to get the indices in physicists or chemists
-    notation.
-
-    # TODO: Physicist / Chemist functions
+    #   TODO: Physicist / Chemist functions
+    #   Functions are provided to get the indices in physicists or chemists
+    #   notation.
 
     - \[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.
     - \[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
-      \sum_{j=1}^{i-1} \frac{\text{erf}(\vert \mathbf{r}_i -
+      \sum_{j=1}^{i-1} \frac{\text{erf}(\mu\, \vert \mathbf{r}_i -
       \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential
 
     The Cholesky decomposition of the integrals can also be stored:
 
     \[
-    A_{ijkl} = \sum_{\alpha} G_{il\alpha} G_{jl\alpha}
+    \langle ij | kl \rangle = \sum_{\alpha} G_{ik\alpha} G_{jl\alpha}
     \]
 
     #+NAME: ao_2e_int
-   | Variable              | Type           | Dimensions                                        | Description                                   |
-   |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
-   | ~eri~                 | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
-   | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range Electron repulsion integrals       |
-   | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
-   | ~eri_cholesky~        | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
-   | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
-   | ~eri_lr_cholesky~     | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
+    | Variable              | Type           | Dimensions                                        | Description                                   |
+    |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
+    | ~eri~                 | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
+    | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range electron repulsion integrals       |
+    | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
+    | ~eri_cholesky~        | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
+    | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
+    | ~eri_lr_cholesky~     | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
     #+CALL: json(data=ao_2e_int, title="ao_2e_int")
 
@@ -840,7 +889,7 @@ power = [
    | Variable              | Type           | Dimensions                                        | Description                                   |
    |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
    | ~eri~                 | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Electron repulsion integrals                  |
-   | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range Electron repulsion integrals       |
+   | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range electron repulsion integrals       |
    | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
    | ~eri_cholesky~        | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
    | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
@@ -861,7 +910,7 @@ power = [
         } ,
     #+end_src
     :end:
-   
+
 * Multi-determinant information
 ** Slater determinants (determinant group)
 
@@ -959,7 +1008,7 @@ power = [
    on a reference wave function $\Psi$, where $\hat{T}_1$ is the single excitation operator,
 
    \[
-   \hat{T}_1 = \sum_{ia} t_{i}^{a}\, \hat{a}^\dagger_a \hat{a}_i, 
+   \hat{T}_1 = \sum_{ia} t_{i}^{a}\, \hat{a}^\dagger_a \hat{a}_i,
    \]
 
    $\hat{T}_2$ is the double excitation operator,
@@ -979,7 +1028,7 @@ power = [
 
    \[ |\Phi\rangle = e^{\hat{T}}| \Psi \rangle \]
 
-   The reference wave function is stored using the ~determinant~ and/or 
+   The reference wave function is stored using the ~determinant~ and/or
    ~csf~ groups, and the amplitudes are stored using the current group.
    The attributes with the ~exp~ suffix correspond to exponentialized operators.
 
@@ -1036,23 +1085,20 @@ power = [
    \gamma_{ij} = \gamma^{\uparrow}_{ij} + \gamma^{\downarrow}_{ij}
    \]
 
-   The $\uparrow \uparrow$,  $\downarrow \downarrow$, $\uparrow \downarrow$, $\downarrow \uparrow$
-   components of the two-body density matrix are given by
+   The $\uparrow \uparrow$,  $\downarrow \downarrow$, $\uparrow \downarrow$ components of the two-body density matrix are given by
    \begin{eqnarray*}
      \Gamma_{ijkl}^{\uparrow \uparrow} &=&
         \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\alpha} \hat{a}_{j\alpha}\, \hat{a}_{i\alpha} | \Psi \rangle \\
      \Gamma_{ijkl}^{\downarrow \downarrow} &=&
         \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\beta} | \Psi \rangle \\
      \Gamma_{ijkl}^{\uparrow \downarrow} &=&
-        \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle \\
-     \Gamma_{ijkl}^{\downarrow \uparrow} &=&
-        \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\alpha} \hat{a}_{j\alpha}\, \hat{a}_{i\beta} | \Psi \rangle \\
+        \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle 
+        + \langle \Psi | \hat{a}^{\dagger}_{l\alpha}\, \hat{a}^{\dagger}_{k\beta} \hat{a}_{i\beta}\, \hat{a}_{j\alpha} | \Psi \rangle \\
    \end{eqnarray*}
    and the spin-summed one-body density matrix is
    \[
    \Gamma_{ijkl} = \Gamma_{ijkl}^{\uparrow \uparrow} +
-     \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow} +
-     \Gamma_{ijkl}^{\downarrow \uparrow}
+     \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow}.
    \]
 
    The total energy can be computed as:
@@ -1078,26 +1124,25 @@ power = [
    $g_{ik}(\mathbf{r}_1) = \phi_i(\mathbf{r}_1) \phi_k(\mathbf{r}_1)$.
 
    #+NAME: rdm
-   | Variable               | Type           | Dimensions                                   | Description                                                           |
-   |------------------------+----------------+----------------------------------------------+-----------------------------------------------------------------------|
-   | ~1e~                   | ~float~        | ~(mo.num, mo.num)~                           | One body density matrix                                               |
-   | ~1e_up~                | ~float~        | ~(mo.num, mo.num)~                           | \uparrow-spin component of the one body density matrix                |
-   | ~1e_dn~                | ~float~        | ~(mo.num, mo.num)~                           | \downarrow-spin component of the one body density matrix              |
-   | ~2e~                   | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | Two-body reduced density matrix (spin trace)                          |
-   | ~2e_upup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\uparrow component of the two-body reduced density matrix     |
-   | ~2e_dndn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\downarrow component of the two-body reduced density matrix |
-   | ~2e_updn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \uparrow\downarrow component of the two-body reduced density matrix   |
-   | ~2e_dnup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~           | \downarrow\uparrow component of the two-body reduced density matrix   |
-   | ~2e_cholesky_num~      | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~      | Cholesky decomposition of the Two-body RDM (spin trace)               |
-   | ~2e_upup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_upup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\uparrow)         |
-   | ~2e_dndn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\downarrow)     |
-   | ~2e_updn_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\uparrow\downarrow)       |
-   | ~2e_dnup_cholesky_num~ | ~dim~          |                                              | Number of Cholesky vectors                                            |
-   | ~2e_dnup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dnup_cholesky_num)~ | Cholesky decomposition of the Two-body RDM (\downarrow\uparrow)       |
+   | Variable               | Type           | Dimensions                                              | Description                                                           |
+   |------------------------+----------------+---------------------------------------------------------+-----------------------------------------------------------------------|
+   | ~1e~                   | ~float~        | ~(mo.num, mo.num)~                                      | One body density matrix                                               |
+   | ~1e_up~                | ~float~        | ~(mo.num, mo.num)~                                      | \uparrow-spin component of the one body density matrix                |
+   | ~1e_dn~                | ~float~        | ~(mo.num, mo.num)~                                      | \downarrow-spin component of the one body density matrix              |
+   | ~1e_transition~        | ~float~        | ~(mo.num, mo.num, state.num, state.num)                 | One-particle transition density matrices                              |
+   | ~2e~                   | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | Two-body reduced density matrix (spin trace)                          |
+   | ~2e_upup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | \uparrow\uparrow component of the two-body reduced density matrix     |
+   | ~2e_dndn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | \downarrow\downarrow component of the two-body reduced density matrix |
+   | ~2e_updn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | \uparrow\downarrow component of the two-body reduced density matrix   |
+   | ~2e_transition~        | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num, state.num, state.num) | Two-particle transition density matrices                              |
+   | ~2e_cholesky_num~      | ~dim~          |                                                         | Number of Cholesky vectors                                            |
+   | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~                 | Cholesky decomposition of the two-body RDM (spin trace)               |
+   | ~2e_upup_cholesky_num~ | ~dim~          |                                                         | Number of Cholesky vectors                                            |
+   | ~2e_upup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~            | Cholesky decomposition of the two-body RDM (\uparrow\uparrow)         |
+   | ~2e_dndn_cholesky_num~ | ~dim~          |                                                         | Number of Cholesky vectors                                            |
+   | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~            | Cholesky decomposition of the two-body RDM (\downarrow\downarrow)     |
+   | ~2e_updn_cholesky_num~ | ~dim~          |                                                         | Number of Cholesky vectors                                            |
+   | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~            | Cholesky decomposition of the two-body RDM (\uparrow\downarrow)       |
 
    #+CALL: json(data=rdm, title="rdm")
 
@@ -1105,24 +1150,23 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "rdm": {
-                             "1e" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
-         ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
-         ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                             ]
-         ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
-         ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
-         ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
-         ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
-         ,              "2e_dnup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]         ]
-         ,      "2e_cholesky_num" : [ "dim"         , []                                                 ]
-         ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]      ]
-         , "2e_upup_cholesky_num" : [ "dim"         , []                                                 ]
-         ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ] ]
-         , "2e_dndn_cholesky_num" : [ "dim"         , []                                                 ]
-         ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ] ]
-         , "2e_updn_cholesky_num" : [ "dim"         , []                                                 ]
-         ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ] ]
-         , "2e_dnup_cholesky_num" : [ "dim"         , []                                                 ]
-         ,     "2e_dnup_cholesky" : [ "float sparse", [ "rdm.2e_dnup_cholesky_num", "mo.num", "mo.num" ] ]
+                             "1e" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
+         ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
+         ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
+         ,        "1e_transition" : [ "float"       , [ "state.num", "state.num", "mo.num", "mo.num" ]                     ]
+         ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+         ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+         ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+         ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+         ,        "2e_transition" : [ "float sparse", [ "state.num", "state.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+         ,      "2e_cholesky_num" : [ "dim"         , []                                                                   ]
+         ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]                        ]
+         , "2e_upup_cholesky_num" : [ "dim"         , []                                                                   ]
+         ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ]                   ]
+         , "2e_dndn_cholesky_num" : [ "dim"         , []                                                                   ]
+         ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ]                   ]
+         , "2e_updn_cholesky_num" : [ "dim"         , []                                                                   ]
+         ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ]                   ]
        } ,
    #+end_src
    :end:
@@ -1130,12 +1174,12 @@ power = [
 * Correlation factors
 ** Jastrow factor (jastrow group)
 
-   The Jastrow factor is an $N$-electron function to which the CI
-   expansion is multiplied: $\Psi = \Phi \times \exp(J)$,
+   The Jastrow factor is an $N$-electron function which multiplies the CI
+   expansion: $\Psi = \Phi \times \exp(J)$,
 
    In the following, we use the notations $r_{ij} = |\mathbf{r}_i - \mathbf{r}_j|$ and
    $R_{i\alpha} = |\mathbf{r}_i - \mathbf{R}_\alpha|$, where indices
-   $i$ and $j$ correspond to electrons and $\alpha$ to nuclei.
+   $i$ and $j$ refer to electrons and $\alpha$ to nuclei.
 
    Parameters for multiple forms of Jastrow factors can be saved in
    TREXIO files, and are described in the following sections. These
@@ -1143,7 +1187,7 @@ power = [
    following:
    - ~CHAMP~
    - ~Mu~
-   
+
 *** CHAMP
 
     The first form of Jastrow factor is the one used in
@@ -1152,75 +1196,95 @@ power = [
    \[
    J(\mathbf{r},\mathbf{R}) = J_{\text{eN}}(\mathbf{r},\mathbf{R}) + J_{\text{ee}}(\mathbf{r}) + J_{\text{eeN}}(\mathbf{r},\mathbf{R})
    \]
-   
 
-   $J_{\text{eN}}$ contains electron-nucleus  terms:
+
+   $J_{\text{eN}}$ contains electron-nucleus terms:
 
    \[
-   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}}
-   \frac{a_{1,\alpha}\, g_\alpha(R_{i\alpha})}{1+a_{2,\alpha}\, g_\alpha(R_{i\alpha})} +
-   \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, [g_\alpha(R_{i\alpha})]^p - J_{eN}^\infty
+   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}}\left[
+   \frac{a_{1,\alpha}\, f_\alpha(R_{i\alpha})}{1+a_{2,\alpha}\,
+   f_\alpha(R_{i\alpha})} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, [f_\alpha(R_{i\alpha})]^p - J_{\text{eN}}^\infty
+   \right]
    \]
 
    $J_{\text{ee}}$ contains electron-electron terms:
+
    \[
    J_{\text{ee}}(\mathbf{r}) =
    \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1}
-   \frac{b_1\, f(r_{ij})}{1+b_2\, f(r_{ij})} +
-   \sum_{p=2}^{N_\text{ord}^b} a_{p+1}\, [f(r_{ij})]^p  - J_{ee}^\infty
+   \left[
+   \frac{\frac{1}{2}\big(1 + \delta^{\uparrow\downarrow}_{ij}\big)\,b_1\, f_{\text{ee}}(r_{ij})}{1+b_2\, f_{\text{ee}}(r_{ij})} +
+   \sum_{p=2}^{N_\text{ord}^b} b_{p+1}\, [f_{\text{ee}}(r_{ij})]^p  - J_{\text{ee},ij}^\infty
+   \right]
    \]
+   
+   $\delta^{\uparrow\downarrow}_{ij}$ is zero when the electrons $i$ and
+   $j$ have the same spin, and one otherwise.
 
-   and $J_{\text{eeN}}$ contains electron-electron-Nucleus terms:
+   $J_{\text{eeN}}$ contains electron-electron-Nucleus terms:
 
    \[
-   J_{\text{eeN}}(\mathbf{r},\mathbf{R}) =
+    J_{\text{eeN}}(\mathbf{r},\mathbf{R}) =
     \sum_{\alpha=1}^{N_{\text{nucl}}}
      \sum_{i=1}^{N_{\text{elec}}}
       \sum_{j=1}^{i-1}
        \sum_{p=2}^{N_{\text{ord}}}
         \sum_{k=0}^{p-1}
          \sum_{l=0}^{p-k-2\delta_{k,0}}
-           c_{lkp\alpha} \left[ f({r}_{ij}) \right]^k
-             \left[ \left[ g_\alpha({R}_{i\alpha}) \right]^l + \left[ g_\alpha({R}_{j\alpha}) \right]^l \right]
-             \left[ g_\alpha({R}_{i\,\alpha}) \, g_\alpha({R}_{j\alpha}) \right]^{(p-k-l)/2}
+           c_{lkp\alpha} \left[ g_{\text{ee}}({r}_{ij}) \right]^k \nonumber \\
+            \left[ \left[ g_\alpha({R}_{i\alpha}) \right]^l + \left[ g_\alpha({R}_{j\alpha}) \right]^l \right]
+             \left[ g_\alpha({R}_{i\,\alpha}) \,
+  g_\alpha({R}_{j\alpha}) \right]^{(p-k-l)/2}
    \]
-
    $c_{lkp\alpha}$ are non-zero only when $p-k-l$ is even.
 
-   The terms $J_{\text{ee}}^\infty$ and $J_{\text{eN}}^\infty$ are shifts to ensure that
-   $J_{\text{ee}}$ and $J_{\text{eN}}$ have an asymptotic value of zero.
+   The terms $J_{\text{ee},ij}^\infty$ and $J_{\text{eN}}^\infty$ are shifts to ensure that
+   $J_{\text{eN}}$ and $J_{\text{ee}}$ have an asymptotic value of zero:
+
+   \[
+   J_{\text{eN}}^{\infty} = 
+   \frac{a_{1,\alpha}\, \kappa_\alpha^{-1}}{1+a_{2,\alpha}\,
+   \kappa_\alpha^{-1}} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, \kappa_\alpha^{-p} 
+   \]
+   \[
+   J_{\text{ee},ij}^{\infty} =
+   \frac{\frac{1}{2}\big(1 + \delta^{\uparrow\downarrow}_{ij}\big)\,b_1\,
+   \kappa_{\text{ee}}^{-1}}{1+b_2\, \kappa_{\text{ee}}^{-1}} +
+   \sum_{p=2}^{N_\text{ord}^b} b_{p+1}\, \kappa_{\text{ee}}^{-p}
+   \]
 
    $f$ and $g$ are scaling function defined as
 
    \[
-   f(r) = \frac{1-e^{-\kappa\, r}}{\kappa} \text{ and }
-   g_\alpha(r) = e^{-\kappa_\alpha\, r}.
+   f_\alpha(r) = \frac{1-e^{-\kappa_\alpha\, r}}{\kappa_\alpha} \text{ and }
+   g_\alpha(r) = e^{-\kappa_\alpha\, r},
    \]
+
 
 *** Mu
 
    [[https://aip.scitation.org/doi/10.1063/5.0044683][Mu-Jastrow]] is based on a one-parameter correlation factor that has
    been introduced in the context of transcorrelated methods.  This
-   correlation factor imposes the electron-electron cusp and it is
+   correlation factor imposes the electron-electron cusp, and it is
    built such that the leading order in $1/r_{12}$ of the effective
    two-electron potential reproduces the long-range interaction of the
    range-separated density functional theory. Its analytical
-   expression reads 
+   expression reads
 
    \[
-   J(\mathbf{r}, \mathbf{R}) = J_{\text{eeN}}(\mathbf{r}, \mathbf{R}) + 
+   J(\mathbf{r}, \mathbf{R}) = J_{\text{eeN}}(\mathbf{r}, \mathbf{R}) +
                                J_{\text{eN}}(\mathbf{r}, \mathbf{R})
    \].
 
-   The electron-electron cusp is incorporated in the three-body term.
-   
+   The electron-electron cusp is incorporated in the three-body term
+
    \[
-   J_\text{eeN} (\mathbf{r}, \mathbf{R}) = 
+   J_\text{eeN} (\mathbf{r}, \mathbf{R}) =
    \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) \,
-   \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha})
+   \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha}),
    \]
 
-   $u$ is an electron-electron function given by the symmetric function
+   where ww$u$ is an electron-electron function
 
    \[
    u\left(\mu, r\right) = \frac{r}{2} \, \left[ 1 - \text{erf}(\mu\, r) \right] - \frac{1}{2 \, \mu \, \sqrt{\pi}} \exp \left[ -(\mu \, r)^2 \right].
@@ -1231,24 +1295,24 @@ power = [
    electrons.
 
    An envelope function has been introduced to cancel out the Jastrow
-   effects between two-electrons when they are both close to a nucleus
+   effects between two-electrons when at least one is close to a nucleus
    (to perform a frozen-core calculation). The envelope function is
    given by
 
    \[
    E_\alpha(R) = 1 - \exp\left( - \gamma_{\alpha} \, R^2 \right).
    \]
-   
+
    In particular, if the parameters $\gamma_\alpha$ tend to zero, the
    Mu-Jastrow factor becomes a two-body Jastrow factor:
 
    \[
-   J_{\text{ee}}(\mathbf{r}) = 
-   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) 
+   J_{\text{ee}}(\mathbf{r}) =
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right)
    \]
 
    and for large $\gamma_\alpha$ it becomes zero.
-   
+
    To increase the flexibility of the Jastrow and improve the
    electron density the following electron-nucleus term is added
 
@@ -1261,36 +1325,36 @@ power = [
    The parameter $\mu$ is stored in the ~ee~ array, the parameters
    $\gamma_\alpha$ are stored in the ~een~ array, and the parameters
    $a_\alpha$ are stored in the ~en~ array.
-   
+
 *** Table of values
-   
+
    #+name: jastrow
-  | Variable      | Type     | Dimensions          | Description                                                     |
-  |---------------+----------+---------------------+-----------------------------------------------------------------|
-  | ~type~        | ~string~ |                     | Type of Jastrow factor: ~CHAMP~ or ~Mu~                         |
-  | ~ee_num~      | ~dim~    |                     | Number of Electron-electron parameters                          |
-  | ~en_num~      | ~dim~    |                     | Number of Electron-nucleus parameters                           |
-  | ~een_num~     | ~dim~    |                     | Number of Electron-electron-nucleus parameters                  |
-  | ~ee~          | ~float~  | ~(jastrow.ee_num)~  | Electron-electron parameters                                    |
-  | ~en~          | ~float~  | ~(jastrow.en_num)~  | Electron-nucleus parameters                                     |
-  | ~een~         | ~float~  | ~(jastrow.een_num)~ | Electron-electron-nucleus parameters                            |
-  | ~en_nucleus~  | ~index~  | ~(jastrow.en_num)~  | Nucleus relative to the eN parameter                            |
-  | ~een_nucleus~ | ~index~  | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                           |
-  | ~ee_scaling~  | ~float~  |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
-  | ~en_scaling~  | ~float~  | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
-   
+  | Variable      | Type    | Dimensions          | Description                                                     |
+  |---------------+---------+---------------------+-----------------------------------------------------------------|
+  | ~type~        | ~str~   |                     | Type of Jastrow factor: ~CHAMP~ or ~Mu~                         |
+  | ~en_num~      | ~dim~   |                     | Number of Electron-nucleus parameters                           |
+  | ~ee_num~      | ~dim~   |                     | Number of Electron-electron parameters                          |
+  | ~een_num~     | ~dim~   |                     | Number of Electron-electron-nucleus parameters                  |
+  | ~en~          | ~float~ | ~(jastrow.en_num)~  | Electron-nucleus parameters                                     |
+  | ~ee~          | ~float~ | ~(jastrow.ee_num)~  | Electron-electron parameters                                    |
+  | ~een~         | ~float~ | ~(jastrow.een_num)~ | Electron-electron-nucleus parameters                            |
+  | ~en_nucleus~  | ~index~ | ~(jastrow.en_num)~  | Nucleus relative to the eN parameter                            |
+  | ~een_nucleus~ | ~index~ | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                           |
+  | ~ee_scaling~  | ~float~ |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
+  | ~en_scaling~  | ~float~ | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
+
    #+CALL: json(data=jastrow, title="jastrow")
 
    #+RESULTS:
    :results:
    #+begin_src python :tangle trex.json
        "jastrow": {
-                  "type" : [ "string", []                    ]
-         ,      "ee_num" : [ "dim"   , []                    ]
+                  "type" : [ "str"   , []                    ]
          ,      "en_num" : [ "dim"   , []                    ]
+         ,      "ee_num" : [ "dim"   , []                    ]
          ,     "een_num" : [ "dim"   , []                    ]
-         ,          "ee" : [ "float" , [ "jastrow.ee_num" ]  ]
          ,          "en" : [ "float" , [ "jastrow.en_num" ]  ]
+         ,          "ee" : [ "float" , [ "jastrow.ee_num" ]  ]
          ,         "een" : [ "float" , [ "jastrow.een_num" ] ]
          ,  "en_nucleus" : [ "index" , [ "jastrow.en_num" ]  ]
          , "een_nucleus" : [ "index" , [ "jastrow.een_num" ] ]
@@ -1331,7 +1395,7 @@ power = [
        }
    #+end_src
    :end:
-   
+
 * Appendix    :noexport:
 ** Python script from table to json
 

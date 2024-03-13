@@ -7,6 +7,21 @@ stubs_file= "trexio_stubs.c"
 ml_file   = "trexio.ml"
 mli_file  = ml_file+"i"
 
+def check_version():
+   with open('trexio.opam','r') as f:
+      for line in f:
+         if line.startswith("version"):
+            ocaml_version = line.split(':')[1].strip()[1:-1]
+            break
+   with open('../../configure.ac','r') as f:
+      for line in f:
+         if line.startswith("AC_INIT"):
+            trexio_version = line.split(',')[1].strip()[1:-1]
+            break
+   if ocaml_version != trexio_version:
+      print(f"Inconsistent versions:\nTREXIO:{trexio_version}\nOCaml: {ocaml_version}\n")
+      raise
+
 def write_stubs(data):
 
     with open("src/"+stubs_file,'r') as f:
@@ -643,10 +658,12 @@ def write_ml(data):
 
 def main():
 
+    check_version()
     with open(json_file,'r') as f:
         data = json.load(f)
         for group in data:
           for element in data[group]:
+             print(f"{group}_{element}")
              if data[group][element][0] == "str":
                   data[group][element][0] = "string"
 

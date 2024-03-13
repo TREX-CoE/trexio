@@ -89,7 +89,7 @@ function build_wheel_for_py()
 
    # cleaning
    rm -rf -- dist/ build/ trexio.egg-info/ 
-   rm -- test_file_py.h5 unsafe_test_file_py.h5
+   #rm -- test_file_py.h5 unsafe_test_file_py.h5
 
    # deactivate the current environment
    deactivate
@@ -103,7 +103,7 @@ function build_wheel_for_py()
 
 
 # build wheels for all versions of CPython in this container
-for CPYVERSION in 36 37 38 39 310
+for CPYVERSION in 37 38 39 310
 do
   build_wheel_for_py ${CPYVERSION}
 done

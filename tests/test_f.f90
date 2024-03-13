@@ -69,8 +69,8 @@ subroutine test_write(file_name, back_end)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
-  character(len=:), allocatable :: sym_str
-  character(len=:), allocatable :: label(:)
+  character(len=32), allocatable :: sym_str
+  character(len=8), allocatable :: label(:)
   double precision, allocatable :: energy(:)
   integer         , allocatable :: spin(:)
 
@@ -85,6 +85,7 @@ subroutine test_write(file_name, back_end)
 
   integer :: i, j, n_buffers = 5
   integer(8) :: buf_size_sparse, buf_size_det, offset
+  integer   :: state_id
 
   buf_size_sparse = 100/n_buffers
   buf_size_det    = 50/n_buffers
@@ -107,6 +108,7 @@ subroutine test_write(file_name, back_end)
 
   ! parameters to be written
   nucleus_num = 12
+  state_id = 2
   charge = (/ 6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.  /)
   coord  = reshape( (/ 0.00000000d0,  1.39250319d0 ,  0.00000000d0 , &
                       -1.20594314d0,  0.69625160d0 ,  0.00000000d0 , &
@@ -129,7 +131,19 @@ subroutine test_write(file_name, back_end)
   basis_shell_num = 24
   basis_nucleus_index = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 /)
 
-  label = [character(len=8) :: 'C', 'Na','C', 'C 66', 'C','C', 'H 99', 'Ru', 'H', 'H',  'H', 'H' ]
+  allocate(label(12))
+  label(1) = 'C'
+  label(2) = 'Na'
+  label(3) = 'C'
+  label(4) = 'C 66'
+  label(5) = 'C'
+  label(6) = 'C'
+  label(7) = 'H 99'
+  label(8) = 'Ru'
+  label(9) = 'H'
+  label(10)= 'H'
+  label(11)= 'H'
+  label(12)= 'H'
 
   sym_str = 'B3U with some comments'
 
@@ -181,6 +195,9 @@ subroutine test_write(file_name, back_end)
 
   rc = trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX')
+
+  rc = trexio_write_state_id(trex_file, state_id)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX TYPE')
 
   ! write ao_num which will be used to determine the optimal size of int indices
   if (trexio_has_ao_num(trex_file) == TREXIO_HAS_NOT) then
@@ -302,6 +319,7 @@ subroutine test_read(file_name, back_end)
   integer*8 :: offset_det_data_read = 5
   integer*8 :: determinant_num
   integer   :: int_num
+  integer   :: state_id
 
   ! orbital lists
   integer*4 :: orb_list_up(150)
@@ -312,6 +330,7 @@ subroutine test_read(file_name, back_end)
 
   num = 12
   basis_shell_num = 24
+  state_id = 0
 
   index_sparse_ao_2e_int_eri = 0
   value_sparse_ao_2e_int_eri = 0.0d0
@@ -376,6 +395,15 @@ subroutine test_read(file_name, back_end)
     write(*,*) 'SUCCESS READ INDEX'
   else
     print *, 'FAILURE INDEX CHECK'
+    call exit(-1)
+  endif
+
+  rc = trexio_read_state_id(trex_file, state_id)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+  if (state_id == 2) then
+    write(*,*) 'SUCCESS READ INDEX TYPE'
+  else
+    print *, 'FAILURE INDEX TYPE CHECK'
     call exit(-1)
   endif
 

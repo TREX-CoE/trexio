@@ -1,8 +1,146 @@
 #+TITLE: Examples
 #+STARTUP: latexpreview
-#+SETUPFILE: docs/theme.setup
+#+SETUPFILE: ./theme.setup
 
+* Writing nuclear coordinates
   
+  Here is a demonstration of how to use TREXIO to write the nuclear
+  coordinates of a water molecule to a file. It shows the basic steps
+  involved in opening a file, writing the data, and closing the file,
+  as well as the necessary TREXIO functions to perform these actions.
+
+** C
+   #+begin_src c
+#include <stdio.h>
+#include <trexio.h>
+
+int main() {
+  int num = 3;  // Number of atoms
+  double coord[][3] = {
+    // xyz coordinates in atomic units
+    0.  ,  0.        , -0.24962655,
+    0.  ,  2.70519714,  1.85136466,
+    0.  , -2.70519714,  1.85136466 };
+
+  trexio_exit_code rc;
+
+  // Open the TREXIO file
+  trexio_t* f = trexio_open("water.trexio", 'w', TREXIO_HDF5, &rc);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+
+  // Write the number of nuclei
+  rc = trexio_write_nucleus_num (f, num);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+
+  // Write the nuclear coordinates
+  rc = trexio_write_nucleus_coord (f, &coord[0][0]);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+
+  // Close the TREXIO file
+  rc = trexio_close(f);
+  if (rc != TREXIO_SUCCESS) {
+    fprintf(stderr, "Error: %s\n", trexio_string_of_error(rc));
+    return -1;
+  }
+  return 0;
+}
+   #+end_src
+
+** Python
+
+   This code uses the TREXIO Python binding to create a new TREXIO file named
+   =water.trexio=, and write the nuclear coordinates of a water molecule.
+
+   The ~coord~ variable is a list of three lists, each containing the x, y,
+   and z coordinates of the water molecule's nuclei.
+
+   The ~with~ statement is used to ensure the file is properly closed after
+   the write is complete.
+
+   The ~trexio.write_nucleus_num~ function is used to write the number of
+   nuclei in the system.
+
+   The ~trexio.write_nucleus_coord~ function is used to write the nuclear
+   coordinates of the system.
+
+   #+begin_src python
+import trexio
+coord = [    # xyz coordinates in atomic units
+    [0. , 0., -0.24962655],
+    [0. , 2.70519714, 1.85136466],
+    [0. , -2.70519714, 1.85136466]
+]
+# The Python API calls can raise `trexio.Error`
+# exceptions to be handled via try/except clauses
+# in the user application
+with trexio.File("water.trexio", 'w',
+                 back_end=trexio.TREXIO_HDF5) as f:
+    trexio.write_nucleus_num(f, len(coord))
+    trexio.write_nucleus_coord(f, coord)
+    
+   #+end_src
+
+** Fortran
+   #+begin_src f90
+program trexio_water
+  use trexio
+
+  integer, parameter        :: num=3       ! Number of nuclei
+  double precision          :: coord(3,3)  ! Array of atom coordinates
+
+  integer(trexio_t)         :: f        ! The TREXIO file handle
+  integer(trexio_exit_code) :: rc       ! TREXIO return code
+  character*(128)           :: err_msg  ! String holding the error message
+
+  coord(:,:) = reshape( (/ 0.d0  ,  0.d0        , -0.24962655d0, &
+                           0.d0  ,  2.70519714d0,  1.85136466d0, &
+                           0.d0  , -2.70519714d0,  1.85136466d0  /), &
+                         shape(coord) )
+
+  ! Open the TREXIO file
+  f = trexio_open ('water.trexio', 'w', TREXIO_HDF5, rc)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+  ! Write the number of nuclei
+  rc = trexio_write_nucleus_num (f, num)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+  ! Write the nuclear coordinates
+  rc = trexio_write_nucleus_coord (f, coord)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+  ! Close the TREXIO file
+  rc = trexio_close(f)
+  if (rc /= TREXIO_SUCCESS) then
+     call trexio_string_of_error(rc, err_msg)
+     print *, 'Error: '//trim(err_msg)
+     call exit(-1)
+  end if
+
+end program
+   #+end_src
+
 * Accessing sparse quantities (integrals)
 
 ** Fortran
@@ -62,7 +200,7 @@ program print_energy
    #+begin_src f90
   call getarg(1, filename)
 
-  f = trexio_open (filename, 'r', TREXIO_HDF5, rc)
+  f = trexio_open (filename, 'r', TREXIO_AUTO, rc)
   if (rc /= TREXIO_SUCCESS) then
      call trexio_string_of_error(rc, err_msg)
      print *, 'Error opening TREXIO file: '//trim(err_msg)
@@ -272,9 +410,141 @@ program print_energy
 end program
     #+end_src
 
+** Python
+  :PROPERTIES:
+  :header-args:    :tangle  print_energy.py
+  :END:
+   
+  #+begin_src python
+import sys
+import trexio
+import numpy as np
+
+BUFSIZE = 100000
+  #+end_src
+
+   This program computes the energy as:
+
+   \[
+   E = E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
+   \rangle\; \textrm{ with } \; 0 < i,j,k,l \le n
+   \]
+   One needs to read from the TREXIO file:
+
+   - $n$ :: The number of molecular orbitals
+   - $E_{\text{NN}}$ :: The nuclear repulsion energy 
+   - $\gamma_{ij}$ :: The one-body reduced density matrix 
+   - $\langle j |h| i \rangle$ :: The one-electron Hamiltonian integrals 
+   - $\Gamma_{ijkl}$ :: The two-body reduced density matrix 
+   - $\langle k l  | i j \rangle$ :: The electron repulsion integrals
+
+*** Obtain the name of the TREXIO file from the command line, and open it for reading
+
+    #+begin_src python
+filename = sys.argv[1]
+f = trexio.File(filename, 'r', trexio.TREXIO_AUTO)
+    #+end_src
+
+*** Read the nuclear repulsion energy
+
+    #+begin_src python
+E_nn = trexio.read_nucleus_repulsion(f)
+    #+end_src
+
+*** Read the number of molecular orbitals
+
+    #+begin_src python
+n = trexio.read_mo_num(f)
+    #+end_src
+
+*** Read one-electron quantities
+    
+    #+begin_src python
+if not trexio.has_mo_1e_int_core_hamiltonian(f):
+  print("No core hamiltonian in file")
+  sys.exit(-1)
+  
+h0 = trexio.read_mo_1e_int_core_hamiltonian(f)
+
+if not trexio.has_rdm_1e(f):
+  print("No 1e RDM in file")
+  sys.exit(-1)
+  
+D = trexio.read_rdm_1e(f)
+    #+end_src
+  
+*** Read two-electron quantities
+    
+**** Electron repulsion integrals
+
+     #+begin_src python
+if not trexio.has_mo_2e_int_eri(f):
+  print("No electron repulsion integrals in file")
+  sys.exit(-1)
+
+size_max = trexio.read_mo_2e_int_eri_size(f)
+
+offset = 0
+icount = BUFSIZE
+feof = False
+W = np.zeros( (n,n,n,n) )
+while not feof:
+  buffer_index, buffer_values, icount, feof = trexio.read_mo_2e_int_eri(f, offset, icount)
+  for m in range(icount):
+    i, j, k, l = buffer_index[m]
+    W[i,j,k,l] = buffer_values[m]
+    W[k,j,i,l] = buffer_values[m]
+    W[i,l,k,j] = buffer_values[m]
+    W[k,l,i,j] = buffer_values[m]
+    W[j,i,l,k] = buffer_values[m]
+    W[j,k,l,i] = buffer_values[m]
+    W[l,i,j,k] = buffer_values[m]
+    W[l,k,j,i] = buffer_values[m]
+     #+end_src
+
+**** Reduced density matrix
+     
+     #+begin_src python
+if not trexio.has_rdm_2e(f):
+  print("No two-body density matrix in file")
+
+offset = 0
+icount = BUFSIZE
+feof = False
+G = np.zeros( (n,n,n,n) )
+while not feof:
+  buffer_index, buffer_values, icount, feof = trexio.read_rdm_2e(f, offset, icount)
+  for m in range(icount):
+    i, j, k, l = buffer_index[m]
+    G[i,j,k,l] = buffer_values[m]
+
+     #+end_src
+    
+*** Compute the energy
+    
+    When the orbitals are real, we can use
+   \begin{eqnarray*}
+   E &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle j | h | i \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle k l | i j
+   \rangle \\
+     &=& E_{\text{NN}} + \sum_{ij} \gamma_{ij}\, \langle i | h | j \rangle\,
+   +\, \frac{1}{2} \sum_{ijkl} \Gamma_{ijkl}\, \langle i j | k l
+   \rangle \\
+   \end{eqnarray*}
+
+    #+begin_src python
+G = np.reshape(G, (n*n, n*n) )
+W = np.reshape(W, (n*n, n*n) )
+E = E_nn
+E += 0.5*sum( [ np.dot(G[:,l], W[:,l]) for l in range(n*n) ] )
+E += sum( [ np.dot(D[:,l], h0[:,l]) for l in range(n) ] )
+
+print (f"Energy: {E}")
+    #+end_src
 
 * Reading determinants
-
+  
 ** Fortran
   :PROPERTIES:
   :header-args:    :tangle  print_dets.f90

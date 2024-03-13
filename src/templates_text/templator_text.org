@@ -145,10 +145,10 @@ trexio_text_inquire (const char* file_name)
   if (file_exists) {
 
     bool is_a_directory = false;
-#ifdef S_IFDIR
+#if defined(S_IFDIR)
     is_a_directory = st.st_mode & S_IFDIR;
-#elif S_ISDIR
-    is_a_directory = S_ISDIR(s.st_mode);
+#elif defined(S_ISDIR)
+    is_a_directory = S_ISDIR(st.st_mode);
 #else
     printf("Some important macros are missing for directory handling.\n");
     return TREXIO_FAILURE;
@@ -160,6 +160,33 @@ trexio_text_inquire (const char* file_name)
     return TREXIO_FAILURE;
   }
 }
+    #+end_src
+
+On non-POSIX file systems, the function ~mkdtemp~ might is not defined.
+In that case, we define an alternate one, which is not as safe as the original one.
+
+    #+begin_src c :tangle basic_text.c
+#if  /* Since glibc 2.19: */ _DEFAULT_SOURCE \
+           || /* Glibc 2.19 and earlier: */ _BSD_SOURCE \
+           || /* Since glibc 2.10: */ _POSIX_C_SOURCE >= 200809L
+
+/* mkdtemp is defined */
+#else
+
+char* mkdtemp(char* template) {
+    char* dir = NULL;
+    dir = tmpnam(dir);
+    if (dir == NULL) return NULL;
+
+    if (mkdir(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+        return NULL;
+    }
+
+    strcpy(template, dir);
+    return template;
+}
+
+#endif
     #+end_src
 
     #+begin_src c :tangle basic_text.c

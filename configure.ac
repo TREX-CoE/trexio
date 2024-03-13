@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([trexio],[2.3.0],[https://github.com/TREX-CoE/trexio/issues])
+AC_INIT([trexio],[2.5.0],[https://github.com/TREX-CoE/trexio/issues])
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
@@ -41,6 +41,25 @@ AC_SUBST([UNAME])
 ## Checks for programs
 ## -------------------
 
+# Fortran API [default: --with-fortran], do not disable in the dev mode
+AC_PROG_FC
+AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
+AS_IF([test "$ok" = "yes"],[
+  AC_FC_FREEFORM
+  AC_FC_SRCEXT([f90])
+  AC_PROG_FC_C_O
+  AC_FC_LIBRARY_LDFLAGS
+
+  # Specific options required with some compilers
+  AS_CASE([$FC],
+  [*gfortran*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*flang*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*ifort*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [])
+
+])
+AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
+
 AC_LANG(C)
 AC_PROG_CC
 
@@ -52,51 +71,18 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 
 
-# Fortran API [default: --with-fortran], do not disable in the dev mode
-AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
-if test "$ok" = "yes"; then
-        AC_PROG_FC
-        AC_FC_FREEFORM
-        AC_FC_SRCEXT([f90])
-        AC_PROG_FC_C_O
-        AC_FC_LIBRARY_LDFLAGS
-fi
-
-AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
-
 # pkg-config
 PKG_PROG_PKG_CONFIG()
-PKG_CFLAGS=""
-PKG_LIBS=""
 
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_GREP
 
-# Specific options required with some compilers
-case $FC in
- *gfortran*)
-      FCFLAGS="$FCFLAGS -fPIC"
-      ;;
- *flang*)
-      FCFLAGS="$FCFLAGS -fPIC"
-      ;;
- *ifort*)
-      FCFLAGS="$FCFLAGS -fPIC"
-      ;;
-esac
-
-case $CC in
-  *gcc*)
-        CFLAGS="$CFLAGS -fPIC"
-        ;;
-  *clang*)
-        CFLAGS="$CFLAGS -fPIC"
-        ;;
-  *icc*)
-        CFLAGS="$CFLAGS -fPIC"
-        ;;
-esac
+AS_CASE([$CC],
+  [*gcc*], [CFLAGS="$CFLAGS -fPIC"],
+  [*clang*], [CFLAGS="$CFLAGS -fPIC"],
+  [*icc*], [CFLAGS="$CFLAGS -fPIC"],
+  [])
 
 # Check if `cp -r -n` works, otherwise use `cp -r`
 AC_CHECK_PROGS(CP_PROG, [cp])
@@ -109,7 +95,7 @@ AC_RUN_IFELSE(
 execl("/bin/sh", "sh", "-c", "mkdir tmpdir1 && \
 touch tmpdir1/test_file && \
 $CP_PROG -r -n tmpdir1 tmpdir2 && \
-exec ls tmpdir2/test_file", NULL);
+exec ls tmpdir2/test_file > /dev/null", NULL);
 ])],
 [ rm -rf tmpdir1 tmpdir2
   CP_COMMAND="\"$CP_PROG\", \"-r\", \"-n\""
@@ -135,64 +121,108 @@ AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd
 ### HDF5
 ### ----
 
-# Configure with HDF5 (default: --with-hdf5 using pkg-config) [optional]:
-# ./configure [--with-hdf5 or --with-hdf5=yes]
-
-# Configure with user-provided path to HDF5:
-# ./configure --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial
-
-# Configure without HDF5:
-# ./configure --without-hdf5 [or --with-hdf5=no]
-
-
 PKG_HDF5=""
-AX_LIB_HDF5()
+HDF5_LIBS=""
+HDF5_LDFLAGS=""
+HDF5_CFLAGS=""
+HDF5_CPPFLAGS=""
+AC_ARG_WITH([hdf5],
+  AS_HELP_STRING([--with-hdf5=PATH], [Path to HDF5 library and headers]), [
+  with_hdf5="$withval"], [with_hdf5="yes"])
 
-if test "x${with_hdf5}" = xno; then
-  AC_MSG_WARN([
-    ------------------------------------------
-    Configuring with the HDF5 library is
-    recommended to build efficient TREXIO.
-    ------------------------------------------])
-else
-    AC_CHECK_LIB([hdf5_hl],[main],[],[AC_MSG_ERROR(
------------------------------------
-Error: hdf5_hl library is required
------------------------------------
-)],[])ac_cv_lib_hdf5_hl=ac_cv_lib_hdf5_hl_main
+AS_IF([test "x$with_hdf5" == "xno"], [], 
+      [test "x$with_hdf5" != "xyes"], [
+           HDF5_LIBS="-lhdf5"
+           HDF5_PATH="$with_hdf5"
+           HDF5_LDFLAGS="-L$HDF5_PATH/lib"
+           HDF5_CPPFLAGS="-I$HDF5_PATH/include"
+           AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available]) ],
+      [
+           PKG_CHECK_EXISTS([hdf5], [
+             PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+             PKG_HDF5="hdf5"
+           ],
+           [ AC_PATH_PROG([H5CC],[h5cc],[not_found])
+             AS_IF([test "$H5CC" != "not_found"], [
+              HDF5_LIBS="-lhdf5"
+              AC_REQUIRE([AC_PROG_SED])
+              AC_REQUIRE([AC_PROG_AWK])
+              AC_REQUIRE([AC_PROG_GREP])
+              # Look for "HDF5 Version: X.Y.Z"
+              HDF5_VERSION=$(eval $H5CC -showconfig | $GREP 'HDF5 Version:' \
+                  | $AWK '{print $[]3}')
 
-fi
+              # A ideal situation would be where everything we needed was
+              # in the AM_* variables. However most systems are not like this
+              # and seem to have the values in the non-AM variables.
+              #
+              # We try the following to find the flags:
+              # (1) Look for "NAME:" tags
+              # (2) Look for "H5_NAME:" tags
+              # (3) Look for "AM_NAME:" tags
+              #
+              HDF5_tmp_flags=$(eval $H5CC -showconfig \
+                  | $GREP 'FLAGS\|Extra libraries:' \
+                  | $AWK -F: '{printf("%s "), $[]2}' )
 
-CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
+              dnl Find the installation directory and append include/
+              HDF5_tmp_inst=$(eval $H5CC -showconfig \
+                  | $GREP 'Installation point:' \
+                  | $AWK '{print $[]NF}' )
+
+              dnl Add this to the CPPFLAGS
+              HDF5_CPPFLAGS="-I${HDF5_tmp_inst}/include"
+
+              HDF5_SHOW=$(eval $H5CC -show)
+
+              dnl Now sort the flags out based upon their prefixes
+              for arg in $HDF5_SHOW $HDF5_tmp_flags ; do
+                case "$arg" in
+                  -I*) echo $HDF5_CPPFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_CPPFLAGS="$HDF5_CPPFLAGS $arg"
+                    ;;
+                  -L*) echo $HDF5_LDFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_LDFLAGS="$HDF5_LDFLAGS $arg"
+                    ;;
+                  -l*) echo $HDF5_LIBS | $GREP -e "$arg" 2>&1 >/dev/null \
+                        || HDF5_LIBS="$HDF5_LIBS $arg"
+                    ;;
+                esac
+              done
+
+             ])
+           ])
+           AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
+      ])
+
+AM_CONDITIONAL([HAVE_HDF5],[test "x$with_hdf5" != "xno"])
+
+AC_SUBST([PKG_HDF5])
+AC_SUBST([HDF5_LDFLAGS])
+AC_SUBST([HDF5_LIBS])
+AC_SUBST([HDF5_CFLAGS])
+AC_SUBST([HDF5_CPPFLAGS])
 CPPFLAGS="${HDF5_CPPFLAGS} ${CPPFLAGS}"
+CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
 LDFLAGS="${HDF5_LDFLAGS} ${LDFLAGS}"
 LIBS="${HDF5_LIBS} ${LIBS}"
 
-# Check if HDF5 is available with pkg-config.
-
-PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8], [
-    PKG_HDF5="hdf5"
-    ],[
-    PKG_HDF5=""
-   ])
-PKG_CFLAGS="${HDF5_CFLAGS}"
-PKG_LIBS="${HDF5_LIBS}"
-
-AC_SUBST([PKG_HDF5])
-AC_SUBST([PKG_CFLAGS])
-AC_SUBST([PKG_LIBS])
-
-AM_CONDITIONAL([HAVE_HDF5],[test "$with_hdf5" = "yes"])
+AS_IF([test "x$with_hdf5" != "xno"], [
+  OLD_LIBS=$LIBS
+  AC_CHECK_LIB([hdf5], [H5Fcreate], [], [
+    AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=...]) ])
+  AC_CHECK_HEADER([hdf5.h], [], [
+    AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
+  LIBS=$OLD_LIBS
+])
 
 # The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
 # It is only needed to manually build Python API because setup.py depends on HDF5.
 
-if test "$HDF5_LDFLAGS" = "" || "$HDF5_CFLAGS" = ""; then
-  HDF5_LDFLAGS="${PKG_LIBS}"
-  HDF5_CFLAGS="${PKG_CFLAGS}"
-  AC_SUBST([HDF5_CFLAGS])
-  AC_SUBST([HDF5_LDFLAGS])
-fi
+#if test x"$HDF5_LDFLAGS" = "x" || x"$HDF5_CFLAGS" = "x"; then
+#  AC_SUBST([HDF5_CFLAGS])
+#  AC_SUBST([HDF5_LDFLAGS])
+#fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT32_T
@@ -286,7 +316,7 @@ AC_CONFIG_FILES([Makefile
                  pkgconfig/trexio.pc])
 AC_OUTPUT
 
-echo \
+AS_ECHO([ \
 "-------------------------------------------------
 
 ${PACKAGE_NAME} Version ${PACKAGE_VERSION} ${GIT_HASH} ${TREXIO_DEVEL}
@@ -309,4 +339,4 @@ where the optional <target> is:
   all           - build C library and Fortran binding
   check         - run unit tests
   install       - install the library
---------------------------------------------------"
+--------------------------------------------------"])

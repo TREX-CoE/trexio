@@ -1,0 +1,311 @@
+#+TITLE: The TREXIO library
+#+STARTUP: latexpreview
+#+SETUPFILE: ./theme.setup
+
+
+* Format specification
+
+#+BEGIN_EXPORT html
+</td>
+<td>
+<img src="trex_specs.png" alt="TREX in a library"
+align="right" width="300" vspace="20" hspace="20" />
+</td></tr>
+</table>
+#+END_EXPORT
+#
+  The TREXIO format is designed to store all the necessary information
+  to represent a wave function.
+  One notable feature of TREXIO is that it is self-contained, meaning
+  that all the parameters needed to recreate the wave function are
+  explicitly stored within the file, eliminating the need for external
+  databases. For example, instead of storing the name of a basis set
+  (such as cc-pVDZ), the actual basis set parameters used in the
+  calculation are stored.
+
+** Organization of the data
+
+   The data in TREXIO are organized into *groups*, each containing
+   multiple *attributes* defined by their *type* and *dimensions*.  Each
+   attribute within a group corresponds to a single scalar or array
+   variable in a code.  In what follows, the notation
+   ~<group>.<attribute>~ will be used to identify an attribute within a
+   group. For example, ~nucleus.charge~ refers to the
+   ~charge~ attribute in the ~nucleus~ group.  It is an array of type
+   ~float~ with dimensions ~nucleus.num~, the attribute describing the
+   number of nuclei.
+
+** Data types
+
+   So that TREXIO can be used in any language, we use a limited number
+   of data types.  The main data types are ~int~ for integers,
+   ~float~ for floating-point values, and ~str~ for
+   character strings.  For complex numbers, their real and imaginary
+   parts are stored as ~float~.  To minimize the risk of integer
+   overflow and accuracy loss, numerical data types are stored using
+   64-bit representations by default.  However, in specific cases where
+   integers are bounded (such as orbital indices in four-index
+   integrals), the smallest possible representation is used to reduce the
+   file size. The API handles any necessary type conversions.
+
+   There are also two types derived from ~int~: ~dim~ and ~index~.
+   ~dim~ is used for dimensioning variables, which are positive integers
+   used to specify the dimensions of an array.  In the previous example,
+   ~nucleus.num~ is a dimensioning variable that specifies the
+   dimensions of the ~nucleus.charge~ array.  ~index~ is used for
+   integers that correspond to array indices, because some languages
+   (such as C or Python) use zero-based indexing, while others (such as
+   Fortran) use one-based indexing. For convenience, values of the
+   ~index~ type are shifted by one when TREXIO is used in one-based
+   languages to be consistent with the semantics of the language.
+   You may also encounter some ~dim readonly~ variables.  It means
+   that the value is automatically computed and written by the TREXIO
+   library, thus it is read-only and cannot be (over)written by the
+   user.
+
+   Arrays can be stored in either dense or sparse formats.  If the
+   sparse format is selected, the data is stored in coordinate format.
+   For example, the element ~A(i,j,k,l)~ is stored as a quadruplet of
+   integers $(i,j,k,l)$ along with the corresponding value. Typically,
+   two-dimensional arrays are stored as dense arrays, while arrays with
+   higher dimensions are stored in sparse format.
+   For sparse data structures the data can be too large to fit in memory
+   and the data needs to be fetched using multiple function calls to
+   perform I/O on buffers.  For more information on how to read/write
+   sparse data structures, see the [[./examples.html][examples]].
+
+   For the Configuration Interaction (CI) and Configuration State
+   Function (CSF) groups, the ~buffered~ data type is introduced, which
+   allows similar incremental I/O as for ~sparse~ data but without the
+   need to write indices of the sparse values.
+
+   For determinant lists (integer bit fields), the ~special~ attribute
+   is present in the type. This means that the source code is not
+   produced by the generator, but hand-written.
+
+   Some data may be complex. In that case, the real part should be stored
+   in the variable, and the imaginary part will be stored in the variable
+   with the same name suffixed by ~_im~.
+
+* The TREXIO library
+
+#+BEGIN_EXPORT html
+</td>
+<td>
+<img src="trex_lib.png" alt="TREX in a library"
+align="left" width="300" vspace="20" hspace="20" />
+</td></tr>
+</table>
+#+END_EXPORT
+
+  The TREXIO library is written is the C language, and is licensed under
+  the open-source 3-clause BSD license to allow for use in all types of
+  quantum chemistry software, whether commercial or not.
+
+  The design of the library is divided into two main sections: the
+  front-end and the back-end.  The front-end serves as the interface
+  between users and the library, while the back-end acts as the
+  interface between the library and the physical storage.
+
+** The front-end
+
+   By using the TREXIO library, users can store and extract data in a
+   consistent and organized manner. The library provides a user-friendly
+   API, including functions for reading, writing, and checking for the
+   existence of data.  The functions follow the pattern
+   ~trexio_[has|read|write]_<group>_<attribute>~, where the
+   group and attribute specify the particular data being accessed.  It
+   also includes an error handling mechanism, in which each function call
+   returns an exit code of type ~trexio_exit_code~, explaining
+   the type of error.
+   This can be used to catch exceptions and improve debugging in the
+   upstream user application.
+
+   To ensure the consistency of the data, the attributes can only be
+   written if all the other attributes on which they explicitly depend
+   have been written.  For example, as the ~nucleus.coord~ array is
+   dimensioned by the number of nuclei ~nucleus.num~, the ~nucleus.coord~
+   attribute can only be written after ~nucleus.num~.  However, the
+   library is not aware of non-explicit dependencies, such as the
+   relation between the electron repulsion integrals (ERIs) and MO
+   coefficients.  A complete control of the consistency of the data is
+   therefore impossible, so the attributes were chosen to be by default
+   /immutable/.  By only allowing data to be written only once, the
+   risk of modifying data in a way that creates inconsistencies is
+   reduced.  For example, if the ERIs have already been written, it would
+   be inconsistent to later modify the MO coefficients.  To allow for
+   flexibility, the library also allows for the use of an /unsafe/
+   mode, in which data can be overwritten.  However, this mode carries
+   the risk of producing inconsistent files, and the ~metadata~ group's
+   ~unsafe~ attribute is set to ~1~ to indicate that the file has
+   potentially been modified in a dangerous way.  This attribute can be
+   manually reset to ~0~ if the user is confident that the modifications
+   made are safe.
+
+** The back-end
+
+   At present, TREXIO supports two back-ends: one relying only on the
+   C standard library to produce plain text files (the so-called /text/
+   back-end), and one relying on the HDF5 library.
+
+   With the text back-end, the TREXIO "file" is a directory containing
+   multiple text files, one for each group.  This back end is intended
+   to be used in development environments, as it gives access to the
+   user to the standard tools such as ~diff~ and ~grep~.
+   In addition, text files are better adapted than binary files for
+   version control systems such as Git, so this format can be also
+   used for storing reference data for unit tests.
+
+   HDF5 is a binary file format and library for storing and managing
+   large amounts of data in a hierarchical structure.  It allows users
+   to manipulate data in a way similar to how files and directories
+   are manipulated within the file system.  The HDF5 library provides
+   optimal performance through its memory mapping mechanism and
+   supports advanced features such as serial and parallel I/O,
+   chunking, and compression filters.  However, HDF5 files are in
+   binary format, which requires additional tools such as ~h5dump~ to
+   view them in a human-readable format.  It is widely used in
+   scientific and engineering applications, and is known for its high
+   performance and ability to handle large data sets efficiently.
+
+   The TREXIO HDF5 back-end is the recommended choice for production
+   environments, as it provides high I/O performance.  Furthermore,
+   all data is stored in a single file, making it especially suitable
+   for parallel file systems like Lustre.  These file systems are
+   optimized for large, sequential I/O operations and are not
+   well-suited for small, random I/O operations.  When multiple small
+   files are used, the file system may become overwhelmed with
+   metadata operations like creating, deleting, or modifying files,
+   which can adversely affect performance.
+
+   In a benchmarking program designed to compare the two back-ends of
+   the library, the HDF5 back-end was found to be significantly faster
+   than the text back-end.  The program wrote a wave function made up
+   of 100 million Slater determinants and measured the time taken to
+   write the Slater determinants and CI coefficients.  The HDF5
+   back-end achieved a speed of $10.4\times10^6$ Slater determinants
+   per second and a data transfer rate of 406 MB/s, while the text
+   back-end had a speed of $1.1\times10^6$ determinants per second and
+   a transfer rate of 69 MB/s.  These results were obtained on a DELL
+   960 GB mix-use solid-state drive (SSD). The HDF5 back-end was able
+   to achieve a performance level close to the peak performance of the
+   SSD, while the text back-end's performance was limited by the speed
+   of the CPU for performing binary to ASCII conversions.
+
+   In addition to the HDF5 and text back-ends, it is also possible to
+   introduce new back-ends to the library.  For example, a back-end
+   could be created to support object storage systems, such as those
+   used in cloud-based applications or for archiving in open data
+   repositories.
+
+** Supported languages
+
+   One of the main benefits of using C as the interface for a library is
+   that it is easy to use from other programming languages.  Many
+   programming languages, such as Python or Julia, provide built-in
+   support for calling C functions, which means that it is relatively
+   straightforward to write a wrapper that allows a library written in C
+   to be called from another language.
+   In general, libraries with a C interface are the easiest to use from
+   other programming languages, because C is widely supported and has a
+   simple, stable application binary interface (ABI).  Other languages,
+   such as Fortran and C++, may have more complex ABIs and may
+   require more work to interface with them.
+
+   TREXIO has been employed in codes developed in various programming
+   languages, including C, C++, Fortran, Python, OCaml, and Julia.  While
+   Julia is designed to enable the use of C functions without the need
+   for additional manual interfacing, the TREXIO C header file was
+   automatically integrated into Julia programs using the
+   ~CBindings.jl~ package.
+   In contrast, specific bindings have been provided for Fortran, Python,
+   and OCaml to simplify the user experience.
+
+   In particular, the binding for Fortran is not distributed as multiple
+   compiled Fortran module files (~.mod~), but instead as a single
+   Fortran source file (~.F90~).  The distribution of the source file
+   instead of the compiled module has multiple benefits.  It ensures that
+   the TREXIO module is always compiled with the same compiler as the
+   client code, avoiding the compatibility problem of ~.mod~ files
+   between different compiler versions and vendors.  The single-file
+   model requires very little changes in the build system of the user's
+   codes, and it facilitates the search for the interface of a particular
+   function.  In addition, advanced text editors can parse the TREXIO
+   interface to propose interactive auto-completion of the TREXIO
+   function names to the developers.
+
+   Finally, the Python module, partly generated with SWIG and fully
+   compatible with NumPy, allows Python users to interact with the
+   library in a more intuitive and user-friendly way.  Using the Python
+   interface is likely the easiest way to begin using TREXIO and
+   understanding its features.  In order to help users get started with
+   TREXIO and understand its functionality, tutorials in Jupyter
+   notebooks are available on GitHub
+   (https://github.com/TREX-CoE/trexio-tutorials), and can be executed
+   via the Binder platform.
+
+
+** Source code generation and documentation
+
+   Source code generation is a valuable technique that can significantly
+   improve the efficiency and consistency of software development.  By
+   using templates to generate code automatically, developers can avoid
+   manual coding and reduce the risk of errors or inconsistencies.  This
+   approach is particularly useful when a large number of functions
+   follow similar patterns, as in the case of the TREXIO library, where
+   functions are named according to the pattern
+   ~trexio_[has|read|write]_<group>_<attribute>~.
+   By generating these functions from the format specification using
+   templates, the developers can ensure that the resulting code follows a
+   consistent structure and is free from errors or inconsistencies.
+
+   The description of the format is written in a text file in the Org
+   format. Org is a structured plain text format, containing information
+   expressed in a lightweight markup language similar to the popular
+   Markdown language.  While Org was introduced as a mode of the GNU
+   Emacs text editor, its basic functionalities have been implemented in
+   most text editors such as Vim, Atom or VS Code.
+
+   There are multiple benefits in using the Org format.  The first
+   benefit is that the Org syntax is easy to learn and allows for the
+   insertion of equations in \LaTeX{} syntax.  Additionally, Org files
+   can be easily converted to HyperText Markup Language (HTML) or
+   Portable Document Format (PDF) for generating documentation.  The
+   second benefit is that GNU Emacs is a programmable text editor and
+   code blocks in Org files can be executed interactively, similar to
+   Jupyter notebooks.  These code blocks can also manipulate data defined
+   in tables and this feature is used to automatically transform tables
+   describing groups and attributes in the documentation into a
+   JavaScript Object Notation (JSON) file.
+   This JSON file is then used by a Python script to generate the needed
+   functions in C language, as well as header files and some files
+   required for the Fortran, Python, and OCaml interfaces.
+
+   With this approach, contributions to the development of the TREXIO
+   library can be made simply by adding new tables to the Org file, which
+   can be submitted as /pull requests/ on the project's GitHub
+   repository (https://github.com/trex-coe/trexio).  Overall, this
+   process allows for a more efficient and consistent development process
+   and enables contributions from a wider range of individuals,
+   regardless of their programming skills.
+
+** Availability
+
+   The TREXIO library is designed to be portable and easy to install
+   on a wide range of systems.  It follows the C99 standard to ensure
+   compatibility with older systems, and can be configured with either
+   the GNU Autotools or the CMake build systems.  The only external
+   dependency is the HDF5 library, which is widely available on HPC
+   platforms and as packages on major Linux distributions.  Note that
+   it is possible to disable the HDF5 back-end at configuration time,
+   allowing TREXIO to operate only with the text back-end and have
+   zero external dependencies.  This can be useful for users who may
+   not be able to install HDF5 on certain systems.
+
+   TREXIO is distributed as a tarball containing the source code,
+   generated code, documentation, and Fortran interface.  It is also
+   available as a binary ~.deb~ package for Debian-based Linux
+   distributions and as packages for Guix, Spack and Conda. The Python
+   module can be found in the PyPI repository, the OCaml binding is
+   available in the official OPAM repository, and the ~.deb~ packages
+   are available in Ubuntu 23.04.

@@ -34,14 +34,14 @@
    num variable is modified by address
 */
 /* Return num variables as part of the output tuple */
-%apply int *OUTPUT { int32_t* const num};
-%apply int *OUTPUT { int64_t* const num};
-%apply int *OUTPUT { int32_t* const num_up};
-%apply int *OUTPUT { int32_t* const num_dn};
-%apply int *OUTPUT { int64_t* const num_up};
-%apply int *OUTPUT { int64_t* const num_dn};
+%apply int32_t *OUTPUT { int32_t* const num};
+%apply int64_t *OUTPUT { int64_t* const num};
+%apply int32_t *OUTPUT { int32_t* const num_up};
+%apply int32_t *OUTPUT { int32_t* const num_dn};
+%apply int64_t *OUTPUT { int64_t* const num_up};
+%apply int64_t *OUTPUT { int64_t* const num_dn};
 %apply float *OUTPUT { float* const num};
-%apply float *OUTPUT { double* const num};
+%apply double *OUTPUT { double* const num};
 /* Return TREXIO exit code from trexio_open as part of the output tuple */
 %apply int *OUTPUT { trexio_exit_code* const rc_open};
 /* Return number of sparse data points stored in the file as part of the output tuple */
@@ -107,6 +107,14 @@ import_array();
 %apply (int32_t* IN_ARRAY1, int32_t DIM1) {(const int32_t* orb_list, const int32_t occupied_num)};
 /* For some reasons SWIG does not apply the proper bitfield_t typemap, so one has to manually specify int64_t* ARGOUT_ARRAY1 below */
 %apply (int64_t* ARGOUT_ARRAY1, int32_t DIM1) {(bitfield_t* const bit_list, const int32_t N_int)};
+
+/* NAO functions */
+%apply double *OUTPUT { double* const log_r_out, double* const amplitude};
+%apply (double *ARGOUT_ARRAY1, int DIM1) {(double* const amplitudes, int amplitude_cnt)};
+%apply (double* IN_ARRAY1, int DIM1) {(double* grid_r, int n_grid_r),
+      (double* interpolator, int n_interp), (double* nucleus_coords, int n_nuc_co), (double* normalization, int n_norm)};
+%apply (int64_t* IN_ARRAY1, int DIM1) {(int64_t* grid_start, int n_grid_st),
+      (int64_t* grid_size, int n_grid_si), (int64_t* nucleus_index, int n_nuc_id)};
 
 /* This tells SWIG to treat char ** dset_in pattern as a special case
    Enables access to trexio_[...]_write_dset_str set of functions directly, i.e.
