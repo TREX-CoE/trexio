@@ -329,7 +329,19 @@ The code should be compliant with the C99
 [CERT C coding standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf).
 This can be checked with the `cppcheck` tool.
 
-If the configure can not find the hdf5 lib, check your $LIBRARY_PATH variable. Sometimes module only add the lib to the $LD_LIBRARY_PATH and forgot $LIBRARY_PATH.
+If you loaded an HDF5 module and the configure script can't find the HDF5 library,
+it is probably because the path to the HDF5 library is missing from your `$LIBRARY_PATH`
+variable. It happens that when building the HDF5 modules, the system
+administrators only append the path to the libraries to the `$LD_LIBRARY_PATH`
+variable, but forget to append it also to `$LIBRARY_PATH`, which is required
+for linking. A simple workaround for the user is to do
+
+```
+export LIBRARY_PATH=$LD_LIBRARY_PATH
+```
+
+before running `configure`, but it is preferable to inform the system administators
+of the problem.
 
 
 -----------------
