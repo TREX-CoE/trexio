@@ -210,7 +210,7 @@ LIBS="${HDF5_LIBS} ${LIBS}"
 AS_IF([test "x$with_hdf5" != "xno"], [
   OLD_LIBS=$LIBS
   AC_CHECK_LIB([hdf5], [H5Fcreate], [], [
-    AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=...]) ])
+    AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=... OR check your $LIBRARY_PATH]) ])
   AC_CHECK_HEADER([hdf5.h], [], [
     AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
   LIBS=$OLD_LIBS

@@ -329,6 +329,7 @@ The code should be compliant with the C99
 [CERT C coding standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf).
 This can be checked with the `cppcheck` tool.
 
+If the configure can not find the hdf5 lib, check your $LIBRARY_PATH variable. Sometimes module only add the lib to the $LD_LIBRARY_PATH and forgot $LIBRARY_PATH.
 
 
 -----------------
