@@ -4490,7 +4490,7 @@ end interface
      if (rc /= TREXIO_SUCCESS) then
        trexio_write_$group_dset$ = rc
      else
-       call trexio_strarray2str(dset, $group_dset_dim$, max_str_len, str_compiled)
+       call trexio_strarray2str(dset, $group_dset_dim$, str_compiled)
        trexio_write_$group_dset$ = trexio_write_$group_dset$_low(trex_file, str_compiled, max_str_len)
      endif
 
@@ -6283,9 +6283,9 @@ trexio_mark_safety (trexio_t* const file, const int32_t safety_flag)
 ** Fortran
 
    #+begin_src f90 :tangle prefix_fortran.f90
-interface
-   integer function trexio_info () bind(C)
-   end function trexio_info
+interface 
+   integer(c_int32_t) function trexio_info_c () bind(C, name="trexio_info")
+   end function trexio_info_c
 end interface
    #+end_src
 
@@ -6591,13 +6591,20 @@ def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
 
 * Fortran helper/wrapper functions
 
+  #+begin_src f90 :tangle helper_fortran.f90
+contains
+   integer function trexio_info ()
+     implicit none
+     trexio_info = trexio_info_c()
+   end function trexio_info
+  #+end_src
+
   The function below adapts the original C-based ~trexio_open~ for Fortran.
   This is needed due to the fact that strings in C are terminated by ~NULL~ character ~\0~
   unlike strings in Fortran.
   Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
 
   #+begin_src f90 :tangle helper_fortran.f90
-contains
    integer(trexio_t) function trexio_open (filename, mode, back_end, rc_open)
      implicit none
      character(len=*), intent(in)                    :: filename
@@ -6728,11 +6735,10 @@ contains
   C API. This is needed due to the fact that strings in C are terminated by ~NULL~ character ~\0~.
 
   #+begin_src f90 :tangle helper_fortran.f90
-   subroutine trexio_strarray2str(str_array, max_num_str, max_len_str, str_res)
+   subroutine trexio_strarray2str(str_array, max_num_str, str_res)
      implicit none
 
-     integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in strign array
-     integer, intent(in), value   :: max_len_str  ! maximum length of a string in an array
+     integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in string array
      character(len=*), intent(in)  :: str_array(*)
      character(len=:), allocatable, intent(out) :: str_res
      integer(c_int64_t) :: i
