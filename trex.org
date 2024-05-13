@@ -13,6 +13,13 @@
 {
    #+end_src
 
+   Dimensions are given both in row-major ~[]~ and column-major ~()~
+   formats. Pick the one adapted to the programming language in which
+   you use TREXIO (Numpy is by default row-major, and Fortran is column-major).
+   In the column-major representation, ~A(i,j)~ and ~A(i+1,j)~ are
+   contiguous in memory. In the row-major representation, ~A[i,j]~ and
+   ~A[i,j+1]~ are contiguous.
+
 * Metadata (metadata group)
 
   As we expect TREXIO files to be archived in open-data repositories,
@@ -22,15 +29,15 @@
   the file, and a textual description.
 
   #+NAME: metadata
-  | Variable          | Type  | Dimensions (for arrays) | Description                              |
-  |-------------------+-------+-------------------------+------------------------------------------|
-  | ~code_num~        | ~dim~ |                         | Number of codes used to produce the file |
-  | ~code~            | ~str~ | ~(metadata.code_num)~   | Names of the codes used                  |
-  | ~author_num~      | ~dim~ |                         | Number of authors of the file            |
-  | ~author~          | ~str~ | ~(metadata.author_num)~ | Names of the authors of the file         |
-  | ~package_version~ | ~str~ |                         | TREXIO version used to produce the file  |
-  | ~description~     | ~str~ |                         | Text describing the content of file      |
-  | ~unsafe~          | ~int~ |                         | ~1~: true, ~0~: false                    |
+  | Variable          | Type  | Row-major Dimensions    | Column-major Dimensions | Description                              |
+  |-------------------+-------+-------------------------+-------------------------+------------------------------------------|
+  | ~code_num~        | ~dim~ |                         |                         | Number of codes used to produce the file |
+  | ~code~            | ~str~ | ~[metadata.code_num]~   | ~(metadata.code_num)~   | Names of the codes used                  |
+  | ~author_num~      | ~dim~ |                         |                         | Number of authors of the file            |
+  | ~author~          | ~str~ | ~[metadata.author_num]~ | ~(metadata.author_num)~ | Names of the authors of the file         |
+  | ~package_version~ | ~str~ |                         |                         | TREXIO version used to produce the file  |
+  | ~description~     | ~str~ |                         |                         | Text describing the content of file      |
+  | ~unsafe~          | ~int~ |                         |                         | ~1~: true, ~0~: false                    |
 
   **Note:** The ~unsafe~ attribute of the ~metadata~ group indicates
   whether the file has been previously opened with ~'u'~ mode.  It is
@@ -62,14 +69,14 @@
    given in Cartesian $(x,y,z)$ format.
 
    #+NAME: nucleus
-   | Variable      | Type    | Dimensions        | Description              |
-   |---------------+---------+-------------------+--------------------------|
-   | ~num~         | ~dim~   |                   | Number of nuclei         |
-   | ~charge~      | ~float~ | ~(nucleus.num)~   | Charges of the nuclei    |
-   | ~coord~       | ~float~ | ~(3,nucleus.num)~ | Coordinates of the atoms |
-   | ~label~       | ~str~   | ~(nucleus.num)~   | Atom labels              |
-   | ~point_group~ | ~str~   |                   | Symmetry point group     |
-   | ~repulsion~   | ~float~ |                   | Nuclear repulsion energy |
+  | Variable      | Type    | Row-major Dimensions | Column-major Dimensions | Description              |   |
+  |---------------+---------+----------------------+-------------------------+--------------------------+---|
+  | ~num~         | ~dim~   |                      |                         | Number of nuclei         |   |
+  | ~charge~      | ~float~ | ~[nucleus.num]~      | ~(nucleus.num)~         | Charges of the nuclei    |   |
+  | ~coord~       | ~float~ | ~[nucleus.num, 3]~   | ~(3, nucleus.num)~      | Coordinates of the atoms |   |
+  | ~label~       | ~str~   | ~[nucleus.num]~      | ~(nucleus.num)~         | Atom labels              |   |
+  | ~point_group~ | ~str~   |                      |                         | Symmetry point group     |   |
+  | ~repulsion~   | ~float~ |                      |                         | Nuclear repulsion energy |   |
 
    #+CALL: json(data=nucleus, title="nucleus")
    #+RESULTS:
@@ -92,15 +99,15 @@
    used in periodic calculations.
 
    #+NAME: cell
-   | Variable | Type    | Dimensions | Description                                                              |
-   |----------+---------+------------+--------------------------------------------------------------------------|
-   | ~a~      | ~float~ | ~(3)~      | First real space lattice vector                                          |
-   | ~b~      | ~float~ | ~(3)~      | Second real space lattice vector                                         |
-   | ~c~      | ~float~ | ~(3)~      | Third real space lattice vector                                          |
-   | ~G_a~    | ~float~ | ~(3)~      | First reciprocal space lattice vector                                    |
-   | ~G_b~    | ~float~ | ~(3)~      | Second reciprocal space lattice vector                                   |
-   | ~G_c~    | ~float~ | ~(3)~      | Third reciprocal space lattice vector                                    |
-   | ~two_pi~ | ~int~   |            | ~0~ or ~1~. If ~two_pi=1~, $2\pi$ is included in the reciprocal vectors. |
+  | Variable | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                              |
+  |----------+---------+----------------------+-------------------------+--------------------------------------------------------------------------|
+  | ~a~      | ~float~ | ~[3]~                | ~(3)~                   | First real space lattice vector                                          |
+  | ~b~      | ~float~ | ~[3]~                | ~(3)~                   | Second real space lattice vector                                         |
+  | ~c~      | ~float~ | ~[3]~                | ~(3)~                   | Third real space lattice vector                                          |
+  | ~G_a~    | ~float~ | ~[3]~                | ~(3)~                   | First reciprocal space lattice vector                                    |
+  | ~G_b~    | ~float~ | ~[3]~                | ~(3)~                   | Second reciprocal space lattice vector                                   |
+  | ~G_c~    | ~float~ | ~[3]~                | ~(3)~                   | Third reciprocal space lattice vector                                    |
+  | ~two_pi~ | ~int~   |                      |                         | ~0~ or ~1~. If ~two_pi=1~, $2\pi$ is included in the reciprocal vectors. |
 
    #+CALL: json(data=cell, title="cell")
 
@@ -123,12 +130,12 @@
 
 
    #+NAME: pbc
-   | Variable         | Type    | Dimensions             | Description             |
-   |------------------+---------+------------------------+-------------------------|
-   | ~periodic~       | ~int~   |                        | ~1~: true or ~0~: false |
-   | ~k_point_num~    | ~dim~   |                        | Number of $k$-points    |
-   | ~k_point~        | ~float~ | ~(3, pbc.k_point_num)~ | $k$-point sampling      |
-   | ~k_point_weight~ | ~float~ | ~(pbc.k_point_num)~    | $k$-point weight        |
+  | Variable         | Type    | Row-major Dimensions | Column-major Dimensions | Description             |
+  |------------------+---------+----------------------+-------------------------+-------------------------|
+  | ~periodic~       | ~int~   |                      |                         | ~1~: true or ~0~: false |
+  | ~k_point_num~    | ~dim~   |                      |                         | Number of $k$-points    |
+  | ~k_point~        | ~float~ | ~[3]~                | ~(3)~                   | $k$-point sampling      |
+  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~  | ~(pbc.k_point_num)~     | $k$-point weight        |
 
    #+CALL: json(data=pbc, title="pbc")
 
@@ -160,11 +167,11 @@
 
 
    #+NAME:electron
-   | Variable | Type  | Dimensions | Description                         |
-   |----------+-------+------------+-------------------------------------|
-   | ~num~    | ~dim~ |            | Number of electrons                 |
-   | ~up_num~ | ~int~ |            | Number of \uparrow-spin electrons   |
-   | ~dn_num~ | ~int~ |            | Number of \downarrow-spin electrons |
+  | Variable | Type  | Row-major Dimensions | Column-major Dimensions | Description                         |
+  |----------+-------+----------------------+-------------------------+-------------------------------------|
+  | ~num~    | ~dim~ |                      |                         | Number of electrons                 |
+  | ~up_num~ | ~int~ |                      |                         | Number of \uparrow-spin electrons   |
+  | ~dn_num~ | ~int~ |                      |                         | Number of \downarrow-spin electrons |
 
    #+CALL: json(data=electron, title="electron")
    #+RESULTS:
@@ -192,14 +199,14 @@
    The ~id~ and ~current_label~ attributes need to be specified for each file.
 
    #+NAME: state
-   | Variable        | Type    | Dimensions    | Description                                                                                 |
-   |-----------------+---------+---------------+---------------------------------------------------------------------------------------------|
-   | ~num~           | ~dim~   |               | Number of states (including the ground state)                                               |
-   | ~id~            | ~index~ |               | Index of the current state (0 is ground state)                                              |
-   | ~energy~        | ~float~ |               | Energy of the current state                                                                 |
-   | ~current_label~ | ~str~   |               | Label of the current state                                                                  |
-   | ~label~         | ~str~   | ~(state.num)~ | Labels of all states                                                                        |
-   | ~file_name~     | ~str~   | ~(state.num)~ | Names of the TREXIO files linked to the current one (i.e. containing data for other states) |
+  | Variable        | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                                                 |
+  |-----------------+---------+----------------------+-------------------------+---------------------------------------------------------------------------------------------|
+  | ~num~           | ~dim~   |                      |                         | Number of states (including the ground state)                                               |
+  | ~id~            | ~index~ |                      |                         | Index of the current state (0 is ground state)                                              |
+  | ~energy~        | ~float~ |                      |                         | Energy of the current state                                                                 |
+  | ~current_label~ | ~str~   |                      |                         | Label of the current state                                                                  |
+  | ~label~         | ~str~   | ~[state.num]~        | ~(state.num)~           | Labels of all states                                                                        |
+  | ~file_name~     | ~str~   | ~[state.num]~        | ~(state.num)~           | Names of the TREXIO files linked to the current one (i.e. containing data for other states) |
 
    #+CALL: json(data=state, title="state")
 
@@ -222,7 +229,7 @@
 
 *** Gaussian and Slater-type orbitals
 
-    We consider here basis functions centered on nuclei. Hence, it is 
+    We consider here basis functions centered on nuclei. Hence, it is
     possibile to define /dummy atoms/ to place basis functions in
     arbitrary positions.
 
@@ -259,10 +266,10 @@
     All the basis set parameters are stored in one-dimensional arrays.
 
 *** Numerical orbitals
-    
+
     Trexio supports numerical atom centered orbitals. The implementation is
-    based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular 
-    simulations with numeric atom-centered orbitals; Computer Physics 
+    based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular
+    simulations with numeric atom-centered orbitals; Computer Physics
     Communications 2009]. These orbitals are
     defined by the atom they are centered on, their angular momentum and a
     radial function $R_s$, which is of the form
@@ -273,7 +280,7 @@
     grid. It is constructed to vanish for any $\mathbf{r}$
     outside of the grid. The reference points are stored in ~nao_grid_r~
     and ~nao_grid_phi~. Additionaly, a separate spline for the first and second
-    derivative of $u(\mathbf{r})$ can be stored in ~nao_grid_grad~ and ~nao_grid_lap~. 
+    derivative of $u(\mathbf{r})$ can be stored in ~nao_grid_grad~ and ~nao_grid_lap~.
     Storing them in this form allows to calculate the actual first and
     second derivatives easily as follows:
 
@@ -309,7 +316,7 @@
     \]
     For convenience, this conversion and functions to evaluate the splines
     are provided with trexio. Since these implementations are not adapted to
-    a specific software architecture, a programm using these orbitals should 
+    a specific software architecture, a programm using these orbitals should
     reimplement them with consideration for its specific needs.
 
 *** Plane waves
@@ -328,32 +335,32 @@
 *** Data definitions
 
     #+NAME: basis
-    | Variable            | Type    | Dimensions                                    | Description                                                                  |
-    |---------------------+---------+-----------------------------------------------+------------------------------------------------------------------------------|
-    | ~type~              | ~str~   |                                               | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |
-    | ~prim_num~          | ~dim~   |                                               | Total number of primitives                                                   |
-    | ~shell_num~         | ~dim~   |                                               | Total number of shells                                                       |
-    | ~nao_grid_num~      | ~dim~   |                                               | Total number of grid points for numerical orbitals                           |
-    | ~interp_coeff_cnt~  | ~dim~   |                                               | Number of coefficients for the numerical orbital interpolator                |
-    | ~nucleus_index~     | ~index~ | ~(basis.shell_num)~                           | One-to-one correspondence between shells and atomic indices                  |
-    | ~shell_ang_mom~     | ~int~   | ~(basis.shell_num)~                           | One-to-one correspondence between shells and angular momenta                 |
-    | ~shell_factor~      | ~float~ | ~(basis.shell_num)~                           | Normalization factor of each shell ($\mathcal{N}_s$)                         |
-    | ~r_power~           | ~int~   | ~(basis.shell_num)~                           | Power to which $r$ is raised ($n_s$)                                         |
-    | ~nao_grid_start~    | ~index~ | ~(basis.shell_num)~                           | Index of the first data point for a given numerical orbital                  |
-    | ~nao_grid_size~     | ~dim~   | ~(basis.shell_num)~                           | Number of data points per numerical orbital                                  |
-    | ~shell_index~       | ~index~ | ~(basis.prim_num)~                            | One-to-one correspondence between primitives and shell index                 |
-    | ~exponent~          | ~float~ | ~(basis.prim_num)~                            | Exponents of the primitives ($\gamma_{ks}$)                                  |
-    | ~coefficient~       | ~float~ | ~(basis.prim_num)~                            | Coefficients of the primitives ($a_{ks}$)                                    |
-    | ~prim_factor~       | ~float~ | ~(basis.prim_num)~                            | Normalization coefficients for the primitives ($f_{ks}$)                     |
-    | ~e_cut~             | ~float~ |                                               | Energy cut-off for plane-wave calculations                                   |
-    | ~nao_grid_radius~   | ~float~ | ~(basis.nao_grid_num)~                        | Radii of grid points for numerical orbitals                                  |
-    | ~nao_grid_phi~      | ~float~ | ~(basis.nao_grid_num)~                        | Wave function values for numerical orbitals                                  |
-    | ~nao_grid_grad~     | ~float~ | ~(basis.nao_grid_num)~                        | Radial gradient of numerical orbitals                                        |
-    | ~nao_grid_lap~      | ~float~ | ~(basis.nao_grid_num)~                        | Laplacian of numerical orbitals                                              |
-    | ~interpolator_kind~ | ~str~   |                                               | Kind of spline, e.g. "Polynomial"                                            |
-    | ~interpolator_phi~  | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital interpolation function                    |
-    | ~interpolator_grad~ | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital gradient interpolation function           |
-    | ~interpolator_lap~  | ~float~ | ~(basis.interp_coeff_cnt,basis.nao_grid_num)~ | Coefficients for numerical orbital laplacian interpolation function          |
+  | Variable            | Type    | Row-major Dimensions                           | Column-major Dimensions                        | Description                                                                  |
+  |---------------------+---------+------------------------------------------------+------------------------------------------------+------------------------------------------------------------------------------|
+  | ~type~              | ~str~   |                                                |                                                | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |
+  | ~prim_num~          | ~dim~   |                                                |                                                | Total number of primitives                                                   |
+  | ~shell_num~         | ~dim~   |                                                |                                                | Total number of shells                                                       |
+  | ~nao_grid_num~      | ~dim~   |                                                |                                                | Total number of grid points for numerical orbitals                           |
+  | ~interp_coeff_cnt~  | ~dim~   |                                                |                                                | Number of coefficients for the numerical orbital interpolator                |
+  | ~nucleus_index~     | ~index~ | ~[basis.shell_num]~                            | ~(basis.shell_num)~                            | One-to-one correspondence between shells and atomic indices                  |
+  | ~shell_ang_mom~     | ~int~   | ~[basis.shell_num]~                            | ~(basis.shell_num)~                            | One-to-one correspondence between shells and angular momenta                 |
+  | ~shell_factor~      | ~float~ | ~[basis.shell_num]~                            | ~(basis.shell_num)~                            | Normalization factor of each shell ($\mathcal{N}_s$)                         |
+  | ~r_power~           | ~int~   | ~[basis.shell_num]~                            | ~(basis.shell_num)~                            | Power to which $r$ is raised ($n_s$)                                         |
+  | ~nao_grid_start~    | ~index~ | ~[basis.shell_num]~                            | ~(basis.shell_num)~                            | Index of the first data point for a given numerical orbital                  |
+  | ~nao_grid_size~     | ~dim~   | ~[basis.shell_num]~                            | ~(basis.shell_num)~                            | Number of data points per numerical orbital                                  |
+  | ~shell_index~       | ~index~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | One-to-one correspondence between primitives and shell index                 |
+  | ~exponent~          | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Exponents of the primitives ($\gamma_{ks}$)                                  |
+  | ~coefficient~       | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Coefficients of the primitives ($a_{ks}$)                                    |
+  | ~prim_factor~       | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Normalization coefficients for the primitives ($f_{ks}$)                     |
+  | ~e_cut~             | ~float~ |                                                |                                                | Energy cut-off for plane-wave calculations                                   |
+  | ~nao_grid_radius~   | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Radii of grid points for numerical orbitals                                  |
+  | ~nao_grid_phi~      | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Wave function values for numerical orbitals                                  |
+  | ~nao_grid_grad~     | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Radial gradient of numerical orbitals                                        |
+  | ~nao_grid_lap~      | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Laplacian of numerical orbitals                                              |
+  | ~interpolator_kind~ | ~str~   |                                                |                                                | Kind of spline, e.g. "Polynomial"                                            |
+  | ~interpolator_phi~  | ~float~ | ~[basis.nao_grid_num, basis.interp_coeff_cnt]~ | ~(basis.interp_coeff_cnt, basis.nao_grid_num)~ | Coefficients for numerical orbital interpolation function                    |
+  | ~interpolator_grad~ | ~float~ | ~[basis.nao_grid_num, basis.interp_coeff_cnt]~ | ~(basis.interp_coeff_cnt, basis.nao_grid_num)~ | Coefficients for numerical orbital gradient interpolation function           |
+  | ~interpolator_lap~  | ~float~ | ~[basis.nao_grid_num, basis.interp_coeff_cnt]~ | ~(basis.interp_coeff_cnt, basis.nao_grid_num)~ | Coefficients for numerical orbital laplacian interpolation function          |
 
 
 
@@ -362,32 +369,32 @@
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-	"basis": {
-			 "type" : [ "str"  , []                                                ]
-	  ,          "prim_num" : [ "dim"  , []                                                ]
-	  ,         "shell_num" : [ "dim"  , []                                                ]
-	  ,       "nao_grid_num" : [ "dim"  , []                                                ]
-	  ,  "interp_coeff_cnt" : [ "dim"  , []                                                ]
-	  ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                             ]
-	  ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                             ]
-	  ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                             ]
-	  ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                             ]
-	  ,     "nao_grid_start" : [ "index", [ "basis.shell_num" ]                             ]
-	  ,      "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                             ]
-	  ,       "shell_index" : [ "index", [ "basis.prim_num" ]                              ]
-	  ,          "exponent" : [ "float", [ "basis.prim_num" ]                              ]
-	  ,       "coefficient" : [ "float", [ "basis.prim_num" ]                              ]
-	  ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                              ]
-	  ,             "e_cut" : [ "float", []                                                ]
-	  ,    "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
-	  ,       "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
-	  ,      "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
-	  ,       "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
-	  , "interpolator_kind" : [ "str"  , []                                                ]
-	  ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
-	  , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
-	  ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
-	} ,
+        "basis": {
+                         "type" : [ "str"  , []                                                 ]
+          ,          "prim_num" : [ "dim"  , []                                                 ]
+          ,         "shell_num" : [ "dim"  , []                                                 ]
+          ,      "nao_grid_num" : [ "dim"  , []                                                 ]
+          ,  "interp_coeff_cnt" : [ "dim"  , []                                                 ]
+          ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                              ]
+          ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                              ]
+          ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                              ]
+          ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                              ]
+          ,    "nao_grid_start" : [ "index", [ "basis.shell_num" ]                              ]
+          ,     "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                              ]
+          ,       "shell_index" : [ "index", [ "basis.prim_num" ]                               ]
+          ,          "exponent" : [ "float", [ "basis.prim_num" ]                               ]
+          ,       "coefficient" : [ "float", [ "basis.prim_num" ]                               ]
+          ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                               ]
+          ,             "e_cut" : [ "float", []                                                 ]
+          ,   "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
+          ,      "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
+          ,     "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
+          ,      "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
+          , "interpolator_kind" : [ "str"  , []                                                 ]
+          ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+          , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+          ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+        } ,
     #+end_src
     :end:
 
@@ -489,16 +496,16 @@ prim_factor =
    See http://dx.doi.org/10.1063/1.4984046 or https://doi.org/10.1063/1.5121006 for more info.
 
    #+NAME: ecp
-   | Variable             | Type    | Dimensions      | Description                                                                            |
-   |----------------------+---------+-----------------+----------------------------------------------------------------------------------------|
-   | ~max_ang_mom_plus_1~ | ~int~   | ~(nucleus.num)~ | $\ell_{\max}+1$, one higher than the max angular momentum in the removed core orbitals |
-   | ~z_core~             | ~int~   | ~(nucleus.num)~ | Number of core electrons to remove per atom                                            |
-   | ~num~                | ~dim~   |                 | Total number of ECP functions for all atoms and all values of $\ell$                   |
-   | ~ang_mom~            | ~int~   | ~(ecp.num)~     | One-to-one correspondence between ECP items and the angular momentum $\ell$            |
-   | ~nucleus_index~      | ~index~ | ~(ecp.num)~     | One-to-one correspondence between ECP items and the atom index                         |
-   | ~exponent~           | ~float~ | ~(ecp.num)~     | $\alpha_{A q \ell}$ all ECP exponents                                                  |
-   | ~coefficient~        | ~float~ | ~(ecp.num)~     | $\beta_{A q \ell}$ all ECP coefficients                                                |
-   | ~power~              | ~int~   | ~(ecp.num)~     | $n_{A q \ell}$ all ECP powers                                                          |
+  | Variable             | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                                            |
+  |----------------------+---------+----------------------+-------------------------+----------------------------------------------------------------------------------------|
+  | ~max_ang_mom_plus_1~ | ~int~   | ~[nucleus.num]~      | ~(nucleus.num)~         | $\ell_{\max}+1$, one higher than the max angular momentum in the removed core orbitals |
+  | ~z_core~             | ~int~   | ~[nucleus.num]~      | ~(nucleus.num)~         | Number of core electrons to remove per atom                                            |
+  | ~num~                | ~dim~   |                      |                         | Total number of ECP functions for all atoms and all values of $\ell$                   |
+  | ~ang_mom~            | ~int~   | ~[ecp.num]~          | ~(ecp.num)~             | One-to-one correspondence between ECP items and the angular momentum $\ell$            |
+  | ~nucleus_index~      | ~index~ | ~[ecp.num]~          | ~(ecp.num)~             | One-to-one correspondence between ECP items and the atom index                         |
+  | ~exponent~           | ~float~ | ~[ecp.num]~          | ~(ecp.num)~             | $\alpha_{A q \ell}$ all ECP exponents                                                  |
+  | ~coefficient~        | ~float~ | ~[ecp.num]~          | ~(ecp.num)~             | $\beta_{A q \ell}$ all ECP coefficients                                                |
+  | ~power~              | ~int~   | ~[ecp.num]~          | ~(ecp.num)~             | $n_{A q \ell}$ all ECP powers                                                          |
 
    There might be some confusion in the meaning of the $\ell_{\max}$.
    It can be attributed to the maximum angular momentum occupied in
@@ -606,21 +613,21 @@ power = [
    Feel free to submit a PR if you find missing options/functionalities.
 
     #+NAME: grid
-   | Variable        | Type    | Dimensions       | Description                                                             |
-   |-----------------+---------+------------------+-------------------------------------------------------------------------|
-   | ~description~   | ~str~   |                  | Details about the used quadratures can go here                          |
-   | ~rad_precision~ | ~float~ |                  | Radial precision parameter (not used in some schemes like Krack-Köster) |
-   | ~num~           | ~dim~   |                  | Number of grid points                                                   |
-   | ~max_ang_num~   | ~int~   |                  | Maximum number of angular grid points (for pruning)                     |
-   | ~min_ang_num~   | ~int~   |                  | Minimum number of angular grid points (for pruning)                     |
-   | ~coord~         | ~float~ | ~(grid.num)~     | Discretized coordinate space                                            |
-   | ~weight~        | ~float~ | ~(grid.num)~     | Grid weights according to a given partitioning (e.g. Becke)             |
-   | ~ang_num~       | ~dim~   |                  | Number of angular integration points (if used)                          |
-   | ~ang_coord~     | ~float~ | ~(grid.ang_num)~ | Discretized angular space (if used)                                     |
-   | ~ang_weight~    | ~float~ | ~(grid.ang_num)~ | Angular grid weights (if used)                                          |
-   | ~rad_num~       | ~dim~   |                  | Number of radial integration points (if used)                           |
-   | ~rad_coord~     | ~float~ | ~(grid.rad_num)~ | Discretized radial space (if used)                                      |
-   | ~rad_weight~    | ~float~ | ~(grid.rad_num)~ | Radial grid weights  (if used)                                          |
+  | Variable        | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                             |
+  |-----------------+---------+----------------------+-------------------------+-------------------------------------------------------------------------|
+  | ~description~   | ~str~   |                      |                         | Details about the used quadratures can go here                          |
+  | ~rad_precision~ | ~float~ |                      |                         | Radial precision parameter (not used in some schemes like Krack-Köster) |
+  | ~num~           | ~dim~   |                      |                         | Number of grid points                                                   |
+  | ~max_ang_num~   | ~int~   |                      |                         | Maximum number of angular grid points (for pruning)                     |
+  | ~min_ang_num~   | ~int~   |                      |                         | Minimum number of angular grid points (for pruning)                     |
+  | ~coord~         | ~float~ | ~[grid.num]~         | ~(grid.num)~            | Discretized coordinate space                                            |
+  | ~weight~        | ~float~ | ~[grid.num]~         | ~(grid.num)~            | Grid weights according to a given partitioning (e.g. Becke)             |
+  | ~ang_num~       | ~dim~   |                      |                         | Number of angular integration points (if used)                          |
+  | ~ang_coord~     | ~float~ | ~[grid.ang_num]~     | ~(grid.ang_num)~        | Discretized angular space (if used)                                     |
+  | ~ang_weight~    | ~float~ | ~[grid.ang_num]~     | ~(grid.ang_num)~        | Angular grid weights (if used)                                          |
+  | ~rad_num~       | ~dim~   |                      |                         | Number of radial integration points (if used)                           |
+  | ~rad_coord~     | ~float~ | ~[grid.rad_num]~     | ~(grid.rad_num)~        | Discretized radial space (if used)                                      |
+  | ~rad_weight~    | ~float~ | ~[grid.rad_num]~     | ~(grid.rad_num)~        | Radial grid weights  (if used)                                          |
 
     #+CALL: json(data=grid, title="grid")
 
@@ -686,12 +693,12 @@ power = [
 
 
    #+NAME: ao
-   | Variable        | Type    | Dimensions | Description                          |
-   |-----------------+---------+------------+--------------------------------------|
-   | ~cartesian~     | ~int~   |            | ~1~: true, ~0~: false                |
-   | ~num~           | ~dim~   |            | Total number of atomic orbitals      |
-   | ~shell~         | ~index~ | ~(ao.num)~ | Basis set shell for each AO          |
-   | ~normalization~ | ~float~ | ~(ao.num)~ | Normalization factor $\mathcal{N}_i$ |
+  | Variable        | Type    | Row-major Dimensions | Column-major Dimensions | Description                          |
+  |-----------------+---------+----------------------+-------------------------+--------------------------------------|
+  | ~cartesian~     | ~int~   |                      |                         | ~1~: true, ~0~: false                |
+  | ~num~           | ~dim~   |                      |                         | Total number of atomic orbitals      |
+  | ~shell~         | ~index~ | ~[ao.num]~           | ~(ao.num)~              | Basis set shell for each AO          |
+  | ~normalization~ | ~float~ | ~[ao.num]~           | ~(ao.num)~              | Normalization factor $\mathcal{N}_i$ |
 
    #+CALL: json(data=ao, title="ao")
 
@@ -724,18 +731,18 @@ power = [
     over atomic orbitals.
 
     #+NAME: ao_1e_int
-    | Variable              | Type    | Dimensions         | Description                                                              |
-    |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
-    | ~overlap~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$                                              |
-    | ~kinetic~             | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$                              |
-    | ~potential_n_e~       | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
-    | ~ecp~                 | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
-    | ~core_hamiltonian~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$                                |
-    | ~overlap_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert q \rangle$ (imaginary part)                             |
-    | ~kinetic_im~          | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
-    | ~potential_n_e_im~    | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
-    | ~ecp_im~              | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
-    | ~core_hamiltonian_im~ | ~float~ | ~(ao.num, ao.num)~ | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
+  | Variable              | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                              |
+  |-----------------------+---------+----------------------+-------------------------+--------------------------------------------------------------------------|
+  | ~overlap~             | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert q \rangle$                                              |
+  | ~kinetic~             | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{T}_e \vert q \rangle$                              |
+  | ~potential_n_e~       | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
+  | ~ecp~                 | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
+  | ~core_hamiltonian~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$                                |
+  | ~overlap_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert q \rangle$ (imaginary part)                             |
+  | ~kinetic_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
+  | ~potential_n_e_im~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
+  | ~ecp_im~              | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
+  | ~core_hamiltonian_im~ | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
 
     #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -782,14 +789,14 @@ power = [
     \]
 
     #+NAME: ao_2e_int
-    | Variable              | Type           | Dimensions                                        | Description                                   |
-    |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
-    | ~eri~                 | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
-    | ~eri_lr~              | ~float sparse~ | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range electron repulsion integrals       |
-    | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
-    | ~eri_cholesky~        | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
-    | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
-    | ~eri_lr_cholesky~     | ~float sparse~ | ~(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
+  | Variable              | Type           | Row-major Dimensions                              | Column-major Dimensions                           | Description                                   |
+  |-----------------------+----------------+---------------------------------------------------+---------------------------------------------------+-----------------------------------------------|
+  | ~eri~                 | ~float sparse~ | ~[ao.num, ao.num, ao.num, ao.num]~                | ~(ao.num, ao.num, ao.num, ao.num)~                | Electron repulsion integrals                  |
+  | ~eri_lr~              | ~float sparse~ | ~[ao.num, ao.num, ao.num, ao.num]~                | ~(ao.num, ao.num, ao.num, ao.num)~                | Long-range electron repulsion integrals       |
+  | ~eri_cholesky_num~    | ~dim~          |                                                   |                                                   | Number of Cholesky vectors for ERI            |
+  | ~eri_cholesky~        | ~float sparse~ | ~[ao_2e_int.eri_cholesky_num, ao.num, ao.num]~    | ~(ao.num, ao.num, ao_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
+  | ~eri_lr_cholesky_num~ | ~dim~          |                                                   |                                                   | Number of Cholesky vectors for long range ERI |
+  | ~eri_lr_cholesky~     | ~float sparse~ | ~[ao_2e_int.eri_lr_cholesky_num, ao.num, ao.num]~ | ~(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
     #+CALL: json(data=ao_2e_int, title="ao_2e_int")
 
@@ -800,7 +807,7 @@ power = [
                             "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
           ,              "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
           ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
-          ,        "eri_cholesky" : [ "float sparse", [ "ao_2e_int.eri_cholesky_num", "ao.num", "ao.num" ]    ]
+          ,        "eri_cholesky" : [ "float sparse", [ "ao_2e_int.eri_cholesky_num", "ao.num", "ao.num" ] ]
           , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
           ,     "eri_lr_cholesky" : [ "float sparse", [ "ao_2e_int.eri_lr_cholesky_num", "ao.num", "ao.num" ] ]
         } ,
@@ -810,25 +817,25 @@ power = [
 ** Molecular orbitals (mo group)
 
    #+NAME: mo
-   | Variable         | Type    | Dimensions         | Description                                                              |
-   |------------------+---------+--------------------+--------------------------------------------------------------------------|
-   | ~type~           | ~str~   |                    | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
-   | ~num~            | ~dim~   |                    | Number of MOs stored in the file                                         |
-   | ~coefficient~    | ~float~ | ~(ao.num, mo.num)~ | MO coefficients                                                          |
-   | ~coefficient_im~ | ~float~ | ~(ao.num, mo.num)~ | MO coefficients (imaginary part)                                         |
-   | ~class~          | ~str~   | ~(mo.num)~         | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
-   | ~symmetry~       | ~str~   | ~(mo.num)~         | Symmetry in the point group                                              |
-   | ~occupation~     | ~float~ | ~(mo.num)~         | Occupation number                                                        |
-   | ~energy~         | ~float~ | ~(mo.num)~         | For canonical MOs, corresponding eigenvalue                              |
-   | ~spin~           | ~int~   | ~(mo.num)~         | For UHF wave functions, 0 is $\alpha$ and 1 is $\beta$                   |
-   | ~k_point~        | ~index~ | ~(mo.num)~         | For periodic calculations, the $k$ point to which each MO belongs        |
+  | Variable         | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                              |
+  |------------------+---------+----------------------+-------------------------+--------------------------------------------------------------------------|
+  | ~type~           | ~str~   |                      |                         | Free text to identify the set of MOs (HF, Natural, Local, CASSCF, /etc/) |
+  | ~num~            | ~dim~   |                      |                         | Number of MOs                                                            |
+  | ~coefficient~    | ~float~ | ~[mo.num, ao.num]~   | ~(ao.num, mo.num)~      | MO coefficients                                                          |
+  | ~coefficient_im~ | ~float~ | ~[mo.num, ao.num]~   | ~(ao.num, mo.num)~      | MO coefficients (imaginary part)                                         |
+  | ~class~          | ~str~   | ~[mo.num]~           | ~(mo.num)~              | Choose among: Core, Inactive, Active, Virtual, Deleted                   |
+  | ~symmetry~       | ~str~   | ~[mo.num]~           | ~(mo.num)~              | Symmetry in the point group                                              |
+  | ~occupation~     | ~float~ | ~[mo.num]~           | ~(mo.num)~              | Occupation number                                                        |
+  | ~energy~         | ~float~ | ~[mo.num]~           | ~(mo.num)~              | For canonical MOs, corresponding eigenvalue                              |
+  | ~spin~           | ~int~   | ~[mo.num]~           | ~(mo.num)~              | For UHF wave functions, 0 is $\alpha$ and 1 is $\beta$                   |
+  | ~k_point~        | ~index~ | ~[mo.num]~           | ~(mo.num)~              | For periodic calculations, the $k$ point to which each MO belongs        |
 
    **Warning**: ~mo.num~ is the total number of MOs stored in the file.
    For periodic calculations, this group contains all the MOs
    belonging to all $k$ points so ~mo.num~ will be the sum of the
    numbers of MOs in each $k$ point. For UHF wave functions, ~mo.num~
    is the number of spin-orbitals, twice the number of spatial orbitals.
-   
+
    #+CALL: json(data=mo, title="mo")
 
    #+RESULTS:
@@ -857,18 +864,18 @@ power = [
     the basis of molecular orbitals.
 
     #+NAME: mo_1e_int
-   | Variable              | Type    | Dimensions         | Description                                                              |
-   |-----------------------+---------+--------------------+--------------------------------------------------------------------------|
-   | ~overlap~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$                                              |
-   | ~kinetic~             | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$                              |
-   | ~potential_n_e~       | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$                    |
-   | ~ecp~                 | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$                   |
-   | ~core_hamiltonian~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$                                |
-   | ~overlap_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert j \rangle$ (imaginary part)                             |
-   | ~kinetic_im~          | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)           |
-   | ~potential_n_e_im~    | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)  |
-   | ~ecp_im~              | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part) |
-   | ~core_hamiltonian_im~ | ~float~ | ~(mo.num, mo.num)~ | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)               |
+  | Variable              | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                              |
+  |-----------------------+---------+----------------------+-------------------------+--------------------------------------------------------------------------|
+  | ~overlap~             | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert j \rangle$                                              |
+  | ~kinetic~             | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{T}_e \vert j \rangle$                              |
+  | ~potential_n_e~       | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$                    |
+  | ~ecp~                 | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$                   |
+  | ~core_hamiltonian~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$                                |
+  | ~overlap_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert j \rangle$ (imaginary part)                             |
+  | ~kinetic_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)           |
+  | ~potential_n_e_im~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)  |
+  | ~ecp_im~              | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part) |
+  | ~core_hamiltonian_im~ | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)               |
 
     #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
@@ -897,14 +904,14 @@ power = [
     the basis of molecular orbitals.
 
     #+NAME: mo_2e_int
-   | Variable              | Type           | Dimensions                                        | Description                                   |
-   |-----------------------+----------------+---------------------------------------------------+-----------------------------------------------|
-   | ~eri~                 | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Electron repulsion integrals                  |
-   | ~eri_lr~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range electron repulsion integrals       |
-   | ~eri_cholesky_num~    | ~dim~          |                                                   | Number of Cholesky vectors for ERI            |
-   | ~eri_cholesky~        | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
-   | ~eri_lr_cholesky_num~ | ~dim~          |                                                   | Number of Cholesky vectors for long range ERI |
-   | ~eri_lr_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, mo_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
+  | Variable              | Type           | Row-major Dimensions                              | Column-major Dimensions                           | Description                                   |
+  |-----------------------+----------------+---------------------------------------------------+---------------------------------------------------+-----------------------------------------------|
+  | ~eri~                 | ~float sparse~ | ~[mo.num, mo.num, mo.num, mo.num]~                | ~(mo.num, mo.num, mo.num, mo.num)~                | Electron repulsion integrals                  |
+  | ~eri_lr~              | ~float sparse~ | ~[mo.num, mo.num, mo.num, mo.num]~                | ~(mo.num, mo.num, mo.num, mo.num)~                | Long-range electron repulsion integrals       |
+  | ~eri_cholesky_num~    | ~dim~          |                                                   |                                                   | Number of Cholesky vectors for ERI            |
+  | ~eri_cholesky~        | ~float sparse~ | ~[mo_2e_int.eri_cholesky_num, mo.num, mo.num]~    | ~(mo.num, mo.num, mo_2e_int.eri_cholesky_num)~    | Cholesky decomposition of the ERI             |
+  | ~eri_lr_cholesky_num~ | ~dim~          |                                                   |                                                   | Number of Cholesky vectors for long range ERI |
+  | ~eri_lr_cholesky~     | ~float sparse~ | ~[mo_2e_int.eri_lr_cholesky_num, mo.num, mo.num]~ | ~(mo.num, mo.num, mo_2e_int.eri_lr_cholesky_num)~ | Cholesky decomposition of the long range ERI  |
 
     #+CALL: json(data=mo_2e_int, title="mo_2e_int")
 
@@ -952,11 +959,11 @@ power = [
    An illustration on how to read determinants is presented in the [[./examples.html][examples]].
 
    #+NAME: determinant
-   | Variable      | Type             | Dimensions          | Description                                            |
-   |---------------+------------------+---------------------+--------------------------------------------------------|
-   | ~num~         | ~dim readonly~   |                     | Number of determinants                                 |
-   | ~list~        | ~int special~    | ~(determinant.num)~ | List of determinants as integer bit fields             |
-   | ~coefficient~ | ~float buffered~ | ~(determinant.num)~ | Coefficients of the determinants from the CI expansion |
+  | Variable      | Type             | Row-major Dimensions | Column-major Dimensions | Description                                            |
+  |---------------+------------------+----------------------+-------------------------+--------------------------------------------------------|
+  | ~num~         | ~dim readonly~   |                      |                         | Number of determinants                                 |
+  | ~list~        | ~int special~    | ~[determinant.num]~  | ~(determinant.num)~     | List of determinants as integer bit fields             |
+  | ~coefficient~ | ~float buffered~ | ~[determinant.num]~  | ~(determinant.num)~     | Coefficients of the determinants from the CI expansion |
 
    #+CALL: json(data=determinant, title="determinant")
 
@@ -988,11 +995,11 @@ power = [
    the basis of Slater determinants.
 
    #+NAME: csf
-   | Variable          | Type             | Dimensions                  | Description                             |
-   |-------------------+------------------+-----------------------------+-----------------------------------------|
-   | ~num~             | ~dim readonly~   |                             | Number of CSFs                          |
-   | ~coefficient~     | ~float buffered~ | ~(csf.num)~                 | Coefficients $C_I$ of the CSF expansion |
-   | ~det_coefficient~ | ~float sparse~   | ~(determinant.num,csf.num)~ | Projection on the determinant basis     |
+  | Variable          | Type             | Row-major Dimensions         | Column-major Dimensions      | Description                             |
+  |-------------------+------------------+------------------------------+------------------------------+-----------------------------------------|
+  | ~num~             | ~dim readonly~   |                              |                              | Number of CSFs                          |
+  | ~coefficient~     | ~float buffered~ | ~[csf.num]~                  | ~(csf.num)~                  | Coefficients $C_I$ of the CSF expansion |
+  | ~det_coefficient~ | ~float sparse~   | ~[csf.num, determinant.num]~ | ~(determinant.num, csf.num)~ | Projection on the determinant basis     |
 
    #+CALL: json(data=csf, title="csf")
 
@@ -1051,16 +1058,16 @@ power = [
    - $\dots$
 
    #+NAME: amplitude
-   | Variable        | Type           | Dimensions                                                  | Description                                     |
-   |-----------------+----------------+-------------------------------------------------------------+-------------------------------------------------|
-   | ~single~        | ~float sparse~ | ~(mo.num,mo.num)~                                           | Single excitation amplitudes                    |
-   | ~single_exp~    | ~float sparse~ | ~(mo.num,mo.num)~                                           | Exponentialized single excitation amplitudes    |
-   | ~double~        | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num)~                             | Double excitation amplitudes                    |
-   | ~double_exp~    | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num)~                             | Exponentialized double excitation amplitudes    |
-   | ~triple~        | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~               | Triple excitation amplitudes                    |
-   | ~triple_exp~    | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~               | Exponentialized triple excitation amplitudes    |
-   | ~quadruple~     | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~ | Quadruple excitation amplitudes                 |
-   | ~quadruple_exp~ | ~float sparse~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~ | Exponentialized quadruple excitation amplitudes |
+  | Variable        | Type           | Row-major Dimensions                                        | Column-major Dimensions                                     | Description                                     |
+  |-----------------+----------------+-------------------------------------------------------------+-------------------------------------------------------------+-------------------------------------------------|
+  | ~single~        | ~float sparse~ | ~[mo.num,mo.num]~                                           | ~(mo.num,mo.num)~                                           | Single excitation amplitudes                    |
+  | ~single_exp~    | ~float sparse~ | ~[mo.num,mo.num]~                                           | ~(mo.num,mo.num)~                                           | Exponentialized single excitation amplitudes    |
+  | ~double~        | ~float sparse~ | ~[mo.num,mo.num,mo.num,mo.num]~                             | ~(mo.num,mo.num,mo.num,mo.num)~                             | Double excitation amplitudes                    |
+  | ~double_exp~    | ~float sparse~ | ~[mo.num,mo.num,mo.num,mo.num]~                             | ~(mo.num,mo.num,mo.num,mo.num)~                             | Exponentialized double excitation amplitudes    |
+  | ~triple~        | ~float sparse~ | ~[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]~               | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~               | Triple excitation amplitudes                    |
+  | ~triple_exp~    | ~float sparse~ | ~[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]~               | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~               | Exponentialized triple excitation amplitudes    |
+  | ~quadruple~     | ~float sparse~ | ~[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~ | Quadruple excitation amplitudes                 |
+  | ~quadruple_exp~ | ~float sparse~ | ~[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]~ | ~(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)~ | Exponentialized quadruple excitation amplitudes |
 
    #+CALL: json(data=amplitude, title="amplitude")
 
@@ -1103,7 +1110,7 @@ power = [
      \Gamma_{ijkl}^{\downarrow \downarrow} &=&
         \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\beta} | \Psi \rangle \\
      \Gamma_{ijkl}^{\uparrow \downarrow} &=&
-        \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle 
+        \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle
         + \langle \Psi | \hat{a}^{\dagger}_{l\alpha}\, \hat{a}^{\dagger}_{k\beta} \hat{a}_{i\beta}\, \hat{a}_{j\alpha} | \Psi \rangle \\
    \end{eqnarray*}
    and the spin-summed one-body density matrix is
@@ -1135,25 +1142,25 @@ power = [
    $g_{ik}(\mathbf{r}_1) = \phi_i(\mathbf{r}_1) \phi_k(\mathbf{r}_1)$.
 
    #+NAME: rdm
-   | Variable               | Type           | Dimensions                                              | Description                                                           |
-   |------------------------+----------------+---------------------------------------------------------+-----------------------------------------------------------------------|
-   | ~1e~                   | ~float~        | ~(mo.num, mo.num)~                                      | One body density matrix                                               |
-   | ~1e_up~                | ~float~        | ~(mo.num, mo.num)~                                      | \uparrow-spin component of the one body density matrix                |
-   | ~1e_dn~                | ~float~        | ~(mo.num, mo.num)~                                      | \downarrow-spin component of the one body density matrix              |
-   | ~1e_transition~        | ~float~        | ~(mo.num, mo.num, state.num, state.num)                 | One-particle transition density matrices                              |
-   | ~2e~                   | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | Two-body reduced density matrix (spin trace)                          |
-   | ~2e_upup~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | \uparrow\uparrow component of the two-body reduced density matrix     |
-   | ~2e_dndn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | \downarrow\downarrow component of the two-body reduced density matrix |
-   | ~2e_updn~              | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num)~                      | \uparrow\downarrow component of the two-body reduced density matrix   |
-   | ~2e_transition~        | ~float sparse~ | ~(mo.num, mo.num, mo.num, mo.num, state.num, state.num) | Two-particle transition density matrices                              |
-   | ~2e_cholesky_num~      | ~dim~          |                                                         | Number of Cholesky vectors                                            |
-   | ~2e_cholesky~          | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_cholesky_num)~                 | Cholesky decomposition of the two-body RDM (spin trace)               |
-   | ~2e_upup_cholesky_num~ | ~dim~          |                                                         | Number of Cholesky vectors                                            |
-   | ~2e_upup_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~            | Cholesky decomposition of the two-body RDM (\uparrow\uparrow)         |
-   | ~2e_dndn_cholesky_num~ | ~dim~          |                                                         | Number of Cholesky vectors                                            |
-   | ~2e_dndn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~            | Cholesky decomposition of the two-body RDM (\downarrow\downarrow)     |
-   | ~2e_updn_cholesky_num~ | ~dim~          |                                                         | Number of Cholesky vectors                                            |
-   | ~2e_updn_cholesky~     | ~float sparse~ | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~            | Cholesky decomposition of the two-body RDM (\uparrow\downarrow)       |
+  | Variable               | Type           | Row-major Dimensions                                     | Column-major Dimensions                                  | Description                                                           |
+  |------------------------+----------------+----------------------------------------------------------+----------------------------------------------------------+-----------------------------------------------------------------------|
+  | ~1e~                   | ~float~        | ~[mo.num, mo.num]~                                       | ~(mo.num, mo.num)~                                       | One body density matrix                                               |
+  | ~1e_up~                | ~float~        | ~[mo.num, mo.num]~                                       | ~(mo.num, mo.num)~                                       | \uparrow-spin component of the one body density matrix                |
+  | ~1e_dn~                | ~float~        | ~[mo.num, mo.num]~                                       | ~(mo.num, mo.num)~                                       | \downarrow-spin component of the one body density matrix              |
+  | ~1e_transition~        | ~float~        | ~[state.num, state.num, mo.num, mo.num]~                 | ~(mo.num, mo.num, state.num, state.num)~                 | One-particle transition density matrices                              |
+  | ~2e~                   | ~float sparse~ | ~[mo.num, mo.num, mo.num, mo.num]~                       | ~(mo.num, mo.num, mo.num, mo.num)~                       | Two-body reduced density matrix (spin trace)                          |
+  | ~2e_upup~              | ~float sparse~ | ~[mo.num, mo.num, mo.num, mo.num]~                       | ~(mo.num, mo.num, mo.num, mo.num)~                       | \uparrow\uparrow component of the two-body reduced density matrix     |
+  | ~2e_dndn~              | ~float sparse~ | ~[mo.num, mo.num, mo.num, mo.num]~                       | ~(mo.num, mo.num, mo.num, mo.num)~                       | \downarrow\downarrow component of the two-body reduced density matrix |
+  | ~2e_updn~              | ~float sparse~ | ~[mo.num, mo.num, mo.num, mo.num]~                       | ~(mo.num, mo.num, mo.num, mo.num)~                       | \uparrow\downarrow component of the two-body reduced density matrix   |
+  | ~2e_transition~        | ~float sparse~ | ~[state.num, state.num, mo.num, mo.num, mo.num, mo.num]~ | ~(mo.num, mo.num, mo.num, mo.num, state.num, state.num)~ | Two-particle transition density matrices                              |
+  | ~2e_cholesky_num~      | ~dim~          |                                                          |                                                          | Number of Cholesky vectors                                            |
+  | ~2e_cholesky~          | ~float sparse~ | ~[rdm.2e_cholesky_num, mo.num, mo.num]~                  | ~(mo.num, mo.num, rdm.2e_cholesky_num)~                  | Cholesky decomposition of the two-body RDM (spin trace)               |
+  | ~2e_upup_cholesky_num~ | ~dim~          |                                                          |                                                          | Number of Cholesky vectors                                            |
+  | ~2e_upup_cholesky~     | ~float sparse~ | ~[rdm.2e_upup_cholesky_num, mo.num, mo.num]~             | ~(mo.num, mo.num, rdm.2e_upup_cholesky_num)~             | Cholesky decomposition of the two-body RDM (\uparrow\uparrow)         |
+  | ~2e_dndn_cholesky_num~ | ~dim~          |                                                          |                                                          | Number of Cholesky vectors                                            |
+  | ~2e_dndn_cholesky~     | ~float sparse~ | ~[rdm.2e_dndn_cholesky_num, mo.num, mo.num]~             | ~(mo.num, mo.num, rdm.2e_dndn_cholesky_num)~             | Cholesky decomposition of the two-body RDM (\downarrow\downarrow)     |
+  | ~2e_updn_cholesky_num~ | ~dim~          |                                                          |                                                          | Number of Cholesky vectors                                            |
+  | ~2e_updn_cholesky~     | ~float sparse~ | ~[rdm.2e_updn_cholesky_num, mo.num, mo.num]~             | ~(mo.num, mo.num, rdm.2e_updn_cholesky_num)~             | Cholesky decomposition of the two-body RDM (\uparrow\downarrow)       |
 
    #+CALL: json(data=rdm, title="rdm")
 
@@ -1228,7 +1235,7 @@ power = [
    \sum_{p=2}^{N_\text{ord}^b} b_{p+1}\, [f_{\text{ee}}(r_{ij})]^p  - J_{\text{ee},ij}^\infty
    \right]
    \]
-   
+
    $\delta^{\uparrow\downarrow}_{ij}$ is zero when the electrons $i$ and
    $j$ have the same spin, and one otherwise.
 
@@ -1253,9 +1260,9 @@ power = [
    $J_{\text{eN}}$ and $J_{\text{ee}}$ have an asymptotic value of zero:
 
    \[
-   J_{\text{eN}}^{\infty} = 
+   J_{\text{eN}}^{\infty} =
    \frac{a_{1,\alpha}\, \kappa_\alpha^{-1}}{1+a_{2,\alpha}\,
-   \kappa_\alpha^{-1}} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, \kappa_\alpha^{-p} 
+   \kappa_\alpha^{-1}} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, \kappa_\alpha^{-p}
    \]
    \[
    J_{\text{ee},ij}^{\infty} =
@@ -1340,19 +1347,19 @@ power = [
 *** Table of values
 
    #+name: jastrow
-  | Variable      | Type    | Dimensions          | Description                                                     |
-  |---------------+---------+---------------------+-----------------------------------------------------------------|
-  | ~type~        | ~str~   |                     | Type of Jastrow factor: ~CHAMP~ or ~Mu~                         |
-  | ~en_num~      | ~dim~   |                     | Number of Electron-nucleus parameters                           |
-  | ~ee_num~      | ~dim~   |                     | Number of Electron-electron parameters                          |
-  | ~een_num~     | ~dim~   |                     | Number of Electron-electron-nucleus parameters                  |
-  | ~en~          | ~float~ | ~(jastrow.en_num)~  | Electron-nucleus parameters                                     |
-  | ~ee~          | ~float~ | ~(jastrow.ee_num)~  | Electron-electron parameters                                    |
-  | ~een~         | ~float~ | ~(jastrow.een_num)~ | Electron-electron-nucleus parameters                            |
-  | ~en_nucleus~  | ~index~ | ~(jastrow.en_num)~  | Nucleus relative to the eN parameter                            |
-  | ~een_nucleus~ | ~index~ | ~(jastrow.een_num)~ | Nucleus relative to the eeN parameter                           |
-  | ~ee_scaling~  | ~float~ |                     | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
-  | ~en_scaling~  | ~float~ | ~(nucleus.num)~     | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
+  | Variable      | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                     |
+  |---------------+---------+----------------------+-------------------------+-----------------------------------------------------------------|
+  | ~type~        | ~str~   |                      |                         | Type of Jastrow factor: ~CHAMP~ or ~Mu~                         |
+  | ~en_num~      | ~dim~   |                      |                         | Number of Electron-nucleus parameters                           |
+  | ~ee_num~      | ~dim~   |                      |                         | Number of Electron-electron parameters                          |
+  | ~een_num~     | ~dim~   |                      |                         | Number of Electron-electron-nucleus parameters                  |
+  | ~en~          | ~float~ | ~[jastrow.en_num]~   | ~(jastrow.en_num)~      | Electron-nucleus parameters                                     |
+  | ~ee~          | ~float~ | ~[jastrow.ee_num]~   | ~(jastrow.ee_num)~      | Electron-electron parameters                                    |
+  | ~een~         | ~float~ | ~[jastrow.een_num]~  | ~(jastrow.een_num)~     | Electron-electron-nucleus parameters                            |
+  | ~en_nucleus~  | ~index~ | ~[jastrow.en_num]~   | ~(jastrow.en_num)~      | Nucleus relative to the eN parameter                            |
+  | ~een_nucleus~ | ~index~ | ~[jastrow.een_num]~  | ~(jastrow.een_num)~     | Nucleus relative to the eeN parameter                           |
+  | ~ee_scaling~  | ~float~ |                      |                         | $\kappa$ value in CHAMP Jastrow for electron-electron distances |
+  | ~en_scaling~  | ~float~ | ~[nucleus.num]~      | ~(nucleus.num)~         | $\kappa$ value in CHAMP Jastrow for electron-nucleus distances  |
 
    #+CALL: json(data=jastrow, title="jastrow")
 
@@ -1386,12 +1393,12 @@ power = [
    of $\uparrow$-spin and then all the $\downarrow$-spin.
 
    #+name: qmc
-  | Variable | Type    | Dimensions                   | Description                           |
-  |----------+---------+------------------------------+---------------------------------------|
-  | ~num~    | ~dim~   |                              | Number of 3N-dimensional points       |
-  | ~point~  | ~float~ | ~(3, electron.num, qmc.num)~ | 3N-dimensional points                 |
-  | ~psi~    | ~float~ | ~(qmc.num)~                  | Wave function evaluated at the points |
-  | ~e_loc~  | ~float~ | ~(qmc.num)~                  | Local energy evaluated at the points  |
+  | Variable | Type    | Row-major Dimensions         | Column-major Dimensions      | Description                           |
+  |----------+---------+------------------------------+------------------------------+---------------------------------------|
+  | ~num~    | ~dim~   |                              |                              | Number of 3N-dimensional points       |
+  | ~point~  | ~float~ | ~[qmc.num, electron.num, 3]~ | ~(3, electron.num, qmc.num)~ | 3N-dimensional points                 |
+  | ~psi~    | ~float~ | ~[qmc.num]~                  | ~(qmc.num)~                  | Wave function evaluated at the points |
+  | ~e_loc~  | ~float~ | ~[qmc.num]~                  | ~(qmc.num)~                  | Local energy evaluated at the points  |
 
    #+CALL: json(data=qmc, title="qmc", last=1)
 
@@ -1421,7 +1428,7 @@ for line in data:
     name = '"'+line[0]+'"'
     typ  = '"'+line[1]+'"'
     dims = line[2]
-    if '(' in dims:
+    if '[' in dims:
         dims = dims.strip()[1:-1]
         dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
         dims = "[ " + ", ".join(dims) + " ]"
@@ -1437,10 +1444,9 @@ for line in data:
     name = '"'+line[0]+'"'
     typ  = '"'+line[1]+'"'
     dims = line[2]
-    if '(' in dims:
+    if '[' in dims:
         dims = dims.strip()[1:-1]
         dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
-        dims.reverse()
         dims = "[ " + ", ".join(dims) + " ]"
     else:
         if dims.strip() != "":
