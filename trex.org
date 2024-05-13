@@ -128,14 +128,14 @@
 
 ** Periodic boundary calculations (pbc group)
 
-   A single $k$-point per TREXIO file can be stored. The $k$-point is
-   defined in this group.
 
    #+NAME: pbc
-  | Variable   | Type    | Row-major Dimensions | Column-major Dimensions | Description             |
-  |------------+---------+----------------------+-------------------------+-------------------------|
-  | ~periodic~ | ~int~   |                      |                         | ~1~: true or ~0~: false |
-  | ~k_point~  | ~float~ | ~[3]~                | ~(3)~                   | $k$-point sampling      |
+  | Variable         | Type    | Row-major Dimensions | Column-major Dimensions | Description             |
+  |------------------+---------+----------------------+-------------------------+-------------------------|
+  | ~periodic~       | ~int~   |                      |                         | ~1~: true or ~0~: false |
+  | ~k_point_num~    | ~dim~   |                      |                         | Number of $k$-points    |
+  | ~k_point~        | ~float~ | ~[3]~                | ~(3)~                   | $k$-point sampling      |
+  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~  | ~(pbc.k_point_num)~     | $k$-point weight        |
 
    #+CALL: json(data=pbc, title="pbc")
 
@@ -143,8 +143,10 @@
    :results:
    #+begin_src python :tangle trex.json
        "pbc": {
-           "periodic" : [ "int"  , []      ]
-         ,  "k_point" : [ "float", [ "3" ] ]
+                 "periodic" : [ "int"  , []                         ]
+         ,    "k_point_num" : [ "dim"  , []                         ]
+         ,        "k_point" : [ "float", [ "pbc.k_point_num", "3" ] ]
+         , "k_point_weight" : [ "float", [ "pbc.k_point_num" ]      ]
        } ,
    #+end_src
    :end:
@@ -826,6 +828,13 @@ power = [
   | ~occupation~     | ~float~ | ~[mo.num]~           | ~(mo.num)~              | Occupation number                                                        |
   | ~energy~         | ~float~ | ~[mo.num]~           | ~(mo.num)~              | For canonical MOs, corresponding eigenvalue                              |
   | ~spin~           | ~int~   | ~[mo.num]~           | ~(mo.num)~              | For UHF wave functions, 0 is $\alpha$ and 1 is $\beta$                   |
+  | ~k_point~        | ~index~ | ~[mo.num]~           | ~(mo.num)~              | For periodic calculations, the $k$ point to which each MO belongs        |
+
+   **Warning**: ~mo.num~ is the total number of MOs stored in the file.
+   For periodic calculations, this group contains all the MOs
+   belonging to all $k$ points so ~mo.num~ will be the sum of the
+   numbers of MOs in each $k$ point. For UHF wave functions, ~mo.num~
+   is the number of spin-orbitals, twice the number of spatial orbitals.
 
    #+CALL: json(data=mo, title="mo")
 
@@ -842,9 +851,11 @@ power = [
          ,     "occupation" : [ "float", [ "mo.num" ]           ]
          ,         "energy" : [ "float", [ "mo.num" ]           ]
          ,           "spin" : [ "int"  , [ "mo.num" ]           ]
+         ,        "k_point" : [ "index", [ "mo.num" ]           ]
        } ,
    #+end_src
    :end:
+
 
 *** One-electron integrals (~mo_1e_int~ group)
 
