@@ -343,7 +343,8 @@ typedef int32_t trexio_exit_code;
   #+begin_src f90 :tangle prefix_fortran.f90
 module trexio
 
-  use, intrinsic :: iso_c_binding
+  use, intrinsic :: iso_c_binding, only : c_int32_t, c_int64_t, c_double, c_size_t, c_bool
+  use, intrinsic :: iso_c_binding, only : c_float, c_char, c_new_line, c_null_char
   implicit none
 
   integer, parameter :: trexio_exit_code  = c_int32_t
@@ -820,7 +821,6 @@ trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING
   #+begin_src f90 :tangle prefix_fortran.f90 :noexport :noweb yes
 interface
    subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_exit_code), intent(in), value :: error
      character(kind=c_char), intent(out)          :: string(<<MAX_STRING_LENGTH()>>)
@@ -1488,8 +1488,8 @@ trexio_open(const char* file_name, const char mode,
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_t) function trexio_open_c (filename, mode, back_end, rc_open) bind(C, name="trexio_open")
-     use, intrinsic :: iso_c_binding
+   integer(trexio_t) function trexio_open_c (filename, mode, back_end, rc_open) &
+        bind(C, name="trexio_open")
      import
      character(kind=c_char), dimension(*)          :: filename
      character(kind=c_char), intent(in), value     :: mode
@@ -1566,7 +1566,6 @@ trexio_exit_code trexio_set_one_based(trexio_t* file)
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_set_one_based(trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_set_one_based
@@ -1674,7 +1673,6 @@ trexio_close (trexio_t* file)
     #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_close (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_close
@@ -1752,7 +1750,6 @@ trexio_flush (trexio_t* file)
     #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_flush (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_flush
@@ -1834,7 +1831,6 @@ trexio_inquire (const char* file_name)
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_inquire_c (filename) bind(C, name="trexio_inquire")
-     use, intrinsic :: iso_c_binding
      import
      character(kind=c_char), dimension(*)       :: filename
    end function trexio_inquire_c
@@ -1947,7 +1943,6 @@ trexio_cp(const char* source, const char* dest)
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_cp_c (source, destination) bind(C, name="trexio_cp")
-     use, intrinsic :: iso_c_binding
      import
      character(kind=c_char), dimension(*)          :: source, destination
    end function trexio_cp_c
@@ -2059,7 +2054,6 @@ trexio_get_state (trexio_t* file, int32_t* const num)
     #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_set_state (trex_file, state) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(in), value :: state
@@ -2068,7 +2062,6 @@ end interface
 
 interface
    integer(trexio_exit_code) function trexio_get_state (trex_file, state) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(out)       :: state
@@ -2322,7 +2315,6 @@ trexio_has_$group$ (trexio_t* const file)
      #+begin_src f90 :tangle has_group_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_$group$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group$
@@ -2609,7 +2601,6 @@ trexio_has_$group_num$ (trexio_t* const file)
      #+begin_src f90 :tangle write_attr_num_64_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_write_$group_num$_64 (trex_file, num) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(in), value :: num
@@ -2620,7 +2611,6 @@ end interface
      #+begin_src f90 :tangle read_attr_num_64_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_read_$group_num$_64 (trex_file, num) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(out) :: num
@@ -2631,7 +2621,6 @@ end interface
      #+begin_src f90 :tangle write_attr_num_32_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_write_$group_num$_32 (trex_file, num) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(in), value :: num
@@ -2642,7 +2631,6 @@ end interface
      #+begin_src f90 :tangle read_attr_num_32_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_read_$group_num$_32 (trex_file, num) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(out) :: num
@@ -2653,7 +2641,6 @@ end interface
      #+begin_src f90 :tangle write_attr_num_def_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_write_$group_num$ (trex_file, num) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(in), value :: num
@@ -2664,7 +2651,6 @@ end interface
      #+begin_src f90 :tangle read_attr_num_def_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_read_$group_num$ (trex_file, num) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(out) :: num
@@ -2675,7 +2661,6 @@ end interface
      #+begin_src f90 :tangle has_attr_num_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_$group_num$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_num$
@@ -3267,7 +3252,6 @@ trexio_has_$group_dset$ (trexio_t* const file)
      #+begin_src f90 :tangle write_dset_data_64_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_write_$group_dset$_64 (trex_file, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(in) :: dset$group_dset_f_dims$
@@ -3278,7 +3262,6 @@ end interface
      #+begin_src f90 :tangle read_dset_data_64_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_64 (trex_file, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(out) :: dset$group_dset_f_dims$
@@ -3289,7 +3272,6 @@ end interface
      #+begin_src f90 :tangle write_dset_data_32_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_write_$group_dset$_32 (trex_file, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(in) :: dset$group_dset_f_dims$
@@ -3300,7 +3282,6 @@ end interface
      #+begin_src f90 :tangle read_dset_data_32_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_32 (trex_file, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(out) :: dset$group_dset_f_dims$
@@ -3311,7 +3292,6 @@ end interface
      #+begin_src f90 :tangle write_dset_data_def_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_write_$group_dset$ (trex_file, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(in) :: dset$group_dset_f_dims$
@@ -3322,7 +3302,6 @@ end interface
      #+begin_src f90 :tangle read_dset_data_def_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_read_$group_dset$ (trex_file, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(out) :: dset$group_dset_f_dims$
@@ -3333,7 +3312,6 @@ end interface
      #+begin_src f90 :tangle has_dset_data_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -3890,7 +3868,6 @@ interface
    integer(trexio_exit_code) function trexio_write_$group_dset$ (trex_file, &
                                                offset_file, buffer_size, &
                                                index_sparse, value_sparse) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -3905,7 +3882,6 @@ interface
                                                     offset_file, buffer_size, &
                                                     index_sparse, index_size, &
                                                     value_sparse, value_size) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -3923,7 +3899,6 @@ interface
    integer(trexio_exit_code) function trexio_read_$group_dset$ (trex_file, &
                                               offset_file, buffer_size, &
                                               index_sparse, value_sparse) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -3938,7 +3913,6 @@ interface
                                                    offset_file, buffer_size, &
                                                    index_sparse, index_size, &
                                                    value_sparse, value_size) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -3955,7 +3929,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_size (trex_file, &
                                                    size_max) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(out) :: size_max
@@ -3966,7 +3939,6 @@ end interface
      #+begin_src f90 :tangle has_dset_sparse_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -4446,7 +4418,6 @@ trexio_has_$group_dset$ (trexio_t* const file)
      #+begin_src f90 :tangle write_dset_str_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_write_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      character(kind=c_char), intent(in)    :: dset(*)
@@ -4458,7 +4429,6 @@ end interface
      #+begin_src f90 :tangle read_dset_str_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(c_int64_t), intent(in), value  :: trex_file
      character(kind=c_char), intent(out)    :: dset(*)
@@ -4470,7 +4440,6 @@ end interface
      #+begin_src f90 :tangle has_dset_str_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -4826,7 +4795,6 @@ trexio_has_$group_dset$ (trexio_t* const file)
 interface
    integer(trexio_exit_code) function trexio_write_$group_dset$(trex_file, &
                                                offset_file, buffer_size, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4839,7 +4807,6 @@ interface
    integer(trexio_exit_code) function trexio_write_safe_$group_dset$ (trex_file, &
                                                     offset_file, buffer_size, &
                                                     dset, dset_size) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4855,7 +4822,6 @@ interface
    integer(trexio_exit_code) function trexio_read_safe_$group_dset$ (trex_file, &
                                                    offset_file, buffer_size, &
                                                    dset, dset_size) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4868,7 +4834,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_read_$group_dset$(trex_file, &
                                               offset_file, buffer_size, dset) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4880,7 +4845,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_read_$group_dset$_size (trex_file, &
                                                    size_max) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(out) :: size_max
@@ -4891,7 +4855,6 @@ end interface
      #+begin_src f90 :tangle has_buffered_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -5171,7 +5134,6 @@ trexio_has_$group_str$ (trexio_t* const file)
 interface
    integer(trexio_exit_code) function trexio_write_$group_str$_c (trex_file, str, max_str_len) &
            bind(C, name="trexio_write_$group_str$")
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value  :: trex_file
      character(kind=c_char), intent(in)    :: str(*)
@@ -5184,7 +5146,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_read_$group_str$_c (trex_file, str, max_str_len) &
            bind(C, name="trexio_read_$group_str$")
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value  :: trex_file
      character(kind=c_char), intent(out)   :: str(*)
@@ -5196,7 +5157,6 @@ end interface
      #+begin_src f90 :tangle has_attr_str_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_$group_str$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value  :: trex_file
    end function trexio_has_$group_str$
@@ -5217,7 +5177,6 @@ end interface
 
   #+begin_src f90 :tangle helper_write_attr_str_front_fortran.fh_90
    integer(trexio_exit_code) function trexio_write_$group_str$ (trex_file, str, max_str_len)
-     use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
      integer(trexio_t), intent(in), value  :: trex_file
      integer(c_int32_t), intent(in), value :: max_str_len
@@ -5355,7 +5314,6 @@ trexio_delete_$group$ (trexio_t* const file)
      #+begin_src f90 :tangle delete_group_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_delete_$group$ (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value  :: trex_file
    end function trexio_delete_$group$
@@ -5609,7 +5567,6 @@ trexio_has_determinant_list (trexio_t* const file)
 interface
    integer(trexio_exit_code) function trexio_write_determinant_list (trex_file, &
                                                offset_file, buffer_size, list) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5622,7 +5579,6 @@ interface
    integer(trexio_exit_code) function trexio_write_safe_determinant_list (trex_file, &
                                                     offset_file, buffer_size, &
                                                     list, list_size) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5637,7 +5593,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_read_determinant_list(trex_file, &
                                               offset_file, buffer_size, list) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5650,7 +5605,6 @@ interface
    integer(trexio_exit_code) function trexio_read_safe_determinant_list (trex_file, &
                                                    offset_file, buffer_size, &
                                                    list, list_size) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5664,7 +5618,6 @@ end interface
      #+begin_src f90 :tangle has_determinant_front_fortran.f90
 interface
    integer(trexio_exit_code) function trexio_has_determinant_list (trex_file) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_determinant_list
@@ -5672,7 +5625,6 @@ end interface
 
 interface
    integer(trexio_exit_code) function trexio_get_int64_num (trex_file, num) bind(C)
-     use, intrinsic :: iso_c_binding
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(out) :: num
@@ -6333,7 +6285,6 @@ trexio_mark_safety (trexio_t* const file, const int32_t safety_flag)
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
    integer function trexio_info () bind(C)
-     use, intrinsic :: iso_c_binding
    end function trexio_info
 end interface
    #+end_src
@@ -6342,7 +6293,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_to_bitfield_list_c(list, occupied_num, det_list, N_int) &
    bind(C, name="trexio_to_bitfield_list")
-     use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in)        :: list(*)
      integer(c_int32_t), intent(in), value :: occupied_num
@@ -6356,7 +6306,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_to_orbital_list_c(N_int, d1, list, occupied_num) &
    bind(C, name="trexio_to_orbital_list")
-     use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in), value :: N_int
      integer(c_int64_t), intent(in)        :: d1(*)
@@ -6370,7 +6319,6 @@ end interface
 interface
    integer(trexio_exit_code) function trexio_to_orbital_list_up_dn_c(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn) &
    bind(C, name="trexio_to_orbital_list_up_dn")
-     use, intrinsic :: iso_c_binding
      import
      integer(c_int32_t), intent(in), value :: N_int
      integer(c_int64_t), intent(in)        :: d1(*)
@@ -6386,7 +6334,6 @@ end interface
 interface
   integer(trexio_exit_code) function trexio_convert_nao_radius_32(r, grid_r, log_r_out) &
   bind(C, name="trexio_convert_nao_radius_32")
-    use, intrinsic :: iso_c_binding
     import
     real(c_float), intent(in), value  :: r
     real(c_float), intent(in)  :: grid_r(*)
@@ -6399,7 +6346,6 @@ end interface
 interface
   integer(trexio_exit_code) function trexio_convert_nao_radius_64(r, grid_r, log_r_out) &
   bind(C, name="trexio_convert_nao_radius_64")
-    use, intrinsic :: iso_c_binding
     import
     real(c_double), intent(in), value  :: r
     real(c_double), intent(in)  :: grid_r(*)
@@ -6413,7 +6359,6 @@ interface
   integer(trexio_exit_code) function trexio_evaluate_nao_radial (shell_index, r, &
           grid_start, grid_size, grid_r, interpolator, normalization, amplitude) &
   bind(C, name="trexio_evaluate_nao_radial")
-    use, intrinsic :: iso_c_binding
     import
     integer(c_int32_t), intent(in), value  :: shell_index
     real(c_double), intent(in), value   :: r
@@ -6434,7 +6379,6 @@ interface
           grid_start, grid_size, grid_r, interpolator, &
           normalization, rx, ry, rz, amplitudes) &
   bind(C, name="trexio_evaluate_nao_radial_all")
-    use, intrinsic :: iso_c_binding
     import
     integer(c_int32_t), intent(in), value  :: shell_num
     integer(c_int32_t), intent(in) :: nucleus_index(*)
@@ -6655,7 +6599,6 @@ def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
   #+begin_src f90 :tangle helper_fortran.f90
 contains
    integer(trexio_t) function trexio_open (filename, mode, back_end, rc_open)
-     use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
      character(len=*), intent(in)                    :: filename
      character, intent(in), value                    :: mode
@@ -6683,7 +6626,6 @@ contains
 
   #+begin_src f90 :tangle helper_fortran.f90
    integer(trexio_exit_code) function trexio_inquire (filename)
-     use, intrinsic :: iso_c_binding
      implicit none
      character(len=*), intent(in)        :: filename
      character(len=len_trim(filename)+1) :: filename_c
@@ -6697,7 +6639,6 @@ contains
 
   #+begin_src f90 :tangle helper_fortran.f90
   integer(trexio_exit_code) function trexio_cp (source, destination)
-    use, intrinsic :: iso_c_binding
     implicit none
     character(len=*), intent(in)           :: source
     character(len=*), intent(in)           :: destination
@@ -6715,7 +6656,6 @@ contains
 
   #+begin_src f90 :tangle helper_fortran.f90
    integer(trexio_exit_code) function trexio_to_bitfield_list(list, occupied_num, det_list, N_int)
-     use, intrinsic :: iso_c_binding
      implicit none
 
      integer(c_int32_t), intent(in)        :: list(*)
@@ -6738,7 +6678,6 @@ contains
 
 
    integer(trexio_exit_code) function trexio_to_orbital_list(N_int, d1, list, occupied_num)
-     use, intrinsic :: iso_c_binding
      implicit none
 
      integer(c_int32_t), intent(in), value :: N_int
@@ -6760,7 +6699,6 @@ contains
 
 
    integer(trexio_exit_code) function trexio_to_orbital_list_up_dn(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn)
-     use, intrinsic :: iso_c_binding
      implicit none
      integer(c_int32_t), intent(in), value :: N_int
      integer(c_int64_t), intent(in)        :: d1(*)
@@ -6791,7 +6729,6 @@ contains
 
   #+begin_src f90 :tangle helper_fortran.f90
    subroutine trexio_strarray2str(str_array, max_num_str, max_len_str, str_res)
-     use, intrinsic :: iso_c_binding, only : c_null_char
      implicit none
 
      integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in strign array
