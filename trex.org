@@ -332,6 +332,20 @@
     kinetic energy cutoff ~e_cut~ is the only input data relevant to
     plane waves.
 
+*** Oscillating orbitals
+
+    Basis functions can be made oscillating as
+    \[
+    R_s(\mathbf{r}) = \mathcal{N}_s \vert\mathbf{r}-\mathbf{R}_A\vert^{n_s}
+    \sum_{k=1}^{N_{\text{prim}}} a_{ks}\, f_{ks}(\gamma_{ks},p)\,
+    \exp \left( - \gamma_{ks}
+    \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right)\, \cos \left( \beta_{ks} \vert \mathbf{r}-\mathbf{R}_A \vert ^q \right)
+    \]
+    
+    Oscillation kind can be:
+    - ~Cos1~ for $q=1$
+    - ~Cos2~ for $q=2$
+    
 *** Data definitions
 
     #+NAME: basis
@@ -350,7 +364,11 @@
   | ~nao_grid_size~     | ~dim~   | ~[basis.shell_num]~                            | ~(basis.shell_num)~                            | Number of data points per numerical orbital                                  |
   | ~shell_index~       | ~index~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | One-to-one correspondence between primitives and shell index                 |
   | ~exponent~          | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Exponents of the primitives ($\gamma_{ks}$)                                  |
+  | ~exponent_im~       | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Imaginary part of the exponents of the primitives ($\gamma_{ks}$)            |
   | ~coefficient~       | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Coefficients of the primitives ($a_{ks}$)                                    |
+  | ~coefficient_im~    | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Imaginary part of the coefficients of the primitives ($a_{ks}$)              |
+  | ~oscillation_arg~   | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Additional argument to have oscillating orbitals ($\beta_{ks}$)              |
+  | ~oscillation_kind~  | ~str~   |                                                |                                                | Kind of Oscillating function:"Cos1" or "Cos2"                                |
   | ~prim_factor~       | ~float~ | ~[basis.prim_num]~                             | ~(basis.prim_num)~                             | Normalization coefficients for the primitives ($f_{ks}$)                     |
   | ~e_cut~             | ~float~ |                                                |                                                | Energy cut-off for plane-wave calculations                                   |
   | ~nao_grid_radius~   | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Radii of grid points for numerical orbitals                                  |
