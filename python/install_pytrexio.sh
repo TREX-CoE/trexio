@@ -63,8 +63,6 @@ else
     export H5_CFLAGS=${H5_CFLAGS_LOCAL}
 fi
 
-python3 -m venv trexio-venv
-source trexio-venv/bin/activate
 
 # Install/upgrade packages required for the installation
 python3 -m pip install build
