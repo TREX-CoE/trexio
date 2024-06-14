@@ -313,14 +313,14 @@ numpy_i       = $(srcdir)/src/numpy.i
 
 if HAVE_HDF5
 python-test: $(TEST_PY)
-  source python/trexio-venv/bin/activate
+	source python/trexio-venv/bin/activate
 	python3 -m pytest -v --all $(TEST_PY)
 	$(RM) -r  -- __pycache__
 	$(RM) -f  -- test_file_py.h5 unsafe_test_file_py.h5
 	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
 else
 python-test: $(TEST_PY)
-  source python/trexio-venv/bin/activate
+	source python/trexio-venv/bin/activate
 	python3 -m pytest -v $(TEST_PY)
 	$(RM) -r  -- __pycache__
 	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
