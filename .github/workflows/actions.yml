@@ -80,13 +80,18 @@ jobs:
           source trexio-venv/bin/activate
 
       - name: install Python API
-        run: make python-install
+        run: |
+          source trexio-venv/bin/activate
+          make python-install
 
       - name: check Python API
-        run: make python-test
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
 
       - name: build and move Python API distribution
         run: |
+          source trexio-venv/bin/activate
           make python-sdist
           cp python/dist/trexio-*.tar.gz .
 
@@ -159,10 +164,13 @@ jobs:
         run: |
           export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
           export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          source trexio-venv/bin/activate
           make python-install
       
       - name: test Python API
-        run: make python-test
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
 
       - name: Archive test log file
         if: failure()
