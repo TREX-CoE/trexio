@@ -63,9 +63,13 @@ else
     export H5_CFLAGS=${H5_CFLAGS_LOCAL}
 fi
 
+python3 -m venv trexio-venv
+source trexio-venv/bin/activate
+
 # Install/upgrade packages required for the installation
-python3 -m pip install --user -r requirements.txt
-python3 -m pip install --user pytest
+python3 -m pip install build
+python3 -m pip install -r requirements.txt
+python3 -m pip install pytest
 
 # export NUMPY_INCLUDEDIR environment variable needed for the proper setup
 #source tools/set_NUMPY_INCLUDEDIR.sh
@@ -92,7 +96,7 @@ python3 -m pip install --user pytest
 python3 -m build --sdist --wheel --outdir dist/
 
 # Install pytrexio in the current environment from the aforementioned wheel
-python3 -m pip install --user dist/trexio-*.whl --force-reinstall
+python3 -m pip install dist/trexio-*.whl --force-reinstall
 
 # Run the command below in the root directory to install the package in 'editable' (-e) mode without dependencies (--no-deps)
 #python -m pip install -e . --no-deps
