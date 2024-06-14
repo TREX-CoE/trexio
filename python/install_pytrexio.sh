@@ -64,7 +64,6 @@ else
 fi
 
 # Install/upgrade packages required for the installation
-python3 -m pip install --user build
 python3 -m pip install --user -r requirements.txt
 python3 -m pip install --user pytest
 
