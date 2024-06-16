@@ -63,8 +63,9 @@ else
     export H5_CFLAGS=${H5_CFLAGS_LOCAL}
 fi
 
+
 # Install/upgrade packages required for the installation
-python3 -m pip install --upgrade setuptools build pip
+python3 -m pip install build
 python3 -m pip install -r requirements.txt
 python3 -m pip install pytest
 

@@ -15,7 +15,7 @@ jobs:
 
   get_commit_message:
     name: Get commit message
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
@@ -33,7 +33,7 @@ jobs:
 
   trexio_ubuntu:
     name: x86 Ubuntu 20.04
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: get_commit_message
 
     steps:
@@ -53,8 +53,8 @@ jobs:
 
       - name: install dependencies
         run: |
-          sudo add-apt-repository ppa:kelleyk/emacs
-          sudo apt-get install libhdf5-dev emacs26
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev emacs
 
       - name: configure with autotools
         run: |
@@ -74,19 +74,24 @@ jobs:
           name: test-report-ubuntu
           path: test-suite.log
 
-      - name: create virtual environment
+      - name: create venv
         run: |
-          python3 -m venv --clear pytrexio-venv
-          source pytrexio-venv/bin/activate
+          python3 -m venv trexio-venv
+          source trexio-venv/bin/activate
 
       - name: install Python API
-        run: make python-install
+        run: |
+          source trexio-venv/bin/activate
+          make python-install
 
       - name: check Python API
-        run: make python-test
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
 
       - name: build and move Python API distribution
         run: |
+          source trexio-venv/bin/activate
           make python-sdist
           cp python/dist/trexio-*.tar.gz .
 
@@ -105,7 +110,7 @@ jobs:
       - name: reconfigure with clang and AddressSanitizer
         run: |
           ./autogen.sh
-          ./configure CC=clang-11 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
+          ./configure CC=clang-15 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
 
       - name: recompile TREXIO
         run: make -j2
@@ -124,8 +129,8 @@ jobs:
         run: make maintainer-clean
 
   trexio_macos:
-    name: x86 MacOS 12
-    runs-on: macos-12
+    name: arm64 MacOS
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
@@ -135,6 +140,8 @@ jobs:
           brew install emacs
           brew install hdf5
           brew install automake
+          brew install libtool
+          brew install swig
           brew --prefix hdf5
 
       - name: configure with autotools
@@ -148,14 +155,22 @@ jobs:
       - name: check TREXIO
         run: make -j3 check
       
+      - name: create venv
+        run: |
+          python3 -m venv trexio-venv
+          source trexio-venv/bin/activate
+
       - name: compile Python API
         run: |
           export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
           export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          source trexio-venv/bin/activate
           make python-install
       
       - name: test Python API
-        run: make python-test
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
 
       - name: Archive test log file
         if: failure()
