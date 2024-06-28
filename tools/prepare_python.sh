@@ -11,7 +11,11 @@ fi
 
 DO_HDF5=0
 if [[ -z ${1} ]] && [[ "${1}" == "--without-hdf5" ]] ; then
-  echo "Compiling Python API without the HDF5 back end."
+  echo ""
+  echo "******************** WARNING **********************"
+  echo "* Compiling Python API without the HDF5 back end. *"
+  echo "***************************************************"
+  echo ""
   DO_HDF5=1
 else
   echo "Compiling Python API with the HDF5 back end."
