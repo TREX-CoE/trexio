@@ -74,11 +74,11 @@ jobs:
           brew install swig
           brew install wget
 
-          #- uses: actions/cache@v3
-          #  id: cache
-          #  with:
-          #    path: $HDF5_INSTALLDIR
-          #    key: ${{ matrix.buildplat[0] }}-hdf5
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: $HDF5_INSTALLDIR
+          key: ${{ matrix.buildplat[0] }}-hdf5
 
       - name: install hdf5
         if: steps.cache.outputs.cache-hit != 'true'
@@ -93,7 +93,6 @@ jobs:
           fi
           ./autogen.sh
           ./configure CC=gcc-12 --prefix $HDF5_INSTALLDIR --enable-build-mode=production --with-szlib
-          echo "PWD is $PWD"
           make -j3
           make install
 
@@ -111,6 +110,7 @@ jobs:
       - name: cleanup python 
         run: |
           rm -rf src/ tools/ 
+          mv python/test/* .
           mv python/* .
 
       - name: Build wheels
@@ -123,7 +123,7 @@ jobs:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_ENVIRONMENT: H5_CFLAGS="-I/Users/runner/work/trexio/trexio/hdf5/include" H5_LDFLAGS="-L/Users/runner/work/trexio/trexio/hdf5/lib"
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: "python3 -m pytest -v --all test/test_api.py"
+          CIBW_TEST_COMMAND: "python3 -m pytest -v --all test_api.py"
 
 
       - uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
