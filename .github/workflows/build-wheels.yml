@@ -80,22 +80,23 @@ jobs:
           tar -xzf hdf5-1_12_3.tar.gz
           cd  hdf5-hdf5-1_12_3
           ./autogen.sh
-          ./configure CC=gcc-12 --prefix $HDF5_INSTALLDIR --enable-build-mode=production --with-szlib
+          ./configure CC=gcc-12 --prefix ${PWD}/../hdf5 --enable-build-mode=production --with-szlib
+          echo "PWD is $PWD"
           make -j3
           make install
 
       - name: configure with autotools
         run: |
           ./autogen.sh
-          export PATH=${PATH}:${HDF5_INSTALLDIR}/bin
+          export PATH=${PATH}:${PWD}/hdf5/bin
           ./configure FC=gfortran-12 --enable-silent-rules
           make -j3
           make -j3 check
           
       - name: prepare python 
         run: |
-          export  H5_CFLAGS="-I${HDF5_INCLUDEDIR}/include"
-          export H5_LDFLAGS="-L${HDF5_INCLUDEDIR}/lib"
+          export  H5_CFLAGS="-I${PWD}/bin/include"
+          export H5_LDFLAGS="-L${PWD}/bin/lib"
           make python-install
 
       - name: cleanup python 
@@ -111,9 +112,9 @@ jobs:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_ENVIRONMENT_LINUX: H5_CFLAGS="-I/tmp/hdf5/include" H5_LDFLAGS="-L/tmp/hdf5/lib"
+          CIBW_ENVIRONMENT_LINUX: H5_CFLAGS="-I${PWD}/hdf5/include" H5_LDFLAGS="-L${PWD}/hdf5/lib"
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMANDS: "pytest -v --all python/test/test_api.py"
+          CIBW_TEST_COMMAND: "pytest -v --all test/test_api.py"
 
 
       - uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
