@@ -64,26 +64,36 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: install dependencies
+        run: |
+          brew install emacs
+          brew install hdf5@1.14
+          brew install automake
+          brew install libtool
+          brew install swig
+          brew --prefix hdf5
+
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          ./configure FC=gfortran-12 --enable-silent-rules
+
+      - name: compile TREXIO
+        run: make -j3
+
+      - name: prepare the repo
+        run: |
+          cd tools 
+          ./prepare_python.sh
+          rm -rf ../src/ ../tools/ 
+          mv ../python/* ..
+
       - name: Build wheels
         uses: pypa/cibuildwheel@bd033a44476646b606efccdd5eed92d5ea1d77ad  # v2.20.0
         env:
           CIBW_PRERELEASE_PYTHONS: False
           CIBW_FREE_THREADED_SUPPORT: False
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
-          CIBW_BEFORE_ALL: >
-            brew install hdf5@1.14 -y &&
-            brew install swig -y &&
-            brew install emacs -y &&
-            brew install automake -y &&
-            brew install libtool -y &&
-            ./autogen.sh &&
-            ./configure FC=gfortran-12 --enable-silent-rules &&
-            make -j3 
-          CIBW_BEFORE_BUILD: > 
-            cd tools &&
-            ./prepare_python.sh &&
-            rm -rf ../src/ ../tools/ &&
-            mv ../python/* ..
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BUILD_FRONTEND: "build"
           CIBW_ENVIRONMENT_LINUX: H5_CFLAGS="-I$(brew --prefix hdf5)/include" H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
