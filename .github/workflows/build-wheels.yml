@@ -77,16 +77,12 @@ jobs:
         run: |
           ./autogen.sh
           ./configure FC=gfortran-12 --enable-silent-rules
-
-      - name: compile TREXIO
-        run: make -j3
-
-      - name: prepare the repo
-        run: |
+          make -j3
           cd tools 
           ./prepare_python.sh
-          rm -rf ../src/ ../tools/ 
-          mv ../python/* ..
+          cd ..
+          rm -rf src/ tools/ 
+          mv python/* .
 
       - name: Build wheels
         uses: pypa/cibuildwheel@bd033a44476646b606efccdd5eed92d5ea1d77ad  # v2.20.0
