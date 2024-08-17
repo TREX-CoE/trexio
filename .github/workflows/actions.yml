@@ -105,29 +105,29 @@ jobs:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
 
-            #     - name: maintainer clean
-            #       run: make maintainer-clean
-            #
-            #     - name: reconfigure with clang and AddressSanitizer
-            #       run: |
-            #         ./autogen.sh
-            #         ./configure CC=clang-15 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
-            #
-            #     - name: recompile TREXIO
-            #       run: make -j2
-            #
-            #     - name: recheck TREXIO for memory leaks
-            #       run: make -j2 check
-            #
-            #     - name: Archive test log file
-            #       if: failure()
-            #       uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
-            #       with:
-            #         name: test-report-ubuntu-2
-            #         path: test-suite.log
-            #
-            #     - name: maintainer clean
-            #       run: make maintainer-clean
+      - name: maintainer clean
+        run: make maintainer-clean
+      
+      - name: reconfigure with clang and AddressSanitizer
+        run: |
+          ./autogen.sh
+          ./configure CC=clang-15 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
+      
+      - name: recompile TREXIO
+        run: make -j2
+      
+      - name: recheck TREXIO for memory leaks
+        run: make -j2 check
+      
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        with:
+          name: test-report-ubuntu-2
+          path: test-suite.log
+      
+      - name: maintainer clean
+        run: make maintainer-clean
 
   trexio_macos:
     name: arm64 MacOS
