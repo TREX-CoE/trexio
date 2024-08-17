@@ -74,7 +74,15 @@ jobs:
           brew install swig
           brew install wget
 
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            $HDF5_INSTALLDIR
+        key: ${{ matrix.buildplat[0] }}-hdf5
+
       - name: install hdf5
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_12_3.tar.gz
           tar -xzf hdf5-1_12_3.tar.gz
@@ -89,7 +97,7 @@ jobs:
         run: |
           ./autogen.sh
           export PATH=${PATH}:${HDF5_INSTALLDIR}/bin
-          ./configure --without-fortran --enable-silent-rules
+          ./configure FC=gfortran-12 --enable-silent-rules
           make -j3
           
       - name: prepare python 
