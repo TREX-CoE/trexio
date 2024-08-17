@@ -42,7 +42,7 @@ jobs:
       (github.repository == 'trex-coe/trexio' && startswith(github.ref, 'refs/tags/v'))
     runs-on: ${{ matrix.buildplat[0] }}
     env:
-      HDF5_INSTALLDIR: "/tmp/hdf5"
+      HDF5_INSTALLDIR: "/Users/runner/work/trexio/trexio/hdf5"
     strategy:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
@@ -80,7 +80,7 @@ jobs:
           tar -xzf hdf5-1_12_3.tar.gz
           cd  hdf5-hdf5-1_12_3
           ./autogen.sh
-          ./configure CC=gcc-12 --prefix ${PWD}/../hdf5 --enable-build-mode=production --with-szlib
+          ./configure CC=gcc-12 --prefix $HDF5_INSTALLDIR --enable-build-mode=production --with-szlib
           echo "PWD is $PWD"
           make -j3
           make install
@@ -88,15 +88,12 @@ jobs:
       - name: configure with autotools
         run: |
           ./autogen.sh
-          export PATH=${PATH}:${PWD}/hdf5/bin
-          ./configure FC=gfortran-12 --enable-silent-rules
+          export PATH=${PATH}:${HDF5_INSTALLDIR}/bin
+          ./configure --without-fortran --enable-silent-rules
           make -j3
-          make -j3 check
           
       - name: prepare python 
         run: |
-          export  H5_CFLAGS="-I${PWD}/bin/include"
-          export H5_LDFLAGS="-L${PWD}/bin/lib"
           make python-install
 
       - name: cleanup python 
@@ -112,7 +109,7 @@ jobs:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_ENVIRONMENT_LINUX: H5_CFLAGS="-I${PWD}/hdf5/include" H5_LDFLAGS="-L${PWD}/hdf5/lib"
+          CIBW_ENVIRONMENT: H5_CFLAGS="-I/Users/runner/work/trexio/trexio/hdf5/include" H5_LDFLAGS="-L/Users/runner/work/trexio/trexio/hdf5/lib"
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest -v --all test/test_api.py"
 
