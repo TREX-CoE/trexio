@@ -74,11 +74,11 @@ jobs:
           brew install swig
           brew install wget
 
-      - uses: actions/cache@v3
-        id: cache
-        with:
-          path: $HDF5_INSTALLDIR
-          key: ${{ matrix.buildplat[0] }}-hdf5
+          #- uses: actions/cache@v3
+          #  id: cache
+          #  with:
+          #    path: $HDF5_INSTALLDIR
+          #    key: ${{ matrix.buildplat[0] }}-hdf5
 
       - name: install hdf5
         if: steps.cache.outputs.cache-hit != 'true'
@@ -86,6 +86,11 @@ jobs:
           wget https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_12_3.tar.gz
           tar -xzf hdf5-1_12_3.tar.gz
           cd  hdf5-hdf5-1_12_3
+          if [[ "$ARCH" == "arm64" ]]; then
+            export MACOSX_DEPLOYMENT_TARGET="11.0"
+          else
+            export MACOSX_DEPLOYMENT_TARGET="10.9"
+          fi
           ./autogen.sh
           ./configure CC=gcc-12 --prefix $HDF5_INSTALLDIR --enable-build-mode=production --with-szlib
           echo "PWD is $PWD"
