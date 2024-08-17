@@ -46,22 +46,9 @@ function build_wheel_for_py()
    PYVERSION=${1}
 
    # derive manylinux glibc tag from the PLAT env variable provided to docker run
-   # this is needed to avoid building wheel for 2010_x86_64 with CPython 3.10
-   # because NumPy does not have wheels for it
    MANYLINUX_TAG=${PLAT:9:4}
-   if [[ ${PYVERSION} -eq 310 ]] && [[ ${MANYLINUX_TAG} -eq 2010 ]]; then
-	echo "Skip build of the wheel for CPython 3.10 on manylinux2010_x86_64"
-	return
-   fi
 
-   # python versions <= 3.7 required additional "m" in the platform tag, e.g. cp37-cp37m
-   if [[ ${PYVERSION} -eq 36 ]] || [[ ${PYVERSION} -eq 37 ]]; then
-       PYM="m"
-   else
-       PYM=""
-   fi
-
-   CPYTHON="cp${PYVERSION}-cp${PYVERSION}${PYM}"
+   CPYTHON="cp${PYVERSION}-cp${PYVERSION}"
 
    # create and activate a virtual environment based on CPython version ${PYVERSION}
    /opt/python/${CPYTHON}/bin/python3 -m venv --clear trexio-manylinux-py${PYVERSION}
@@ -88,7 +75,7 @@ function build_wheel_for_py()
    pytest -v test/test_api.py
 
    # cleaning
-   rm -rf -- dist/ build/ trexio.egg-info/ 
+   rm -rf -- dist/ build/ trexio.egg-info/
    #rm -- test_file_py.h5 unsafe_test_file_py.h5
 
    # deactivate the current environment
@@ -103,7 +90,7 @@ function build_wheel_for_py()
 
 
 # build wheels for all versions of CPython in this container
-for CPYVERSION in 37 38 39 310
+for CPYVERSION in 38 39 310 311 312 313
 do
   build_wheel_for_py ${CPYVERSION}
 done

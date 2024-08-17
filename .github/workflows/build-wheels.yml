@@ -4,7 +4,7 @@ on:
   # Run this workflow after the TREXIO CI completed
   workflow_run:
     workflows: [ "TREXIO CI" ]
-    branches: [ master ]
+    branches: [ test-new-wheels ]
     types:
       - completed
 
@@ -16,12 +16,12 @@ jobs:
   get_commit_message:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Get commit message
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         # Gets the correct commit message for pull request
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -30,8 +30,8 @@ jobs:
         run: |
           set -xe
           COMMIT_MSG=$(git log --no-merges -1 --oneline)
-          echo "::set-output name=message::$COMMIT_MSG"
-
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo github.ref ${{ github.ref }}
 
   build_linux_wheels:
     name: Build Linux wheels for different versions of CPython on manylinux_x86_64
@@ -39,19 +39,19 @@ jobs:
     if: >-
       contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
       (github.repository == 'TREX-CoE/trexio' && startsWith(github.ref, 'refs/tags/v'))
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        manylinux_tag: [2014_x86_64, 2_24_x86_64]
+        manylinux_tag: [2014_x86_64, 2_28_x86_64]
 
     steps:
       - name: Checkout the branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install build dependencies
         run: python -m pip install -U setuptools
@@ -65,7 +65,7 @@ jobs:
       # Conventional download-artifact action does not work for artifact produced in a different workflow,
       # which is the case here (TREXIO CI produced the Python API distribution tarball)
       - name: Download the Python API distribution tarball
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           # Specify the name of the workflow file which uploaded the tarball
           workflow: actions.yml
@@ -89,7 +89,7 @@ jobs:
         working-directory: python
 
       - name: Upload produced wheels as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
         with:
           name: pytrexio-manylinux-${{ matrix.manylinux_tag }}
           path: ./python/wheelhouse/*.whl
@@ -98,27 +98,27 @@ jobs:
   publish_wheels:
     name: Publish all wheels on PyPI
     needs: [build_linux_wheels]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout the branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install build dependencies
         run: python -m pip install -U setuptools twine
 
       - name: Download the build artifacts (wheels) of this workflow
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           path: dist
 
       - name: Download the Python API distribution tarball
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: actions.yml
           workflow_conclusion: success
@@ -135,15 +135,15 @@ jobs:
           ls -sh -w 1
         working-directory: dist
 
-      #- name: Publish distribution 📦 to Test PyPI
-      #  uses: pypa/gh-action-pypi-publish@master
-      #  with:
-      #    password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      #    repository_url: https://test.pypi.org/legacy/
-          #verbose: true
-
-      - name: Publish distribution 📦 to PyPI
+      - name: Publish distribution 📦 to Test PyPI
         uses: pypa/gh-action-pypi-publish@master
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-        #if: startsWith(github.ref, 'refs/tags')
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          #verbose: true
+
+      #- name: Publish distribution 📦 to PyPI
+      #  uses: pypa/gh-action-pypi-publish@master
+      #  with:
+      #    password: ${{ secrets.PYPI_API_TOKEN }}
+      #  #if: startsWith(github.ref, 'refs/tags')
