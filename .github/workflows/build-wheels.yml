@@ -1,12 +1,12 @@
 
 # Controls when the workflow will run
-on:
-  # Run this workflow after the TREXIO CI completed
-  workflow_run:
-    workflows: [ "TREXIO CI" ]
-    #branches: [ master ]
-    types:
-      - completed
+#on:
+#  # Run this workflow after the TREXIO CI completed
+#  workflow_run:
+#    workflows: [ "TREXIO CI" ]
+#    branches: [ master ]
+#    types:
+#      - completed
 
 # Workflow to build and publish wheels.
 # in the get_commit_message job: Include [wheel build] in your commit message to trigger this build.
@@ -14,7 +14,7 @@ name: Build CPython wheels
 jobs:
 
   get_commit_message:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Get commit message
     runs-on: ubuntu-22.04
     outputs:
@@ -30,14 +30,19 @@ jobs:
         run: |
           set -xe
           COMMIT_MSG=$(git log --no-merges -1 --oneline)
-          echo "::set-output name=message::$COMMIT_MSG"
+          RUN="0"
+          if [[ "$COMMIT_MSG" == *"[wheel build]"* ]]; then
+              RUN="1" 
+          fi
+          echo "message=$RUN" >> $GITHUB_OUTPUT
+          echo github.ref ${{ github.ref }}
 
 
   build_linux_wheels:
     name: Build Linux wheels for different versions of CPython on manylinux_x86_64
     needs: get_commit_message
     if: >-
-      contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
+      contains(needs.get_commit_message.outputs.message, '1') ||
       (github.repository == 'TREX-CoE/trexio' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-22.04
     strategy:
