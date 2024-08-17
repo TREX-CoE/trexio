@@ -20,7 +20,7 @@ jobs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
         # Gets the correct commit message for pull request
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -29,11 +29,7 @@ jobs:
         run: |
           set -xe
           COMMIT_MSG=$(git log --no-merges -1 --oneline)
-          RUN="0"
-          if [[ "$COMMIT_MSG" == *"[wheel build]"* ]]; then
-              RUN="1" 
-          fi
-          echo "message=$RUN" >> $GITHUB_OUTPUT
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
           echo github.ref ${{ github.ref }}
 
   trexio_ubuntu:
@@ -102,7 +98,7 @@ jobs:
 
       - name: publish Python API distribution as an artifact
         if: >-
-          contains(needs.get_commit_message.outputs.message, '1') ||
+          contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
           github.event_name == 'release'
         uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
         with:
