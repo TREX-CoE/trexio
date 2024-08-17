@@ -78,9 +78,15 @@ jobs:
           ./autogen.sh
           ./configure FC=gfortran-12 --enable-silent-rules
           make -j3
-          cd tools 
-          ./prepare_python.sh
-          cd ..
+          
+      - name: prepare python 
+        run: |
+          export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
+          export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          make python-install
+
+      - name: cleanup python 
+        run: |
           rm -rf src/ tools/ 
           mv python/* .
 
