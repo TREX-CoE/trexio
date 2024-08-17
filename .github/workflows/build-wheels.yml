@@ -82,8 +82,9 @@ jobs:
           CIBW_BEFORE_BUILD: > 
             cd tools &&
             ./prepare_python.sh &&
-            cd ../python
-          CIBW_BUILD_VERBOSITY: 1
+            rm -rf ../src/ ../tools/ &&
+            mv ../python/* ..
+          CIBW_BUILD_VERBOSITY: 3
           CIBW_BUILD_FRONTEND: "build"
           CIBW_ENVIRONMENT_LINUX: H5_CFLAGS="-I$(brew --prefix hdf5)/include" H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
           CIBW_TEST_REQUIRES: pytest
@@ -94,38 +95,6 @@ jobs:
         with:
           name: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
           path: ./wheelhouse/*.whl
-
-      - name: configure with autotools
-        run: |
-          ./autogen.sh
-          ./configure FC=gfortran-12 --enable-silent-rules
-
-      - name: compile TREXIO
-        run: make -j3
-
-      - name: check TREXIO
-        run: make -j3 check
-      
-      - name: create venv
-        run: |
-          python3 -m venv trexio-venv
-          source trexio-venv/bin/activate
-
-      - name: compile Python API
-        run: |
-
-      
-      - name: test Python API
-        run: |
-          source trexio-venv/bin/activate
-          make python-test
-
-      - name: Archive test log file
-        if: failure()
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
-        with:
-          name: test-report-macos
-          path: test-suite.log
 
 
 
