@@ -71,7 +71,6 @@ jobs:
           brew install automake
           brew install libtool
           brew install swig
-          brew install wget
 
       - uses: actions/cache@v3
         id: cache-hdf5
@@ -187,7 +186,7 @@ jobs:
         working-directory: python
   
       - name: Upload produced wheels as artifacts
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: pytrexio-manylinux-${{ matrix.manylinux_tag }}-wheels
           path: ./python/wheelhouse/*.whl
@@ -197,6 +196,9 @@ jobs:
     name: Publish all wheels on PyPI
     needs: [build_linux_wheels, build_macos_wheels]
     runs-on: ubuntu-22.04
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
   
     steps:
       - name: Checkout the branch
@@ -234,14 +236,11 @@ jobs:
         working-directory: dist
   
       - name: Publish distribution 📦 to Test PyPI
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
           #verbose: true
 
       #- name: Publish distribution 📦 to PyPI
-      #  uses: pypa/gh-action-pypi-publish@master
-      #  with:
-      #    password: ${{ secrets.PYPI_API_TOKEN }}
-      #  #if: startsWith(github.ref, 'refs/tags')
+      #  uses: pypa/gh-action-pypi-publish@release/v1
+      #  ##if: startsWith(github.ref, 'refs/tags')
