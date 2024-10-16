@@ -15,7 +15,7 @@ jobs:
 
   get_commit_message:
     name: Get commit message
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
@@ -29,11 +29,12 @@ jobs:
         run: |
           set -xe
           COMMIT_MSG=$(git log --no-merges -1 --oneline)
-          echo "::set-output name=message::$COMMIT_MSG"
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo github.ref ${{ github.ref }}
 
   trexio_ubuntu:
-    name: x86 Ubuntu 20.04
-    runs-on: ubuntu-20.04
+    name: x86 Ubuntu
+    runs-on: ubuntu-22.04
     needs: get_commit_message
 
     steps:
@@ -53,8 +54,8 @@ jobs:
 
       - name: install dependencies
         run: |
-          sudo add-apt-repository ppa:kelleyk/emacs
-          sudo apt-get install libhdf5-dev emacs26
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev emacs
 
       - name: configure with autotools
         run: |
@@ -69,24 +70,29 @@ jobs:
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: test-report-ubuntu
           path: test-suite.log
 
-      - name: create virtual environment
+      - name: create venv
         run: |
-          python3 -m venv --clear pytrexio-venv
-          source pytrexio-venv/bin/activate
+          python3 -m venv trexio-venv
+          source trexio-venv/bin/activate
 
       - name: install Python API
-        run: make python-install
+        run: |
+          source trexio-venv/bin/activate
+          make python-install
 
       - name: check Python API
-        run: make python-test
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
 
       - name: build and move Python API distribution
         run: |
+          source trexio-venv/bin/activate
           make python-sdist
           cp python/dist/trexio-*.tar.gz .
 
@@ -94,38 +100,42 @@ jobs:
         if: >-
           contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
           github.event_name == 'release'
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
         with:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
 
       - name: maintainer clean
         run: make maintainer-clean
-
+      
       - name: reconfigure with clang and AddressSanitizer
         run: |
           ./autogen.sh
-          ./configure CC=clang-11 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
-
+          ./configure CC=clang-15 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
+      
       - name: recompile TREXIO
         run: make -j2
-
+      
       - name: recheck TREXIO for memory leaks
         run: make -j2 check
-
+      
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
         with:
-          name: test-report-ubuntu-2
+          name: test-report-ubuntu-memory
           path: test-suite.log
-
+      
       - name: maintainer clean
         run: make maintainer-clean
 
   trexio_macos:
-    name: x86 MacOS 12
-    runs-on: macos-12
+    name: x86 and arm64 MacOS
+    strategy:
+      # macos-13 = x86_64 ; macos-14 = aarch64
+      matrix:
+        os: [macos-13, macos-14]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
@@ -133,14 +143,16 @@ jobs:
       - name: install dependencies
         run: |
           brew install emacs
-          brew install hdf5
+          brew install hdf5@1.14
           brew install automake
+          brew install libtool
+          brew install swig
           brew --prefix hdf5
 
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure FC=gfortran-12 --enable-silent-rules
+          ./configure CC=gcc-12 FC=gfortran-12 --enable-silent-rules
 
       - name: compile TREXIO
         run: make -j3
@@ -148,20 +160,28 @@ jobs:
       - name: check TREXIO
         run: make -j3 check
       
+      - name: create venv
+        run: |
+          python3 -m venv trexio-venv
+          source trexio-venv/bin/activate
+
       - name: compile Python API
         run: |
           export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
           export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          source trexio-venv/bin/activate
           make python-install
       
       - name: test Python API
-        run: make python-test
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
         with:
-          name: test-report-macos
+          name: test-report-${{ matrix.os }}
           path: test-suite.log
 
       - name: clean

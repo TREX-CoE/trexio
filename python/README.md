@@ -11,8 +11,8 @@ can be used to convert data from one input/output file format into another.
 
 ## Requirements
 
-- python3 	(>= 3.6)
-- numpy		  (>= 1.17.3)
+- python3  (>= 3.8)
+- numpy    (>= 1.17.3)
 
 ## Installation from PyPI
 
@@ -27,10 +27,6 @@ However, it is good practice to first check for updates of the build-system pack
 **Note: we highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.**
 For more details, see the corresponding part of the [Python documentation](https://docs.python.org/3/library/venv.html#creating-virtual-environments).
 
-**Note: our build farm (GitHub Actions) does not support ARM64 architectures (including the Mac M1/M2 chips). Therefore, `pip install trexio` does not work on an ARM64-based machine. Thus, we recommend to install TREXIO from source on an ARM64-based machine. If one uses a Mac where HDF5 is installed with brew (i.e., `brew install hdf5`), a workaround is to execute the following 2 lines before doing `pip install trexio`:**
-
-- `export H5_CFLAGS="-I$(brew --prefix hdf5)/include"`
-- `export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"`
 
 ## Additional requirements (for installation from source)
 
@@ -50,6 +46,9 @@ For more details, see the corresponding part of the [Python documentation](https
 The following two steps can be skipped if HDF5 is properly configured for `pkg-config` (i.e. if executing `pkg-config --libs hdf5` returns a list of options).
    - `export H5_CFLAGS=-I/path/to/hdf5/include`
    - `export H5_LDFLAGS=-L/path/to/hdf5/lib`
+On MacOS where HDF5 is installed with homebrew (i.e. `brew install hdf5`), one can use the following:
+   - `export H5_CFLAGS="-I$(brew --prefix hdf5)/include"`
+   - `export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"`
 6. `pip install .` (this installs `trexio` in your environment)
 7. `cd test && python -m pytest -v test_api.py` (this executes several tests that verify the installation)
 
