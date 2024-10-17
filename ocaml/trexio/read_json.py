@@ -8,10 +8,10 @@ ml_file   = "trexio.ml"
 mli_file  = ml_file+"i"
 
 def check_version():
-   with open('trexio.opam','r') as f:
+   with open('dune-project','r') as f:
       for line in f:
-         if line.startswith("version"):
-            ocaml_version = line.split(':')[1].strip()[1:-1]
+         if line.startswith("(version"):
+            ocaml_version = line.split()[1].strip().replace(')','')
             break
    with open('../../configure.ac','r') as f:
       for line in f:
