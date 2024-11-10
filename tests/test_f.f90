@@ -79,6 +79,8 @@ subroutine test_write(file_name, back_end)
   double precision :: value_sparse_ao_2e_int_eri(100)
 
   ! determinants
+  integer   :: nup, ndn
+  integer   :: det_occ(10,2)
   integer*8 :: det_list(6, 50)
   integer*8 :: det_num
   integer   :: int_num
@@ -86,6 +88,7 @@ subroutine test_write(file_name, back_end)
   integer :: i, j, n_buffers = 5
   integer(8) :: buf_size_sparse, buf_size_det, offset
   integer   :: state_id
+
 
   buf_size_sparse = 100/n_buffers
   buf_size_det    = 50/n_buffers
@@ -100,10 +103,15 @@ subroutine test_write(file_name, back_end)
   enddo
 
   ! fill determinant list
+  nup = 8
+  ndn = 6
+  det_occ(1:8,1) = (/ 1, 2, 3, 4, 76, 128, 129, 143 /)
+  det_occ(1:6,2) = (/ 1, 3, 4, 80, 81, 139 /)
   do i = 1, 50
-    do j = 1, 6
-      det_list(j,i) = 6*i+(j-1) - 5
-    enddo
+    rc = trexio_to_bitfield_list(det_occ(1:8,1), nup, det_list(1:,i), 8)
+    call trexio_assert(rc, TREXIO_SUCCESS)
+    rc = trexio_to_bitfield_list(det_occ(1:6,2), ndn, det_list(4:,i), 6)
+    call trexio_assert(rc, TREXIO_SUCCESS)
   enddo
 
   ! parameters to be written
@@ -160,6 +168,18 @@ subroutine test_write(file_name, back_end)
 
   rc = trexio_has_nucleus_charge(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2')
+
+  rc = trexio_has_electron_up_num(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2.1')
+
+  rc = trexio_write_electron_up_num(trex_file, nup)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
+  rc = trexio_has_electron_dn_num(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2.2')
+
+  rc = trexio_write_electron_dn_num(trex_file, ndn)
+  call trexio_assert(rc, TREXIO_SUCCESS)
 
   rc = trexio_has_ao_2e_int_eri(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 3')
@@ -313,7 +333,7 @@ subroutine test_read(file_name, back_end)
 
   ! determinant data
   integer*8 :: det_list(6,50)
-  integer*8 :: det_list_check(3)
+  integer*8 :: det_list_check(6)
   integer*8 :: read_buf_det_size = 20
   integer*8 :: offset_det_read = 10
   integer*8 :: offset_det_data_read = 5
@@ -477,17 +497,39 @@ subroutine test_read(file_name, back_end)
   ! read a chunk of determinants
   rc = trexio_read_determinant_list(trex_file, offset_det_read, read_buf_det_size, &
                                     det_list(1, offset_det_data_read + 1))
-  !do  i = 1,50
-  !  write(*,*) det_list(1,i)
-  !enddo
   call trexio_assert(rc, TREXIO_SUCCESS)
-  if (det_list(1, 1) == 0 .and. &
-      det_list(1, offset_det_data_read + 1) == offset_det_read*6 + 1) then
-    write(*,*) 'SUCCESS READ DET LIST'
-  else
-    print *, 'FAILURE DET LIST CHECK'
-    call exit(-1)
-  endif
+  det_list_check = (/15_8,  -9223372036854773760_8, 16385_8, 13_8, 98304_8, 1024_8 /)
+  do  i = 1,offset_det_data_read
+    do j=1,6
+      if (det_list(j,i) /= 0_8) then
+        print *, det_list(j,i)
+        print *, 'FAILURE DET LIST CHECK 1'
+        call exit(-1)
+      endif
+    enddo
+  enddo
+
+  do  i = offset_det_data_read+1, offset_det_data_read+read_buf_det_size
+    do j=1,6
+      if (det_list(j,i) /= det_list_check(j)) then
+        print *, det_list(j,i)
+        print *, 'FAILURE DET LIST CHECK 2'
+        call exit(-1)
+      endif
+    enddo
+  enddo
+
+  do  i = offset_det_data_read+read_buf_det_size+1,50
+    do j=1,6
+      if (det_list(j,i) /= 0_8) then
+        print *, det_list(j,i)
+        print *, 'FAILURE DET LIST CHECK 3'
+        call exit(-1)
+      endif
+    enddo
+  enddo
+
+  write(*,*) 'SUCCESS READ DET LIST'
 
   ! read the total number of stored determinants
   rc = trexio_read_determinant_num_64(trex_file, determinant_num)
@@ -509,7 +551,7 @@ subroutine test_read(file_name, back_end)
   ! Print binary representation of the first integer bit field of a given determinant
   !write(*,'(B64.64)') det_list(1, offset_det_data_read+1)
   call trexio_assert(rc, TREXIO_SUCCESS)
-  if (occ_num_up == 16 .and. occ_num_dn == 5) then
+  if (occ_num_up == 8 .and. occ_num_dn == 6) then
     write(*,*) 'SUCCESS CONVERT DET LIST'
   else
     print *, 'FAILURE DET CONVERT CHECK'

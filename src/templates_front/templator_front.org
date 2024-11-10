@@ -5398,7 +5398,10 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (buffer_size_read == NULL) return TREXIO_INVALID_ARG_3;
+  if (*buffer_size_read < 0) return TREXIO_INVALID_ARG_3;
+  if (dset  == NULL) return TREXIO_INVALID_ARG_4;
   if (trexio_has_determinant_list(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   /* Get the number of int bit fields per determinant */
@@ -5459,7 +5462,9 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (buffer_size < 0) return TREXIO_INVALID_ARG_3;
+  if (dset == NULL) return TREXIO_INVALID_ARG_4;
 
   /* Get the number of int bit fields per determinant */
   int32_t int_num = 0;
@@ -5470,6 +5475,50 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   uint64_t dims[2] = {buffer_size, int_num*2UL};
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
+
+  /* Read the number of mos */
+  int64_t mo_num = 0L;
+  rc = trexio_read_mo_num_64(file, &mo_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  // Read up/dn num 
+  int32_t nup = 0;
+  rc = trexio_read_electron_up_num(file, &nup);
+  if (rc != TREXIO_SUCCESS) return rc;
+  
+  int32_t ndn = 0;
+  rc = trexio_read_electron_dn_num(file, &ndn);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Check all determinants */
+  int32_t list_up[nup];
+  int32_t list_dn[ndn];
+  int32_t occ_num_up;
+  int32_t occ_num_dn;
+  for (int64_t i=0 ; i<buffer_size ; i+= 2*int_num) {
+    rc = trexio_to_orbital_list_up_dn(int_num, &dset[i],
+                                      list_up, list_dn,
+                                      &occ_num_up, &occ_num_dn);
+    if (rc != TREXIO_SUCCESS) return rc;
+    if (occ_num_up != nup || occ_num_dn != ndn) {
+      return TREXIO_INVALID_ARG_4;
+    }
+    for (int32_t j=0 ; j<occ_num_up ; ++j) {
+      if (list_up[j] < 0 || list_up[j] >= mo_num) {
+        return TREXIO_INVALID_ARG_4;
+      }
+    }
+    for (int32_t j=0 ; j<occ_num_dn ; ++j) {
+      if (list_dn[j] < 0 || list_dn[j] >= mo_num) {
+        return TREXIO_INVALID_ARG_4;
+      }
+    }
+    
+  }
+
+  /* Up to this point, all the determinants have been checked to
+     have the correct sizes (number of electrons), and MOs in the
+     correct range */
 
   switch (file->back_end) {
 
