@@ -156,12 +156,13 @@ jobs:
           brew install hdf5@1.14
           brew install automake
           brew install libtool
-          # SWIG 4.3.0 with clang failed CI for macos@aarch64 - lol what? => pinnin for now
-          brew install swig@4.2.1
-          brew --prefix hdf5
-
+          # SWIG 4.3.0 from homebrew with clang failed CI for macos@aarch64 - lol what?
+          pip install swig==4.2.1.post0
+          swig -version
+          
       - name: configure with autotools
         run: |
+          brew --prefix hdf5
           ./autogen.sh
           ./configure CC=gcc-12 FC=gfortran-12 --enable-silent-rules
 
