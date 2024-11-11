@@ -222,6 +222,7 @@ trexio_text_init (trexio_t* const file)
   char file_name[TREXIO_MAX_FILENAME_LENGTH];
 
   strncpy (file_name, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_name[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   strncat (file_name, lock_file_name, TREXIO_MAX_FILENAME_LENGTH-strlen(lock_file_name));
 
   if (file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
@@ -241,6 +242,7 @@ trexio_text_init (trexio_t* const file)
         char dirname[TREXIO_MAX_FILENAME_LENGTH] = "/tmp/trexio.XXXXXX";
         if (mkdtemp(dirname) == NULL) return TREXIO_ERRNO;
         strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
+        file_name[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
         strncat (file_name, lock_file_name, TREXIO_MAX_FILENAME_LENGTH-strlen(lock_file_name));
         f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
         remove(file_name);
@@ -368,6 +370,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
   const char* $group$_file_name = "/$group$.txt";
 
   strncpy ($group$->file_name, file->parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
+  $group$->file_name[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   strncat ($group$->file_name, $group$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
 
@@ -486,6 +489,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
 
             size_t tmp_$group_dset$_len = strlen(buffer);
             strncpy(tmp_$group_dset$, buffer, 32);
+            tmp_$group_dset$[31] = '\0';
             tmp_$group_dset$ += tmp_$group_dset$_len + 1;
           }
         }
@@ -550,6 +554,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           }
           /* Safer string conversion to avoid buffer overflow in fscanf */
           strncpy($group$->$group_str$, buffer, $group$->len_$group_str$);
+          $group$->$group_str$[$group$->len_$group_str$-1] = '\0';
 
         }
       // END REPEAT GROUP_ATTR_STR
@@ -594,6 +599,7 @@ trexio_text_has_$group$ (trexio_t* const file)
   const char* $group$_file_name = "/$group$.txt";
 
   strncpy ($group$_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  $group$_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   strncat ($group$_full_path, $group$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
 
@@ -975,6 +981,7 @@ trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const u
     size_t tmp_len = strlen(dset[i]);
     $group$->$group_dset$[i] = tmp_str;
     strncpy(tmp_str, dset[i], tmp_len);
+    tmp_str[tmp_len-1] = '\0';
     tmp_str += tmp_len + 1;
   }
 
@@ -1023,6 +1030,7 @@ trexio_text_read_$group_str$ (trexio_t* const file, char* const str, const uint3
   if ($group$ == NULL) return TREXIO_FAILURE;
 
   strncpy(str, $group$->$group_str$, max_str_len);
+  str[max_str_len-1] = '\0';
 
   return TREXIO_SUCCESS;
 
@@ -1052,6 +1060,7 @@ trexio_text_write_$group_str$ (trexio_t* const file, const char *str)
   $group$->len_$group_str$ = tmp_len + 1;
 
   strncpy($group$->$group_str$, str, tmp_len + 1);
+  $group$->$group_str$[tmp_len] = '\0';
 
   $group$->to_flush = 1;
 
@@ -1115,6 +1124,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
@@ -1136,12 +1146,15 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   if (size_max < UINT8_MAX) {
     line_length = $sparse_line_length_8$; // 41 for 4 indices
     strncpy(format_str, $sparse_format_printf_8$, 256);
+    format_str[255] = '\0';
   } else if (size_max < UINT16_MAX) {
     line_length = $sparse_line_length_16$; // 49 for 4 indices
     strncpy(format_str, $sparse_format_printf_16$, 256);
+    format_str[255] = '\0';
   } else {
     line_length = $sparse_line_length_32$; //69 for 4 indices
     strncpy(format_str, $sparse_format_printf_32$, 256);
+    format_str[255] = '\0';
   }
   strncat(format_str, "\n", 2);
 
@@ -1191,6 +1204,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group$_file_name));
@@ -1230,6 +1244,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
@@ -1305,6 +1320,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
@@ -1355,6 +1371,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
@@ -1403,6 +1420,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
@@ -1465,6 +1483,7 @@ trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
@@ -1518,6 +1537,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
@@ -1565,6 +1585,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, group_file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(group_file_name));
 
@@ -1593,6 +1614,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
@@ -1665,6 +1687,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
@@ -1747,6 +1770,7 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
@@ -1781,6 +1805,7 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, det_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(det_file_name));
@@ -1809,6 +1834,7 @@ trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file)
 
   /* Copy directory name in file_full_path */
   strncpy (file_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
+  file_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
   /* Append name of the file with sparse data */
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));

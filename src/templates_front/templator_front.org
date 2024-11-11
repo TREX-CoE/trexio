@@ -841,6 +841,7 @@ void
 trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>])
 {
   strncpy(result, trexio_string_of_error(error), <<MAX_STRING_LENGTH()>>);
+  result[<<MAX_STRING_LENGTH()>>-1] = '\0';
 }
    #+end_src
 
@@ -1291,7 +1292,8 @@ trexio_open(const char* file_name, const char mode,
   /* Data for the parent type */
 
   strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH);
-  if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
+  result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
+  if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-2] != '\0') {
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
     free(result);
     return NULL;
