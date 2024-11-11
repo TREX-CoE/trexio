@@ -79,9 +79,9 @@ AC_PROG_LN_S
 AC_PROG_GREP
 
 AS_CASE([$CC],
-  [*gcc*], [CFLAGS="$CFLAGS -g -fPIC"],
-  [*clang*], [CFLAGS="$CFLAGS -g -fPIC"],
-  [*icc*], [CFLAGS="$CFLAGS -g -fPIC"],
+  [*gcc*], [CFLAGS="$CFLAGS -fPIC"],
+  [*clang*], [CFLAGS="$CFLAGS -fPIC"],
+  [*icc*], [CFLAGS="$CFLAGS -fPIC"],
   [])
 
 # Check if `cp -r -n` works, otherwise use `cp -r`
