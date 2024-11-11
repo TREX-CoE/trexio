@@ -52,9 +52,9 @@ AS_IF([test "$ok" = "yes"],[
 
   # Specific options required with some compilers
   AS_CASE([$FC],
-  [*gfortran*], [FCFLAGS="$FCFLAGS -fPIC"],
-  [*flang*], [FCFLAGS="$FCFLAGS -fPIC"],
-  [*ifort*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*gfortran*], [FCFLAGS="$FCFLAGS -g -fPIC"],
+  [*flang*], [FCFLAGS="$FCFLAGS -g -fPIC"],
+  [*ifort*], [FCFLAGS="$FCFLAGS -g -fPIC"],
   [])
 
 ])
@@ -79,9 +79,9 @@ AC_PROG_LN_S
 AC_PROG_GREP
 
 AS_CASE([$CC],
-  [*gcc*], [CFLAGS="$CFLAGS -fPIC"],
-  [*clang*], [CFLAGS="$CFLAGS -fPIC"],
-  [*icc*], [CFLAGS="$CFLAGS -fPIC"],
+  [*gcc*], [CFLAGS="$CFLAGS -g -fPIC"],
+  [*clang*], [CFLAGS="$CFLAGS -g -fPIC"],
+  [*icc*], [CFLAGS="$CFLAGS -g -fPIC"],
   [])
 
 # Check if `cp -r -n` works, otherwise use `cp -r`
