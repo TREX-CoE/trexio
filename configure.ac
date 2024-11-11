@@ -315,7 +315,7 @@ AC_CHECK_HEADERS([pthread.h])
 
 AC_ARG_ENABLE(debug, [AS_HELP_STRING([--enable-debug],[enable gcc and gfortran debug flags])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
-  CFLAGS="${CFLAGS} -Wall -Wextra -Wpedantic -Werror -Wshadow -Wformat -Wfloat-equal -Wconversion -Wcast-align -Wnull-dereference -Wstrict-aliasing -Winline -Wmissing-prototypes -Wunreachable-code -fstack-protector-strong -fdiagnostics-show-option -Wfloat-conversion -Wcast-qual -fno-inline fno-omit-frame-pointer -Wno-sign-conversion -Wno-cast-qual" # -Wno-unused-variable"
+  CFLAGS="${CFLAGS} -Wall -Wextra -Wpedantic -Werror -Wshadow -Wformat -Wfloat-equal -Wconversion -Wcast-align -Wnull-dereference -Wstrict-aliasing -Winline -Wmissing-prototypes -Wunreachable-code -fstack-protector-strong -fdiagnostics-show-option -Wfloat-conversion -Wcast-qual -fno-inline fno-omit-frame-pointer -Wno-sign-conversion -Wno-cast-qual -Wno-float-conversion" # -Wno-unused-variable"
   FCFLAGS="${FCFLAGS} -g -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow -finit-real=nan"
 fi
 

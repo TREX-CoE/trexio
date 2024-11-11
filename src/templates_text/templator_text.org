@@ -394,7 +394,9 @@ trexio_text_read_$group$ (trexio_text_t* const file)
     }
 
     int rc = 0;
+    (void) rc;  // Avoid unused variable;
     trexio_exit_code rc_free = TREXIO_FAILURE;
+    (void) rc_free;  // Avoid unused variable;
 
     /* workaround for the case of missing blocks in the file */
     // START REPEAT GROUP_DSET_ALL
@@ -466,16 +468,16 @@ trexio_text_read_$group$ (trexio_text_t* const file)
           }
 
           /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
-           * BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
-           */
+           ,* BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+           ,*/
           char* tmp_$group_dset$;
           tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
 
           for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
             $group$->$group_dset$[i] = tmp_$group_dset$;
             /* conventional fcanf with "%s" only return the string before the first space character
-             * to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
-             */
+             ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
+             ,*/
             rc = fscanf(f, " %1023[^\n]", buffer);
             if (rc != 1) {
               trexio_text_free_read_$group$(buffer, f, file, $group$);
@@ -820,6 +822,8 @@ trexio_text_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
 
   $group$_t* const $group$ = trexio_text_read_$group$((trexio_text_t*) file);
   if ($group$ == NULL) return TREXIO_FAILURE;
@@ -849,6 +853,8 @@ trexio_text_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
 
   if (file  == NULL)  return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL)  return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
 
   if (file->mode == 'r') return TREXIO_READONLY;
 
@@ -1385,6 +1391,9 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
                                                double* const dset)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (dset == NULL) return TREXIO_INVALID_ARG_6;
 
@@ -1497,7 +1506,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
                                                 const double* dset)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (rank != 1) return TREXIO_INVALID_ARG_3;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
   if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (dset == NULL) return TREXIO_INVALID_ARG_5;
 
