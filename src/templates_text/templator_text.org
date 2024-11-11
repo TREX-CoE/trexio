@@ -332,8 +332,8 @@ trexio_text_flush (trexio_t* const file)
   trexio_exit_code rc;
   trexio_text_t* f = (trexio_text_t*) file;
 
-  /* Error handling for this call is added by the generator */
-  rc = trexio_text_flush_$group$(f);
+  /* TODO: Error handling for this call is NOT added by the generator */
+  rc = trexio_text_flush_$group$(f); if (rc != TREXIO_SUCCESS) return rc;
 
   return TREXIO_SUCCESS;
 
@@ -1121,6 +1121,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
      the line_length is 69 because 10 per index + 4 spaces + 24 for floating point value + 1 for the new line char.
      CURRENTLY NO OFFSET IS USED WHEN WRITING !
     ,*/
+  (void) offset_file; // Avoid unused variable error
+  
   int64_t line_length = 0L;
   char format_str[256];
 
@@ -1495,6 +1497,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
                                                 const double* dset)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (rank != 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (dset == NULL) return TREXIO_INVALID_ARG_5;
 
   const char file_name[256] = "/$group_dset$.txt";
