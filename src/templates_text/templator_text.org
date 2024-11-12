@@ -1682,6 +1682,9 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
                                                    int64_t* const list)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank != 2) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (list == NULL) return TREXIO_INVALID_ARG_6;
 
@@ -1765,7 +1768,10 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
                                                     const uint64_t* dims,
                                                     const int64_t* list)
 {
-  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file  == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank != 2) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (list == NULL) return TREXIO_INVALID_ARG_5;
 
   const char determinant_list_file_name[256] = "/determinant_list.txt";
