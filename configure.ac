@@ -42,10 +42,7 @@ AC_SUBST([UNAME])
 ## -------------------
 
 # Fortran API [default: --with-fortran], do not disable in the dev mode
-FCFLAGS_SAVE="$FCFLAGS"
 AC_PROG_FC
-# Removing -O2 from FCFLAGS
-FCFLAGS="$FCFLAGS_SAVE -g"
 
 AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
 AS_IF([test "$ok" = "yes"],[
