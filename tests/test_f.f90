@@ -132,9 +132,9 @@ subroutine test_write(file_name, back_end)
   det_occ(1:nup,1) = (/ 1, 2, 3, 4, 76, 128, 129, 143 /)
   det_occ(1:ndn,2) = (/ 1, 3, 4, 80, 81, 139 /)
   do i = 1, 50
-    rc = trexio_to_bitfield_list(det_occ(1:8,1), nup, det_list(1:,i), 8)
+    rc = trexio_to_bitfield_list(det_occ(1:8,1), nup, det_list(1:3,i), 3)
     call trexio_assert(rc, TREXIO_SUCCESS)
-    rc = trexio_to_bitfield_list(det_occ(1:6,2), ndn, det_list(4:,i), 6)
+    rc = trexio_to_bitfield_list(det_occ(1:6,2), ndn, det_list(4:6,i), 3)
     call trexio_assert(rc, TREXIO_SUCCESS)
   enddo
 
