@@ -321,9 +321,10 @@ if test "$ok" = "yes"; then
 fi
 
 
-AC_ARG_ENABLE(sanitize, [AS_HELP_STRING([--enable-sanitize],[enable sanitizer debug flags])], ok=$enableval, ok=no)
+AC_ARG_ENABLE(sanitizer, [AS_HELP_STRING([--enable-sanitizer],[enable sanitizer debug flags])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
   CFLAGS="${CFLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=bounds -fsanitize=bounds-strict"
+  FCFLAGS="${FCFLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=bounds -fsanitize=bounds-strict"
 fi
 
 
