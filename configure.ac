@@ -42,7 +42,11 @@ AC_SUBST([UNAME])
 ## -------------------
 
 # Fortran API [default: --with-fortran], do not disable in the dev mode
+FCFLAGS_SAVE="$FCFLAGS"
 AC_PROG_FC
+# Removing -O2 from FCFLAGS
+FCFLAGS="$FCFLAGS_SAVE -g"
+
 AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
 AS_IF([test "$ok" = "yes"],[
   AC_FC_FREEFORM
@@ -79,9 +83,9 @@ AC_PROG_LN_S
 AC_PROG_GREP
 
 AS_CASE([$CC],
-  [*gcc*], [CFLAGS="$CFLAGS -g -fPIC"],
-  [*clang*], [CFLAGS="$CFLAGS -g -fPIC"],
-  [*icc*], [CFLAGS="$CFLAGS -g -fPIC"],
+  [*gcc*], [CFLAGS="$CFLAGS -fPIC"],
+  [*clang*], [CFLAGS="$CFLAGS -fPIC"],
+  [*icc*], [CFLAGS="$CFLAGS -fPIC"],
   [])
 
 # Check if `cp -r -n` works, otherwise use `cp -r`

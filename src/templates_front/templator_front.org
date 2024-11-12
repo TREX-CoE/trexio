@@ -5241,11 +5241,7 @@ end interface
      integer(c_int32_t), intent(in), value :: max_str_len
      character(len=*), intent(in) :: str
 
-     character(len=len_trim(str)+1) :: str_c
-
-     str_c = trim(str) // c_null_char
-
-     trexio_write_$group_str$ = trexio_write_$group_str$_c(trex_file, str_c, max_str_len)
+     trexio_write_$group_str$ = trexio_write_$group_str$_c(trex_file, trim(str) // c_null_char, max_str_len)
 
    end function trexio_write_$group_str$
   #+end_src
@@ -6786,11 +6782,9 @@ contains
      character, intent(in), value                    :: mode
      integer(trexio_back_end_t), intent(in), value   :: back_end
      integer(trexio_exit_code), intent(out)          :: rc_open
-     character(len=len_trim(filename)+1)             :: filename_c
      integer(trexio_exit_code) :: rc
 
-     filename_c = trim(filename) // c_null_char
-     trexio_open = trexio_open_c(filename_c, mode, back_end, rc_open)
+     trexio_open = trexio_open_c(trim(filename) // c_null_char, mode, back_end, rc_open)
      if (trexio_open == 0_8 .or. rc_open /= TREXIO_SUCCESS) then
        return
      endif
@@ -6810,10 +6804,8 @@ contains
    integer(trexio_exit_code) function trexio_inquire (filename)
      implicit none
      character(len=*), intent(in)        :: filename
-     character(len=len_trim(filename)+1) :: filename_c
 
-     filename_c = trim(filename) // c_null_char
-     trexio_inquire = trexio_inquire_c(filename_c)
+     trexio_inquire = trexio_inquire_c(trim(filename) // c_null_char)
    end function trexio_inquire
   #+end_src
 
@@ -6824,12 +6816,8 @@ contains
     implicit none
     character(len=*), intent(in)           :: source
     character(len=*), intent(in)           :: destination
-    character(len=len_trim(source)+1)      :: source_c
-    character(len=len_trim(destination)+1) :: destination_c
 
-    source_c = trim(source) // c_null_char
-    destination_c = trim(destination) // c_null_char
-    trexio_cp = trexio_cp_c(source_c, destination_c)
+    trexio_cp = trexio_cp_c(trim(source) // c_null_char, trim(destination) // c_null_char)
   end function trexio_cp
    #+end_src
 
