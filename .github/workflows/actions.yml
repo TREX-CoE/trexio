@@ -52,6 +52,11 @@ jobs:
           diff configure_v rust_v
           diff configure_v ocaml_v
 
+      - name: setup fixed Python version for testing
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
+        with:
+          python-version: '3.10'
+
       - name: install dependencies
         run: |
           sudo apt-get update
@@ -140,17 +145,24 @@ jobs:
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
 
+      - name: setup fixed Python version for testing
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
+        with:
+          python-version: '3.12'
+
       - name: install dependencies
         run: |
           brew install emacs
           brew install hdf5@1.14
           brew install automake
           brew install libtool
-          brew install swig
-          brew --prefix hdf5
-
+          # SWIG 4.3.0 from homebrew with clang failed CI for macos@aarch64 - lol what?
+          pip install swig==4.2.1.post0
+          swig -version
+          
       - name: configure with autotools
         run: |
+          brew --prefix hdf5
           ./autogen.sh
           ./configure CC=gcc-12 FC=gfortran-12 --enable-silent-rules
 
