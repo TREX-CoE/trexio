@@ -1660,12 +1660,12 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly.
-     Each 64-bit integer takes at most 10 slots and requires one space,
+     Each 64-bit integer takes at most 20 slots and requires one space,
      we have int_num integers per up-spin determinant,
      then this number is doubled because we have the same number for down-spin electrons,
      and then one newline char.
    ,*/
-  uint64_t line_length = dims[1]*11UL + 1UL; // 10 digits per int64_t bitfield + 1 space = 11 spots + 1 newline char
+  uint64_t line_length = dims[1]*21UL + 1UL; // 20 digits per int64_t bitfield + 1 space = 11 spots + 1 newline char
 
   /* Offset in the file according to the provided  value of offset_file and optimal line_length */
   fseek(f, (long) offset_file * line_length, SEEK_SET);
@@ -1677,7 +1677,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
   uint32_t buf_size = sizeof(buffer);
   /* Parameters to post-process the buffer and to get bit fields integers */
   uint64_t accum = 0UL;
-  uint32_t shift_int64 = 11U;
+  uint32_t shift_int64 = 21U;
   /* Counter for number of elements beind processed */
   uint64_t count = 0UL;
   for (uint64_t i=0UL; i < dims[0]; ++i) {
@@ -1697,7 +1697,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
       Thus, we parse the buffer string int_num*2 times to get the bit field determinants.
     ,*/
       for (uint32_t j=0; j < (uint32_t) dims[1]; ++j) {
-        rc = sscanf(buffer+accum, "%10" SCNd64, list + dims[1]*i + j);
+        rc = sscanf(buffer+accum, "%20" SCNd64, list + dims[1]*i + j);
         if (rc <= 0) {
           fclose(f);
           return TREXIO_FAILURE;
@@ -1747,7 +1747,7 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
 
     /* The loop below is needed to write a line with int bit fields for alpha and beta electrons */
     for (uint32_t j=0; j < (uint32_t) dims[1]; ++j) {
-      rc = fprintf(f, "%10" PRId64 " ", *(list + i*dims[1] + j));
+      rc = fprintf(f, "%20" PRId64 " ", *(list + i*dims[1] + j));
       if (rc <= 0) {
         fclose(f);
         return TREXIO_FAILURE;
