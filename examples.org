@@ -491,6 +491,7 @@ feof = False
 W = np.zeros( (n,n,n,n) )
 while not feof:
   buffer_index, buffer_values, icount, feof = trexio.read_mo_2e_int_eri(f, offset, icount)
+  offset += icount
   for m in range(icount):
     i, j, k, l = buffer_index[m]
     W[i,j,k,l] = buffer_values[m]
@@ -515,6 +516,7 @@ feof = False
 G = np.zeros( (n,n,n,n) )
 while not feof:
   buffer_index, buffer_values, icount, feof = trexio.read_rdm_2e(f, offset, icount)
+  offset += icount
   for m in range(icount):
     i, j, k, l = buffer_index[m]
     G[i,j,k,l] = buffer_values[m]
