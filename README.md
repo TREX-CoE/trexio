@@ -22,12 +22,12 @@ Below is the list of codes that adopted TREXIO for reading and/or writing single
 | [Quantum Package](https://github.com/QuantumPackage/qp2)                       | Write/Read       | Write/Read      |
 | [FHI-aims](https://fhi-aims.org/)                                              | Write/Read       | ??              |
 | [PySCF](https://github.com/pyscf/pyscf)                                        | Write/Read       | Write/Read      |
-| [CP2K](https://github.com/cp2k/cp2k)                                           | Write/Read       | ---             |
+| [CP2K](https://github.com/cp2k/cp2k)                                           | Write            | ---             |
 | [CHAMP](https://github.com/filippi-claudia/champ)                              | Read             | Read            |
 | [GammCor](https://github.com/pernalk/GAMMCOR)                                  | Read             | Read            |
 | [TurboRVB](https://github.com/sissaschool/turborvb)                            | Read             | ---             |
 | [ipie](https://github.com/JoonhoLee-Group/ipie)                                | Read             | ??              |
-| [Spicy](https://gitlab.com/theoretical-chemistry-jena/quantum-chemistry/Spicy) | Read             | ??              |
+| [Spicy](https://gitlab.com/theoretical-chemistry-jena/quantum-chemistry/Spicy) | Read             | ---             |
 | [QMC=Chem](https://github.com/TREX-CoE/qmcchem2)                               | Read             | Read            |
 | [QMCkl](https://github.com/TREX-CoE/qmckl)                                     | Read             | ---             |
 
