@@ -15,30 +15,48 @@ which enables fast read and write operations. It is compatible with a variety
 of platforms and has interfaces for the Fortran, Python, OCaml and Rust
 programming languages.
 
+Below is the list of codes that adopted TREXIO for reading and/or writing 
+single- and/or multi-reference wave functions:
+
+| Software                                                                       | Single-reference | Multi-reference |
+| ------------------------------------------------------------------------------ | ---------------- | --------------- |
+| [Quantum Package](https://github.com/QuantumPackage/qp2)                       | Write/Read       | Write/Read      |
+| [PySCF](https://github.com/pyscf/pyscf)                                        | Write/Read       | Write/Read      |
+| [FHI-aims](https://fhi-aims.org/)                                              | Write            | ---             |
+| [CP2K](https://github.com/cp2k/cp2k)                                           | Write            | ---             |
+| [CHAMP](https://github.com/filippi-claudia/champ)                              | Read             | Read            |
+| [GammCor](https://github.com/pernalk/GAMMCOR)                                  | Read             | Read            |
+| [ipie](https://github.com/JoonhoLee-Group/ipie)                                | Read             | Read            |
+| [TurboRVB](https://github.com/sissaschool/turborvb)                            | Read             | ---             |
+| [Spicy](https://gitlab.com/theoretical-chemistry-jena/quantum-chemistry/Spicy) | Read             | ---             |
+| [QMC=Chem](https://github.com/TREX-CoE/qmcchem2)                               | Read             | ---             |
+| [QMCkl](https://github.com/TREX-CoE/qmckl)                                     | Read             | ---             |
+
+
 * [Installation](#installation)
-   * [Installation using a package manager](#installation-using-a-package-manager)
-      * [Conda](#conda)
-      * [Spack](#spack)
-      * [Guix](#guix)
-      * [Debian/Ubuntu](#debianubuntu)
-   * [Installation from source](#installation-from-source)
-      * [Minimal requirements (for users):](#minimal-requirements-for-users)
-      * [Recommended: Installation from the release tarball](#recommended-installation-from-the-release-tarball)
-      * [Compilation without the HDF5 library](#compilation-without-the-hdf5-library)
-      * [For TREXIO developers: from the GitHub repo clone](#for-trexio-developers-from-the-github-repo-clone)
-      * [Using CMake instead of Autotools](#using-cmake-instead-of-autotools)
+  * [Installation using a package manager](#installation-using-a-package-manager)
+    * [Conda](#conda)
+    * [Spack](#spack)
+    * [Guix](#guix)
+    * [Debian/Ubuntu](#debianubuntu)
+  * [Installation from source](#installation-from-source)
+    * [Minimal requirements (for users):](#minimal-requirements-for-users)
+    * [Recommended: Installation from the release tarball](#recommended-installation-from-the-release-tarball)
+    * [Compilation without the HDF5 library](#compilation-without-the-hdf5-library)
+    * [For TREXIO developers: from the GitHub repo clone](#for-trexio-developers-from-the-github-repo-clone)
+    * [Using CMake instead of Autotools](#using-cmake-instead-of-autotools)
 * [Using TREXIO](#using-trexio)
-   * [Naming convention](#naming-convention)
-   * [Tutorial](#tutorial)
-   * [Documentation](#documentation)
-   * [Linking to your program](#linking-to-your-program)
-   * [Distributing TREXIO with your code](#distributing-trexio-with-your-code)
+  * [Naming convention](#naming-convention)
+  * [Tutorial](#tutorial)
+  * [Documentation](#documentation)
+  * [Linking to your program](#linking-to-your-program)
+  * [Distributing TREXIO with your code](#distributing-trexio-with-your-code)
 * [APIs for other languages](#apis-for-other-languages)
-   * [Python](#python)
-   * [Rust](#rust)
-   * [OCaml](#ocaml)
+  * [Python](#python)
+  * [Rust](#rust)
+  * [OCaml](#ocaml)
 * [Citation](#citation)
-   * [Miscellaneous](#miscellaneous)
+  * [Miscellaneous](#miscellaneous)
 
 
 ## Installation
@@ -110,7 +128,7 @@ sudo apt-get update && sudo apt-get install libtrexio-dev
 3. `cd trexio-<version>`
 4. `./configure`
 5. ```make -j 4 ```
-6. ```make -j 4 check```
+6. ```make -j $(nproc) check```
 7. `sudo make install`
 
 In environments where `sudo` access is unavailable, a common workaround for
@@ -155,7 +173,7 @@ Additional requirements:
 3. `./autogen.sh`
 4. `./configure`
 5. ```make -j 4```
-6. ```make -j 4 check```
+6. ```make -j $(nproc) check```
 7. `sudo make install`
 
 #### Using CMake instead of Autotools
@@ -166,7 +184,7 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 1. `cmake -S. -Bbuild`
 2. `cd build`
 3. ```make -j 4```
-4. ```ctest -j 4```
+4. ```ctest -j $(nproc)```
 5. `sudo make install`
 
 **Note**: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.
