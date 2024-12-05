@@ -841,7 +841,8 @@ void
 trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>])
 {
   const char* pSrc = trexio_string_of_error(error);
-  size_t sizeCp = strnlen(pSrc, <<MAX_STRING_LENGTH()>>);
+  size_t sizeCp = strlen(pSrc);
+  if (sizeCp > MAX_STRING_LENGTH) sizeCp = MAX_STRING_LENGTH;
   memcpy(result, pSrc, sizeCp);
   result[sizeCp] = '\0';
 }
