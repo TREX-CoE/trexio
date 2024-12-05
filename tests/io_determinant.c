@@ -52,7 +52,6 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   det_list = (int64_t*) calloc(2 * int_num * SIZE, sizeof(int64_t));
   det_coef = (double*) calloc(SIZE, sizeof(double));
 
-  int64_t size_list = TREXIO_NORB_PER_INT * int_num;
   const int32_t orb_list_up[4] = {0,1,2,3};
   const int32_t orb_list_dn[3] = {0,1,2};
 
@@ -250,11 +249,11 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   assert(check_diff*check_diff < 1e-14);
 
   // check the value of determinant_num
-  int32_t det_num = 0;
-  int32_t size_check = SIZE;
+  int64_t det_num = 0;
+  int64_t size_check = SIZE;
   if (offset != 0L) size_check += offset;
 
-  rc = trexio_read_determinant_num(file, &det_num);
+  rc = trexio_read_determinant_num_64(file, &det_num);
   assert(rc == TREXIO_SUCCESS);
   assert(det_num == size_check);
 

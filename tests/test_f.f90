@@ -327,7 +327,8 @@ subroutine test_read(file_name, back_end)
 
   integer(trexio_t) :: trex_file
 
-  integer :: i, j, k, ind, offset, flag
+  integer*8 :: i
+  integer :: j, k, ind, offset, flag
   integer(trexio_exit_code) :: rc = 1
   integer :: num, num_read, basis_shell_num
 

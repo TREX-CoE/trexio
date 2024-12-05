@@ -23,12 +23,12 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
   // parameters to be written
   int32_t* index;
   double* value;
-  int64_t size = mo_num/2;
+  uint64_t size = mo_num/2;
 
   index = calloc(4L*size, sizeof(int32_t));
   value = calloc(size, sizeof(double));
 
-  for(int i=0; i<size; i++){
+  for(int i=0; (uint64_t) i<size; i++){
     index[4*i]   = i;
     index[4*i+1] = i+1;
     index[4*i+2] = i+2;
@@ -38,16 +38,16 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
 
   // write mo_num which will be used to determine the optimal size of int indices
   if (trexio_has_mo_num(file) == TREXIO_HAS_NOT) {
-    rc = trexio_write_mo_num(file, mo_num);
+    rc = trexio_write_mo_num_64(file, mo_num);
     assert(rc == TREXIO_SUCCESS);
   }
 
   // write dataset chunks of sparse data in the file (including FAKE statements)
   uint64_t chunk_size = (uint64_t) size/N_CHUNKS;
   chunk_size = chunk_size > 0 ? chunk_size : (uint64_t) size;
-  int n_chunks = size/chunk_size;
+  uint64_t n_chunks = size/chunk_size;
   printf("chunk_size = %ld\n", (long) chunk_size);
-  printf("n_chunks   = %d\n", n_chunks);
+  printf("n_chunks   = %ld\n", (long) n_chunks);
 
   uint64_t offset_f = 0UL + offset;
   uint64_t offset_d = 0UL;
