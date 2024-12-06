@@ -63,9 +63,13 @@ static int test_has_dset_str (const char* file_name, const back_end_t backend) {
   // open file
   file = trexio_open(file_name, 'r', backend, &rc);
   assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
 
   // check that the previously written dataset of strings exists
   rc = trexio_has_nucleus_label(file);
+  if (rc != TREXIO_SUCCESS) {
+     printf("%s\n", trexio_string_of_error(rc));
+  }
   assert (rc == TREXIO_SUCCESS);
 
   // check that the dataset of strings does not exist

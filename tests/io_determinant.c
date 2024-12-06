@@ -32,6 +32,16 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     assert(rc == TREXIO_SUCCESS);
   }
 
+  // write number of up and down electrons for checking consistency of determinants
+  if (trexio_has_electron_up_num(file) == TREXIO_HAS_NOT) {
+    rc = trexio_write_electron_up_num(file, 4);
+    assert(rc == TREXIO_SUCCESS);
+  }
+  if (trexio_has_electron_dn_num(file) == TREXIO_HAS_NOT) {
+    rc = trexio_write_electron_dn_num(file, 3);
+    assert(rc == TREXIO_SUCCESS);
+  }
+
   // get the number of int64 bit fields per determinant
   int int_num;
   rc = trexio_get_int64_num(file, &int_num);
@@ -42,7 +52,6 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   det_list = (int64_t*) calloc(2 * int_num * SIZE, sizeof(int64_t));
   det_coef = (double*) calloc(SIZE, sizeof(double));
 
-  int64_t size_list = TREXIO_NORB_PER_INT * int_num;
   const int32_t orb_list_up[4] = {0,1,2,3};
   const int32_t orb_list_dn[3] = {0,1,2};
 
@@ -218,7 +227,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   /*
   printf("%s\n", trexio_string_of_error(rc));
   for (int i=0; i<size_r; i++) {
-    printf("%lld %lld\n", det_list_read[6*i], det_list_read[6*i+5]);
+    printf("%ld %ld\n", det_list_read[6*i], det_list_read[6*i+5]);
   }
   */
   assert(rc == TREXIO_END);
@@ -240,11 +249,11 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   assert(check_diff*check_diff < 1e-14);
 
   // check the value of determinant_num
-  int32_t det_num = 0;
-  int32_t size_check = SIZE;
+  int64_t det_num = 0;
+  int64_t size_check = SIZE;
   if (offset != 0L) size_check += offset;
 
-  rc = trexio_read_determinant_num(file, &det_num);
+  rc = trexio_read_determinant_num_64(file, &det_num);
   assert(rc == TREXIO_SUCCESS);
   assert(det_num == size_check);
 

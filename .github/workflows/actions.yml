@@ -65,13 +65,13 @@ jobs:
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules
+          ./configure --enable-silent-rules --enable-debug --enable-sanitizer
 
       - name: compile TREXIO
         run: make -j2
 
       - name: check TREXIO
-        run: make -j2 check
+        run: make -j1 check  # Non-parallel run 
 
       - name: Archive test log file
         if: failure()
