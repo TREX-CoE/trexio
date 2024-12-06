@@ -684,7 +684,7 @@ return '\n'.join(result)
 
    #+begin_src c :tangle prefix_front.h :exports none :noweb yes
 const char* trexio_string_of_error(const trexio_exit_code error);
-void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>]);
+void trexio_string_of_error_f(const trexio_exit_code error, const int32_t size_string, char* const result);
    #+end_src
 
    *IMPORTANT!*
@@ -838,12 +838,12 @@ trexio_string_of_error (const trexio_exit_code error)
 }
 
 void
-trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>])
+trexio_string_of_error_f (const trexio_exit_code error, const int32_t str_size, char* const result)
 {
   const char* pSrc = trexio_string_of_error(error);
   size_t sizeCp = strlen(pSrc);
-  if (sizeCp > <<MAX_STRING_LENGTH()>>) {
-     sizeCp = <<MAX_STRING_LENGTH()>>;
+  if ((int32_t) sizeCp > str_size) {
+     sizeCp = str_size;
   }
   memcpy(result, pSrc, sizeCp);
   result[sizeCp] = '\0';
@@ -854,11 +854,12 @@ trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING
 
   #+begin_src f90 :tangle prefix_fortran.f90 :noexport :noweb yes
 interface
-   subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
+   subroutine trexio_string_of_error_f (error, str_size, string) bind(C)
      import
      integer(trexio_exit_code), intent(in), value :: error
-     character(kind=c_char), intent(out)          :: string(<<MAX_STRING_LENGTH()>>)
-   end subroutine trexio_string_of_error
+     integer(c_int32_t), intent(in), value            :: str_size
+     character(kind=c_char), intent(out)          :: string(str_size)
+   end subroutine trexio_string_of_error_f
 end interface
   #+end_src
 
@@ -6775,6 +6776,18 @@ contains
      implicit none
      trexio_info = trexio_info_c()
    end function trexio_info
+  #+end_src
+
+  This function adds the string length as an extra argument to help the C code
+  check that the passed string is large enough.
+
+  #+begin_src f90 :tangle helper_fortran.f90 :noweb yes
+subroutine trexio_string_of_error (error, string)
+   implicit none
+   integer(trexio_exit_code), intent(in) :: error
+   character*(*), intent(out)            :: string
+   call  trexio_string_of_error_f(error, len(string), string)
+end subroutine trexio_string_of_error
   #+end_src
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.
