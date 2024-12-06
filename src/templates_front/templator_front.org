@@ -841,12 +841,14 @@ void
 trexio_string_of_error_f (const trexio_exit_code error, const int32_t str_size, char* const result)
 {
   const char* pSrc = trexio_string_of_error(error);
-  size_t sizeCp = strlen(pSrc);
-  if ((int32_t) sizeCp > str_size) {
+  int32_t sizeCp = (int32_t) strlen(pSrc);
+  if (sizeCp > str_size) {
      sizeCp = str_size;
   }
   memcpy(result, pSrc, sizeCp);
-  result[sizeCp] = '\0';
+  for (int32_t i=sizeCp ; i<str_size ; ++i) {
+    result[i] = ' ';
+  }
 }
    #+end_src
 

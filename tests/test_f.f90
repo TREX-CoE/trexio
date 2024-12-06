@@ -662,7 +662,6 @@ subroutine test_read_void(file_name, back_end)
   integer(trexio_t) :: trex_file
   integer :: rc = 1
   character*(128) :: str
-  str = ''
 
 ! ================= START OF TEST ===================== !
 
