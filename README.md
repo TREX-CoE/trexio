@@ -38,6 +38,7 @@ single- and/or multi-reference wave functions:
     * [Conda](#conda)
     * [Spack](#spack)
     * [Guix](#guix)
+    * [Nix](#nix)
     * [Debian/Ubuntu](#debianubuntu)
   * [Installation from source](#installation-from-source)
     * [Minimal requirements (for users):](#minimal-requirements-for-users)
@@ -98,6 +99,23 @@ It can be installed as follows:
 
 ```
 guix package --cores=`getconf _NPROCESSORS_ONLN` --install-from-file=trexio.scm
+```
+
+#### Nix
+
+The official releases of TREXIO `>=2.5.` can be used and installed via [Nix](https://nixos.org/).
+This repository provides a [Nix Flake](https://nixos.wiki/wiki/Flakes), where [tools/nix/trexio.nix](https://github.com/TREX-CoE/trexio/blob/master/tools/nix/trexio.nix) provides the build specification.
+You can inspect the flake or build the package with
+
+```
+nix flake show github:TREX-CoE/trexio
+nix build github:TREX-CoE/trexio
+```
+
+TREXIO is also part of [NixPkgs](https://github.com/NixOS/nixpkgs) and can be used via that channel.
+
+```
+nix build nixpkgs#trexio
 ```
 
 #### Debian/Ubuntu
