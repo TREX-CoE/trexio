@@ -117,7 +117,7 @@ static int test_open_errors (const back_end_t backend) {
 }
 
 
-static int test_inquire (const back_end_t backend) {
+static int test_inquire () {
 
 /* Try to call trexio_inquire function */
 
@@ -151,7 +151,7 @@ int main(void) {
   test_open_r     (TREXIO_FILE, TEST_BACKEND);
   test_open_auto  (TREXIO_FILE);
   test_open_errors(TEST_BACKEND);
-  test_inquire    (TEST_BACKEND);
+  test_inquire    ();
 
   rc = system(RM_COMMAND);
   assert (rc == 0);

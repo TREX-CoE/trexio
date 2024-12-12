@@ -277,6 +277,7 @@ trexio_hdf5_write_$group_num$ (trexio_t* const file, const $group_num_dtype_doub
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (num < 0) return TREXIO_INVALID_ARG_2;
 
   trexio_hdf5_t* const f = (trexio_hdf5_t*) file;
 
@@ -355,6 +356,8 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, $group_dset_dtype$* const $
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -412,6 +415,8 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype$* 
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
@@ -502,6 +507,11 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file,
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (size < 0) return TREXIO_INVALID_ARG_3;
+  if (size_max < 0) return TREXIO_INVALID_ARG_4;
+  if (index_sparse == NULL) return TREXIO_INVALID_ARG_5;
+  if (value_sparse == NULL) return TREXIO_INVALID_ARG_6;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
@@ -593,7 +603,12 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file,
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (size < 0) return TREXIO_INVALID_ARG_3;
+  if (size_max < 0) return TREXIO_INVALID_ARG_4;
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
+  if (index_read == NULL) return TREXIO_INVALID_ARG_6;
+  if (value_read == NULL) return TREXIO_INVALID_ARG_7;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -703,6 +718,9 @@ trexio_exit_code trexio_hdf5_read_$group_dset$(trexio_t* const file,
                                                double* const dset)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank != 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (dset == NULL) return TREXIO_INVALID_ARG_6;
 
@@ -728,6 +746,9 @@ trexio_exit_code trexio_hdf5_write_$group_dset$(trexio_t* const file,
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank != 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (dset == NULL) return TREXIO_INVALID_ARG_5;
 
   const char* dset_name = "$group_dset$";
@@ -832,6 +853,9 @@ trexio_hdf5_read_$group_dset$ (trexio_t* const file, char* const $group_dset$, c
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$  == NULL) return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
+  if (max_str_len < 1) return TREXIO_INVALID_ARG_5;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -938,6 +962,8 @@ trexio_hdf5_write_$group_dset$ (trexio_t* const file, const char** $group_dset$,
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if ($group_dset$  == NULL) return TREXIO_INVALID_ARG_2;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
@@ -1031,6 +1057,7 @@ trexio_hdf5_read_$group_str$ (trexio_t* const file, char* const str, const uint3
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (str  == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len < 1) return TREXIO_INVALID_ARG_3;
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
   /* Quit if the string attribute is missing in the file */
@@ -1202,6 +1229,9 @@ trexio_exit_code trexio_hdf5_read_determinant_list(trexio_t* const file,
                                                    int64_t* const list)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank < 2) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (list == NULL) return TREXIO_INVALID_ARG_6;
 
@@ -1227,6 +1257,9 @@ trexio_exit_code trexio_hdf5_write_determinant_list(trexio_t* const file,
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (rank < 2) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (list == NULL) return TREXIO_INVALID_ARG_5;
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
@@ -1292,6 +1325,9 @@ trexio_hdf5_create_write_dset_sparse (const hid_t group_id,
                                       const hsize_t* chunk_dims,
                                       const void* data_sparse)
 {
+  assert (chunk_dims != NULL);
+  assert (data_sparse != NULL);
+  assert (dset_name != NULL);
   const int h5_rank = 1;
   const hsize_t maxdims[1] = {H5S_UNLIMITED};
 
