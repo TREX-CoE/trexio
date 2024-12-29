@@ -251,13 +251,15 @@ fn read(file_name: &str, back_end: BackEnd) {
     let det_num = trex_file.read_determinant_num().unwrap();
     assert_eq!(det_num, 50);
 
-    let mut det_list_ref = Vec::with_capacity(det_num);
+    // Determinants
+    let det_num = 50;
+    let mut det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
+    let mut det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
+    let mut det_list_ref = Vec::with_capacity(det_num*6);
     for i in 0..det_num {
-        let mut d = [0i64; 6];
-        for j in 0..6 {
-            d[j] = 6 * (i as i64) + (j as i64);
-        }
-        det_list_ref.push(Bitfield::from_vec(&d));
+        let (alpha, _) = Bitfield::from(3, &det_occ_alpha);
+        let (beta, _)  = Bitfield::from(3, &det_occ_beta);
+        det_list_ref.push(Bitfield::from_alpha_beta(&alpha, &beta));
     }
 
     let n_buffers = 8;
