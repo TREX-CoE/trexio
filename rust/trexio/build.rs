@@ -1,7 +1,3 @@
-extern crate reqwest;
-extern crate tar;
-extern crate flate2;
-
 const WRAPPER_H: &str = "wrapper.h";
 const GENERATED_RS: &str = "generated.rs";
 
@@ -11,60 +7,52 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use serde_json::Value;
-use flate2::read::GzDecoder;
-use tar::Archive;
+use pkg_config::Config;
 
 
+/// The header path will be searched in the following order:
+///
+/// 1. pkg-config
+/// 2. Environment variable TREXIO_INCLUDE_DIR
+/// 3. Common system paths
+///
+/// If the header is found, the JSON configuration will be extracted and
+/// written to trex.json in the output directory
+fn find_header_path() -> Option<PathBuf> {
+    // First try pkg-config
+    if let Ok(lib) = Config::new().probe("trexio") {
+        // pkg-config returns include paths, we need to append trexio.h
+        for include_path in lib.include_paths {
+            let header_path = include_path.join("trexio.h");
+            if header_path.exists() {
+                return Some(header_path);
+            }
+        }
+    }
 
-fn download_trexio() -> PathBuf {
-    let version = env::var("CARGO_PKG_VERSION").unwrap();
-    println!("Version : {}", version);
+    // Try environment variable next
+    if let Ok(dir) = env::var("TREXIO_INCLUDE_DIR") {
+        let path = PathBuf::from(dir).join("trexio.h");
+        if path.exists() {
+            return Some(path);
+        }
+    }
 
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let trexio_url = format!("https://github.com/TREX-CoE/trexio/releases/download/v{version}/trexio-{version}.tar.gz");
+    // Finally check common system paths
+    let possible_paths = vec![
+        "/usr/include/trexio.h",
+        "/usr/local/include/trexio.h",
+        "/opt/local/include/trexio.h",
+    ];
 
-    // Download the .tar.gz archive
-    let tar_gz = out_path.join("trexio.tar.gz");
-    let trexio_dir= out_path.join("trexio_dir");
-    let mut resp = reqwest::blocking::get(trexio_url).expect("Failed to download the archive");
-    let mut out = File::create(tar_gz.clone()).expect("Failed to create archive file");
-    std::io::copy(&mut resp, &mut out).expect("Failed to copy content");
+    for path in possible_paths {
+        let p = PathBuf::from(path);
+        if p.exists() {
+            return Some(p);
+        }
+    }
 
-    // Unpack the .tar.gz archive
-    let tar_gz = File::open(tar_gz).unwrap();
-    let tar = GzDecoder::new(tar_gz);
-    let mut archive = Archive::new(tar);
-    archive.unpack(trexio_dir.clone()).expect("Failed to unpack");
-
-    // Assume that the archive extracts to a directory named 'trexio-0.1.0'
-    trexio_dir.join(format!("trexio-{}", version))
-}
-
-
-fn install_trexio(trexio_dir: &PathBuf) -> PathBuf {
-    println!("{}", trexio_dir.display());
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let install_path = out_path.join("trexio_install");
-
-    // Run configure script
-    let configure_status = std::process::Command::new("./configure")
-        .arg(format!("--prefix={}",install_path.display()))
-        .arg("--without-fortran")
-        .current_dir(&trexio_dir)
-        .status()
-        .unwrap();
-
-    assert!(configure_status.success());
-
-    // Run make
-    let make_status = std::process::Command::new("make")
-        .arg("install")
-        .current_dir(&trexio_dir)
-        .status()
-        .unwrap();
-
-    assert!(make_status.success());
-    install_path
+    None
 }
 
 
@@ -617,12 +605,14 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
     }}
 
     let size_max: i64 = data.len().try_into().expect("try_into failed in write_{group}_{element} (size_max)");
-    let buffer_size = size_max;
+    let size_max_val: i64 = size_max / ({size}+1);
+    let size_max_idx: i64 = {size} * size_max_val;
+    let buffer_size = size_max_val;
     let idx_ptr = idx.as_ptr() as *const i32;
     let val_ptr = val.as_ptr() as *const f64;
     let offset: i64 = offset.try_into().expect("try_into failed in write_{group}_{element} (offset)");
     let rc = unsafe {{ c::trexio_write_safe_{group}_{element}(self.ptr,
-           offset, buffer_size, idx_ptr, size_max, val_ptr, size_max) }};
+           offset, buffer_size, idx_ptr, size_max_idx, val_ptr, size_max_val) }};
     rc_return((), rc)
 }}"#));
                     },
@@ -637,6 +627,48 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
 
 
 
+fn extract_json(trexio_h: &PathBuf) -> io::Result<()> {
+     // Read the header file
+    let file = File::open(&trexio_h)?;
+    let reader = BufReader::new(file);
+
+    // Extract JSON configuration
+    let mut in_json = false;
+    let mut json_content = String::new();
+
+    for line in reader.lines() {
+        let line = line?;
+
+        if line.contains("/* JSON configuration") {
+            in_json = true;
+            continue;
+        }
+
+        if in_json {
+            if line.contains("*/") {
+                break;
+            }
+            json_content.push_str(&line);
+            json_content.push('\n');
+        }
+    }
+
+   // Write JSON to output file
+    let out_dir = env::var("OUT_DIR").unwrap();
+    let json_path = PathBuf::from(out_dir).join("trex.json");
+
+    let mut output_file = File::create(json_path)?;
+    output_file.write_all(json_content.as_bytes())?;
+
+    // Tell cargo to rerun if the header file changes
+    println!("cargo:rerun-if-changed={}", trexio_h.display());
+
+    // Rerun if relevant env vars change
+    println!("cargo:rerun-if-env-changed=TREXIO_INCLUDE_DIR");
+    println!("cargo:rerun-if-env-changed=PKG_CONFIG_PATH");
+
+    Ok(())
+}
 
 
 
@@ -678,24 +710,18 @@ impl File {
 
 
 
-fn main() {
-    let source_path = download_trexio();
-    println!("source path: {}", source_path.display());
+fn main() -> Result<(), Box<dyn std::error::Error>>  {
+    let trexio_h = find_header_path()
+        .ok_or("Could not find trexio.h - please ensure trexio is installed and findable via pkg-config, TREXIO_INCLUDE_DIR, or in system paths")?;
 
-    let install_path = install_trexio(&source_path);
-    println!("install path: {}", install_path.display());
+    // Print some helpful information during build
+    println!("cargo:warning=Found trexio.h at: {}", trexio_h.display());
 
-    // Tell cargo to look for shared libraries in the specified directory
-    println!("cargo:rustc-link-search={}/lib", install_path.display());
+    let out_path = PathBuf::from(env::var("OUT_DIR")?);
 
-    // Tell cargo to tell rustc to link the system trexio shared library.
-    println!("cargo:rustc-link-lib=trexio");
+    make_interface(&trexio_h)?;
+    extract_json(&trexio_h)?;
 
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let trexio_h = install_path.join("include").join("trexio.h");
-    println!("trexio.h: {}", trexio_h.display());
-
-    make_interface(&trexio_h).unwrap();
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
@@ -722,8 +748,9 @@ fn main() {
         .write_to_file(&bindings_path)
         .expect("Couldn't write bindings!");
 
-    let json_path = source_path.join("trex.json");
+    let json_path = out_path.join("trex.json");
     println!("json path: {}", json_path.display());
 
     make_functions(&json_path).unwrap();
+    Ok(())
 }
