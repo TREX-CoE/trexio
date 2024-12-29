@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define SIZE          100
-#define N_CHUNKS      5
+#define N_CHUNKS      7
 #define STATE_TEST    2
 
 static int test_write_determinant (const char* file_name, const back_end_t backend, const int64_t offset, const int mo_num) {
@@ -54,7 +54,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   }
 
   // write dataset chunks of sparse data in the file (including FAKE statements)
-  uint64_t chunk_size = (uint64_t) SIZE/N_CHUNKS;
+  uint64_t chunk_size = (uint64_t) (SIZE-1)/N_CHUNKS+1;
   uint64_t offset_f = 0UL;
   uint64_t offset_d = 0UL;
   if (offset != 0L) offset_f += offset;
@@ -67,7 +67,10 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   // write n_chunks times using write_sparse
   for(int i=0; i<N_CHUNKS; ++i){
-
+    if (i*chunk_size + chunk_size > SIZE) {
+      chunk_size = SIZE % chunk_size;
+    }
+    printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
     rc = trexio_write_determinant_list(file, offset_f, chunk_size, &det_list[2*int_num*offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
@@ -222,6 +225,8 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   }
   */
   assert(rc == TREXIO_END);
+  printf("%d %d\n", (int) chunk_read, (int) eof_read_size_check);
+  fflush(stdout);
   assert(chunk_read == eof_read_size_check);
 
   chunk_read = read_size_check;
