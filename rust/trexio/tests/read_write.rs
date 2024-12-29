@@ -95,14 +95,18 @@ fn write(file_name: &str, back_end: BackEnd) {
     }
 
     // Determinants
+    let nup = 8;
+    let ndn = 6;
+    trex_file.write_electron_up_num(nup).unwrap();
+    trex_file.write_electron_dn_num(ndn).unwrap();
     let det_num = 50;
-    let mut det_list = Vec::with_capacity(det_num);
+    let mut det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
+    let mut det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
+    let mut det_list = Vec::with_capacity(det_num*6);
     for i in 0..det_num {
-        let mut d = [0i64; 6];
-        for j in 0..6 {
-            d[j] = 6 * (i as i64) + (j as i64);
-        }
-        det_list.push(Bitfield::from_vec(&d));
+        let (alpha, _) = Bitfield::from(3, &det_occ_alpha);
+        let (beta, _)  = Bitfield::from(3, &det_occ_beta);
+        det_list.push(Bitfield::from_alpha_beta(&alpha, &beta));
     }
 
     let n_buffers = 5;

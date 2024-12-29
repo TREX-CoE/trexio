@@ -554,7 +554,7 @@ pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Re
     let offset: i64 = offset.try_into().expect("try_into failed in read_{group}_{element} (offset)");
     let mut buffer_size_read: i64 = buffer_size.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
     let rc = unsafe {{ c::trexio_read_safe_{group}_{element}(self.ptr,
-           offset, &mut buffer_size_read, idx_ptr, buffer_size_read, val_ptr, buffer_size_read)
+           offset, &mut buffer_size_read, idx_ptr, idx.len().try_into().unwrap(), val_ptr, val.len().try_into().unwrap())
     }};
     let rc = match ExitCode::from(rc) {{
               ExitCode::End => ExitCode::to_c(&ExitCode::Success),
@@ -605,9 +605,9 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
     }}
 
     let size_max: i64 = data.len().try_into().expect("try_into failed in write_{group}_{element} (size_max)");
-    let size_max_val: i64 = size_max / ({size}+1);
-    let size_max_idx: i64 = {size} * size_max_val;
-    let buffer_size = size_max_val;
+    let size_max_val: i64 = val.len().try_into().expect("try_into failed in write_{group}_{element} (size_max)");
+    let size_max_idx: i64 = idx.len().try_into().expect("try_into failed in write_{group}_{element} (size_max)");
+    let buffer_size = size_max;
     let idx_ptr = idx.as_ptr() as *const i32;
     let val_ptr = val.as_ptr() as *const f64;
     let offset: i64 = offset.try_into().expect("try_into failed in write_{group}_{element} (offset)");
