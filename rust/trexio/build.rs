@@ -547,14 +547,15 @@ pub fn write_{group_l}_{element_l}(&self, data: &[&str]) -> Result<(), ExitCode>
 /// The reading process is a buffered operation, meaning that only a segment of the full array
 /// is read into the memory.
 pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Result<Vec<{typ}>, ExitCode> {{
-    let mut idx = Vec::<i32>::with_capacity({size}*buffer_size);
+    let size_idx = {size}*buffer_size;
+    let mut idx = Vec::<i32>::with_capacity(size_idx);
     let mut val = Vec::<f64>::with_capacity(buffer_size);
     let idx_ptr = idx.as_ptr() as *mut i32;
     let val_ptr = val.as_ptr() as *mut f64;
     let offset: i64 = offset.try_into().expect("try_into failed in read_{group}_{element} (offset)");
     let mut buffer_size_read: i64 = buffer_size.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
     let rc = unsafe {{ c::trexio_read_safe_{group}_{element}(self.ptr,
-           offset, &mut buffer_size_read, idx_ptr, idx.len().try_into().unwrap(), val_ptr, val.len().try_into().unwrap())
+           offset, &mut buffer_size_read, idx_ptr, size_idx.try_into().unwrap(), val_ptr, buffer_size.try_into().unwrap())
     }};
     let rc = match ExitCode::from(rc) {{
               ExitCode::End => ExitCode::to_c(&ExitCode::Success),
