@@ -270,7 +270,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
 
 //  rc = trexio_read_determinant_list(file, 0L, &chunk_read, &det_list_read[0L]);
   // read n_chunks times using read_sparse
-  uint64_t chunk_size = (uint64_t) (SIZE-1)/N_CHUNKS+1;
+  int64_t chunk_size = (int64_t) (SIZE-1)/N_CHUNKS+1;
   uint64_t offset_f = 0UL;
   uint64_t offset_d = 0UL;
   for(int i=0; i<N_CHUNKS; ++i){

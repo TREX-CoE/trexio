@@ -1718,7 +1718,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
   int rc;
   /* Declare fixed buffer which will be used to read the determinant string <a1 a2 ... a/\ b1 b2 ... b\/> */
   char buffer[line_length+2];
-  uint32_t buf_size = sizeof(buffer);
+  size_t buf_size = sizeof(buffer);
   /* Parameters to post-process the buffer and to get bit fields integers */
   uint64_t accum = 0UL;
   uint32_t shift_int64 = 21U;
@@ -1729,7 +1729,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
     accum = 0UL;
     memset(buffer, 0, buf_size);
 
-    if (fgets(buffer, line_length+1, f) == NULL){
+    if (fgets(buffer, ( (int) line_length)+1, f) == NULL){
 
       fclose(f);
       ,*eof_read_size = count;
