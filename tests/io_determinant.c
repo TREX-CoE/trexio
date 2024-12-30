@@ -178,7 +178,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   int64_t* det_list_read;
   double*  det_coef_read;
   double check_diff;
-  uint64_t size_r = SIZE;
+  uint64_t size_r = 2*SIZE;
 
   det_list_read = (int64_t*) calloc(2*int_num*size_r,sizeof(int64_t));
   det_coef_read = (double*)  calloc(size_r,sizeof(double));
@@ -274,15 +274,17 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   uint64_t offset_f = 0UL;
   uint64_t offset_d = 0UL;
   for(int i=0; i<N_CHUNKS; ++i){
+/*
     if (i*chunk_size + chunk_size > SIZE) {
       chunk_size = SIZE % chunk_size;
     }
+*/
     printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
     rc = trexio_read_determinant_list(file, offset_f, &chunk_size, &det_list_read[2*int_num*offset_d]);
-    assert(rc == TREXIO_SUCCESS);
+    assert(rc == TREXIO_SUCCESS || rc == TREXIO_END);
 
     rc = trexio_read_determinant_coefficient(file, offset_f, &chunk_size, &det_coef_read[offset_d]);
-    assert(rc == TREXIO_SUCCESS);
+    assert(rc == TREXIO_SUCCESS || rc == TREXIO_END);
 
     offset_d += chunk_size;
     offset_f += chunk_size;

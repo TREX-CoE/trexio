@@ -660,11 +660,12 @@ subroutine test_read_void(file_name, back_end)
   integer, intent(in) :: back_end
 
   integer(trexio_t) :: trex_file
-  integer :: rc = 1
+  integer :: rc
   character*(128) :: str
 
 ! ================= START OF TEST ===================== !
 
+  rc = TREXIO_SUCCESS
   trex_file = trexio_open(file_name, 'r', back_end, rc)
   if (rc /= TREXIO_OPEN_ERROR) then
     rc = trexio_close(trex_file)
