@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define SIZE          100
-#define N_CHUNKS      5
+#define N_CHUNKS      7
 #define STATE_TEST    2
 
 static int test_write_determinant (const char* file_name, const back_end_t backend, const int64_t offset, const int mo_num) {
@@ -63,7 +63,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   }
 
   // write dataset chunks of sparse data in the file (including FAKE statements)
-  uint64_t chunk_size = (uint64_t) SIZE/N_CHUNKS;
+  uint64_t chunk_size = (uint64_t) (SIZE-1)/N_CHUNKS+1;
   uint64_t offset_f = 0UL;
   uint64_t offset_d = 0UL;
   if (offset != 0L) offset_f += offset;
@@ -76,7 +76,10 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   // write n_chunks times using write_sparse
   for(int i=0; i<N_CHUNKS; ++i){
-
+    if (i*chunk_size + chunk_size > SIZE) {
+      chunk_size = SIZE % chunk_size;
+    }
+    printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
     rc = trexio_write_determinant_list(file, offset_f, chunk_size, &det_list[2*int_num*offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
@@ -175,7 +178,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   int64_t* det_list_read;
   double*  det_coef_read;
   double check_diff;
-  uint64_t size_r = 40L;
+  uint64_t size_r = SIZE;
 
   det_list_read = (int64_t*) calloc(2*int_num*size_r,sizeof(int64_t));
   det_coef_read = (double*)  calloc(size_r,sizeof(double));
@@ -231,6 +234,8 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   }
   */
   assert(rc == TREXIO_END);
+  printf("%d %d\n", (int) chunk_read, (int) eof_read_size_check);
+  fflush(stdout);
   assert(chunk_read == eof_read_size_check);
 
   chunk_read = read_size_check;
@@ -263,7 +268,26 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   int32_t* orb_list_dn = (int32_t*) calloc(size_list, sizeof(int32_t));
   int32_t  occ_num_up, occ_num_dn;
 
-  rc = trexio_read_determinant_list(file, 0L, &chunk_read, &det_list_read[0L]);
+//  rc = trexio_read_determinant_list(file, 0L, &chunk_read, &det_list_read[0L]);
+  // read n_chunks times using read_sparse
+  uint64_t chunk_size = (uint64_t) (SIZE-1)/N_CHUNKS+1;
+  uint64_t offset_f = 0UL;
+  uint64_t offset_d = 0UL;
+  for(int i=0; i<N_CHUNKS; ++i){
+    if (i*chunk_size + chunk_size > SIZE) {
+      chunk_size = SIZE % chunk_size;
+    }
+    printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
+    rc = trexio_read_determinant_list(file, offset_f, &chunk_size, &det_list_read[2*int_num*offset_d]);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_read_determinant_coefficient(file, offset_f, &chunk_size, &det_coef_read[offset_d]);
+    assert(rc == TREXIO_SUCCESS);
+
+    offset_d += chunk_size;
+    offset_f += chunk_size;
+  }
+
   assert (rc == TREXIO_SUCCESS);
 
   rc = trexio_to_orbital_list_up_dn (int_num, &det_list_read[0], orb_list_up, orb_list_dn, &occ_num_up, &occ_num_dn);
