@@ -65,13 +65,16 @@ jobs:
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules --enable-debug --enable-sanitizer
+          ./configure --enable-silent-rules 
 
       - name: compile TREXIO
         run: make -j2
 
       - name: check TREXIO
         run: make -j2 check
+
+      - name: check via valgrind
+        run: cd tests && bash run_valgrind.sh
 
       - name: Archive test log file
         if: failure()
@@ -113,15 +116,15 @@ jobs:
       - name: maintainer clean
         run: make maintainer-clean
       
-      - name: reconfigure with clang and AddressSanitizer
+      - name: reconfigure with debugging 
         run: |
           ./autogen.sh
-          ./configure CC=clang-15 CFLAGS="-O2 -fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address" --enable-silent-rules
+          ./configure --enable-silent-rules --enable-debug --enable-sanitizer
       
       - name: recompile TREXIO
         run: make -j2
       
-      - name: recheck TREXIO for memory leaks
+      - name: recheck TREXIO 
         run: make -j2 check
       
       - name: Archive test log file
