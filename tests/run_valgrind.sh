@@ -33,12 +33,12 @@ TESTS_C="\
 TESTS="$TESTS_C test_f"
 
 for test in $TESTS; do
-    echo $test
+    echo "$test"
     libtool --mode=execute valgrind \
         --leak-check=full \
         --show-leak-kinds=all \
         --error-exitcode=666 \
         --errors-for-leak-kinds=all \
         --suppressions=valgrind.supp \
-        "$test"
+        "./$test"
 done
