@@ -106,7 +106,6 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
   // free the allocated memeory
   free(det_list);
   free(det_coef);
-  printf("write determinants OK\n");
 
 /*================= END OF TEST ==================*/
 
@@ -143,7 +142,6 @@ static int test_has_determinant(const char* file_name, const back_end_t backend)
   assert (rc == TREXIO_SUCCESS);
 
 /*================= END OF TEST ==================*/
-  printf("has_determinant OK\n");
 
   return 0;
 }
@@ -315,7 +313,6 @@ int main(){
     assert (rc == 0);
 
   // check the first write attempt (SIZE elements written in N_CHUNKS chunks)
-    printf("mo_num = %d\n", mo_nums[i]);
     test_write_determinant (TREXIO_FILE, TEST_BACKEND, 0L, mo_nums[i]);
     test_has_determinant   (TREXIO_FILE, TEST_BACKEND);
     test_read_determinant  (TREXIO_FILE, TEST_BACKEND, 0L);
