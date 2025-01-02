@@ -60,7 +60,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libhdf5-dev emacs
+          sudo apt-get install libhdf5-dev emacs libtool-bin
 
       - name: configure with autotools
         run: |
@@ -74,7 +74,9 @@ jobs:
         run: make -j2 check
 
       - name: check via valgrind
-        run: cd tests && ./run_valgrind.sh
+        run: |
+          which libtool
+          cd tests && ./run_valgrind.sh
 
       - name: Archive test log file
         if: failure()
