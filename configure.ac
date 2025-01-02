@@ -53,9 +53,9 @@ AS_IF([test "$ok" = "yes"],[
 
   # Specific options required with some compilers
   AS_CASE([$FC],
-  [*gfortran*], [FCFLAGS="$FCFLAGS -g -fPIC"],
-  [*flang*], [FCFLAGS="$FCFLAGS -g -fPIC"],
-  [*ifort*], [FCFLAGS="$FCFLAGS -g -fPIC"],
+  [*gfortran*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*flang*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*ifort*], [FCFLAGS="$FCFLAGS -fPIC"],
   [])
 
 ])
