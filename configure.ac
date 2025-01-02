@@ -43,6 +43,7 @@ AC_SUBST([UNAME])
 
 # Fortran API [default: --with-fortran], do not disable in the dev mode
 AC_PROG_FC
+
 AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
 AS_IF([test "$ok" = "yes"],[
   AC_FC_FREEFORM
@@ -52,9 +53,9 @@ AS_IF([test "$ok" = "yes"],[
 
   # Specific options required with some compilers
   AS_CASE([$FC],
-  [*gfortran*], [FCFLAGS="$FCFLAGS -fPIC"],
-  [*flang*], [FCFLAGS="$FCFLAGS -fPIC"],
-  [*ifort*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*gfortran*], [FCFLAGS="$FCFLAGS -g -fPIC"],
+  [*flang*], [FCFLAGS="$FCFLAGS -g -fPIC"],
+  [*ifort*], [FCFLAGS="$FCFLAGS -g -fPIC"],
   [])
 
 ])
