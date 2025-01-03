@@ -45,9 +45,6 @@ static int test_write_dset_sparse (const char* file_name, const back_end_t backe
   // write dataset chunks of sparse data in the file (including FAKE statements)
   uint64_t chunk_size = (uint64_t) size/N_CHUNKS;
   chunk_size = chunk_size > 0 ? chunk_size : (uint64_t) size;
-  uint64_t n_chunks = size/chunk_size;
-  //printf("chunk_size = %ld\n", (long) chunk_size);
-  //printf("n_chunks   = %ld\n", (long) n_chunks);
 
   uint64_t offset_f = 0UL + offset;
   uint64_t offset_d = 0UL;
