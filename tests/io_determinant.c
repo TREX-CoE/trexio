@@ -79,7 +79,7 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     if (i*chunk_size + chunk_size > SIZE) {
       chunk_size = SIZE % chunk_size;
     }
-    printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
+    //printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
     rc = trexio_write_determinant_list(file, offset_f, chunk_size, &det_list[2*int_num*offset_d]);
     assert(rc == TREXIO_SUCCESS);
 
@@ -192,7 +192,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   if (offset != 0L) offset_file_read += offset;
 
   // read one chunk using the aforementioned parameters
-  printf("int_num: %d\n", int_num);
+  //printf("int_num: %d\n", int_num);
   rc = trexio_read_determinant_list(file, offset_file_read, &chunk_read, &det_list_read[2*int_num*offset_data_read]);
   assert(rc == TREXIO_SUCCESS);
   assert(chunk_read == read_size_check);
@@ -232,8 +232,8 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   }
   */
   assert(rc == TREXIO_END);
-  printf("%d %d\n", (int) chunk_read, (int) eof_read_size_check);
-  fflush(stdout);
+  //printf("%d %d\n", (int) chunk_read, (int) eof_read_size_check);
+  //fflush(stdout);
   assert(chunk_read == eof_read_size_check);
 
   chunk_read = read_size_check;
@@ -277,7 +277,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
       chunk_size = SIZE % chunk_size;
     }
 */
-    printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
+    //printf("chunk_size: %ld | %ld\n", chunk_size, offset_f+chunk_size);
     rc = trexio_read_determinant_list(file, offset_f, &chunk_size, &det_list_read[2*int_num*offset_d]);
     assert(rc == TREXIO_SUCCESS || rc == TREXIO_END);
 
