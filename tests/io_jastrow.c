@@ -1,5 +1,6 @@
 #include "trexio.h"
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -119,25 +120,25 @@ static int test_read_jastrow (const char* file_name, const back_end_t backend) {
   double ee [2] = { 0., 0. };
   rc = trexio_read_jastrow_ee(file, ee);
   assert (rc == TREXIO_SUCCESS);
-  assert (ee[0] == 0.5);
-  assert (ee[1] == 2.0);
+  assert (fabs(ee[0]-0.5) < 1.e-15);
+  assert (fabs(ee[1]-2.0) < 1.e-15);
 
   double en [3] = { 0., 0., 0. };
   rc = trexio_read_jastrow_en(file, en);
   assert (rc == TREXIO_SUCCESS);
-  assert (en[0] == 1.0);
-  assert (en[1] == 2.0);
-  assert (en[2] == 3.0);
+  assert (fabs(en[0]-1.0) < 1.e-15);
+  assert (fabs(en[1]-2.0) < 1.e-15);
+  assert (fabs(en[2]-3.0) < 1.e-15);
 
   double een [6];
   rc = trexio_read_jastrow_een(file, een);
   assert (rc == TREXIO_SUCCESS);
-  assert (een[0] == 11.0);
-  assert (een[1] == 12.0);
-  assert (een[2] == 13.0);
-  assert (een[3] == 14.0);
-  assert (een[4] == 15.0);
-  assert (een[5] == 16.0);
+  assert (fabs(een[0]-11.0) < 1.e-15);
+  assert (fabs(een[1]-12.0) < 1.e-15);
+  assert (fabs(een[2]-13.0) < 1.e-15);
+  assert (fabs(een[3]-14.0) < 1.e-15);
+  assert (fabs(een[4]-15.0) < 1.e-15);
+  assert (fabs(een[5]-16.0) < 1.e-15);
 
   int en_nucleus [3] = { 0, 0, 0 };
   rc = trexio_read_jastrow_en_nucleus(file, en_nucleus);
@@ -159,14 +160,14 @@ static int test_read_jastrow (const char* file_name, const back_end_t backend) {
   double ee_scaling = 0.0;
   rc = trexio_read_jastrow_ee_scaling(file, &ee_scaling);
   assert (rc == TREXIO_SUCCESS);
-  assert (ee_scaling == 1.0);
+  assert (fabs(ee_scaling-1.0) < 1.e-15);
 
   double en_scaling[3] = { 0.5, 1.0, 0.5 };
   rc = trexio_read_jastrow_en_scaling(file, en_scaling);
   assert (rc == TREXIO_SUCCESS);
-  assert (en_scaling[0] == 0.5);
-  assert (en_scaling[1] == 1.0);
-  assert (en_scaling[2] == 0.5);
+  assert (fabs(en_scaling[0]-0.5) < 1.e-15);
+  assert (fabs(en_scaling[1]-1.0) < 1.e-15);
+  assert (fabs(en_scaling[2]-0.5) < 1.e-15);
 
   rc = trexio_close(file);
 /*================= END OF TEST ==================*/
