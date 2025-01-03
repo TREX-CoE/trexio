@@ -477,6 +477,7 @@ __trexio_path__ = None
    | ~TREXIO_INVALID_ARG_12~          |   42 | 'Invalid argument 12'                          |
    | ~TREXIO_INVALID_ARG_13~          |   43 | 'Invalid argument 13'                          |
    | ~TREXIO_INVALID_ARG_14~          |   44 | 'Invalid argument 14'                          |
+   | ~TREXIO_CORRUPTION_ATTEMPT~      |   45 | 'File offset is wrong, corruption risk'        |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -568,6 +569,7 @@ return '\n'.join(result)
    #define TREXIO_INVALID_ARG_12          ((trexio_exit_code) 42)
    #define TREXIO_INVALID_ARG_13          ((trexio_exit_code) 43)
    #define TREXIO_INVALID_ARG_14          ((trexio_exit_code) 44)
+   #define TREXIO_CORRUPTION_ATTEMPT      ((trexio_exit_code) 45)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -617,6 +619,7 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_12          = 42
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_13          = 43
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_14          = 44
+      integer(trexio_exit_code), parameter :: TREXIO_CORRUPTION_ATTEMPT      = 45
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
@@ -667,6 +670,7 @@ return '\n'.join(result)
    TREXIO_INVALID_ARG_12          = 42
    TREXIO_INVALID_ARG_13          = 43
    TREXIO_INVALID_ARG_14          = 44
+   TREXIO_CORRUPTION_ATTEMPT      = 45
    #+end_src
    :end:
 
@@ -3803,6 +3807,9 @@ trexio_write_$group_dset$(trexio_t* const file,
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
+  /* Dummy check to avoid overwriting existing data */
+  if (offset_file < size_max) return TREXIO_CORRUPTION_ATTEMPT;
+
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
 #define unique_rank $group_dset_unique_rank$
@@ -5544,6 +5551,17 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   if (offset_file < 0) return TREXIO_INVALID_ARG_2;
   if (buffer_size <= 0) return TREXIO_INVALID_ARG_3;
   if (dset == NULL) return TREXIO_INVALID_ARG_4;
+
+  // Update the determinant_num value with the number of determinants written
+  int64_t det_num_current = 0L;
+  // Read the determinant_num if it exists already
+  if (trexio_has_determinant_num(file) == TREXIO_SUCCESS) {
+     trexio_exit_code rc = trexio_read_determinant_num_64(file, &det_num_current);
+     if (rc != TREXIO_SUCCESS) return rc;
+  }
+
+  /* Dummy check to avoid overwriting existing data */
+  if (offset_file < det_num_current) return TREXIO_CORRUPTION_ATTEMPT;
 
   /* Get the number of int bit fields per determinant */
   int32_t int_num = 0;
