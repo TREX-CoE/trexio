@@ -56,6 +56,7 @@ single- and/or multi-reference wave functions:
   * [Python](#python)
   * [Rust](#rust)
   * [OCaml](#ocaml)
+  * [Haskell](#haskell)
 * [Citation](#citation)
   * [Miscellaneous](#miscellaneous)
 
@@ -331,6 +332,14 @@ If you prefer to install it from this repository,
 cd ocaml/trexio
 make
 opam install .
+```
+
+### Haskell
+
+The Haskell bindings are available at <https://github.com/TREX-CoE/trexio-hs> and published on Hackage <https://hackage.haskell.org/package/trexio-hs>.
+```
+cabal update
+cabal install trexio-hs
 ```
 
 ## Citation
