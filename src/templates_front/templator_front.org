@@ -483,7 +483,7 @@ __trexio_path__ = None
    # -*- org-src-preserve-indentation: t
 
    *IMPORTANT!*
-   The code below has to be executed within Emacs each time
+   The 2 code blocks below have to be executed within Emacs each time
    a new error code is added to the table above. Otherwise, the codes
    and the corresponding message are not propagated to the source code.
 
@@ -518,7 +518,6 @@ result += [ "#+end_src" ]
 return '\n'.join(result)
 
    #+end_src
-
 
    #+RESULTS:
    :results:
@@ -673,28 +672,6 @@ return '\n'.join(result)
    TREXIO_CORRUPTION_ATTEMPT      = 45
    #+end_src
    :end:
-
-*** Decoding errors
-
-   The ~trexio_string_of_error~ converts an exit code into a string. The
-   string is assumed to be large enough to contain the error message
-   (typically 128 characters).
-
-   To decode the error messages, ~trexio_string_of_error~ converts an
-   error code into a string.
-
-   #+NAME: MAX_STRING_LENGTH
-   : 128
-
-   #+begin_src c :tangle prefix_front.h :exports none :noweb yes
-const char* trexio_string_of_error(const trexio_exit_code error);
-void trexio_string_of_error_f(const trexio_exit_code error, const int32_t size_string, char* const result);
-   #+end_src
-
-   *IMPORTANT!*
-   The code below has to be executed within Emacs each time
-   a new error code is added to the table above. Otherwise, the codes
-   and the corresponding message are not propagated to the source code.
 
    #+NAME:cases
    #+begin_src python :var table=table-exit-codes :exports none :noweb yes
@@ -855,6 +832,20 @@ return '\n'.join(result)
      return "File offset is wrong, corruption risk";
      break;
    #+end_example
+
+*** Decoding errors
+
+   The ~trexio_string_of_error~ converts an exit code into a string. The
+   string is assumed to be large enough to contain the error message
+   (typically 128 characters).
+
+   To decode the error messages, ~trexio_string_of_error~ converts an
+   error code into a string.
+
+   #+begin_src c :tangle prefix_front.h :exports none :noweb yes
+const char* trexio_string_of_error(const trexio_exit_code error);
+void trexio_string_of_error_f(const trexio_exit_code error, const int32_t size_string, char* const result);
+   #+end_src
 
 **** C source code
 
