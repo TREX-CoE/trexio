@@ -53,9 +53,9 @@ AS_IF([test "$ok" = "yes"],[
 
   # Specific options required with some compilers
   AS_CASE([$FC],
-  [*gfortran*], [FCFLAGS="$FCFLAGS -g -fPIC"],
-  [*flang*], [FCFLAGS="$FCFLAGS -g -fPIC"],
-  [*ifort*], [FCFLAGS="$FCFLAGS -g -fPIC"],
+  [*gfortran*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*flang*], [FCFLAGS="$FCFLAGS -fPIC"],
+  [*ifort*], [FCFLAGS="$FCFLAGS -fPIC"],
   [])
 
 ])
@@ -131,7 +131,7 @@ AC_ARG_WITH([hdf5],
   AS_HELP_STRING([--with-hdf5=PATH], [Path to HDF5 library and headers]), [
   with_hdf5="$withval"], [with_hdf5="yes"])
 
-AS_IF([test "x$with_hdf5" == "xno"], [], 
+AS_IF([test "x$with_hdf5" == "xno"], [],
       [test "x$with_hdf5" != "xyes"], [
            HDF5_LIBS="-lhdf5"
            HDF5_PATH="$with_hdf5"
@@ -311,6 +311,21 @@ AC_CHECK_HEADERS([math.h])
 
 AC_SEARCH_LIBS([pthread_create], [pthread], [], AC_MSG_ERROR([The pthread library is required]))
 AC_CHECK_HEADERS([pthread.h])
+
+# Debug flags
+
+AC_ARG_ENABLE(debug, [AS_HELP_STRING([--enable-debug],[enable gcc and gfortran debug flags])], ok=$enableval, ok=no)
+if test "$ok" = "yes"; then
+  CFLAGS="${CFLAGS} -Wall -Wextra -Wpedantic -Werror -Wshadow -Wformat -Wfloat-equal -Wconversion -Wcast-align -Wnull-dereference -Wstrict-aliasing -Winline -Wmissing-prototypes -Wunreachable-code -fstack-protector-strong -fdiagnostics-show-option -Wfloat-conversion -Wcast-qual -fno-inline -fno-omit-frame-pointer -Wno-sign-conversion -Wno-cast-qual -Wno-float-conversion" # -Wno-unused-variable"
+  FCFLAGS="${FCFLAGS} -g -fcheck=all -Waliasing -Wampersand -Wconversion -Wsurprising -Wintrinsics-std -Wno-tabs -Wintrinsic-shadow -Wline-truncation -Wreal-q-constant -Wuninitialized  -fbacktrace -ffpe-trap=zero,overflow -finit-real=nan"
+fi
+
+
+AC_ARG_ENABLE(sanitizer, [AS_HELP_STRING([--enable-sanitizer],[enable sanitizer debug flags])], ok=$enableval, ok=no)
+if test "$ok" = "yes"; then
+  CFLAGS="${CFLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=bounds -fsanitize=bounds-strict"
+  FCFLAGS="${FCFLAGS} -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=bounds -fsanitize=bounds-strict"
+fi
 
 
 AC_CONFIG_FILES([Makefile

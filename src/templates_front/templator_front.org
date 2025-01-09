@@ -471,12 +471,19 @@ __trexio_path__ = None
    | ~TREXIO_VERSION_PARSING_ISSUE~   |   36 | 'Failed to parse package_version'              |
    | ~TREXIO_PHASE_CHANGE~            |   37 | 'The function succeeded with a change of sign' |
    | ~TREXIO_INVALID_MO_INDEX~        |   38 | 'Invalid MO index'                             |
+   | ~TREXIO_INVALID_ARG_9~           |   39 | 'Invalid argument 9'                           |
+   | ~TREXIO_INVALID_ARG_10~          |   40 | 'Invalid argument 10'                          |
+   | ~TREXIO_INVALID_ARG_11~          |   41 | 'Invalid argument 11'                          |
+   | ~TREXIO_INVALID_ARG_12~          |   42 | 'Invalid argument 12'                          |
+   | ~TREXIO_INVALID_ARG_13~          |   43 | 'Invalid argument 13'                          |
+   | ~TREXIO_INVALID_ARG_14~          |   44 | 'Invalid argument 14'                          |
+   | ~TREXIO_CORRUPTION_ATTEMPT~      |   45 | 'File offset is wrong, corruption risk'        |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
 
    *IMPORTANT!*
-   The code below has to be executed within Emacs each time
+   The 2 code blocks below have to be executed within Emacs each time
    a new error code is added to the table above. Otherwise, the codes
    and the corresponding message are not propagated to the source code.
 
@@ -511,7 +518,6 @@ result += [ "#+end_src" ]
 return '\n'.join(result)
 
    #+end_src
-
 
    #+RESULTS:
    :results:
@@ -556,6 +562,13 @@ return '\n'.join(result)
    #define TREXIO_VERSION_PARSING_ISSUE   ((trexio_exit_code) 36)
    #define TREXIO_PHASE_CHANGE            ((trexio_exit_code) 37)
    #define TREXIO_INVALID_MO_INDEX        ((trexio_exit_code) 38)
+   #define TREXIO_INVALID_ARG_9           ((trexio_exit_code) 39)
+   #define TREXIO_INVALID_ARG_10          ((trexio_exit_code) 40)
+   #define TREXIO_INVALID_ARG_11          ((trexio_exit_code) 41)
+   #define TREXIO_INVALID_ARG_12          ((trexio_exit_code) 42)
+   #define TREXIO_INVALID_ARG_13          ((trexio_exit_code) 43)
+   #define TREXIO_INVALID_ARG_14          ((trexio_exit_code) 44)
+   #define TREXIO_CORRUPTION_ATTEMPT      ((trexio_exit_code) 45)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -599,6 +612,13 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_VERSION_PARSING_ISSUE   = 36
       integer(trexio_exit_code), parameter :: TREXIO_PHASE_CHANGE            = 37
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_MO_INDEX        = 38
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_9           = 39
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_10          = 40
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_11          = 41
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_12          = 42
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_13          = 43
+      integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_14          = 44
+      integer(trexio_exit_code), parameter :: TREXIO_CORRUPTION_ATTEMPT      = 45
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
@@ -643,30 +663,15 @@ return '\n'.join(result)
    TREXIO_VERSION_PARSING_ISSUE   = 36
    TREXIO_PHASE_CHANGE            = 37
    TREXIO_INVALID_MO_INDEX        = 38
+   TREXIO_INVALID_ARG_9           = 39
+   TREXIO_INVALID_ARG_10          = 40
+   TREXIO_INVALID_ARG_11          = 41
+   TREXIO_INVALID_ARG_12          = 42
+   TREXIO_INVALID_ARG_13          = 43
+   TREXIO_INVALID_ARG_14          = 44
+   TREXIO_CORRUPTION_ATTEMPT      = 45
    #+end_src
    :end:
-
-*** Decoding errors
-
-   The ~trexio_string_of_error~ converts an exit code into a string. The
-   string is assumed to be large enough to contain the error message
-   (typically 128 characters).
-
-   To decode the error messages, ~trexio_string_of_error~ converts an
-   error code into a string.
-
-   #+NAME: MAX_STRING_LENGTH
-   : 128
-
-   #+begin_src c :tangle prefix_front.h :exports none :noweb yes
-const char* trexio_string_of_error(const trexio_exit_code error);
-void trexio_string_of_error_f(const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>]);
-   #+end_src
-
-   *IMPORTANT!*
-   The code below has to be executed within Emacs each time
-   a new error code is added to the table above. Otherwise, the codes
-   and the corresponding message are not propagated to the source code.
 
    #+NAME:cases
    #+begin_src python :var table=table-exit-codes :exports none :noweb yes
@@ -799,7 +804,48 @@ return '\n'.join(result)
    case TREXIO_VERSION_PARSING_ISSUE:
      return "Failed to parse package_version";
      break;
+   case TREXIO_PHASE_CHANGE:
+     return "The function succeeded with a change of sign";
+     break;
+   case TREXIO_INVALID_MO_INDEX:
+     return "Invalid MO index";
+     break;
+   case TREXIO_INVALID_ARG_9:
+     return "Invalid argument 9";
+     break;
+   case TREXIO_INVALID_ARG_10:
+     return "Invalid argument 10";
+     break;
+   case TREXIO_INVALID_ARG_11:
+     return "Invalid argument 11";
+     break;
+   case TREXIO_INVALID_ARG_12:
+     return "Invalid argument 12";
+     break;
+   case TREXIO_INVALID_ARG_13:
+     return "Invalid argument 13";
+     break;
+   case TREXIO_INVALID_ARG_14:
+     return "Invalid argument 14";
+     break;
+   case TREXIO_CORRUPTION_ATTEMPT:
+     return "File offset is wrong, corruption risk";
+     break;
    #+end_example
+
+*** Decoding errors
+
+   The ~trexio_string_of_error~ converts an exit code into a string. The
+   string is assumed to be large enough to contain the error message
+   (typically 128 characters).
+
+   To decode the error messages, ~trexio_string_of_error~ converts an
+   error code into a string.
+
+   #+begin_src c :tangle prefix_front.h :exports none :noweb yes
+const char* trexio_string_of_error(const trexio_exit_code error);
+void trexio_string_of_error_f(const trexio_exit_code error, const int32_t size_string, char* const result);
+   #+end_src
 
 **** C source code
 
@@ -814,9 +860,17 @@ trexio_string_of_error (const trexio_exit_code error)
 }
 
 void
-trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING_LENGTH()>>])
+trexio_string_of_error_f (const trexio_exit_code error, const int32_t str_size, char* const result)
 {
-  strncpy(result, trexio_string_of_error(error), <<MAX_STRING_LENGTH()>>);
+  const char* pSrc = trexio_string_of_error(error);
+  int32_t sizeCp = (int32_t) strlen(pSrc);
+  if (sizeCp > str_size) {
+     sizeCp = str_size;
+  }
+  memcpy(result, pSrc, sizeCp);
+  for (int32_t i=sizeCp ; i<str_size ; ++i) {
+    result[i] = ' ';
+  }
 }
    #+end_src
 
@@ -824,11 +878,12 @@ trexio_string_of_error_f (const trexio_exit_code error, char result[<<MAX_STRING
 
   #+begin_src f90 :tangle prefix_fortran.f90 :noexport :noweb yes
 interface
-   subroutine trexio_string_of_error (error, string) bind(C, name='trexio_string_of_error_f')
+   subroutine trexio_string_of_error_f (error, str_size, string) bind(C)
      import
      integer(trexio_exit_code), intent(in), value :: error
-     character(kind=c_char), intent(out)          :: string(<<MAX_STRING_LENGTH()>>)
-   end subroutine trexio_string_of_error
+     integer(c_int32_t), intent(in), value            :: str_size
+     character(kind=c_char), intent(out)          :: string(str_size)
+   end subroutine trexio_string_of_error_f
 end interface
   #+end_src
 
@@ -1266,8 +1321,11 @@ trexio_open(const char* file_name, const char mode,
 
   /* Data for the parent type */
 
-  strncpy(result->file_name, file_name, TREXIO_MAX_FILENAME_LENGTH);
-  if (result->file_name[TREXIO_MAX_FILENAME_LENGTH-1] != '\0') {
+  // See https://stackoverflow.com/a/50198398/4151327
+  size_t lenSrc = strnlen(file_name, TREXIO_MAX_FILENAME_LENGTH-1);
+  if (lenSrc < TREXIO_MAX_FILENAME_LENGTH) {
+    memcpy(result->file_name, file_name, lenSrc+1);
+  } else {
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
     free(result);
     return NULL;
@@ -1285,11 +1343,9 @@ trexio_open(const char* file_name, const char mode,
   }
   // assert (irc == 0);
 
-  trexio_exit_code rc;
-
   /* Back end initialization */
 
-  rc = TREXIO_OPEN_ERROR;
+  trexio_exit_code rc = TREXIO_OPEN_ERROR;
 
   switch (back_end_local) {
 
@@ -2090,8 +2146,6 @@ trexio_pre_close (trexio_t* file)
 
   if (file == NULL) return TREXIO_FILE_ERROR;
 
-  trexio_exit_code rc;
-
   /* Check consistency between number of determinants and coefficients stored in the file */
 
   if (file->version_major >= 2 && file->version_minor >= 2) {
@@ -2101,6 +2155,8 @@ trexio_pre_close (trexio_t* file)
     int64_t ndet, ncoeff;
 
     if (has_det && has_coeff) {
+      trexio_exit_code rc = TREXIO_FAILURE;
+
       rc = trexio_read_determinant_num_64(file, &ndet);
       if (rc != TREXIO_SUCCESS) return rc;
 
@@ -2120,7 +2176,11 @@ trexio_pre_close (trexio_t* file)
   bool has_updn = (trexio_has_electron_num(file) == TREXIO_SUCCESS);
 
   if (file->mode != 'r') {
+
     if (has_updn && has_up && has_dn) {
+
+      trexio_exit_code rc = TREXIO_FAILURE;
+
       rc = trexio_read_electron_up_num(file, &nup);
       if (rc != TREXIO_SUCCESS) return rc;
 
@@ -2139,7 +2199,11 @@ trexio_pre_close (trexio_t* file)
           return TREXIO_INVALID_ELECTRON_NUM;
         }
       }
+
     } else if (has_up && has_dn) {
+
+      trexio_exit_code rc = TREXIO_FAILURE;
+
       rc = trexio_read_electron_up_num(file, &nup);
       if (rc != TREXIO_SUCCESS) return rc;
 
@@ -2149,7 +2213,11 @@ trexio_pre_close (trexio_t* file)
       nelec = nup + ndn;
       rc = trexio_write_electron_num(file, nelec);
       if (rc != TREXIO_SUCCESS) return rc;
+
     } else if (has_up) {
+
+      trexio_exit_code rc = TREXIO_FAILURE;
+
       rc = trexio_read_electron_up_num(file, &nup);
       if (rc != TREXIO_SUCCESS) return rc;
 
@@ -2160,7 +2228,11 @@ trexio_pre_close (trexio_t* file)
       nelec = nup;
       rc = trexio_write_electron_num(file, nelec);
       if (rc != TREXIO_SUCCESS) return rc;
+
     } else if (has_dn) {
+      
+      trexio_exit_code rc = TREXIO_FAILURE;
+
       rc = trexio_read_electron_dn_num(file, &ndn);
       if (rc != TREXIO_SUCCESS) return rc;
 
@@ -2171,6 +2243,7 @@ trexio_pre_close (trexio_t* file)
       nelec = ndn;
       rc = trexio_write_electron_num(file, nelec);
       if (rc != TREXIO_SUCCESS) return rc;
+
     }
   }
 
@@ -2792,9 +2865,10 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
-  trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
 
+  trexio_exit_code rc = TREXIO_FAILURE;
+  
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
@@ -2855,10 +2929,9 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
 
-
-  trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
 
+  trexio_exit_code rc = TREXIO_FAILURE;
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
@@ -2952,8 +3025,9 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
-  trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
@@ -3026,8 +3100,9 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
   if ($group_dset$ == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
 
-  trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
@@ -3092,8 +3167,10 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
 
   #+NAME:dimCheck
   #+begin_src c
-  trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
+
+  trexio_exit_code rc = TREXIO_FAILURE;
+  (void) rc; // Avoids unused parameter error for scalar variables
 
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
@@ -3578,6 +3655,12 @@ trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file,
                                                const int64_t size_value_read
                                                )
 {
+  /* To be set by generator : number of indices */
+  const uint32_t rank = $group_dset_rank$;
+
+  if (size_index_read < rank * (*buffer_size_read)) return TREXIO_INVALID_ARG_5;
+  if (size_value_read <        (*buffer_size_read)) return TREXIO_INVALID_ARG_7;
+  
   return trexio_read_$group_dset$(file, offset_file, buffer_size_read, index_sparse_read, value_sparse_read);
 }
 
@@ -3599,10 +3682,9 @@ trexio_read_$group_dset$(trexio_t* const file,
   const uint32_t rank = $group_dset_rank$;  // To be set by generator : number of indices
 
   int64_t size_max;         // Max number of integrals (already in the file)
-  trexio_exit_code rc;
 
   /* Read the max number of integrals stored in the file */
-  rc = trexio_read_$group_dset$_size(file, &size_max);
+  trexio_exit_code rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS) return rc;
 
   /* To be set by generator : number of unique dimensions
@@ -3710,6 +3792,12 @@ trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file,
                                                 const int64_t size_value_write
                                                 )
 {
+  /* To be set by generator : number of indices */
+  const uint32_t rank = $group_dset_rank$;
+
+  if (size_index_write < rank * buffer_size) return TREXIO_INVALID_ARG_5;
+  if (size_value_write <        buffer_size) return TREXIO_INVALID_ARG_7;
+  
   return trexio_write_$group_dset$(file, offset_file, buffer_size, index_sparse_write, value_sparse_write);
 }
 
@@ -3731,12 +3819,14 @@ trexio_write_$group_dset$(trexio_t* const file,
   const uint32_t rank = $group_dset_rank$;
 
   int64_t size_max = 0L; // Max number of integrals (already in the file)
-  trexio_exit_code rc;
 
   /* Read the max number of integrals stored in the file */
-  rc = trexio_read_$group_dset$_size(file, &size_max);
+  trexio_exit_code rc = trexio_read_$group_dset$_size(file, &size_max);
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
+
+  /* Dummy check to avoid overwriting existing data */
+  if (offset_file < size_max) return TREXIO_CORRUPTION_ATTEMPT;
 
   /* To be set by generator : number of unique dimensions
      (e.g. 1 for ERI in AO basis because only ao_num is present in the list of dimensions) */
@@ -4182,11 +4272,10 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const int32_
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
   if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
-  trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
 
   /* Error handling for this call is added by the generator */
-  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+  trexio_exit_code rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
@@ -4225,11 +4314,10 @@ trexio_read_$group_dset$ (trexio_t* const file, char** dset_out, const int32_t m
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
-  trexio_exit_code rc;
   int64_t dset_dim = 0;
 
   /* Error handling for this call is added by the generator */
-  rc = trexio_read_$group_dset_dim$_64(file, &(dset_dim));
+  trexio_exit_code rc = trexio_read_$group_dset_dim$_64(file, &(dset_dim));
 
   if (dset_dim == 0L) return TREXIO_INVALID_NUM;
 
@@ -4272,11 +4360,10 @@ trexio_write_$group_dset$_low (trexio_t* const file, char* dset_in, const int32_
   if (max_str_len <= 0) return TREXIO_INVALID_ARG_3;
   if (trexio_has_$group_dset$(file) == TREXIO_SUCCESS && file->mode != 'u') return TREXIO_DSET_ALREADY_EXISTS;
 
-  trexio_exit_code rc;
   int64_t $group_dset_dim$ = 0;
 
   /* Error handling for this call is added by the generator */
-  rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
+  trexio_exit_code rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
   if ($group_dset_dim$ == 0L) return TREXIO_INVALID_NUM;
 
@@ -4358,11 +4445,10 @@ trexio_write_$group_dset$ (trexio_t* const file, const char** dset_in, const int
 
   assert(file->back_end < TREXIO_INVALID_BACK_END);
 
-  trexio_exit_code rc;
   int64_t dset_dim = 0;
 
   /* Error handling for this call is added by the generator */
-  rc = trexio_read_$group_dset_dim$_64(file, &(dset_dim));
+  trexio_exit_code rc = trexio_read_$group_dset_dim$_64(file, &(dset_dim));
 
   if (dset_dim == 0L) return TREXIO_INVALID_NUM;
 
@@ -4631,7 +4717,7 @@ trexio_read_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64
   if (dset  == NULL) return TREXIO_INVALID_ARG_2;
   if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
-  trexio_exit_code rc;
+  trexio_exit_code rc = TREXIO_FAILURE;
 
   uint32_t rank = 1;
   uint64_t det_size = (uint64_t) (*buffer_size_read);
@@ -4660,8 +4746,8 @@ trexio_read_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64
     break;
 ,*/
   default:
-    rc = TREXIO_FAILURE;  /* Impossible case */
-    break;
+    rc = TREXIO_FAILURE;
+    break;  /* Impossible case */
   }
 
   if (rc != TREXIO_SUCCESS && rc != TREXIO_END) return rc;
@@ -4709,6 +4795,7 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 trexio_exit_code
 trexio_read_safe_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset_out, const int64_t dim_out)
 {
+  if (dim_out < (*buffer_size_read)) return TREXIO_INVALID_ARG_5;
   return trexio_read_$group_dset$(file, offset_file, buffer_size_read, dset_out);
 }
      #+end_src
@@ -4755,6 +4842,9 @@ trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, cons
 trexio_exit_code
 trexio_write_safe_$group_dset$ (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset_in, const int64_t dim_in)
 {
+  /* Check that dim_in is large enough */
+  if (dim_in < buffer_size) return TREXIO_INVALID_ARG_5;
+
   return trexio_write_$group_dset$(file, offset_file, buffer_size, dset_in);
 }
      #+end_src
@@ -5384,7 +5474,7 @@ trexio_get_int64_num(trexio_t* const file, int32_t* const num)
 
   /* Compute how many integer numbers is needed to represent a determinant */
   int32_t int_num = 0;
-  int_num = (mo_num - 1L)/64 + 1;
+  int_num = (int32_t) (mo_num - 1L)/64 + 1;
 
   *num = int_num;
 
@@ -5452,6 +5542,14 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
 trexio_exit_code
 trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, int64_t* const dset_out, const int64_t dim_out)
 {
+  /* Get the number of int bit fields per determinant */
+  int32_t int_num = 0;
+  trexio_exit_code rc = trexio_get_int64_num(file, &int_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Check that dset_out is large enough */
+  if (dim_out < (*buffer_size_read) * int_num * 2) return TREXIO_INVALID_ARG_5;
+
   return trexio_read_determinant_list(file, offset_file, buffer_size_read, dset_out);
 }
      #+end_src
@@ -5471,6 +5569,17 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   if (offset_file < 0) return TREXIO_INVALID_ARG_2;
   if (buffer_size <= 0) return TREXIO_INVALID_ARG_3;
   if (dset == NULL) return TREXIO_INVALID_ARG_4;
+
+  // Update the determinant_num value with the number of determinants written
+  int64_t det_num_current = 0L;
+  // Read the determinant_num if it exists already
+  if (trexio_has_determinant_num(file) == TREXIO_SUCCESS) {
+     trexio_exit_code rc = trexio_read_determinant_num_64(file, &det_num_current);
+     if (rc != TREXIO_SUCCESS) return rc;
+  }
+
+  /* Dummy check to avoid overwriting existing data */
+  if (offset_file < det_num_current) return TREXIO_CORRUPTION_ATTEMPT;
 
   /* Get the number of int bit fields per determinant */
   int32_t int_num = 0;
@@ -5587,6 +5696,14 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
 trexio_exit_code
 trexio_write_safe_determinant_list (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const int64_t* dset_in, const int64_t dim_in)
 {
+  /* Get the number of int bit fields per determinant */
+  int32_t int_num = 0;
+  trexio_exit_code rc = trexio_get_int64_num(file, &int_num);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  /* Check that dim_in is large enough */
+  if (dim_in < buffer_size * int_num * 2) return TREXIO_INVALID_ARG_5;
+
   return trexio_write_determinant_list(file, offset_file, buffer_size, dset_in);
 }
      #+end_src
@@ -6048,10 +6165,8 @@ trexio_exit_code trexio_to_orbital_list_up_dn(const int32_t N_int,
   if (occ_num_up == NULL) return TREXIO_INVALID_ARG_5;
   if (occ_num_dn == NULL) return TREXIO_INVALID_ARG_6;
 
-  trexio_exit_code rc;
-
   /* First process up-spin electrons */
-  rc = trexio_to_orbital_list(N_int, &d1[0], list_up, occ_num_up);
+  trexio_exit_code rc = trexio_to_orbital_list(N_int, &d1[0], list_up, occ_num_up);
   if (rc != TREXIO_SUCCESS) return rc;
 
   /* Now process down-spin electrons */
@@ -6071,6 +6186,14 @@ trexio_safe_to_orbital_list (const int32_t N_int,
                              const int64_t dim_out,
 			     int32_t* const num)
 {
+  if (dim_in < N_int) return TREXIO_INVALID_ARG_3;
+
+  /* Count number of up electrons in first bitfield */
+  int count = 0;
+  for (int i=0 ; i<N_int; i++) {
+    count += popcnt(dset_in[i]);
+  }
+  if (dim_out < count) return TREXIO_INVALID_ARG_5;
   return trexio_to_orbital_list(N_int, dset_in, dset_out, num);
 }
 
@@ -6085,6 +6208,21 @@ trexio_safe_to_orbital_list_up_dn (const int32_t N_int,
 			           int32_t* const num_up,
 			           int32_t* const num_dn)
 {
+  if (dim_in < 2*N_int) return TREXIO_INVALID_ARG_3;
+
+  /* Count number of up electrons in first bitfield */
+  int count = 0;
+  for (int i=0 ; i<N_int; i++) {
+    count += popcnt(dset_in[i]);
+  }
+  if (dim_up_out < count) return TREXIO_INVALID_ARG_5;
+
+  /* Count number of up electrons in second bitfield */
+  count = 0;
+  for (int i=N_int ; i<2*N_int; i++) {
+    count += popcnt(dset_in[i]);
+  }
+  if (dim_dn_out < count) return TREXIO_INVALID_ARG_7;
   return trexio_to_orbital_list_up_dn(N_int, dset_in, dset_up_out, dset_dn_out, num_up, num_dn);
 }
     #+end_src
@@ -6093,23 +6231,22 @@ trexio_safe_to_orbital_list_up_dn (const int32_t N_int,
 trexio_exit_code
 trexio_convert_nao_radius_32 (const float r, const float* const grid_r, float* const log_r_out)
 {
-  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (r <= 0.) return TREXIO_INVALID_ARG_1;
   if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
   if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
 
-  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
-
+  ,*log_r_out = (float) log((double) r / grid_r[0]) / log((double) grid_r[1] / grid_r[0]);
   return TREXIO_SUCCESS;
 }
 
 trexio_exit_code
 trexio_convert_nao_radius_64 (const double r, const double* const grid_r, double* const log_r_out)
 {
-  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (r <= 0.) return TREXIO_INVALID_ARG_1;
   if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
   if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
 
-  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+  ,*log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
 
   return TREXIO_SUCCESS;
 }
@@ -6117,11 +6254,12 @@ trexio_convert_nao_radius_64 (const double r, const double* const grid_r, double
 trexio_exit_code
 trexio_convert_nao_radius_py (const double r, double* grid_r, int32_t n_grid, double* const log_r_out)
 {
-  if (r < 0) return TREXIO_INVALID_ARG_1;
+  if (r <= 0.) return TREXIO_INVALID_ARG_1;
   if (grid_r == NULL) return TREXIO_INVALID_ARG_2;
-  if (log_r_out == NULL) return TREXIO_INVALID_ARG_3;
+  if (n_grid < 2) return TREXIO_INVALID_ARG_3;
+  if (log_r_out == NULL) return TREXIO_INVALID_ARG_4;
 
-  *log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
+  ,*log_r_out = log(r / grid_r[0]) / log(grid_r[1] / grid_r[0]);
 
   return TREXIO_SUCCESS;
 }
@@ -6141,12 +6279,12 @@ trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int
   if (interpolator == 0) return TREXIO_INVALID_ARG_6;
   if (normalization == 0) return TREXIO_INVALID_ARG_7;
 
-  const int32_t i0 = 4*grid_start[shell_index];
+  const int64_t i0 = 4*grid_start[shell_index];
 
   // Convert radius to logarithmic units
   double r_log = 0.0;
   trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
-  int32_t i_log = (int32_t) r_log;
+  int64_t i_log = (int64_t) r_log;
   if (i_log < 0)
     i_log = 0;
   else if (i_log >= grid_size[shell_index])
@@ -6158,7 +6296,7 @@ trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int
   val_spline += t * t * interpolator[i0 + 4*i_log + 2];
   val_spline += t * t * t * interpolator[i0 + 4*i_log + 3];
 
-  *amplitude = val_spline * normalization[shell_index] / r;
+  ,*amplitude = val_spline * normalization[shell_index] / r;
   return TREXIO_SUCCESS;
 }
 
@@ -6176,8 +6314,6 @@ trexio_evaluate_nao_radial_all (const int32_t shell_num, const int32_t* const nu
   if (interpolator == 0) return TREXIO_INVALID_ARG_7;
   if (normalization == 0) return TREXIO_INVALID_ARG_8;
 
-  trexio_exit_code rc;
-
   for (int shell_index = 0; shell_index < shell_num; shell_index++) {
     const int32_t nuc_index = nucleus_index[shell_index];
     const double dx = nucleus_coords[3*nuc_index + 0] - rx;
@@ -6186,7 +6322,7 @@ trexio_evaluate_nao_radial_all (const int32_t shell_num, const int32_t* const nu
     const double r = sqrt(dx*dx + dy*dy + dz*dz);
 
     // All possibly reported errors have been caught above
-    rc = trexio_evaluate_nao_radial(shell_index, r, grid_start,
+    trexio_exit_code rc = trexio_evaluate_nao_radial(shell_index, r, grid_start,
       grid_size, grid_r, interpolator, normalization, &amplitude[shell_index]);
 
     if (rc != TREXIO_SUCCESS)
@@ -6199,39 +6335,47 @@ trexio_evaluate_nao_radial_all (const int32_t shell_num, const int32_t* const nu
 trexio_exit_code trexio_evaluate_nao_radial_py (const int shell_index,
   const double r, int64_t* grid_start, int n_grid_st,
   int64_t* grid_size, int n_grid_si, double* grid_r, int n_grid_r,
-  double* interpolator, int n_interp, double* normalization, int n_norm, double* const amplitude)
+  double* interpolator, int n_interp, double* normalization, int n_norm,
+  double* const amplitude)
 {
   // Code needs to be copied because of the use of int64_t mandated by Python
   // If a 64-bit version is implemented, this can be avoided
   if (shell_index < 0) return TREXIO_INVALID_ARG_1;
   if (r < 0) return TREXIO_INVALID_ARG_2;
   if (grid_start == 0) return TREXIO_INVALID_ARG_3;
-  if (grid_size == 0) return TREXIO_INVALID_ARG_4;
-  if (grid_r == NULL) return TREXIO_INVALID_ARG_5;
-  if (interpolator == 0) return TREXIO_INVALID_ARG_6;
-  if (normalization == 0) return TREXIO_INVALID_ARG_7;
+  if (n_grid_st < shell_index) return TREXIO_INVALID_ARG_4;
+  if (grid_size == 0) return TREXIO_INVALID_ARG_5;
+  if (n_grid_si < shell_index) return TREXIO_INVALID_ARG_6;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_7;
+  if (n_grid_r < grid_start[shell_index]) return TREXIO_INVALID_ARG_8;
+  if (interpolator == NULL) return TREXIO_INVALID_ARG_9;
+  if (normalization == 0) return TREXIO_INVALID_ARG_11;
+  if (n_norm < shell_index) return TREXIO_INVALID_ARG_12;
 
-  const int32_t i0 = 4*grid_start[shell_index];
+  const int64_t i0 = 4*grid_start[shell_index];
+  if (n_interp < i0) return TREXIO_INVALID_ARG_10;
 
   // Convert radius to logarithmic units
   double r_log = 0.0;
   trexio_convert_nao_radius_64 (r, grid_r + grid_start[shell_index], &r_log);
-  int32_t i_log = (int32_t) r_log;
+  int64_t i_log = (int64_t) r_log;
   if (i_log < 0) {
-    *amplitude = interpolator[i0] * normalization[shell_index] / r;
+    ,*amplitude = interpolator[i0] * normalization[shell_index] / r;
     return TREXIO_SUCCESS;
   } else if (i_log >= grid_size[shell_index]) {
-    *amplitude = 0.0;
+    ,*amplitude = 0.0;
     return TREXIO_SUCCESS; // NAOs vanish at the boundary by definition
   }
 
   double t = r_log - (double) i_log;
+  if (n_interp < i0+4*i_log+3) return TREXIO_INVALID_ARG_10;
+
   double val_spline = interpolator[i0 + 4*i_log + 0];
   val_spline += t * interpolator[i0 + 4*i_log + 1];
   val_spline += t * t * interpolator[i0 + 4*i_log + 2];
   val_spline += t * t * t * interpolator[i0 + 4*i_log + 3];
 
-  *amplitude = val_spline * normalization[shell_index] / r;
+  ,*amplitude = val_spline * normalization[shell_index] / r;
   return TREXIO_SUCCESS;
 }
 
@@ -6240,29 +6384,38 @@ trexio_exit_code trexio_evaluate_nao_radial_all_py (const int32_t shell_num,
   int64_t* grid_start, int n_grid_st, int64_t* grid_size, int n_grid_si,
   double* grid_r, int n_grid_r, double* interpolator, int n_interp,
   double* normalization, int n_norm,
-  const double rx, const double ry, const double rz, double* const amplitudes, int amplitude_cnt)
+  const double rx, const double ry, const double rz,
+  double* const amplitudes, int amplitude_cnt)
 {
   if (shell_num < 0) return TREXIO_INVALID_ARG_1;
-  if (nucleus_index == 0) return TREXIO_INVALID_ARG_2;
-  if (nucleus_coords == 0) return TREXIO_INVALID_ARG_3;
-  if (grid_start == 0) return TREXIO_INVALID_ARG_4;
-  if (grid_size == 0) return TREXIO_INVALID_ARG_5;
-  if (grid_r == NULL) return TREXIO_INVALID_ARG_6;
-  if (interpolator == 0) return TREXIO_INVALID_ARG_7;
-  if (normalization == 0) return TREXIO_INVALID_ARG_8;
+  if (nucleus_index == NULL) return TREXIO_INVALID_ARG_2;
+  if (nucleus_coords == NULL) return TREXIO_INVALID_ARG_4;
+  if (grid_start == NULL) return TREXIO_INVALID_ARG_6;
+  if (grid_size == NULL) return TREXIO_INVALID_ARG_8;
+  if (grid_r == NULL) return TREXIO_INVALID_ARG_10;
+  if (interpolator == NULL) return TREXIO_INVALID_ARG_12;
+  if (normalization == NULL) return TREXIO_INVALID_ARG_14;
 
-  trexio_exit_code rc;
+  assert (amplitudes != NULL); // 19 arguments!!! Don't want to make TREXIO_INVALID_ARG_19
+  assert (amplitude_cnt > shell_num);
+
+  if (n_nuc_id < shell_num) return TREXIO_INVALID_ARG_3;
+  if (n_nuc_co <  3*nucleus_index[shell_num-1]+2) return TREXIO_INVALID_ARG_5;
 
   for (int shell_index = 0; shell_index < shell_num; shell_index++) {
-    const int32_t nuc_index = nucleus_index[shell_index];
+    const int64_t nuc_index = nucleus_index[shell_index];
+
     const double dx = nucleus_coords[3*nuc_index + 0] - rx;
     const double dy = nucleus_coords[3*nuc_index + 1] - ry;
     const double dz = nucleus_coords[3*nuc_index + 2] - rz;
     const double r = sqrt(dx*dx + dy*dy + dz*dz);
 
     // All possibly reported errors have been caught above
-    rc = trexio_evaluate_nao_radial_py(shell_index, r, grid_start, n_grid_st,
-      grid_size, n_grid_si, grid_r, n_grid_r, interpolator, n_interp, normalization, n_norm, &amplitudes[shell_index]);
+    trexio_exit_code rc =
+      trexio_evaluate_nao_radial_py(shell_index, r, grid_start, n_grid_st, grid_size,
+                                    n_grid_si, grid_r, n_grid_r, interpolator, n_interp,
+                                    normalization, n_norm, &amplitudes[shell_index]);
+
     if (rc != TREXIO_SUCCESS)
       return rc;
   }
@@ -6662,6 +6815,18 @@ contains
      implicit none
      trexio_info = trexio_info_c()
    end function trexio_info
+  #+end_src
+
+  This function adds the string length as an extra argument to help the C code
+  check that the passed string is large enough.
+
+  #+begin_src f90 :tangle helper_fortran.f90 :noweb yes
+subroutine trexio_string_of_error (error, string)
+   implicit none
+   integer(trexio_exit_code), intent(in) :: error
+   character*(*), intent(out)            :: string
+   call  trexio_string_of_error_f(error, len(string), string)
+end subroutine trexio_string_of_error
   #+end_src
 
   The function below adapts the original C-based ~trexio_open~ for Fortran.

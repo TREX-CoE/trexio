@@ -327,7 +327,8 @@ subroutine test_read(file_name, back_end)
 
   integer(trexio_t) :: trex_file
 
-  integer :: i, j, k, ind, offset, flag
+  integer*8 :: i
+  integer :: j, k, ind, offset, flag
   integer(trexio_exit_code) :: rc = 1
   integer :: num, num_read, basis_shell_num
 
@@ -659,11 +660,12 @@ subroutine test_read_void(file_name, back_end)
   integer, intent(in) :: back_end
 
   integer(trexio_t) :: trex_file
-  integer :: rc = 1
-  character(128) :: str
+  integer :: rc
+  character*(128) :: str
 
 ! ================= START OF TEST ===================== !
 
+  rc = TREXIO_SUCCESS
   trex_file = trexio_open(file_name, 'r', back_end, rc)
   if (rc /= TREXIO_OPEN_ERROR) then
     rc = trexio_close(trex_file)
