@@ -3,14 +3,14 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-01-02 Thu 21:15 -->
+<!-- 2025-01-09 Thu 14:53 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HDF5 back end</title>
-<meta name="generator" content="Org mode" />
 <meta name="author" content="TREX-CoE" />
-<style type="text/css">
- <!--/*--><![CDATA[/*><!--*/
+<meta name="generator" content="Org Mode" />
+<style>
+  #content { max-width: 60em; margin: auto; }
   .title  { text-align: center;
              margin-bottom: .2em; }
   .subtitle { text-align: center;
@@ -31,8 +31,9 @@
   #postamble p, #preamble p { font-size: 90%; margin: .2em; }
   p.verse { margin-left: 3%; }
   pre {
-    border: 1px solid #ccc;
-    box-shadow: 3px 3px 3px #eee;
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
     padding: 8pt;
     font-family: monospace;
     overflow: auto;
@@ -40,22 +41,22 @@
   }
   pre.src {
     position: relative;
-    overflow: visible;
-    padding-top: 1.2em;
+    overflow: auto;
   }
   pre.src:before {
     display: none;
     position: absolute;
-    background-color: white;
-    top: -10px;
-    right: 10px;
+    top: -8px;
+    right: 12px;
     padding: 3px;
-    border: 1px solid black;
+    color: #555;
+    background-color: #f2f2f299;
   }
-  pre.src:hover:before { display: inline;}
+  pre.src:hover:before { display: inline; margin-top: 14px;}
   /* Languages per Org manual */
   pre.src-asymptote:before { content: 'Asymptote'; }
   pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
   pre.src-C:before { content: 'C'; }
   /* pre.src-C++ doesn't work in CSS */
   pre.src-clojure:before { content: 'Clojure'; }
@@ -190,70 +191,17 @@
     { font-size: 10px; font-weight: bold; white-space: nowrap; }
   .org-info-js_search-highlight
     { background-color: #ffff00; color: #000000; font-weight: bold; }
-  .org-svg { width: 90%; }
-  /*]]>*/-->
+  .org-svg { }
 </style>
 <link rel="stylesheet" title="Standard" href="trexio.css" type="text/css" />
 
-<script type="text/javascript" src="org-info.js">
-/**
- *
- * @source: org-info.js
- *
- * @licstart  The following is the entire license notice for the
- *  JavaScript code in org-info.js.
- *
- * Copyright (C) 2012-2020 Free Software Foundation, Inc.
- *
- *
- * The JavaScript code in this tag is free software: you can
- * redistribute it and/or modify it under the terms of the GNU
- * General Public License (GNU GPL) as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version.  The code is distributed WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
- *
- * As additional permission under GNU GPL version 3 section 7, you
- * may distribute non-source (e.g., minimized or compacted) forms of
- * that code without the copy of the GNU GPL normally required by
- * section 4, provided you include this license notice and a URL
- * through which recipients can access the Corresponding Source.
- *
- * @licend  The above is the entire license notice
- * for the JavaScript code in org-info.js.
- *
- */
+<script src="org-info.js">
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&amp;dn=gpl-3.0.txt GPL-v3-or-Later
+// @license-end
 </script>
 
-<script type="text/javascript">
-
-/*
-@licstart  The following is the entire license notice for the
-JavaScript code in this tag.
-
-Copyright (C) 2012-2020 Free Software Foundation, Inc.
-
-The JavaScript code in this tag is free software: you can
-redistribute it and/or modify it under the terms of the GNU
-General Public License (GNU GPL) as published by the Free Software
-Foundation, either version 3 of the License, or (at your option)
-any later version.  The code is distributed WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-
-As additional permission under GNU GPL version 3 section 7, you
-may distribute non-source (e.g., minimized or compacted) forms of
-that code without the copy of the GNU GPL normally required by
-section 4, provided you include this license notice and a URL
-through which recipients can access the Corresponding Source.
-
-
-@licend  The above is the entire license notice
-for the JavaScript code in this tag.
-*/
-
-<!--/*--><![CDATA[/*><!--*/
+<script>
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&amp;dn=gpl-3.0.txt GPL-v3-or-Later
 org_html_manager.set("TOC_DEPTH", "4");
 org_html_manager.set("LINK_HOME", "index.html");
 org_html_manager.set("LINK_UP", "");
@@ -264,53 +212,7 @@ org_html_manager.set("FIXED_TOC", "0");
 org_html_manager.set("TOC", "0");
 org_html_manager.set("VIEW", "info");
 org_html_manager.setup();  // activate after the parameters are set
-/*]]>*///-->
-</script>
-<script type="text/javascript">
-/*
-@licstart  The following is the entire license notice for the
-JavaScript code in this tag.
-
-Copyright (C) 2012-2020 Free Software Foundation, Inc.
-
-The JavaScript code in this tag is free software: you can
-redistribute it and/or modify it under the terms of the GNU
-General Public License (GNU GPL) as published by the Free Software
-Foundation, either version 3 of the License, or (at your option)
-any later version.  The code is distributed WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-
-As additional permission under GNU GPL version 3 section 7, you
-may distribute non-source (e.g., minimized or compacted) forms of
-that code without the copy of the GNU GPL normally required by
-section 4, provided you include this license notice and a URL
-through which recipients can access the Corresponding Source.
-
-
-@licend  The above is the entire license notice
-for the JavaScript code in this tag.
-*/
-<!--/*--><![CDATA[/*><!--*/
- function CodeHighlightOn(elem, id)
- {
-   var target = document.getElementById(id);
-   if(null != target) {
-     elem.cacheClassElem = elem.className;
-     elem.cacheClassTarget = target.className;
-     target.className = "code-highlighted";
-     elem.className   = "code-highlighted";
-   }
- }
- function CodeHighlightOff(elem, id)
- {
-   var target = document.getElementById(id);
-   if(elem.cacheClassElem)
-     elem.className = elem.cacheClassElem;
-   if(elem.cacheClassTarget)
-     target.className = elem.cacheClassTarget;
- }
-/*]]>*///-->
+// @license-end
 </script>
 </head>
 <body>
@@ -318,31 +220,31 @@ for the JavaScript code in this tag.
  <a accesskey="h" href=""> UP </a>
  |
  <a accesskey="H" href="index.html"> HOME </a>
-</div><div id="content">
+</div><div id="content" class="content">
 <h1 class="title">HDF5 back end</h1>
-<div id="table-of-contents">
+<div id="table-of-contents" role="doc-toc">
 <h2>Table of Contents</h2>
-<div id="text-table-of-contents">
+<div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#orgb4a0109">1. Template for HDF5 definitions</a></li>
-<li><a href="#org30d2b9a">2. Template for HDF5 structures</a></li>
-<li><a href="#org907b483">3. Template for HDF5 init/deinit</a></li>
-<li><a href="#org975745d">4. Template for HDF5 has a group</a></li>
-<li><a href="#org7c204e6">5. Template for HDF5 has/read/write a numerical attribute</a></li>
-<li><a href="#org6fa9c71">6. Template for HDF5 has/read/write a dataset of numerical data</a></li>
-<li><a href="#org9c37154">7. Template for HDF5 has/read/write a dataset of sparse data</a></li>
-<li><a href="#org1f4a1a8">8. Template for HDF5 has/read/write a dataset of buffered vectors</a></li>
-<li><a href="#org784391e">9. Template for HDF5 has/read/write a dataset of strings</a></li>
-<li><a href="#orga8d6244">10. Template for HDF5 has/read/write a string attribute</a></li>
-<li><a href="#org4b3cd09">11. Template for HDF5 delete a group (UNSAFE mode)</a></li>
-<li><a href="#org3be89d7">12. Source code for the determinant part</a></li>
-<li><a href="#orgf9a56c9">13. Helper functions</a></li>
+<li><a href="#orga820642">1. Template for HDF5 definitions</a></li>
+<li><a href="#org1fc06a8">2. Template for HDF5 structures</a></li>
+<li><a href="#orgcc071f9">3. Template for HDF5 init/deinit</a></li>
+<li><a href="#org99120a5">4. Template for HDF5 has a group</a></li>
+<li><a href="#orgf1e6539">5. Template for HDF5 has/read/write a numerical attribute</a></li>
+<li><a href="#org506da15">6. Template for HDF5 has/read/write a dataset of numerical data</a></li>
+<li><a href="#org64ce7fc">7. Template for HDF5 has/read/write a dataset of sparse data</a></li>
+<li><a href="#orge9203a4">8. Template for HDF5 has/read/write a dataset of buffered vectors</a></li>
+<li><a href="#orgff25940">9. Template for HDF5 has/read/write a dataset of strings</a></li>
+<li><a href="#org31f27b2">10. Template for HDF5 has/read/write a string attribute</a></li>
+<li><a href="#orgc9c8dfe">11. Template for HDF5 delete a group (UNSAFE mode)</a></li>
+<li><a href="#orgf4e3746">12. Source code for the determinant part</a></li>
+<li><a href="#orgd565416">13. Helper functions</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgb4a0109" class="outline-2">
-<h2 id="orgb4a0109"><span class="section-number-2">1</span> Template for HDF5 definitions</h2>
+<div id="outline-container-orga820642" class="outline-2">
+<h2 id="orga820642"><span class="section-number-2">1.</span> Template for HDF5 definitions</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #483d8b;">#define</span> $GROUP$_GROUP_NAME          <span style="color: #8b2252;">"$group$"</span>
@@ -354,8 +256,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org30d2b9a" class="outline-2">
-<h2 id="org30d2b9a"><span class="section-number-2">2</span> Template for HDF5 structures</h2>
+<div id="outline-container-org1fc06a8" class="outline-2">
+<h2 id="org1fc06a8"><span class="section-number-2">2.</span> Template for HDF5 structures</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Polymorphism of the <code>trexio_t</code> type is handled by ensuring that the
@@ -375,8 +277,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org907b483" class="outline-2">
-<h2 id="org907b483"><span class="section-number-2">3</span> Template for HDF5 init/deinit</h2>
+<div id="outline-container-orgcc071f9" class="outline-2">
+<h2 id="orgcc071f9"><span class="section-number-2">3.</span> Template for HDF5 init/deinit</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -496,8 +398,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org975745d" class="outline-2">
-<h2 id="org975745d"><span class="section-number-2">4</span> Template for HDF5 has a group</h2>
+<div id="outline-container-org99120a5" class="outline-2">
+<h2 id="org99120a5"><span class="section-number-2">4.</span> Template for HDF5 has a group</h2>
 <div class="outline-text-2" id="text-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -527,8 +429,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org7c204e6" class="outline-2">
-<h2 id="org7c204e6"><span class="section-number-2">5</span> Template for HDF5 has/read/write a numerical attribute</h2>
+<div id="outline-container-orgf1e6539" class="outline-2">
+<h2 id="orgf1e6539"><span class="section-number-2">5.</span> Template for HDF5 has/read/write a numerical attribute</h2>
 <div class="outline-text-2" id="text-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -565,6 +467,7 @@ corresponding types for all back ends can be safely casted to
 {
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (num &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
 
   <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
 
@@ -632,8 +535,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org6fa9c71" class="outline-2">
-<h2 id="org6fa9c71"><span class="section-number-2">6</span> Template for HDF5 has/read/write a dataset of numerical data</h2>
+<div id="outline-container-org506da15" class="outline-2">
+<h2 id="org506da15"><span class="section-number-2">6.</span> Template for HDF5 has/read/write a dataset of numerical data</h2>
 <div class="outline-text-2" id="text-6">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -642,6 +545,8 @@ corresponding types for all back ends can be safely casted to
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> ($group_dset$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank &lt; 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>*) file;
 
@@ -700,6 +605,8 @@ corresponding types for all back ends can be safely casted to
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> ($group_dset$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank &lt; 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
 
   <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
 
@@ -770,8 +677,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org9c37154" class="outline-2">
-<h2 id="org9c37154"><span class="section-number-2">7</span> Template for HDF5 has/read/write a dataset of sparse data</h2>
+<div id="outline-container-org64ce7fc" class="outline-2">
+<h2 id="org64ce7fc"><span class="section-number-2">7.</span> Template for HDF5 has/read/write a dataset of sparse data</h2>
 <div class="outline-text-2" id="text-7">
 <p>
 Sparse data is stored using extensible datasets of HDF5. Extensibility is required
@@ -789,6 +696,11 @@ due to the fact that the sparse data will be written in chunks of user-defined s
 {
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (offset_file &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (size &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (size_max &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
+  <span style="color: #a020f0;">if</span> (index_sparse == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
+  <span style="color: #a020f0;">if</span> (value_sparse == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_6;
 
   <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
 
@@ -881,7 +793,12 @@ due to the fact that the sparse data will be written in chunks of user-defined s
 {
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (offset_file &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (size &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (size_max &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
   <span style="color: #a020f0;">if</span> (eof_read_size == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
+  <span style="color: #a020f0;">if</span> (index_read == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_6;
+  <span style="color: #a020f0;">if</span> (value_read == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_7;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>*) file;
 
@@ -976,8 +893,8 @@ due to the fact that the sparse data will be written in chunks of user-defined s
 </div>
 </div>
 
-<div id="outline-container-org1f4a1a8" class="outline-2">
-<h2 id="org1f4a1a8"><span class="section-number-2">8</span> Template for HDF5 has/read/write a dataset of buffered vectors</h2>
+<div id="outline-container-orge9203a4" class="outline-2">
+<h2 id="orge9203a4"><span class="section-number-2">8.</span> Template for HDF5 has/read/write a dataset of buffered vectors</h2>
 <div class="outline-text-2" id="text-8">
 <p>
 Chunked I/O in HDF5 for <code>buffered</code> data.
@@ -992,6 +909,9 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
                                                <span style="color: #228b22;">double</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">dset</span>)
 {
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (offset_file &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank != 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
   <span style="color: #a020f0;">if</span> (eof_read_size == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
   <span style="color: #a020f0;">if</span> (dset == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_6;
 
@@ -1018,6 +938,9 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
 {
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (offset_file &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank != 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
   <span style="color: #a020f0;">if</span> (dset == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span>* <span style="color: #a0522d;">dset_name</span> = <span style="color: #8b2252;">"$group_dset$"</span>;
@@ -1111,8 +1034,8 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
 </div>
 </div>
 
-<div id="outline-container-org784391e" class="outline-2">
-<h2 id="org784391e"><span class="section-number-2">9</span> Template for HDF5 has/read/write a dataset of strings</h2>
+<div id="outline-container-orgff25940" class="outline-2">
+<h2 id="orgff25940"><span class="section-number-2">9.</span> Template for HDF5 has/read/write a dataset of strings</h2>
 <div class="outline-text-2" id="text-9">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1121,6 +1044,9 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> ($group_dset$  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank &lt; 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
+  <span style="color: #a020f0;">if</span> (max_str_len &lt; 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>*) file;
 
@@ -1228,6 +1154,8 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> ($group_dset$  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank &lt; 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
 
   <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
 
@@ -1309,8 +1237,8 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
 </div>
 </div>
 
-<div id="outline-container-orga8d6244" class="outline-2">
-<h2 id="orga8d6244"><span class="section-number-2">10</span> Template for HDF5 has/read/write a string attribute</h2>
+<div id="outline-container-org31f27b2" class="outline-2">
+<h2 id="org31f27b2"><span class="section-number-2">10.</span> Template for HDF5 has/read/write a string attribute</h2>
 <div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1319,6 +1247,7 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> (str  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (max_str_len &lt; 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
 
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #a020f0;">const</span> <span style="color: #228b22;">trexio_hdf5_t</span>*) file;
   /* <span style="color: #b22222;">Quit if the string attribute is missing in the file</span> */
@@ -1437,8 +1366,8 @@ Chunked I/O in HDF5 for <code>buffered</code> data.
 </div>
 </div>
 </div>
-<div id="outline-container-org4b3cd09" class="outline-2">
-<h2 id="org4b3cd09"><span class="section-number-2">11</span> Template for HDF5 delete a group (UNSAFE mode)</h2>
+<div id="outline-container-orgc9c8dfe" class="outline-2">
+<h2 id="orgc9c8dfe"><span class="section-number-2">11.</span> Template for HDF5 delete a group (UNSAFE mode)</h2>
 <div class="outline-text-2" id="text-11">
 <p>
 <b><b>Note:</b></b> in early versions of the HDF5 library (v &lt; 1.10) unlinking an object was not working as expected
@@ -1478,8 +1407,8 @@ Thus, any corrupted/lost file space will remain in the first file. The use of <c
 </div>
 </div>
 
-<div id="outline-container-org3be89d7" class="outline-2">
-<h2 id="org3be89d7"><span class="section-number-2">12</span> Source code for the determinant part</h2>
+<div id="outline-container-orgf4e3746" class="outline-2">
+<h2 id="orgf4e3746"><span class="section-number-2">12.</span> Source code for the determinant part</h2>
 <div class="outline-text-2" id="text-12">
 <p>
 Each array is stored in a separate HDF5 dataset due to the fact that determinant I/O has to be decoupled.
@@ -1496,6 +1425,9 @@ Size specifies the number of data items (e.g. determinants) to process.
                                                    <span style="color: #228b22;">int64_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">list</span>)
 {
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (offset_file &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank &lt; 2) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
   <span style="color: #a020f0;">if</span> (eof_read_size == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
   <span style="color: #a020f0;">if</span> (list == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_6;
 
@@ -1522,6 +1454,9 @@ Size specifies the number of data items (e.g. determinants) to process.
 {
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
+  <span style="color: #a020f0;">if</span> (offset_file &lt; 0) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
+  <span style="color: #a020f0;">if</span> (rank &lt; 2) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
+  <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
   <span style="color: #a020f0;">if</span> (list == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_5;
 
   <span style="color: #228b22;">trexio_hdf5_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_hdf5_t</span>*) file;
@@ -1581,8 +1516,8 @@ Size specifies the number of data items (e.g. determinants) to process.
 </div>
 </div>
 
-<div id="outline-container-orgf9a56c9" class="outline-2">
-<h2 id="orgf9a56c9"><span class="section-number-2">13</span> Helper functions</h2>
+<div id="outline-container-orgd565416" class="outline-2">
+<h2 id="orgd565416"><span class="section-number-2">13.</span> Helper functions</h2>
 <div class="outline-text-2" id="text-13">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1592,6 +1527,9 @@ Size specifies the number of data items (e.g. determinants) to process.
                                       <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hsize_t</span>* <span style="color: #a0522d;">chunk_dims</span>,
                                       <span style="color: #a020f0;">const</span> <span style="color: #228b22;">void</span>* <span style="color: #a0522d;">data_sparse</span>)
 {
+  assert (chunk_dims != <span style="color: #008b8b;">NULL</span>);
+  assert (data_sparse != <span style="color: #008b8b;">NULL</span>);
+  assert (dset_name != <span style="color: #008b8b;">NULL</span>);
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">int</span> <span style="color: #a0522d;">h5_rank</span> = 1;
   <span style="color: #a020f0;">const</span> <span style="color: #228b22;">hsize_t</span> <span style="color: #a0522d;">maxdims</span>[1] = {H5S_UNLIMITED};
 
@@ -1850,8 +1788,8 @@ Size specifies the number of data items (e.g. determinants) to process.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2025-01-02 Thu 21:15</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+<p class="date">Created: 2025-01-09 Thu 14:53</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>
