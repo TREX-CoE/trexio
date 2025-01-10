@@ -100,10 +100,10 @@ fn write(file_name: &str, back_end: BackEnd) {
     trex_file.write_electron_up_num(nup).unwrap();
     trex_file.write_electron_dn_num(ndn).unwrap();
     let det_num = 50;
-    let mut det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
-    let mut det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
+    let det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
+    let det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
     let mut det_list = Vec::with_capacity(det_num*6);
-    for i in 0..det_num {
+    for _ in 0..det_num {
         let (alpha, _) = Bitfield::from(3, &det_occ_alpha);
         let (beta, _)  = Bitfield::from(3, &det_occ_beta);
         det_list.push(Bitfield::from_alpha_beta(&alpha, &beta));
@@ -251,15 +251,13 @@ fn read(file_name: &str, back_end: BackEnd) {
     let det_num = trex_file.read_determinant_num().unwrap();
     assert_eq!(det_num, 50);
 
-/* Bug in text backend prevents this test from working.
-   Will be activated later on.
 
     // Determinants
     let det_num = 50;
-    let mut det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
-    let mut det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
+    let det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
+    let det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
     let mut det_list_ref = Vec::with_capacity(det_num*6);
-    for i in 0..det_num {
+    for _ in 0..det_num {
         let (alpha, _) = Bitfield::from(3, &det_occ_alpha);
         let (beta, _)  = Bitfield::from(3, &det_occ_beta);
         det_list_ref.push(Bitfield::from_alpha_beta(&alpha, &beta));
@@ -275,7 +273,6 @@ fn read(file_name: &str, back_end: BackEnd) {
         det_list.extend(buffer);
     }
     assert_eq!(det_list_ref, det_list);
-*/
 
     trex_file.close().unwrap()
 }
