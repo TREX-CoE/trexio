@@ -1,7 +1,7 @@
 use trexio::back_end::BackEnd;
 use trexio::bitfield::Bitfield;
 
-fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
+fn write(file_name: &str, back_end: BackEnd) {
     // Prepare data to be written
 
     let nucleus_num = 12;
@@ -34,32 +34,32 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let sym_str = "B3U with some comments";
 
     println!("Write {}", file_name);
-    assert!(!trexio::File::inquire(file_name)?);
+    assert!(!trexio::File::inquire(file_name).unwrap());
 
-    let trex_file = trexio::File::open(file_name, 'w', back_end)?;
+    let trex_file = trexio::File::open(file_name, 'w', back_end).unwrap();
 
-    assert!(!trex_file.has_nucleus()?);
-    assert!(!trex_file.has_nucleus_num()?);
-    assert!(!trex_file.has_nucleus_charge()?);
-    assert!(!trex_file.has_ao_2e_int()?);
-    assert!(!trex_file.has_ao_2e_int_eri()?);
-    assert!(!trex_file.has_determinant_list()?);
+    assert!(!trex_file.has_nucleus().unwrap());
+    assert!(!trex_file.has_nucleus_num().unwrap());
+    assert!(!trex_file.has_nucleus_charge().unwrap());
+    assert!(!trex_file.has_ao_2e_int().unwrap());
+    assert!(!trex_file.has_ao_2e_int_eri().unwrap());
+    assert!(!trex_file.has_determinant_list().unwrap());
 
-    trex_file.write_nucleus_num(nucleus_num)?;
-    trex_file.write_nucleus_charge(&charge)?;
-    trex_file.write_nucleus_point_group(sym_str)?;
-    trex_file.write_nucleus_coord(&flat_coord)?;
-    trex_file.write_nucleus_label(&label)?;
-    trex_file.write_basis_shell_num(basis_shell_num)?;
-    trex_file.write_basis_nucleus_index(&basis_nucleus_index)?;
-    trex_file.write_state_id(state_id)?;
+    trex_file.write_nucleus_num(nucleus_num).unwrap();
+    trex_file.write_nucleus_charge(&charge).unwrap();
+    trex_file.write_nucleus_point_group(sym_str).unwrap();
+    trex_file.write_nucleus_coord(&flat_coord).unwrap();
+    trex_file.write_nucleus_label(&label).unwrap();
+    trex_file.write_basis_shell_num(basis_shell_num).unwrap();
+    trex_file.write_basis_nucleus_index(&basis_nucleus_index).unwrap();
+    trex_file.write_state_id(state_id).unwrap();
 
-    if !trex_file.has_ao_num()? {
-        trex_file.write_ao_num(ao_num)?;
+    if !trex_file.has_ao_num().unwrap() {
+        trex_file.write_ao_num(ao_num).unwrap();
     }
 
-    if !trex_file.has_mo_num()? {
-        trex_file.write_mo_num(mo_num)?;
+    if !trex_file.has_mo_num().unwrap() {
+        trex_file.write_mo_num(mo_num).unwrap();
     }
 
     let mut energy = Vec::with_capacity(mo_num);
@@ -67,13 +67,13 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
         let e: f64 = i as f64 - 100.0f64;
         energy.push(e);
     }
-    trex_file.write_mo_energy(&energy)?;
+    trex_file.write_mo_energy(&energy).unwrap();
 
     let mut spin = vec![0; mo_num];
     for i in mo_num / 2..mo_num {
         spin[i] = 1;
     }
-    trex_file.write_mo_spin(&spin)?;
+    trex_file.write_mo_spin(&spin).unwrap();
 
     // Integrals
     let nmax = 100;
@@ -82,7 +82,7 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let n_buffers = 5;
     let bufsize = nmax / n_buffers;
 
-    for i in 0..100 {
+    for i in 0..nmax {
         // Quadruplet of indices + value
         let data = (4 * i, 4 * i + 1, 4 * i + 2, 4 * i + 3, 3.14 + (i as f64));
         ao_2e_int_eri.push(data);
@@ -90,58 +90,62 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
 
     let mut offset = 0;
     for _ in 0..n_buffers {
-        trex_file.write_ao_2e_int_eri(offset, &ao_2e_int_eri[offset..offset + bufsize])?;
+        trex_file.write_ao_2e_int_eri(offset, &ao_2e_int_eri[offset..offset + bufsize]).unwrap();
         offset += bufsize;
     }
 
     // Determinants
+    let nup = 8;
+    let ndn = 6;
+    trex_file.write_electron_up_num(nup).unwrap();
+    trex_file.write_electron_dn_num(ndn).unwrap();
     let det_num = 50;
-    let mut det_list = Vec::with_capacity(det_num);
-    for i in 0..det_num {
-        let mut d = [0i64; 6];
-        for j in 0..6 {
-            d[j] = 6 * (i as i64) + (j as i64);
-        }
-        det_list.push(Bitfield::from_vec(&d));
+    let det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
+    let det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
+    let mut det_list = Vec::with_capacity(det_num*6);
+    for _ in 0..det_num {
+        let (alpha, _) = Bitfield::from(3, &det_occ_alpha);
+        let (beta, _)  = Bitfield::from(3, &det_occ_beta);
+        det_list.push(Bitfield::from_alpha_beta(&alpha, &beta));
     }
 
     let n_buffers = 5;
     let bufsize = 50 / n_buffers;
     let mut offset = 0;
     for _ in 0..n_buffers {
-        trex_file.write_determinant_list(offset, &det_list[offset..offset + bufsize])?;
+        trex_file.write_determinant_list(offset, &det_list[offset..offset + bufsize]).unwrap();
         offset += bufsize;
     }
 
-    trex_file.close()
+    trex_file.close().unwrap()
 }
 
-fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
+fn read(file_name: &str, back_end: BackEnd) {
     println!("Read {}", file_name);
-    assert!(trexio::File::inquire(file_name)?);
+    assert!(trexio::File::inquire(file_name).unwrap());
 
-    let trex_file = trexio::File::open(file_name, 'r', back_end)?;
+    let trex_file = trexio::File::open(file_name, 'r', back_end).unwrap();
 
-    assert!(trex_file.has_nucleus()?);
-    assert!(trex_file.has_nucleus_num()?);
-    assert!(trex_file.has_nucleus_charge()?);
-    assert!(trex_file.has_ao_2e_int()?);
-    assert!(trex_file.has_ao_2e_int_eri()?);
-    assert!(trex_file.has_determinant_list()?);
+    assert!(trex_file.has_nucleus().unwrap());
+    assert!(trex_file.has_nucleus_num().unwrap());
+    assert!(trex_file.has_nucleus_charge().unwrap());
+    assert!(trex_file.has_ao_2e_int().unwrap());
+    assert!(trex_file.has_ao_2e_int_eri().unwrap());
+    assert!(trex_file.has_determinant_list().unwrap());
 
-    let nucleus_num = trex_file.read_nucleus_num()?;
+    let nucleus_num = trex_file.read_nucleus_num().unwrap();
     assert_eq!(nucleus_num, 12);
 
-    let sym_str = trex_file.read_nucleus_point_group(64)?;
+    let sym_str = trex_file.read_nucleus_point_group(64).unwrap();
     assert_eq!(sym_str, "B3U with some comments");
 
-    let charge = trex_file.read_nucleus_charge()?;
+    let charge = trex_file.read_nucleus_charge().unwrap();
     assert_eq!(
         charge,
         vec![6., 6., 6., 6., 6., 6., 1., 1., 1., 1., 1., 1.0f64]
     );
 
-    let coord = trex_file.read_nucleus_coord()?;
+    let coord = trex_file.read_nucleus_coord().unwrap();
     assert_eq!(
         coord,
         vec![
@@ -184,26 +188,26 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
         ]
     );
 
-    let label = trex_file.read_nucleus_label(6)?;
+    let label = trex_file.read_nucleus_label(6).unwrap();
     assert_eq!(
         label,
         vec!["C", "Na", "C", "C 66", "C", "C", "H 99", "Ru", "H", "H", "H", "H"]
     );
 
-    let basis_shell_num = trex_file.read_basis_shell_num()?;
+    let basis_shell_num = trex_file.read_basis_shell_num().unwrap();
     assert_eq!(basis_shell_num, 24);
 
-    let basis_nucleus_index = trex_file.read_basis_nucleus_index()?;
+    let basis_nucleus_index = trex_file.read_basis_nucleus_index().unwrap();
     let ref_val: Vec<usize> = (0..24).collect();
     assert_eq!(basis_nucleus_index, ref_val);
 
-    let state_id = trex_file.read_state_id()?;
+    let state_id = trex_file.read_state_id().unwrap();
     assert_eq!(state_id, 2);
 
-    let ao_num = trex_file.read_ao_num()?;
+    let ao_num = trex_file.read_ao_num().unwrap();
     assert_eq!(ao_num, 1000);
 
-    let mo_num = trex_file.read_mo_num()?;
+    let mo_num = trex_file.read_mo_num().unwrap();
     assert_eq!(mo_num, 150);
 
     let mut energy_ref = Vec::with_capacity(mo_num);
@@ -211,14 +215,14 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
         let e: f64 = i as f64 - 100.0f64;
         energy_ref.push(e);
     }
-    let energy = trex_file.read_mo_energy()?;
+    let energy = trex_file.read_mo_energy().unwrap();
     assert_eq!(energy, energy_ref);
 
     let mut spin_ref = vec![0; mo_num];
     for i in mo_num / 2..mo_num {
         spin_ref[i] = 1;
     }
-    let spin = trex_file.read_mo_spin()?;
+    let spin = trex_file.read_mo_spin().unwrap();
     assert_eq!(spin, spin_ref);
 
     // Integrals
@@ -237,23 +241,26 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let mut offset = 0;
     let mut ao_2e_int_eri = Vec::<(usize, usize, usize, usize, f64)>::with_capacity(nmax);
     for _ in 0..n_buffers {
-        let buffer = trex_file.read_ao_2e_int_eri(offset, bufsize)?;
+        let buffer = trex_file.read_ao_2e_int_eri(offset, bufsize).unwrap();
         offset += buffer.len();
         ao_2e_int_eri.extend(buffer);
     }
     assert_eq!(ao_2e_int_eri_ref, ao_2e_int_eri);
 
     // Determinants
-    let det_num = trex_file.read_determinant_num()?;
+    let det_num = trex_file.read_determinant_num().unwrap();
     assert_eq!(det_num, 50);
 
-    let mut det_list_ref = Vec::with_capacity(det_num);
-    for i in 0..det_num {
-        let mut d = [0i64; 6];
-        for j in 0..6 {
-            d[j] = 6 * (i as i64) + (j as i64);
-        }
-        det_list_ref.push(Bitfield::from_vec(&d));
+
+    // Determinants
+    let det_num = 50;
+    let det_occ_alpha = [ 0, 1, 2, 3, 75, 127, 128, 142 ];
+    let det_occ_beta  = [ 0, 2, 3, 79, 80, 138 ];
+    let mut det_list_ref = Vec::with_capacity(det_num*6);
+    for _ in 0..det_num {
+        let (alpha, _) = Bitfield::from(3, &det_occ_alpha);
+        let (beta, _)  = Bitfield::from(3, &det_occ_beta);
+        det_list_ref.push(Bitfield::from_alpha_beta(&alpha, &beta));
     }
 
     let n_buffers = 8;
@@ -261,13 +268,13 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let mut offset = 0;
     let mut det_list: Vec<Bitfield> = Vec::with_capacity(det_num);
     for _ in 0..n_buffers {
-        let buffer = trex_file.read_determinant_list(offset, bufsize)?;
+        let buffer = trex_file.read_determinant_list(offset, bufsize).unwrap();
         offset += buffer.len();
         det_list.extend(buffer);
     }
     assert_eq!(det_list_ref, det_list);
 
-    trex_file.close()
+    trex_file.close().unwrap()
 }
 
 #[test]
@@ -279,14 +286,14 @@ use std::fs;
 
 #[test]
 pub fn text_backend() {
-    let _ = write("tmp/test_write.dir", trexio::BackEnd::Text).unwrap();
-    let _ = read("tmp/test_write.dir", trexio::BackEnd::Text).unwrap();
+    let _ = write("tmp/test_write.dir", trexio::BackEnd::Text);
+    let _ = read("tmp/test_write.dir", trexio::BackEnd::Text);
     fs::remove_dir_all("tmp/test_write.dir").unwrap()
 }
 
 #[test]
 pub fn hdf5_backend() {
-    let _ = write("tmp/test_write.hdf5", trexio::BackEnd::Hdf5).unwrap();
-    let _ = read("tmp/test_write.hdf5", trexio::BackEnd::Hdf5).unwrap();
+    let _ = write("tmp/test_write.hdf5", trexio::BackEnd::Hdf5);
+    let _ = read("tmp/test_write.hdf5", trexio::BackEnd::Hdf5);
     fs::remove_file("tmp/test_write.hdf5").unwrap()
 }
