@@ -15,6 +15,7 @@ use pkg_config::Config;
 /// 1. pkg-config
 /// 2. Environment variable TREXIO_INCLUDE_DIR
 /// 3. Common system paths
+/// 4. Rust sources (may not be adapted to the installed library)
 ///
 /// If the header is found, the JSON configuration will be extracted and
 /// written to trex.json in the output directory
@@ -52,7 +53,8 @@ fn find_header_path() -> Option<PathBuf> {
         }
     }
 
-    None
+    // Default for generating the documentation on Doc.rs
+    Some(PathBuf::from("src/trexio.h"))
 }
 
 
