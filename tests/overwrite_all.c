@@ -170,7 +170,7 @@ static int test_overwrite_safe (const char* file_name, const back_end_t backend)
 }
 
 
-int test_read(const char* file_name, const back_end_t backend) {
+static int test_read(const char* file_name, const back_end_t backend) {
 
 /*========= Test read ===========*/
 

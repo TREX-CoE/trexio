@@ -5,6 +5,7 @@ program test_trexio
 
   integer :: rc
   logical :: have_hdf5
+  character*(64) :: trexio_file1, trexio_file2
 
   print'(a)'   , "============================================"
   print'(a,a)' , "         TREXIO VERSION STRING : ", TREXIO_PACKAGE_VERSION
@@ -14,20 +15,40 @@ program test_trexio
 
   rc = trexio_info()
 
-  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock ' &
-      // 'test_write_f2.dir/*.txt test_write_f2.dir/*.txt.size test_write_f2.dir/.lock && ' &
-      // 'rm -fd -- test_write_f.dir test_write_f2.dir')
-  print *, 'call test_write(''test_write_f.dir'', TREXIO_TEXT)'
-  call test_write('test_write_f.dir', TREXIO_TEXT)
-  rc = trexio_cp('test_write_f.dir', 'test_write_f2.dir')
-  call trexio_assert(rc, TREXIO_SUCCESS)
-  print *, 'call test_read(''test_write_f2.dir'', TREXIO_TEXT)'
-  call test_read('test_write_f2.dir', TREXIO_TEXT)
-  call system('rm -f -- test_write_f.dir/*.txt test_write_f.dir/*.txt.size test_write_f.dir/.lock ' &
-      // 'test_write_f2.dir/*.txt test_write_f2.dir/*.txt.size test_write_f2.dir/.lock && ' &
-      // 'rm -fd -- test_write_f.dir test_write_f2.dir')
+  trexio_file1 = 'test_write_f.dir'
+  trexio_file2 = 'test_write_f2.dir'
 
-  call test_read_void('test_write_f.dir', TREXIO_TEXT)
+  call system('rm -f  -- '//trim(trexio_file1)//'/*.txt')
+  call system('rm -f  -- '//trim(trexio_file1)//'/*.txt.size')
+  call system('rm -f  -- '//trim(trexio_file1)//'/.lock ')
+  call system('rm -rf -- '//trim(trexio_file1))
+
+  call system('rm -f  -- '//trim(trexio_file2)//'/*.txt')
+  call system('rm -f  -- '//trim(trexio_file2)//'/*.txt.size')
+  call system('rm -f  -- '//trim(trexio_file2)//'/.lock ')
+  call system('rm -rf -- '//trim(trexio_file2))
+
+  print *, 'call test_write'
+  call test_write('test_write_f.dir', TREXIO_TEXT)
+
+  rc = trexio_cp(trexio_file1, trexio_file2)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
+  print *, 'call test_read'
+  call test_read(trexio_file2, TREXIO_TEXT)
+
+  call system('rm -f  -- '//trim(trexio_file1)//'/*.txt')
+  call system('rm -f  -- '//trim(trexio_file1)//'/*.txt.size')
+  call system('rm -f  -- '//trim(trexio_file1)//'/.lock ')
+  call system('rm -rf -- '//trim(trexio_file1))
+
+  call system('rm -f  -- '//trim(trexio_file2)//'/*.txt')
+  call system('rm -f  -- '//trim(trexio_file2)//'/*.txt.size')
+  call system('rm -f  -- '//trim(trexio_file2)//'/.lock ')
+  call system('rm -rf -- '//trim(trexio_file2))
+
+  print *, 'call test_read_void'
+  call test_read_void(trexio_file1, TREXIO_TEXT)
 
   ! No way to conditionally check whether compilation was done with HDF5
   ! So temporarily disable the test for HDF5 back end at the moment
@@ -69,16 +90,18 @@ subroutine test_write(file_name, back_end)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
-  character(len=32), allocatable :: sym_str
+  character(len=32) :: sym_str
   character(len=8), allocatable :: label(:)
   double precision, allocatable :: energy(:)
   integer         , allocatable :: spin(:)
 
   ! sparse data
-  integer(4) :: index_sparse_ao_2e_int_eri(4,100)
-  double precision :: value_sparse_ao_2e_int_eri(100)
+  integer(4), allocatable :: index_sparse_ao_2e_int_eri(:,:)
+  double precision, allocatable :: value_sparse_ao_2e_int_eri(:)
 
   ! determinants
+  integer   :: nup, ndn
+  integer   :: det_occ(10,2)
   integer*8 :: det_list(6, 50)
   integer*8 :: det_num
   integer   :: int_num
@@ -87,9 +110,12 @@ subroutine test_write(file_name, back_end)
   integer(8) :: buf_size_sparse, buf_size_det, offset
   integer   :: state_id
 
+
+
   buf_size_sparse = 100/n_buffers
   buf_size_det    = 50/n_buffers
 
+  allocate(index_sparse_ao_2e_int_eri(4,100), value_sparse_ao_2e_int_eri(100))
   ! fill sparse indices and values
   do i = 1, 100
     index_sparse_ao_2e_int_eri(1,i) = 4*i   - 3
@@ -100,10 +126,16 @@ subroutine test_write(file_name, back_end)
   enddo
 
   ! fill determinant list
+  nup = 8
+  ndn = 6
+  det_occ = 0
+  det_occ(1:nup,1) = (/ 1, 2, 3, 4, 76, 128, 129, 143 /)
+  det_occ(1:ndn,2) = (/ 1, 3, 4, 80, 81, 139 /)
   do i = 1, 50
-    do j = 1, 6
-      det_list(j,i) = 6*i+(j-1) - 5
-    enddo
+    rc = trexio_to_bitfield_list(det_occ(1:8,1), nup, det_list(1:3,i), 3)
+    call trexio_assert(rc, TREXIO_SUCCESS)
+    rc = trexio_to_bitfield_list(det_occ(1:6,2), ndn, det_list(4:6,i), 3)
+    call trexio_assert(rc, TREXIO_SUCCESS)
   enddo
 
   ! parameters to be written
@@ -161,6 +193,18 @@ subroutine test_write(file_name, back_end)
   rc = trexio_has_nucleus_charge(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2')
 
+  rc = trexio_has_electron_up_num(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2.1')
+
+  rc = trexio_write_electron_up_num(trex_file, nup)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
+  rc = trexio_has_electron_dn_num(trex_file)
+  call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2.2')
+
+  rc = trexio_write_electron_dn_num(trex_file, ndn)
+  call trexio_assert(rc, TREXIO_SUCCESS)
+
   rc = trexio_has_ao_2e_int_eri(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 3')
 
@@ -187,7 +231,6 @@ subroutine test_write(file_name, back_end)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE LABEL')
 
   rc = trexio_write_nucleus_point_group(trex_file, sym_str, 32)
-  deallocate(sym_str)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE POINT GROUP')
 
   rc = trexio_write_basis_shell_num(trex_file, basis_shell_num)
@@ -244,6 +287,7 @@ subroutine test_write(file_name, back_end)
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE DET LIST')
     offset = offset + buf_size_det
   enddo
+  deallocate(index_sparse_ao_2e_int_eri, value_sparse_ao_2e_int_eri)
 
   rc = trexio_has_nucleus_num(trex_file)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS HAS 1')
@@ -283,7 +327,8 @@ subroutine test_read(file_name, back_end)
 
   integer(trexio_t) :: trex_file
 
-  integer :: i, j, k, ind, offset, flag
+  integer*8 :: i
+  integer :: j, k, ind, offset, flag
   integer(trexio_exit_code) :: rc = 1
   integer :: num, num_read, basis_shell_num
 
@@ -313,7 +358,7 @@ subroutine test_read(file_name, back_end)
 
   ! determinant data
   integer*8 :: det_list(6,50)
-  integer*8 :: det_list_check(3)
+  integer*8 :: det_list_check(6)
   integer*8 :: read_buf_det_size = 20
   integer*8 :: offset_det_read = 10
   integer*8 :: offset_det_data_read = 5
@@ -477,17 +522,39 @@ subroutine test_read(file_name, back_end)
   ! read a chunk of determinants
   rc = trexio_read_determinant_list(trex_file, offset_det_read, read_buf_det_size, &
                                     det_list(1, offset_det_data_read + 1))
-  !do  i = 1,50
-  !  write(*,*) det_list(1,i)
-  !enddo
   call trexio_assert(rc, TREXIO_SUCCESS)
-  if (det_list(1, 1) == 0 .and. &
-      det_list(1, offset_det_data_read + 1) == offset_det_read*6 + 1) then
-    write(*,*) 'SUCCESS READ DET LIST'
-  else
-    print *, 'FAILURE DET LIST CHECK'
-    call exit(-1)
-  endif
+  det_list_check = (/15_8,  -9223372036854773760_8, 16385_8, 13_8, 98304_8, 1024_8 /)
+  do  i = 1,offset_det_data_read
+    do j=1,6
+      if (det_list(j,i) /= 0_8) then
+        print *, det_list(j,i)
+        print *, 'FAILURE DET LIST CHECK 1'
+        call exit(-1)
+      endif
+    enddo
+  enddo
+
+  do  i = offset_det_data_read+1, offset_det_data_read+read_buf_det_size
+    do j=1,6
+      if (det_list(j,i) /= det_list_check(j)) then
+        print *, det_list(j,i)
+        print *, 'FAILURE DET LIST CHECK 2'
+        call exit(-1)
+      endif
+    enddo
+  enddo
+
+  do  i = offset_det_data_read+read_buf_det_size+1,50
+    do j=1,6
+      if (det_list(j,i) /= 0_8) then
+        print *, det_list(j,i)
+        print *, 'FAILURE DET LIST CHECK 3'
+        call exit(-1)
+      endif
+    enddo
+  enddo
+
+  write(*,*) 'SUCCESS READ DET LIST'
 
   ! read the total number of stored determinants
   rc = trexio_read_determinant_num_64(trex_file, determinant_num)
@@ -509,7 +576,7 @@ subroutine test_read(file_name, back_end)
   ! Print binary representation of the first integer bit field of a given determinant
   !write(*,'(B64.64)') det_list(1, offset_det_data_read+1)
   call trexio_assert(rc, TREXIO_SUCCESS)
-  if (occ_num_up == 16 .and. occ_num_dn == 5) then
+  if (occ_num_up == 8 .and. occ_num_dn == 6) then
     write(*,*) 'SUCCESS CONVERT DET LIST'
   else
     print *, 'FAILURE DET CONVERT CHECK'
@@ -593,11 +660,12 @@ subroutine test_read_void(file_name, back_end)
   integer, intent(in) :: back_end
 
   integer(trexio_t) :: trex_file
-  integer :: rc = 1
-  character(128) :: str
+  integer :: rc
+  character*(128) :: str
 
 ! ================= START OF TEST ===================== !
 
+  rc = TREXIO_SUCCESS
   trex_file = trexio_open(file_name, 'r', back_end, rc)
   if (rc /= TREXIO_OPEN_ERROR) then
     rc = trexio_close(trex_file)
