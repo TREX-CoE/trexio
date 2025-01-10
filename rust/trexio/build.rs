@@ -54,7 +54,12 @@ fn find_header_path() -> Option<PathBuf> {
     }
 
     // Default for generating the documentation on Doc.rs
-    Some(PathBuf::from("src/trexio.h"))
+    if let Ok(dir) = env::current_dir() {
+        let path = PathBuf::from(dir).join("trexio.h");
+        Some(path)
+    } else {
+        None
+    }
 }
 
 
