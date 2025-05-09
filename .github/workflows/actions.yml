@@ -85,10 +85,11 @@ jobs:
           name: test-report-ubuntu
           path: test-suite.log
 
-      - name: create venv
+      - name: create venv with swig 4.1
         run: |
           python3 -m venv trexio-venv
           source trexio-venv/bin/activate
+          pip instal swig==4.1
 
       - name: install Python API
         run: |
@@ -96,6 +97,17 @@ jobs:
           make python-install
 
       - name: check Python API
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
+
+      - name: install Python API with swig 4.3
+        run: |
+          source trexio-venv/bin/activate
+          pip install swig==4.3
+          make python-install
+
+      - name: check Python API with swig 4.3
         run: |
           source trexio-venv/bin/activate
           make python-test
