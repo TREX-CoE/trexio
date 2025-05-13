@@ -189,8 +189,8 @@ def trexio_delete_state(file):
 def trexio_delete_basis(file):
     return _pytrexio.trexio_delete_basis(file)
 
-def trexio_delete_auxbasis(file):
-    return _pytrexio.trexio_delete_auxbasis(file)
+def trexio_delete_auxbas(file):
+    return _pytrexio.trexio_delete_auxbas(file)
 
 def trexio_delete_ecp(file):
     return _pytrexio.trexio_delete_ecp(file)
@@ -675,110 +675,110 @@ def trexio_read_basis_e_cut_64(file):
 def trexio_write_basis_e_cut_64(file, num):
     return _pytrexio.trexio_write_basis_e_cut_64(file, num)
 
-def trexio_has_auxbasis_prim_num(file):
-    return _pytrexio.trexio_has_auxbasis_prim_num(file)
+def trexio_has_auxbas_prim_num(file):
+    return _pytrexio.trexio_has_auxbas_prim_num(file)
 
-def trexio_read_auxbasis_prim_num(file):
-    return _pytrexio.trexio_read_auxbasis_prim_num(file)
+def trexio_read_auxbas_prim_num(file):
+    return _pytrexio.trexio_read_auxbas_prim_num(file)
 
-def trexio_write_auxbasis_prim_num(file, num):
-    return _pytrexio.trexio_write_auxbasis_prim_num(file, num)
+def trexio_write_auxbas_prim_num(file, num):
+    return _pytrexio.trexio_write_auxbas_prim_num(file, num)
 
-def trexio_read_auxbasis_prim_num_32(file):
-    return _pytrexio.trexio_read_auxbasis_prim_num_32(file)
+def trexio_read_auxbas_prim_num_32(file):
+    return _pytrexio.trexio_read_auxbas_prim_num_32(file)
 
-def trexio_write_auxbasis_prim_num_32(file, num):
-    return _pytrexio.trexio_write_auxbasis_prim_num_32(file, num)
+def trexio_write_auxbas_prim_num_32(file, num):
+    return _pytrexio.trexio_write_auxbas_prim_num_32(file, num)
 
-def trexio_read_auxbasis_prim_num_64(file):
-    return _pytrexio.trexio_read_auxbasis_prim_num_64(file)
+def trexio_read_auxbas_prim_num_64(file):
+    return _pytrexio.trexio_read_auxbas_prim_num_64(file)
 
-def trexio_write_auxbasis_prim_num_64(file, num):
-    return _pytrexio.trexio_write_auxbasis_prim_num_64(file, num)
+def trexio_write_auxbas_prim_num_64(file, num):
+    return _pytrexio.trexio_write_auxbas_prim_num_64(file, num)
 
-def trexio_has_auxbasis_shell_num(file):
-    return _pytrexio.trexio_has_auxbasis_shell_num(file)
+def trexio_has_auxbas_shell_num(file):
+    return _pytrexio.trexio_has_auxbas_shell_num(file)
 
-def trexio_read_auxbasis_shell_num(file):
-    return _pytrexio.trexio_read_auxbasis_shell_num(file)
+def trexio_read_auxbas_shell_num(file):
+    return _pytrexio.trexio_read_auxbas_shell_num(file)
 
-def trexio_write_auxbasis_shell_num(file, num):
-    return _pytrexio.trexio_write_auxbasis_shell_num(file, num)
+def trexio_write_auxbas_shell_num(file, num):
+    return _pytrexio.trexio_write_auxbas_shell_num(file, num)
 
-def trexio_read_auxbasis_shell_num_32(file):
-    return _pytrexio.trexio_read_auxbasis_shell_num_32(file)
+def trexio_read_auxbas_shell_num_32(file):
+    return _pytrexio.trexio_read_auxbas_shell_num_32(file)
 
-def trexio_write_auxbasis_shell_num_32(file, num):
-    return _pytrexio.trexio_write_auxbasis_shell_num_32(file, num)
+def trexio_write_auxbas_shell_num_32(file, num):
+    return _pytrexio.trexio_write_auxbas_shell_num_32(file, num)
 
-def trexio_read_auxbasis_shell_num_64(file):
-    return _pytrexio.trexio_read_auxbasis_shell_num_64(file)
+def trexio_read_auxbas_shell_num_64(file):
+    return _pytrexio.trexio_read_auxbas_shell_num_64(file)
 
-def trexio_write_auxbasis_shell_num_64(file, num):
-    return _pytrexio.trexio_write_auxbasis_shell_num_64(file, num)
+def trexio_write_auxbas_shell_num_64(file, num):
+    return _pytrexio.trexio_write_auxbas_shell_num_64(file, num)
 
-def trexio_has_auxbasis_nao_grid_num(file):
-    return _pytrexio.trexio_has_auxbasis_nao_grid_num(file)
+def trexio_has_auxbas_nao_grid_num(file):
+    return _pytrexio.trexio_has_auxbas_nao_grid_num(file)
 
-def trexio_read_auxbasis_nao_grid_num(file):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_num(file)
+def trexio_read_auxbas_nao_grid_num(file):
+    return _pytrexio.trexio_read_auxbas_nao_grid_num(file)
 
-def trexio_write_auxbasis_nao_grid_num(file, num):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_num(file, num)
+def trexio_write_auxbas_nao_grid_num(file, num):
+    return _pytrexio.trexio_write_auxbas_nao_grid_num(file, num)
 
-def trexio_read_auxbasis_nao_grid_num_32(file):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_num_32(file)
+def trexio_read_auxbas_nao_grid_num_32(file):
+    return _pytrexio.trexio_read_auxbas_nao_grid_num_32(file)
 
-def trexio_write_auxbasis_nao_grid_num_32(file, num):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_num_32(file, num)
+def trexio_write_auxbas_nao_grid_num_32(file, num):
+    return _pytrexio.trexio_write_auxbas_nao_grid_num_32(file, num)
 
-def trexio_read_auxbasis_nao_grid_num_64(file):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_num_64(file)
+def trexio_read_auxbas_nao_grid_num_64(file):
+    return _pytrexio.trexio_read_auxbas_nao_grid_num_64(file)
 
-def trexio_write_auxbasis_nao_grid_num_64(file, num):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_num_64(file, num)
+def trexio_write_auxbas_nao_grid_num_64(file, num):
+    return _pytrexio.trexio_write_auxbas_nao_grid_num_64(file, num)
 
-def trexio_has_auxbasis_interp_coeff_cnt(file):
-    return _pytrexio.trexio_has_auxbasis_interp_coeff_cnt(file)
+def trexio_has_auxbas_interp_coeff_cnt(file):
+    return _pytrexio.trexio_has_auxbas_interp_coeff_cnt(file)
 
-def trexio_read_auxbasis_interp_coeff_cnt(file):
-    return _pytrexio.trexio_read_auxbasis_interp_coeff_cnt(file)
+def trexio_read_auxbas_interp_coeff_cnt(file):
+    return _pytrexio.trexio_read_auxbas_interp_coeff_cnt(file)
 
-def trexio_write_auxbasis_interp_coeff_cnt(file, num):
-    return _pytrexio.trexio_write_auxbasis_interp_coeff_cnt(file, num)
+def trexio_write_auxbas_interp_coeff_cnt(file, num):
+    return _pytrexio.trexio_write_auxbas_interp_coeff_cnt(file, num)
 
-def trexio_read_auxbasis_interp_coeff_cnt_32(file):
-    return _pytrexio.trexio_read_auxbasis_interp_coeff_cnt_32(file)
+def trexio_read_auxbas_interp_coeff_cnt_32(file):
+    return _pytrexio.trexio_read_auxbas_interp_coeff_cnt_32(file)
 
-def trexio_write_auxbasis_interp_coeff_cnt_32(file, num):
-    return _pytrexio.trexio_write_auxbasis_interp_coeff_cnt_32(file, num)
+def trexio_write_auxbas_interp_coeff_cnt_32(file, num):
+    return _pytrexio.trexio_write_auxbas_interp_coeff_cnt_32(file, num)
 
-def trexio_read_auxbasis_interp_coeff_cnt_64(file):
-    return _pytrexio.trexio_read_auxbasis_interp_coeff_cnt_64(file)
+def trexio_read_auxbas_interp_coeff_cnt_64(file):
+    return _pytrexio.trexio_read_auxbas_interp_coeff_cnt_64(file)
 
-def trexio_write_auxbasis_interp_coeff_cnt_64(file, num):
-    return _pytrexio.trexio_write_auxbasis_interp_coeff_cnt_64(file, num)
+def trexio_write_auxbas_interp_coeff_cnt_64(file, num):
+    return _pytrexio.trexio_write_auxbas_interp_coeff_cnt_64(file, num)
 
-def trexio_has_auxbasis_e_cut(file):
-    return _pytrexio.trexio_has_auxbasis_e_cut(file)
+def trexio_has_auxbas_e_cut(file):
+    return _pytrexio.trexio_has_auxbas_e_cut(file)
 
-def trexio_read_auxbasis_e_cut(file):
-    return _pytrexio.trexio_read_auxbasis_e_cut(file)
+def trexio_read_auxbas_e_cut(file):
+    return _pytrexio.trexio_read_auxbas_e_cut(file)
 
-def trexio_write_auxbasis_e_cut(file, num):
-    return _pytrexio.trexio_write_auxbasis_e_cut(file, num)
+def trexio_write_auxbas_e_cut(file, num):
+    return _pytrexio.trexio_write_auxbas_e_cut(file, num)
 
-def trexio_read_auxbasis_e_cut_32(file):
-    return _pytrexio.trexio_read_auxbasis_e_cut_32(file)
+def trexio_read_auxbas_e_cut_32(file):
+    return _pytrexio.trexio_read_auxbas_e_cut_32(file)
 
-def trexio_write_auxbasis_e_cut_32(file, num):
-    return _pytrexio.trexio_write_auxbasis_e_cut_32(file, num)
+def trexio_write_auxbas_e_cut_32(file, num):
+    return _pytrexio.trexio_write_auxbas_e_cut_32(file, num)
 
-def trexio_read_auxbasis_e_cut_64(file):
-    return _pytrexio.trexio_read_auxbasis_e_cut_64(file)
+def trexio_read_auxbas_e_cut_64(file):
+    return _pytrexio.trexio_read_auxbas_e_cut_64(file)
 
-def trexio_write_auxbasis_e_cut_64(file, num):
-    return _pytrexio.trexio_write_auxbasis_e_cut_64(file, num)
+def trexio_write_auxbas_e_cut_64(file, num):
+    return _pytrexio.trexio_write_auxbas_e_cut_64(file, num)
 
 def trexio_has_ecp_num(file):
     return _pytrexio.trexio_has_ecp_num(file)
@@ -1359,32 +1359,32 @@ def trexio_read_basis_interpolator_kind(file, str_out):
 def trexio_write_basis_interpolator_kind(file, str, max_str_len):
     return _pytrexio.trexio_write_basis_interpolator_kind(file, str, max_str_len)
 
-def trexio_has_auxbasis_type(file):
-    return _pytrexio.trexio_has_auxbasis_type(file)
+def trexio_has_auxbas_type(file):
+    return _pytrexio.trexio_has_auxbas_type(file)
 
-def trexio_read_auxbasis_type(file, str_out):
-    return _pytrexio.trexio_read_auxbasis_type(file, str_out)
+def trexio_read_auxbas_type(file, str_out):
+    return _pytrexio.trexio_read_auxbas_type(file, str_out)
 
-def trexio_write_auxbasis_type(file, str, max_str_len):
-    return _pytrexio.trexio_write_auxbasis_type(file, str, max_str_len)
+def trexio_write_auxbas_type(file, str, max_str_len):
+    return _pytrexio.trexio_write_auxbas_type(file, str, max_str_len)
 
-def trexio_has_auxbasis_oscillation_kind(file):
-    return _pytrexio.trexio_has_auxbasis_oscillation_kind(file)
+def trexio_has_auxbas_oscillation_kind(file):
+    return _pytrexio.trexio_has_auxbas_oscillation_kind(file)
 
-def trexio_read_auxbasis_oscillation_kind(file, str_out):
-    return _pytrexio.trexio_read_auxbasis_oscillation_kind(file, str_out)
+def trexio_read_auxbas_oscillation_kind(file, str_out):
+    return _pytrexio.trexio_read_auxbas_oscillation_kind(file, str_out)
 
-def trexio_write_auxbasis_oscillation_kind(file, str, max_str_len):
-    return _pytrexio.trexio_write_auxbasis_oscillation_kind(file, str, max_str_len)
+def trexio_write_auxbas_oscillation_kind(file, str, max_str_len):
+    return _pytrexio.trexio_write_auxbas_oscillation_kind(file, str, max_str_len)
 
-def trexio_has_auxbasis_interpolator_kind(file):
-    return _pytrexio.trexio_has_auxbasis_interpolator_kind(file)
+def trexio_has_auxbas_interpolator_kind(file):
+    return _pytrexio.trexio_has_auxbas_interpolator_kind(file)
 
-def trexio_read_auxbasis_interpolator_kind(file, str_out):
-    return _pytrexio.trexio_read_auxbasis_interpolator_kind(file, str_out)
+def trexio_read_auxbas_interpolator_kind(file, str_out):
+    return _pytrexio.trexio_read_auxbas_interpolator_kind(file, str_out)
 
-def trexio_write_auxbasis_interpolator_kind(file, str, max_str_len):
-    return _pytrexio.trexio_write_auxbasis_interpolator_kind(file, str, max_str_len)
+def trexio_write_auxbas_interpolator_kind(file, str, max_str_len):
+    return _pytrexio.trexio_write_auxbas_interpolator_kind(file, str, max_str_len)
 
 def trexio_has_grid_description(file):
     return _pytrexio.trexio_has_grid_description(file)
@@ -2619,785 +2619,785 @@ def trexio_read_safe_basis_interpolator_lap_64(file, dset_out):
 def trexio_write_safe_basis_interpolator_lap_64(file, dset_in):
     return _pytrexio.trexio_write_safe_basis_interpolator_lap_64(file, dset_in)
 
-def trexio_has_auxbasis_nucleus_index(file):
-    return _pytrexio.trexio_has_auxbasis_nucleus_index(file)
+def trexio_has_auxbas_nucleus_index(file):
+    return _pytrexio.trexio_has_auxbas_nucleus_index(file)
 
-def trexio_read_auxbasis_nucleus_index(file, auxbasis_nucleus_index):
-    return _pytrexio.trexio_read_auxbasis_nucleus_index(file, auxbasis_nucleus_index)
+def trexio_read_auxbas_nucleus_index(file, auxbas_nucleus_index):
+    return _pytrexio.trexio_read_auxbas_nucleus_index(file, auxbas_nucleus_index)
 
-def trexio_write_auxbasis_nucleus_index(file, auxbasis_nucleus_index):
-    return _pytrexio.trexio_write_auxbasis_nucleus_index(file, auxbasis_nucleus_index)
+def trexio_write_auxbas_nucleus_index(file, auxbas_nucleus_index):
+    return _pytrexio.trexio_write_auxbas_nucleus_index(file, auxbas_nucleus_index)
 
-def trexio_read_auxbasis_nucleus_index_32(file, auxbasis_nucleus_index):
-    return _pytrexio.trexio_read_auxbasis_nucleus_index_32(file, auxbasis_nucleus_index)
+def trexio_read_auxbas_nucleus_index_32(file, auxbas_nucleus_index):
+    return _pytrexio.trexio_read_auxbas_nucleus_index_32(file, auxbas_nucleus_index)
 
-def trexio_write_auxbasis_nucleus_index_32(file, auxbasis_nucleus_index):
-    return _pytrexio.trexio_write_auxbasis_nucleus_index_32(file, auxbasis_nucleus_index)
+def trexio_write_auxbas_nucleus_index_32(file, auxbas_nucleus_index):
+    return _pytrexio.trexio_write_auxbas_nucleus_index_32(file, auxbas_nucleus_index)
 
-def trexio_read_auxbasis_nucleus_index_64(file, auxbasis_nucleus_index):
-    return _pytrexio.trexio_read_auxbasis_nucleus_index_64(file, auxbasis_nucleus_index)
+def trexio_read_auxbas_nucleus_index_64(file, auxbas_nucleus_index):
+    return _pytrexio.trexio_read_auxbas_nucleus_index_64(file, auxbas_nucleus_index)
 
-def trexio_write_auxbasis_nucleus_index_64(file, auxbasis_nucleus_index):
-    return _pytrexio.trexio_write_auxbasis_nucleus_index_64(file, auxbasis_nucleus_index)
+def trexio_write_auxbas_nucleus_index_64(file, auxbas_nucleus_index):
+    return _pytrexio.trexio_write_auxbas_nucleus_index_64(file, auxbas_nucleus_index)
 
-def trexio_read_safe_auxbasis_nucleus_index(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nucleus_index(file, dset_out)
+def trexio_read_safe_auxbas_nucleus_index(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nucleus_index(file, dset_out)
 
-def trexio_write_safe_auxbasis_nucleus_index(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nucleus_index(file, dset_in)
+def trexio_write_safe_auxbas_nucleus_index(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nucleus_index(file, dset_in)
 
-def trexio_read_safe_auxbasis_nucleus_index_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nucleus_index_32(file, dset_out)
+def trexio_read_safe_auxbas_nucleus_index_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nucleus_index_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_nucleus_index_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nucleus_index_32(file, dset_in)
+def trexio_write_safe_auxbas_nucleus_index_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nucleus_index_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_nucleus_index_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nucleus_index_64(file, dset_out)
+def trexio_read_safe_auxbas_nucleus_index_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nucleus_index_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_nucleus_index_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nucleus_index_64(file, dset_in)
+def trexio_write_safe_auxbas_nucleus_index_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nucleus_index_64(file, dset_in)
 
-def trexio_has_auxbasis_shell_ang_mom(file):
-    return _pytrexio.trexio_has_auxbasis_shell_ang_mom(file)
+def trexio_has_auxbas_shell_ang_mom(file):
+    return _pytrexio.trexio_has_auxbas_shell_ang_mom(file)
 
-def trexio_read_auxbasis_shell_ang_mom(file, auxbasis_shell_ang_mom):
-    return _pytrexio.trexio_read_auxbasis_shell_ang_mom(file, auxbasis_shell_ang_mom)
+def trexio_read_auxbas_shell_ang_mom(file, auxbas_shell_ang_mom):
+    return _pytrexio.trexio_read_auxbas_shell_ang_mom(file, auxbas_shell_ang_mom)
 
-def trexio_write_auxbasis_shell_ang_mom(file, auxbasis_shell_ang_mom):
-    return _pytrexio.trexio_write_auxbasis_shell_ang_mom(file, auxbasis_shell_ang_mom)
+def trexio_write_auxbas_shell_ang_mom(file, auxbas_shell_ang_mom):
+    return _pytrexio.trexio_write_auxbas_shell_ang_mom(file, auxbas_shell_ang_mom)
 
-def trexio_read_auxbasis_shell_ang_mom_32(file, auxbasis_shell_ang_mom):
-    return _pytrexio.trexio_read_auxbasis_shell_ang_mom_32(file, auxbasis_shell_ang_mom)
+def trexio_read_auxbas_shell_ang_mom_32(file, auxbas_shell_ang_mom):
+    return _pytrexio.trexio_read_auxbas_shell_ang_mom_32(file, auxbas_shell_ang_mom)
 
-def trexio_write_auxbasis_shell_ang_mom_32(file, auxbasis_shell_ang_mom):
-    return _pytrexio.trexio_write_auxbasis_shell_ang_mom_32(file, auxbasis_shell_ang_mom)
+def trexio_write_auxbas_shell_ang_mom_32(file, auxbas_shell_ang_mom):
+    return _pytrexio.trexio_write_auxbas_shell_ang_mom_32(file, auxbas_shell_ang_mom)
 
-def trexio_read_auxbasis_shell_ang_mom_64(file, auxbasis_shell_ang_mom):
-    return _pytrexio.trexio_read_auxbasis_shell_ang_mom_64(file, auxbasis_shell_ang_mom)
+def trexio_read_auxbas_shell_ang_mom_64(file, auxbas_shell_ang_mom):
+    return _pytrexio.trexio_read_auxbas_shell_ang_mom_64(file, auxbas_shell_ang_mom)
 
-def trexio_write_auxbasis_shell_ang_mom_64(file, auxbasis_shell_ang_mom):
-    return _pytrexio.trexio_write_auxbasis_shell_ang_mom_64(file, auxbasis_shell_ang_mom)
+def trexio_write_auxbas_shell_ang_mom_64(file, auxbas_shell_ang_mom):
+    return _pytrexio.trexio_write_auxbas_shell_ang_mom_64(file, auxbas_shell_ang_mom)
 
-def trexio_read_safe_auxbasis_shell_ang_mom(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_ang_mom(file, dset_out)
+def trexio_read_safe_auxbas_shell_ang_mom(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_ang_mom(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_ang_mom(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_ang_mom(file, dset_in)
+def trexio_write_safe_auxbas_shell_ang_mom(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_ang_mom(file, dset_in)
 
-def trexio_read_safe_auxbasis_shell_ang_mom_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_ang_mom_32(file, dset_out)
+def trexio_read_safe_auxbas_shell_ang_mom_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_ang_mom_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_ang_mom_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_ang_mom_32(file, dset_in)
+def trexio_write_safe_auxbas_shell_ang_mom_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_ang_mom_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_shell_ang_mom_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_ang_mom_64(file, dset_out)
+def trexio_read_safe_auxbas_shell_ang_mom_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_ang_mom_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_ang_mom_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_ang_mom_64(file, dset_in)
+def trexio_write_safe_auxbas_shell_ang_mom_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_ang_mom_64(file, dset_in)
 
-def trexio_has_auxbasis_shell_factor(file):
-    return _pytrexio.trexio_has_auxbasis_shell_factor(file)
+def trexio_has_auxbas_shell_factor(file):
+    return _pytrexio.trexio_has_auxbas_shell_factor(file)
 
-def trexio_read_auxbasis_shell_factor(file, auxbasis_shell_factor):
-    return _pytrexio.trexio_read_auxbasis_shell_factor(file, auxbasis_shell_factor)
+def trexio_read_auxbas_shell_factor(file, auxbas_shell_factor):
+    return _pytrexio.trexio_read_auxbas_shell_factor(file, auxbas_shell_factor)
 
-def trexio_write_auxbasis_shell_factor(file, auxbasis_shell_factor):
-    return _pytrexio.trexio_write_auxbasis_shell_factor(file, auxbasis_shell_factor)
+def trexio_write_auxbas_shell_factor(file, auxbas_shell_factor):
+    return _pytrexio.trexio_write_auxbas_shell_factor(file, auxbas_shell_factor)
 
-def trexio_read_auxbasis_shell_factor_32(file, auxbasis_shell_factor):
-    return _pytrexio.trexio_read_auxbasis_shell_factor_32(file, auxbasis_shell_factor)
+def trexio_read_auxbas_shell_factor_32(file, auxbas_shell_factor):
+    return _pytrexio.trexio_read_auxbas_shell_factor_32(file, auxbas_shell_factor)
 
-def trexio_write_auxbasis_shell_factor_32(file, auxbasis_shell_factor):
-    return _pytrexio.trexio_write_auxbasis_shell_factor_32(file, auxbasis_shell_factor)
+def trexio_write_auxbas_shell_factor_32(file, auxbas_shell_factor):
+    return _pytrexio.trexio_write_auxbas_shell_factor_32(file, auxbas_shell_factor)
 
-def trexio_read_auxbasis_shell_factor_64(file, auxbasis_shell_factor):
-    return _pytrexio.trexio_read_auxbasis_shell_factor_64(file, auxbasis_shell_factor)
+def trexio_read_auxbas_shell_factor_64(file, auxbas_shell_factor):
+    return _pytrexio.trexio_read_auxbas_shell_factor_64(file, auxbas_shell_factor)
 
-def trexio_write_auxbasis_shell_factor_64(file, auxbasis_shell_factor):
-    return _pytrexio.trexio_write_auxbasis_shell_factor_64(file, auxbasis_shell_factor)
+def trexio_write_auxbas_shell_factor_64(file, auxbas_shell_factor):
+    return _pytrexio.trexio_write_auxbas_shell_factor_64(file, auxbas_shell_factor)
 
-def trexio_read_safe_auxbasis_shell_factor(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_factor(file, dset_out)
+def trexio_read_safe_auxbas_shell_factor(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_factor(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_factor(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_factor(file, dset_in)
+def trexio_write_safe_auxbas_shell_factor(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_factor(file, dset_in)
 
-def trexio_read_safe_auxbasis_shell_factor_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_factor_32(file, dset_out)
+def trexio_read_safe_auxbas_shell_factor_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_factor_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_factor_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_factor_32(file, dset_in)
+def trexio_write_safe_auxbas_shell_factor_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_factor_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_shell_factor_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_factor_64(file, dset_out)
+def trexio_read_safe_auxbas_shell_factor_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_factor_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_factor_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_factor_64(file, dset_in)
+def trexio_write_safe_auxbas_shell_factor_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_factor_64(file, dset_in)
 
-def trexio_has_auxbasis_r_power(file):
-    return _pytrexio.trexio_has_auxbasis_r_power(file)
+def trexio_has_auxbas_r_power(file):
+    return _pytrexio.trexio_has_auxbas_r_power(file)
 
-def trexio_read_auxbasis_r_power(file, auxbasis_r_power):
-    return _pytrexio.trexio_read_auxbasis_r_power(file, auxbasis_r_power)
+def trexio_read_auxbas_r_power(file, auxbas_r_power):
+    return _pytrexio.trexio_read_auxbas_r_power(file, auxbas_r_power)
 
-def trexio_write_auxbasis_r_power(file, auxbasis_r_power):
-    return _pytrexio.trexio_write_auxbasis_r_power(file, auxbasis_r_power)
+def trexio_write_auxbas_r_power(file, auxbas_r_power):
+    return _pytrexio.trexio_write_auxbas_r_power(file, auxbas_r_power)
 
-def trexio_read_auxbasis_r_power_32(file, auxbasis_r_power):
-    return _pytrexio.trexio_read_auxbasis_r_power_32(file, auxbasis_r_power)
+def trexio_read_auxbas_r_power_32(file, auxbas_r_power):
+    return _pytrexio.trexio_read_auxbas_r_power_32(file, auxbas_r_power)
 
-def trexio_write_auxbasis_r_power_32(file, auxbasis_r_power):
-    return _pytrexio.trexio_write_auxbasis_r_power_32(file, auxbasis_r_power)
+def trexio_write_auxbas_r_power_32(file, auxbas_r_power):
+    return _pytrexio.trexio_write_auxbas_r_power_32(file, auxbas_r_power)
 
-def trexio_read_auxbasis_r_power_64(file, auxbasis_r_power):
-    return _pytrexio.trexio_read_auxbasis_r_power_64(file, auxbasis_r_power)
+def trexio_read_auxbas_r_power_64(file, auxbas_r_power):
+    return _pytrexio.trexio_read_auxbas_r_power_64(file, auxbas_r_power)
 
-def trexio_write_auxbasis_r_power_64(file, auxbasis_r_power):
-    return _pytrexio.trexio_write_auxbasis_r_power_64(file, auxbasis_r_power)
+def trexio_write_auxbas_r_power_64(file, auxbas_r_power):
+    return _pytrexio.trexio_write_auxbas_r_power_64(file, auxbas_r_power)
 
-def trexio_read_safe_auxbasis_r_power(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_r_power(file, dset_out)
+def trexio_read_safe_auxbas_r_power(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_r_power(file, dset_out)
 
-def trexio_write_safe_auxbasis_r_power(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_r_power(file, dset_in)
+def trexio_write_safe_auxbas_r_power(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_r_power(file, dset_in)
 
-def trexio_read_safe_auxbasis_r_power_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_r_power_32(file, dset_out)
+def trexio_read_safe_auxbas_r_power_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_r_power_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_r_power_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_r_power_32(file, dset_in)
+def trexio_write_safe_auxbas_r_power_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_r_power_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_r_power_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_r_power_64(file, dset_out)
+def trexio_read_safe_auxbas_r_power_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_r_power_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_r_power_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_r_power_64(file, dset_in)
+def trexio_write_safe_auxbas_r_power_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_r_power_64(file, dset_in)
 
-def trexio_has_auxbasis_nao_grid_start(file):
-    return _pytrexio.trexio_has_auxbasis_nao_grid_start(file)
+def trexio_has_auxbas_nao_grid_start(file):
+    return _pytrexio.trexio_has_auxbas_nao_grid_start(file)
 
-def trexio_read_auxbasis_nao_grid_start(file, auxbasis_nao_grid_start):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_start(file, auxbasis_nao_grid_start)
+def trexio_read_auxbas_nao_grid_start(file, auxbas_nao_grid_start):
+    return _pytrexio.trexio_read_auxbas_nao_grid_start(file, auxbas_nao_grid_start)
 
-def trexio_write_auxbasis_nao_grid_start(file, auxbasis_nao_grid_start):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_start(file, auxbasis_nao_grid_start)
+def trexio_write_auxbas_nao_grid_start(file, auxbas_nao_grid_start):
+    return _pytrexio.trexio_write_auxbas_nao_grid_start(file, auxbas_nao_grid_start)
 
-def trexio_read_auxbasis_nao_grid_start_32(file, auxbasis_nao_grid_start):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_start_32(file, auxbasis_nao_grid_start)
+def trexio_read_auxbas_nao_grid_start_32(file, auxbas_nao_grid_start):
+    return _pytrexio.trexio_read_auxbas_nao_grid_start_32(file, auxbas_nao_grid_start)
 
-def trexio_write_auxbasis_nao_grid_start_32(file, auxbasis_nao_grid_start):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_start_32(file, auxbasis_nao_grid_start)
+def trexio_write_auxbas_nao_grid_start_32(file, auxbas_nao_grid_start):
+    return _pytrexio.trexio_write_auxbas_nao_grid_start_32(file, auxbas_nao_grid_start)
 
-def trexio_read_auxbasis_nao_grid_start_64(file, auxbasis_nao_grid_start):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_start_64(file, auxbasis_nao_grid_start)
+def trexio_read_auxbas_nao_grid_start_64(file, auxbas_nao_grid_start):
+    return _pytrexio.trexio_read_auxbas_nao_grid_start_64(file, auxbas_nao_grid_start)
 
-def trexio_write_auxbasis_nao_grid_start_64(file, auxbasis_nao_grid_start):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_start_64(file, auxbasis_nao_grid_start)
+def trexio_write_auxbas_nao_grid_start_64(file, auxbas_nao_grid_start):
+    return _pytrexio.trexio_write_auxbas_nao_grid_start_64(file, auxbas_nao_grid_start)
 
-def trexio_read_safe_auxbasis_nao_grid_start(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_start(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_start(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_start(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_start(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_start(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_start(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_start(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_start_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_start_32(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_start_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_start_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_start_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_start_32(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_start_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_start_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_start_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_start_64(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_start_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_start_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_start_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_start_64(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_start_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_start_64(file, dset_in)
 
-def trexio_has_auxbasis_nao_grid_size(file):
-    return _pytrexio.trexio_has_auxbasis_nao_grid_size(file)
+def trexio_has_auxbas_nao_grid_size(file):
+    return _pytrexio.trexio_has_auxbas_nao_grid_size(file)
 
-def trexio_read_auxbasis_nao_grid_size(file, auxbasis_nao_grid_size):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_size(file, auxbasis_nao_grid_size)
+def trexio_read_auxbas_nao_grid_size(file, auxbas_nao_grid_size):
+    return _pytrexio.trexio_read_auxbas_nao_grid_size(file, auxbas_nao_grid_size)
 
-def trexio_write_auxbasis_nao_grid_size(file, auxbasis_nao_grid_size):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_size(file, auxbasis_nao_grid_size)
+def trexio_write_auxbas_nao_grid_size(file, auxbas_nao_grid_size):
+    return _pytrexio.trexio_write_auxbas_nao_grid_size(file, auxbas_nao_grid_size)
 
-def trexio_read_auxbasis_nao_grid_size_32(file, auxbasis_nao_grid_size):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_size_32(file, auxbasis_nao_grid_size)
+def trexio_read_auxbas_nao_grid_size_32(file, auxbas_nao_grid_size):
+    return _pytrexio.trexio_read_auxbas_nao_grid_size_32(file, auxbas_nao_grid_size)
 
-def trexio_write_auxbasis_nao_grid_size_32(file, auxbasis_nao_grid_size):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_size_32(file, auxbasis_nao_grid_size)
+def trexio_write_auxbas_nao_grid_size_32(file, auxbas_nao_grid_size):
+    return _pytrexio.trexio_write_auxbas_nao_grid_size_32(file, auxbas_nao_grid_size)
 
-def trexio_read_auxbasis_nao_grid_size_64(file, auxbasis_nao_grid_size):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_size_64(file, auxbasis_nao_grid_size)
+def trexio_read_auxbas_nao_grid_size_64(file, auxbas_nao_grid_size):
+    return _pytrexio.trexio_read_auxbas_nao_grid_size_64(file, auxbas_nao_grid_size)
 
-def trexio_write_auxbasis_nao_grid_size_64(file, auxbasis_nao_grid_size):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_size_64(file, auxbasis_nao_grid_size)
+def trexio_write_auxbas_nao_grid_size_64(file, auxbas_nao_grid_size):
+    return _pytrexio.trexio_write_auxbas_nao_grid_size_64(file, auxbas_nao_grid_size)
 
-def trexio_read_safe_auxbasis_nao_grid_size(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_size(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_size(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_size(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_size(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_size(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_size(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_size(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_size_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_size_32(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_size_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_size_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_size_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_size_32(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_size_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_size_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_size_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_size_64(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_size_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_size_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_size_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_size_64(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_size_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_size_64(file, dset_in)
 
-def trexio_has_auxbasis_shell_index(file):
-    return _pytrexio.trexio_has_auxbasis_shell_index(file)
+def trexio_has_auxbas_shell_index(file):
+    return _pytrexio.trexio_has_auxbas_shell_index(file)
 
-def trexio_read_auxbasis_shell_index(file, auxbasis_shell_index):
-    return _pytrexio.trexio_read_auxbasis_shell_index(file, auxbasis_shell_index)
+def trexio_read_auxbas_shell_index(file, auxbas_shell_index):
+    return _pytrexio.trexio_read_auxbas_shell_index(file, auxbas_shell_index)
 
-def trexio_write_auxbasis_shell_index(file, auxbasis_shell_index):
-    return _pytrexio.trexio_write_auxbasis_shell_index(file, auxbasis_shell_index)
+def trexio_write_auxbas_shell_index(file, auxbas_shell_index):
+    return _pytrexio.trexio_write_auxbas_shell_index(file, auxbas_shell_index)
 
-def trexio_read_auxbasis_shell_index_32(file, auxbasis_shell_index):
-    return _pytrexio.trexio_read_auxbasis_shell_index_32(file, auxbasis_shell_index)
+def trexio_read_auxbas_shell_index_32(file, auxbas_shell_index):
+    return _pytrexio.trexio_read_auxbas_shell_index_32(file, auxbas_shell_index)
 
-def trexio_write_auxbasis_shell_index_32(file, auxbasis_shell_index):
-    return _pytrexio.trexio_write_auxbasis_shell_index_32(file, auxbasis_shell_index)
+def trexio_write_auxbas_shell_index_32(file, auxbas_shell_index):
+    return _pytrexio.trexio_write_auxbas_shell_index_32(file, auxbas_shell_index)
 
-def trexio_read_auxbasis_shell_index_64(file, auxbasis_shell_index):
-    return _pytrexio.trexio_read_auxbasis_shell_index_64(file, auxbasis_shell_index)
+def trexio_read_auxbas_shell_index_64(file, auxbas_shell_index):
+    return _pytrexio.trexio_read_auxbas_shell_index_64(file, auxbas_shell_index)
 
-def trexio_write_auxbasis_shell_index_64(file, auxbasis_shell_index):
-    return _pytrexio.trexio_write_auxbasis_shell_index_64(file, auxbasis_shell_index)
+def trexio_write_auxbas_shell_index_64(file, auxbas_shell_index):
+    return _pytrexio.trexio_write_auxbas_shell_index_64(file, auxbas_shell_index)
 
-def trexio_read_safe_auxbasis_shell_index(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_index(file, dset_out)
+def trexio_read_safe_auxbas_shell_index(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_index(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_index(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_index(file, dset_in)
+def trexio_write_safe_auxbas_shell_index(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_index(file, dset_in)
 
-def trexio_read_safe_auxbasis_shell_index_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_index_32(file, dset_out)
+def trexio_read_safe_auxbas_shell_index_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_index_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_index_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_index_32(file, dset_in)
+def trexio_write_safe_auxbas_shell_index_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_index_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_shell_index_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_shell_index_64(file, dset_out)
+def trexio_read_safe_auxbas_shell_index_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_shell_index_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_shell_index_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_shell_index_64(file, dset_in)
+def trexio_write_safe_auxbas_shell_index_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_shell_index_64(file, dset_in)
 
-def trexio_has_auxbasis_exponent(file):
-    return _pytrexio.trexio_has_auxbasis_exponent(file)
+def trexio_has_auxbas_exponent(file):
+    return _pytrexio.trexio_has_auxbas_exponent(file)
 
-def trexio_read_auxbasis_exponent(file, auxbasis_exponent):
-    return _pytrexio.trexio_read_auxbasis_exponent(file, auxbasis_exponent)
+def trexio_read_auxbas_exponent(file, auxbas_exponent):
+    return _pytrexio.trexio_read_auxbas_exponent(file, auxbas_exponent)
 
-def trexio_write_auxbasis_exponent(file, auxbasis_exponent):
-    return _pytrexio.trexio_write_auxbasis_exponent(file, auxbasis_exponent)
+def trexio_write_auxbas_exponent(file, auxbas_exponent):
+    return _pytrexio.trexio_write_auxbas_exponent(file, auxbas_exponent)
 
-def trexio_read_auxbasis_exponent_32(file, auxbasis_exponent):
-    return _pytrexio.trexio_read_auxbasis_exponent_32(file, auxbasis_exponent)
+def trexio_read_auxbas_exponent_32(file, auxbas_exponent):
+    return _pytrexio.trexio_read_auxbas_exponent_32(file, auxbas_exponent)
 
-def trexio_write_auxbasis_exponent_32(file, auxbasis_exponent):
-    return _pytrexio.trexio_write_auxbasis_exponent_32(file, auxbasis_exponent)
+def trexio_write_auxbas_exponent_32(file, auxbas_exponent):
+    return _pytrexio.trexio_write_auxbas_exponent_32(file, auxbas_exponent)
 
-def trexio_read_auxbasis_exponent_64(file, auxbasis_exponent):
-    return _pytrexio.trexio_read_auxbasis_exponent_64(file, auxbasis_exponent)
+def trexio_read_auxbas_exponent_64(file, auxbas_exponent):
+    return _pytrexio.trexio_read_auxbas_exponent_64(file, auxbas_exponent)
 
-def trexio_write_auxbasis_exponent_64(file, auxbasis_exponent):
-    return _pytrexio.trexio_write_auxbasis_exponent_64(file, auxbasis_exponent)
+def trexio_write_auxbas_exponent_64(file, auxbas_exponent):
+    return _pytrexio.trexio_write_auxbas_exponent_64(file, auxbas_exponent)
 
-def trexio_read_safe_auxbasis_exponent(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_exponent(file, dset_out)
+def trexio_read_safe_auxbas_exponent(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_exponent(file, dset_out)
 
-def trexio_write_safe_auxbasis_exponent(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_exponent(file, dset_in)
+def trexio_write_safe_auxbas_exponent(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_exponent(file, dset_in)
 
-def trexio_read_safe_auxbasis_exponent_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_exponent_32(file, dset_out)
+def trexio_read_safe_auxbas_exponent_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_exponent_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_exponent_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_exponent_32(file, dset_in)
+def trexio_write_safe_auxbas_exponent_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_exponent_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_exponent_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_exponent_64(file, dset_out)
+def trexio_read_safe_auxbas_exponent_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_exponent_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_exponent_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_exponent_64(file, dset_in)
+def trexio_write_safe_auxbas_exponent_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_exponent_64(file, dset_in)
 
-def trexio_has_auxbasis_exponent_im(file):
-    return _pytrexio.trexio_has_auxbasis_exponent_im(file)
+def trexio_has_auxbas_exponent_im(file):
+    return _pytrexio.trexio_has_auxbas_exponent_im(file)
 
-def trexio_read_auxbasis_exponent_im(file, auxbasis_exponent_im):
-    return _pytrexio.trexio_read_auxbasis_exponent_im(file, auxbasis_exponent_im)
+def trexio_read_auxbas_exponent_im(file, auxbas_exponent_im):
+    return _pytrexio.trexio_read_auxbas_exponent_im(file, auxbas_exponent_im)
 
-def trexio_write_auxbasis_exponent_im(file, auxbasis_exponent_im):
-    return _pytrexio.trexio_write_auxbasis_exponent_im(file, auxbasis_exponent_im)
+def trexio_write_auxbas_exponent_im(file, auxbas_exponent_im):
+    return _pytrexio.trexio_write_auxbas_exponent_im(file, auxbas_exponent_im)
 
-def trexio_read_auxbasis_exponent_im_32(file, auxbasis_exponent_im):
-    return _pytrexio.trexio_read_auxbasis_exponent_im_32(file, auxbasis_exponent_im)
+def trexio_read_auxbas_exponent_im_32(file, auxbas_exponent_im):
+    return _pytrexio.trexio_read_auxbas_exponent_im_32(file, auxbas_exponent_im)
 
-def trexio_write_auxbasis_exponent_im_32(file, auxbasis_exponent_im):
-    return _pytrexio.trexio_write_auxbasis_exponent_im_32(file, auxbasis_exponent_im)
+def trexio_write_auxbas_exponent_im_32(file, auxbas_exponent_im):
+    return _pytrexio.trexio_write_auxbas_exponent_im_32(file, auxbas_exponent_im)
 
-def trexio_read_auxbasis_exponent_im_64(file, auxbasis_exponent_im):
-    return _pytrexio.trexio_read_auxbasis_exponent_im_64(file, auxbasis_exponent_im)
+def trexio_read_auxbas_exponent_im_64(file, auxbas_exponent_im):
+    return _pytrexio.trexio_read_auxbas_exponent_im_64(file, auxbas_exponent_im)
 
-def trexio_write_auxbasis_exponent_im_64(file, auxbasis_exponent_im):
-    return _pytrexio.trexio_write_auxbasis_exponent_im_64(file, auxbasis_exponent_im)
+def trexio_write_auxbas_exponent_im_64(file, auxbas_exponent_im):
+    return _pytrexio.trexio_write_auxbas_exponent_im_64(file, auxbas_exponent_im)
 
-def trexio_read_safe_auxbasis_exponent_im(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_exponent_im(file, dset_out)
+def trexio_read_safe_auxbas_exponent_im(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_exponent_im(file, dset_out)
 
-def trexio_write_safe_auxbasis_exponent_im(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_exponent_im(file, dset_in)
+def trexio_write_safe_auxbas_exponent_im(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_exponent_im(file, dset_in)
 
-def trexio_read_safe_auxbasis_exponent_im_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_exponent_im_32(file, dset_out)
+def trexio_read_safe_auxbas_exponent_im_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_exponent_im_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_exponent_im_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_exponent_im_32(file, dset_in)
+def trexio_write_safe_auxbas_exponent_im_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_exponent_im_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_exponent_im_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_exponent_im_64(file, dset_out)
+def trexio_read_safe_auxbas_exponent_im_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_exponent_im_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_exponent_im_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_exponent_im_64(file, dset_in)
+def trexio_write_safe_auxbas_exponent_im_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_exponent_im_64(file, dset_in)
 
-def trexio_has_auxbasis_coefficient(file):
-    return _pytrexio.trexio_has_auxbasis_coefficient(file)
+def trexio_has_auxbas_coefficient(file):
+    return _pytrexio.trexio_has_auxbas_coefficient(file)
 
-def trexio_read_auxbasis_coefficient(file, auxbasis_coefficient):
-    return _pytrexio.trexio_read_auxbasis_coefficient(file, auxbasis_coefficient)
+def trexio_read_auxbas_coefficient(file, auxbas_coefficient):
+    return _pytrexio.trexio_read_auxbas_coefficient(file, auxbas_coefficient)
 
-def trexio_write_auxbasis_coefficient(file, auxbasis_coefficient):
-    return _pytrexio.trexio_write_auxbasis_coefficient(file, auxbasis_coefficient)
+def trexio_write_auxbas_coefficient(file, auxbas_coefficient):
+    return _pytrexio.trexio_write_auxbas_coefficient(file, auxbas_coefficient)
 
-def trexio_read_auxbasis_coefficient_32(file, auxbasis_coefficient):
-    return _pytrexio.trexio_read_auxbasis_coefficient_32(file, auxbasis_coefficient)
+def trexio_read_auxbas_coefficient_32(file, auxbas_coefficient):
+    return _pytrexio.trexio_read_auxbas_coefficient_32(file, auxbas_coefficient)
 
-def trexio_write_auxbasis_coefficient_32(file, auxbasis_coefficient):
-    return _pytrexio.trexio_write_auxbasis_coefficient_32(file, auxbasis_coefficient)
+def trexio_write_auxbas_coefficient_32(file, auxbas_coefficient):
+    return _pytrexio.trexio_write_auxbas_coefficient_32(file, auxbas_coefficient)
 
-def trexio_read_auxbasis_coefficient_64(file, auxbasis_coefficient):
-    return _pytrexio.trexio_read_auxbasis_coefficient_64(file, auxbasis_coefficient)
+def trexio_read_auxbas_coefficient_64(file, auxbas_coefficient):
+    return _pytrexio.trexio_read_auxbas_coefficient_64(file, auxbas_coefficient)
 
-def trexio_write_auxbasis_coefficient_64(file, auxbasis_coefficient):
-    return _pytrexio.trexio_write_auxbasis_coefficient_64(file, auxbasis_coefficient)
+def trexio_write_auxbas_coefficient_64(file, auxbas_coefficient):
+    return _pytrexio.trexio_write_auxbas_coefficient_64(file, auxbas_coefficient)
 
-def trexio_read_safe_auxbasis_coefficient(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_coefficient(file, dset_out)
+def trexio_read_safe_auxbas_coefficient(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_coefficient(file, dset_out)
 
-def trexio_write_safe_auxbasis_coefficient(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_coefficient(file, dset_in)
+def trexio_write_safe_auxbas_coefficient(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_coefficient(file, dset_in)
 
-def trexio_read_safe_auxbasis_coefficient_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_coefficient_32(file, dset_out)
+def trexio_read_safe_auxbas_coefficient_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_coefficient_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_coefficient_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_coefficient_32(file, dset_in)
+def trexio_write_safe_auxbas_coefficient_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_coefficient_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_coefficient_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_coefficient_64(file, dset_out)
+def trexio_read_safe_auxbas_coefficient_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_coefficient_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_coefficient_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_coefficient_64(file, dset_in)
+def trexio_write_safe_auxbas_coefficient_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_coefficient_64(file, dset_in)
 
-def trexio_has_auxbasis_coefficient_im(file):
-    return _pytrexio.trexio_has_auxbasis_coefficient_im(file)
+def trexio_has_auxbas_coefficient_im(file):
+    return _pytrexio.trexio_has_auxbas_coefficient_im(file)
 
-def trexio_read_auxbasis_coefficient_im(file, auxbasis_coefficient_im):
-    return _pytrexio.trexio_read_auxbasis_coefficient_im(file, auxbasis_coefficient_im)
+def trexio_read_auxbas_coefficient_im(file, auxbas_coefficient_im):
+    return _pytrexio.trexio_read_auxbas_coefficient_im(file, auxbas_coefficient_im)
 
-def trexio_write_auxbasis_coefficient_im(file, auxbasis_coefficient_im):
-    return _pytrexio.trexio_write_auxbasis_coefficient_im(file, auxbasis_coefficient_im)
+def trexio_write_auxbas_coefficient_im(file, auxbas_coefficient_im):
+    return _pytrexio.trexio_write_auxbas_coefficient_im(file, auxbas_coefficient_im)
 
-def trexio_read_auxbasis_coefficient_im_32(file, auxbasis_coefficient_im):
-    return _pytrexio.trexio_read_auxbasis_coefficient_im_32(file, auxbasis_coefficient_im)
+def trexio_read_auxbas_coefficient_im_32(file, auxbas_coefficient_im):
+    return _pytrexio.trexio_read_auxbas_coefficient_im_32(file, auxbas_coefficient_im)
 
-def trexio_write_auxbasis_coefficient_im_32(file, auxbasis_coefficient_im):
-    return _pytrexio.trexio_write_auxbasis_coefficient_im_32(file, auxbasis_coefficient_im)
+def trexio_write_auxbas_coefficient_im_32(file, auxbas_coefficient_im):
+    return _pytrexio.trexio_write_auxbas_coefficient_im_32(file, auxbas_coefficient_im)
 
-def trexio_read_auxbasis_coefficient_im_64(file, auxbasis_coefficient_im):
-    return _pytrexio.trexio_read_auxbasis_coefficient_im_64(file, auxbasis_coefficient_im)
+def trexio_read_auxbas_coefficient_im_64(file, auxbas_coefficient_im):
+    return _pytrexio.trexio_read_auxbas_coefficient_im_64(file, auxbas_coefficient_im)
 
-def trexio_write_auxbasis_coefficient_im_64(file, auxbasis_coefficient_im):
-    return _pytrexio.trexio_write_auxbasis_coefficient_im_64(file, auxbasis_coefficient_im)
+def trexio_write_auxbas_coefficient_im_64(file, auxbas_coefficient_im):
+    return _pytrexio.trexio_write_auxbas_coefficient_im_64(file, auxbas_coefficient_im)
 
-def trexio_read_safe_auxbasis_coefficient_im(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_coefficient_im(file, dset_out)
+def trexio_read_safe_auxbas_coefficient_im(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_coefficient_im(file, dset_out)
 
-def trexio_write_safe_auxbasis_coefficient_im(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_coefficient_im(file, dset_in)
+def trexio_write_safe_auxbas_coefficient_im(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_coefficient_im(file, dset_in)
 
-def trexio_read_safe_auxbasis_coefficient_im_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_coefficient_im_32(file, dset_out)
+def trexio_read_safe_auxbas_coefficient_im_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_coefficient_im_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_coefficient_im_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_coefficient_im_32(file, dset_in)
+def trexio_write_safe_auxbas_coefficient_im_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_coefficient_im_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_coefficient_im_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_coefficient_im_64(file, dset_out)
+def trexio_read_safe_auxbas_coefficient_im_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_coefficient_im_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_coefficient_im_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_coefficient_im_64(file, dset_in)
+def trexio_write_safe_auxbas_coefficient_im_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_coefficient_im_64(file, dset_in)
 
-def trexio_has_auxbasis_oscillation_arg(file):
-    return _pytrexio.trexio_has_auxbasis_oscillation_arg(file)
+def trexio_has_auxbas_oscillation_arg(file):
+    return _pytrexio.trexio_has_auxbas_oscillation_arg(file)
 
-def trexio_read_auxbasis_oscillation_arg(file, auxbasis_oscillation_arg):
-    return _pytrexio.trexio_read_auxbasis_oscillation_arg(file, auxbasis_oscillation_arg)
+def trexio_read_auxbas_oscillation_arg(file, auxbas_oscillation_arg):
+    return _pytrexio.trexio_read_auxbas_oscillation_arg(file, auxbas_oscillation_arg)
 
-def trexio_write_auxbasis_oscillation_arg(file, auxbasis_oscillation_arg):
-    return _pytrexio.trexio_write_auxbasis_oscillation_arg(file, auxbasis_oscillation_arg)
+def trexio_write_auxbas_oscillation_arg(file, auxbas_oscillation_arg):
+    return _pytrexio.trexio_write_auxbas_oscillation_arg(file, auxbas_oscillation_arg)
 
-def trexio_read_auxbasis_oscillation_arg_32(file, auxbasis_oscillation_arg):
-    return _pytrexio.trexio_read_auxbasis_oscillation_arg_32(file, auxbasis_oscillation_arg)
+def trexio_read_auxbas_oscillation_arg_32(file, auxbas_oscillation_arg):
+    return _pytrexio.trexio_read_auxbas_oscillation_arg_32(file, auxbas_oscillation_arg)
 
-def trexio_write_auxbasis_oscillation_arg_32(file, auxbasis_oscillation_arg):
-    return _pytrexio.trexio_write_auxbasis_oscillation_arg_32(file, auxbasis_oscillation_arg)
+def trexio_write_auxbas_oscillation_arg_32(file, auxbas_oscillation_arg):
+    return _pytrexio.trexio_write_auxbas_oscillation_arg_32(file, auxbas_oscillation_arg)
 
-def trexio_read_auxbasis_oscillation_arg_64(file, auxbasis_oscillation_arg):
-    return _pytrexio.trexio_read_auxbasis_oscillation_arg_64(file, auxbasis_oscillation_arg)
+def trexio_read_auxbas_oscillation_arg_64(file, auxbas_oscillation_arg):
+    return _pytrexio.trexio_read_auxbas_oscillation_arg_64(file, auxbas_oscillation_arg)
 
-def trexio_write_auxbasis_oscillation_arg_64(file, auxbasis_oscillation_arg):
-    return _pytrexio.trexio_write_auxbasis_oscillation_arg_64(file, auxbasis_oscillation_arg)
+def trexio_write_auxbas_oscillation_arg_64(file, auxbas_oscillation_arg):
+    return _pytrexio.trexio_write_auxbas_oscillation_arg_64(file, auxbas_oscillation_arg)
 
-def trexio_read_safe_auxbasis_oscillation_arg(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_oscillation_arg(file, dset_out)
+def trexio_read_safe_auxbas_oscillation_arg(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_oscillation_arg(file, dset_out)
 
-def trexio_write_safe_auxbasis_oscillation_arg(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_oscillation_arg(file, dset_in)
+def trexio_write_safe_auxbas_oscillation_arg(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_oscillation_arg(file, dset_in)
 
-def trexio_read_safe_auxbasis_oscillation_arg_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_oscillation_arg_32(file, dset_out)
+def trexio_read_safe_auxbas_oscillation_arg_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_oscillation_arg_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_oscillation_arg_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_oscillation_arg_32(file, dset_in)
+def trexio_write_safe_auxbas_oscillation_arg_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_oscillation_arg_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_oscillation_arg_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_oscillation_arg_64(file, dset_out)
+def trexio_read_safe_auxbas_oscillation_arg_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_oscillation_arg_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_oscillation_arg_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_oscillation_arg_64(file, dset_in)
+def trexio_write_safe_auxbas_oscillation_arg_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_oscillation_arg_64(file, dset_in)
 
-def trexio_has_auxbasis_prim_factor(file):
-    return _pytrexio.trexio_has_auxbasis_prim_factor(file)
+def trexio_has_auxbas_prim_factor(file):
+    return _pytrexio.trexio_has_auxbas_prim_factor(file)
 
-def trexio_read_auxbasis_prim_factor(file, auxbasis_prim_factor):
-    return _pytrexio.trexio_read_auxbasis_prim_factor(file, auxbasis_prim_factor)
+def trexio_read_auxbas_prim_factor(file, auxbas_prim_factor):
+    return _pytrexio.trexio_read_auxbas_prim_factor(file, auxbas_prim_factor)
 
-def trexio_write_auxbasis_prim_factor(file, auxbasis_prim_factor):
-    return _pytrexio.trexio_write_auxbasis_prim_factor(file, auxbasis_prim_factor)
+def trexio_write_auxbas_prim_factor(file, auxbas_prim_factor):
+    return _pytrexio.trexio_write_auxbas_prim_factor(file, auxbas_prim_factor)
 
-def trexio_read_auxbasis_prim_factor_32(file, auxbasis_prim_factor):
-    return _pytrexio.trexio_read_auxbasis_prim_factor_32(file, auxbasis_prim_factor)
+def trexio_read_auxbas_prim_factor_32(file, auxbas_prim_factor):
+    return _pytrexio.trexio_read_auxbas_prim_factor_32(file, auxbas_prim_factor)
 
-def trexio_write_auxbasis_prim_factor_32(file, auxbasis_prim_factor):
-    return _pytrexio.trexio_write_auxbasis_prim_factor_32(file, auxbasis_prim_factor)
+def trexio_write_auxbas_prim_factor_32(file, auxbas_prim_factor):
+    return _pytrexio.trexio_write_auxbas_prim_factor_32(file, auxbas_prim_factor)
 
-def trexio_read_auxbasis_prim_factor_64(file, auxbasis_prim_factor):
-    return _pytrexio.trexio_read_auxbasis_prim_factor_64(file, auxbasis_prim_factor)
+def trexio_read_auxbas_prim_factor_64(file, auxbas_prim_factor):
+    return _pytrexio.trexio_read_auxbas_prim_factor_64(file, auxbas_prim_factor)
 
-def trexio_write_auxbasis_prim_factor_64(file, auxbasis_prim_factor):
-    return _pytrexio.trexio_write_auxbasis_prim_factor_64(file, auxbasis_prim_factor)
+def trexio_write_auxbas_prim_factor_64(file, auxbas_prim_factor):
+    return _pytrexio.trexio_write_auxbas_prim_factor_64(file, auxbas_prim_factor)
 
-def trexio_read_safe_auxbasis_prim_factor(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_prim_factor(file, dset_out)
+def trexio_read_safe_auxbas_prim_factor(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_prim_factor(file, dset_out)
 
-def trexio_write_safe_auxbasis_prim_factor(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_prim_factor(file, dset_in)
+def trexio_write_safe_auxbas_prim_factor(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_prim_factor(file, dset_in)
 
-def trexio_read_safe_auxbasis_prim_factor_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_prim_factor_32(file, dset_out)
+def trexio_read_safe_auxbas_prim_factor_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_prim_factor_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_prim_factor_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_prim_factor_32(file, dset_in)
+def trexio_write_safe_auxbas_prim_factor_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_prim_factor_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_prim_factor_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_prim_factor_64(file, dset_out)
+def trexio_read_safe_auxbas_prim_factor_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_prim_factor_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_prim_factor_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_prim_factor_64(file, dset_in)
+def trexio_write_safe_auxbas_prim_factor_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_prim_factor_64(file, dset_in)
 
-def trexio_has_auxbasis_nao_grid_radius(file):
-    return _pytrexio.trexio_has_auxbasis_nao_grid_radius(file)
+def trexio_has_auxbas_nao_grid_radius(file):
+    return _pytrexio.trexio_has_auxbas_nao_grid_radius(file)
 
-def trexio_read_auxbasis_nao_grid_radius(file, auxbasis_nao_grid_radius):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_radius(file, auxbasis_nao_grid_radius)
+def trexio_read_auxbas_nao_grid_radius(file, auxbas_nao_grid_radius):
+    return _pytrexio.trexio_read_auxbas_nao_grid_radius(file, auxbas_nao_grid_radius)
 
-def trexio_write_auxbasis_nao_grid_radius(file, auxbasis_nao_grid_radius):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_radius(file, auxbasis_nao_grid_radius)
+def trexio_write_auxbas_nao_grid_radius(file, auxbas_nao_grid_radius):
+    return _pytrexio.trexio_write_auxbas_nao_grid_radius(file, auxbas_nao_grid_radius)
 
-def trexio_read_auxbasis_nao_grid_radius_32(file, auxbasis_nao_grid_radius):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_radius_32(file, auxbasis_nao_grid_radius)
+def trexio_read_auxbas_nao_grid_radius_32(file, auxbas_nao_grid_radius):
+    return _pytrexio.trexio_read_auxbas_nao_grid_radius_32(file, auxbas_nao_grid_radius)
 
-def trexio_write_auxbasis_nao_grid_radius_32(file, auxbasis_nao_grid_radius):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_radius_32(file, auxbasis_nao_grid_radius)
+def trexio_write_auxbas_nao_grid_radius_32(file, auxbas_nao_grid_radius):
+    return _pytrexio.trexio_write_auxbas_nao_grid_radius_32(file, auxbas_nao_grid_radius)
 
-def trexio_read_auxbasis_nao_grid_radius_64(file, auxbasis_nao_grid_radius):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_radius_64(file, auxbasis_nao_grid_radius)
+def trexio_read_auxbas_nao_grid_radius_64(file, auxbas_nao_grid_radius):
+    return _pytrexio.trexio_read_auxbas_nao_grid_radius_64(file, auxbas_nao_grid_radius)
 
-def trexio_write_auxbasis_nao_grid_radius_64(file, auxbasis_nao_grid_radius):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_radius_64(file, auxbasis_nao_grid_radius)
+def trexio_write_auxbas_nao_grid_radius_64(file, auxbas_nao_grid_radius):
+    return _pytrexio.trexio_write_auxbas_nao_grid_radius_64(file, auxbas_nao_grid_radius)
 
-def trexio_read_safe_auxbasis_nao_grid_radius(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_radius(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_radius(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_radius(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_radius(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_radius(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_radius(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_radius(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_radius_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_radius_32(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_radius_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_radius_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_radius_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_radius_32(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_radius_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_radius_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_radius_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_radius_64(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_radius_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_radius_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_radius_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_radius_64(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_radius_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_radius_64(file, dset_in)
 
-def trexio_has_auxbasis_nao_grid_phi(file):
-    return _pytrexio.trexio_has_auxbasis_nao_grid_phi(file)
+def trexio_has_auxbas_nao_grid_phi(file):
+    return _pytrexio.trexio_has_auxbas_nao_grid_phi(file)
 
-def trexio_read_auxbasis_nao_grid_phi(file, auxbasis_nao_grid_phi):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_phi(file, auxbasis_nao_grid_phi)
+def trexio_read_auxbas_nao_grid_phi(file, auxbas_nao_grid_phi):
+    return _pytrexio.trexio_read_auxbas_nao_grid_phi(file, auxbas_nao_grid_phi)
 
-def trexio_write_auxbasis_nao_grid_phi(file, auxbasis_nao_grid_phi):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_phi(file, auxbasis_nao_grid_phi)
+def trexio_write_auxbas_nao_grid_phi(file, auxbas_nao_grid_phi):
+    return _pytrexio.trexio_write_auxbas_nao_grid_phi(file, auxbas_nao_grid_phi)
 
-def trexio_read_auxbasis_nao_grid_phi_32(file, auxbasis_nao_grid_phi):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_phi_32(file, auxbasis_nao_grid_phi)
+def trexio_read_auxbas_nao_grid_phi_32(file, auxbas_nao_grid_phi):
+    return _pytrexio.trexio_read_auxbas_nao_grid_phi_32(file, auxbas_nao_grid_phi)
 
-def trexio_write_auxbasis_nao_grid_phi_32(file, auxbasis_nao_grid_phi):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_phi_32(file, auxbasis_nao_grid_phi)
+def trexio_write_auxbas_nao_grid_phi_32(file, auxbas_nao_grid_phi):
+    return _pytrexio.trexio_write_auxbas_nao_grid_phi_32(file, auxbas_nao_grid_phi)
 
-def trexio_read_auxbasis_nao_grid_phi_64(file, auxbasis_nao_grid_phi):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_phi_64(file, auxbasis_nao_grid_phi)
+def trexio_read_auxbas_nao_grid_phi_64(file, auxbas_nao_grid_phi):
+    return _pytrexio.trexio_read_auxbas_nao_grid_phi_64(file, auxbas_nao_grid_phi)
 
-def trexio_write_auxbasis_nao_grid_phi_64(file, auxbasis_nao_grid_phi):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_phi_64(file, auxbasis_nao_grid_phi)
+def trexio_write_auxbas_nao_grid_phi_64(file, auxbas_nao_grid_phi):
+    return _pytrexio.trexio_write_auxbas_nao_grid_phi_64(file, auxbas_nao_grid_phi)
 
-def trexio_read_safe_auxbasis_nao_grid_phi(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_phi(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_phi(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_phi(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_phi(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_phi(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_phi(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_phi(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_phi_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_phi_32(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_phi_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_phi_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_phi_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_phi_32(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_phi_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_phi_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_phi_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_phi_64(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_phi_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_phi_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_phi_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_phi_64(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_phi_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_phi_64(file, dset_in)
 
-def trexio_has_auxbasis_nao_grid_grad(file):
-    return _pytrexio.trexio_has_auxbasis_nao_grid_grad(file)
+def trexio_has_auxbas_nao_grid_grad(file):
+    return _pytrexio.trexio_has_auxbas_nao_grid_grad(file)
 
-def trexio_read_auxbasis_nao_grid_grad(file, auxbasis_nao_grid_grad):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_grad(file, auxbasis_nao_grid_grad)
+def trexio_read_auxbas_nao_grid_grad(file, auxbas_nao_grid_grad):
+    return _pytrexio.trexio_read_auxbas_nao_grid_grad(file, auxbas_nao_grid_grad)
 
-def trexio_write_auxbasis_nao_grid_grad(file, auxbasis_nao_grid_grad):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_grad(file, auxbasis_nao_grid_grad)
+def trexio_write_auxbas_nao_grid_grad(file, auxbas_nao_grid_grad):
+    return _pytrexio.trexio_write_auxbas_nao_grid_grad(file, auxbas_nao_grid_grad)
 
-def trexio_read_auxbasis_nao_grid_grad_32(file, auxbasis_nao_grid_grad):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_grad_32(file, auxbasis_nao_grid_grad)
+def trexio_read_auxbas_nao_grid_grad_32(file, auxbas_nao_grid_grad):
+    return _pytrexio.trexio_read_auxbas_nao_grid_grad_32(file, auxbas_nao_grid_grad)
 
-def trexio_write_auxbasis_nao_grid_grad_32(file, auxbasis_nao_grid_grad):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_grad_32(file, auxbasis_nao_grid_grad)
+def trexio_write_auxbas_nao_grid_grad_32(file, auxbas_nao_grid_grad):
+    return _pytrexio.trexio_write_auxbas_nao_grid_grad_32(file, auxbas_nao_grid_grad)
 
-def trexio_read_auxbasis_nao_grid_grad_64(file, auxbasis_nao_grid_grad):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_grad_64(file, auxbasis_nao_grid_grad)
+def trexio_read_auxbas_nao_grid_grad_64(file, auxbas_nao_grid_grad):
+    return _pytrexio.trexio_read_auxbas_nao_grid_grad_64(file, auxbas_nao_grid_grad)
 
-def trexio_write_auxbasis_nao_grid_grad_64(file, auxbasis_nao_grid_grad):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_grad_64(file, auxbasis_nao_grid_grad)
+def trexio_write_auxbas_nao_grid_grad_64(file, auxbas_nao_grid_grad):
+    return _pytrexio.trexio_write_auxbas_nao_grid_grad_64(file, auxbas_nao_grid_grad)
 
-def trexio_read_safe_auxbasis_nao_grid_grad(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_grad(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_grad(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_grad(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_grad(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_grad(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_grad(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_grad(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_grad_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_grad_32(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_grad_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_grad_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_grad_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_grad_32(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_grad_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_grad_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_grad_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_grad_64(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_grad_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_grad_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_grad_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_grad_64(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_grad_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_grad_64(file, dset_in)
 
-def trexio_has_auxbasis_nao_grid_lap(file):
-    return _pytrexio.trexio_has_auxbasis_nao_grid_lap(file)
+def trexio_has_auxbas_nao_grid_lap(file):
+    return _pytrexio.trexio_has_auxbas_nao_grid_lap(file)
 
-def trexio_read_auxbasis_nao_grid_lap(file, auxbasis_nao_grid_lap):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_lap(file, auxbasis_nao_grid_lap)
+def trexio_read_auxbas_nao_grid_lap(file, auxbas_nao_grid_lap):
+    return _pytrexio.trexio_read_auxbas_nao_grid_lap(file, auxbas_nao_grid_lap)
 
-def trexio_write_auxbasis_nao_grid_lap(file, auxbasis_nao_grid_lap):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_lap(file, auxbasis_nao_grid_lap)
+def trexio_write_auxbas_nao_grid_lap(file, auxbas_nao_grid_lap):
+    return _pytrexio.trexio_write_auxbas_nao_grid_lap(file, auxbas_nao_grid_lap)
 
-def trexio_read_auxbasis_nao_grid_lap_32(file, auxbasis_nao_grid_lap):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_lap_32(file, auxbasis_nao_grid_lap)
+def trexio_read_auxbas_nao_grid_lap_32(file, auxbas_nao_grid_lap):
+    return _pytrexio.trexio_read_auxbas_nao_grid_lap_32(file, auxbas_nao_grid_lap)
 
-def trexio_write_auxbasis_nao_grid_lap_32(file, auxbasis_nao_grid_lap):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_lap_32(file, auxbasis_nao_grid_lap)
+def trexio_write_auxbas_nao_grid_lap_32(file, auxbas_nao_grid_lap):
+    return _pytrexio.trexio_write_auxbas_nao_grid_lap_32(file, auxbas_nao_grid_lap)
 
-def trexio_read_auxbasis_nao_grid_lap_64(file, auxbasis_nao_grid_lap):
-    return _pytrexio.trexio_read_auxbasis_nao_grid_lap_64(file, auxbasis_nao_grid_lap)
+def trexio_read_auxbas_nao_grid_lap_64(file, auxbas_nao_grid_lap):
+    return _pytrexio.trexio_read_auxbas_nao_grid_lap_64(file, auxbas_nao_grid_lap)
 
-def trexio_write_auxbasis_nao_grid_lap_64(file, auxbasis_nao_grid_lap):
-    return _pytrexio.trexio_write_auxbasis_nao_grid_lap_64(file, auxbasis_nao_grid_lap)
+def trexio_write_auxbas_nao_grid_lap_64(file, auxbas_nao_grid_lap):
+    return _pytrexio.trexio_write_auxbas_nao_grid_lap_64(file, auxbas_nao_grid_lap)
 
-def trexio_read_safe_auxbasis_nao_grid_lap(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_lap(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_lap(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_lap(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_lap(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_lap(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_lap(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_lap(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_lap_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_lap_32(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_lap_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_lap_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_lap_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_lap_32(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_lap_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_lap_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_nao_grid_lap_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_nao_grid_lap_64(file, dset_out)
+def trexio_read_safe_auxbas_nao_grid_lap_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_nao_grid_lap_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_nao_grid_lap_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_nao_grid_lap_64(file, dset_in)
+def trexio_write_safe_auxbas_nao_grid_lap_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_nao_grid_lap_64(file, dset_in)
 
-def trexio_has_auxbasis_interpolator_phi(file):
-    return _pytrexio.trexio_has_auxbasis_interpolator_phi(file)
+def trexio_has_auxbas_interpolator_phi(file):
+    return _pytrexio.trexio_has_auxbas_interpolator_phi(file)
 
-def trexio_read_auxbasis_interpolator_phi(file, auxbasis_interpolator_phi):
-    return _pytrexio.trexio_read_auxbasis_interpolator_phi(file, auxbasis_interpolator_phi)
+def trexio_read_auxbas_interpolator_phi(file, auxbas_interpolator_phi):
+    return _pytrexio.trexio_read_auxbas_interpolator_phi(file, auxbas_interpolator_phi)
 
-def trexio_write_auxbasis_interpolator_phi(file, auxbasis_interpolator_phi):
-    return _pytrexio.trexio_write_auxbasis_interpolator_phi(file, auxbasis_interpolator_phi)
+def trexio_write_auxbas_interpolator_phi(file, auxbas_interpolator_phi):
+    return _pytrexio.trexio_write_auxbas_interpolator_phi(file, auxbas_interpolator_phi)
 
-def trexio_read_auxbasis_interpolator_phi_32(file, auxbasis_interpolator_phi):
-    return _pytrexio.trexio_read_auxbasis_interpolator_phi_32(file, auxbasis_interpolator_phi)
+def trexio_read_auxbas_interpolator_phi_32(file, auxbas_interpolator_phi):
+    return _pytrexio.trexio_read_auxbas_interpolator_phi_32(file, auxbas_interpolator_phi)
 
-def trexio_write_auxbasis_interpolator_phi_32(file, auxbasis_interpolator_phi):
-    return _pytrexio.trexio_write_auxbasis_interpolator_phi_32(file, auxbasis_interpolator_phi)
+def trexio_write_auxbas_interpolator_phi_32(file, auxbas_interpolator_phi):
+    return _pytrexio.trexio_write_auxbas_interpolator_phi_32(file, auxbas_interpolator_phi)
 
-def trexio_read_auxbasis_interpolator_phi_64(file, auxbasis_interpolator_phi):
-    return _pytrexio.trexio_read_auxbasis_interpolator_phi_64(file, auxbasis_interpolator_phi)
+def trexio_read_auxbas_interpolator_phi_64(file, auxbas_interpolator_phi):
+    return _pytrexio.trexio_read_auxbas_interpolator_phi_64(file, auxbas_interpolator_phi)
 
-def trexio_write_auxbasis_interpolator_phi_64(file, auxbasis_interpolator_phi):
-    return _pytrexio.trexio_write_auxbasis_interpolator_phi_64(file, auxbasis_interpolator_phi)
+def trexio_write_auxbas_interpolator_phi_64(file, auxbas_interpolator_phi):
+    return _pytrexio.trexio_write_auxbas_interpolator_phi_64(file, auxbas_interpolator_phi)
 
-def trexio_read_safe_auxbasis_interpolator_phi(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_phi(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_phi(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_phi(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_phi(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_phi(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_phi(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_phi(file, dset_in)
 
-def trexio_read_safe_auxbasis_interpolator_phi_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_phi_32(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_phi_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_phi_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_phi_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_phi_32(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_phi_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_phi_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_interpolator_phi_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_phi_64(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_phi_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_phi_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_phi_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_phi_64(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_phi_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_phi_64(file, dset_in)
 
-def trexio_has_auxbasis_interpolator_grad(file):
-    return _pytrexio.trexio_has_auxbasis_interpolator_grad(file)
+def trexio_has_auxbas_interpolator_grad(file):
+    return _pytrexio.trexio_has_auxbas_interpolator_grad(file)
 
-def trexio_read_auxbasis_interpolator_grad(file, auxbasis_interpolator_grad):
-    return _pytrexio.trexio_read_auxbasis_interpolator_grad(file, auxbasis_interpolator_grad)
+def trexio_read_auxbas_interpolator_grad(file, auxbas_interpolator_grad):
+    return _pytrexio.trexio_read_auxbas_interpolator_grad(file, auxbas_interpolator_grad)
 
-def trexio_write_auxbasis_interpolator_grad(file, auxbasis_interpolator_grad):
-    return _pytrexio.trexio_write_auxbasis_interpolator_grad(file, auxbasis_interpolator_grad)
+def trexio_write_auxbas_interpolator_grad(file, auxbas_interpolator_grad):
+    return _pytrexio.trexio_write_auxbas_interpolator_grad(file, auxbas_interpolator_grad)
 
-def trexio_read_auxbasis_interpolator_grad_32(file, auxbasis_interpolator_grad):
-    return _pytrexio.trexio_read_auxbasis_interpolator_grad_32(file, auxbasis_interpolator_grad)
+def trexio_read_auxbas_interpolator_grad_32(file, auxbas_interpolator_grad):
+    return _pytrexio.trexio_read_auxbas_interpolator_grad_32(file, auxbas_interpolator_grad)
 
-def trexio_write_auxbasis_interpolator_grad_32(file, auxbasis_interpolator_grad):
-    return _pytrexio.trexio_write_auxbasis_interpolator_grad_32(file, auxbasis_interpolator_grad)
+def trexio_write_auxbas_interpolator_grad_32(file, auxbas_interpolator_grad):
+    return _pytrexio.trexio_write_auxbas_interpolator_grad_32(file, auxbas_interpolator_grad)
 
-def trexio_read_auxbasis_interpolator_grad_64(file, auxbasis_interpolator_grad):
-    return _pytrexio.trexio_read_auxbasis_interpolator_grad_64(file, auxbasis_interpolator_grad)
+def trexio_read_auxbas_interpolator_grad_64(file, auxbas_interpolator_grad):
+    return _pytrexio.trexio_read_auxbas_interpolator_grad_64(file, auxbas_interpolator_grad)
 
-def trexio_write_auxbasis_interpolator_grad_64(file, auxbasis_interpolator_grad):
-    return _pytrexio.trexio_write_auxbasis_interpolator_grad_64(file, auxbasis_interpolator_grad)
+def trexio_write_auxbas_interpolator_grad_64(file, auxbas_interpolator_grad):
+    return _pytrexio.trexio_write_auxbas_interpolator_grad_64(file, auxbas_interpolator_grad)
 
-def trexio_read_safe_auxbasis_interpolator_grad(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_grad(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_grad(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_grad(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_grad(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_grad(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_grad(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_grad(file, dset_in)
 
-def trexio_read_safe_auxbasis_interpolator_grad_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_grad_32(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_grad_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_grad_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_grad_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_grad_32(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_grad_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_grad_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_interpolator_grad_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_grad_64(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_grad_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_grad_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_grad_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_grad_64(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_grad_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_grad_64(file, dset_in)
 
-def trexio_has_auxbasis_interpolator_lap(file):
-    return _pytrexio.trexio_has_auxbasis_interpolator_lap(file)
+def trexio_has_auxbas_interpolator_lap(file):
+    return _pytrexio.trexio_has_auxbas_interpolator_lap(file)
 
-def trexio_read_auxbasis_interpolator_lap(file, auxbasis_interpolator_lap):
-    return _pytrexio.trexio_read_auxbasis_interpolator_lap(file, auxbasis_interpolator_lap)
+def trexio_read_auxbas_interpolator_lap(file, auxbas_interpolator_lap):
+    return _pytrexio.trexio_read_auxbas_interpolator_lap(file, auxbas_interpolator_lap)
 
-def trexio_write_auxbasis_interpolator_lap(file, auxbasis_interpolator_lap):
-    return _pytrexio.trexio_write_auxbasis_interpolator_lap(file, auxbasis_interpolator_lap)
+def trexio_write_auxbas_interpolator_lap(file, auxbas_interpolator_lap):
+    return _pytrexio.trexio_write_auxbas_interpolator_lap(file, auxbas_interpolator_lap)
 
-def trexio_read_auxbasis_interpolator_lap_32(file, auxbasis_interpolator_lap):
-    return _pytrexio.trexio_read_auxbasis_interpolator_lap_32(file, auxbasis_interpolator_lap)
+def trexio_read_auxbas_interpolator_lap_32(file, auxbas_interpolator_lap):
+    return _pytrexio.trexio_read_auxbas_interpolator_lap_32(file, auxbas_interpolator_lap)
 
-def trexio_write_auxbasis_interpolator_lap_32(file, auxbasis_interpolator_lap):
-    return _pytrexio.trexio_write_auxbasis_interpolator_lap_32(file, auxbasis_interpolator_lap)
+def trexio_write_auxbas_interpolator_lap_32(file, auxbas_interpolator_lap):
+    return _pytrexio.trexio_write_auxbas_interpolator_lap_32(file, auxbas_interpolator_lap)
 
-def trexio_read_auxbasis_interpolator_lap_64(file, auxbasis_interpolator_lap):
-    return _pytrexio.trexio_read_auxbasis_interpolator_lap_64(file, auxbasis_interpolator_lap)
+def trexio_read_auxbas_interpolator_lap_64(file, auxbas_interpolator_lap):
+    return _pytrexio.trexio_read_auxbas_interpolator_lap_64(file, auxbas_interpolator_lap)
 
-def trexio_write_auxbasis_interpolator_lap_64(file, auxbasis_interpolator_lap):
-    return _pytrexio.trexio_write_auxbasis_interpolator_lap_64(file, auxbasis_interpolator_lap)
+def trexio_write_auxbas_interpolator_lap_64(file, auxbas_interpolator_lap):
+    return _pytrexio.trexio_write_auxbas_interpolator_lap_64(file, auxbas_interpolator_lap)
 
-def trexio_read_safe_auxbasis_interpolator_lap(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_lap(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_lap(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_lap(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_lap(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_lap(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_lap(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_lap(file, dset_in)
 
-def trexio_read_safe_auxbasis_interpolator_lap_32(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_lap_32(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_lap_32(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_lap_32(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_lap_32(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_lap_32(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_lap_32(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_lap_32(file, dset_in)
 
-def trexio_read_safe_auxbasis_interpolator_lap_64(file, dset_out):
-    return _pytrexio.trexio_read_safe_auxbasis_interpolator_lap_64(file, dset_out)
+def trexio_read_safe_auxbas_interpolator_lap_64(file, dset_out):
+    return _pytrexio.trexio_read_safe_auxbas_interpolator_lap_64(file, dset_out)
 
-def trexio_write_safe_auxbasis_interpolator_lap_64(file, dset_in):
-    return _pytrexio.trexio_write_safe_auxbasis_interpolator_lap_64(file, dset_in)
+def trexio_write_safe_auxbas_interpolator_lap_64(file, dset_in):
+    return _pytrexio.trexio_write_safe_auxbas_interpolator_lap_64(file, dset_in)
 
 def trexio_has_ecp_max_ang_mom_plus_1(file):
     return _pytrexio.trexio_has_ecp_max_ang_mom_plus_1(file)
@@ -6102,8 +6102,8 @@ def trexio_has_state(file):
 def trexio_has_basis(file):
     return _pytrexio.trexio_has_basis(file)
 
-def trexio_has_auxbasis(file):
-    return _pytrexio.trexio_has_auxbasis(file)
+def trexio_has_auxbas(file):
+    return _pytrexio.trexio_has_auxbas(file)
 
 def trexio_has_ecp(file):
     return _pytrexio.trexio_has_ecp(file)

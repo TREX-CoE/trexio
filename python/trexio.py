@@ -629,8 +629,8 @@ def delete_basis(trexio_file) -> None:
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def delete_auxbasis(trexio_file) -> None:
-    """Delete the entire auxbasis group from the TREXIO file.
+def delete_auxbas(trexio_file) -> None:
+    """Delete the entire auxbas group from the TREXIO file.
 
     Parameters:
 
@@ -642,7 +642,7 @@ def delete_auxbasis(trexio_file) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_delete_auxbasis(trexio_file.pytrexio_s)
+    rc = pytr.trexio_delete_auxbas(trexio_file.pytrexio_s)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -1283,8 +1283,8 @@ def has_basis_e_cut(trexio_file) -> bool:
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_prim_num(trexio_file) -> bool:
-    """Check that auxbasis_prim_num variable exists in the TREXIO file.
+def has_auxbas_prim_num(trexio_file) -> bool:
+    """Check that auxbas_prim_num variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -1296,14 +1296,14 @@ def has_auxbasis_prim_num(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_prim_num(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_prim_num(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_shell_num(trexio_file) -> bool:
-    """Check that auxbasis_shell_num variable exists in the TREXIO file.
+def has_auxbas_shell_num(trexio_file) -> bool:
+    """Check that auxbas_shell_num variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -1315,14 +1315,14 @@ def has_auxbasis_shell_num(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_shell_num(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_shell_num(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nao_grid_num(trexio_file) -> bool:
-    """Check that auxbasis_nao_grid_num variable exists in the TREXIO file.
+def has_auxbas_nao_grid_num(trexio_file) -> bool:
+    """Check that auxbas_nao_grid_num variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -1334,14 +1334,14 @@ def has_auxbasis_nao_grid_num(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nao_grid_num(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nao_grid_num(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_interp_coeff_cnt(trexio_file) -> bool:
-    """Check that auxbasis_interp_coeff_cnt variable exists in the TREXIO file.
+def has_auxbas_interp_coeff_cnt(trexio_file) -> bool:
+    """Check that auxbas_interp_coeff_cnt variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -1353,14 +1353,14 @@ def has_auxbasis_interp_coeff_cnt(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_interp_coeff_cnt(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_interp_coeff_cnt(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_e_cut(trexio_file) -> bool:
-    """Check that auxbasis_e_cut variable exists in the TREXIO file.
+def has_auxbas_e_cut(trexio_file) -> bool:
+    """Check that auxbas_e_cut variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -1372,7 +1372,7 @@ def has_auxbasis_e_cut(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_e_cut(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_e_cut(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
@@ -2005,8 +2005,8 @@ def has_basis_interpolator_kind(trexio_file) -> bool:
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_type(trexio_file) -> bool:
-    """Check that auxbasis_type variable exists in the TREXIO file.
+def has_auxbas_type(trexio_file) -> bool:
+    """Check that auxbas_type variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2018,14 +2018,14 @@ def has_auxbasis_type(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_type(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_type(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_oscillation_kind(trexio_file) -> bool:
-    """Check that auxbasis_oscillation_kind variable exists in the TREXIO file.
+def has_auxbas_oscillation_kind(trexio_file) -> bool:
+    """Check that auxbas_oscillation_kind variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2037,14 +2037,14 @@ def has_auxbasis_oscillation_kind(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_oscillation_kind(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_oscillation_kind(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_interpolator_kind(trexio_file) -> bool:
-    """Check that auxbasis_interpolator_kind variable exists in the TREXIO file.
+def has_auxbas_interpolator_kind(trexio_file) -> bool:
+    """Check that auxbas_interpolator_kind variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2056,7 +2056,7 @@ def has_auxbasis_interpolator_kind(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_interpolator_kind(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_interpolator_kind(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
@@ -2727,8 +2727,8 @@ def has_basis_interpolator_lap(trexio_file) -> bool:
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nucleus_index(trexio_file) -> bool:
-    """Check that auxbasis_nucleus_index variable exists in the TREXIO file.
+def has_auxbas_nucleus_index(trexio_file) -> bool:
+    """Check that auxbas_nucleus_index variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2740,14 +2740,14 @@ def has_auxbasis_nucleus_index(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nucleus_index(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nucleus_index(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_shell_ang_mom(trexio_file) -> bool:
-    """Check that auxbasis_shell_ang_mom variable exists in the TREXIO file.
+def has_auxbas_shell_ang_mom(trexio_file) -> bool:
+    """Check that auxbas_shell_ang_mom variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2759,14 +2759,14 @@ def has_auxbasis_shell_ang_mom(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_shell_ang_mom(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_shell_ang_mom(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_shell_factor(trexio_file) -> bool:
-    """Check that auxbasis_shell_factor variable exists in the TREXIO file.
+def has_auxbas_shell_factor(trexio_file) -> bool:
+    """Check that auxbas_shell_factor variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2778,14 +2778,14 @@ def has_auxbasis_shell_factor(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_shell_factor(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_shell_factor(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_r_power(trexio_file) -> bool:
-    """Check that auxbasis_r_power variable exists in the TREXIO file.
+def has_auxbas_r_power(trexio_file) -> bool:
+    """Check that auxbas_r_power variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2797,14 +2797,14 @@ def has_auxbasis_r_power(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_r_power(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_r_power(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nao_grid_start(trexio_file) -> bool:
-    """Check that auxbasis_nao_grid_start variable exists in the TREXIO file.
+def has_auxbas_nao_grid_start(trexio_file) -> bool:
+    """Check that auxbas_nao_grid_start variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2816,14 +2816,14 @@ def has_auxbasis_nao_grid_start(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nao_grid_start(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nao_grid_start(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nao_grid_size(trexio_file) -> bool:
-    """Check that auxbasis_nao_grid_size variable exists in the TREXIO file.
+def has_auxbas_nao_grid_size(trexio_file) -> bool:
+    """Check that auxbas_nao_grid_size variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2835,14 +2835,14 @@ def has_auxbasis_nao_grid_size(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nao_grid_size(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nao_grid_size(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_shell_index(trexio_file) -> bool:
-    """Check that auxbasis_shell_index variable exists in the TREXIO file.
+def has_auxbas_shell_index(trexio_file) -> bool:
+    """Check that auxbas_shell_index variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2854,14 +2854,14 @@ def has_auxbasis_shell_index(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_shell_index(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_shell_index(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_exponent(trexio_file) -> bool:
-    """Check that auxbasis_exponent variable exists in the TREXIO file.
+def has_auxbas_exponent(trexio_file) -> bool:
+    """Check that auxbas_exponent variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2873,14 +2873,14 @@ def has_auxbasis_exponent(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_exponent(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_exponent(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_exponent_im(trexio_file) -> bool:
-    """Check that auxbasis_exponent_im variable exists in the TREXIO file.
+def has_auxbas_exponent_im(trexio_file) -> bool:
+    """Check that auxbas_exponent_im variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2892,14 +2892,14 @@ def has_auxbasis_exponent_im(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_exponent_im(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_exponent_im(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_coefficient(trexio_file) -> bool:
-    """Check that auxbasis_coefficient variable exists in the TREXIO file.
+def has_auxbas_coefficient(trexio_file) -> bool:
+    """Check that auxbas_coefficient variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2911,14 +2911,14 @@ def has_auxbasis_coefficient(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_coefficient(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_coefficient(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_coefficient_im(trexio_file) -> bool:
-    """Check that auxbasis_coefficient_im variable exists in the TREXIO file.
+def has_auxbas_coefficient_im(trexio_file) -> bool:
+    """Check that auxbas_coefficient_im variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2930,14 +2930,14 @@ def has_auxbasis_coefficient_im(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_coefficient_im(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_coefficient_im(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_oscillation_arg(trexio_file) -> bool:
-    """Check that auxbasis_oscillation_arg variable exists in the TREXIO file.
+def has_auxbas_oscillation_arg(trexio_file) -> bool:
+    """Check that auxbas_oscillation_arg variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2949,14 +2949,14 @@ def has_auxbasis_oscillation_arg(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_oscillation_arg(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_oscillation_arg(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_prim_factor(trexio_file) -> bool:
-    """Check that auxbasis_prim_factor variable exists in the TREXIO file.
+def has_auxbas_prim_factor(trexio_file) -> bool:
+    """Check that auxbas_prim_factor variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2968,14 +2968,14 @@ def has_auxbasis_prim_factor(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_prim_factor(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_prim_factor(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nao_grid_radius(trexio_file) -> bool:
-    """Check that auxbasis_nao_grid_radius variable exists in the TREXIO file.
+def has_auxbas_nao_grid_radius(trexio_file) -> bool:
+    """Check that auxbas_nao_grid_radius variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -2987,14 +2987,14 @@ def has_auxbasis_nao_grid_radius(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nao_grid_radius(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nao_grid_radius(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nao_grid_phi(trexio_file) -> bool:
-    """Check that auxbasis_nao_grid_phi variable exists in the TREXIO file.
+def has_auxbas_nao_grid_phi(trexio_file) -> bool:
+    """Check that auxbas_nao_grid_phi variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -3006,14 +3006,14 @@ def has_auxbasis_nao_grid_phi(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nao_grid_phi(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nao_grid_phi(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nao_grid_grad(trexio_file) -> bool:
-    """Check that auxbasis_nao_grid_grad variable exists in the TREXIO file.
+def has_auxbas_nao_grid_grad(trexio_file) -> bool:
+    """Check that auxbas_nao_grid_grad variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -3025,14 +3025,14 @@ def has_auxbasis_nao_grid_grad(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nao_grid_grad(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nao_grid_grad(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_nao_grid_lap(trexio_file) -> bool:
-    """Check that auxbasis_nao_grid_lap variable exists in the TREXIO file.
+def has_auxbas_nao_grid_lap(trexio_file) -> bool:
+    """Check that auxbas_nao_grid_lap variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -3044,14 +3044,14 @@ def has_auxbasis_nao_grid_lap(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_nao_grid_lap(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_nao_grid_lap(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_interpolator_phi(trexio_file) -> bool:
-    """Check that auxbasis_interpolator_phi variable exists in the TREXIO file.
+def has_auxbas_interpolator_phi(trexio_file) -> bool:
+    """Check that auxbas_interpolator_phi variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -3063,14 +3063,14 @@ def has_auxbasis_interpolator_phi(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_interpolator_phi(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_interpolator_phi(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_interpolator_grad(trexio_file) -> bool:
-    """Check that auxbasis_interpolator_grad variable exists in the TREXIO file.
+def has_auxbas_interpolator_grad(trexio_file) -> bool:
+    """Check that auxbas_interpolator_grad variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -3082,14 +3082,14 @@ def has_auxbasis_interpolator_grad(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_interpolator_grad(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_interpolator_grad(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis_interpolator_lap(trexio_file) -> bool:
-    """Check that auxbasis_interpolator_lap variable exists in the TREXIO file.
+def has_auxbas_interpolator_lap(trexio_file) -> bool:
+    """Check that auxbas_interpolator_lap variable exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -3101,7 +3101,7 @@ def has_auxbasis_interpolator_lap(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis_interpolator_lap(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas_interpolator_lap(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
@@ -4912,8 +4912,8 @@ def has_basis(trexio_file) -> bool:
 
     return rc == TREXIO_SUCCESS
 
-def has_auxbasis(trexio_file) -> bool:
-    """Check that auxbasis group exists in the TREXIO file.
+def has_auxbas(trexio_file) -> bool:
+    """Check that auxbas group exists in the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
@@ -4925,7 +4925,7 @@ def has_auxbasis(trexio_file) -> bool:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_has_auxbasis(trexio_file.pytrexio_s)
+    rc = pytr.trexio_has_auxbas(trexio_file.pytrexio_s)
     if rc == TREXIO_FAILURE:
         raise Error(rc)
 
@@ -5617,101 +5617,101 @@ def read_basis_e_cut(trexio_file) -> float:
 
     return num_r
 
-def read_auxbasis_prim_num(trexio_file) -> int:
-    """Read the auxbasis_prim_num variable from the TREXIO file.
+def read_auxbas_prim_num(trexio_file) -> int:
+    """Read the auxbas_prim_num variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~num_r~: int
-        Integer value of auxbasis_prim_num variable read from ~trexio_file~.
+        Integer value of auxbas_prim_num variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, num_r = pytr.trexio_read_auxbasis_prim_num(trexio_file.pytrexio_s)
+    rc, num_r = pytr.trexio_read_auxbas_prim_num(trexio_file.pytrexio_s)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
     return num_r
 
-def read_auxbasis_shell_num(trexio_file) -> int:
-    """Read the auxbasis_shell_num variable from the TREXIO file.
+def read_auxbas_shell_num(trexio_file) -> int:
+    """Read the auxbas_shell_num variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~num_r~: int
-        Integer value of auxbasis_shell_num variable read from ~trexio_file~.
+        Integer value of auxbas_shell_num variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, num_r = pytr.trexio_read_auxbasis_shell_num(trexio_file.pytrexio_s)
+    rc, num_r = pytr.trexio_read_auxbas_shell_num(trexio_file.pytrexio_s)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
     return num_r
 
-def read_auxbasis_nao_grid_num(trexio_file) -> int:
-    """Read the auxbasis_nao_grid_num variable from the TREXIO file.
+def read_auxbas_nao_grid_num(trexio_file) -> int:
+    """Read the auxbas_nao_grid_num variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~num_r~: int
-        Integer value of auxbasis_nao_grid_num variable read from ~trexio_file~.
+        Integer value of auxbas_nao_grid_num variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, num_r = pytr.trexio_read_auxbasis_nao_grid_num(trexio_file.pytrexio_s)
+    rc, num_r = pytr.trexio_read_auxbas_nao_grid_num(trexio_file.pytrexio_s)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
     return num_r
 
-def read_auxbasis_interp_coeff_cnt(trexio_file) -> int:
-    """Read the auxbasis_interp_coeff_cnt variable from the TREXIO file.
+def read_auxbas_interp_coeff_cnt(trexio_file) -> int:
+    """Read the auxbas_interp_coeff_cnt variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~num_r~: int
-        Integer value of auxbasis_interp_coeff_cnt variable read from ~trexio_file~.
+        Integer value of auxbas_interp_coeff_cnt variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, num_r = pytr.trexio_read_auxbasis_interp_coeff_cnt(trexio_file.pytrexio_s)
+    rc, num_r = pytr.trexio_read_auxbas_interp_coeff_cnt(trexio_file.pytrexio_s)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
     return num_r
 
-def read_auxbasis_e_cut(trexio_file) -> float:
-    """Read the auxbasis_e_cut variable from the TREXIO file.
+def read_auxbas_e_cut(trexio_file) -> float:
+    """Read the auxbas_e_cut variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~num_r~: int
-        Integer value of auxbasis_e_cut variable read from ~trexio_file~.
+        Integer value of auxbas_e_cut variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, num_r = pytr.trexio_read_auxbasis_e_cut(trexio_file.pytrexio_s)
+    rc, num_r = pytr.trexio_read_auxbas_e_cut(trexio_file.pytrexio_s)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -6377,61 +6377,61 @@ def read_basis_interpolator_kind(trexio_file) -> str:
 
     return str_r
 
-def read_auxbasis_type(trexio_file) -> str:
-    """Read the auxbasis_type variable from the TREXIO file.
+def read_auxbas_type(trexio_file) -> str:
+    """Read the auxbas_type variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~str_r~: str
-        String corresponding to the auxbasis_type variable read from ~trexio_file~.
+        String corresponding to the auxbas_type variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, str_r = pytr.trexio_read_auxbasis_type(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
+    rc, str_r = pytr.trexio_read_auxbas_type(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
     return str_r
 
-def read_auxbasis_oscillation_kind(trexio_file) -> str:
-    """Read the auxbasis_oscillation_kind variable from the TREXIO file.
+def read_auxbas_oscillation_kind(trexio_file) -> str:
+    """Read the auxbas_oscillation_kind variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~str_r~: str
-        String corresponding to the auxbasis_oscillation_kind variable read from ~trexio_file~.
+        String corresponding to the auxbas_oscillation_kind variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, str_r = pytr.trexio_read_auxbasis_oscillation_kind(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
+    rc, str_r = pytr.trexio_read_auxbas_oscillation_kind(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
     return str_r
 
-def read_auxbasis_interpolator_kind(trexio_file) -> str:
-    """Read the auxbasis_interpolator_kind variable from the TREXIO file.
+def read_auxbas_interpolator_kind(trexio_file) -> str:
+    """Read the auxbas_interpolator_kind variable from the TREXIO file.
 
     Parameter is a ~TREXIO File~ object that has been created by a call to ~open~ function.
 
     Returns:
         ~str_r~: str
-        String corresponding to the auxbasis_interpolator_kind variable read from ~trexio_file~.
+        String corresponding to the auxbas_interpolator_kind variable read from ~trexio_file~.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc, str_r = pytr.trexio_read_auxbasis_interpolator_kind(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
+    rc, str_r = pytr.trexio_read_auxbas_interpolator_kind(trexio_file.pytrexio_s, PYTREXIO_MAX_STR_LENGTH)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9201,8 +9201,8 @@ def read_basis_interpolator_lap(trexio_file, dim = None, doReshape = None, dtype
     else:
         return dset_64
 
-def read_auxbasis_nucleus_index(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_nucleus_index array of numbers from the TREXIO file.
+def read_auxbas_nucleus_index(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_nucleus_index array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9210,7 +9210,7 @@ def read_auxbasis_nucleus_index(trexio_file, dim = None, doReshape = None, dtype
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_nucleus_index will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_nucleus_index will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9222,7 +9222,7 @@ def read_auxbasis_nucleus_index(trexio_file, dim = None, doReshape = None, dtype
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_nucleus_index values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_nucleus_index values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9253,7 +9253,7 @@ def read_auxbasis_nucleus_index(trexio_file, dim = None, doReshape = None, dtype
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_nucleus_index_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_nucleus_index_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9286,8 +9286,8 @@ def read_auxbasis_nucleus_index(trexio_file, dim = None, doReshape = None, dtype
     else:
         return dset_64
 
-def read_auxbasis_shell_ang_mom(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_shell_ang_mom array of numbers from the TREXIO file.
+def read_auxbas_shell_ang_mom(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_shell_ang_mom array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9295,7 +9295,7 @@ def read_auxbasis_shell_ang_mom(trexio_file, dim = None, doReshape = None, dtype
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_shell_ang_mom will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_shell_ang_mom will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9307,7 +9307,7 @@ def read_auxbasis_shell_ang_mom(trexio_file, dim = None, doReshape = None, dtype
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_shell_ang_mom values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_shell_ang_mom values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9338,7 +9338,7 @@ def read_auxbasis_shell_ang_mom(trexio_file, dim = None, doReshape = None, dtype
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_shell_ang_mom_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_shell_ang_mom_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9371,8 +9371,8 @@ def read_auxbasis_shell_ang_mom(trexio_file, dim = None, doReshape = None, dtype
     else:
         return dset_64
 
-def read_auxbasis_shell_factor(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_shell_factor array of numbers from the TREXIO file.
+def read_auxbas_shell_factor(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_shell_factor array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9380,7 +9380,7 @@ def read_auxbasis_shell_factor(trexio_file, dim = None, doReshape = None, dtype 
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_shell_factor will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_shell_factor will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9392,7 +9392,7 @@ def read_auxbasis_shell_factor(trexio_file, dim = None, doReshape = None, dtype 
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_shell_factor values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_shell_factor values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9423,7 +9423,7 @@ def read_auxbasis_shell_factor(trexio_file, dim = None, doReshape = None, dtype 
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_shell_factor_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_shell_factor_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9456,8 +9456,8 @@ def read_auxbasis_shell_factor(trexio_file, dim = None, doReshape = None, dtype 
     else:
         return dset_64
 
-def read_auxbasis_r_power(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_r_power array of numbers from the TREXIO file.
+def read_auxbas_r_power(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_r_power array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9465,7 +9465,7 @@ def read_auxbasis_r_power(trexio_file, dim = None, doReshape = None, dtype = Non
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_r_power will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_r_power will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9477,7 +9477,7 @@ def read_auxbasis_r_power(trexio_file, dim = None, doReshape = None, dtype = Non
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_r_power values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_r_power values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9508,7 +9508,7 @@ def read_auxbasis_r_power(trexio_file, dim = None, doReshape = None, dtype = Non
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_r_power_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_r_power_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9541,8 +9541,8 @@ def read_auxbasis_r_power(trexio_file, dim = None, doReshape = None, dtype = Non
     else:
         return dset_64
 
-def read_auxbasis_nao_grid_start(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_nao_grid_start array of numbers from the TREXIO file.
+def read_auxbas_nao_grid_start(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_nao_grid_start array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9550,7 +9550,7 @@ def read_auxbasis_nao_grid_start(trexio_file, dim = None, doReshape = None, dtyp
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_nao_grid_start will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_nao_grid_start will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9562,7 +9562,7 @@ def read_auxbasis_nao_grid_start(trexio_file, dim = None, doReshape = None, dtyp
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_nao_grid_start values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_nao_grid_start values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9593,7 +9593,7 @@ def read_auxbasis_nao_grid_start(trexio_file, dim = None, doReshape = None, dtyp
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_nao_grid_start_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_nao_grid_start_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9626,8 +9626,8 @@ def read_auxbasis_nao_grid_start(trexio_file, dim = None, doReshape = None, dtyp
     else:
         return dset_64
 
-def read_auxbasis_nao_grid_size(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_nao_grid_size array of numbers from the TREXIO file.
+def read_auxbas_nao_grid_size(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_nao_grid_size array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9635,7 +9635,7 @@ def read_auxbasis_nao_grid_size(trexio_file, dim = None, doReshape = None, dtype
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_nao_grid_size will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_nao_grid_size will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9647,7 +9647,7 @@ def read_auxbasis_nao_grid_size(trexio_file, dim = None, doReshape = None, dtype
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_nao_grid_size values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_nao_grid_size values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9678,7 +9678,7 @@ def read_auxbasis_nao_grid_size(trexio_file, dim = None, doReshape = None, dtype
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_nao_grid_size_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_nao_grid_size_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9711,8 +9711,8 @@ def read_auxbasis_nao_grid_size(trexio_file, dim = None, doReshape = None, dtype
     else:
         return dset_64
 
-def read_auxbasis_shell_index(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_shell_index array of numbers from the TREXIO file.
+def read_auxbas_shell_index(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_shell_index array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9720,7 +9720,7 @@ def read_auxbasis_shell_index(trexio_file, dim = None, doReshape = None, dtype =
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_shell_index will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_shell_index will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9732,7 +9732,7 @@ def read_auxbasis_shell_index(trexio_file, dim = None, doReshape = None, dtype =
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_shell_index values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_shell_index values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9763,7 +9763,7 @@ def read_auxbasis_shell_index(trexio_file, dim = None, doReshape = None, dtype =
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_shell_index_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_shell_index_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9796,8 +9796,8 @@ def read_auxbasis_shell_index(trexio_file, dim = None, doReshape = None, dtype =
     else:
         return dset_64
 
-def read_auxbasis_exponent(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_exponent array of numbers from the TREXIO file.
+def read_auxbas_exponent(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_exponent array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9805,7 +9805,7 @@ def read_auxbasis_exponent(trexio_file, dim = None, doReshape = None, dtype = No
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_exponent will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_exponent will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9817,7 +9817,7 @@ def read_auxbasis_exponent(trexio_file, dim = None, doReshape = None, dtype = No
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_exponent values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_exponent values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9848,7 +9848,7 @@ def read_auxbasis_exponent(trexio_file, dim = None, doReshape = None, dtype = No
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_exponent_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_exponent_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9881,8 +9881,8 @@ def read_auxbasis_exponent(trexio_file, dim = None, doReshape = None, dtype = No
     else:
         return dset_64
 
-def read_auxbasis_exponent_im(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_exponent_im array of numbers from the TREXIO file.
+def read_auxbas_exponent_im(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_exponent_im array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9890,7 +9890,7 @@ def read_auxbasis_exponent_im(trexio_file, dim = None, doReshape = None, dtype =
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_exponent_im will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_exponent_im will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9902,7 +9902,7 @@ def read_auxbasis_exponent_im(trexio_file, dim = None, doReshape = None, dtype =
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_exponent_im values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_exponent_im values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -9933,7 +9933,7 @@ def read_auxbasis_exponent_im(trexio_file, dim = None, doReshape = None, dtype =
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_exponent_im_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_exponent_im_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -9966,8 +9966,8 @@ def read_auxbasis_exponent_im(trexio_file, dim = None, doReshape = None, dtype =
     else:
         return dset_64
 
-def read_auxbasis_coefficient(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_coefficient array of numbers from the TREXIO file.
+def read_auxbas_coefficient(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_coefficient array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -9975,7 +9975,7 @@ def read_auxbasis_coefficient(trexio_file, dim = None, doReshape = None, dtype =
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_coefficient will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_coefficient will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -9987,7 +9987,7 @@ def read_auxbasis_coefficient(trexio_file, dim = None, doReshape = None, dtype =
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_coefficient values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_coefficient values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10018,7 +10018,7 @@ def read_auxbasis_coefficient(trexio_file, dim = None, doReshape = None, dtype =
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_coefficient_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_coefficient_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10051,8 +10051,8 @@ def read_auxbasis_coefficient(trexio_file, dim = None, doReshape = None, dtype =
     else:
         return dset_64
 
-def read_auxbasis_coefficient_im(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_coefficient_im array of numbers from the TREXIO file.
+def read_auxbas_coefficient_im(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_coefficient_im array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10060,7 +10060,7 @@ def read_auxbasis_coefficient_im(trexio_file, dim = None, doReshape = None, dtyp
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_coefficient_im will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_coefficient_im will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10072,7 +10072,7 @@ def read_auxbasis_coefficient_im(trexio_file, dim = None, doReshape = None, dtyp
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_coefficient_im values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_coefficient_im values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10103,7 +10103,7 @@ def read_auxbasis_coefficient_im(trexio_file, dim = None, doReshape = None, dtyp
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_coefficient_im_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_coefficient_im_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10136,8 +10136,8 @@ def read_auxbasis_coefficient_im(trexio_file, dim = None, doReshape = None, dtyp
     else:
         return dset_64
 
-def read_auxbasis_oscillation_arg(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_oscillation_arg array of numbers from the TREXIO file.
+def read_auxbas_oscillation_arg(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_oscillation_arg array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10145,7 +10145,7 @@ def read_auxbasis_oscillation_arg(trexio_file, dim = None, doReshape = None, dty
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_oscillation_arg will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_oscillation_arg will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10157,7 +10157,7 @@ def read_auxbasis_oscillation_arg(trexio_file, dim = None, doReshape = None, dty
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_oscillation_arg values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_oscillation_arg values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10188,7 +10188,7 @@ def read_auxbasis_oscillation_arg(trexio_file, dim = None, doReshape = None, dty
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_oscillation_arg_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_oscillation_arg_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10221,8 +10221,8 @@ def read_auxbasis_oscillation_arg(trexio_file, dim = None, doReshape = None, dty
     else:
         return dset_64
 
-def read_auxbasis_prim_factor(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_prim_factor array of numbers from the TREXIO file.
+def read_auxbas_prim_factor(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_prim_factor array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10230,7 +10230,7 @@ def read_auxbasis_prim_factor(trexio_file, dim = None, doReshape = None, dtype =
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_prim_factor will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_prim_factor will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10242,7 +10242,7 @@ def read_auxbasis_prim_factor(trexio_file, dim = None, doReshape = None, dtype =
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_prim_factor values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_prim_factor values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10273,7 +10273,7 @@ def read_auxbasis_prim_factor(trexio_file, dim = None, doReshape = None, dtype =
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_prim_factor_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_prim_factor_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10306,8 +10306,8 @@ def read_auxbasis_prim_factor(trexio_file, dim = None, doReshape = None, dtype =
     else:
         return dset_64
 
-def read_auxbasis_nao_grid_radius(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_nao_grid_radius array of numbers from the TREXIO file.
+def read_auxbas_nao_grid_radius(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_nao_grid_radius array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10315,7 +10315,7 @@ def read_auxbasis_nao_grid_radius(trexio_file, dim = None, doReshape = None, dty
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_nao_grid_radius will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_nao_grid_radius will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10327,7 +10327,7 @@ def read_auxbasis_nao_grid_radius(trexio_file, dim = None, doReshape = None, dty
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_nao_grid_radius values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_nao_grid_radius values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10358,7 +10358,7 @@ def read_auxbasis_nao_grid_radius(trexio_file, dim = None, doReshape = None, dty
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_nao_grid_radius_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_nao_grid_radius_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10391,8 +10391,8 @@ def read_auxbasis_nao_grid_radius(trexio_file, dim = None, doReshape = None, dty
     else:
         return dset_64
 
-def read_auxbasis_nao_grid_phi(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_nao_grid_phi array of numbers from the TREXIO file.
+def read_auxbas_nao_grid_phi(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_nao_grid_phi array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10400,7 +10400,7 @@ def read_auxbasis_nao_grid_phi(trexio_file, dim = None, doReshape = None, dtype 
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_nao_grid_phi will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_nao_grid_phi will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10412,7 +10412,7 @@ def read_auxbasis_nao_grid_phi(trexio_file, dim = None, doReshape = None, dtype 
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_nao_grid_phi values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_nao_grid_phi values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10443,7 +10443,7 @@ def read_auxbasis_nao_grid_phi(trexio_file, dim = None, doReshape = None, dtype 
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_nao_grid_phi_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_nao_grid_phi_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10476,8 +10476,8 @@ def read_auxbasis_nao_grid_phi(trexio_file, dim = None, doReshape = None, dtype 
     else:
         return dset_64
 
-def read_auxbasis_nao_grid_grad(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_nao_grid_grad array of numbers from the TREXIO file.
+def read_auxbas_nao_grid_grad(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_nao_grid_grad array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10485,7 +10485,7 @@ def read_auxbasis_nao_grid_grad(trexio_file, dim = None, doReshape = None, dtype
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_nao_grid_grad will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_nao_grid_grad will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10497,7 +10497,7 @@ def read_auxbasis_nao_grid_grad(trexio_file, dim = None, doReshape = None, dtype
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_nao_grid_grad values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_nao_grid_grad values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10528,7 +10528,7 @@ def read_auxbasis_nao_grid_grad(trexio_file, dim = None, doReshape = None, dtype
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_nao_grid_grad_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_nao_grid_grad_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10561,8 +10561,8 @@ def read_auxbasis_nao_grid_grad(trexio_file, dim = None, doReshape = None, dtype
     else:
         return dset_64
 
-def read_auxbasis_nao_grid_lap(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_nao_grid_lap array of numbers from the TREXIO file.
+def read_auxbas_nao_grid_lap(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_nao_grid_lap array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10570,7 +10570,7 @@ def read_auxbasis_nao_grid_lap(trexio_file, dim = None, doReshape = None, dtype 
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_nao_grid_lap will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_nao_grid_lap will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10582,7 +10582,7 @@ def read_auxbasis_nao_grid_lap(trexio_file, dim = None, doReshape = None, dtype 
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_nao_grid_lap values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_nao_grid_lap values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10613,7 +10613,7 @@ def read_auxbasis_nao_grid_lap(trexio_file, dim = None, doReshape = None, dtype 
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_nao_grid_lap_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_nao_grid_lap_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10646,8 +10646,8 @@ def read_auxbasis_nao_grid_lap(trexio_file, dim = None, doReshape = None, dtype 
     else:
         return dset_64
 
-def read_auxbasis_interpolator_phi(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_interpolator_phi array of numbers from the TREXIO file.
+def read_auxbas_interpolator_phi(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_interpolator_phi array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10655,7 +10655,7 @@ def read_auxbasis_interpolator_phi(trexio_file, dim = None, doReshape = None, dt
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_interpolator_phi will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_interpolator_phi will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10667,7 +10667,7 @@ def read_auxbasis_interpolator_phi(trexio_file, dim = None, doReshape = None, dt
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_interpolator_phi values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_interpolator_phi values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10699,7 +10699,7 @@ def read_auxbasis_interpolator_phi(trexio_file, dim = None, doReshape = None, dt
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_interpolator_phi_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_interpolator_phi_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10732,8 +10732,8 @@ def read_auxbasis_interpolator_phi(trexio_file, dim = None, doReshape = None, dt
     else:
         return dset_64
 
-def read_auxbasis_interpolator_grad(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_interpolator_grad array of numbers from the TREXIO file.
+def read_auxbas_interpolator_grad(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_interpolator_grad array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10741,7 +10741,7 @@ def read_auxbasis_interpolator_grad(trexio_file, dim = None, doReshape = None, d
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_interpolator_grad will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_interpolator_grad will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10753,7 +10753,7 @@ def read_auxbasis_interpolator_grad(trexio_file, dim = None, doReshape = None, d
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_interpolator_grad values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_interpolator_grad values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10785,7 +10785,7 @@ def read_auxbasis_interpolator_grad(trexio_file, dim = None, doReshape = None, d
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_interpolator_grad_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_interpolator_grad_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -10818,8 +10818,8 @@ def read_auxbasis_interpolator_grad(trexio_file, dim = None, doReshape = None, d
     else:
         return dset_64
 
-def read_auxbasis_interpolator_lap(trexio_file, dim = None, doReshape = None, dtype = None):
-    """Read the auxbasis_interpolator_lap array of numbers from the TREXIO file.
+def read_auxbas_interpolator_lap(trexio_file, dim = None, doReshape = None, dtype = None):
+    """Read the auxbas_interpolator_lap array of numbers from the TREXIO file.
 
     Parameters:
 
@@ -10827,7 +10827,7 @@ def read_auxbasis_interpolator_lap(trexio_file, dim = None, doReshape = None, dt
         TREXIO File object.
 
     dim (Optional): int
-        Size of the block to be read from the file (i.e. how many items of auxbasis_interpolator_lap will be returned)
+        Size of the block to be read from the file (i.e. how many items of auxbas_interpolator_lap will be returned)
         If None, the function will read all necessary array dimensions from the file.
 
     dtype (Optional): type
@@ -10839,7 +10839,7 @@ def read_auxbasis_interpolator_lap(trexio_file, dim = None, doReshape = None, dt
 
     Returns:
         ~dset_64~ if dtype is None or ~dset_converted~ otherwise: numpy.ndarray
-        1D NumPy array with ~dim~ elements corresponding to auxbasis_interpolator_lap values read from the TREXIO file.
+        1D NumPy array with ~dim~ elements corresponding to auxbas_interpolator_lap values read from the TREXIO file.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -10871,7 +10871,7 @@ def read_auxbasis_interpolator_lap(trexio_file, dim = None, doReshape = None, dt
         raise ValueError("Reshaping failure: shape is None.")
 
 
-    rc, dset_64 = pytr.trexio_read_safe_auxbasis_interpolator_lap_64(trexio_file.pytrexio_s, dim)
+    rc, dset_64 = pytr.trexio_read_safe_auxbas_interpolator_lap_64(trexio_file.pytrexio_s, dim)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -18528,8 +18528,8 @@ def write_basis_e_cut(trexio_file, num_w: float) -> None:
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_prim_num(trexio_file, num_w: int) -> None:
-    """Write the auxbasis_prim_num variable in the TREXIO file.
+def write_auxbas_prim_num(trexio_file, num_w: int) -> None:
+    """Write the auxbas_prim_num variable in the TREXIO file.
 
     Parameters:
 
@@ -18537,19 +18537,19 @@ def write_auxbasis_prim_num(trexio_file, num_w: int) -> None:
         TREXIO File object.
 
     num_w: int
-        Value of the auxbasis_prim_num variable to be written.
+        Value of the auxbas_prim_num variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_write_auxbasis_prim_num(trexio_file.pytrexio_s, num_w)
+    rc = pytr.trexio_write_auxbas_prim_num(trexio_file.pytrexio_s, num_w)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_shell_num(trexio_file, num_w: int) -> None:
-    """Write the auxbasis_shell_num variable in the TREXIO file.
+def write_auxbas_shell_num(trexio_file, num_w: int) -> None:
+    """Write the auxbas_shell_num variable in the TREXIO file.
 
     Parameters:
 
@@ -18557,19 +18557,19 @@ def write_auxbasis_shell_num(trexio_file, num_w: int) -> None:
         TREXIO File object.
 
     num_w: int
-        Value of the auxbasis_shell_num variable to be written.
+        Value of the auxbas_shell_num variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_write_auxbasis_shell_num(trexio_file.pytrexio_s, num_w)
+    rc = pytr.trexio_write_auxbas_shell_num(trexio_file.pytrexio_s, num_w)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nao_grid_num(trexio_file, num_w: int) -> None:
-    """Write the auxbasis_nao_grid_num variable in the TREXIO file.
+def write_auxbas_nao_grid_num(trexio_file, num_w: int) -> None:
+    """Write the auxbas_nao_grid_num variable in the TREXIO file.
 
     Parameters:
 
@@ -18577,19 +18577,19 @@ def write_auxbasis_nao_grid_num(trexio_file, num_w: int) -> None:
         TREXIO File object.
 
     num_w: int
-        Value of the auxbasis_nao_grid_num variable to be written.
+        Value of the auxbas_nao_grid_num variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_write_auxbasis_nao_grid_num(trexio_file.pytrexio_s, num_w)
+    rc = pytr.trexio_write_auxbas_nao_grid_num(trexio_file.pytrexio_s, num_w)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_interp_coeff_cnt(trexio_file, num_w: int) -> None:
-    """Write the auxbasis_interp_coeff_cnt variable in the TREXIO file.
+def write_auxbas_interp_coeff_cnt(trexio_file, num_w: int) -> None:
+    """Write the auxbas_interp_coeff_cnt variable in the TREXIO file.
 
     Parameters:
 
@@ -18597,19 +18597,19 @@ def write_auxbasis_interp_coeff_cnt(trexio_file, num_w: int) -> None:
         TREXIO File object.
 
     num_w: int
-        Value of the auxbasis_interp_coeff_cnt variable to be written.
+        Value of the auxbas_interp_coeff_cnt variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_write_auxbasis_interp_coeff_cnt(trexio_file.pytrexio_s, num_w)
+    rc = pytr.trexio_write_auxbas_interp_coeff_cnt(trexio_file.pytrexio_s, num_w)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_e_cut(trexio_file, num_w: float) -> None:
-    """Write the auxbasis_e_cut variable in the TREXIO file.
+def write_auxbas_e_cut(trexio_file, num_w: float) -> None:
+    """Write the auxbas_e_cut variable in the TREXIO file.
 
     Parameters:
 
@@ -18617,14 +18617,14 @@ def write_auxbasis_e_cut(trexio_file, num_w: float) -> None:
         TREXIO File object.
 
     num_w: int
-        Value of the auxbasis_e_cut variable to be written.
+        Value of the auxbas_e_cut variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    rc = pytr.trexio_write_auxbasis_e_cut(trexio_file.pytrexio_s, num_w)
+    rc = pytr.trexio_write_auxbas_e_cut(trexio_file.pytrexio_s, num_w)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -19264,8 +19264,8 @@ def write_basis_interpolator_kind(trexio_file, str_w: str) -> None:
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_type(trexio_file, str_w: str) -> None:
-    """Write the auxbasis_type variable in the TREXIO file.
+def write_auxbas_type(trexio_file, str_w: str) -> None:
+    """Write the auxbas_type variable in the TREXIO file.
 
     Parameters:
 
@@ -19273,7 +19273,7 @@ def write_auxbasis_type(trexio_file, str_w: str) -> None:
         TREXIO File object.
 
     str_w: str
-        String corresponding to the auxbasis_type variable to be written.
+        String corresponding to the auxbas_type variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
@@ -19282,12 +19282,12 @@ def write_auxbasis_type(trexio_file, str_w: str) -> None:
 
     max_str_length = len(str_w) + 1
 
-    rc = pytr.trexio_write_auxbasis_type(trexio_file.pytrexio_s, str_w, max_str_length)
+    rc = pytr.trexio_write_auxbas_type(trexio_file.pytrexio_s, str_w, max_str_length)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_oscillation_kind(trexio_file, str_w: str) -> None:
-    """Write the auxbasis_oscillation_kind variable in the TREXIO file.
+def write_auxbas_oscillation_kind(trexio_file, str_w: str) -> None:
+    """Write the auxbas_oscillation_kind variable in the TREXIO file.
 
     Parameters:
 
@@ -19295,7 +19295,7 @@ def write_auxbasis_oscillation_kind(trexio_file, str_w: str) -> None:
         TREXIO File object.
 
     str_w: str
-        String corresponding to the auxbasis_oscillation_kind variable to be written.
+        String corresponding to the auxbas_oscillation_kind variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
@@ -19304,12 +19304,12 @@ def write_auxbasis_oscillation_kind(trexio_file, str_w: str) -> None:
 
     max_str_length = len(str_w) + 1
 
-    rc = pytr.trexio_write_auxbasis_oscillation_kind(trexio_file.pytrexio_s, str_w, max_str_length)
+    rc = pytr.trexio_write_auxbas_oscillation_kind(trexio_file.pytrexio_s, str_w, max_str_length)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_interpolator_kind(trexio_file, str_w: str) -> None:
-    """Write the auxbasis_interpolator_kind variable in the TREXIO file.
+def write_auxbas_interpolator_kind(trexio_file, str_w: str) -> None:
+    """Write the auxbas_interpolator_kind variable in the TREXIO file.
 
     Parameters:
 
@@ -19317,7 +19317,7 @@ def write_auxbasis_interpolator_kind(trexio_file, str_w: str) -> None:
         TREXIO File object.
 
     str_w: str
-        String corresponding to the auxbasis_interpolator_kind variable to be written.
+        String corresponding to the auxbas_interpolator_kind variable to be written.
 
     Raises:
         - Exception from AssertionError if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message using trexio_string_of_error.
@@ -19326,7 +19326,7 @@ def write_auxbasis_interpolator_kind(trexio_file, str_w: str) -> None:
 
     max_str_length = len(str_w) + 1
 
-    rc = pytr.trexio_write_auxbasis_interpolator_kind(trexio_file.pytrexio_s, str_w, max_str_length)
+    rc = pytr.trexio_write_auxbas_interpolator_kind(trexio_file.pytrexio_s, str_w, max_str_length)
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
@@ -21094,8 +21094,8 @@ def write_basis_interpolator_lap(trexio_file, dset_w) -> None:
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nucleus_index(trexio_file, dset_w) -> None:
-    """Write the auxbasis_nucleus_index array of numbers in the TREXIO file.
+def write_auxbas_nucleus_index(trexio_file, dset_w) -> None:
+    """Write the auxbas_nucleus_index array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21103,7 +21103,7 @@ def write_auxbasis_nucleus_index(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_nucleus_index values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_nucleus_index values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21139,17 +21139,17 @@ def write_auxbasis_nucleus_index(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_nucleus_index_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_nucleus_index_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_nucleus_index_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_nucleus_index_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_nucleus_index_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_nucleus_index_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_shell_ang_mom(trexio_file, dset_w) -> None:
-    """Write the auxbasis_shell_ang_mom array of numbers in the TREXIO file.
+def write_auxbas_shell_ang_mom(trexio_file, dset_w) -> None:
+    """Write the auxbas_shell_ang_mom array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21157,7 +21157,7 @@ def write_auxbasis_shell_ang_mom(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_shell_ang_mom values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_shell_ang_mom values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21193,17 +21193,17 @@ def write_auxbasis_shell_ang_mom(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_shell_ang_mom_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_shell_ang_mom_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_shell_ang_mom_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_shell_ang_mom_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_shell_ang_mom_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_shell_ang_mom_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_shell_factor(trexio_file, dset_w) -> None:
-    """Write the auxbasis_shell_factor array of numbers in the TREXIO file.
+def write_auxbas_shell_factor(trexio_file, dset_w) -> None:
+    """Write the auxbas_shell_factor array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21211,7 +21211,7 @@ def write_auxbasis_shell_factor(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_shell_factor values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_shell_factor values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21247,17 +21247,17 @@ def write_auxbasis_shell_factor(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_shell_factor_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_shell_factor_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_shell_factor_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_shell_factor_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_shell_factor_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_shell_factor_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_r_power(trexio_file, dset_w) -> None:
-    """Write the auxbasis_r_power array of numbers in the TREXIO file.
+def write_auxbas_r_power(trexio_file, dset_w) -> None:
+    """Write the auxbas_r_power array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21265,7 +21265,7 @@ def write_auxbasis_r_power(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_r_power values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_r_power values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21301,17 +21301,17 @@ def write_auxbasis_r_power(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_r_power_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_r_power_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_r_power_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_r_power_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_r_power_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_r_power_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nao_grid_start(trexio_file, dset_w) -> None:
-    """Write the auxbasis_nao_grid_start array of numbers in the TREXIO file.
+def write_auxbas_nao_grid_start(trexio_file, dset_w) -> None:
+    """Write the auxbas_nao_grid_start array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21319,7 +21319,7 @@ def write_auxbasis_nao_grid_start(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_nao_grid_start values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_nao_grid_start values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21355,17 +21355,17 @@ def write_auxbasis_nao_grid_start(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_start_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_start_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_start_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_start_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_start_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_start_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nao_grid_size(trexio_file, dset_w) -> None:
-    """Write the auxbasis_nao_grid_size array of numbers in the TREXIO file.
+def write_auxbas_nao_grid_size(trexio_file, dset_w) -> None:
+    """Write the auxbas_nao_grid_size array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21373,7 +21373,7 @@ def write_auxbasis_nao_grid_size(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_nao_grid_size values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_nao_grid_size values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21409,17 +21409,17 @@ def write_auxbasis_nao_grid_size(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_size_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_size_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_size_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_size_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_size_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_size_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_shell_index(trexio_file, dset_w) -> None:
-    """Write the auxbasis_shell_index array of numbers in the TREXIO file.
+def write_auxbas_shell_index(trexio_file, dset_w) -> None:
+    """Write the auxbas_shell_index array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21427,7 +21427,7 @@ def write_auxbasis_shell_index(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_shell_index values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_shell_index values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21463,17 +21463,17 @@ def write_auxbasis_shell_index(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_shell_index_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_shell_index_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_shell_index_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_shell_index_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_shell_index_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_shell_index_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_exponent(trexio_file, dset_w) -> None:
-    """Write the auxbasis_exponent array of numbers in the TREXIO file.
+def write_auxbas_exponent(trexio_file, dset_w) -> None:
+    """Write the auxbas_exponent array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21481,7 +21481,7 @@ def write_auxbasis_exponent(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_exponent values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_exponent values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21517,17 +21517,17 @@ def write_auxbasis_exponent(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_exponent_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_exponent_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_exponent_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_exponent_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_exponent_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_exponent_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_exponent_im(trexio_file, dset_w) -> None:
-    """Write the auxbasis_exponent_im array of numbers in the TREXIO file.
+def write_auxbas_exponent_im(trexio_file, dset_w) -> None:
+    """Write the auxbas_exponent_im array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21535,7 +21535,7 @@ def write_auxbasis_exponent_im(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_exponent_im values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_exponent_im values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21571,17 +21571,17 @@ def write_auxbasis_exponent_im(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_exponent_im_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_exponent_im_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_exponent_im_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_exponent_im_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_exponent_im_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_exponent_im_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_coefficient(trexio_file, dset_w) -> None:
-    """Write the auxbasis_coefficient array of numbers in the TREXIO file.
+def write_auxbas_coefficient(trexio_file, dset_w) -> None:
+    """Write the auxbas_coefficient array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21589,7 +21589,7 @@ def write_auxbasis_coefficient(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_coefficient values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_coefficient values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21625,17 +21625,17 @@ def write_auxbasis_coefficient(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_coefficient_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_coefficient_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_coefficient_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_coefficient_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_coefficient_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_coefficient_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_coefficient_im(trexio_file, dset_w) -> None:
-    """Write the auxbasis_coefficient_im array of numbers in the TREXIO file.
+def write_auxbas_coefficient_im(trexio_file, dset_w) -> None:
+    """Write the auxbas_coefficient_im array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21643,7 +21643,7 @@ def write_auxbasis_coefficient_im(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_coefficient_im values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_coefficient_im values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21679,17 +21679,17 @@ def write_auxbasis_coefficient_im(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_coefficient_im_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_coefficient_im_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_coefficient_im_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_coefficient_im_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_coefficient_im_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_coefficient_im_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_oscillation_arg(trexio_file, dset_w) -> None:
-    """Write the auxbasis_oscillation_arg array of numbers in the TREXIO file.
+def write_auxbas_oscillation_arg(trexio_file, dset_w) -> None:
+    """Write the auxbas_oscillation_arg array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21697,7 +21697,7 @@ def write_auxbasis_oscillation_arg(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_oscillation_arg values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_oscillation_arg values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21733,17 +21733,17 @@ def write_auxbasis_oscillation_arg(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_oscillation_arg_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_oscillation_arg_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_oscillation_arg_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_oscillation_arg_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_oscillation_arg_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_oscillation_arg_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_prim_factor(trexio_file, dset_w) -> None:
-    """Write the auxbasis_prim_factor array of numbers in the TREXIO file.
+def write_auxbas_prim_factor(trexio_file, dset_w) -> None:
+    """Write the auxbas_prim_factor array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21751,7 +21751,7 @@ def write_auxbasis_prim_factor(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_prim_factor values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_prim_factor values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21787,17 +21787,17 @@ def write_auxbasis_prim_factor(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_prim_factor_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_prim_factor_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_prim_factor_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_prim_factor_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_prim_factor_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_prim_factor_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nao_grid_radius(trexio_file, dset_w) -> None:
-    """Write the auxbasis_nao_grid_radius array of numbers in the TREXIO file.
+def write_auxbas_nao_grid_radius(trexio_file, dset_w) -> None:
+    """Write the auxbas_nao_grid_radius array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21805,7 +21805,7 @@ def write_auxbasis_nao_grid_radius(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_nao_grid_radius values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_nao_grid_radius values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21841,17 +21841,17 @@ def write_auxbasis_nao_grid_radius(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_radius_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_radius_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_radius_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_radius_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_radius_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_radius_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nao_grid_phi(trexio_file, dset_w) -> None:
-    """Write the auxbasis_nao_grid_phi array of numbers in the TREXIO file.
+def write_auxbas_nao_grid_phi(trexio_file, dset_w) -> None:
+    """Write the auxbas_nao_grid_phi array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21859,7 +21859,7 @@ def write_auxbasis_nao_grid_phi(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_nao_grid_phi values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_nao_grid_phi values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21895,17 +21895,17 @@ def write_auxbasis_nao_grid_phi(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_phi_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_phi_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_phi_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_phi_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_phi_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_phi_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nao_grid_grad(trexio_file, dset_w) -> None:
-    """Write the auxbasis_nao_grid_grad array of numbers in the TREXIO file.
+def write_auxbas_nao_grid_grad(trexio_file, dset_w) -> None:
+    """Write the auxbas_nao_grid_grad array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21913,7 +21913,7 @@ def write_auxbasis_nao_grid_grad(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_nao_grid_grad values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_nao_grid_grad values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -21949,17 +21949,17 @@ def write_auxbasis_nao_grid_grad(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_grad_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_grad_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_grad_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_grad_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_grad_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_grad_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_nao_grid_lap(trexio_file, dset_w) -> None:
-    """Write the auxbasis_nao_grid_lap array of numbers in the TREXIO file.
+def write_auxbas_nao_grid_lap(trexio_file, dset_w) -> None:
+    """Write the auxbas_nao_grid_lap array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -21967,7 +21967,7 @@ def write_auxbasis_nao_grid_lap(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_nao_grid_lap values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_nao_grid_lap values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -22003,17 +22003,17 @@ def write_auxbasis_nao_grid_lap(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_lap_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_lap_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_lap_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_lap_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_nao_grid_lap_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_nao_grid_lap_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_interpolator_phi(trexio_file, dset_w) -> None:
-    """Write the auxbasis_interpolator_phi array of numbers in the TREXIO file.
+def write_auxbas_interpolator_phi(trexio_file, dset_w) -> None:
+    """Write the auxbas_interpolator_phi array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -22021,7 +22021,7 @@ def write_auxbasis_interpolator_phi(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_interpolator_phi values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_interpolator_phi values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -22057,17 +22057,17 @@ def write_auxbasis_interpolator_phi(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_phi_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_phi_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_phi_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_phi_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_phi_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_phi_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_interpolator_grad(trexio_file, dset_w) -> None:
-    """Write the auxbasis_interpolator_grad array of numbers in the TREXIO file.
+def write_auxbas_interpolator_grad(trexio_file, dset_w) -> None:
+    """Write the auxbas_interpolator_grad array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -22075,7 +22075,7 @@ def write_auxbasis_interpolator_grad(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_interpolator_grad values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_interpolator_grad values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -22111,17 +22111,17 @@ def write_auxbasis_interpolator_grad(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_grad_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_grad_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_grad_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_grad_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_grad_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_grad_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
 
-def write_auxbasis_interpolator_lap(trexio_file, dset_w) -> None:
-    """Write the auxbasis_interpolator_lap array of numbers in the TREXIO file.
+def write_auxbas_interpolator_lap(trexio_file, dset_w) -> None:
+    """Write the auxbas_interpolator_lap array of numbers in the TREXIO file.
 
     Parameters:
 
@@ -22129,7 +22129,7 @@ def write_auxbasis_interpolator_lap(trexio_file, dset_w) -> None:
         TREXIO File object.
 
     dset_w: list OR numpy.ndarray
-        Array of auxbasis_interpolator_lap values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
+        Array of auxbas_interpolator_lap values to be written. If array data type does not correspond to int64 or float64, the conversion is performed.
 
     Raises:
         - trexio.Error if TREXIO return code ~rc~ is different from TREXIO_SUCCESS and prints the error message.
@@ -22165,11 +22165,11 @@ def write_auxbasis_interpolator_lap(trexio_file, dset_w) -> None:
 
 
     if doConversion:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_lap_64(trexio_file.pytrexio_s, dset_64)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_lap_64(trexio_file.pytrexio_s, dset_64)
     elif doFlatten:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_lap_64(trexio_file.pytrexio_s, dset_flat)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_lap_64(trexio_file.pytrexio_s, dset_flat)
     else:
-        rc = pytr.trexio_write_safe_auxbasis_interpolator_lap_64(trexio_file.pytrexio_s, dset_w)
+        rc = pytr.trexio_write_safe_auxbas_interpolator_lap_64(trexio_file.pytrexio_s, dset_w)
 
     if rc != TREXIO_SUCCESS:
         raise Error(rc)
