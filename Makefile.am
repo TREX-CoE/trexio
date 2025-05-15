@@ -33,7 +33,7 @@
 # =============== SETTINGS =============== #
 
 ACLOCAL_AMFLAGS = -I m4
-CLEANFILES = trexio.mod
+CLEANFILES = trexio.mod tests/trexio_f.f90
 BUILT_SOURCES = trex.json
 if HAVE_FORTRAN
 BUILT_SOURCES += trexio.mod
