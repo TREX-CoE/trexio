@@ -266,10 +266,11 @@ GENERATOR_FILES = $(srcdir)/tools/generator.py \
 $(SOURCES): $(trexio_h)
 src/trexio.c: $(trexio_h)
 
-$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES)
-	cd $(srcdir)/tools && ./build_trexio.sh
+trex.json: trex.org
+	cd $(srcdir)/tools && ./build_json.sh
 
-trex.json: $(trexio_h)
+$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES) trex.json
+	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
 	touch $(htmlizer)
