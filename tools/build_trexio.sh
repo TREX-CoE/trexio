@@ -25,10 +25,6 @@ function tangle()
 #        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \
 #        --eval "(setq org-confirm-babel-evaluate nil)" \
 
-# Create trex.json file
-cd ${TREXIO_ROOT}
-tangle trex.org
-
 # Go to src directory
 cd ${SRC}
 
