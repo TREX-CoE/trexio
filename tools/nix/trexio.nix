@@ -11,7 +11,7 @@
 
 stdenv.mkDerivation rec {
   pname = "trexio";
-  version = "2.5.0";
+  version = "2.5.1";
 
   src = lib.cleanSourceWith {
     src = ../../.;
