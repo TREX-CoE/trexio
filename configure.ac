@@ -210,8 +210,8 @@ AS_IF([test "x$with_hdf5" = "xno"],
   )
 
   AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
-  AM_CONDITIONAL([HAVE_HDF5], [true])
 ])
+AM_CONDITIONAL([HAVE_HDF5], [test "x$with_hdf5" != "xno"])
 
 # Export variables to the Makefiles
 AC_SUBST([PKG_HDF5])
