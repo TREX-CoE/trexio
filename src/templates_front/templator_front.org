@@ -341,6 +341,17 @@ typedef int32_t trexio_exit_code;
 ** Fortran
 
   #+begin_src f90 :tangle prefix_fortran.f90
+!
+! To include this file in your source code, we recommend creating a new file
+! within your source tree named `trexio_module.F90` (note the capital F is
+! crucial). The contents of this file should be limited to a single line:
+!
+! #include <trexio_f.f90>
+!
+! By following this approach, the C preprocessor will automatically include the
+! TREXIO module from its standard installation location. If you update the
+! library in the future, your source code won't require any modifications.
+!
 module trexio
 
   use, intrinsic :: iso_c_binding, only : c_int32_t, c_int64_t, c_double, c_size_t, c_bool
@@ -1598,7 +1609,7 @@ def _open(file_name: str, mode: str, back_end: int):
             if rc_open == TREXIO_SUCCESS:
                 trexio_file = return_obj[0]
                 assert trexio_file is not None
-                
+
             return trexio_file
     except:
         raise Error(18) # 18 is an error code for encountering an invalid file
@@ -2230,7 +2241,7 @@ trexio_pre_close (trexio_t* file)
       if (rc != TREXIO_SUCCESS) return rc;
 
     } else if (has_dn) {
-      
+
       trexio_exit_code rc = TREXIO_FAILURE;
 
       rc = trexio_read_electron_dn_num(file, &ndn);
@@ -2884,7 +2895,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
   int64_t $group_dset_dim$ = 0;
 
   trexio_exit_code rc = TREXIO_FAILURE;
-  
+
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
@@ -3690,7 +3701,7 @@ trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file,
 
   if (size_index_read < rank * (*buffer_size_read)) return TREXIO_INVALID_ARG_5;
   if (size_value_read <        (*buffer_size_read)) return TREXIO_INVALID_ARG_7;
-  
+
   return trexio_read_$group_dset$(file, offset_file, buffer_size_read, index_sparse_read, value_sparse_read);
 }
 
@@ -3827,7 +3838,7 @@ trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file,
 
   if (size_index_write < rank * buffer_size) return TREXIO_INVALID_ARG_5;
   if (size_value_write <        buffer_size) return TREXIO_INVALID_ARG_7;
-  
+
   return trexio_write_$group_dset$(file, offset_file, buffer_size, index_sparse_write, value_sparse_write);
 }
 
