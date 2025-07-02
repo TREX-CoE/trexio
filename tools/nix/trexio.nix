@@ -41,6 +41,13 @@ stdenv.mkDerivation rec {
     hdf5
   ];
 
+  preConfigure = ''
+    cd ./tools
+    ./build_json.sh
+    ./build_trexio.sh
+    cd ..
+  '';
+
   outputs = [ "out" "dev" ];
 
   doCheck = true;
