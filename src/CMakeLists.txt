@@ -12,6 +12,15 @@ find_package(Threads REQUIRED)
 include(CheckIncludeFile)
 check_include_file(stdint.h HAVE_STDINT_H)
 
+add_custom_command(
+        # note writing trex.json to src tree
+        COMMAND build_json.sh
+        OUTPUT  "${CMAKE_CURRENT_SOURCE_DIR}/../trex.json"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../trex.org"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
+        COMMENT "Generate trex.json from trex.org")
+
+
 # ========= DEFINE TREXIO C LIBRARY =========
 
 # Set a list of TREXIO source and header files that are always compiled.
@@ -128,6 +137,7 @@ if(TREXIO_DEVEL)
 	  ${TREXIO_MOD_FILE}
       COMMAND ./build_trexio.sh
       DEPENDS ${ORG_FILES} ${PROJECT_SOURCE_DIR}/include/config.h
+              "${CMAKE_CURRENT_SOURCE_DIR}/../trex.json"
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
       COMMENT "Generating TREXIO source code from org-mode files."
       VERBATIM)
