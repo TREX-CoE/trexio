@@ -31,6 +31,7 @@ single- and/or multi-reference wave functions:
 | [Spicy](https://gitlab.com/theoretical-chemistry-jena/quantum-chemistry/Spicy) | Read             | ---             |
 | [QMC=Chem](https://github.com/TREX-CoE/qmcchem2)                               | Read             | ---             |
 | [QMCkl](https://github.com/TREX-CoE/qmckl)                                     | Read             | ---             |
+| [Dirac](https://www.diracprogram.org)                                          | Write            | ---             |
 
 
 * [Installation](#installation)
