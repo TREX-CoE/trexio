@@ -33,8 +33,11 @@ jobs:
           echo github.ref ${{ github.ref }}
 
   trexio_ubuntu:
-    name: x86 Ubuntu
-    runs-on: ubuntu-22.04
+    name: x86 and arm64 Ubuntu
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
     needs: get_commit_message
 
     steps:
