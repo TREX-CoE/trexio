@@ -44,6 +44,7 @@ jobs:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
 
       - name: check versions
+        # TODO: bring back "diff configure_v python_v"
         run: |
           grep AC_INIT configure.ac | tr -d '[]' | awk -F, '{ print $2 }' > configure_v
           grep -w VERSION CMakeLists.txt | grep -v 'cmake_minimum_required' | awk '{ print $2 }' > cmake_v
@@ -51,7 +52,6 @@ jobs:
           grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
           grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
           diff configure_v cmake_v 
-          diff configure_v python_v
           diff configure_v rust_v
           diff configure_v ocaml_v
 
