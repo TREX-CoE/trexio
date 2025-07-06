@@ -123,8 +123,8 @@ jobs:
 
       - name: publish Python API distribution as an artifact
         if: >-
-          contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
-          github.event_name == 'release'
+          contains(needs.get_commit_message.outputs.message, '[wheel build]') &&
+          ${{ matrix.os == 'ubuntu-22.04' }} 
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
         with:
           name: pytrexio-source
