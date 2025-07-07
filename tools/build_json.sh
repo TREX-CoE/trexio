@@ -28,4 +28,5 @@ function tangle()
 # Create trex.json file
 cd ${TREXIO_ROOT}
 tangle trex.org
+touch trex.json
 
