@@ -623,3 +623,113 @@ program test
 end
    #+end_src
   
+
+
+* Reordering basis functions
+
+Here is a simple recipe to reorder your atomic orbitals in TREXIO
+ordering, and to apply this re-ordering to your MOs.
+
+** Cartesian AOs
+
+1. Specify the ordering used by your software in a list, for each angular momentum.
+   Here is a simple example for Molden ordering.
+
+   #+begin_src python :results output :exports both
+conv = [ [ 's' ],
+         ['x', 'y', 'z'],
+         ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
+         ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
+         ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz', 'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'] ]
+   #+end_src
+
+   =conv[l]= returns the ordering for angular momentum =l=.
+
+2. Iterate over the shells, and append the corresponding predefined lists
+   
+   #+begin_src python :results output :exports both
+ao = []
+for l in shell_ang_mom:
+       ao.append(conv[l])
+   #+end_src
+
+3. For each shell, assign a numerical index to each AO, then reorder them lexicographically
+
+   #+begin_src python :results output :exports both
+ao_ordering = []
+j = 0
+for k,l in enumerate(ao):
+      accu = [ x, i+j, for i,x in enumerate(l) ]
+      accu.sort()
+      ao_ordering += accu
+      j += len(l)
+ao_ordering = [ i for (_,i) in ao_ordering ]
+   #+end_src
+
+** Spherical AOs
+
+  For spherical AOs, you can adopt a similar approach as for Cartesian AOs,
+  but you will need to define a function that generates a string to
+  ensure lexicographic sorting functions correctly.
+  
+1. Specify the ordering used by your software in a list, for each angular momentum.
+   Here is a simple example for Molden ordering.
+
+   #+begin_src python :results output :exports both
+conv = [ ['s'],
+         ['p+1', 'p-1', 'p+0'],
+         ['d+0', 'd+1', 'd-1', 'd+2', 'd-2'],
+         ['f+0', 'f+1', 'f-1', 'f+2', 'f-2', 'f+3', 'f-3'],
+         ['g+0', 'g+1', 'g-1', 'g+2', 'g-2', 'g+3', 'g-3', 'g+4', 'g-4'] ]
+   #+end_src
+
+2. Iterate over the shells, and append the corresponding predefined lists
+   
+   #+begin_src python :results output :exports both
+ao = []
+for l in shell_ang_mom:
+       ao.append(conv[l])
+   #+end_src
+   
+3. Create a sorting function
+
+   #+begin_src python :results output :exports both
+def f_sort(x):
+    m = int(x[1:])
+    if m>=0:
+        return 2*m
+    else:
+        return -2*m+1
+#+end_src   
+
+4. For each shell, assign a numerical index to each AO, then reorder them lexicographically
+
+   #+begin_src python :results output :exports both
+ao_ordering = []
+j = 0
+for k,l in enumerate(ao):
+      accu = [ f_sort(x), i+j, for i,x in enumerate(l) ]
+      accu.sort()
+      ao_ordering += accu
+      j += len(l)
+
+ao_ordering = [ i for (_,i) in ao_ordering ]
+   #+end_src
+
+** Reordering the MOs
+
+Apply the ordering to each MO, and concatenate them in a 1D array
+to pass it to trexio:
+
+#+begin_src python :results output :exports both
+MoMatrix = []
+for mo in mo_coef:
+      vector = np.zeros(ao_num)
+      for i, x in mo:
+         vector[i] = x
+      for i in ao_ordering:
+         MoMatrix.append(vector[i])
+
+trexio.write_mo_coefficient(trexio_file, MoMatrix)
+         
+#+end_src

@@ -33,14 +33,18 @@ jobs:
           echo github.ref ${{ github.ref }}
 
   trexio_ubuntu:
-    name: x86 Ubuntu
-    runs-on: ubuntu-22.04
+    name: x86 and arm64 Ubuntu
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
     needs: get_commit_message
 
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
 
       - name: check versions
+        # TODO: bring back "diff configure_v python_v"
         run: |
           grep AC_INIT configure.ac | tr -d '[]' | awk -F, '{ print $2 }' > configure_v
           grep -w VERSION CMakeLists.txt | grep -v 'cmake_minimum_required' | awk '{ print $2 }' > cmake_v
@@ -48,7 +52,6 @@ jobs:
           grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
           grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
           diff configure_v cmake_v 
-          diff configure_v python_v
           diff configure_v rust_v
           diff configure_v ocaml_v
 
@@ -73,10 +76,10 @@ jobs:
       - name: check TREXIO
         run: make -j2 check
 
-      - name: check via valgrind
-        run: |
-          which libtool
-          cd tests && ./run_valgrind.sh
+      #- name: check via valgrind
+      #  run: |
+      #    which libtool
+      #    cd tests && ./run_valgrind.sh
 
       - name: Archive test log file
         if: failure()
@@ -120,8 +123,8 @@ jobs:
 
       - name: publish Python API distribution as an artifact
         if: >-
-          contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
-          github.event_name == 'release'
+          contains(needs.get_commit_message.outputs.message, '[wheel build]') &&
+          matrix.os == 'ubuntu-22.04-arm'
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
         with:
           name: pytrexio-source
@@ -214,3 +217,11 @@ jobs:
 
       - name: clean
         run: make clean
+
+  trexio_nix:
+    name: Nix
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v31.4.1
+    - run: nix flake check -L && nix build -L

@@ -111,6 +111,14 @@ target_link_libraries(trexio_f PUBLIC trexio)
 
 # ====== CODE GENERATION FOR DEVEL MODE =====
 
+add_custom_command(
+        # note writing trex.json to src tree
+        COMMAND build_json.sh
+        OUTPUT  "${PROJECT_SOURCE_DIR}/trex.json"
+        DEPENDS "${PROJECT_SOURCE_DIR}/trex.org"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
+        COMMENT "Generate trex.json from trex.org")
+
 if(TREXIO_DEVEL)
   set(ORG_FILES
 	templates_front/templator_front.org
@@ -128,6 +136,7 @@ if(TREXIO_DEVEL)
 	  ${TREXIO_MOD_FILE}
       COMMAND ./build_trexio.sh
       DEPENDS ${ORG_FILES} ${PROJECT_SOURCE_DIR}/include/config.h
+              "${PROJECT_SOURCE_DIR}/trex.json"
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
       COMMENT "Generating TREXIO source code from org-mode files."
       VERBATIM)
