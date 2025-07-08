@@ -32,6 +32,7 @@ single- and/or multi-reference wave functions:
 | [QMC=Chem](https://github.com/TREX-CoE/qmcchem2)                               | Read             | ---             |
 | [QMCkl](https://github.com/TREX-CoE/qmckl)                                     | Read             | ---             |
 | [Dirac](https://www.diracprogram.org)                                          | Write            | ---             |
+| [pymolpro](https://molpro.github.io/pymolpro)                                  | Write            | ---             |
 
 
 * [Installation](#installation)
