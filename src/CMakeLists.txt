@@ -107,6 +107,7 @@ set(TREXIO_MOD_FILE ${TREXIO_MOD_FILE} PARENT_SCOPE)
 # Add TREXIO Fortran module as a library.
 add_library(trexio_f SHARED)
 target_sources(trexio_f PUBLIC ${TREXIO_MOD_FILE})
+target_include_directories(trexio PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(trexio_f PUBLIC trexio)
 
 # ====== CODE GENERATION FOR DEVEL MODE =====
