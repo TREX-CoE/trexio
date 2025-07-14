@@ -3,7 +3,7 @@ program test_trexio
   use, intrinsic :: iso_c_binding
   implicit none
 
-  integer :: rc
+  integer(trexio_exit_code) :: rc
   logical :: have_hdf5
   character*(64) :: trexio_file1, trexio_file2
 
@@ -78,7 +78,7 @@ subroutine test_write(file_name, back_end)
   implicit none
 
   character*(*), intent(in) :: file_name
-  integer, intent(in) :: back_end
+  integer(trexio_back_end_t), intent(in) :: back_end
 
   integer(trexio_t) :: trex_file
 
@@ -132,9 +132,9 @@ subroutine test_write(file_name, back_end)
   det_occ(1:nup,1) = (/ 1, 2, 3, 4, 76, 128, 129, 143 /)
   det_occ(1:ndn,2) = (/ 1, 3, 4, 80, 81, 139 /)
   do i = 1, 50
-    rc = trexio_to_bitfield_list(det_occ(1:8,1), nup, det_list(1:3,i), 3)
+    rc = trexio_to_bitfield_list(int(det_occ(1:8,1),c_int32_t), int(nup,c_int32_t), det_list(1:3,i), int(3,c_int32_t))
     call trexio_assert(rc, TREXIO_SUCCESS)
-    rc = trexio_to_bitfield_list(det_occ(1:6,2), ndn, det_list(4:6,i), 3)
+    rc = trexio_to_bitfield_list(int(det_occ(1:6,2),c_int32_t), int(ndn,c_int32_t), det_list(4:6,i), int(3,c_int32_t))
     call trexio_assert(rc, TREXIO_SUCCESS)
   enddo
 
@@ -184,7 +184,7 @@ subroutine test_write(file_name, back_end)
   rc = trexio_inquire(file_name)
   call trexio_assert(rc, TREXIO_FAILURE)
 
-  trex_file = trexio_open(file_name, 'w', back_end, rc)
+  trex_file = trexio_open(file_name, 'w', int(back_end,trexio_back_end_t), rc)
   call trexio_assert(rc, TREXIO_SUCCESS)
 
   rc = trexio_has_nucleus_num(trex_file)
@@ -196,13 +196,13 @@ subroutine test_write(file_name, back_end)
   rc = trexio_has_electron_up_num(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2.1')
 
-  rc = trexio_write_electron_up_num(trex_file, nup)
+  rc = trexio_write_electron_up_num(trex_file, int(nup,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS)
 
   rc = trexio_has_electron_dn_num(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 2.2')
 
-  rc = trexio_write_electron_dn_num(trex_file, ndn)
+  rc = trexio_write_electron_dn_num(trex_file, int(ndn,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS)
 
   rc = trexio_has_ao_2e_int_eri(trex_file)
@@ -217,7 +217,7 @@ subroutine test_write(file_name, back_end)
   rc = trexio_has_ao_2e_int(trex_file)
   call trexio_assert(rc, TREXIO_HAS_NOT, 'SUCCESS HAS NOT 6')
 
-  rc = trexio_write_nucleus_num(trex_file, nucleus_num)
+  rc = trexio_write_nucleus_num(trex_file, int(nucleus_num,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE NUM')
 
   rc = trexio_write_nucleus_charge(trex_file, charge)
@@ -226,30 +226,30 @@ subroutine test_write(file_name, back_end)
   rc = trexio_write_nucleus_coord(trex_file, coord)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE COORD')
 
-  rc = trexio_write_nucleus_label(trex_file, label, 5)
+  rc = trexio_write_nucleus_label(trex_file, label, int(5,c_int32_t))
   deallocate(label)
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE LABEL')
 
-  rc = trexio_write_nucleus_point_group(trex_file, sym_str, 32)
+  rc = trexio_write_nucleus_point_group(trex_file, sym_str, int(32,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE POINT GROUP')
 
-  rc = trexio_write_basis_shell_num(trex_file, basis_shell_num)
+  rc = trexio_write_basis_shell_num(trex_file, int(basis_shell_num,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE BASIS NUM')
 
-  rc = trexio_write_basis_nucleus_index(trex_file, basis_nucleus_index)
+  rc = trexio_write_basis_nucleus_index(trex_file, int(basis_nucleus_index,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX')
 
-  rc = trexio_write_state_id(trex_file, state_id)
+  rc = trexio_write_state_id(trex_file, int(state_id,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE INDEX TYPE')
 
   ! write ao_num which will be used to determine the optimal size of int indices
   if (trexio_has_ao_num(trex_file) == TREXIO_HAS_NOT) then
-    rc = trexio_write_ao_num(trex_file, ao_num)
+    rc = trexio_write_ao_num(trex_file, int(ao_num,c_int32_t))
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE AO NUM')
   endif
   ! write mo_num which will be used to determine the optimal size of the determinants bit fields
   if (trexio_has_mo_num(trex_file) == TREXIO_HAS_NOT) then
-    rc = trexio_write_mo_num(trex_file, mo_num)
+    rc = trexio_write_mo_num(trex_file, int(mo_num,c_int32_t))
     call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE MO NUM')
   endif
 
@@ -266,7 +266,7 @@ subroutine test_write(file_name, back_end)
   do i=mo_num/2+1,mo_num
     spin(i) = 1
   enddo
-  rc = trexio_write_mo_spin(trex_file, spin)
+  rc = trexio_write_mo_spin(trex_file, int(spin,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS, 'SUCCESS WRITE SPIN')
   deallocate(spin)
 
@@ -323,16 +323,16 @@ subroutine test_read(file_name, back_end)
   implicit none
 
   character*(*), intent(in) :: file_name
-  integer, intent(in) :: back_end
+  integer(trexio_back_end_t), intent(in) :: back_end
 
   integer(trexio_t) :: trex_file
 
   integer*8 :: i
   integer :: j, k, ind, offset, flag
   integer(trexio_exit_code) :: rc = 1
-  integer :: num, num_read, basis_shell_num
+  integer(c_int32_t) :: num, num_read, basis_shell_num
 
-  integer :: basis_nucleus_index(24)
+  integer(c_int32_t) :: basis_nucleus_index(24)
   double precision :: charge(12)
   double precision :: coord(3,12)
 
@@ -341,9 +341,9 @@ subroutine test_read(file_name, back_end)
   character(len=4) :: label(12) ! also works with allocatable arrays
 
   character(len=32) :: sym_str
-  integer           :: mo_num
+  integer(c_int32_t)           :: mo_num
   double precision, allocatable :: energy(:)
-  integer         , allocatable :: spin(:)
+  integer(c_int32_t)         , allocatable :: spin(:)
 
   ! sparse data
   integer(4) :: index_sparse_ao_2e_int_eri(4,20)
@@ -363,8 +363,8 @@ subroutine test_read(file_name, back_end)
   integer*8 :: offset_det_read = 10
   integer*8 :: offset_det_data_read = 5
   integer*8 :: determinant_num
-  integer   :: int_num
-  integer   :: state_id
+  integer(c_int32_t)   :: int_num
+  integer(c_int32_t)   :: state_id
 
   ! orbital lists
   integer*4 :: orb_list_up(150)
@@ -422,7 +422,7 @@ subroutine test_read(file_name, back_end)
   endif
 
 
-  rc = trexio_read_nucleus_label(trex_file, label, 4)
+  rc = trexio_read_nucleus_label(trex_file, label, int(4,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS)
   if (trim(label(2)) == 'Na'   .and. &
       trim(label(4)) == 'C 66' .and. &
@@ -453,7 +453,7 @@ subroutine test_read(file_name, back_end)
   endif
 
 
-  rc = trexio_read_nucleus_point_group(trex_file, sym_str, 10)
+  rc = trexio_read_nucleus_point_group(trex_file, sym_str, int(10,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS)
   if (sym_str(1:3) == 'B3U') then
     write(*,*) 'SUCCESS READ POINT GROUP'
@@ -567,7 +567,7 @@ subroutine test_read(file_name, back_end)
   endif
 
   ! convert one given determinant into lists of orbitals
-  rc = trexio_to_orbital_list_up_dn(3, det_list(:, offset_det_data_read+1), orb_list_up, orb_list_dn, occ_num_up, occ_num_dn)
+  rc = trexio_to_orbital_list_up_dn(int(3,c_int32_t), det_list(:, offset_det_data_read+1), orb_list_up, orb_list_dn, occ_num_up, occ_num_dn)
   !write(*,*) occ_num_up, occ_num_dn
   ! Print occupied orbitals for an up-spin component of a given determinant
   !write(*,*) orb_list_up(1:occ_num_up)
@@ -584,7 +584,7 @@ subroutine test_read(file_name, back_end)
   endif
 
   ! convert one orbital list into a bitfield determinant representation
-  rc = trexio_to_bitfield_list(orb_list_up, occ_num_up, det_list_check, 3)
+  rc = trexio_to_bitfield_list(orb_list_up, occ_num_up, det_list_check, int(3,c_int32_t))
   !write(*,*) occ_num_up, occ_num_dn
   ! Print occupied orbitals for an up-spin component of a given determinant
   !write(*,*) orb_list_up(1:occ_num_up)
@@ -607,17 +607,17 @@ subroutine test_read(file_name, back_end)
   orb_list_dn(:) = orb_list_up(:)
   orb_list_dn(2) = orb_list_up(1)
   orb_list_dn(1) = orb_list_up(2)
-  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn, det_list_check, 3)
+  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn, det_list_check, int(3,c_int32_t))
   call trexio_assert(rc, TREXIO_PHASE_CHANGE)
 
   do i=1,occ_num_dn
     orb_list_dn(occ_num_up-i+1) = orb_list_up(i)
   enddo
 
-  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn, det_list_check, 3)
+  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn, det_list_check, int(3,c_int32_t))
   call trexio_assert(rc, TREXIO_SUCCESS)
 
-  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn-1, det_list_check, 3)
+  rc = trexio_to_bitfield_list(orb_list_dn, occ_num_dn-int(1,c_int32_t), det_list_check, int(3,c_int32_t))
   call trexio_assert(rc, TREXIO_PHASE_CHANGE)
 
 
@@ -657,16 +657,16 @@ subroutine test_read_void(file_name, back_end)
   implicit none
 
   character*(*), intent(in) :: file_name
-  integer, intent(in) :: back_end
+  integer(trexio_back_end_t), intent(in) :: back_end
 
   integer(trexio_t) :: trex_file
-  integer :: rc
+  integer(trexio_exit_code) :: rc
   character*(128) :: str
 
 ! ================= START OF TEST ===================== !
 
   rc = TREXIO_SUCCESS
-  trex_file = trexio_open(file_name, 'r', back_end, rc)
+  trex_file = trexio_open(file_name, 'r', int(back_end,trexio_back_end_t), rc)
   if (rc /= TREXIO_OPEN_ERROR) then
     rc = trexio_close(trex_file)
   endif
