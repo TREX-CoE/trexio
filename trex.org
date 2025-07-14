@@ -1038,6 +1038,10 @@ power = [
 
    An illustration on how to read determinants is presented in the [[./examples.html][examples]].
 
+   *Important*: The number of determinants is not explicitly written
+   by the user (~dim_readonly~). It is automatically set by the number
+   of determinants written in the determinant list.
+
    #+NAME: determinant
   | Variable      | Type             | Row-major Dimensions | Column-major Dimensions | Description                                            |
   |---------------+------------------+----------------------+-------------------------+--------------------------------------------------------|
@@ -1077,10 +1081,13 @@ power = [
    matrix $\langle D_I | \psi_J \rangle$ needed to project the CSFs in
    the basis of Slater determinants.
 
+   *Important*: As opposed to the determinants, the number of CSFs
+   (~csf.num~) has to be written by the user.
+
    #+NAME: csf
   | Variable          | Type             | Row-major Dimensions         | Column-major Dimensions      | Description                             |
   |-------------------+------------------+------------------------------+------------------------------+-----------------------------------------|
-  | ~num~             | ~dim readonly~   |                              |                              | Number of CSFs                          |
+  | ~num~             | ~dim~            |                              |                              | Number of CSFs                          |
   | ~coefficient~     | ~float buffered~ | ~[csf.num]~                  | ~(csf.num)~                  | Coefficients $C_I$ of the CSF expansion |
   | ~det_coefficient~ | ~float sparse~   | ~[csf.num, determinant.num]~ | ~(determinant.num, csf.num)~ | Projection on the determinant basis     |
 
@@ -1090,7 +1097,7 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "csf": {
-		       "num" : [ "dim readonly"  , []                               ]
+		       "num" : [ "dim"           , []                               ]
 	 ,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
 	 , "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
        } ,
