@@ -6942,7 +6942,9 @@ subroutine trexio_string_of_error (error, string)
    implicit none
    integer(trexio_exit_code), intent(in) :: error
    character*(*), intent(out)            :: string
-   call  trexio_string_of_error_f(error, int(len(string),c_int32_t), string)
+   integer(c_int32_t)                    :: lenstring
+   lenstring = len(string)
+   call  trexio_string_of_error_f(error, lenstring, string)
 end subroutine trexio_string_of_error
   #+end_src
 
@@ -7104,7 +7106,7 @@ subroutine trexio_str2strarray(str_flat, max_num_str, max_len_str, str_array)
   implicit none
 
   integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in strign array
-  integer(c_int32_t), intent(in), value              :: max_len_str  ! maximum length of a string in an array
+  integer(c_int32_t), intent(in), value   :: max_len_str  ! maximum length of a string in an array
   character(kind=c_char), intent(in)      :: str_flat(*)
   character(len=*), intent(inout)         :: str_array(*)
 
