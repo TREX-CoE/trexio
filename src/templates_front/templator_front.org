@@ -6120,6 +6120,11 @@ def has_determinant_list(trexio_file) -> bool:
   bitfield representation of the determinant. If the creation of the bitfield requires a change of sign, the return code is
   ~TREXIO_PHASE_CHANGE~.
 
+  ~trexio_phase_aabb_to_abab~ and ~trexio_phase_aabb_to_abab_list~ are functions that help going from the $\alpha \alpha \ldots \beta\beta$
+  ordering to the $\alpha \beta \alpha \beta \ldots$ ordering by checking if reordering a determinant requires applying a change of
+  phase to the coefficient. These functions return ~TREXIO_SUCCESS~ if the conversion of the determinant doesn't require a change of
+  phase. Otherwise, they return ~TREXIO_PHASE_CHANGE~.
+
   ~trexio_convert_nao_radius~ functions convert a radius from the center of an NAO to its logarithmic interpolation grid.
 
   ~trexio_evaluate_nao_radial~ function evaluates the radial function of an NAO for a given distance from the center.
@@ -6143,9 +6148,12 @@ trexio_exit_code trexio_to_orbital_list (const int32_t N_int, const bitfield_t* 
 trexio_exit_code trexio_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* d1, int32_t* const list_up, int32_t* const list_dn, int32_t* const occ_num_up, int32_t* const occ_num_dn);
 trexio_exit_code trexio_safe_to_orbital_list (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_out, const int64_t dim_out, int32_t* const num);
 trexio_exit_code trexio_safe_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_up_out, const int64_t dim_up_out, int32_t* const dset_dn_out, const int64_t dim_dn_out, int32_t* const num_up, int32_t* const num_dn);
+
 trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list, const int32_t occupied_num, bitfield_t* const bit_list, const int32_t N_int);
+
 trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up, const int32_t* list_dn, const int32_t occ_num_up, const int32_t occ_num_dn);
 trexio_exit_code trexio_safe_phase_aabb_to_abab_list (const int32_t* list_up, const int64_t dim_up, const int32_t* list_dn, const int64_t dim_dn, const int32_t occ_num_up, const int32_t occ_num_dn);
+
 trexio_exit_code trexio_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in);
 
 
