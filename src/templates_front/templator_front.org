@@ -5561,14 +5561,14 @@ trexio_get_int64_num(trexio_t* const file, int32_t* const num)
   if (num   == NULL) return TREXIO_INVALID_ARG_2;
 
   /* Read the number of mos */
-  int64_t mo_num = 0L;
-  trexio_exit_code rc = trexio_read_mo_num_64(file, &mo_num);
+  int32_t mo_num = 0L;
+  trexio_exit_code rc = trexio_read_mo_num_32(file, &mo_num);
   if (rc != TREXIO_SUCCESS) return rc;
   if (mo_num == 0L) return TREXIO_INVALID_NUM;
 
-  /* Compute how many integer numbers is needed to represent a determinant */
+  /* Compute how many integer numbers are needed to represent a determinant */
   int32_t int_num = 0;
-  int_num = (int32_t) (mo_num - 1L)/TREXIO_NORB_PER_INT + 1;
+  int_num = (mo_num - 1)/TREXIO_NORB_PER_INT + 1;
 
   *num = int_num;
 
@@ -6141,7 +6141,7 @@ typedef int64_t  bitfield_t;
 
 #define TREXIO_ORBITAL_SHIFT      1
 #define TREXIO_INT_SIZE           64
-#define TREXIO_NORB_PER_INT       ( 8*sizeof(bitfield_t) )
+#define TREXIO_NORB_PER_INT       64
 #define TREXIO_NORB_PER_INT_SHIFT ( trailz( TREXIO_NORB_PER_INT ) )
 
 trexio_exit_code trexio_to_orbital_list (const int32_t N_int, const bitfield_t* d1, int32_t* const list, int32_t* const occupied_num);
@@ -6155,6 +6155,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up, const i
 trexio_exit_code trexio_safe_phase_aabb_to_abab_list (const int32_t* list_up, const int64_t dim_up, const int32_t* list_dn, const int64_t dim_dn, const int32_t occ_num_up, const int32_t occ_num_dn);
 
 trexio_exit_code trexio_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in);
+trexio_exit_code trexio_safe_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in);
 
 
 trexio_exit_code trexio_convert_nao_radius_32 (const float r,
