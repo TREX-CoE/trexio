@@ -46,7 +46,7 @@ single- and/or multi-reference wave functions:
     * [Minimal requirements (for users):](#minimal-requirements-for-users)
     * [Recommended: Installation from the release tarball](#recommended-installation-from-the-release-tarball)
     * [Compilation without the HDF5 library](#compilation-without-the-hdf5-library)
-    * [For TREXIO developers: from the GitHub repo clone](#for-trexio-developers-from-the-github-repo-clone)
+    * [For TREXIO maintainers: from the GitHub repo clone](#for-trexio-maintainers-from-the-github-repo-clone)
     * [Using CMake instead of Autotools](#using-cmake-instead-of-autotools)
 * [Using TREXIO](#using-trexio)
   * [Naming convention](#naming-convention)
@@ -179,7 +179,7 @@ To build TREXIO without HDF5 back end, append `--without-hdf5` option to `config
 - `./configure --without-hdf5`
 - `cmake -S. -Bbuild -DENABLE_HDF5=OFF`
 
-#### For TREXIO developers: from the GitHub repo clone
+#### For TREXIO maintainers: from the GitHub repo clone
 
 Additional requirements:
 
@@ -291,7 +291,7 @@ For more details regarding the installation and usage of the TREXIO Python API,
 see [this page](python/README.md).
 
 The aforementioned instructions are adapted for users installing from the source code distribution (periodically updated).
-In order to install the Python API with the latest changes, follow the developer installation guide and run the following command in the end
+In order to install the Python API with the latest changes, follow the maintainer installation guide and run the following command in the end
 
 ```
 make python-install
