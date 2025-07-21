@@ -252,6 +252,72 @@
 * Basis functions
 ** Basis set (basis group)
 
+*** Gaussian-type orbitals
+
+**** Basis Functions
+
+    We consider here basis functions centered on nuclei. It is
+    therefore possible to introduce *dummy atoms* (artificial centers
+    with no physical meaning) solely for the purpose of placing basis
+    functions at arbitrary locations in space.
+
+    The atomic basis set is defined as a list of shells. Each shell $s$
+    is centered on a point $\mathbf{R}_A$, associated with a given
+    angular momentum $\ell_s$, and characterized by a radial function
+    $R_s(\mathbf{r})$. The radial function is a linear combination of
+    $N_{\text{prim}}$ *primitive* functions. These primitives may be
+    of Slater-type or Gaussian-type, and are parameterized by
+    exponents $\gamma_{ks}$ and contraction coefficients $a_{ks}$.
+
+    **Slater-type orbitals (STO):**
+
+    Slater orbitals are typically written as:
+
+    \[
+    R_s^{\text{STO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s} 
+    \sum_{k=1}^{N_{\text{prim}}} f_{ks}^{\text{STO}}(\gamma_{ks})\,a_{ks}\,
+    \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right| \right)
+    \]
+
+    For STOs, the prefactor exponent $n_s$ is usually set to 
+    $n_s = n-1$, where $n$ is the principal quantum number.
+
+    **Gaussian-type orbitals (GTO):**
+
+    Gaussian orbitals are usually defined as:
+
+    \[
+    R_s^{\text{GTO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s} 
+    \sum_{k=1}^{N_{\text{prim}}} f_{ks}^{\text{GTO}}(\gamma_{ks})\, a_{ks}\, 
+    \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right|^2 \right)
+    \]
+
+    In conventional GTO-based codes, the radial prefactor exponent is
+    typically set to \( n_s = 0 \), resulting in a so-called
+    *cartesian Gaussian* formulation. However, it is also possible to
+    define *spherically pure* Gaussian-type orbitals (GTOs) by setting
+    \( n_s = \ell_s \).
+
+**** Normalization Conventions
+
+    Different computational chemistry codes apply normalization at
+    various levels. The normalization of basis functions requires the
+    evaluation of overlap integrals, which might not always be
+    supported by the client software. For this reason, normalization
+    constants should be explicitly provided in the data files to
+    ensure portability and completeness.
+
+    Some codes assume that the primitive functions are individually
+    normalized. In that case, a normalization constant $f_{ks}$
+    must be computed and applied to each primitive. If this
+    normalization is not required, then $f_{ks} = 1$.
+
+    Similarly, some codes expect the contracted basis functions 
+    $R_s(\mathbf{r})$ to be normalized. In this case, an additional
+    normalization factor $\mathcal{N}_s$ must be computed. If the
+    full basis function is not normalized, then $\mathcal{N}_s = 1$.
+
+
 *** Gaussian and Slater-type orbitals
 
     We consider here basis functions centered on nuclei. Hence, it is
@@ -292,7 +358,7 @@
 
 *** Numerical orbitals
 
-    Trexio supports numerical atom centered orbitals. The implementation is
+    TREXIO supports numerical atom centered orbitals. The implementation is
     based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular
     simulations with numeric atom-centered orbitals; Computer Physics
     Communications 2009]. These orbitals are
