@@ -261,10 +261,15 @@
     with no physical meaning) solely for the purpose of placing basis
     functions at arbitrary locations in space.
 
-    The atomic basis set is defined as a list of shells. Each shell $s$
-    is centered on a point $\mathbf{R}_A$, associated with a given
+    The atomic basis set is defined as a list of shells. Each shell
+    $s$ is centered on a point $\mathbf{R}_A$, associated with a given
     angular momentum $\ell_s$, and characterized by a radial function
-    $R_s(\mathbf{r})$. The radial function is a linear combination of
+    $R_s(\mathbf{r})$. Note that since the angular functions are
+    defined as solid harmonics that include the $r^{\ell_s}$ factor,
+    the radial functions in TREXIO differ from the textbook definition
+    by $r^{-\ell_s}$.
+
+    The radial function is a linear combination of
     $N_{\text{prim}}$ *primitive* functions. These primitives may be
     of Slater-type or Gaussian-type, and are parameterized by
     exponents $\gamma_{ks}$ and contraction coefficients $a_{ks}$.
@@ -279,12 +284,12 @@
     \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right| \right)
     \]
 
-    For STOs, the prefactor exponent $n_s$ is usually set to 
-    $n_s = n-1$, where $n$ is the principal quantum number.
+    The prefactor exponent $n_s$ for STOs is $n_s = n_s-1-\ell_s$,
+    where $n_s$ is the shell's principal quantum number.
 
     **Gaussian-type orbitals (GTO):**
 
-    Gaussian orbitals are usually defined as:
+    Gaussian-type orbitals (GTOs) are usually defined as:
 
     \[
     R_s^{\text{GTO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s} 
@@ -292,11 +297,13 @@
     \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right|^2 \right)
     \]
 
-    In conventional GTO-based codes, the radial prefactor exponent is
-    typically set to \( n_s = 0 \), resulting in a so-called
-    *cartesian Gaussian* formulation. However, it is also possible to
-    define *spherically pure* Gaussian-type orbitals (GTOs) by setting
-    \( n_s = \ell_s \).
+    GTO-based codes usually use *spherically pure* Gaussians, in which
+    case the radial prefactor exponent is \( n_s = 0 \), as the
+    $r^{\ell_s}$ factor is already included in the solid harmonics.
+    *Cartesian Gaussians* are obtained by constructing several shells
+    with \( n_s = \lambda_s - \ell_s, \lambda_s - \ell_s - 2, \dots
+    \), where $\lambda_s$ is the Cartesian angular momentum of the
+    shell.
 
 **** Normalization Conventions
 
