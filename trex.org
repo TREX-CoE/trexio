@@ -265,9 +265,11 @@
     $s$ is centered on a point $\mathbf{R}_A$, associated with a given
     angular momentum $\ell_s$, and characterized by a radial function
     $R_s(\mathbf{r})$. Note that since the angular functions are
-    defined as solid harmonics that include the $r^{\ell_s}$ factor,
-    the radial functions in TREXIO differ from the textbook definition
-    by $r^{-\ell_s}$.
+    defined as solid harmonics that include the $r^{\ell_s}$ or
+    $r^{\lambda_s}$ factor for spherical and Cartesian functions,
+    respectively, the radial functions in TREXIO differ from the
+    textbook definition by $r^{-\ell_s}$ or $r^{-\lambda_s}$,
+    respectively.
 
     The radial function is a linear combination of
     $N_{\text{prim}}$ *primitive* functions. These primitives may be
@@ -279,31 +281,40 @@
     Slater orbitals are typically written as:
 
     \[
-    R_s^{\text{STO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s} 
+    R_s^{\text{STO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s}
     \sum_{k=1}^{N_{\text{prim}}} f_{ks}^{\text{STO}}(\gamma_{ks})\,a_{ks}\,
     \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right| \right)
     \]
 
-    The prefactor exponent $n_s$ for STOs is $n_s = n_s-1-\ell_s$,
-    where $n_s$ is the shell's principal quantum number.
+    The prefactor exponent $n_s$ for STOs is $n_s = n-1-\ell_s$,
+    where $n$ is the shell's principal quantum number.
 
     **Gaussian-type orbitals (GTO):**
 
     Gaussian-type orbitals (GTOs) are usually defined as:
 
     \[
-    R_s^{\text{GTO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s} 
-    \sum_{k=1}^{N_{\text{prim}}} f_{ks}^{\text{GTO}}(\gamma_{ks})\, a_{ks}\, 
+    R_s^{\text{GTO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s}
+    \sum_{k=1}^{N_{\text{prim}}} f_{ks}^{\text{GTO}}(\gamma_{ks})\, a_{ks}\,
     \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right|^2 \right)
     \]
 
     GTO-based codes usually use *spherically pure* Gaussians, in which
     case the radial prefactor exponent is \( n_s = 0 \), as the
     $r^{\ell_s}$ factor is already included in the solid harmonics.
-    *Cartesian Gaussians* are obtained by constructing several shells
-    with \( n_s = \lambda_s - \ell_s, \lambda_s - \ell_s - 2, \dots
-    \), where $\lambda_s$ is the Cartesian angular momentum of the
-    shell.
+    Similarly, *Cartesian Gaussians* correspond to \( n_s = 0 \),
+    since the $r^{\lambda_s}$ term is already included in the
+    Cartesian polynomial in the angular part.
+
+    TREXIO is flexible enough to allow the implementation of Cartesian
+    Gaussians in terms of spherical shells. For instance, a Cartesian
+    d shell consists of 6 functions, which are linear combinations of
+    the 5 spherical d functions with $n_s=0$ and a spherical s
+    function with $n_s=2$. More generally, a Cartesian shell of
+    Cartesian angular momentum $\lambda_s$ will give rise to a
+    spherical shell with $\ell_s = \lambda_s$ ($n_s=0$), $\ell_s =
+    \lambda_s -2$ ($n_s=2$), $\ell_s =
+    \lambda_s -4$ ($n_s=4$), etc.
 
 **** Normalization Conventions
 
@@ -319,7 +330,7 @@
     must be computed and applied to each primitive. If this
     normalization is not required, then $f_{ks} = 1$.
 
-    Similarly, some codes expect the contracted basis functions 
+    Similarly, some codes expect the contracted basis functions
     $R_s(\mathbf{r})$ to be normalized. In this case, an additional
     normalization factor $\mathcal{N}_s$ must be computed. If the
     full basis function is not normalized, then $\mathcal{N}_s = 1$.
@@ -439,11 +450,11 @@
     \exp \left( - \gamma_{ks}
     \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right)\, \cos \left( \beta_{ks} \vert \mathbf{r}-\mathbf{R}_A \vert ^q \right)
     \]
-    
+
     Oscillation kind can be:
     - ~Cos1~ for $q=1$
     - ~Cos2~ for $q=2$
-    
+
 *** Data definitions
 
     #+NAME: basis
@@ -791,15 +802,19 @@ power = [
    \]
 
    where $i$ is the atomic orbital index, $P$ refers to either
-   polynomials in $x,y,z$ or real solid harmonics
+   polynomials in $x,y,z$
    \[
-   S^m_{\ell}(\mathbf{r}) \equiv \sqrt{\frac{4\pi}{2\ell+1}}\; r^\ell
-   Y^m_{\ell}(\theta,\varphi)
+   P_{\eta(i)}(\mathbf{r}) \equiv x^{\eta(i)_x} y^{\eta(i)_y} z^{\eta(i)_z}
+   \]
+   or real solid harmonics
+   \[
+   P_{\eta(i)}(\mathbf{r}) \to S^{m_i}_{\ell}(\mathbf{r}) \equiv \sqrt{\frac{4\pi}{2\ell+1}}\; r^\ell
+   Y^{m_i}_{\ell}(\theta,\varphi)
    \]
    (see [[https://en.wikipedia.org/wiki/Solid_harmonics][Wikipedia]]), and $s(i)$
    specifies the shell on which the AO is expanded.
 
-   
+
    $\eta(i)$ denotes the chosen angular function.  The AOs can be
    expressed using real solid harmonics or polynomials in Cartesian
    coordinates.  In the case of real solid harmonics, the AOs are
@@ -1616,7 +1631,7 @@ if title != "End":
         f1 = max(f1, len(name))
         f2 = max(f2, len(typ))
         f3 = max(f3, len(dims))
-    
+
     fmt = "%%s%%%ds : [ %%%ds, %%%ds ]" % (f1, f2, f3)
     for line in data:
         line = [ x.replace("~","") for x in line ]
@@ -1635,7 +1650,7 @@ if title != "End":
         buffer = fmt % (indent, name, typ.ljust(f2), dims.ljust(f3))
         indent = "      , "
         print(buffer)
-    
+
     if last == 0:
         print("    } ,")
     else:
@@ -1655,6 +1670,3 @@ print("""#+end_src""")
  #+RESULTS:
 
  :end:
-
-
-
