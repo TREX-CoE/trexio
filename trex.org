@@ -277,46 +277,64 @@
   of Slater-type or Gaussian-type, and are parameterized by
   exponents $\gamma_{ks}$ and contraction coefficients $a_{ks}$.
 
-  Slater orbitals are written as:
+  Slater-type orbitals (STO, $p=1$) and Gaussian-type orbitals (GTO, $p=2$) are written as:
 
   \[
-  R_s^{\text{STO}}(\mathbf{r}) = \mathcal{N}_s  \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s-1-\ell_s}
-  sum_{k=1}^{N_{\text{prim}}}
-  _{ks}\,a_{ks}\,
-  exp\left( -\zeta_{ks} \left| \mathbf{r} - \mathbf{R}_A \right| \right)
-  \]
-
-  Gaussian-type orbitals (GTOs) are usually defined as:
-
-  \[
-  R_s^{\text{GTO}}(\mathbf{r}) = \mathcal{N}_s \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s}
+  R_s(\mathbf{r}) = \mathcal{N}_s\, || \mathbf{r} - \mathbf{R}_A ||^{n_s}
   \sum_{k=1}^{N_{\text{prim}}} f_{ks} \, a_{ks}\,
-  \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right|^2 \right)
+  \exp\left( -\gamma_{ks} || \mathbf{r} - \mathbf{R}_A ||^p \right)
   \]
+
+  The prefactor exponent $n_s$ for STOs is $n_s = n-1-\ell_s$,
+  where $n$ is the shell's principal quantum number.
 
   GTO-based codes usually use *spherically pure* Gaussians, in which
-  case the radial prefactor exponent is zero, as the
+  case the radial prefactor exponent is $n_s = 0$, as the
   $r^{\ell_s}$ factor is already included in the solid harmonics.
+  Similarly, *Cartesian Gaussians* correspond to $n_s = 0$,
+  since the $r^{\lambda_s}$ term is already included in the
+  Cartesian polynomial in the angular part.
+
   TREXIO is flexible enough to allow the implementation of Cartesian
   Gaussians in terms of spherical shells. For instance, a Cartesian
-  d shell consists of 6 functions, which are linear combinations of
+  $d$ shell consists of 6 functions, which are linear combinations of
   the 5 spherical d functions with $n_s=0$ and a spherical s
   function with $n_s=2$. More generally, a Cartesian shell of
   Cartesian angular momentum $\lambda_s$ will give rise to a
   spherical shell with $\ell_s = \lambda_s$ ($n_s=0$), $\ell_s =
-  \lambda_s -2$ ($n_s=2$), $\ell_s = \lambda_s -4$ ($n_s=4$), etc.
+  \lambda_s -2$ ($n_s=2$), $\ell_s = \lambda_s -4$ ($n_s=4$), etc. 
 
-  Standard basis sets assume that the primitive functions are
-  normalized. In that case, a normalization constant $f_{ks}$ must
-  be computed and applied to each primitive. This normalization
-  constant usually depends on the exponent and on the quantum
-  numbers $n$ and $\ell$. If this normalization is not required,
-  then $f_{ks} = 1$.
 
-  Similarly, some codes expect the contracted basis functions
+  Standard Gaussian basis sets, such as those available from the Basis
+  Set Exchange, typically assume that each /primitive/ function is
+  normalized.
+  That is, for a primitive Gaussian of the form
+  \[
+  g_{ks}(\mathbf{r}) = ||\mathbf{r} - \mathbf{R}_k||^{\ell} \exp(-\alpha_s ||\mathbf{r} - \mathbf{R}_k||^2),
+  \]
+  a normalization constant $f_{ks}$ is computed so that the integral
+  of $|f_{ks} g_{ks}|^2$ over all space is equal to 1.
+  It is applied independently for each primitive function.
+  If this normalization is not required, then $f_{ks} = 1$.
+
+  In addition, some codes expect the contracted basis functions
   $R_s(\mathbf{r})$ to be normalized. In this case, an additional
-  normalization factor $\mathcal{N}_s$ must be computed. If the
-  full basis function is not normalized, then $\mathcal{N}_s = 1$.
+  normalization factor $\mathcal{N}_s$ must be computed.
+  This extra normalization is not universally applied, as it is not
+  strictly necessary: most quantum chemistry codes compute and store the
+  AO overlap matrix explicitly, and orthogonalization procedures
+  compensate for any deviations from normalization.  Nevertheless,
+  applying this normalization is common practice, as it keeps the
+  molecular orbital (MO) coefficients within a consistent numerical
+  range.
+  
+  In TREXIO, if this additional renormalization is applied by the code,
+  the overall normalization factor $\mathcal{N}_s$ should be stored explicitly
+  to preserve consistency between the stored MO coefficients and the
+  contracted basis functions.  If no additional normalization is
+  applied, then $\mathcal{N}_s = 1$.
+
+
 
 *** Numerical orbitals
 
