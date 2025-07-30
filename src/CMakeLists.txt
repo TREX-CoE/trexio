@@ -95,7 +95,10 @@ endif()
 # Private headers have to be listed as sources, otherwise they are installed
 # with public headers upon make install (when using PRIVATE_HEADER property).
 target_sources(trexio PRIVATE ${TREXIO_SOURCES} ${TREXIO_PRIVATE_HEADERS})
-target_include_directories(trexio INTERFACE ../include)
+target_include_directories(trexio PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        $<INSTALL_INTERFACE:include>
+)
 
 # ============= FORTRAN SUPPORT ==============
 
