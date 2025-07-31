@@ -307,7 +307,9 @@ trexio_text_unlock (trexio_t* const file)
   trexio_text_t* const f = (trexio_text_t*) file;
 
 #ifdef _WIN32
-  /* On Windows, we use a dummy file descriptor, so don't close it */
+  /* On Windows, we don't use file locking, but we need to close the file descriptor
+     so that the .lock file can be properly removed during cleanup */
+  close(f->lock_file);
   return TREXIO_SUCCESS;
 #else
   struct flock fl;
