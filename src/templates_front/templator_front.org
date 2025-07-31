@@ -1993,8 +1993,8 @@ trexio_cp(const char* source, const char* dest)
 #ifdef _WIN32
   /* Windows implementation using system() */
   char command[4096];
-  /* Use xcopy with corrected flags for directory copying */
-  int ret = snprintf(command, sizeof(command), "xcopy \"%s\" \"%s\" /E /I /Q /Y", source, dest);
+  /* Use xcopy with explicit handling to avoid cyclic copy issues */
+  int ret = snprintf(command, sizeof(command), "xcopy /E /I /Q /Y \"%s\" \"%s\"", source, dest);
   if (ret < 0 || ret >= sizeof(command)) {
     return TREXIO_FILE_ERROR;
   }
