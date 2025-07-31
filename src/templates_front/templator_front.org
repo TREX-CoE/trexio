@@ -1993,8 +1993,17 @@ trexio_cp(const char* source, const char* dest)
 #ifdef _WIN32
   /* Windows implementation using system() */
   char command[4096];
-  /* Use xcopy with explicit handling to avoid cyclic copy issues */
-  int ret = snprintf(command, sizeof(command), "xcopy /E /I /Q /Y \"%s\" \"%s\"", source, dest);
+  int ret;
+  
+  /* Check if source is a directory to use appropriate xcopy flags */
+  if (back_end_local == TREXIO_TEXT) {
+    /* TEXT backend uses directories - use directory copy flags */
+    ret = snprintf(command, sizeof(command), "xcopy /E /I /Q /Y \"%s\" \"%s\"", source, dest);
+  } else {
+    /* HDF5 backend uses files - use file copy flags */
+    ret = snprintf(command, sizeof(command), "xcopy /Q /Y \"%s\" \"%s\"", source, dest);
+  }
+  
   if (ret < 0 || ret >= sizeof(command)) {
     return TREXIO_FILE_ERROR;
   }
