@@ -301,9 +301,11 @@ typedef int32_t trexio_exit_code;
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#ifndef _WIN32
 #include <err.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#endif
 
 
 #include "trexio.h"
@@ -1988,10 +1990,22 @@ trexio_cp(const char* source, const char* dest)
 
   /* Call cp */
 
+#ifdef _WIN32
+  /* Windows implementation using system() */
+  char command[4096];
+  int ret = snprintf(command, sizeof(command), "xcopy \"%s\" \"%s\" /E /I /Y", source, dest);
+  if (ret < 0 || ret >= sizeof(command)) {
+    return TREXIO_FILE_ERROR;
+  }
+  
+  if (system(command) != 0) {
+    return TREXIO_FILE_ERROR;
+  }
+#else
+  /* Unix implementation using fork/exec */
 #ifndef CP_COMMAND
 #define CP_COMMAND "cp", "-r"
 #endif
-
 
   pid_t pid = fork();
   if (pid == 0) {
@@ -2004,6 +2018,7 @@ trexio_cp(const char* source, const char* dest)
     if (ws != pid || !WIFEXITED(wstatus) )
       return TREXIO_FILE_ERROR;
   }
+#endif
 
   return TREXIO_SUCCESS;
 }
