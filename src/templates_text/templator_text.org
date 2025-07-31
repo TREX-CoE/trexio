@@ -241,9 +241,9 @@ trexio_text_init (trexio_t* const file)
 
   if (f->lock_file <= 0) {
 #ifdef _WIN32
-    /* On Windows, we can't reliably create lock files in all scenarios,
-       so we just use a dummy file descriptor for compatibility */
-    f->lock_file = 1; /* dummy file descriptor */
+    /* On Windows, we can't lock files but we should still be able to create them.
+       If we can't create the lock file, return an error */
+    return TREXIO_ERRNO;
 #else
     if (file->mode != 'r') {
       return TREXIO_ERRNO;
