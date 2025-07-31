@@ -1157,8 +1157,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
-  FILE* f = fopen(file_full_path, "a");
+  /* Open the file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE* f = fopen(file_full_path, "ab");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
@@ -1212,8 +1212,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* Append .size to the file_full_path in order to write additional info about the written buffer of data */
   strncat(file_full_path, ".size", 6);
 
-  /* Open the new file in "a" (append) mode to append info about the buffer that has been just written */
-  FILE *f_wSize = fopen(file_full_path, "a");
+  /* Open the new file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE *f_wSize = fopen(file_full_path, "ab");
   if (f_wSize == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the buffer_size */
@@ -1569,8 +1569,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
-  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
-  FILE* f = fopen(file_full_path, "a");
+  /* Open the file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE* f = fopen(file_full_path, "ab");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
@@ -1592,8 +1592,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* Append .size to the file_full_path in order to write additional info about the written buffer of data */
   strncat(file_full_path, ".size", append_str_len);
 
-  /* Open the new file in "a" (append) mode to append info about the buffer that has been just written */
-  FILE *f_wSize = fopen(file_full_path, "a");
+  /* Open the new file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE *f_wSize = fopen(file_full_path, "ab");
   if (f_wSize == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the buffer_size */
@@ -1810,8 +1810,8 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
-  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
-  FILE* f = fopen(file_full_path, "a");
+  /* Open the file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE* f = fopen(file_full_path, "ab");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
