@@ -2000,8 +2000,8 @@ trexio_cp(const char* source, const char* dest)
     /* TEXT backend uses directories - use directory copy flags */
     ret = snprintf(command, sizeof(command), "xcopy /E /I /Q /Y \"%s\" \"%s\"", source, dest);
   } else {
-    /* HDF5 backend uses files - use file copy flags */
-    ret = snprintf(command, sizeof(command), "xcopy /Q /Y \"%s\" \"%s\"", source, dest);
+    /* HDF5 backend uses files - use file copy flags with /F to force file destination */
+    ret = snprintf(command, sizeof(command), "xcopy /F /Q /Y \"%s\" \"%s\"", source, dest);
   }
   
   if (ret < 0 || ret >= sizeof(command)) {
