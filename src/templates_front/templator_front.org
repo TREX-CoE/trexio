@@ -4576,7 +4576,7 @@ interface
         trexio_read_$group_dset$_low &
         (trex_file, dset, max_str_len) bind(C)
      import
-     integer(c_int64_t), intent(in), value  :: trex_file
+     integer(trexio_t), intent(in), value  :: trex_file
      character(kind=c_char), intent(out)    :: dset(*)
      integer(c_int32_t), intent(in), value  :: max_str_len
    end function trexio_read_$group_dset$_low
@@ -6941,7 +6941,7 @@ end function trexio_info
 subroutine trexio_string_of_error (error, string)
    implicit none
    integer(trexio_exit_code), intent(in) :: error
-   character*(*), intent(out)            :: string
+   character(len=*), intent(out)            :: string
    integer(c_int32_t)                    :: lenstring
    lenstring = len(string)
    call  trexio_string_of_error_f(error, lenstring, string)
@@ -7146,7 +7146,7 @@ subroutine trexio_assert(trexio_rc, check_rc, success_message)
   integer(trexio_exit_code), intent(in), value :: check_rc
   character(len=*), intent(in), optional  :: success_message
 
-  character*(128) :: str
+  character(len=128) :: str
 
   if (trexio_rc == check_rc) then
      if (present(success_message)) write(*,*) success_message

@@ -72,8 +72,6 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 
 
-# pkg-config
-PKG_PROG_PKG_CONFIG()
 
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -138,6 +136,9 @@ AS_IF([test "x$with_hdf5" = "xno"],
   [AC_MSG_NOTICE([HDF5 support disabled by user.])],
   [AS_IF([test "x$with_hdf5" = "xyes"],
     [
+      # pkg-config
+      PKG_PROG_PKG_CONFIG()
+
       # Try pkg-config first
       PKG_CHECK_EXISTS([hdf5 >= 1.8],
         [
