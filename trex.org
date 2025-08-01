@@ -816,6 +816,7 @@ power = [
     - \[ \hat{T}_{\text{e}} =
       \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy
     - $\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} + \hat{V}_\text{ECP}$ : core electronic Hamiltonian
+    - $\hat{\mu}_x = -x$, $\hat{\mu}_y = -y$, $\hat{\mu}_z = -z$ : dipole moment operators
 
     The one-electron integrals for a one-electron operator $\hat{O}$ are
     \[ \langle p \vert \hat{O} \vert q \rangle \], returned as a matrix
@@ -829,11 +830,17 @@ power = [
   | ~potential_n_e~       | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
   | ~ecp~                 | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
   | ~core_hamiltonian~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$                                |
+  | ~dipole_x~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_x \vert q \rangle$                            |
+  | ~dipole_y~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_y \vert q \rangle$                            |
+  | ~dipole_z~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_z \vert q \rangle$                            |
   | ~overlap_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert q \rangle$ (imaginary part)                             |
   | ~kinetic_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
   | ~potential_n_e_im~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
   | ~ecp_im~              | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
   | ~core_hamiltonian_im~ | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
+  | ~dipole_x_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_x \vert q \rangle$ (imaginary part)           |
+  | ~dipole_y_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_y \vert q \rangle$ (imaginary part)           |
+  | ~dipole_z_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_z \vert q \rangle$ (imaginary part)           |
 
     #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -846,11 +853,17 @@ power = [
 	  ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_x" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_y" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_z" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_x_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_y_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_z_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	} ,
     #+end_src
 
@@ -971,11 +984,17 @@ power = [
   | ~potential_n_e~       | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$                    |
   | ~ecp~                 | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$                   |
   | ~core_hamiltonian~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$                                |
+  | ~dipole_x~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_x \vert j \rangle$                            |
+  | ~dipole_y~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_y \vert j \rangle$                            |
+  | ~dipole_z~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_z \vert j \rangle$                            |
   | ~overlap_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert j \rangle$ (imaginary part)                             |
   | ~kinetic_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)           |
   | ~potential_n_e_im~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)  |
   | ~ecp_im~              | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part) |
   | ~core_hamiltonian_im~ | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)               |
+  | ~dipole_x_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_x \vert j \rangle$ (imaginary part)           |
+  | ~dipole_y_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_y \vert j \rangle$ (imaginary part)           |
+  | ~dipole_z_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_z \vert j \rangle$ (imaginary part)           |
 
     #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
@@ -988,11 +1007,17 @@ power = [
 	  ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_x" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_y" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_z" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_x_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_y_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_z_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	} ,
     #+end_src
 
