@@ -109,7 +109,17 @@ trexio_exit_code
 trexio_hdf5_inquire(const char* file_name)
 {
   /* H5Fis_hdf5 determines whether file is in HDF5 format */
+  /* Disable HDF5 error messages during auto-detection */
+  H5E_auto2_t old_func;
+  void *old_client_data;
+  H5Eget_auto2(H5E_DEFAULT, &old_func, &old_client_data);
+  H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+
   htri_t rc = H5Fis_hdf5(file_name);
+
+  /* Restore previous error handler */
+  H5Eset_auto2(H5E_DEFAULT, old_func, old_client_data);
+
   if (rc > 0 ) {
     return TREXIO_SUCCESS;    //exists and HDF5
   } else if (rc == 0) {
