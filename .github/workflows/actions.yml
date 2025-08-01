@@ -193,7 +193,8 @@ jobs:
                 gfortran-multilib \
                 git \
                 pkg-config \
-                zlib1g-dev:i386
+                zlib1g-dev:i386 \
+                swig
           
           # Set environment for 32-bit compilation
           ENV CC="gcc -m32" \
@@ -244,11 +245,11 @@ jobs:
             echo 'Testing TREXIO:'
             make -j2 check
             
-            # Create venv with swig 4.1
+            # Create venv and verify SWIG
             echo 'Setting up Python environment:'
             python3 -m venv trexio-venv
             . trexio-venv/bin/activate
-            pip install swig==4.1
+            echo 'SWIG version:' && swig -version
             
             # Install Python API
             echo 'Installing Python API:'
