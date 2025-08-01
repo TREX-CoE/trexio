@@ -173,14 +173,13 @@ jobs:
           cat > Dockerfile.i686 << 'EOF'
           FROM ubuntu:22.04
           
-          # Install i386 architecture support
+          # Install i386 architecture support and basic dependencies
           RUN dpkg --add-architecture i386 && \
               apt-get update && \
               apt-get install -y \
                 gcc-multilib \
                 g++-multilib \
                 libc6-dev:i386 \
-                libhdf5-dev \
                 emacs \
                 libtool-bin \
                 valgrind \
@@ -194,14 +193,28 @@ jobs:
                 gfortran-multilib \
                 git \
                 pkg-config \
-                zlib1g-dev:i386
+                zlib1g-dev:i386 \
+                wget \
+                cmake
+          
+          # Build HDF5 for 32-bit
+          RUN wget https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.14/hdf5-1.14.5/src/hdf5-1.14.5.tar.gz && \
+              tar -xzf hdf5-1.14.5.tar.gz && \
+              cd hdf5-1.14.5 && \
+              CC="gcc -m32" ./configure --prefix=/usr/local/hdf5-i386 --host=i686-linux-gnu && \
+              make -j$(nproc) && \
+              make install && \
+              cd .. && \
+              rm -rf hdf5-1.14.5*
           
           # Set environment for 32-bit compilation
           ENV CC="gcc -m32" \
               FC="gfortran -m32" \
               CFLAGS="-m32" \
               FCFLAGS="-m32" \
-              LDFLAGS="-m32"
+              LDFLAGS="-m32" \
+              PKG_CONFIG_PATH="/usr/local/hdf5-i386/lib/pkgconfig:${PKG_CONFIG_PATH}" \
+              HDF5_ROOT="/usr/local/hdf5-i386"
           
           WORKDIR /workspace
           EOF
@@ -234,7 +247,7 @@ jobs:
             # Configure with autotools for 32-bit
             echo 'Configuring with autotools for i686:'
             ./autogen.sh
-            ./configure --enable-silent-rules --host=i686-linux-gnu
+            ./configure --enable-silent-rules --host=i686-linux-gnu --with-hdf5=/usr/local/hdf5-i386
             
             # Compile TREXIO
             echo 'Compiling TREXIO:'
@@ -262,7 +275,7 @@ jobs:
             echo 'Testing debug build:'
             make maintainer-clean
             ./autogen.sh
-            ./configure --enable-silent-rules --enable-debug --enable-sanitizer --host=i686-linux-gnu
+            ./configure --enable-silent-rules --enable-debug --enable-sanitizer --host=i686-linux-gnu --with-hdf5=/usr/local/hdf5-i386
             make -j2
             make -j2 check
             
