@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 /* Portable cleanup function to replace system() calls */
-static inline int trexio_cleanup_test_file(const char* file_path) {
+static int trexio_cleanup_test_file(const char* file_path) {
     trexio_exit_code rc;
     
     /* First check if the file/directory exists */

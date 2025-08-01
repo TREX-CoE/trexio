@@ -8,7 +8,7 @@
 #define TREXIO_FILE 	"test_pre_close.dir"
 
 /* Portable cleanup function to replace system() calls */
-static inline int trexio_cleanup_test_file_pre_close(const char* file_path) {
+static int trexio_cleanup_test_file_pre_close(const char* file_path) {
     trexio_exit_code rc;
     
     /* First check if the file/directory exists */

@@ -2003,14 +2003,14 @@ trexio_remove_directory_recursive(const char* path)
   char fullPath[MAX_PATH];
   
   int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", path);
-  if (ret < 0 || ret >= sizeof(searchPath)) return TREXIO_FILE_ERROR;
+  if (ret < 0 || ret >= (int) sizeof(searchPath)) return TREXIO_FILE_ERROR;
   
   hFind = FindFirstFileA(searchPath, &findData);
   if (hFind != INVALID_HANDLE_VALUE) {
     do {
       if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
         ret = snprintf(fullPath, sizeof(fullPath), "%s\\%s", path, findData.cFileName);
-        if (ret < 0 || ret >= sizeof(fullPath)) {
+        if (ret < 0 || ret >= (int) sizeof(fullPath)) {
           FindClose(hFind);
           return TREXIO_FILE_ERROR;
         }
@@ -2047,7 +2047,7 @@ trexio_remove_directory_recursive(const char* path)
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
         char fullPath[PATH_MAX];
         int ret = snprintf(fullPath, sizeof(fullPath), "%s/%s", path, entry->d_name);
-        if (ret < 0 || ret >= sizeof(fullPath)) {
+        if (ret < 0 || ret >= (int) sizeof(fullPath)) {
           closedir(dir);
           return TREXIO_FILE_ERROR;
         }
@@ -2152,7 +2152,7 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
   char destPath[MAX_PATH];
   
   int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", source);
-  if (ret < 0 || ret >= sizeof(searchPath)) return TREXIO_FILE_ERROR;
+  if (ret < 0 || ret >= (int) sizeof(searchPath)) return TREXIO_FILE_ERROR;
   
   hFind = FindFirstFileA(searchPath, &findData);
   if (hFind == INVALID_HANDLE_VALUE) {
@@ -2162,13 +2162,13 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
   do {
     if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
       ret = snprintf(sourcePath, sizeof(sourcePath), "%s\\%s", source, findData.cFileName);
-      if (ret < 0 || ret >= sizeof(sourcePath)) {
+      if (ret < 0 || ret >= (int) sizeof(sourcePath)) {
         FindClose(hFind);
         return TREXIO_FILE_ERROR;
       }
       
       ret = snprintf(destPath, sizeof(destPath), "%s\\%s", dest, findData.cFileName);
-      if (ret < 0 || ret >= sizeof(destPath)) {
+      if (ret < 0 || ret >= (int) sizeof(destPath)) {
         FindClose(hFind);
         return TREXIO_FILE_ERROR;
       }
@@ -2205,13 +2205,13 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
       char destPath[PATH_MAX];
       
       int ret = snprintf(sourcePath, sizeof(sourcePath), "%s/%s", source, entry->d_name);
-      if (ret < 0 || ret >= sizeof(sourcePath)) {
+      if (ret < 0 || ret >= (int) sizeof(sourcePath)) {
         closedir(dir);
         return TREXIO_FILE_ERROR;
       }
       
       ret = snprintf(destPath, sizeof(destPath), "%s/%s", dest, entry->d_name);
-      if (ret < 0 || ret >= sizeof(destPath)) {
+      if (ret < 0 || ret >= (int) sizeof(destPath)) {
         closedir(dir);
         return TREXIO_FILE_ERROR;
       }
