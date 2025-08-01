@@ -154,6 +154,91 @@ jobs:
       - name: maintainer clean
         run: make maintainer-clean
 
+  trexio_i686:
+    name: i686 (32-bit) Linux
+    runs-on: ubuntu-22.04
+    needs: get_commit_message
+    container:
+      image: i386/ubuntu:latest
+
+    steps:
+      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+
+      - name: check versions
+        # TODO: bring back "diff configure_v python_v"
+        run: |
+          grep AC_INIT configure.ac | tr -d '[]' | awk -F, '{ print $2 }' > configure_v
+          grep -w VERSION CMakeLists.txt | grep -v 'cmake_minimum_required' | awk '{ print $2 }' > cmake_v
+          grep version python/pytrexio/_version.py | tr -d '"' | awk '{ print $3 }' > python_v
+          grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
+          grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
+          diff configure_v cmake_v 
+          diff configure_v rust_v
+          diff configure_v ocaml_v
+
+      - name: install dependencies
+        run: |
+          apt-get update
+          apt-get install -y libhdf5-dev emacs libtool-bin valgrind python3 python3-pip python3-venv build-essential autoconf automake
+
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules 
+
+      - name: compile TREXIO
+        run: make -j2
+
+      - name: check TREXIO
+        run: make -j2 check
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: test-report-i686
+          path: test-suite.log
+
+      - name: create venv with swig 4.1
+        run: |
+          python3 -m venv trexio-venv
+          . trexio-venv/bin/activate
+          pip install swig==4.1
+
+      - name: install Python API
+        run: |
+          . trexio-venv/bin/activate
+          make python-install
+
+      - name: check Python API
+        run: |
+          . trexio-venv/bin/activate
+          make python-test
+
+      - name: maintainer clean
+        run: make maintainer-clean
+      
+      - name: reconfigure with debugging 
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules --enable-debug --enable-sanitizer
+      
+      - name: recompile TREXIO
+        run: make -j2
+      
+      - name: recheck TREXIO 
+        run: make -j2 check
+      
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
+        with:
+          name: test-report-i686-memory
+          path: test-suite.log
+      
+      - name: maintainer clean
+        run: make maintainer-clean
+
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
