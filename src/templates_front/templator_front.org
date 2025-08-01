@@ -5466,14 +5466,6 @@ trexio_delete_$group$ (trexio_t* const file)
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (file->mode != 'u') return TREXIO_SAFE_MODE;
 
-  /* Flush is required because the deleted group might still
-     be in RAM but not yet on disk. */
-
-  trexio_exit_code rc = trexio_flush(file);
-  if (rc != TREXIO_SUCCESS) {
-     return rc;
-  }
-
   switch (file->back_end) {
 
   case TREXIO_TEXT:
