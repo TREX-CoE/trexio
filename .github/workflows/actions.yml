@@ -162,22 +162,63 @@ jobs:
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
 
+      - name: Set up QEMU for multi-architecture support
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
 
-      - name: Run i686 tests in Docker container
+      - name: Create i686 compatible Dockerfile
         run: |
-          docker run --rm -v "$PWD:/workspace" -w /workspace i386/ubuntu:latest bash -c "
+          cat > Dockerfile.i686 << 'EOF'
+          FROM ubuntu:22.04
+          
+          # Install i386 architecture support
+          RUN dpkg --add-architecture i386 && \
+              apt-get update && \
+              apt-get install -y \
+                gcc-multilib \
+                g++-multilib \
+                libc6-dev:i386 \
+                libhdf5-dev \
+                emacs \
+                libtool-bin \
+                valgrind \
+                python3 \
+                python3-pip \
+                python3-venv \
+                python3-dev \
+                build-essential \
+                autoconf \
+                automake \
+                gfortran-multilib \
+                git \
+                pkg-config \
+                zlib1g-dev:i386
+          
+          # Set environment for 32-bit compilation
+          ENV CC="gcc -m32" \
+              FC="gfortran -m32" \
+              CFLAGS="-m32" \
+              FCFLAGS="-m32" \
+              LDFLAGS="-m32"
+          
+          WORKDIR /workspace
+          EOF
+
+      - name: Build i686 test container
+        run: docker build -f Dockerfile.i686 -t trexio-i686 .
+
+      - name: Run i686 tests in container
+        run: |
+          docker run --rm -v "$PWD:/workspace" trexio-i686 bash -c "
             set -xe
             
-            # Verify architecture
+            # Verify architecture setup
             echo 'Architecture verification:'
-            dpkg --print-architecture
-            uname -m
-            
-            # Install dependencies
-            apt-get update
-            apt-get install -y libhdf5-dev emacs libtool-bin valgrind python3 python3-pip python3-venv build-essential autoconf automake gfortran git
+            file /bin/bash
+            gcc -m32 -v 2>&1 | tail -1
+            python3 -c 'import platform; print(f\"Python: {platform.machine()} {platform.architecture()}\")'
             
             # Check versions
             echo 'Checking version consistency:'
@@ -190,10 +231,10 @@ jobs:
             diff configure_v rust_v
             diff configure_v ocaml_v
             
-            # Configure with autotools
-            echo 'Configuring with autotools:'
+            # Configure with autotools for 32-bit
+            echo 'Configuring with autotools for i686:'
             ./autogen.sh
-            ./configure --enable-silent-rules 
+            ./configure --enable-silent-rules --host=i686-linux-gnu
             
             # Compile TREXIO
             echo 'Compiling TREXIO:'
@@ -221,7 +262,7 @@ jobs:
             echo 'Testing debug build:'
             make maintainer-clean
             ./autogen.sh
-            ./configure --enable-silent-rules --enable-debug --enable-sanitizer
+            ./configure --enable-silent-rules --enable-debug --enable-sanitizer --host=i686-linux-gnu
             make -j2
             make -j2 check
             
