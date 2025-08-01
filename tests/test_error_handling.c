@@ -9,7 +9,7 @@
 
 static int test_invalid_arguments() {
     /* Test functions with invalid arguments to ensure proper error handling */
-    
+
     trexio_exit_code rc;
 
     /*================= START OF TEST ==================*/
@@ -63,7 +63,7 @@ static int test_invalid_arguments() {
 
 static int test_write_before_dimensions() {
     /* Test writing arrays before writing their dimensions */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -105,7 +105,7 @@ static int test_write_before_dimensions() {
 
 static int test_read_nonexistent_data() {
     /* Test reading data that doesn't exist */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -125,25 +125,13 @@ static int test_read_nonexistent_data() {
     assert(rc == TREXIO_SUCCESS);
 
     // Try to read data that doesn't exist - may return different error codes
-    int32_t nucleus_num;
-    rc = trexio_read_nucleus_num(file, &nucleus_num);
-    // Should fail - may return TREXIO_HAS_NOT or other error code
-
-    double coords[6];
-    rc = trexio_read_nucleus_coord(file, coords);
-    // Should fail - may return TREXIO_HAS_NOT or other error code
+    int32_t mo_num;
+    rc = trexio_read_mo_num(file, &mo_num);
+    assert (rc != TREXIO_SUCCESS);
 
     // Test has functions on non-existent data - results may vary
-    trexio_exit_code has_rc;
-    has_rc = trexio_has_nucleus_num(file);
-    (void)has_rc; // Suppress unused variable warning
-    // Should return TREXIO_HAS_NOT but implementation may vary
-    
-    has_rc = trexio_has_nucleus_coord(file);
-    // Should return TREXIO_HAS_NOT but implementation may vary
-    
-    has_rc = trexio_has_nucleus_charge(file);
-    // Should return TREXIO_HAS_NOT but implementation may vary
+    rc = trexio_has_mo_num(file);
+    assert (rc == TREXIO_HAS_NOT);
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -155,7 +143,7 @@ static int test_read_nonexistent_data() {
 
 static int test_write_to_readonly_file() {
     /* Test writing to a file opened in read-only mode */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -168,7 +156,7 @@ static int test_write_to_readonly_file() {
 
     // Write nucleus data first
     rc = trexio_write_nucleus_num(file, 2);
-    // May succeed or fail - just test the function exists
+    assert(rc == TREXIO_SUCCESS);
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -178,13 +166,13 @@ static int test_write_to_readonly_file() {
     assert(file != NULL);
     assert(rc == TREXIO_SUCCESS);
 
-    // Try to write - should fail with TREXIO_READONLY but may vary
-    rc = trexio_write_nucleus_num(file, 3);
-    // Should fail but error code may vary
+    // Try to write - should fail with TREXIO_READONLY
+    rc = trexio_write_mo_num(file, 3);
+    assert(rc == TREXIO_READONLY);
 
     double coords[6] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0};
     rc = trexio_write_nucleus_coord(file, coords);
-    // Should fail but error code may vary
+    assert(rc == TREXIO_READONLY);
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -196,7 +184,7 @@ static int test_write_to_readonly_file() {
 
 static int test_invalid_dimensions() {
     /* Test writing invalid dimensions (zero or negative) */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -224,10 +212,10 @@ static int test_invalid_dimensions() {
 
     // Valid dimensions should work (but may depend on implementation)
     rc = trexio_write_nucleus_num(file, 2);
-    // May succeed or fail depending on file state
+    assert (rc == TREXIO_SUCCESS);
 
     rc = trexio_write_basis_shell_num(file, 4);
-    // May succeed or fail depending on file state
+    assert (rc == TREXIO_SUCCESS);
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -239,7 +227,7 @@ static int test_invalid_dimensions() {
 
 static int test_double_write_attribute() {
     /* Test writing the same attribute twice */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -252,21 +240,21 @@ static int test_double_write_attribute() {
 
     // Write nucleus_num
     rc = trexio_write_nucleus_num(file, 2);
-    // May succeed or fail - just test function exists
+    assert (rc == TREXIO_SUCCESS);
 
     // Try to write it again - behavior may vary
     rc = trexio_write_nucleus_num(file, 3);
-    // May succeed, fail with ATTR_ALREADY_EXISTS, or other error
+    assert (rc == TREXIO_ATTR_ALREADY_EXISTS);
 
     // Write nucleus coordinates if possible
     double coords[6] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0};
     rc = trexio_write_nucleus_coord(file, coords);
-    // May succeed or fail depending on file state
+    assert (rc == TREXIO_SUCCESS);
 
     // Try to write coordinates again - behavior may vary
     double coords2[6] = {1.0, 1.0, 1.0, 2.0, 2.0, 2.0};
     rc = trexio_write_nucleus_coord(file, coords2);
-    // May succeed, fail with DSET_ALREADY_EXISTS, or other error
+    assert (rc == TREXIO_DSET_ALREADY_EXISTS);
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -278,7 +266,7 @@ static int test_double_write_attribute() {
 
 static int test_string_operations_edge_cases() {
     /* Test string operations with edge cases */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -292,18 +280,12 @@ static int test_string_operations_edge_cases() {
     // Test writing empty string
     char* empty_string = "";
     rc = trexio_write_basis_type(file, empty_string, (int32_t)strlen(empty_string));
-    // May succeed or fail - just test function exists
+    assert (rc != TREXIO_SUCCESS);
 
-    // Test reading back empty string if write succeeded
-    if (rc == TREXIO_SUCCESS) {
-        char read_string[100];
-        int32_t max_str_len = 100;
-        rc = trexio_read_basis_type(file, read_string, max_str_len);
-        // May succeed or fail
-        if (rc == TREXIO_SUCCESS) {
-            // String was read successfully
-        }
-    }
+    char read_string[100];
+    int32_t max_str_len = 100;
+    rc = trexio_read_basis_type(file, read_string, max_str_len);
+    assert (rc != TREXIO_SUCCESS);
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -333,7 +315,8 @@ static int test_string_operations_edge_cases() {
     // Test reading into too small buffer
     char small_buffer[10];
     rc = trexio_read_basis_type(file, small_buffer, 10);
-    // This might succeed with truncation or fail - implementation dependent
+    assert(rc == TREXIO_SUCCESS);
+    assert(small_buffer[9] == '\0');
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -345,7 +328,7 @@ static int test_string_operations_edge_cases() {
 
 static int test_backend_detection() {
     /* Test backend detection function */
-    
+
     /*================= START OF TEST ==================*/
 
     // Test has_backend function with actual backend constants
@@ -365,7 +348,7 @@ static int test_backend_detection() {
 
 static int test_int64_num_operations() {
     /* Test int64_num operations */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -376,10 +359,9 @@ static int test_int64_num_operations() {
     assert(file != NULL);
     assert(rc == TREXIO_SUCCESS);
 
-    // Write determinant data to make int64_num meaningful
-    int64_t dummy_value = 1000000LL;
-    rc = trexio_read_determinant_num_64(file, &dummy_value);
-    // This function may not work as expected - just test that it exists
+    // Write number of mos to make int64_num meaningful
+    rc = trexio_write_mo_num(file, 300);
+    assert(rc == TREXIO_SUCCESS);
 
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
@@ -392,7 +374,8 @@ static int test_int64_num_operations() {
     // Test get_int64_num function - correct type
     int32_t int64_num = 0;
     rc = trexio_get_int64_num(file, &int64_num);
-    // Function may succeed or fail - main goal is to test it exists
+    assert(rc == TREXIO_SUCCESS);
+    assert(int64_num == 5);
 
     // Test with NULL arguments
     rc = trexio_get_int64_num(NULL, &int64_num);
@@ -421,50 +404,75 @@ int main(){
     // Test invalid arguments
     printf("## Testing invalid arguments\n");
     rc = test_invalid_arguments();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test writing before dimensions
     printf("## Testing write before dimensions\n");
     rc = test_write_before_dimensions();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test reading non-existent data
     printf("## Testing read non-existent data\n");
     rc = test_read_nonexistent_data();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test writing to read-only file
     printf("## Testing write to read-only file\n");
     rc = test_write_to_readonly_file();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test invalid dimensions
     printf("## Testing invalid dimensions\n");
     rc = test_invalid_dimensions();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test double write attribute
     printf("## Testing double write attribute\n");
     rc = test_double_write_attribute();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test string operations edge cases
     printf("## Testing string operations edge cases\n");
     rc = test_string_operations_edge_cases();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test backend detection
     printf("## Testing backend detection\n");
     rc = test_backend_detection();
+    assert (rc == TREXIO_SUCCESS);
+
+    rc = system("rm -rf " TEST_FILE);
     assert (rc == 0);
 
     // Test int64_num operations
     printf("## Testing int64_num operations\n");
     rc = test_int64_num_operations();
-    assert (rc == 0);
+    assert (rc == TREXIO_SUCCESS);
 
     // Clean up
     rc = system("rm -rf " TEST_FILE);
+    assert (rc == 0);
 
     printf("# All error handling and edge case tests passed!\n");
     return 0;
