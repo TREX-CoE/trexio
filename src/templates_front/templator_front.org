@@ -301,15 +301,22 @@ typedef int32_t trexio_exit_code;
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifndef _WIN32
 #include <err.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
 #endif
 
 #ifdef _WIN32
 #include <windows.h>
+#include <io.h>
+#include <direct.h>
 #endif
 
 
@@ -1930,6 +1937,301 @@ def _inquire(file_name: str) -> bool:
         raise Error(rc)
    #+end_src
 
+** Portable file and directory operations
+
+   These functions provide portable file and directory operations 
+   without using system() calls or fork/exec, for better portability
+   and security.
+
+*** C
+
+   #+begin_src c :tangle prefix_front.h :exports none
+/* Portable file and directory operations */
+trexio_exit_code trexio_remove_file(const char* path);
+trexio_exit_code trexio_remove_directory_recursive(const char* path);
+trexio_exit_code trexio_copy_file(const char* source, const char* dest);
+trexio_exit_code trexio_copy_directory_recursive(const char* source, const char* dest);
+   #+end_src
+
+   #+begin_src c :tangle prefix_front.c
+
+/* Portable file removal */
+trexio_exit_code
+trexio_remove_file(const char* path)
+{
+  if (path == NULL || path[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+
+#ifdef _WIN32
+  if (DeleteFileA(path) == 0) {
+    DWORD error = GetLastError();
+    if (error != ERROR_FILE_NOT_FOUND) {
+      return TREXIO_FILE_ERROR;
+    }
+  }
+#else
+  if (unlink(path) != 0 && errno != ENOENT) {
+    return TREXIO_FILE_ERROR;
+  }
+#endif
+
+  return TREXIO_SUCCESS;
+}
+
+/* Portable recursive directory removal */
+trexio_exit_code
+trexio_remove_directory_recursive(const char* path)
+{
+  if (path == NULL || path[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+
+#ifdef _WIN32
+  WIN32_FIND_DATAA findData;
+  HANDLE hFind;
+  char searchPath[MAX_PATH];
+  char fullPath[MAX_PATH];
+  
+  int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", path);
+  if (ret < 0 || ret >= sizeof(searchPath)) return TREXIO_FILE_ERROR;
+  
+  hFind = FindFirstFileA(searchPath, &findData);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    do {
+      if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
+        ret = snprintf(fullPath, sizeof(fullPath), "%s\\%s", path, findData.cFileName);
+        if (ret < 0 || ret >= sizeof(fullPath)) {
+          FindClose(hFind);
+          return TREXIO_FILE_ERROR;
+        }
+        
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+          trexio_exit_code rc = trexio_remove_directory_recursive(fullPath);
+          if (rc != TREXIO_SUCCESS) {
+            FindClose(hFind);
+            return rc;
+          }
+        } else {
+          trexio_exit_code rc = trexio_remove_file(fullPath);
+          if (rc != TREXIO_SUCCESS) {
+            FindClose(hFind);
+            return rc;
+          }
+        }
+      }
+    } while (FindNextFileA(hFind, &findData) != 0);
+    FindClose(hFind);
+  }
+  
+  if (RemoveDirectoryA(path) == 0) {
+    DWORD error = GetLastError();
+    if (error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND) {
+      return TREXIO_FILE_ERROR;
+    }
+  }
+#else
+  DIR *dir = opendir(path);
+  if (dir) {
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+      if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+        char fullPath[PATH_MAX];
+        int ret = snprintf(fullPath, sizeof(fullPath), "%s/%s", path, entry->d_name);
+        if (ret < 0 || ret >= sizeof(fullPath)) {
+          closedir(dir);
+          return TREXIO_FILE_ERROR;
+        }
+        
+        struct stat statbuf;
+        if (stat(fullPath, &statbuf) == 0) {
+          if (S_ISDIR(statbuf.st_mode)) {
+            trexio_exit_code rc = trexio_remove_directory_recursive(fullPath);
+            if (rc != TREXIO_SUCCESS) {
+              closedir(dir);
+              return rc;
+            }
+          } else {
+            trexio_exit_code rc = trexio_remove_file(fullPath);
+            if (rc != TREXIO_SUCCESS) {
+              closedir(dir);
+              return rc;
+            }
+          }
+        }
+      }
+    }
+    closedir(dir);
+  }
+  
+  if (rmdir(path) != 0 && errno != ENOENT) {
+    return TREXIO_FILE_ERROR;
+  }
+#endif
+
+  return TREXIO_SUCCESS;
+}
+
+/* Portable file copy */
+trexio_exit_code
+trexio_copy_file(const char* source, const char* dest)
+{
+  if (source == NULL || source[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+  
+  if (dest == NULL || dest[0] == '\0') {
+    return TREXIO_INVALID_ARG_2;
+  }
+
+#ifdef _WIN32
+  if (!CopyFileA(source, dest, FALSE)) {
+    return TREXIO_FILE_ERROR;
+  }
+#else
+  FILE *src = fopen(source, "rb");
+  if (!src) return TREXIO_FILE_ERROR;
+  
+  FILE *dst = fopen(dest, "wb");
+  if (!dst) {
+    fclose(src);
+    return TREXIO_FILE_ERROR;
+  }
+  
+  char buffer[8192];
+  size_t bytes;
+  while ((bytes = fread(buffer, 1, sizeof(buffer), src)) > 0) {
+    if (fwrite(buffer, 1, bytes, dst) != bytes) {
+      fclose(src);
+      fclose(dst);
+      unlink(dest);
+      return TREXIO_FILE_ERROR;
+    }
+  }
+  
+  fclose(src);
+  fclose(dst);
+#endif
+
+  return TREXIO_SUCCESS;
+}
+
+/* Portable recursive directory copy */
+trexio_exit_code
+trexio_copy_directory_recursive(const char* source, const char* dest)
+{
+  if (source == NULL || source[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+  
+  if (dest == NULL || dest[0] == '\0') {
+    return TREXIO_INVALID_ARG_2;
+  }
+
+#ifdef _WIN32
+  if (CreateDirectoryA(dest, NULL) == 0) {
+    DWORD error = GetLastError();
+    if (error != ERROR_ALREADY_EXISTS) {
+      return TREXIO_FILE_ERROR;
+    }
+  }
+  
+  WIN32_FIND_DATAA findData;
+  HANDLE hFind;
+  char searchPath[MAX_PATH];
+  char sourcePath[MAX_PATH];
+  char destPath[MAX_PATH];
+  
+  int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", source);
+  if (ret < 0 || ret >= sizeof(searchPath)) return TREXIO_FILE_ERROR;
+  
+  hFind = FindFirstFileA(searchPath, &findData);
+  if (hFind == INVALID_HANDLE_VALUE) {
+    return TREXIO_FILE_ERROR;
+  }
+  
+  do {
+    if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
+      ret = snprintf(sourcePath, sizeof(sourcePath), "%s\\%s", source, findData.cFileName);
+      if (ret < 0 || ret >= sizeof(sourcePath)) {
+        FindClose(hFind);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      ret = snprintf(destPath, sizeof(destPath), "%s\\%s", dest, findData.cFileName);
+      if (ret < 0 || ret >= sizeof(destPath)) {
+        FindClose(hFind);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        trexio_exit_code rc = trexio_copy_directory_recursive(sourcePath, destPath);
+        if (rc != TREXIO_SUCCESS) {
+          FindClose(hFind);
+          return rc;
+        }
+      } else {
+        trexio_exit_code rc = trexio_copy_file(sourcePath, destPath);
+        if (rc != TREXIO_SUCCESS) {
+          FindClose(hFind);
+          return rc;
+        }
+      }
+    }
+  } while (FindNextFileA(hFind, &findData) != 0);
+  
+  FindClose(hFind);
+#else
+  if (mkdir(dest, 0755) != 0 && errno != EEXIST) {
+    return TREXIO_FILE_ERROR;
+  }
+  
+  DIR *dir = opendir(source);
+  if (!dir) return TREXIO_FILE_ERROR;
+  
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+      char sourcePath[PATH_MAX];
+      char destPath[PATH_MAX];
+      
+      int ret = snprintf(sourcePath, sizeof(sourcePath), "%s/%s", source, entry->d_name);
+      if (ret < 0 || ret >= sizeof(sourcePath)) {
+        closedir(dir);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      ret = snprintf(destPath, sizeof(destPath), "%s/%s", dest, entry->d_name);
+      if (ret < 0 || ret >= sizeof(destPath)) {
+        closedir(dir);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      struct stat statbuf;
+      if (stat(sourcePath, &statbuf) == 0) {
+        if (S_ISDIR(statbuf.st_mode)) {
+          trexio_exit_code rc = trexio_copy_directory_recursive(sourcePath, destPath);
+          if (rc != TREXIO_SUCCESS) {
+            closedir(dir);
+            return rc;
+          }
+        } else {
+          trexio_exit_code rc = trexio_copy_file(sourcePath, destPath);
+          if (rc != TREXIO_SUCCESS) {
+            closedir(dir);
+            return rc;
+          }
+        }
+      }
+    }
+  }
+  closedir(dir);
+#endif
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
 ** File copy
 
    ~trexio_cp~ copies a TREXIO file using =cp=. The destination file
@@ -1993,50 +2295,14 @@ trexio_cp(const char* source, const char* dest)
     return TREXIO_FILE_ERROR;
   }
 
-  /* Call cp */
-
-#ifdef _WIN32
-  /* Windows implementation */
-
-  char command[4096];
-  int ret;
-  
+  /* Pure C implementation for copying files and directories */
   if (back_end_local == TREXIO_TEXT) {
-    /* Directory -> use robocopy */
-    ret = snprintf(command, sizeof(command),
-                   "robocopy \"%s\" \"%s\" /E /NFL /NDL /NJH /NJS /NC /NS > nul",
-                   source, dest);
-    if (ret < 0 || ret >= sizeof(command)) return TREXIO_FILE_ERROR;
-    // robocopy returns codes >= 8 for failure
-    if (system(command) >= 8) return TREXIO_FILE_ERROR;
+    /* Directory -> use recursive directory copy */
+    return trexio_copy_directory_recursive(source, dest);
   } else {
-    /* File -> use CopyFileA */
-    if (!CopyFileA(source, dest, FALSE)) {
-      return TREXIO_FILE_ERROR;
-    }
+    /* File -> use file copy */
+    return trexio_copy_file(source, dest);
   }
-
-#else
-  /* Unix implementation */
-
-#ifndef CP_COMMAND
-#define CP_COMMAND "cp", "-r"
-#endif
-
-  pid_t pid = fork();
-  if (pid == 0) {
-    execlp("cp", CP_COMMAND, source, dest, (char *)0);
-  } else if (pid < 0) {
-    return TREXIO_FILE_ERROR;
-  } else {
-    int wstatus;
-    pid_t ws = waitpid( pid, &wstatus, 0);
-    if (ws != pid || !WIFEXITED(wstatus) )
-      return TREXIO_FILE_ERROR;
-  }
-#endif
-
-  return TREXIO_SUCCESS;
 }
    #+end_src
 

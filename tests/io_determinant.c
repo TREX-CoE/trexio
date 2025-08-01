@@ -334,7 +334,7 @@ int main(){
 
   int mo_nums[5] = {10, 20, 40, 100, 300};
   for (int i=0 ; i<5 ; ++i) {
-    int rc = system(RM_COMMAND);
+    int rc = RM_COMMAND_RESULT;
     assert (rc == 0);
 
   // check the first write attempt (SIZE elements written in N_CHUNKS chunks)
@@ -346,7 +346,7 @@ int main(){
     test_write_determinant (TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE, mo_nums[i]);
     test_read_determinant  (TREXIO_FILE, TEST_BACKEND, (int64_t) SIZE);
 
-    rc = system(RM_COMMAND);
+    rc = RM_COMMAND_RESULT;
     assert (rc == 0);
   }
 
