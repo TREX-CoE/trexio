@@ -267,7 +267,7 @@ AC_C_INLINE
 AC_CHECK_FUNCS([memset mkdir strerror])
 
 if test "x$enable_maintainer_mode" = "xyes"; then
-  TREXIO_DEVEL=" -- Developer mode"
+  TREXIO_DEVEL=" -- Maintainer mode"
 else
   TREXIO_DEVEL=""
 fi
