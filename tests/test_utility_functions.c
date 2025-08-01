@@ -115,7 +115,7 @@ static int test_bitfield_operations() {
     /*================= START OF TEST ==================*/
 
     // Allocate bitfield
-    bit_list = calloc(N_int, sizeof(bitfield_t));
+    bit_list = calloc(2*N_int, sizeof(bitfield_t));
     assert(bit_list != NULL);
 
     // test trexio_to_bitfield_list
@@ -133,12 +133,12 @@ static int test_bitfield_operations() {
     }
 
     // Test with spin-separated lists - just check function exists and runs
-    int32_t list_up[5], list_dn[5];
+    int32_t list_up[10] = {0, 1, 105, 110};
+    int32_t list_dn[10] = {0, 1, 106, 109, 119};
     int32_t occ_num_up = 0, occ_num_dn = 0;
 
     rc = trexio_to_orbital_list_up_dn(N_int, bit_list, list_up, list_dn, &occ_num_up, &occ_num_dn);
-    // Function may succeed or fail depending on implementation details
-    // Main goal is to test that it doesn't crash
+    assert (rc == TREXIO_SUCCESS);
 
     // Test safe versions with proper bounds checking - these may fail with specific error codes
     int32_t safe_list[10];
@@ -150,7 +150,7 @@ static int test_bitfield_operations() {
         assert(safe_num <= 10); // Should not exceed bounds
     }
 
-    int32_t safe_up[5], safe_dn[5];
+    int32_t safe_up[10], safe_dn[10];
     int32_t safe_up_num = 0, safe_dn_num = 0;
 
     rc = trexio_safe_to_orbital_list_up_dn(N_int, bit_list, 1, safe_up, 5, safe_dn, 5, &safe_up_num, &safe_dn_num);
