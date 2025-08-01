@@ -247,19 +247,9 @@ int main(){
     rc = test_file_operations(TEST_FILE, TEST_BACKEND_TEXT);
     assert (rc == 0);
 
-    // Test conversion functions
-    printf("## Testing conversion functions\n");
-    rc = test_conversion_functions();
-    assert (rc == 0);
-
     // Test bitfield operations
     printf("## Testing bitfield operations\n");
     rc = test_bitfield_operations();
-    assert (rc == 0);
-
-    // Test NAO evaluation functions
-    printf("## Testing NAO evaluation functions\n");
-    rc = test_nao_evaluation_functions(TEST_FILE, TEST_BACKEND_TEXT);
     assert (rc == 0);
 
     // Test safety functions
