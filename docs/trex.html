@@ -1,0 +1,3496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-08-01 Fri 10:48 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Data stored in TREXIO</title>
+<meta name="author" content="TREX-CoE" />
+<meta name="generator" content="Org Mode" />
+<style>
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+<link rel="stylesheet" title="Standard" href="trexio.css" type="text/css" />
+
+<script src="org-info.js">
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&amp;dn=gpl-3.0.txt GPL-v3-or-Later
+// @license-end
+</script>
+
+<script>
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&amp;dn=gpl-3.0.txt GPL-v3-or-Later
+org_html_manager.set("TOC_DEPTH", "4");
+org_html_manager.set("LINK_HOME", "index.html");
+org_html_manager.set("LINK_UP", "");
+org_html_manager.set("LOCAL_TOC", "1");
+org_html_manager.set("VIEW_BUTTONS", "0");
+org_html_manager.set("MOUSE_HINT", "underline");
+org_html_manager.set("FIXED_TOC", "0");
+org_html_manager.set("TOC", "0");
+org_html_manager.set("VIEW", "info");
+org_html_manager.setup();  // activate after the parameters are set
+// @license-end
+</script>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href=""> UP </a>
+ |
+ <a accesskey="H" href="index.html"> HOME </a>
+</div><div id="content" class="content">
+<h1 class="title">Data stored in TREXIO</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org0d71f3b">1. Metadata (metadata group)</a></li>
+<li><a href="#org080c425">2. System</a>
+<ul>
+<li><a href="#org31e4112">2.1. Nucleus (nucleus group)</a></li>
+<li><a href="#org62ef396">2.2. Cell (cell group)</a></li>
+<li><a href="#org1c1a18f">2.3. Periodic boundary calculations (pbc group)</a></li>
+<li><a href="#orga5998b1">2.4. Electron (electron group)</a></li>
+<li><a href="#org47cdc0e">2.5. Ground or excited states (state group)</a></li>
+</ul>
+</li>
+<li><a href="#orga839d95">3. Basis functions</a>
+<ul>
+<li><a href="#org0ba37f2">3.1. Basis set (basis group)</a>
+<ul>
+<li><a href="#org7a3cdef">3.1.1. Gaussian- and Slater-type orbitals</a></li>
+<li><a href="#orgb01a359">3.1.2. Numerical orbitals</a></li>
+<li><a href="#org1e1024b">3.1.3. Plane waves</a></li>
+<li><a href="#orgbcdecd3">3.1.4. Oscillating orbitals</a></li>
+<li><a href="#orgccd8b8a">3.1.5. Data definitions</a></li>
+<li><a href="#org10701e9">3.1.6. Example</a></li>
+</ul>
+</li>
+<li><a href="#org6c70205">3.2. Effective core potentials (ecp group)</a>
+<ul>
+<li><a href="#orged7cba8">3.2.1. Example</a></li>
+</ul>
+</li>
+<li><a href="#orga89e819">3.3. Numerical integration grid (grid group)</a></li>
+</ul>
+</li>
+<li><a href="#orgfb1b0b1">4. Orbitals</a>
+<ul>
+<li><a href="#orgd1f0452">4.1. Atomic orbitals (ao group)</a>
+<ul>
+<li><a href="#ao_one_e">4.1.1. One-electron integrals (<code>ao_1e_int</code> group)</a></li>
+<li><a href="#ao_two_e">4.1.2. Two-electron integrals (<code>ao_2e_int</code> group)</a></li>
+</ul>
+</li>
+<li><a href="#orgc407dea">4.2. Molecular orbitals (mo group)</a>
+<ul>
+<li><a href="#org1b5150e">4.2.1. One-electron integrals (<code>mo_1e_int</code> group)</a></li>
+<li><a href="#orge107a20">4.2.2. Two-electron integrals (<code>mo_2e_int</code> group)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgdd6f6a5">5. Multi-determinant information</a>
+<ul>
+<li><a href="#org15a5c69">5.1. Slater determinants (determinant group)</a></li>
+<li><a href="#orgf5b8254">5.2. Configuration state functions (csf group)</a></li>
+<li><a href="#org112a02b">5.3. Amplitudes (amplitude group)</a></li>
+<li><a href="#org5171eaa">5.4. Reduced density matrices (rdm group)</a></li>
+</ul>
+</li>
+<li><a href="#orgf23082c">6. Correlation factors</a>
+<ul>
+<li><a href="#orgcaad28e">6.1. Jastrow factor (jastrow group)</a>
+<ul>
+<li><a href="#org445c47a">6.1.1. CHAMP</a></li>
+<li><a href="#orgde075d1">6.1.2. Mu</a></li>
+<li><a href="#org98c6350">6.1.3. Table of values</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org3df54ea">7. Quantum Monte Carlo data (qmc group)</a></li>
+</ul>
+</div>
+</div>
+<p>
+For simplicity, the singular form is always used for the names of
+groups and attributes, and all data are stored in atomic units.
+The dimensions of the arrays in the tables below are given in
+column-major order (as in Fortran), and the ordering of the dimensions
+is reversed in the produced <code>trex.json</code> configuration file as the
+library is written in C.
+</p>
+
+<p>
+Dimensions are given both in row-major <code>[]</code> and column-major <code>()</code>
+formats. Pick the one adapted to the programming language in which
+you use TREXIO (Numpy is by default row-major, and Fortran is column-major).
+In the column-major representation, <code>A(i,j)</code> and <code>A(i+1,j)</code> are
+contiguous in memory. In the row-major representation, <code>A[i,j]</code> and
+<code>A[i,j+1]</code> are contiguous.
+</p>
+
+<div id="outline-container-org0d71f3b" class="outline-2">
+<h2 id="org0d71f3b"><span class="section-number-2">1.</span> Metadata (metadata group)</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+As we expect TREXIO files to be archived in open-data repositories,
+we give the possibility to the users to store some metadata inside
+the files. We propose to store the list of names of the codes which
+have participated to the creation of the file, a list of authors of
+the file, and a textual description.
+</p>
+
+<table id="orgb8415b1" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>code_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of codes used to produce the file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>code</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left"><code>[metadata.code_num]</code></td>
+<td class="org-left"><code>(metadata.code_num)</code></td>
+<td class="org-left">Names of the codes used</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>author_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of authors of the file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>author</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left"><code>[metadata.author_num]</code></td>
+<td class="org-left"><code>(metadata.author_num)</code></td>
+<td class="org-left">Names of the authors of the file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>package_version</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">TREXIO version used to produce the file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>description</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Text describing the content of file</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>unsafe</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left"><code>1</code>: true, <code>0</code>: false</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<b><b>Note:</b></b> The <code>unsafe</code> attribute of the <code>metadata</code> group indicates
+whether the file has been previously opened with <code>'u'</code> mode.  It is
+automatically written in the file upon the first unsafe opening.  If
+the user has checked that the TREXIO file is valid (e.g. using
+<code>trexio-tools</code>) after unsafe operations, then the <code>unsafe</code> attribute
+value can be manually overwritten (in unsafe mode) from <code>1</code> to <code>0</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org080c425" class="outline-2">
+<h2 id="org080c425"><span class="section-number-2">2.</span> System</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org31e4112" class="outline-3">
+<h3 id="org31e4112"><span class="section-number-3">2.1.</span> Nucleus (nucleus group)</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+The nuclei are considered as fixed point charges. Coordinates are
+given in Cartesian \((x,y,z)\) format.
+</p>
+
+<table id="org1b5a163" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of nuclei</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>charge</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[nucleus.num]</code></td>
+<td class="org-left"><code>(nucleus.num)</code></td>
+<td class="org-left">Charges of the nuclei</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coord</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[nucleus.num, 3]</code></td>
+<td class="org-left"><code>(3, nucleus.num)</code></td>
+<td class="org-left">Coordinates of the atoms</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>label</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left"><code>[nucleus.num]</code></td>
+<td class="org-left"><code>(nucleus.num)</code></td>
+<td class="org-left">Atom labels</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>point_group</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Symmetry point group</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>repulsion</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Nuclear repulsion energy</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org62ef396" class="outline-3">
+<h3 id="org62ef396"><span class="section-number-3">2.2.</span> Cell (cell group)</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+3 Lattice vectors to define a box containing the system, for example
+used in periodic calculations.
+</p>
+
+<table id="orgca72fc0" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>a</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[3]</code></td>
+<td class="org-left"><code>(3)</code></td>
+<td class="org-left">First real space lattice vector</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>b</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[3]</code></td>
+<td class="org-left"><code>(3)</code></td>
+<td class="org-left">Second real space lattice vector</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>c</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[3]</code></td>
+<td class="org-left"><code>(3)</code></td>
+<td class="org-left">Third real space lattice vector</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>g_a</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[3]</code></td>
+<td class="org-left"><code>(3)</code></td>
+<td class="org-left">First reciprocal space lattice vector</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>g_b</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[3]</code></td>
+<td class="org-left"><code>(3)</code></td>
+<td class="org-left">Second reciprocal space lattice vector</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>g_c</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[3]</code></td>
+<td class="org-left"><code>(3)</code></td>
+<td class="org-left">Third reciprocal space lattice vector</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>two_pi</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left"><code>0</code> or <code>1</code>. If <code>two_pi=1</code>, \(2\pi\) is included in the reciprocal vectors.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org1c1a18f" class="outline-3">
+<h3 id="org1c1a18f"><span class="section-number-3">2.3.</span> Periodic boundary calculations (pbc group)</h3>
+<div class="outline-text-3" id="text-2-3">
+<table id="orge2410d5" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>periodic</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left"><code>1</code>: true or <code>0</code>: false</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>k_point_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of $k$-points</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>k_point</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[3]</code></td>
+<td class="org-left"><code>(3)</code></td>
+<td class="org-left">$k$-point sampling</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>k_point_weight</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[pbc.k_point_num]</code></td>
+<td class="org-left"><code>(pbc.k_point_num)</code></td>
+<td class="org-left">$k$-point weight</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>madelung</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Madelung correction of the Ewald probe charge method</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-orga5998b1" class="outline-3">
+<h3 id="orga5998b1"><span class="section-number-3">2.4.</span> Electron (electron group)</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+The chemical system consists of nuclei and electrons, where the
+nuclei are considered as fixed point charges with Cartesian
+coordinates.  The wave function is stored in the spin-free
+formalism, and therefore, it is necessary for the user to
+explicitly store the number of electrons with spin up
+(\(N_\uparrow\)) and spin down (\(N_\downarrow\)).  These numbers
+correspond to the normalization of the spin-up and spin-down
+single-particle reduced density matrices.
+</p>
+
+<p>
+We consider wave functions expressed in the spin-free formalism, where
+the number of &uarr; and &darr; electrons is fixed.
+</p>
+
+
+<table id="orgd16393c" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of electrons</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>up_num</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of &uarr;-spin electrons</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>dn_num</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of &darr;-spin electrons</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org47cdc0e" class="outline-3">
+<h3 id="org47cdc0e"><span class="section-number-3">2.5.</span> Ground or excited states (state group)</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+This group contains information about excited states. Since only a
+single state can be stored in a TREXIO file, it is possible to store
+in the main TREXIO file the names of auxiliary files containing the
+information of the other states.
+</p>
+
+<p>
+The <code>file_name</code> and <code>label</code> arrays have to be written only for the
+main file, e.g. the one containing the ground state wave function
+together with the basis set parameters, molecular orbitals,
+integrals, etc.
+The <code>id</code> and <code>current_label</code> attributes need to be specified for each file.
+</p>
+
+<table id="org1259888" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of states (including the ground state)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>id</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Index of the current state (0 is ground state)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>energy</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Energy of the current state</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>current_label</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Label of the current state</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>label</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left"><code>[state.num]</code></td>
+<td class="org-left"><code>(state.num)</code></td>
+<td class="org-left">Labels of all states</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>file_name</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left"><code>[state.num]</code></td>
+<td class="org-left"><code>(state.num)</code></td>
+<td class="org-left">Names of the TREXIO files linked to the current one (i.e. containing data for other states)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga839d95" class="outline-2">
+<h2 id="orga839d95"><span class="section-number-2">3.</span> Basis functions</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org0ba37f2" class="outline-3">
+<h3 id="org0ba37f2"><span class="section-number-3">3.1.</span> Basis set (basis group)</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+Different computational chemistry codes apply normalization at
+various levels. The normalization of basis functions requires the
+evaluation of overlap integrals, which might not always be
+supported by the client software. For this reason, normalization
+constants should be explicitly provided in the TREXIO files to
+ensure portability and completeness.
+</p>
+</div>
+
+<div id="outline-container-org7a3cdef" class="outline-4">
+<h4 id="org7a3cdef"><span class="section-number-4">3.1.1.</span> Gaussian- and Slater-type orbitals</h4>
+<div class="outline-text-4" id="text-3-1-1">
+<p>
+We consider here basis functions centered on nuclei. It is
+therefore possible to introduce <b>dummy atoms</b> (artificial centers
+with no physical meaning) solely for the purpose of placing basis
+functions at arbitrary locations in space.
+</p>
+
+<p>
+The atomic basis set is defined as a list of shells. Each shell
+\(s\) is centered on a point \(\mathbf{R}_A\), associated with a given
+angular momentum \(\ell_s\), and characterized by a radial function
+\(R_s(\mathbf{r})\). Note that since the angular functions are
+defined as regular solid harmonics that include the \(r^{\ell_s}\) factor,
+the radial functions in TREXIO differ from the textbook definition
+by a factor of \(r^{-\ell_s}\).
+</p>
+
+<p>
+The radial function is a linear combination of
+\(N_{\text{prim}}\) <b>primitive</b> functions. These primitives may be
+of Slater-type or Gaussian-type, and are parameterized by
+exponents \(\gamma_{ks}\) and contraction coefficients \(a_{ks}\).
+</p>
+
+<p>
+Slater orbitals are written as:
+</p>
+
+<p>
+\[
+    R_s^{\text{STO}}(\mathbf{r}) = \mathcal{N}_s  \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s-1-\ell_s}
+\sum_{k=1}^{N_{\text{prim}}}
+f_{ks}\,a_{ks}\,
+\exp\left( -\zeta_{ks} \left| \mathbf{r} - \mathbf{R}_A \right| \right)
+    \]
+</p>
+
+<p>
+Gaussian-type orbitals (GTOs) are usually defined as:
+</p>
+
+<p>
+\[
+    R_s^{\text{GTO}}(\mathbf{r}) = \mathcal{N}_s
+    \sum_{k=1}^{N_{\text{prim}}} f_{ks} \, a_{ks}\,
+    \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right|^2 \right)
+    \]
+</p>
+
+<p>
+GTO-based codes usually use <b>spherically pure</b> Gaussians, in which
+case the radial prefactor exponent is zero, as the
+\(r^{\ell_s}\) factor is already included in the solid harmonics.
+</p>
+
+<p>
+Standard basis sets assume that the primitive functions are
+normalized. In that case, a normalization constant \(f_{ks}\) must
+be computed and applied to each primitive. This normalization
+constant usually depends on the exponent and on the quantum
+numbers \(n\) and \(\ell\). If this normalization is not required,
+then \(f_{ks} = 1\).
+</p>
+
+<p>
+Similarly, some codes expect the contracted basis functions
+\(R_s(\mathbf{r})\) to be normalized. In this case, an additional
+normalization factor \(\mathcal{N}_s\) must be computed. If the
+full basis function is not normalized, then \(\mathcal{N}_s = 1\).
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgb01a359" class="outline-4">
+<h4 id="orgb01a359"><span class="section-number-4">3.1.2.</span> Numerical orbitals</h4>
+<div class="outline-text-4" id="text-3-1-2">
+<p>
+TREXIO supports numerical atom centered orbitals. The implementation is
+based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular
+simulations with numeric atom-centered orbitals; Computer Physics
+Communications 2009]. These orbitals are
+defined by the atom they are centered on, their angular momentum and a
+radial function \(R_s\), which is of the form
+\[
+    R_s(\mathbf{r}) = \mathcal{N}_s \frac{u_i(\mathbf{r})}{r^{-n_s}}.
+    \]
+Where \(u_i(\mathbf{r})\) is numerically tabulated on a dense logarithmic
+grid. It is constructed to vanish for any \(\mathbf{r}\)
+outside of the grid. The reference points are stored in <code>nao_grid_r</code>
+and <code>nao_grid_phi</code>. Additionaly, a separate spline for the first and second
+derivative of \(u(\mathbf{r})\) can be stored in <code>nao_grid_grad</code> and <code>nao_grid_lap</code>.
+Storing them in this form allows to calculate the actual first and
+second derivatives easily as follows:
+</p>
+
+<p>
+\[
+      \frac{\partial \phi}{\partial x} = \frac{x}{r^2}\left( u^\prime\left(r\right) - \frac{u\left(r\right)}{r}\right)
+    \]
+\[
+      \frac{\partial^2 \phi}{\partial x^2} = \frac{1}{r^3}\left(x^2 u^{\prime\prime}(r) + \left( 3x^2-r^2\right) \left( \frac{u(r)}{r^2} - \frac{u'(r)}{r}\right) \right)
+    \]
+</p>
+
+<p>
+The index of the first data point for each shell is stored in
+<code>nao_grid_start</code>, the number of data points per spline is stored
+in <code>nao_grid_size</code> for convenience.
+</p>
+
+<p>
+What kind of spline is used can be provided in the <code>interpolator_kind</code> field.
+For example, FHI-aims uses a cubic spline, so the <code>interpolator_kind</code> is
+\"Polynomial\" and the <code>interp_coeff_cnt</code> is \(4\). In this case, the first
+interpolation coefficient per data point is the absolute term, the second is for
+the linear term etc.
+The interpolation coefficients for the wave function are given in the
+ <code>interpolator_phi</code> array. The <code>interpolator_grad</code> and <code>interpolator_lap</code>
+arrays provide a spline for the gradient and Laplacian, respectively.
+The argument passed to the interpolants is on the logarithmic scale of
+the reference points: If the argument is an integer \(i\), the interpolant
+will return the value of \(u(\mathbf{r})\) at the $i$th reference point.
+A radius is converted to this scale by (note the zero-indexing)
+\[
+    i_{\log} = \frac{1}{c} \cdot \log \left( \frac{r}{r_0} \right)
+    \]
+where
+\[
+    c = \log\left(\frac{r_1}{r_0}\right)
+    \]
+For convenience, this conversion and functions to evaluate the splines
+are provided with trexio. Since these implementations are not adapted to
+a specific software architecture, a programm using these orbitals should
+reimplement them with consideration for its specific needs.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1e1024b" class="outline-4">
+<h4 id="org1e1024b"><span class="section-number-4">3.1.3.</span> Plane waves</h4>
+<div class="outline-text-4" id="text-3-1-3">
+<p>
+A plane wave is defined as
+</p>
+
+<p>
+\[
+       \chi_j(\mathbf{r}) = \exp \left( -i \mathbf{G}_j \cdot \mathbf{r} \right)
+    \]
+</p>
+
+<p>
+The basis set is defined as the array of $k$-points in the
+reciprocal space \(\mathbf{G}_j\), defined in the <code>pbc</code> group. The
+kinetic energy cutoff <code>e_cut</code> is the only input data relevant to
+plane waves.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgbcdecd3" class="outline-4">
+<h4 id="orgbcdecd3"><span class="section-number-4">3.1.4.</span> Oscillating orbitals</h4>
+<div class="outline-text-4" id="text-3-1-4">
+<p>
+Basis functions can be made oscillating as
+\[
+    R_s(\mathbf{r}) = \mathcal{N}_s \vert\mathbf{r}-\mathbf{R}_A\vert^{n_s}
+    \sum_{k=1}^{N_{\text{prim}}} a_{ks}\, f_{ks}(\gamma_{ks},p)\,
+    \exp \left( - \gamma_{ks}
+    \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right)\, \cos \left( \beta_{ks} \vert \mathbf{r}-\mathbf{R}_A \vert ^q \right)
+    \]
+</p>
+
+<p>
+Oscillation kind can be:
+</p>
+<ul class="org-ul">
+<li><code>Cos1</code> for \(q=1\)</li>
+<li><code>Cos2</code> for \(q=2\)</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgccd8b8a" class="outline-4">
+<h4 id="orgccd8b8a"><span class="section-number-4">3.1.5.</span> Data definitions</h4>
+<div class="outline-text-4" id="text-3-1-5">
+<table id="org34b9a9e" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>type</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>prim_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Total number of primitives</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>shell_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Total number of shells</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nao_grid_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Total number of grid points for numerical orbitals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>interp_coeff_cnt</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of coefficients for the numerical orbital interpolator</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nucleus_index</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[basis.shell_num]</code></td>
+<td class="org-left"><code>(basis.shell_num)</code></td>
+<td class="org-left">One-to-one correspondence between shells and atomic indices</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>shell_ang_mom</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>[basis.shell_num]</code></td>
+<td class="org-left"><code>(basis.shell_num)</code></td>
+<td class="org-left">One-to-one correspondence between shells and angular momenta</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>shell_factor</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.shell_num]</code></td>
+<td class="org-left"><code>(basis.shell_num)</code></td>
+<td class="org-left">Normalization factor of each shell (\(\mathcal{N}_s\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>r_power</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>[basis.shell_num]</code></td>
+<td class="org-left"><code>(basis.shell_num)</code></td>
+<td class="org-left">Power to which \(r\) is raised (\(n_s\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nao_grid_start</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[basis.shell_num]</code></td>
+<td class="org-left"><code>(basis.shell_num)</code></td>
+<td class="org-left">Index of the first data point for a given numerical orbital</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nao_grid_size</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left"><code>[basis.shell_num]</code></td>
+<td class="org-left"><code>(basis.shell_num)</code></td>
+<td class="org-left">Number of data points per numerical orbital</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>shell_index</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[basis.prim_num]</code></td>
+<td class="org-left"><code>(basis.prim_num)</code></td>
+<td class="org-left">One-to-one correspondence between primitives and shell index</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>exponent</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.prim_num]</code></td>
+<td class="org-left"><code>(basis.prim_num)</code></td>
+<td class="org-left">Exponents of the primitives (\(\gamma_{ks}\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>exponent_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.prim_num]</code></td>
+<td class="org-left"><code>(basis.prim_num)</code></td>
+<td class="org-left">Imaginary part of the exponents of the primitives (\(\gamma_{ks}\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coefficient</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.prim_num]</code></td>
+<td class="org-left"><code>(basis.prim_num)</code></td>
+<td class="org-left">Coefficients of the primitives (\(a_{ks}\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coefficient_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.prim_num]</code></td>
+<td class="org-left"><code>(basis.prim_num)</code></td>
+<td class="org-left">Imaginary part of the coefficients of the primitives (\(a_{ks}\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>oscillation_arg</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.prim_num]</code></td>
+<td class="org-left"><code>(basis.prim_num)</code></td>
+<td class="org-left">Additional argument to have oscillating orbitals (\(\beta_{ks}\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>oscillation_kind</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Kind of Oscillating function:"Cos1" or "Cos2"</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>prim_factor</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.prim_num]</code></td>
+<td class="org-left"><code>(basis.prim_num)</code></td>
+<td class="org-left">Normalization coefficients for the primitives (\(f_{ks}\))</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>e_cut</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Energy cut-off for plane-wave calculations</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nao_grid_radius</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.nao_grid_num]</code></td>
+<td class="org-left"><code>(basis.nao_grid_num)</code></td>
+<td class="org-left">Radii of grid points for numerical orbitals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nao_grid_phi</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.nao_grid_num]</code></td>
+<td class="org-left"><code>(basis.nao_grid_num)</code></td>
+<td class="org-left">Wave function values for numerical orbitals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nao_grid_grad</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.nao_grid_num]</code></td>
+<td class="org-left"><code>(basis.nao_grid_num)</code></td>
+<td class="org-left">Radial gradient of numerical orbitals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nao_grid_lap</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.nao_grid_num]</code></td>
+<td class="org-left"><code>(basis.nao_grid_num)</code></td>
+<td class="org-left">Laplacian of numerical orbitals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>interpolator_kind</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Kind of spline, e.g. "Polynomial"</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>interpolator_phi</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.nao_grid_num, basis.interp_coeff_cnt]</code></td>
+<td class="org-left"><code>(basis.interp_coeff_cnt, basis.nao_grid_num)</code></td>
+<td class="org-left">Coefficients for numerical orbital interpolation function</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>interpolator_grad</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.nao_grid_num, basis.interp_coeff_cnt]</code></td>
+<td class="org-left"><code>(basis.interp_coeff_cnt, basis.nao_grid_num)</code></td>
+<td class="org-left">Coefficients for numerical orbital gradient interpolation function</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>interpolator_lap</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[basis.nao_grid_num, basis.interp_coeff_cnt]</code></td>
+<td class="org-left"><code>(basis.interp_coeff_cnt, basis.nao_grid_num)</code></td>
+<td class="org-left">Coefficients for numerical orbital laplacian interpolation function</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org10701e9" class="outline-4">
+<h4 id="org10701e9"><span class="section-number-4">3.1.6.</span> Example</h4>
+<div class="outline-text-4" id="text-3-1-6">
+<p>
+For example, consider H<sub>2</sub> with the following basis set (in GAMESS
+format), where both the AOs and primitives are considered normalized:
+</p>
+
+<pre class="example" id="org5890ce3">
+HYDROGEN
+S   5
+1         3.387000E+01           6.068000E-03
+2         5.095000E+00           4.530800E-02
+3         1.159000E+00           2.028220E-01
+4         3.258000E-01           5.039030E-01
+5         1.027000E-01           3.834210E-01
+S   1
+1         3.258000E-01           1.000000E+00
+S   1
+1         1.027000E-01           1.000000E+00
+P   1
+1         1.407000E+00           1.000000E+00
+P   1
+1         3.880000E-01           1.000000E+00
+D   1
+1         1.057000E+00           1.000000E+00
+</pre>
+
+<p>
+In TREXIO representaion we have:
+</p>
+
+<pre class="example" id="orgf631541">
+type  = "Gaussian"
+prim_num   = 20
+shell_num   = 12
+
+# 6 shells per H atom
+nucleus_index =
+[ 0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1, 1, 1 ]
+
+# 3 shells in S (l=0), 2 in P (l=1), 1 in D (l=2)
+shell_ang_mom =
+[ 0, 0, 0, 1, 1, 2,
+  0, 0, 0, 1, 1, 2 ]
+
+# no need to renormalize shells
+shell_factor =
+[ 1., 1., 1., 1., 1., 1.,
+  1., 1., 1., 1., 1., 1. ]
+
+# 5 primitives for the first S shell and then 1 primitive per remaining shells in each H atom
+shell_index =
+[ 0, 0, 0, 0, 0, 1, 2, 3, 4, 5,
+  6, 6, 6, 6, 6, 7, 8, 9, 10, 11 ]
+
+# parameters of the primitives (10 per H atom)
+exponent =
+[ 33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407, 0.388, 1.057,
+  33.87, 5.095, 1.159, 0.3258, 0.1027, 0.3258, 0.1027, 1.407, 0.388, 1.057 ]
+
+coefficient =
+[ 0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0,
+  0.006068, 0.045308, 0.202822, 0.503903, 0.383421, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+
+prim_factor =
+[ 1.0006253235944540e+01, 2.4169531573445120e+00, 7.9610924849766440e-01
+  3.0734305383061117e-01, 1.2929684417481876e-01, 3.0734305383061117e-01,
+  1.2929684417481876e-01, 2.1842769845268308e+00, 4.3649547399719840e-01,
+  1.8135965626177861e+00, 1.0006253235944540e+01, 2.4169531573445120e+00,
+  7.9610924849766440e-01, 3.0734305383061117e-01, 1.2929684417481876e-01,
+  3.0734305383061117e-01, 1.2929684417481876e-01, 2.1842769845268308e+00,
+  4.3649547399719840e-01, 1.8135965626177861e+00 ]
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org6c70205" class="outline-3">
+<h3 id="org6c70205"><span class="section-number-3">3.2.</span> Effective core potentials (ecp group)</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+An effective core potential (ECP) \(V_A^{\text{ECP}}\) replacing the
+core electrons of atom \(A\) can be expressed as
+\[
+   V_A^{\text{ECP}} =
+   V_{A \ell_{\max}+1} +
+   \sum_{\ell=0}^{\ell_{\max}}
+   \delta V_{A \ell}\sum_{m=-\ell}^{\ell} | Y_{\ell m} \rangle \langle Y_{\ell m} |
+   \]
+</p>
+
+<p>
+The first term in this equation is attributed to the local channel, while
+the remaining terms correspond to non-local channel projections.  \(\ell_{\max}\)
+refers to the maximum angular momentum in the non-local component of the ECP.
+The functions \(\delta V_{A \ell}\) and \(V_{A \ell_{\max}+1}\) are parameterized as:
+</p>
+\begin{eqnarray}
+   \delta V_{A \ell}(\mathbf{r}) &=&
+   \sum_{q=1}^{N_{q \ell}}
+   \beta_{A q \ell}\, |\mathbf{r}-\mathbf{R}_{A}|^{n_{A q \ell}}\,
+   e^{-\alpha_{A q \ell} |\mathbf{r}-\mathbf{R}_{A}|^2 } \nonumber\\
+   V_{A \ell_{\max}+1}(\mathbf{r}) &=& -\frac{Z_\text{eff}}{|\mathbf{r}-\mathbf{R}_{A}|}+\delta V_{A \ell_{\max}+1}(\mathbf{r})
+\end{eqnarray}
+<p>
+where \(Z_\text{eff}\) is the effective nuclear charge of the center.
+</p>
+
+<p>
+See <a href="http://dx.doi.org/10.1063/1.4984046">http://dx.doi.org/10.1063/1.4984046</a> or <a href="https://doi.org/10.1063/1.5121006">https://doi.org/10.1063/1.5121006</a> for more info.
+</p>
+
+<table id="org27ed734" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>max_ang_mom_plus_1</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>[nucleus.num]</code></td>
+<td class="org-left"><code>(nucleus.num)</code></td>
+<td class="org-left">\(\ell_{\max}+1\), one higher than the max angular momentum in the removed core orbitals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>z_core</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>[nucleus.num]</code></td>
+<td class="org-left"><code>(nucleus.num)</code></td>
+<td class="org-left">Number of core electrons to remove per atom</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Total number of ECP functions for all atoms and all values of \(\ell\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ang_mom</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>[ecp.num]</code></td>
+<td class="org-left"><code>(ecp.num)</code></td>
+<td class="org-left">One-to-one correspondence between ECP items and the angular momentum \(\ell\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>nucleus_index</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[ecp.num]</code></td>
+<td class="org-left"><code>(ecp.num)</code></td>
+<td class="org-left">One-to-one correspondence between ECP items and the atom index</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>exponent</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ecp.num]</code></td>
+<td class="org-left"><code>(ecp.num)</code></td>
+<td class="org-left">\(\alpha_{A q \ell}\) all ECP exponents</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coefficient</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ecp.num]</code></td>
+<td class="org-left"><code>(ecp.num)</code></td>
+<td class="org-left">\(\beta_{A q \ell}\) all ECP coefficients</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>power</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>[ecp.num]</code></td>
+<td class="org-left"><code>(ecp.num)</code></td>
+<td class="org-left">\(n_{A q \ell}\) all ECP powers</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+There might be some confusion in the meaning of the \(\ell_{\max}\).
+It can be attributed to the maximum angular momentum occupied in
+the core orbitals, which are removed by the ECP. On the other
+hand, it can be attributed to the maximum angular momentum of the
+ECP that replaces the core electrons.
+<b>Note</b>, that the latter \(\ell_{\max}\) is always higher by 1 than the former.
+</p>
+
+<p>
+<b>Note for developers of TREXIO</b>: avoid having variables with similar prefix
+in their name. The HDF5 back end might cause issues due to the way
+<code>find_dataset</code> function works.  For example, in the ECP group we
+use <code>max_ang_mom</code> and not <code>ang_mom_max</code>. The latter causes issues
+when written before the <code>ang_mom</code> array in the TREXIO file.
+<b>Update</b>: in fact, the aforementioned issue has only been observed
+when using HDF5 version 1.10.4 installed via <code>apt-get</code>. Installing
+the same version from the <code>conda-forge</code> channel and running it in
+an isolated <code>conda</code> environment works just fine. Thus, it seems to
+be a bug in the <code>apt</code>-provided package.
+If you encounter the aforementioned issue, please report it to our
+<a href="https://github.com/TREX-CoE/trexio/issues">issue tracker on GitHub</a>.
+</p>
+</div>
+
+<div id="outline-container-orged7cba8" class="outline-4">
+<h4 id="orged7cba8"><span class="section-number-4">3.2.1.</span> Example</h4>
+<div class="outline-text-4" id="text-3-2-1">
+<p>
+For example, consider H<sub>2</sub> molecule with the following
+<a href="https://pseudopotentiallibrary.org/recipes/H/ccECP/H.ccECP.gamess">effective core potential</a>
+(in GAMESS input format for the H atom):
+</p>
+
+<pre class="example" id="orgd24f756">
+H-ccECP GEN 0 1
+3
+1.00000000000000    1 21.24359508259891
+21.24359508259891   3 21.24359508259891
+-10.85192405303825  2 21.77696655044365
+1
+0.00000000000000    2 1.000000000000000
+</pre>
+
+<p>
+In TREXIO representation this would be:
+</p>
+
+<pre class="example" id="org640579a">
+num = 8
+
+# lmax+1 per atom
+max_ang_mom_plus_1 = [ 1, 1 ]
+
+# number of core electrons to remove per atom
+zcore = [ 0, 0 ]
+
+# first 4 ECP elements correspond to the first H atom ; the remaining 4 elements are for the second H atom
+nucleus_index = [
+  0, 0, 0, 0,
+  1, 1, 1, 1
+  ]
+
+# 3 first ECP elements correspond to potential of the P orbital (l=1), then 1 element for the S orbital (l=0) ; similar for the second H atom
+ang_mom = [
+  1, 1, 1, 0,
+  1, 1, 1, 0
+  ]
+
+# ECP quantities that can be attributed to atoms and/or angular momenta based on the aforementioned ecp_nucleus and ecp_ang_mom arrays
+coefficient = [
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000,
+  1.00000000000000, 21.24359508259891, -10.85192405303825, 0.00000000000000
+  ]
+
+exponent = [
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000,
+  21.24359508259891, 21.24359508259891, 21.77696655044365, 1.000000000000000
+  ]
+
+power = [
+  -1, 1, 0, 0,
+  -1, 1, 0, 0
+  ]
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga89e819" class="outline-3">
+<h3 id="orga89e819"><span class="section-number-3">3.3.</span> Numerical integration grid (grid group)</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+In some applications, such as DFT calculations, integrals have to
+be computed numerically on a grid.  A common choice for the angular
+grid is the one proposed by Lebedev and Laikov
+[Russian Academy of Sciences Doklady Mathematics, Volume 59, Number 3, 1999, pages 477-481].
+For the radial grids, many approaches have been developed over the years.
+</p>
+
+<p>
+The structure of this group is adapted for the <a href="https://github.com/dftlibs/numgrid">numgrid</a> library.
+Feel free to submit a PR if you find missing options/functionalities.
+</p>
+
+<table id="org5151bf0" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>description</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Details about the used quadratures can go here</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>rad_precision</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Radial precision parameter (not used in some schemes like Krack-Köster)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of grid points</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>max_ang_num</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Maximum number of angular grid points (for pruning)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>min_ang_num</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Minimum number of angular grid points (for pruning)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coord</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[grid.num]</code></td>
+<td class="org-left"><code>(grid.num)</code></td>
+<td class="org-left">Discretized coordinate space</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>weight</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[grid.num]</code></td>
+<td class="org-left"><code>(grid.num)</code></td>
+<td class="org-left">Grid weights according to a given partitioning (e.g. Becke)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ang_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of angular integration points (if used)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ang_coord</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[grid.ang_num]</code></td>
+<td class="org-left"><code>(grid.ang_num)</code></td>
+<td class="org-left">Discretized angular space (if used)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ang_weight</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[grid.ang_num]</code></td>
+<td class="org-left"><code>(grid.ang_num)</code></td>
+<td class="org-left">Angular grid weights (if used)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>rad_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of radial integration points (if used)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>rad_coord</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[grid.rad_num]</code></td>
+<td class="org-left"><code>(grid.rad_num)</code></td>
+<td class="org-left">Discretized radial space (if used)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>rad_weight</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[grid.rad_num]</code></td>
+<td class="org-left"><code>(grid.rad_num)</code></td>
+<td class="org-left">Radial grid weights  (if used)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgfb1b0b1" class="outline-2">
+<h2 id="orgfb1b0b1"><span class="section-number-2">4.</span> Orbitals</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+<div id="outline-container-orgd1f0452" class="outline-3">
+<h3 id="orgd1f0452"><span class="section-number-3">4.1.</span> Atomic orbitals (ao group)</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+AOs are defined as
+</p>
+
+<p>
+\[
+   \chi_i (\mathbf{r}) = \mathcal{N}_i'\, P_{\eta(i)}(\mathbf{r})\, R_{s(i)} (\mathbf{r})
+   \]
+</p>
+
+<p>
+where \(i\) is the atomic orbital index, \(P\) refers to either
+polynomials in \(x,y,z\)
+\[
+   P_{\eta(i)}(\mathbf{r}) \equiv x^{\eta(i)_x} y^{\eta(i)_y} z^{\eta(i)_z}
+   \]
+or <i>regular</i> solid harmonics
+\[
+   P_{\eta(i)}(\mathbf{r}) \to S^{m_i}_{\ell}(\mathbf{r}) \equiv \sqrt{\frac{4\pi}{2\ell+1}}\; r^\ell
+   Y^{m_i}_{\ell}(\theta,\varphi)
+   \]
+(see <a href="https://en.wikipedia.org/wiki/Solid_harmonics">Wikipedia</a>), and \(s(i)\)
+specifies the shell on which the AO is expanded.
+</p>
+
+
+<p>
+\(\eta(i)\) denotes the chosen angular function.  The AOs can be
+expressed using real solid harmonics or polynomials in Cartesian
+coordinates.  In the case of real solid harmonics, the AOs are
+ordered as \(0, +1, -1, +2, -2, \dots, + m, -m\)).  In
+the case of polynomials, the canonical (or alphabetical) ordering is
+used,
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">\(p\)</td>
+<td class="org-left">\(p_x, p_y, p_z\)</td>
+</tr>
+
+<tr>
+<td class="org-left">\(d\)</td>
+<td class="org-left">\(d_{xx}, d_{xy}, d_{xz}, d_{yy}, d_{yz}, d_{zz}\)</td>
+</tr>
+
+<tr>
+<td class="org-left">\(f\)</td>
+<td class="org-left">\(f_{xxx}, f_{xxy}, f_{xxz}, f_{xyy}, f_{xyz}\),</td>
+</tr>
+
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">\(f_{xzz}, f_{yyy}, f_{yyz}, f_{yzz}, f_{zzz}\)</td>
+</tr>
+
+<tr>
+<td class="org-left">\(\vdots\)</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Note that for \(p\) orbitals in spherical coordinates, the ordering
+is \(0,+1,-1\) which corresponds to \(p_z, p_x, p_y\).
+</p>
+
+<p>
+\(\mathcal{N}_i'\) is a normalization factor that allows for different
+normalization coefficients within a single shell, as in the GAMESS
+convention where each individual function is unit-normalized.
+Using GAMESS convention, the normalization factor of the shell
+\(\mathcal{N}_d\) in the <code>basis</code> group is appropriate for instance
+for the \(d_z^2\) function (i.e.
+\(\mathcal{N}_{d}\equiv\mathcal{N}_{z^2}\)) but not for the \(d_{xy}\)
+AO, so the correction factor \(\mathcal{N}_i'\) for \(d_{xy}\) in the
+<code>ao</code> groups is the ratio \(\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}\).
+</p>
+
+
+<table id="org296587c" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>cartesian</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left"><code>1</code>: true, <code>0</code>: false</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Total number of atomic orbitals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>shell</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[ao.num]</code></td>
+<td class="org-left"><code>(ao.num)</code></td>
+<td class="org-left">Basis set shell for each AO</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>normalization</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num]</code></td>
+<td class="org-left"><code>(ao.num)</code></td>
+<td class="org-left">Normalization factor \(\mathcal{N}_i\)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div id="outline-container-ao_one_e" class="outline-4">
+<h4 id="ao_one_e"><span class="section-number-4">4.1.1.</span> One-electron integrals (<code>ao_1e_int</code> group)</h4>
+<div class="outline-text-4" id="text-ao_one_e">
+<ul class="org-ul">
+<li>\[ \hat{V}_{\text{ne}} = \sum_{A=1}^{N_\text{nucl}}
+      \sum_{i=1}^{N_\text{elec}} \frac{-Z_A }{\vert \mathbf{R}_A -
+      \mathbf{r}_i \vert} \] : electron-nucleus attractive potential,</li>
+<li>\[ \hat{T}_{\text{e}} =
+      \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy</li>
+<li>\(\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} + \hat{V}_\text{ECP}\) : core electronic Hamiltonian</li>
+</ul>
+
+<p>
+The one-electron integrals for a one-electron operator \(\hat{O}\) are
+\[ \langle p \vert \hat{O} \vert q \rangle \], returned as a matrix
+over atomic orbitals.
+</p>
+
+<table id="orgbb45577" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>overlap</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert q \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>kinetic</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{T}_e \vert q \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>potential_n_e</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ecp</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>core_hamiltonian</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{h} \vert q \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>overlap_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert q \rangle\) (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>kinetic_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{T}_e \vert q \rangle\)   (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>potential_n_e_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle\)  (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ecp_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle\)  (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>core_hamiltonian_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num)</code></td>
+<td class="org-left">\(\langle p \vert \hat{h} \vert q \rangle\) (imaginary part)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-ao_two_e" class="outline-4">
+<h4 id="ao_two_e"><span class="section-number-4">4.1.2.</span> Two-electron integrals (<code>ao_2e_int</code> group)</h4>
+<div class="outline-text-4" id="text-ao_two_e">
+<p>
+The two-electron integrals for a two-electron operator \(\hat{O}\) are
+\[ \langle p q \vert \hat{O} \vert r s \rangle \] in physicists
+notation, where \(p,q,r,s\) are indices over atomic orbitals.
+</p>
+
+<ul class="org-ul">
+<li>\[ \hat{W}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}} \sum_{j=1}^{i-1} \frac{1}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron repulsive potential operator.</li>
+<li>\[ \hat{W}^{lr}_{\text{ee}} = \sum_{i=2}^{N_\text{elec}}
+      \sum_{j=1}^{i-1} \frac{\text{erf}(\mu\, \vert \mathbf{r}_i -
+      \mathbf{r}_j \vert)}{\vert \mathbf{r}_i - \mathbf{r}_j \vert} \] : electron-electron long range potential</li>
+</ul>
+
+<p>
+The Cholesky decomposition of the integrals can also be stored:
+</p>
+
+<p>
+\[
+    \langle ij | kl \rangle = \sum_{\alpha} G_{ik\alpha} G_{jl\alpha}
+    \]
+</p>
+
+<table id="orgf6aa12c" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>eri</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[ao.num, ao.num, ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num, ao.num, ao.num)</code></td>
+<td class="org-left">Electron repulsion integrals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_lr</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[ao.num, ao.num, ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num, ao.num, ao.num)</code></td>
+<td class="org-left">Long-range electron repulsion integrals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors for ERI</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[ao_2e_int.eri_cholesky_num, ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num, ao_2e_int.eri_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the ERI</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_lr_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors for long range ERI</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_lr_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[ao_2e_int.eri_lr_cholesky_num, ao.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, ao.num, ao_2e_int.eri_lr_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the long range ERI</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc407dea" class="outline-3">
+<h3 id="orgc407dea"><span class="section-number-3">4.2.</span> Molecular orbitals (mo group)</h3>
+<div class="outline-text-3" id="text-4-2">
+<table id="orgd5a08a3" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>type</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Free text to identify the set of MOs (HF, Natural, Local, CASSCF, <i>etc</i>)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of MOs</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coefficient</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, mo.num)</code></td>
+<td class="org-left">MO coefficients</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coefficient_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, ao.num]</code></td>
+<td class="org-left"><code>(ao.num, mo.num)</code></td>
+<td class="org-left">MO coefficients (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>class</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left"><code>[mo.num]</code></td>
+<td class="org-left"><code>(mo.num)</code></td>
+<td class="org-left">Choose among: Core, Inactive, Active, Virtual, Deleted</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>symmetry</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left"><code>[mo.num]</code></td>
+<td class="org-left"><code>(mo.num)</code></td>
+<td class="org-left">Symmetry in the point group</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>occupation</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num]</code></td>
+<td class="org-left"><code>(mo.num)</code></td>
+<td class="org-left">Occupation number</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>energy</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num]</code></td>
+<td class="org-left"><code>(mo.num)</code></td>
+<td class="org-left">For canonical MOs, corresponding eigenvalue</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>spin</code></td>
+<td class="org-left"><code>int</code></td>
+<td class="org-left"><code>[mo.num]</code></td>
+<td class="org-left"><code>(mo.num)</code></td>
+<td class="org-left">For UHF wave functions, 0 is \(\alpha\) and 1 is \(\beta\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>k_point</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[mo.num]</code></td>
+<td class="org-left"><code>(mo.num)</code></td>
+<td class="org-left">For periodic calculations, the \(k\) point to which each MO belongs</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<b><b>Warning</b></b>: <code>mo.num</code> is the total number of MOs stored in the file.
+For periodic calculations, this group contains all the MOs
+belonging to all \(k\) points so <code>mo.num</code> will be the sum of the
+numbers of MOs in each \(k\) point. For UHF wave functions, <code>mo.num</code>
+is the number of spin-orbitals, twice the number of spatial orbitals.
+</p>
+</div>
+
+
+<div id="outline-container-org1b5150e" class="outline-4">
+<h4 id="org1b5150e"><span class="section-number-4">4.2.1.</span> One-electron integrals (<code>mo_1e_int</code> group)</h4>
+<div class="outline-text-4" id="text-4-2-1">
+<p>
+The operators as the same as those defined in the
+<a href="#ao_one_e">AO one-electron integrals section</a>. Here, the integrals are given in
+the basis of molecular orbitals.
+</p>
+
+<table id="orgc722b62" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>overlap</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert j \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>kinetic</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{T}_e \vert j \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>potential_n_e</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ecp</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>core_hamiltonian</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{h} \vert j \rangle\)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>overlap_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert j \rangle\) (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>kinetic_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{T}_e \vert j \rangle\)   (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>potential_n_e_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle\)  (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ecp_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle\)  (imaginary part)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>core_hamiltonian_im</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">\(\langle i \vert \hat{h} \vert j \rangle\) (imaginary part)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-orge107a20" class="outline-4">
+<h4 id="orge107a20"><span class="section-number-4">4.2.2.</span> Two-electron integrals (<code>mo_2e_int</code> group)</h4>
+<div class="outline-text-4" id="text-4-2-2">
+<p>
+The operators are the same as those defined in the
+<a href="#ao_two_e">AO two-electron integrals section</a>. Here, the integrals are given in
+the basis of molecular orbitals.
+</p>
+
+<table id="org58dad54" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>eri</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num, mo.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo.num, mo.num)</code></td>
+<td class="org-left">Electron repulsion integrals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_lr</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num, mo.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo.num, mo.num)</code></td>
+<td class="org-left">Long-range electron repulsion integrals</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors for ERI</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo_2e_int.eri_cholesky_num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo_2e_int.eri_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the ERI</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_lr_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors for long range ERI</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>eri_lr_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo_2e_int.eri_lr_cholesky_num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo_2e_int.eri_lr_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the long range ERI</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgdd6f6a5" class="outline-2">
+<h2 id="orgdd6f6a5"><span class="section-number-2">5.</span> Multi-determinant information</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-org15a5c69" class="outline-3">
+<h3 id="org15a5c69"><span class="section-number-3">5.1.</span> Slater determinants (determinant group)</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+The configuration interaction (CI) wave function \(\Psi\)
+can be expanded in the basis of Slater determinants \(D_I\) as follows
+</p>
+
+<p>
+\[
+   \Psi = \sum_I C_I D_I
+   \]
+</p>
+
+<p>
+For relatively small expansions, a given determinant can be represented as a list of occupied orbitals.
+However, this becomes unfeasible for larger expansions and requires more advanced data structures.
+The bit field representation is used here, namely a given determinant is represented as \(N_{\text{int}}\)
+64-bit integers where j-th bit is set to 1 if there is an electron in the j-th orbital and 0 otherwise.
+This gives access to larger determinant expansions by optimising the storage of the determinant lists
+in the memory.
+</p>
+
+<p>
+\[
+   D_I = \alpha_1 \alpha_2 \ldots \alpha_{n_\uparrow} \beta_1 \beta_2 \ldots \beta_{n_\downarrow}
+   \]
+</p>
+
+<p>
+where \(\alpha\) and \(\beta\) denote &uarr;-spin and &darr;-spin electrons, respectively,
+\(n_\uparrow\) and \(n_\downarrow\) correspond to <code>electron.up_num</code> and <code>electron.dn_num</code>, respectively.
+</p>
+
+<p>
+Note: the <code>special</code> attribute is present in the types, meaning that the source node is not
+produced by the code generator.
+</p>
+
+<p>
+An illustration on how to read determinants is presented in the <a href="./examples.html">examples</a>.
+</p>
+
+<p>
+<b>Important</b>: The number of determinants is not explicitly written
+by the user (<code>dim_readonly</code>). It is automatically set by the number
+of determinants written in the determinant list.
+</p>
+
+<table id="org7c51103" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim readonly</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of determinants</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>list</code></td>
+<td class="org-left"><code>int special</code></td>
+<td class="org-left"><code>[determinant.num]</code></td>
+<td class="org-left"><code>(determinant.num)</code></td>
+<td class="org-left">List of determinants as integer bit fields</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coefficient</code></td>
+<td class="org-left"><code>float buffered</code></td>
+<td class="org-left"><code>[determinant.num]</code></td>
+<td class="org-left"><code>(determinant.num)</code></td>
+<td class="org-left">Coefficients of the determinants from the CI expansion</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-orgf5b8254" class="outline-3">
+<h3 id="orgf5b8254"><span class="section-number-3">5.2.</span> Configuration state functions (csf group)</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+The configuration interaction (CI) wave function \(\Psi\) can be
+expanded in the basis of <a href="https://en.wikipedia.org/wiki/Configuration_state_function">configuration state functions</a> (CSFs)
+\(\Psi_I\) as follows
+</p>
+
+<p>
+\[
+   \Psi = \sum_I C_I \psi_I.
+   \]
+</p>
+
+<p>
+Each CSF \(\psi_I\) is a linear combination of Slater determinants. Slater
+determinants are stored in the <code>determinant</code> section. In this group
+we store the CI coefficients in the basis of CSFs, and the
+matrix \(\langle D_I | \psi_J \rangle\) needed to project the CSFs in
+the basis of Slater determinants.
+</p>
+
+<p>
+<b>Important</b>: As opposed to the determinants, the number of CSFs
+(<code>csf.num</code>) has to be written by the user.
+</p>
+
+<table id="org9b24bd3" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of CSFs</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>coefficient</code></td>
+<td class="org-left"><code>float buffered</code></td>
+<td class="org-left"><code>[csf.num]</code></td>
+<td class="org-left"><code>(csf.num)</code></td>
+<td class="org-left">Coefficients \(C_I\) of the CSF expansion</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>det_coefficient</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[csf.num, determinant.num]</code></td>
+<td class="org-left"><code>(determinant.num, csf.num)</code></td>
+<td class="org-left">Projection on the determinant basis</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org112a02b" class="outline-3">
+<h3 id="org112a02b"><span class="section-number-3">5.3.</span> Amplitudes (amplitude group)</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+The wave function may be expressed in terms of action of the cluster
+operator \(\hat{T}\):
+</p>
+
+<p>
+\[
+   \hat{T} = \hat{T}_1 + \hat{T}_2 + \hat{T}_3 + \dots
+   \]
+</p>
+
+<p>
+on a reference wave function \(\Psi\), where \(\hat{T}_1\) is the single excitation operator,
+</p>
+
+<p>
+\[
+   \hat{T}_1 = \sum_{ia} t_{i}^{a}\, \hat{a}^\dagger_a \hat{a}_i,
+   \]
+</p>
+
+<p>
+\(\hat{T}_2\) is the double excitation operator,
+</p>
+
+<p>
+\[
+   \hat{T}_2 = \frac{1}{4} \sum_{ijab} t_{ij}^{ab}\, \hat{a}^\dagger_a \hat{a}^\dagger_b \hat{a}_j \hat{a}_i,
+   \]
+</p>
+
+<p>
+<i>etc</i>. Indices \(i\), \(j\), \(a\) and \(b\) denote molecular orbital indices.
+</p>
+
+<p>
+Wave functions obtained with perturbation theory or configuration
+interaction are of the form
+</p>
+
+<p>
+\[ |\Phi\rangle = \hat{T}|\Psi\rangle  \]
+</p>
+
+<p>
+and coupled-cluster wave functions are of the form
+</p>
+
+<p>
+\[ |\Phi\rangle = e^{\hat{T}}| \Psi \rangle \]
+</p>
+
+<p>
+The reference wave function is stored using the <code>determinant</code> and/or
+<code>csf</code> groups, and the amplitudes are stored using the current group.
+The attributes with the <code>exp</code> suffix correspond to exponentialized operators.
+</p>
+
+<p>
+The order of the indices is chosen such that
+</p>
+<ul class="org-ul">
+<li><code>t(i,a)</code> = \(t_{i}^{a}\).</li>
+<li><code>t(i,j,a,b)</code> = \(t_{ij}^{ab}\),</li>
+<li><code>t(i,j,k,a,b,c)</code> = \(t_{ijk}^{abc}\),</li>
+<li><code>t(i,j,k,l,a,b,c,d)</code> = \(t_{ijkl}^{abcd}\),</li>
+<li>\(\dots\)</li>
+</ul>
+
+<table id="orgef93ff0" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>single</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num)</code></td>
+<td class="org-left">Single excitation amplitudes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>single_exp</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num)</code></td>
+<td class="org-left">Exponentialized single excitation amplitudes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>double</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num,mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num,mo.num,mo.num)</code></td>
+<td class="org-left">Double excitation amplitudes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>double_exp</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num,mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num,mo.num,mo.num)</code></td>
+<td class="org-left">Exponentialized double excitation amplitudes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>triple</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)</code></td>
+<td class="org-left">Triple excitation amplitudes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>triple_exp</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)</code></td>
+<td class="org-left">Exponentialized triple excitation amplitudes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>quadruple</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)</code></td>
+<td class="org-left">Quadruple excitation amplitudes</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>quadruple_exp</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num]</code></td>
+<td class="org-left"><code>(mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num,mo.num)</code></td>
+<td class="org-left">Exponentialized quadruple excitation amplitudes</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org5171eaa" class="outline-3">
+<h3 id="org5171eaa"><span class="section-number-3">5.4.</span> Reduced density matrices (rdm group)</h3>
+<div class="outline-text-3" id="text-5-4">
+<p>
+The reduced density matrices are defined in the basis of molecular
+orbitals.
+</p>
+
+<p>
+The &uarr;-spin and &darr;-spin components of the one-body
+density matrix are given by
+</p>
+\begin{eqnarray*}
+  \gamma_{ij}^{\uparrow}   &=& \langle \Psi | \hat{a}^{\dagger}_{j\alpha}\, \hat{a}_{i\alpha} | \Psi \rangle \\
+  \gamma_{ij}^{\downarrow} &=& \langle \Psi | \hat{a}^{\dagger}_{j\beta} \, \hat{a}_{i\beta}  | \Psi \rangle
+\end{eqnarray*}
+<p>
+and the spin-summed one-body density matrix is
+\[
+   \gamma_{ij} = \gamma^{\uparrow}_{ij} + \gamma^{\downarrow}_{ij}
+   \]
+</p>
+
+<p>
+The \(\uparrow \uparrow\),  \(\downarrow \downarrow\), \(\uparrow \downarrow\) components of the two-body density matrix are given by
+</p>
+\begin{eqnarray*}
+  \Gamma_{ijkl}^{\uparrow \uparrow} &=&
+     \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\alpha} \hat{a}_{j\alpha}\, \hat{a}_{i\alpha} | \Psi \rangle \\
+  \Gamma_{ijkl}^{\downarrow \downarrow} &=&
+     \langle \Psi | \hat{a}^{\dagger}_{k\beta}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\beta} | \Psi \rangle \\
+  \Gamma_{ijkl}^{\uparrow \downarrow} &=&
+     \langle \Psi | \hat{a}^{\dagger}_{k\alpha}\, \hat{a}^{\dagger}_{l\beta} \hat{a}_{j\beta}\, \hat{a}_{i\alpha} | \Psi \rangle
+     + \langle \Psi | \hat{a}^{\dagger}_{l\alpha}\, \hat{a}^{\dagger}_{k\beta} \hat{a}_{i\beta}\, \hat{a}_{j\alpha} | \Psi \rangle \\
+\end{eqnarray*}
+<p>
+and the spin-summed one-body density matrix is
+\[
+   \Gamma_{ijkl} = \Gamma_{ijkl}^{\uparrow \uparrow} +
+     \Gamma_{ijkl}^{\downarrow \downarrow} + \Gamma_{ijkl}^{\uparrow \downarrow}.
+   \]
+</p>
+
+<p>
+The total energy can be computed as:
+\[
+   E = E_{\text{NN}} + \sum_{ij} \gamma_{ij} \langle j|h|i \rangle +
+       \frac{1}{2} \sum_{ijlk} \Gamma_{ijkl} \langle k l | i j \rangle
+   \]
+</p>
+
+
+<p>
+To compress the storage, the Cholesky decomposition of the RDMs can
+be stored:
+</p>
+
+<p>
+\[
+     \Gamma_{ijkl} = \sum_{\alpha} G_{ij\alpha} G_{kl\alpha}
+   \]
+</p>
+
+<p>
+Warning: as opposed to electron repulsion integrals, the
+decomposition is made such that the Cholesky vectors are expanded
+in a two-electron basis
+\(f_{ij}(\mathbf{r}_1,\mathbf{r}_2) = \phi_i(\mathbf{r}_1) \phi_j(\mathbf{r}_2)\),
+whereas in electron repulsion integrals each Cholesky vector is
+expressed in a basis of a one-electron function
+\(g_{ik}(\mathbf{r}_1) = \phi_i(\mathbf{r}_1) \phi_k(\mathbf{r}_1)\).
+</p>
+
+<table id="orgff8e84a" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>1e</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">One body density matrix</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>1e_up</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">&uarr;-spin component of the one body density matrix</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>1e_dn</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num)</code></td>
+<td class="org-left">&darr;-spin component of the one body density matrix</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>1e_transition</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[state.num, state.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, state.num, state.num)</code></td>
+<td class="org-left">One-particle transition density matrices</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num, mo.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo.num, mo.num)</code></td>
+<td class="org-left">Two-body reduced density matrix (spin trace)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_upup</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num, mo.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo.num, mo.num)</code></td>
+<td class="org-left">&uarr;&uarr; component of the two-body reduced density matrix</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_dndn</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num, mo.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo.num, mo.num)</code></td>
+<td class="org-left">&darr;&darr; component of the two-body reduced density matrix</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_updn</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[mo.num, mo.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo.num, mo.num)</code></td>
+<td class="org-left">&uarr;&darr; component of the two-body reduced density matrix</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_transition</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[state.num, state.num, mo.num, mo.num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, mo.num, mo.num, state.num, state.num)</code></td>
+<td class="org-left">Two-particle transition density matrices</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[rdm.2e_cholesky_num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, rdm.2e_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the two-body RDM (spin trace)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_upup_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_upup_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[rdm.2e_upup_cholesky_num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, rdm.2e_upup_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the two-body RDM (&uarr;&uarr;)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_dndn_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_dndn_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[rdm.2e_dndn_cholesky_num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, rdm.2e_dndn_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the two-body RDM (&darr;&darr;)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_updn_cholesky_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Cholesky vectors</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>2e_updn_cholesky</code></td>
+<td class="org-left"><code>float sparse</code></td>
+<td class="org-left"><code>[rdm.2e_updn_cholesky_num, mo.num, mo.num]</code></td>
+<td class="org-left"><code>(mo.num, mo.num, rdm.2e_updn_cholesky_num)</code></td>
+<td class="org-left">Cholesky decomposition of the two-body RDM (&uarr;&darr;)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgf23082c" class="outline-2">
+<h2 id="orgf23082c"><span class="section-number-2">6.</span> Correlation factors</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-orgcaad28e" class="outline-3">
+<h3 id="orgcaad28e"><span class="section-number-3">6.1.</span> Jastrow factor (jastrow group)</h3>
+<div class="outline-text-3" id="text-6-1">
+<p>
+The Jastrow factor is an $N$-electron function which multiplies the CI
+expansion: \(\Psi = \Phi \times \exp(J)\),
+</p>
+
+<p>
+In the following, we use the notations \(r_{ij} = |\mathbf{r}_i - \mathbf{r}_j|\) and
+\(R_{i\alpha} = |\mathbf{r}_i - \mathbf{R}_\alpha|\), where indices
+\(i\) and \(j\) refer to electrons and \(\alpha\) to nuclei.
+</p>
+
+<p>
+Parameters for multiple forms of Jastrow factors can be saved in
+TREXIO files, and are described in the following sections. These
+are identified by the <code>type</code> attribute. The type can be one of the
+following:
+</p>
+<ul class="org-ul">
+<li><code>CHAMP</code></li>
+<li><code>Mu</code></li>
+</ul>
+</div>
+
+<div id="outline-container-org445c47a" class="outline-4">
+<h4 id="org445c47a"><span class="section-number-4">6.1.1.</span> CHAMP</h4>
+<div class="outline-text-4" id="text-6-1-1">
+<p>
+The first form of Jastrow factor is the one used in
+the <a href="https://trex-coe.eu/trex-quantum-chemistry-codes/champ">CHAMP</a> program:
+</p>
+
+<p>
+\[
+   J(\mathbf{r},\mathbf{R}) = J_{\text{eN}}(\mathbf{r},\mathbf{R}) + J_{\text{ee}}(\mathbf{r}) + J_{\text{eeN}}(\mathbf{r},\mathbf{R})
+   \]
+</p>
+
+
+<p>
+\(J_{\text{eN}}\) contains electron-nucleus terms:
+</p>
+
+<p>
+\[
+   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}}\left[
+   \frac{a_{1,\alpha}\, f_\alpha(R_{i\alpha})}{1+a_{2,\alpha}\,
+   f_\alpha(R_{i\alpha})} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, [f_\alpha(R_{i\alpha})]^p - J_{\text{eN}}^\infty
+   \right]
+   \]
+</p>
+
+<p>
+\(J_{\text{ee}}\) contains electron-electron terms:
+</p>
+
+<p>
+\[
+   J_{\text{ee}}(\mathbf{r}) =
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1}
+   \left[
+   \frac{\frac{1}{2}\big(1 + \delta^{\uparrow\downarrow}_{ij}\big)\,b_1\, f_{\text{ee}}(r_{ij})}{1+b_2\, f_{\text{ee}}(r_{ij})} +
+   \sum_{p=2}^{N_\text{ord}^b} b_{p+1}\, [f_{\text{ee}}(r_{ij})]^p  - J_{\text{ee},ij}^\infty
+   \right]
+   \]
+</p>
+
+<p>
+\(\delta^{\uparrow\downarrow}_{ij}\) is zero when the electrons \(i\) and
+\(j\) have the same spin, and one otherwise.
+</p>
+
+<p>
+\(J_{\text{eeN}}\) contains electron-electron-Nucleus terms:
+</p>
+
+<p>
+\[
+    J_{\text{eeN}}(\mathbf{r},\mathbf{R}) =
+    \sum_{\alpha=1}^{N_{\text{nucl}}}
+     \sum_{i=1}^{N_{\text{elec}}}
+      \sum_{j=1}^{i-1}
+       \sum_{p=2}^{N_{\text{ord}}}
+        \sum_{k=0}^{p-1}
+         \sum_{l=0}^{p-k-2\delta_{k,0}}
+           c_{lkp\alpha} \left[ g_{\text{ee}}({r}_{ij}) \right]^k \nonumber \\
+            \left[ \left[ g_\alpha({R}_{i\alpha}) \right]^l + \left[ g_\alpha({R}_{j\alpha}) \right]^l \right]
+             \left[ g_\alpha({R}_{i\,\alpha}) \,
+  g_\alpha({R}_{j\alpha}) \right]^{(p-k-l)/2}
+   \]
+\(c_{lkp\alpha}\) are non-zero only when \(p-k-l\) is even.
+</p>
+
+<p>
+The terms \(J_{\text{ee},ij}^\infty\) and \(J_{\text{eN}}^\infty\) are shifts to ensure that
+\(J_{\text{eN}}\) and \(J_{\text{ee}}\) have an asymptotic value of zero:
+</p>
+
+<p>
+\[
+   J_{\text{eN}}^{\infty} =
+   \frac{a_{1,\alpha}\, \kappa_\alpha^{-1}}{1+a_{2,\alpha}\,
+   \kappa_\alpha^{-1}} + \sum_{p=2}^{N_\text{ord}^a} a_{p+1,\alpha}\, \kappa_\alpha^{-p}
+   \]
+\[
+   J_{\text{ee},ij}^{\infty} =
+   \frac{\frac{1}{2}\big(1 + \delta^{\uparrow\downarrow}_{ij}\big)\,b_1\,
+   \kappa_{\text{ee}}^{-1}}{1+b_2\, \kappa_{\text{ee}}^{-1}} +
+   \sum_{p=2}^{N_\text{ord}^b} b_{p+1}\, \kappa_{\text{ee}}^{-p}
+   \]
+</p>
+
+<p>
+\(f\) and \(g\) are scaling function defined as
+</p>
+
+<p>
+\[
+   f_\alpha(r) = \frac{1-e^{-\kappa_\alpha\, r}}{\kappa_\alpha} \text{ and }
+   g_\alpha(r) = e^{-\kappa_\alpha\, r},
+   \]
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgde075d1" class="outline-4">
+<h4 id="orgde075d1"><span class="section-number-4">6.1.2.</span> Mu</h4>
+<div class="outline-text-4" id="text-6-1-2">
+<p>
+<a href="https://aip.scitation.org/doi/10.1063/5.0044683">Mu-Jastrow</a> is based on a one-parameter correlation factor that has
+been introduced in the context of transcorrelated methods.  This
+correlation factor imposes the electron-electron cusp, and it is
+built such that the leading order in \(1/r_{12}\) of the effective
+two-electron potential reproduces the long-range interaction of the
+range-separated density functional theory. Its analytical
+expression reads
+</p>
+
+<p>
+\[
+   J(\mathbf{r}, \mathbf{R}) = J_{\text{eeN}}(\mathbf{r}, \mathbf{R}) +
+                               J_{\text{eN}}(\mathbf{r}, \mathbf{R})
+   \].
+</p>
+
+<p>
+The electron-electron cusp is incorporated in the three-body term
+</p>
+
+<p>
+\[
+   J_\text{eeN} (\mathbf{r}, \mathbf{R}) =
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right) \,
+   \Pi_{\alpha=1}^{N_{\text{nucl}}} \, E_\alpha({R}_{i\alpha}) \, E_\alpha({R}_{j\alpha}),
+   \]
+</p>
+
+<p>
+where ww\(u\) is an electron-electron function
+</p>
+
+<p>
+\[
+   u\left(\mu, r\right) = \frac{r}{2} \, \left[ 1 - \text{erf}(\mu\, r) \right] - \frac{1}{2 \, \mu \, \sqrt{\pi}} \exp \left[ -(\mu \, r)^2 \right].
+   \]
+</p>
+
+<p>
+This electron-electron term is tuned by the parameter \(\mu\) which
+controls the depth and the range of the Coulomb hole between
+electrons.
+</p>
+
+<p>
+An envelope function has been introduced to cancel out the Jastrow
+effects between two-electrons when at least one is close to a nucleus
+(to perform a frozen-core calculation). The envelope function is
+given by
+</p>
+
+<p>
+\[
+   E_\alpha(R) = 1 - \exp\left( - \gamma_{\alpha} \, R^2 \right).
+   \]
+</p>
+
+<p>
+In particular, if the parameters \(\gamma_\alpha\) tend to zero, the
+Mu-Jastrow factor becomes a two-body Jastrow factor:
+</p>
+
+<p>
+\[
+   J_{\text{ee}}(\mathbf{r}) =
+   \sum_{i=1}^{N_\text{elec}} \sum_{j=1}^{i-1} \, u\left(\mu, r_{ij}\right)
+   \]
+</p>
+
+<p>
+and for large \(\gamma_\alpha\) it becomes zero.
+</p>
+
+<p>
+To increase the flexibility of the Jastrow and improve the
+electron density the following electron-nucleus term is added
+</p>
+
+<p>
+\[
+   J_{\text{eN}}(\mathbf{r},\mathbf{R}) = \sum_{i=1}^{N_\text{elec}} \sum_{\alpha=1}^{N_\text{nucl}} \,
+   \left[ \exp\left( a_{\alpha} R_{i \alpha}^2 \right) - 1\right].
+   \]
+</p>
+
+
+<p>
+The parameter \(\mu\) is stored in the <code>ee</code> array, the parameters
+\(\gamma_\alpha\) are stored in the <code>een</code> array, and the parameters
+\(a_\alpha\) are stored in the <code>en</code> array.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org98c6350" class="outline-4">
+<h4 id="org98c6350"><span class="section-number-4">6.1.3.</span> Table of values</h4>
+<div class="outline-text-4" id="text-6-1-3">
+<table id="org5c055f6" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>type</code></td>
+<td class="org-left"><code>str</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Type of Jastrow factor: <code>CHAMP</code> or <code>Mu</code></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>en_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Electron-nucleus parameters</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ee_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Electron-electron parameters</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>een_num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of Electron-electron-nucleus parameters</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>en</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[jastrow.en_num]</code></td>
+<td class="org-left"><code>(jastrow.en_num)</code></td>
+<td class="org-left">Electron-nucleus parameters</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ee</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[jastrow.ee_num]</code></td>
+<td class="org-left"><code>(jastrow.ee_num)</code></td>
+<td class="org-left">Electron-electron parameters</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>een</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[jastrow.een_num]</code></td>
+<td class="org-left"><code>(jastrow.een_num)</code></td>
+<td class="org-left">Electron-electron-nucleus parameters</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>en_nucleus</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[jastrow.en_num]</code></td>
+<td class="org-left"><code>(jastrow.en_num)</code></td>
+<td class="org-left">Nucleus relative to the eN parameter</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>een_nucleus</code></td>
+<td class="org-left"><code>index</code></td>
+<td class="org-left"><code>[jastrow.een_num]</code></td>
+<td class="org-left"><code>(jastrow.een_num)</code></td>
+<td class="org-left">Nucleus relative to the eeN parameter</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>ee_scaling</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">\(\kappa\) value in CHAMP Jastrow for electron-electron distances</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>en_scaling</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[nucleus.num]</code></td>
+<td class="org-left"><code>(nucleus.num)</code></td>
+<td class="org-left">\(\kappa\) value in CHAMP Jastrow for electron-nucleus distances</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3df54ea" class="outline-2">
+<h2 id="org3df54ea"><span class="section-number-2">7.</span> Quantum Monte Carlo data (qmc group)</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+In quantum Monte Carlo calculations, the wave function is evaluated
+at points of the 3N-dimensional space. Some algorithms require multiple
+independent <i>walkers</i>, so it is possible to store multiple coordinates,
+as well as some quantities evaluated at those points.
+</p>
+
+<p>
+By convention, the electron coordinates contain first all the electrons
+of $&uarr;$-spin and then all the $&darr;$-spin.
+</p>
+
+<table id="org670929c" border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Variable</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Row-major Dimensions</th>
+<th scope="col" class="org-left">Column-major Dimensions</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>num</code></td>
+<td class="org-left"><code>dim</code></td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">Number of 3N-dimensional points</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>point</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[qmc.num, electron.num, 3]</code></td>
+<td class="org-left"><code>(3, electron.num, qmc.num)</code></td>
+<td class="org-left">3N-dimensional points</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>psi</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[qmc.num]</code></td>
+<td class="org-left"><code>(qmc.num)</code></td>
+<td class="org-left">Wave function evaluated at the points</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>e_loc</code></td>
+<td class="org-left"><code>float</code></td>
+<td class="org-left"><code>[qmc.num]</code></td>
+<td class="org-left"><code>(qmc.num)</code></td>
+<td class="org-left">Local energy evaluated at the points</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: TREX-CoE</p>
+<p class="date">Created: 2025-08-01 Fri 10:48</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
