@@ -301,10 +301,15 @@ typedef int32_t trexio_exit_code;
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
 #ifndef _WIN32
 #include <err.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
 #endif
 
 
@@ -1991,28 +1996,30 @@ trexio_cp(const char* source, const char* dest)
   /* Call cp */
 
 #ifdef _WIN32
-  /* Windows implementation using system() */
+  /* Windows implementation */
+
   char command[4096];
   int ret;
   
   /* Check if source is a directory to use appropriate xcopy flags */
   if (back_end_local == TREXIO_TEXT) {
-    /* TEXT backend uses directories - use directory copy flags */
-    ret = snprintf(command, sizeof(command), "xcopy /E /I /Q /Y \"%s\" \"%s\"", source, dest);
+    /* Directory -> use robocopy */
+    ret = snprintf(command, sizeof(command),
+                   "robocopy \"%s\" \"%s\" /E /NFL /NDL /NJH /NJS /NC /NS > nul",
+                   source, dest);
+    if (ret < 0 || ret >= sizeof(command)) return TREXIO_FILE_ERROR;
+    // robocopy returns codes >= 8 for failure
+    if (system(command) >= 8) return TREXIO_FILE_ERROR;
   } else {
-    /* HDF5 backend uses files - use file copy flags with /F to force file destination */
-    ret = snprintf(command, sizeof(command), "xcopy /F /Q /Y \"%s\" \"%s\"", source, dest);
+    /* File -> use CopyFileA */
+    if (!CopyFileA(source, dest, FALSE)) {
+      return TREXIO_FILE_ERROR;
+    }
   }
-  
-  if (ret < 0 || ret >= sizeof(command)) {
-    return TREXIO_FILE_ERROR;
-  }
-  
-  if (system(command) != 0) {
-    return TREXIO_FILE_ERROR;
-  }
+
 #else
-  /* Unix implementation using fork/exec */
+  /* Unix implementation */
+
 #ifndef CP_COMMAND
 #define CP_COMMAND "cp", "-r"
 #endif

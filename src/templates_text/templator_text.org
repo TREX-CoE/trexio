@@ -243,7 +243,7 @@ trexio_text_init (trexio_t* const file)
 #ifdef _WIN32
     /* On Windows, we can't lock files but we should still be able to create them.
        If we can't create the lock file, return an error */
-    return TREXIO_ERRNO;
+    return TREXIO_LOCK_ERROR;
 #else
     if (file->mode != 'r') {
       return TREXIO_ERRNO;
@@ -277,9 +277,9 @@ trexio_exit_code trexio_text_lock(trexio_t* const file) {
 
   trexio_text_t* const f = (trexio_text_t*) file;
 
-#ifdef _WIN32
-  return TREXIO_SUCCESS;
-#else
+#ifndef _WIN32
+  /* On Windows, we can't lock the file, so we pass here */
+
   struct flock fl;
 
   fl.l_type   = F_WRLCK;
@@ -291,8 +291,9 @@ trexio_exit_code trexio_text_lock(trexio_t* const file) {
   int rc = fcntl(f->lock_file, F_SETLKW, &fl);
   if (rc == -1) return TREXIO_FAILURE;
 
-  return TREXIO_SUCCESS;
 #endif
+
+  return TREXIO_SUCCESS;
 
 }
     #+end_src
@@ -306,12 +307,8 @@ trexio_text_unlock (trexio_t* const file)
 
   trexio_text_t* const f = (trexio_text_t*) file;
 
-#ifdef _WIN32
-  /* On Windows, we don't use file locking, but we need to close the file descriptor
-     so that the .lock file can be properly removed during cleanup */
-  close(f->lock_file);
-  return TREXIO_SUCCESS;
-#else
+#ifndef _WIN32
+
   struct flock fl;
 
   fl.l_type   = F_UNLCK;
@@ -321,9 +318,10 @@ trexio_text_unlock (trexio_t* const file)
   fl.l_pid    = getpid();
   fcntl(f->lock_file, F_SETLK, &fl);
 
+#endif
+
   close(f->lock_file);
   return TREXIO_SUCCESS;
-#endif
 
 }
     #+end_src
