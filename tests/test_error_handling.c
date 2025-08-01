@@ -136,6 +136,7 @@ static int test_read_nonexistent_data() {
     // Test has functions on non-existent data - results may vary
     trexio_exit_code has_rc;
     has_rc = trexio_has_nucleus_num(file);
+    (void)has_rc; // Suppress unused variable warning
     // Should return TREXIO_HAS_NOT but implementation may vary
     
     has_rc = trexio_has_nucleus_coord(file);
@@ -290,7 +291,7 @@ static int test_string_operations_edge_cases() {
 
     // Test writing empty string
     char* empty_string = "";
-    rc = trexio_write_basis_type(file, empty_string, strlen(empty_string));
+    rc = trexio_write_basis_type(file, empty_string, (int32_t)strlen(empty_string));
     // May succeed or fail - just test function exists
 
     // Test reading back empty string if write succeeded
@@ -313,7 +314,7 @@ static int test_string_operations_edge_cases() {
     assert(rc == TREXIO_SUCCESS);
 
     char* long_string = "This is a very long basis set name that might cause issues";
-    rc = trexio_write_basis_type(file, long_string, strlen(long_string));
+    rc = trexio_write_basis_type(file, long_string, (int32_t)strlen(long_string));
     assert(rc == TREXIO_SUCCESS);
 
     rc = trexio_close(file);
@@ -345,16 +346,16 @@ static int test_string_operations_edge_cases() {
 static int test_backend_detection() {
     /* Test backend detection function */
     
-    trexio_exit_code rc;
-
     /*================= START OF TEST ==================*/
 
     // Test has_backend function with actual backend constants
     bool has_text = trexio_has_backend(TREXIO_TEXT);
+    (void)has_text; // Suppress unused variable warning
     // Should return true since we compiled with text backend
 
     // Test with invalid backend
     bool has_invalid = trexio_has_backend(999);
+    (void)has_invalid; // Suppress unused variable warning
     // Should return false
 
     /*================= END OF TEST ==================*/

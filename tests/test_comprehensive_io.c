@@ -43,7 +43,7 @@ static int test_basic_has_read_write() {
     assert(rc == TREXIO_SUCCESS);
 
     char* current_label = "Ground State";
-    rc = trexio_write_state_current_label(file, current_label, strlen(current_label));
+    rc = trexio_write_state_current_label(file, current_label, (int32_t)strlen(current_label));
     assert(rc == TREXIO_SUCCESS);
 
     rc = trexio_close(file);

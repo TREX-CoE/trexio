@@ -104,8 +104,6 @@ static int test_file_operations(const char* file_name, const back_end_t backend)
 static int test_conversion_functions() {
     /* Test NAO radius conversion functions - simplified test */
     
-    trexio_exit_code rc;
-    
     /*================= START OF TEST ==================*/
 
     // These functions require grid data and other complex parameters
@@ -207,6 +205,8 @@ static int test_bitfield_operations() {
 
 static int test_nao_evaluation_functions(const char* file_name, const back_end_t backend) {
     /* Test NAO radial evaluation functions - simplified test */
+    
+    (void)backend; // Suppress unused parameter warning
     
     trexio_t* file = NULL;
     trexio_exit_code rc;
