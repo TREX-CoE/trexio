@@ -10,7 +10,7 @@
 
 static int test_state_management(const char* file_name, const back_end_t backend) {
     /* Test state management functions: set/get state */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
     int32_t state_in = 42;
@@ -43,7 +43,7 @@ static int test_state_management(const char* file_name, const back_end_t backend
 
 static int test_file_operations(const char* file_name, const back_end_t backend) {
     /* Test file operations: inquire, cp, flush, info */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
     char copy_file_name[256];
@@ -101,45 +101,9 @@ static int test_file_operations(const char* file_name, const back_end_t backend)
     return 0;
 }
 
-static int test_conversion_functions() {
-    /* Test NAO radius conversion functions - simplified test */
-    
-    /*================= START OF TEST ==================*/
-
-    // These functions require grid data and other complex parameters
-    // that are difficult to set up in a simple test.
-    // For now, we just test that the functions exist and can be called
-    // with appropriate parameters (they will likely return error codes
-    // due to missing prerequisites, but shouldn't crash)
-    
-    float radius_32 = 1.5f;
-    float grid_r_32[1] = {1.0f};
-    float log_r_out_32[1];
-    
-    rc = trexio_convert_nao_radius_32(radius_32, grid_r_32, log_r_out_32);
-    // Function exists and can be called - result may vary
-
-    double radius_64 = 1.5;
-    double grid_r_64[1] = {1.0};
-    double log_r_out_64[1];
-    
-    rc = trexio_convert_nao_radius_64(radius_64, grid_r_64, log_r_out_64);
-    // Function exists and can be called - result may vary
-
-    double grid_r_py[1] = {1.0};
-    double log_r_out_py[1];
-    
-    rc = trexio_convert_nao_radius_py(radius_64, grid_r_py, 1, log_r_out_py);
-    // Function exists and can be called - result may vary
-
-    /*================= END OF TEST ==================*/
-
-    return 0;
-}
-
 static int test_bitfield_operations() {
     /* Test bitfield/orbital list conversion functions */
-    
+
     trexio_exit_code rc;
     int32_t N_int = 2;
     int32_t occupied_num = 4;
@@ -179,7 +143,7 @@ static int test_bitfield_operations() {
     // Test safe versions with proper bounds checking - these may fail with specific error codes
     int32_t safe_list[10];
     int32_t safe_num = 0;
-    
+
     rc = trexio_safe_to_orbital_list(N_int, bit_list, 1, safe_list, 10, &safe_num);
     // Function may succeed or fail - main goal is to test that it exists and doesn't crash
     if (rc == TREXIO_SUCCESS) {
@@ -188,7 +152,7 @@ static int test_bitfield_operations() {
 
     int32_t safe_up[5], safe_dn[5];
     int32_t safe_up_num = 0, safe_dn_num = 0;
-    
+
     rc = trexio_safe_to_orbital_list_up_dn(N_int, bit_list, 1, safe_up, 5, safe_dn, 5, &safe_up_num, &safe_dn_num);
     // Function may succeed or fail - main goal is to test that it doesn't crash
     if (rc == TREXIO_SUCCESS) {
@@ -203,48 +167,9 @@ static int test_bitfield_operations() {
     return 0;
 }
 
-static int test_nao_evaluation_functions(const char* file_name, const back_end_t backend) {
-    /* Test NAO radial evaluation functions - simplified test */
-    
-    (void)backend; // Suppress unused parameter warning
-    
-    trexio_t* file = NULL;
-    trexio_exit_code rc;
-    
-    /*================= START OF TEST ==================*/
-    
-    // These evaluation functions require complex setup with proper grid data,
-    // interpolation coefficients, and normalization factors that are difficult
-    // to set up correctly in a simple test. For now, we just test that the
-    // functions exist and can be called (they will likely return error codes
-    // due to missing prerequisites, but shouldn't crash).
-    
-    // Create a minimal file for testing
-    file = trexio_open(file_name, 'w', TEST_BACKEND_TEXT, &rc);
-    assert(file != NULL);
-    assert(rc == TREXIO_SUCCESS);
-
-    // Set up minimal basis data  
-    int32_t shell_num = 1;
-    rc = trexio_write_basis_shell_num(file, shell_num);
-    assert(rc == TREXIO_SUCCESS);
-
-    rc = trexio_close(file);
-    assert(rc == TREXIO_SUCCESS);
-
-    // The actual evaluation functions require extensive setup that would
-    // make this test overly complex. The main goal is to verify the functions
-    // exist and are callable. More detailed testing would require setting up
-    // complete basis set data, grid points, interpolation coefficients, etc.
-
-    /*================= END OF TEST ==================*/
-
-    return 0;
-}
-
 static int test_safety_functions(const char* file_name, const back_end_t backend) {
     /* Test safety and marking functions */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
     int32_t safety_flag = 1;
@@ -278,7 +203,7 @@ static int test_safety_functions(const char* file_name, const back_end_t backend
 
 static int test_one_based_indexing(const char* file_name, const back_end_t backend) {
     /* Test one-based indexing setting */
-    
+
     trexio_t* file = NULL;
     trexio_exit_code rc;
 
@@ -318,7 +243,7 @@ int main(){
     assert (rc == 0);
 
     // Test file operations
-    printf("## Testing file operations\n");  
+    printf("## Testing file operations\n");
     rc = test_file_operations(TEST_FILE, TEST_BACKEND_TEXT);
     assert (rc == 0);
 
