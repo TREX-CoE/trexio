@@ -157,7 +157,11 @@ TESTS_C = \
   tests/delete_group_text \
   tests/overwrite_all_text \
   tests/io_all \
-  tests/pre_close
+  tests/pre_close \
+  tests/test_utility_functions \
+  tests/test_delete_operations \
+  tests/test_comprehensive_io \
+  tests/test_error_handling
 
 if HAVE_HDF5
 TESTS_C += \
