@@ -63,7 +63,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libhdf5-dev emacs libtool-bin valgrind
+          sudo apt-get install libhdf5-dev emacs libtool-bin valgrind cmake
 
       - name: configure with autotools
         run: |
@@ -76,10 +76,11 @@ jobs:
       - name: check TREXIO
         run: make -j2 check
 
-      #- name: check via valgrind
-      #  run: |
-      #    which libtool
-      #    cd tests && ./run_valgrind.sh
+      - name: check via valgrind
+        if: matrix.os != 'ubuntu-22.04-arm'
+        run: |
+          which libtool
+          cd tests && ./run_valgrind.sh
 
       - name: Archive test log file
         if: failure()
@@ -153,6 +154,20 @@ jobs:
       
       - name: maintainer clean
         run: make maintainer-clean
+
+      - name: configure with CMake
+        run: cmake -S. -Bbuild
+
+      - name: compile TREXIO
+        working-directory: build
+        run: make -j2
+
+      - name: check TREXIO
+        working-directory: build
+        run: ctest -j2
+ 
+      - name: maintainer clean
+        run: rm -rf -- build/
 
   trexio_macos:
     name: x86 and arm64 MacOS
