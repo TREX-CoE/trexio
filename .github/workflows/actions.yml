@@ -154,18 +154,20 @@ jobs:
         run: make maintainer-clean
 
       - name: configure with CMake
-        run: cmake -S. -Bbuild
+        run: |
+          mkdir builddir && cd builddir
+          cmake ..
 
       - name: compile TREXIO
-        working-directory: build
+        working-directory: builddir
         run: make -j2
 
       - name: check TREXIO
-        working-directory: build
+        working-directory: builddir
         run: ctest -j2
  
       - name: maintainer clean
-        run: rm -rf -- build/
+        run: rm -rf -- builddir/
 
   trexio_macos:
     name: x86 and arm64 MacOS
