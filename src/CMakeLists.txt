@@ -65,8 +65,10 @@ set_target_properties(trexio PROPERTIES
 option(ENABLE_HDF5 "Enable HDF5 support" ON)
 
 if(ENABLE_HDF5)
-  # Try to detect HDF5 installation using built-in FindHDF5.cmake macro.
-  find_package(HDF5 REQUIRED COMPONENTS C)
+  # Try to detect HDF5 installation using built-in FindHDF5.cmake macro, unless the target has been set up previously.
+  if (NOT TARGET hdf5::hdf5)
+      find_package(HDF5 REQUIRED COMPONENTS C)
+  endif ()
 
   if(HDF5_FOUND)
     message(STATUS "HDF5 version     :: ${HDF5_VERSION}")
@@ -84,15 +86,22 @@ if(ENABLE_HDF5)
   list(APPEND TREXIO_PRIVATE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/trexio_hdf5.h)
   # - define symbol HAVE_HDF5=1 (used to activate HDF5 back end in the preprocessor conditionals)
   target_compile_definitions(trexio PUBLIC "HAVE_HDF5")
-  # - include directories with HDF5 header files
-  target_include_directories(trexio PRIVATE ${HDF5_C_INCLUDE_DIRS})
-  # - link to HDF5 C libraries
-  target_link_libraries(trexio PRIVATE ${HDF5_C_LIBRARIES})
+  target_link_libraries(trexio PRIVATE hdf5::hdf5)
+  if (HDF5_IS_PARALLEL)
+      if (NOT TARGET MPI::MPI_C)
+          find_package(MPI REQUIRED COMPONENTS C)
+      endif ()
+      target_link_libraries(trexio PUBLIC MPI::MPI_C)
+  endif ()
 endif()
 
 # Private headers have to be listed as sources, otherwise they are installed
 # with public headers upon make install (when using PRIVATE_HEADER property).
 target_sources(trexio PRIVATE ${TREXIO_SOURCES} ${TREXIO_PRIVATE_HEADERS})
+target_include_directories(trexio PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        $<INSTALL_INTERFACE:include>
+)
 
 # ============= FORTRAN SUPPORT ==============
 
