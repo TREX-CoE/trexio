@@ -183,7 +183,7 @@ To build TREXIO without HDF5 back end, append `--without-hdf5` option to `config
 
 Additional requirements:
 
-- Python3       (>= 3.6)
+- Python3       (>= 3.8)
 - Emacs         (>= 26.0)
 - SWIG          (>= 4.0)   [required for the Python API]
 
