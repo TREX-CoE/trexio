@@ -122,7 +122,7 @@ target_link_libraries(trexio_f PUBLIC trexio)
 
 add_custom_command(
         # note writing trex.json to src tree
-        COMMAND build_json.sh
+        COMMAND bash build_json.sh
         OUTPUT  "${PROJECT_SOURCE_DIR}/trex.json"
         DEPENDS "${PROJECT_SOURCE_DIR}/trex.org"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
