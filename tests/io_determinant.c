@@ -50,7 +50,9 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
 
   // allocate memory and fill with values to be written
   det_list = (int64_t*) calloc(2 * int_num * SIZE, sizeof(int64_t));
+  assert(det_list != NULL);
   det_coef = (double*) calloc(SIZE, sizeof(double));
+  assert(det_coef != NULL);
 
   const int32_t orb_list_up[4] = {0,1,2,3};
   const int32_t orb_list_dn[3] = {0,1,2};
@@ -179,7 +181,9 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   uint64_t size_r = 2*SIZE;
 
   det_list_read = (int64_t*) calloc(2*int_num*size_r,sizeof(int64_t));
+  assert (det_list_read != NULL);
   det_coef_read = (double*)  calloc(size_r,sizeof(double));
+  assert (det_coef_read != NULL);
 
   // specify the read parameters, here:
   // 1 chunk of 10 elements using offset of 40 (i.e. lines No. 40--59) into elements of the array starting from 5
@@ -263,7 +267,9 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
   // check conversion of determinants into orbital lists
   int64_t  size_list = TREXIO_NORB_PER_INT * int_num;
   int32_t* orb_list_up = (int32_t*) calloc(size_list, sizeof(int32_t));
+  assert (orb_list_up != NULL);
   int32_t* orb_list_dn = (int32_t*) calloc(size_list, sizeof(int32_t));
+  assert (orb_list_dn != NULL);
   int32_t  occ_num_up, occ_num_dn;
 
 //  rc = trexio_read_determinant_list(file, 0L, &chunk_read, &det_list_read[0L]);
@@ -304,6 +310,7 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
 
   // check conversion of one orbital list into the bitfield determinant representation
   int64_t* det_list_check = (int64_t*) calloc(int_num, sizeof(int64_t));
+  assert (det_list_check != NULL);
 
   rc = trexio_to_bitfield_list (orb_list_up, occ_num_up, det_list_check, int_num);
   assert (rc == TREXIO_SUCCESS);
@@ -328,6 +335,101 @@ static int test_read_determinant (const char* file_name, const back_end_t backen
 }
 
 
+static int test_helpers() {
+
+/*================= START OF TEST ==================*/
+
+  trexio_exit_code rc = TREXIO_FAILURE;
+
+  {
+    int32_t up_list[1] = { 1 };
+    int32_t dn_list[1] = { 1 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 1, 1);
+    assert (rc == TREXIO_SUCCESS);
+    rc = trexio_safe_phase_aabb_to_abab_list(&up_list[0], 1, &dn_list[0], 1, 1, 1);
+    assert (rc == TREXIO_SUCCESS);
+    int64_t det[2] = { 2, 2 };
+    rc = trexio_phase_aabb_to_abab(1, &det[0]);
+    assert (rc == TREXIO_SUCCESS);
+  }
+
+  {
+    int32_t up_list[1] = { 2 };
+    int32_t dn_list[1] = { 1 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 1, 1);
+    assert (rc == TREXIO_PHASE_CHANGE);
+    int64_t det[2] = { 4, 2 };
+    rc = trexio_phase_aabb_to_abab(1, &det[0]);
+    assert (rc == TREXIO_PHASE_CHANGE);
+  }
+
+  {
+    int32_t up_list[1] = { 1 };
+    int32_t dn_list[1] = { 2 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 1, 1);
+    assert (rc == TREXIO_SUCCESS);
+    int64_t det[2] = { 2, 4 };
+    rc = trexio_phase_aabb_to_abab(1, &det[0]);
+    assert (rc == TREXIO_SUCCESS);
+  }
+
+  {
+    int32_t up_list[3] = { 0, 1, 2 };
+    int32_t dn_list[3] = { 0, 1, 2 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 3, 3);
+    assert (rc == TREXIO_PHASE_CHANGE);
+    int64_t det[2] = { 7, 7 };
+    rc = trexio_phase_aabb_to_abab(1, &det[0]);
+    assert (rc == TREXIO_PHASE_CHANGE);
+  }
+
+  {
+    int32_t up_list[4] = { 0, 1, 2, 3 };
+    int32_t dn_list[3] = { 0, 1, 2 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 4, 3);
+    assert (rc == TREXIO_SUCCESS);
+  }
+
+  {
+    int32_t up_list[4] = { 0, 1, 2, 3 };
+    int32_t dn_list[3] = { 0, 2, 4 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 4, 3);
+    assert (rc == TREXIO_SUCCESS);
+    int64_t det[2] = { 15, 21 };
+    rc = trexio_phase_aabb_to_abab(1, &det[0]);
+    assert (rc == TREXIO_SUCCESS);
+  }
+
+  {
+    int32_t up_list[5] = { 0, 2, 3, 4, 0 };
+    int32_t dn_list[5] = { 0, 1, 2, 0, 0 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 4, 3);
+    assert (rc == TREXIO_SUCCESS);
+    rc = trexio_safe_phase_aabb_to_abab_list(&up_list[0], 5, &dn_list[0], 5, 4, 3);
+    assert (rc == TREXIO_SUCCESS);
+    int64_t det[2] = { 29, 7 };
+    rc = trexio_phase_aabb_to_abab(1, &det[0]);
+    assert (rc == TREXIO_SUCCESS);
+  }
+  {
+    int32_t up_list[4] = { 0, 2, 3, 4 };
+    int32_t dn_list[3] = { 0, 1, 3 };
+    rc = trexio_phase_aabb_to_abab_list(&up_list[0], &dn_list[0], 4, 3);
+    assert (rc == TREXIO_PHASE_CHANGE);
+    int64_t det[2] = { 29, 11 };
+    rc = trexio_phase_aabb_to_abab(1, &det[0]);
+    assert (rc == TREXIO_PHASE_CHANGE);
+  }
+
+
+/*================= END OF TEST ==================*/
+
+  return 0;
+}
+
+
+
+
 int main(){
 
 /*============== Test launcher ================*/
@@ -337,7 +439,7 @@ int main(){
     int rc = system(RM_COMMAND);
     assert (rc == 0);
 
-  // check the first write attempt (SIZE elements written in N_CHUNKS chunks)
+    // check the first write attempt (SIZE elements written in N_CHUNKS chunks)
     test_write_determinant (TREXIO_FILE, TEST_BACKEND, 0L, mo_nums[i]);
     test_has_determinant   (TREXIO_FILE, TEST_BACKEND);
     test_read_determinant  (TREXIO_FILE, TEST_BACKEND, 0L);
@@ -349,6 +451,8 @@ int main(){
     rc = system(RM_COMMAND);
     assert (rc == 0);
   }
+
+  test_helpers();
 
   return 0;
 }
