@@ -5,9 +5,6 @@
 #include <string.h>
 #include <math.h>
 
-#define TEST_BACKEND_TEXT TREXIO_TEXT
-#define TEST_FILE "test_simple_io_trexio"
-
 static int test_basic_has_read_write() {
     /* Test basic has/read/write operations that weren't covered in existing tests */
     
@@ -17,7 +14,7 @@ static int test_basic_has_read_write() {
     /*================= START OF TEST ==================*/
 
     // Create file and test various has/read/write operations
-    file = trexio_open(TEST_FILE, 'w', TEST_BACKEND_TEXT, &rc);
+    file = trexio_open(TREXIO_FILE, 'w', TEST_BACKEND, &rc);
     assert(file != NULL);
     assert(rc == TREXIO_SUCCESS);
 
@@ -49,43 +46,56 @@ static int test_basic_has_read_write() {
     rc = trexio_close(file);
     assert(rc == TREXIO_SUCCESS);
 
-    // Test has and read operations
-    file = trexio_open(TEST_FILE, 'r', TEST_BACKEND_TEXT, &rc);
+    // Read file and verify data
+    file = trexio_open(TREXIO_FILE, 'r', TEST_BACKEND, &rc);
     assert(file != NULL);
     assert(rc == TREXIO_SUCCESS);
 
     // Test has functions
-    assert(trexio_has_nucleus_point_group(file) == TREXIO_SUCCESS);
-    assert(trexio_has_nucleus_repulsion(file) == TREXIO_SUCCESS);
-    assert(trexio_has_electron_up_num(file) == TREXIO_SUCCESS);
-    assert(trexio_has_electron_dn_num(file) == TREXIO_SUCCESS);
-    assert(trexio_has_state_id(file) == TREXIO_SUCCESS);
-    assert(trexio_has_state_energy(file) == TREXIO_SUCCESS);
-    assert(trexio_has_state_current_label(file) == TREXIO_SUCCESS);
+    rc = trexio_has_nucleus_point_group(file);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_has_nucleus_repulsion(file);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_has_electron_up_num(file);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_has_electron_dn_num(file);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_has_state_id(file);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_has_state_energy(file);
+    assert(rc == TREXIO_SUCCESS);
+
+    rc = trexio_has_state_current_label(file);
+    assert(rc == TREXIO_SUCCESS);
 
     // Test read functions
-    char read_point_group[10];
-    double read_repulsion;
-    int32_t read_up_num, read_dn_num;
+    char point_group[10];
+    rc = trexio_read_nucleus_point_group(file, point_group, 10);
+    assert(rc == TREXIO_SUCCESS);
+    assert(strcmp(point_group, "C1") == 0);
+
+    double repulsion;
+    rc = trexio_read_nucleus_repulsion(file, &repulsion);
+    assert(rc == TREXIO_SUCCESS);
+    assert(fabs(repulsion - 85.123456) < 1e-12);
+
+    int32_t up_num, dn_num;
+    rc = trexio_read_electron_up_num(file, &up_num);
+    assert(rc == TREXIO_SUCCESS);
+    assert(up_num == 5);
+
+    rc = trexio_read_electron_dn_num(file, &dn_num);
+    assert(rc == TREXIO_SUCCESS);
+    assert(dn_num == 5);
+
     int32_t read_state_id;
     double read_energy;
     char read_current_label[100];
-
-    rc = trexio_read_nucleus_point_group(file, read_point_group, 10);
-    assert(rc == TREXIO_SUCCESS);
-    assert(strcmp(read_point_group, "C1") == 0);
-
-    rc = trexio_read_nucleus_repulsion(file, &read_repulsion);
-    assert(rc == TREXIO_SUCCESS);
-    assert(fabs(read_repulsion - 85.123456) < 1e-12);
-
-    rc = trexio_read_electron_up_num(file, &read_up_num);
-    assert(rc == TREXIO_SUCCESS);
-    assert(read_up_num == 5);
-
-    rc = trexio_read_electron_dn_num(file, &read_dn_num);
-    assert(rc == TREXIO_SUCCESS);
-    assert(read_dn_num == 5);
 
     rc = trexio_read_state_id(file, &read_state_id);
     assert(rc == TREXIO_SUCCESS);
@@ -112,7 +122,7 @@ int main(){
     /*================= Test launcher ================*/
 
     int rc;
-    rc = system("rm -rf " TEST_FILE);
+    rc = system(RM_COMMAND);
 
     printf("# Testing additional has/read/write operations...\n");
 
@@ -121,8 +131,9 @@ int main(){
     assert (rc == 0);
 
     // Clean up
-    rc = system("rm -rf " TEST_FILE);
+    rc = system(RM_COMMAND);
 
-    printf("# All additional I/O tests passed!\n");
+    printf("# All comprehensive I/O tests passed!\n");
     return 0;
+
 }
