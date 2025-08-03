@@ -143,13 +143,13 @@
 
 
    #+NAME: pbc
-  | Variable         | Type    | Row-major Dimensions | Column-major Dimensions | Description                                          |
+  | Variable         | Type    | Row-major Dimensions  | Column-major Dimensions | Description                                          |
   |------------------+---------+----------------------+-------------------------+------------------------------------------------------|
-  | ~periodic~       | ~int~   |                      |                         | ~1~: true or ~0~: false                              |
-  | ~k_point_num~    | ~dim~   |                      |                         | Number of $k$-points                                 |
-  | ~k_point~        | ~float~ | ~[3]~                | ~(3)~                   | $k$-point sampling                                   |
-  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~  | ~(pbc.k_point_num)~     | $k$-point weight                                     |
-  | ~madelung~       | ~float~ |                      |                         | Madelung correction of the Ewald probe charge method |
+  | ~periodic~       | ~int~   |                       |                         | ~1~: true or ~0~: false                              |
+  | ~k_point_num~    | ~dim~   |                       |                         | Number of $k$-points                                 |
+  | ~k_point~        | ~float~ | ~[pbc.k_point_num,3]~ | ~(3,pbc.k_point_num)~   | $k$-point sampling                                   |
+  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~   | ~(pbc.k_point_num)~     | $k$-point weight                                     |
+  | ~madelung~       | ~float~ |                       |                         | Madelung correction of the Ewald probe charge method |
 
    #+CALL: json(data=pbc, title="pbc")
 
@@ -157,16 +157,13 @@
    :results:
    #+begin_src python :tangle trex.json
        "pbc": {
-		 "periodic" : [ "int"  , []                    ]
-	 ,    "k_point_num" : [ "dim"  , []                    ]
-	 ,        "k_point" : [ "float", [ "3" ]               ]
-	 , "k_point_weight" : [ "float", [ "pbc.k_point_num" ] ]
-	 ,       "madelung" : [ "float", []                    ]
+                 "periodic" : [ "int"  , []                         ]
+         ,    "k_point_num" : [ "dim"  , []                         ]
+         ,        "k_point" : [ "float", [ "pbc.k_point_num", "3" ] ]
+         , "k_point_weight" : [ "float", [ "pbc.k_point_num" ]      ]
+         ,       "madelung" : [ "float", []                         ]
        } ,
    #+end_src
-
-   #+RESULTS:
-
    :end:
 
 ** Electron (electron group)
@@ -816,6 +813,7 @@ power = [
     - \[ \hat{T}_{\text{e}} =
       \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy
     - $\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} + \hat{V}_\text{ECP}$ : core electronic Hamiltonian
+    - $\hat{\mu}_x = -x$, $\hat{\mu}_y = -y$, $\hat{\mu}_z = -z$ : dipole moment operators
 
     The one-electron integrals for a one-electron operator $\hat{O}$ are
     \[ \langle p \vert \hat{O} \vert q \rangle \], returned as a matrix
@@ -829,11 +827,17 @@ power = [
   | ~potential_n_e~       | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
   | ~ecp~                 | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
   | ~core_hamiltonian~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$                                |
+  | ~dipole_x~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_x \vert q \rangle$                            |
+  | ~dipole_y~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_y \vert q \rangle$                            |
+  | ~dipole_z~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_z \vert q \rangle$                            |
   | ~overlap_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert q \rangle$ (imaginary part)                             |
   | ~kinetic_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
   | ~potential_n_e_im~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
   | ~ecp_im~              | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
   | ~core_hamiltonian_im~ | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
+  | ~dipole_x_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_x \vert q \rangle$ (imaginary part)           |
+  | ~dipole_y_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_y \vert q \rangle$ (imaginary part)           |
+  | ~dipole_z_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_z \vert q \rangle$ (imaginary part)           |
 
     #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
@@ -846,11 +850,17 @@ power = [
 	  ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_x" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_y" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_z" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	  , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_x_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_y_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_z_im" : [ "float", [ "ao.num", "ao.num" ] ]
 	} ,
     #+end_src
 
@@ -971,11 +981,17 @@ power = [
   | ~potential_n_e~       | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$                    |
   | ~ecp~                 | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$                   |
   | ~core_hamiltonian~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$                                |
+  | ~dipole_x~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_x \vert j \rangle$                            |
+  | ~dipole_y~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_y \vert j \rangle$                            |
+  | ~dipole_z~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_z \vert j \rangle$                            |
   | ~overlap_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert j \rangle$ (imaginary part)                             |
   | ~kinetic_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)           |
   | ~potential_n_e_im~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)  |
   | ~ecp_im~              | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part) |
   | ~core_hamiltonian_im~ | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)               |
+  | ~dipole_x_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_x \vert j \rangle$ (imaginary part)           |
+  | ~dipole_y_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_y \vert j \rangle$ (imaginary part)           |
+  | ~dipole_z_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_z \vert j \rangle$ (imaginary part)           |
 
     #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
@@ -988,11 +1004,17 @@ power = [
 	  ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_x" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_y" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_z" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	  , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_x_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_y_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_z_im" : [ "float", [ "mo.num", "mo.num" ] ]
 	} ,
     #+end_src
 
@@ -1058,6 +1080,11 @@ power = [
 
    where $\alpha$ and $\beta$ denote \uparrow-spin and \downarrow-spin electrons, respectively,
    $n_\uparrow$ and $n_\downarrow$ correspond to ~electron.up_num~ and ~electron.dn_num~, respectively.
+
+   The ordering of determinants in TREXIO files is $\alpha \alpha \ldots \alpha_{n_\uparrow} \beta \beta \ldots \beta_{n_\downarrow}$.
+   The functions ~trexio_phase_aabb_to_abab~ and ~trexio_phase_aabb_to_abab_list~ help switching to the 
+   $\alpha \beta \alpha \beta \ldots$ ordering by checking if a change of phase is required. These functions return ~TREXIO_SUCCESS~ if
+   a change of phase is not required, or ~TREXIO_PHASE_CHANGE~ otherwise.
 
    Note: the ~special~ attribute is present in the types, meaning that the source node is not
    produced by the code generator.
