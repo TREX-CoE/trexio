@@ -26,12 +26,8 @@ return (int) (log(*argv[0]) + sin(*argv[1]) + sqrt(*argv[2]));
     return()
   endif()
 
-  find_library(STD_MATH_LIB "m")
+  set(STD_MATH_LIB "m")
 
-  if (NOT STD_MATH_LIB)
-    message(FATAL_ERROR "Linking to std math library required but the library could not be found")
-  endif()
-  
   set(CMAKE_REQUIRED_LIBRARIES "${STD_MATH_LIB}")
   check_c_source_compiles("${TEST_SOURCE}" "${VAR_BASENAME}_WITH_STDMATH")
 
