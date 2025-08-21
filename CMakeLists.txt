@@ -13,6 +13,8 @@ project(Trexio
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
 # Optional configure for developer mode to generate source code from org-mode files.
 option(TREXIO_DEVEL "TREXIO developer mode (for code generation)." OFF)
 option(TREXIO_TESTS "Whether to perform tests for TREXIO" ON)
