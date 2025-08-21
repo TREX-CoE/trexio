@@ -73,7 +73,7 @@ if(ENABLE_HDF5)
   if(HDF5_FOUND)
     message(STATUS "HDF5 version     :: ${HDF5_VERSION}")
     message(STATUS "HDF5 include dir :: ${HDF5_INCLUDE_DIRS}")
-  else()
+  elseif(NOT TARGET hdf5::hdf5)
     # Download and install HDF5 library using FetchContent
     # ...
     # For now - raise a FATAL_ERROR
