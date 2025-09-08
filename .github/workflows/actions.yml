@@ -63,7 +63,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libhdf5-dev emacs libtool-bin valgrind
+          sudo apt-get install libhdf5-dev emacs libtool-bin valgrind cmake
 
       - name: configure with autotools
         run: |
@@ -77,9 +77,8 @@ jobs:
         run: make -j2 check
 
       #- name: check via valgrind
-      #  run: |
-      #    which libtool
-      #    cd tests && ./run_valgrind.sh
+      #  if: matrix.os != 'ubuntu-22.04-arm'
+      #  run: cd tests && ./run_valgrind.sh
 
       - name: Archive test log file
         if: failure()
@@ -154,6 +153,20 @@ jobs:
       - name: maintainer clean
         run: make maintainer-clean
 
+      - name: configure with CMake
+        run: cmake -S. -Bbuilddir
+
+      - name: compile TREXIO
+        working-directory: builddir
+        run: make -j2
+
+      - name: check TREXIO
+        working-directory: builddir
+        run: ctest -j2
+ 
+      - name: maintainer clean
+        run: rm -rf -- builddir/
+
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
@@ -217,6 +230,49 @@ jobs:
 
       - name: clean
         run: make clean
+
+  trexio_windows:
+    name: Windows MinGW
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+
+      - name: Setup MSYS2 
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-fortran
+            mingw-w64-x86_64-hdf5
+            mingw-w64-x86_64-autotools
+            mingw-w64-x86_64-libtool
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-emacs
+            git
+            make
+
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules
+
+      - name: compile TREXIO
+        run: make -j2
+
+      - name: check TREXIO
+        run: make -j2 check
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: test-report-windows
+          path: test-suite.log
 
   trexio_nix:
     name: Nix
