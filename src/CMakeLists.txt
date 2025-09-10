@@ -58,6 +58,9 @@ set_target_properties(trexio PROPERTIES
 	PUBLIC_HEADER ${TREXIO_PUBLIC_HEADERS}
 	)
 
+include(standard_math_lib)
+target_link_std_math(trexio PRIVATE)
+
 # ============= CONFIGURE HDF5 ==============
 
 # By defaulti, TREXIO is configured with the HDF5 support.
