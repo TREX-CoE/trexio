@@ -12,7 +12,12 @@ function(target_link_std_math TARGET VISIBILITY)
 #include <math.h>
 
 int main(int argc, char **argv) {
-return (int) (log(*argv[0]) + sin(*argv[1]) + sqrt(*argv[2]));
+/* Here, we use log( (double) *argv[0]) to convert the address of the string into
+a double. This will give random values: it will not convert the string into a
+double. But it will make the code valid for the compiler, and will avoid
+optimizations by the compiler to enforce the need of linking with the math
+library. */
+return (int) (log( (double) *argv[0]) + sin( (double) *argv[1]) + sqrt( (double) *argv[2]));
 }
 "
   )
