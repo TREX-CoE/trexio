@@ -109,7 +109,17 @@ trexio_exit_code
 trexio_hdf5_inquire(const char* file_name)
 {
   /* H5Fis_hdf5 determines whether file is in HDF5 format */
+  /* Disable HDF5 error messages during auto-detection */
+  H5E_auto2_t old_func;
+  void *old_client_data;
+  H5Eget_auto2(H5E_DEFAULT, &old_func, &old_client_data);
+  H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+
   htri_t rc = H5Fis_hdf5(file_name);
+
+  /* Restore previous error handler */
+  H5Eset_auto2(H5E_DEFAULT, old_func, old_client_data);
+
   if (rc > 0 ) {
     return TREXIO_SUCCESS;    //exists and HDF5
   } else if (rc == 0) {
@@ -133,6 +143,12 @@ trexio_hdf5_init (trexio_t* const file)
 
   if (stat(file->file_name, &st) == 0) f_exists = 1;
 
+  /* Disable HDF5 error messages during file operations to avoid noise when opening invalid HDF5 files */
+  H5E_auto2_t old_func;
+  void *old_client_data;
+  H5Eget_auto2(H5E_DEFAULT, &old_func, &old_client_data);
+  H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+
   if (f_exists == 1) {
 
     switch (file->mode) {
@@ -152,6 +168,7 @@ trexio_hdf5_init (trexio_t* const file)
     switch (file->mode) {
     case 'r':
       // reading non-existing file -> error
+      H5Eset_auto2(H5E_DEFAULT, old_func, old_client_data);
       return TREXIO_FAILURE;
     case 'u':
     case 'w':
@@ -161,6 +178,9 @@ trexio_hdf5_init (trexio_t* const file)
     }
 
   }
+
+  /* Restore previous error handler */
+  H5Eset_auto2(H5E_DEFAULT, old_func, old_client_data);
 
   /* Create or open groups in the hdf5 file assuming that they exist if file exists */
   switch (file->mode) {
@@ -196,6 +216,10 @@ trexio_hdf5_deinit (trexio_t* const file)
 
   H5Fclose(f->file_id);
   f->file_id = 0;
+
+  // Clean up all allocated memory
+  H5close();
+  H5garbage_collect();
 
   return TREXIO_SUCCESS;
 
@@ -724,7 +748,7 @@ trexio_exit_code trexio_hdf5_read_$group_dset$(trexio_t* const file,
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (dset == NULL) return TREXIO_INVALID_ARG_6;
 
-  const char* dset_name = "$group_dset$";
+  const char dset_name[] = "$group_dset$";
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -751,7 +775,7 @@ trexio_exit_code trexio_hdf5_write_$group_dset$(trexio_t* const file,
   if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (dset == NULL) return TREXIO_INVALID_ARG_5;
 
-  const char* dset_name = "$group_dset$";
+  const char dset_name[] = "$group_dset$";
 
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
 
@@ -789,7 +813,7 @@ trexio_hdf5_read_$group_dset$_size (trexio_t* const file, int64_t* const size_ma
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (size_max == NULL) return TREXIO_INVALID_ARG_2;
 
-  const char* dset_name = "$group_dset$";
+  const char dset_name[] = "$group_dset$";
 
   const trexio_hdf5_t* f = (const trexio_hdf5_t*) file;
 
@@ -825,7 +849,7 @@ trexio_exit_code trexio_hdf5_has_$group_dset$(trexio_t* const file)
   trexio_hdf5_t* f = (trexio_hdf5_t*) file;
   if (f->$group$_group == (hsize_t) 0) return TREXIO_HAS_NOT;
 
-  const char* dset_name = "$group_dset$";
+  const char dset_name[] = "$group_dset$";
 
   htri_t exists = H5Lexists(f->$group$_group, dset_name, H5P_DEFAULT);
   if (exists > 0) {

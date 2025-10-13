@@ -11,7 +11,7 @@
 
 stdenv.mkDerivation rec {
   pname = "trexio";
-  version = "2.5.0";
+  version = "2.6.0";
 
   src = lib.cleanSourceWith {
     src = ../../.;
@@ -40,6 +40,13 @@ stdenv.mkDerivation rec {
   buildInputs = [
     hdf5
   ];
+
+  preConfigure = ''
+    cd ./tools
+    ./build_json.sh
+    ./build_trexio.sh
+    cd ..
+  '';
 
   outputs = [ "out" "dev" ];
 

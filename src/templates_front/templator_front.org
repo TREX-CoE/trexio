@@ -301,10 +301,33 @@ typedef int32_t trexio_exit_code;
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
+#include <limits.h>
+
+#ifndef _WIN32
 #include <err.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+#endif
 
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#include <direct.h>
+#endif
+
+/* Fallback definition for PATH_MAX if not available */
+#ifndef PATH_MAX
+#ifdef _WIN32
+#define PATH_MAX 260
+#else
+#define PATH_MAX 4096
+#endif
+#endif
 
 #include "trexio.h"
 #include "trexio_private.h"
@@ -341,6 +364,17 @@ typedef int32_t trexio_exit_code;
 ** Fortran
 
   #+begin_src f90 :tangle prefix_fortran.f90
+!
+! To include this file in your source code, we recommend creating a new file
+! within your source tree named `trexio_module.F90` (note the capital F is
+! crucial). The contents of this file should be limited to a single line:
+!
+! #include <trexio_f.f90>
+!
+! By following this approach, the C preprocessor will automatically include the
+! TREXIO module from its standard installation location. If you update the
+! library in the future, your source code won't require any modifications.
+!
 module trexio
 
   use, intrinsic :: iso_c_binding, only : c_int32_t, c_int64_t, c_double, c_size_t, c_bool
@@ -1322,7 +1356,7 @@ trexio_open(const char* file_name, const char mode,
   /* Data for the parent type */
 
   // See https://stackoverflow.com/a/50198398/4151327
-  size_t lenSrc = strnlen(file_name, TREXIO_MAX_FILENAME_LENGTH-1);
+  size_t lenSrc = strlen(file_name);
   if (lenSrc < TREXIO_MAX_FILENAME_LENGTH) {
     memcpy(result->file_name, file_name, lenSrc+1);
   } else {
@@ -1598,10 +1632,10 @@ def _open(file_name: str, mode: str, back_end: int):
             if rc_open == TREXIO_SUCCESS:
                 trexio_file = return_obj[0]
                 assert trexio_file is not None
-    except AssertionError:
-        raise Exception(f"Could not open TREXIO file {file_name} using trexio_open function. The return value is None (NULL pointer).")
 
-    return trexio_file
+            return trexio_file
+    except:
+        raise Error(18) # 18 is an error code for encountering an invalid file
    #+end_src
 
 *** Zero-based versus one-based arrays of indices
@@ -1912,6 +1946,301 @@ def _inquire(file_name: str) -> bool:
         raise Error(rc)
    #+end_src
 
+** Portable file and directory operations
+
+   These functions provide portable file and directory operations 
+   without using system() calls or fork/exec, for better portability
+   and security.
+
+*** C
+
+   #+begin_src c :tangle prefix_front.h :exports none
+/* Portable file and directory operations */
+trexio_exit_code trexio_remove_file(const char* path);
+trexio_exit_code trexio_remove_directory_recursive(const char* path);
+trexio_exit_code trexio_copy_file(const char* source, const char* dest);
+trexio_exit_code trexio_copy_directory_recursive(const char* source, const char* dest);
+   #+end_src
+
+   #+begin_src c :tangle prefix_front.c
+
+/* Portable file removal */
+trexio_exit_code
+trexio_remove_file(const char* path)
+{
+  if (path == NULL || path[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+
+#ifdef _WIN32
+  if (DeleteFileA(path) == 0) {
+    DWORD error = GetLastError();
+    if (error != ERROR_FILE_NOT_FOUND) {
+      return TREXIO_FILE_ERROR;
+    }
+  }
+#else
+  if (unlink(path) != 0 && errno != ENOENT) {
+    return TREXIO_FILE_ERROR;
+  }
+#endif
+
+  return TREXIO_SUCCESS;
+}
+
+/* Portable recursive directory removal */
+trexio_exit_code
+trexio_remove_directory_recursive(const char* path)
+{
+  if (path == NULL || path[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+
+#ifdef _WIN32
+  WIN32_FIND_DATAA findData;
+  HANDLE hFind;
+  char searchPath[MAX_PATH];
+  char fullPath[MAX_PATH];
+  
+  int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", path);
+  if (ret < 0 || ret >= (int) sizeof(searchPath)) return TREXIO_FILE_ERROR;
+  
+  hFind = FindFirstFileA(searchPath, &findData);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    do {
+      if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
+        ret = snprintf(fullPath, sizeof(fullPath), "%s\\%s", path, findData.cFileName);
+        if (ret < 0 || ret >= (int) sizeof(fullPath)) {
+          FindClose(hFind);
+          return TREXIO_FILE_ERROR;
+        }
+        
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+          trexio_exit_code rc = trexio_remove_directory_recursive(fullPath);
+          if (rc != TREXIO_SUCCESS) {
+            FindClose(hFind);
+            return rc;
+          }
+        } else {
+          trexio_exit_code rc = trexio_remove_file(fullPath);
+          if (rc != TREXIO_SUCCESS) {
+            FindClose(hFind);
+            return rc;
+          }
+        }
+      }
+    } while (FindNextFileA(hFind, &findData) != 0);
+    FindClose(hFind);
+  }
+  
+  if (RemoveDirectoryA(path) == 0) {
+    DWORD error = GetLastError();
+    if (error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND) {
+      return TREXIO_FILE_ERROR;
+    }
+  }
+#else
+  DIR *dir = opendir(path);
+  if (dir) {
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+      if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+        char fullPath[PATH_MAX];
+        int ret = snprintf(fullPath, sizeof(fullPath), "%s/%s", path, entry->d_name);
+        if (ret < 0 || ret >= (int) sizeof(fullPath)) {
+          closedir(dir);
+          return TREXIO_FILE_ERROR;
+        }
+        
+        struct stat statbuf;
+        if (stat(fullPath, &statbuf) == 0) {
+          if (S_ISDIR(statbuf.st_mode)) {
+            trexio_exit_code rc = trexio_remove_directory_recursive(fullPath);
+            if (rc != TREXIO_SUCCESS) {
+              closedir(dir);
+              return rc;
+            }
+          } else {
+            trexio_exit_code rc = trexio_remove_file(fullPath);
+            if (rc != TREXIO_SUCCESS) {
+              closedir(dir);
+              return rc;
+            }
+          }
+        }
+      }
+    }
+    closedir(dir);
+  }
+  
+  if (rmdir(path) != 0 && errno != ENOENT) {
+    return TREXIO_FILE_ERROR;
+  }
+#endif
+
+  return TREXIO_SUCCESS;
+}
+
+/* Portable file copy */
+trexio_exit_code
+trexio_copy_file(const char* source, const char* dest)
+{
+  if (source == NULL || source[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+  
+  if (dest == NULL || dest[0] == '\0') {
+    return TREXIO_INVALID_ARG_2;
+  }
+
+#ifdef _WIN32
+  if (!CopyFileA(source, dest, FALSE)) {
+    return TREXIO_FILE_ERROR;
+  }
+#else
+  FILE *src = fopen(source, "rb");
+  if (!src) return TREXIO_FILE_ERROR;
+  
+  FILE *dst = fopen(dest, "wb");
+  if (!dst) {
+    fclose(src);
+    return TREXIO_FILE_ERROR;
+  }
+  
+  char buffer[8192];
+  size_t bytes;
+  while ((bytes = fread(buffer, 1, sizeof(buffer), src)) > 0) {
+    if (fwrite(buffer, 1, bytes, dst) != bytes) {
+      fclose(src);
+      fclose(dst);
+      unlink(dest);
+      return TREXIO_FILE_ERROR;
+    }
+  }
+  
+  fclose(src);
+  fclose(dst);
+#endif
+
+  return TREXIO_SUCCESS;
+}
+
+/* Portable recursive directory copy */
+trexio_exit_code
+trexio_copy_directory_recursive(const char* source, const char* dest)
+{
+  if (source == NULL || source[0] == '\0') {
+    return TREXIO_INVALID_ARG_1;
+  }
+  
+  if (dest == NULL || dest[0] == '\0') {
+    return TREXIO_INVALID_ARG_2;
+  }
+
+#ifdef _WIN32
+  if (CreateDirectoryA(dest, NULL) == 0) {
+    DWORD error = GetLastError();
+    if (error != ERROR_ALREADY_EXISTS) {
+      return TREXIO_FILE_ERROR;
+    }
+  }
+  
+  WIN32_FIND_DATAA findData;
+  HANDLE hFind;
+  char searchPath[MAX_PATH];
+  char sourcePath[MAX_PATH];
+  char destPath[MAX_PATH];
+  
+  int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", source);
+  if (ret < 0 || ret >= (int) sizeof(searchPath)) return TREXIO_FILE_ERROR;
+  
+  hFind = FindFirstFileA(searchPath, &findData);
+  if (hFind == INVALID_HANDLE_VALUE) {
+    return TREXIO_FILE_ERROR;
+  }
+  
+  do {
+    if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
+      ret = snprintf(sourcePath, sizeof(sourcePath), "%s\\%s", source, findData.cFileName);
+      if (ret < 0 || ret >= (int) sizeof(sourcePath)) {
+        FindClose(hFind);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      ret = snprintf(destPath, sizeof(destPath), "%s\\%s", dest, findData.cFileName);
+      if (ret < 0 || ret >= (int) sizeof(destPath)) {
+        FindClose(hFind);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        trexio_exit_code rc = trexio_copy_directory_recursive(sourcePath, destPath);
+        if (rc != TREXIO_SUCCESS) {
+          FindClose(hFind);
+          return rc;
+        }
+      } else {
+        trexio_exit_code rc = trexio_copy_file(sourcePath, destPath);
+        if (rc != TREXIO_SUCCESS) {
+          FindClose(hFind);
+          return rc;
+        }
+      }
+    }
+  } while (FindNextFileA(hFind, &findData) != 0);
+  
+  FindClose(hFind);
+#else
+  if (mkdir(dest, 0755) != 0 && errno != EEXIST) {
+    return TREXIO_FILE_ERROR;
+  }
+  
+  DIR *dir = opendir(source);
+  if (!dir) return TREXIO_FILE_ERROR;
+  
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+      char sourcePath[PATH_MAX];
+      char destPath[PATH_MAX];
+      
+      int ret = snprintf(sourcePath, sizeof(sourcePath), "%s/%s", source, entry->d_name);
+      if (ret < 0 || ret >= (int) sizeof(sourcePath)) {
+        closedir(dir);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      ret = snprintf(destPath, sizeof(destPath), "%s/%s", dest, entry->d_name);
+      if (ret < 0 || ret >= (int) sizeof(destPath)) {
+        closedir(dir);
+        return TREXIO_FILE_ERROR;
+      }
+      
+      struct stat statbuf;
+      if (stat(sourcePath, &statbuf) == 0) {
+        if (S_ISDIR(statbuf.st_mode)) {
+          trexio_exit_code rc = trexio_copy_directory_recursive(sourcePath, destPath);
+          if (rc != TREXIO_SUCCESS) {
+            closedir(dir);
+            return rc;
+          }
+        } else {
+          trexio_exit_code rc = trexio_copy_file(sourcePath, destPath);
+          if (rc != TREXIO_SUCCESS) {
+            closedir(dir);
+            return rc;
+          }
+        }
+      }
+    }
+  }
+  closedir(dir);
+#endif
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
 ** File copy
 
    ~trexio_cp~ copies a TREXIO file using =cp=. The destination file
@@ -1975,26 +2304,14 @@ trexio_cp(const char* source, const char* dest)
     return TREXIO_FILE_ERROR;
   }
 
-  /* Call cp */
-
-#ifndef CP_COMMAND
-#define CP_COMMAND "cp", "-r"
-#endif
-
-
-  pid_t pid = fork();
-  if (pid == 0) {
-    execlp("cp", CP_COMMAND, source, dest, (char *)0);
-  } else if (pid < 0) {
-    return TREXIO_FILE_ERROR;
+  /* Pure C implementation for copying files and directories */
+  if (back_end_local == TREXIO_TEXT) {
+    /* Directory -> use recursive directory copy */
+    return trexio_copy_directory_recursive(source, dest);
   } else {
-    int wstatus;
-    pid_t ws = waitpid( pid, &wstatus, 0);
-    if (ws != pid || !WIFEXITED(wstatus) )
-      return TREXIO_FILE_ERROR;
+    /* File -> use file copy */
+    return trexio_copy_file(source, dest);
   }
-
-  return TREXIO_SUCCESS;
 }
    #+end_src
 
@@ -2163,7 +2480,7 @@ trexio_pre_close (trexio_t* file)
       rc = trexio_read_determinant_coefficient_size(file, &ncoeff);
       if (rc != TREXIO_SUCCESS) return rc;
 
-      /* Maybe be even more direct and use assert here so that the user's code crushes in case of inconsistency */
+      /* Maybe be even more direct and use assert here so that the user's code crashes in case of inconsistency */
       if (ndet != ncoeff) return TREXIO_INVALID_DETERMINANT_NUM;
     }
 
@@ -2230,7 +2547,7 @@ trexio_pre_close (trexio_t* file)
       if (rc != TREXIO_SUCCESS) return rc;
 
     } else if (has_dn) {
-      
+
       trexio_exit_code rc = TREXIO_FAILURE;
 
       rc = trexio_read_electron_dn_num(file, &ndn);
@@ -2391,7 +2708,9 @@ trexio_has_$group$ (trexio_t* const file)
 
      #+begin_src f90 :tangle has_group_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_$group$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_$group$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group$
@@ -2677,7 +2996,9 @@ trexio_has_$group_num$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_attr_num_64_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_num$_64 (trex_file, num) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_num$_64 &
+        (trex_file, num) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(in), value :: num
@@ -2687,7 +3008,9 @@ end interface
 
      #+begin_src f90 :tangle read_attr_num_64_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_num$_64 (trex_file, num) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_num$_64 &
+        (trex_file, num) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_double$, intent(out) :: num
@@ -2697,7 +3020,9 @@ end interface
 
      #+begin_src f90 :tangle write_attr_num_32_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_num$_32 (trex_file, num) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_num$_32 &
+        (trex_file, num) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(in), value :: num
@@ -2707,7 +3032,9 @@ end interface
 
      #+begin_src f90 :tangle read_attr_num_32_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_num$_32 (trex_file, num) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_num$_32 &
+        (trex_file, num) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_single$, intent(out) :: num
@@ -2717,7 +3044,9 @@ end interface
 
      #+begin_src f90 :tangle write_attr_num_def_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_num$ (trex_file, num) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_num$ &
+        (trex_file, num) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(in), value :: num
@@ -2727,7 +3056,9 @@ end interface
 
      #+begin_src f90 :tangle read_attr_num_def_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_num$ (trex_file, num) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_num$ &
+        (trex_file, num) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_num_f_dtype_default$, intent(out) :: num
@@ -2737,7 +3068,9 @@ end interface
 
      #+begin_src f90 :tangle has_attr_num_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_$group_num$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_$group_num$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_num$
@@ -2868,7 +3201,7 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
   int64_t $group_dset_dim$ = 0;
 
   trexio_exit_code rc = TREXIO_FAILURE;
-  
+
   /* Error handling for this call is added by the generator */
   rc = trexio_read_$group_dset_dim$_64(file, &($group_dset_dim$));
 
@@ -3332,7 +3665,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_data_64_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_dset$_64 (trex_file, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_dset$_64 &
+        (trex_file, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(in) :: dset$group_dset_f_dims$
@@ -3342,7 +3677,9 @@ end interface
 
      #+begin_src f90 :tangle read_dset_data_64_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$_64 (trex_file, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$_64 &
+        (trex_file, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_double$, intent(out) :: dset$group_dset_f_dims$
@@ -3352,7 +3689,9 @@ end interface
 
      #+begin_src f90 :tangle write_dset_data_32_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_dset$_32 (trex_file, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_dset$_32 &
+        (trex_file, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(in) :: dset$group_dset_f_dims$
@@ -3362,7 +3701,9 @@ end interface
 
      #+begin_src f90 :tangle read_dset_data_32_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$_32 (trex_file, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$_32 &
+        (trex_file, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_single$, intent(out) :: dset$group_dset_f_dims$
@@ -3372,7 +3713,9 @@ end interface
 
      #+begin_src f90 :tangle write_dset_data_def_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_dset$ (trex_file, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_dset$ &
+        (trex_file, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(in) :: dset$group_dset_f_dims$
@@ -3382,7 +3725,9 @@ end interface
 
      #+begin_src f90 :tangle read_dset_data_def_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$ (trex_file, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$ &
+        (trex_file, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      $group_dset_f_dtype_default$, intent(out) :: dset$group_dset_f_dims$
@@ -3392,7 +3737,9 @@ end interface
 
      #+begin_src f90 :tangle has_dset_data_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_$group_dset$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -3660,7 +4007,7 @@ trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file,
 
   if (size_index_read < rank * (*buffer_size_read)) return TREXIO_INVALID_ARG_5;
   if (size_value_read <        (*buffer_size_read)) return TREXIO_INVALID_ARG_7;
-  
+
   return trexio_read_$group_dset$(file, offset_file, buffer_size_read, index_sparse_read, value_sparse_read);
 }
 
@@ -3797,7 +4144,7 @@ trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file,
 
   if (size_index_write < rank * buffer_size) return TREXIO_INVALID_ARG_5;
   if (size_value_write <        buffer_size) return TREXIO_INVALID_ARG_7;
-  
+
   return trexio_write_$group_dset$(file, offset_file, buffer_size, index_sparse_write, value_sparse_write);
 }
 
@@ -3959,9 +4306,11 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_sparse_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_dset$ (trex_file, &
-                                               offset_file, buffer_size, &
-                                               index_sparse, value_sparse) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_dset$ &
+        (trex_file, &
+        offset_file, buffer_size, &
+        index_sparse, value_sparse) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -3972,10 +4321,12 @@ interface
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_write_safe_$group_dset$ (trex_file, &
-                                                    offset_file, buffer_size, &
-                                                    index_sparse, index_size, &
-                                                    value_sparse, value_size) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_safe_$group_dset$ &
+        (trex_file, &
+        offset_file, buffer_size, &
+        index_sparse, index_size, &
+        value_sparse, value_size) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -3990,9 +4341,11 @@ end interface
 
      #+begin_src f90 :tangle read_dset_sparse_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$ (trex_file, &
-                                              offset_file, buffer_size, &
-                                              index_sparse, value_sparse) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$ &
+        (trex_file, &
+        offset_file, buffer_size, &
+        index_sparse, value_sparse) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4003,10 +4356,12 @@ interface
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_read_safe_$group_dset$ (trex_file, &
-                                                   offset_file, buffer_size, &
-                                                   index_sparse, index_size, &
-                                                   value_sparse, value_size) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_safe_$group_dset$ &
+        (trex_file, &
+        offset_file, buffer_size, &
+        index_sparse, index_size, &
+        value_sparse, value_size) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4021,8 +4376,9 @@ end interface
 
      #+begin_src f90 :tangle read_dset_sparse_size_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$_size (trex_file, &
-                                                   size_max) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$_size &
+        (trex_file, size_max) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(out) :: size_max
@@ -4032,7 +4388,9 @@ end interface
 
      #+begin_src f90 :tangle has_dset_sparse_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_$group_dset$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -4507,7 +4865,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_dset_str_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_dset$_low &
+        (trex_file, dset, max_str_len) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      character(kind=c_char), intent(in)    :: dset(*)
@@ -4518,9 +4878,11 @@ end interface
 
      #+begin_src f90 :tangle read_dset_str_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$_low (trex_file, dset, max_str_len) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$_low &
+        (trex_file, dset, max_str_len) bind(C)
      import
-     integer(c_int64_t), intent(in), value  :: trex_file
+     integer(trexio_t), intent(in), value  :: trex_file
      character(kind=c_char), intent(out)    :: dset(*)
      integer(c_int32_t), intent(in), value  :: max_str_len
    end function trexio_read_$group_dset$_low
@@ -4529,7 +4891,9 @@ end interface
 
      #+begin_src f90 :tangle has_dset_str_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_$group_dset$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -4537,36 +4901,44 @@ end interface
      #+end_src
 
   #+begin_src f90 :tangle helper_read_dset_str_front_fortran.fh_90
-   integer(trexio_exit_code) function trexio_read_$group_dset$ (trex_file, dset, max_str_len)
-     implicit none
-     integer(trexio_t), intent(in), value :: trex_file
-     integer(c_int32_t), intent(in), value :: max_str_len
-     character(len=*), intent(inout) :: dset(*)
+integer(trexio_exit_code) function &
+     trexio_read_$group_dset$ &
+     (trex_file, dset, max_str_len)
+  implicit none
+  integer(trexio_t), intent(in), value :: trex_file
+  integer(c_int32_t), intent(in), value :: max_str_len
+  character(len=*), intent(inout) :: dset(*)
 
-     character, allocatable :: str_compiled(:)
-     integer(c_int64_t) :: $group_dset_dim$
-     integer(trexio_exit_code) :: rc
+  character, allocatable :: str_compiled(:)
+  integer(c_int64_t) :: $group_dset_dim$
+  integer(trexio_exit_code) :: rc
 
-     rc = trexio_read_$group_dset_dim$_64(trex_file, $group_dset_dim$)
-     if (rc /= TREXIO_SUCCESS) trexio_read_$group_dset$ = rc
+  rc = trexio_read_$group_dset_dim$_64 &
+       (trex_file, $group_dset_dim$)
+  if (rc /= TREXIO_SUCCESS) then
+     trexio_read_$group_dset$ = rc
+  endif
 
-     allocate(str_compiled($group_dset_dim$*(max_str_len+1)+1))
+  allocate(str_compiled($group_dset_dim$*(max_str_len+1)+1))
 
-     rc = trexio_read_$group_dset$_low(trex_file, str_compiled, max_str_len)
-     if (rc /= TREXIO_SUCCESS) then
-       deallocate(str_compiled)
-       trexio_read_$group_dset$ = rc
-     else
-       call trexio_str2strarray(str_compiled, $group_dset_dim$, max_str_len, dset)
-       deallocate(str_compiled)
-       trexio_read_$group_dset$ = TREXIO_SUCCESS
-     endif
+  rc = trexio_read_$group_dset$_low(trex_file, str_compiled, max_str_len)
+  if (rc /= TREXIO_SUCCESS) then
+    deallocate(str_compiled)
+    trexio_read_$group_dset$ = rc
+  else
+    call trexio_str2strarray(str_compiled, &
+         $group_dset_dim$, max_str_len, dset)
+    deallocate(str_compiled)
+    trexio_read_$group_dset$ = TREXIO_SUCCESS
+  endif
 
-   end function trexio_read_$group_dset$
+end function trexio_read_$group_dset$
   #+end_src
 
   #+begin_src f90 :tangle helper_write_dset_str_front_fortran.fh_90
-   integer(trexio_exit_code) function trexio_write_$group_dset$ (trex_file, dset, max_str_len)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_dset$ &
+        (trex_file, dset, max_str_len)
      implicit none
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(in), value :: max_str_len
@@ -4576,12 +4948,15 @@ end interface
      integer(c_int64_t) :: $group_dset_dim$
      integer(trexio_exit_code) :: rc
 
-     rc = trexio_read_$group_dset_dim$_64(trex_file, $group_dset_dim$)
+     rc = trexio_read_$group_dset_dim$_64 &
+          (trex_file, $group_dset_dim$)
      if (rc /= TREXIO_SUCCESS) then
        trexio_write_$group_dset$ = rc
      else
        call trexio_strarray2str(dset, $group_dset_dim$, str_compiled)
-       trexio_write_$group_dset$ = trexio_write_$group_dset$_low(trex_file, str_compiled, max_str_len)
+       trexio_write_$group_dset$ = &
+            trexio_write_$group_dset$_low &
+            (trex_file, str_compiled, max_str_len)
      endif
 
    end function trexio_write_$group_dset$
@@ -4887,8 +5262,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_buffered_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_dset$(trex_file, &
-                                               offset_file, buffer_size, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_$group_dset$ &
+        (trex_file, offset_file, buffer_size, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4898,9 +5274,11 @@ interface
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_write_safe_$group_dset$ (trex_file, &
-                                                    offset_file, buffer_size, &
-                                                    dset, dset_size) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_safe_$group_dset$ &
+        (trex_file, &
+        offset_file, buffer_size, &
+        dset, dset_size) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4913,9 +5291,11 @@ end interface
 
      #+begin_src f90 :tangle read_buffered_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_safe_$group_dset$ (trex_file, &
-                                                   offset_file, buffer_size, &
-                                                   dset, dset_size) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_safe_$group_dset$ &
+        (trex_file, &
+        offset_file, buffer_size, &
+        dset, dset_size) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4926,8 +5306,9 @@ interface
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$(trex_file, &
-                                              offset_file, buffer_size, dset) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$ &
+        (trex_file, offset_file, buffer_size, dset) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -4937,8 +5318,9 @@ interface
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_read_$group_dset$_size (trex_file, &
-                                                   size_max) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_$group_dset$_size &
+        (trex_file, size_max) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(out) :: size_max
@@ -4948,7 +5330,9 @@ end interface
 
      #+begin_src f90 :tangle has_buffered_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_$group_dset$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_$group_dset$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_$group_dset$
@@ -5226,8 +5610,10 @@ trexio_has_$group_str$ (trexio_t* const file)
 
      #+begin_src f90 :tangle write_attr_str_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_$group_str$_c (trex_file, str, max_str_len) &
-           bind(C, name="trexio_write_$group_str$")
+   integer(trexio_exit_code) function &
+        trexio_write_$group_str$_c &
+        (trex_file, str, max_str_len) bind(C, &
+        name="trexio_write_$group_str$")
      import
      integer(trexio_t), intent(in), value  :: trex_file
      character(kind=c_char), intent(in)    :: str(*)
@@ -5238,8 +5624,10 @@ end interface
 
      #+begin_src f90 :tangle read_attr_str_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_$group_str$_c (trex_file, str, max_str_len) &
-           bind(C, name="trexio_read_$group_str$")
+   integer(trexio_exit_code) function &
+        trexio_read_$group_str$_c &
+        (trex_file, str, max_str_len) bind(C, &
+        name="trexio_read_$group_str$")
      import
      integer(trexio_t), intent(in), value  :: trex_file
      character(kind=c_char), intent(out)   :: str(*)
@@ -5250,7 +5638,9 @@ end interface
 
      #+begin_src f90 :tangle has_attr_str_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_$group_str$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_$group_str$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value  :: trex_file
    end function trexio_has_$group_str$
@@ -5258,27 +5648,35 @@ end interface
      #+end_src
 
   #+begin_src f90 :tangle helper_read_attr_str_front_fortran.fh_90
-   integer(trexio_exit_code) function trexio_read_$group_str$ (trex_file, str, max_str_len)
-     implicit none
-     integer(trexio_t), intent(in), value  :: trex_file
-     integer(c_int32_t), intent(in), value :: max_str_len
-     character, intent(out) :: str(*)
+integer(trexio_exit_code) function &
+     trexio_read_$group_str$ &
+     (trex_file, str, max_str_len)
+  implicit none
+  integer(trexio_t), intent(in), value  :: trex_file
+  integer(c_int32_t), intent(in), value :: max_str_len
+  character, intent(out) :: str(*)
 
-     trexio_read_$group_str$ = trexio_read_$group_str$_c(trex_file, str, max_str_len)
+  trexio_read_$group_str$ = &
+   trexio_read_$group_str$_c &
+   (trex_file, str, max_str_len)
 
-   end function trexio_read_$group_str$
+end function trexio_read_$group_str$
   #+end_src
 
   #+begin_src f90 :tangle helper_write_attr_str_front_fortran.fh_90
-   integer(trexio_exit_code) function trexio_write_$group_str$ (trex_file, str, max_str_len)
-     implicit none
-     integer(trexio_t), intent(in), value  :: trex_file
-     integer(c_int32_t), intent(in), value :: max_str_len
-     character(len=*), intent(in) :: str
+integer(trexio_exit_code) function &
+     trexio_write_$group_str$ &
+     (trex_file, str, max_str_len)
+  implicit none
+  integer(trexio_t), intent(in), value  :: trex_file
+  integer(c_int32_t), intent(in), value :: max_str_len
+  character(len=*), intent(in) :: str
 
-     trexio_write_$group_str$ = trexio_write_$group_str$_c(trex_file, trim(str) // c_null_char, max_str_len)
+  trexio_write_$group_str$ = &
+   trexio_write_$group_str$_c &
+   (trex_file, trim(str) // c_null_char, max_str_len)
 
-   end function trexio_write_$group_str$
+end function trexio_write_$group_str$
   #+end_src
 
 *** Python templates for front end
@@ -5403,7 +5801,9 @@ trexio_delete_$group$ (trexio_t* const file)
 
      #+begin_src f90 :tangle delete_group_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_delete_$group$ (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_delete_$group$ &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value  :: trex_file
    end function trexio_delete_$group$
@@ -5467,14 +5867,14 @@ trexio_get_int64_num(trexio_t* const file, int32_t* const num)
   if (num   == NULL) return TREXIO_INVALID_ARG_2;
 
   /* Read the number of mos */
-  int64_t mo_num = 0L;
-  trexio_exit_code rc = trexio_read_mo_num_64(file, &mo_num);
+  int32_t mo_num = 0L;
+  trexio_exit_code rc = trexio_read_mo_num_32(file, &mo_num);
   if (rc != TREXIO_SUCCESS) return rc;
   if (mo_num == 0L) return TREXIO_INVALID_NUM;
 
-  /* Compute how many integer numbers is needed to represent a determinant */
+  /* Compute how many integer numbers are needed to represent a determinant */
   int32_t int_num = 0;
-  int_num = (int32_t) (mo_num - 1L)/64 + 1;
+  int_num = (mo_num - 1)/TREXIO_NORB_PER_INT + 1;
 
   *num = int_num;
 
@@ -5746,8 +6146,9 @@ trexio_has_determinant_list (trexio_t* const file)
 
      #+begin_src f90 :tangle write_determinant_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_write_determinant_list (trex_file, &
-                                               offset_file, buffer_size, list) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_determinant_list &
+        (trex_file, offset_file, buffer_size, list) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5757,9 +6158,11 @@ interface
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_write_safe_determinant_list (trex_file, &
-                                                    offset_file, buffer_size, &
-                                                    list, list_size) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_write_safe_determinant_list &
+        (trex_file, &
+        offset_file, buffer_size, &
+        list, list_size) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5772,8 +6175,9 @@ end interface
 
      #+begin_src f90 :tangle read_determinant_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_read_determinant_list(trex_file, &
-                                              offset_file, buffer_size, list) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_determinant_list &
+     (trex_file, offset_file, buffer_size, list) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5783,9 +6187,11 @@ interface
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_read_safe_determinant_list (trex_file, &
-                                                   offset_file, buffer_size, &
-                                                   list, list_size) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_read_safe_determinant_list &
+        (trex_file, &
+        offset_file, buffer_size, &
+        list, list_size) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int64_t), intent(in), value :: offset_file
@@ -5798,14 +6204,18 @@ end interface
 
      #+begin_src f90 :tangle has_determinant_front_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_has_determinant_list (trex_file) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_has_determinant_list &
+        (trex_file) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
    end function trexio_has_determinant_list
 end interface
 
 interface
-   integer(trexio_exit_code) function trexio_get_int64_num (trex_file, num) bind(C)
+   integer(trexio_exit_code) function &
+        trexio_get_int64_num &
+        (trex_file, num) bind(C)
      import
      integer(trexio_t), intent(in), value :: trex_file
      integer(c_int32_t), intent(out) :: num
@@ -6016,6 +6426,11 @@ def has_determinant_list(trexio_file) -> bool:
   bitfield representation of the determinant. If the creation of the bitfield requires a change of sign, the return code is
   ~TREXIO_PHASE_CHANGE~.
 
+  ~trexio_phase_aabb_to_abab~ and ~trexio_phase_aabb_to_abab_list~ are functions that help going from the $\alpha \alpha \ldots \beta\beta$
+  ordering to the $\alpha \beta \alpha \beta \ldots$ ordering by checking if reordering a determinant requires applying a change of
+  phase to the coefficient. These functions return ~TREXIO_SUCCESS~ if the conversion of the determinant doesn't require a change of
+  phase. Otherwise, they return ~TREXIO_PHASE_CHANGE~.
+
   ~trexio_convert_nao_radius~ functions convert a radius from the center of an NAO to its logarithmic interpolation grid.
 
   ~trexio_evaluate_nao_radial~ function evaluates the radial function of an NAO for a given distance from the center.
@@ -6032,14 +6447,22 @@ typedef int64_t  bitfield_t;
 
 #define TREXIO_ORBITAL_SHIFT      1
 #define TREXIO_INT_SIZE           64
-#define TREXIO_NORB_PER_INT       ( 8*sizeof(bitfield_t) )
+#define TREXIO_NORB_PER_INT       64
 #define TREXIO_NORB_PER_INT_SHIFT ( trailz( TREXIO_NORB_PER_INT ) )
 
 trexio_exit_code trexio_to_orbital_list (const int32_t N_int, const bitfield_t* d1, int32_t* const list, int32_t* const occupied_num);
 trexio_exit_code trexio_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* d1, int32_t* const list_up, int32_t* const list_dn, int32_t* const occ_num_up, int32_t* const occ_num_dn);
 trexio_exit_code trexio_safe_to_orbital_list (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_out, const int64_t dim_out, int32_t* const num);
 trexio_exit_code trexio_safe_to_orbital_list_up_dn (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in, int32_t* const dset_up_out, const int64_t dim_up_out, int32_t* const dset_dn_out, const int64_t dim_dn_out, int32_t* const num_up, int32_t* const num_dn);
+
 trexio_exit_code trexio_to_bitfield_list (const int32_t* orb_list, const int32_t occupied_num, bitfield_t* const bit_list, const int32_t N_int);
+
+trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up, const int32_t* list_dn, const int32_t occ_num_up, const int32_t occ_num_dn);
+trexio_exit_code trexio_safe_phase_aabb_to_abab_list (const int32_t* list_up, const int64_t dim_up, const int32_t* list_dn, const int64_t dim_dn, const int32_t occ_num_up, const int32_t occ_num_dn);
+
+trexio_exit_code trexio_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in);
+trexio_exit_code trexio_safe_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in);
+
 
 trexio_exit_code trexio_convert_nao_radius_32 (const float r,
   const float* const grid_r, float* const log_r_out);
@@ -6224,6 +6647,101 @@ trexio_safe_to_orbital_list_up_dn (const int32_t N_int,
   }
   if (dim_dn_out < count) return TREXIO_INVALID_ARG_7;
   return trexio_to_orbital_list_up_dn(N_int, dset_in, dset_up_out, dset_dn_out, num_up, num_dn);
+}
+    #+end_src
+
+    
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
+                                                 const int32_t* list_dn,
+                                                 const int32_t occ_num_up,
+                                                 const int32_t occ_num_dn)
+{
+  if (list_up == NULL) return TREXIO_INVALID_ARG_1;
+  if (list_dn == NULL) return TREXIO_INVALID_ARG_2;
+  if (occ_num_up <= 0) return TREXIO_INVALID_ARG_3;
+  if (occ_num_dn <= 0) return TREXIO_INVALID_ARG_4;
+
+  int32_t* new_list = malloc( (occ_num_up+occ_num_dn)*sizeof(int32_t) );
+  if (new_list == NULL) return TREXIO_ALLOCATION_FAILED;
+
+  const int32_t occupied_num = occ_num_up+occ_num_dn;
+  
+  for (int i=0 ; i<occ_num_up ; ++i) {
+    new_list[i] = 2*list_up[i];
+  }
+
+  for (int i=0 ; i<occ_num_dn ; ++i) {
+    new_list[i+occ_num_up] = 2*list_dn[i]+1;
+  }
+
+  int32_t momax = 0;
+  for (int i=0 ; i<occupied_num ; ++i) {
+    if (new_list[i] > momax) {
+      momax = new_list[i];
+    }
+  }
+
+  const int32_t N_int = momax/TREXIO_NORB_PER_INT + 1;
+
+  bitfield_t* bit_list = malloc( N_int * sizeof(bitfield_t) );
+  if (bit_list == NULL) {
+    free(new_list);
+    return TREXIO_ALLOCATION_FAILED;
+  }
+  
+  trexio_exit_code rc = trexio_to_bitfield_list (new_list, occupied_num, bit_list, N_int);
+
+  free(bit_list);
+  free(new_list);
+
+  return rc;
+}
+
+    
+trexio_exit_code trexio_safe_phase_aabb_to_abab_list (const int32_t* list_up,
+                                                      const int64_t dim_up,
+                                                      const int32_t* list_dn,
+                                                      const int64_t dim_dn,
+                                                      const int32_t occ_num_up,
+                                                      const int32_t occ_num_dn)
+{
+  if (list_up == NULL) return TREXIO_INVALID_ARG_1;
+  if (occ_num_up > dim_up) return TREXIO_INVALID_ARG_2;
+  if (list_dn == NULL) return TREXIO_INVALID_ARG_3;
+  if (occ_num_dn > dim_dn) return TREXIO_INVALID_ARG_2;
+  if (occ_num_up <= 0) return TREXIO_INVALID_ARG_5;
+  if (occ_num_dn <= 0) return TREXIO_INVALID_ARG_6;
+  return trexio_phase_aabb_to_abab_list (list_up, list_dn, occ_num_up, occ_num_dn);
+}
+    #+end_src
+
+    
+    #+begin_src c :tangle prefix_front.c
+trexio_exit_code trexio_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in)
+{
+  if (N_int <= 0) return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL) return TREXIO_INVALID_ARG_2;
+
+  int32_t list_up[N_int*TREXIO_NORB_PER_INT];
+  int32_t occ_num_up;
+  int32_t list_dn[N_int*TREXIO_NORB_PER_INT];
+  int32_t occ_num_dn;
+
+  trexio_exit_code rc = trexio_to_orbital_list_up_dn(N_int, dset_in, &list_up[0], &list_dn[0],
+                                                     &occ_num_up, &occ_num_dn);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  return trexio_phase_aabb_to_abab_list(&list_up[0], &list_dn[0], occ_num_up, occ_num_dn);
+}
+
+trexio_exit_code trexio_safe_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in, const int64_t dim_in)
+{
+  if (N_int <= 0) return TREXIO_INVALID_ARG_1;
+  if (dset_in == NULL) return TREXIO_INVALID_ARG_2;
+  if (dim_in <= 0) return TREXIO_INVALID_ARG_3;
+  if (N_int > dim_in) return TREXIO_INVALID_ARG_3;
+  return trexio_phase_aabb_to_abab(N_int, dset_in);
 }
     #+end_src
 
@@ -6509,8 +7027,10 @@ end interface
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_to_bitfield_list_c(list, occupied_num, det_list, N_int) &
-   bind(C, name="trexio_to_bitfield_list")
+   integer(trexio_exit_code) function &
+        trexio_to_bitfield_list_c &
+        (list, occupied_num, det_list, N_int) &
+        bind(C, name="trexio_to_bitfield_list")
      import
      integer(c_int32_t), intent(in)        :: list(*)
      integer(c_int32_t), intent(in), value :: occupied_num
@@ -6522,8 +7042,10 @@ end interface
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_to_orbital_list_c(N_int, d1, list, occupied_num) &
-   bind(C, name="trexio_to_orbital_list")
+   integer(trexio_exit_code) function &
+        trexio_to_orbital_list_c &
+        (N_int, d1, list, occupied_num) &
+        bind(C, name="trexio_to_orbital_list")
      import
      integer(c_int32_t), intent(in), value :: N_int
      integer(c_int64_t), intent(in)        :: d1(*)
@@ -6535,8 +7057,10 @@ end interface
 
    #+begin_src f90 :tangle prefix_fortran.f90
 interface
-   integer(trexio_exit_code) function trexio_to_orbital_list_up_dn_c(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn) &
-   bind(C, name="trexio_to_orbital_list_up_dn")
+   integer(trexio_exit_code) function &
+        trexio_to_orbital_list_up_dn_c &
+        (N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn) &
+        bind(C, name="trexio_to_orbital_list_up_dn")
      import
      integer(c_int32_t), intent(in), value :: N_int
      integer(c_int64_t), intent(in)        :: d1(*)
@@ -6550,8 +7074,10 @@ end interface
 
   #+begin_src f90 :tangle prefix_fortran.f90
 interface
-  integer(trexio_exit_code) function trexio_convert_nao_radius_32(r, grid_r, log_r_out) &
-  bind(C, name="trexio_convert_nao_radius_32")
+  integer(trexio_exit_code) function &
+       trexio_convert_nao_radius_32 &
+       (r, grid_r, log_r_out) &
+       bind(C, name="trexio_convert_nao_radius_32")
     import
     real(c_float), intent(in), value  :: r
     real(c_float), intent(in)  :: grid_r(*)
@@ -6562,8 +7088,10 @@ end interface
 
   #+begin_src f90 :tangle prefix_fortran.f90
 interface
-  integer(trexio_exit_code) function trexio_convert_nao_radius_64(r, grid_r, log_r_out) &
-  bind(C, name="trexio_convert_nao_radius_64")
+  integer(trexio_exit_code) function &
+       trexio_convert_nao_radius_64 &
+       (r, grid_r, log_r_out) &
+       bind(C, name="trexio_convert_nao_radius_64")
     import
     real(c_double), intent(in), value  :: r
     real(c_double), intent(in)  :: grid_r(*)
@@ -6574,9 +7102,11 @@ end interface
 
   #+begin_src f90 :tangle prefix_fortran.f90
 interface
-  integer(trexio_exit_code) function trexio_evaluate_nao_radial (shell_index, r, &
-          grid_start, grid_size, grid_r, interpolator, normalization, amplitude) &
-  bind(C, name="trexio_evaluate_nao_radial")
+  integer(trexio_exit_code) function &
+       trexio_evaluate_nao_radial &
+       (shell_index, r, &
+       grid_start, grid_size, grid_r, interpolator, normalization, amplitude) &
+       bind(C, name="trexio_evaluate_nao_radial")
     import
     integer(c_int32_t), intent(in), value  :: shell_index
     real(c_double), intent(in), value   :: r
@@ -6592,11 +7122,12 @@ end interface
 
   #+begin_src f90 :tangle prefix_fortran.f90
 interface
-  integer(trexio_exit_code) function trexio_evaluate_nao_radial_all (shell_num, &
+  integer(trexio_exit_code) function &
+       trexio_evaluate_nao_radial_all (shell_num, &
           nucleus_index, nucleus_coords, &
           grid_start, grid_size, grid_r, interpolator, &
           normalization, rx, ry, rz, amplitudes) &
-  bind(C, name="trexio_evaluate_nao_radial_all")
+          bind(C, name="trexio_evaluate_nao_radial_all")
     import
     integer(c_int32_t), intent(in), value  :: shell_num
     integer(c_int32_t), intent(in) :: nucleus_index(*)
@@ -6811,10 +7342,10 @@ def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
 
   #+begin_src f90 :tangle helper_fortran.f90
 contains
-   integer function trexio_info ()
-     implicit none
-     trexio_info = trexio_info_c()
-   end function trexio_info
+integer function trexio_info ()
+  implicit none
+  trexio_info = trexio_info_c()
+end function trexio_info
   #+end_src
 
   This function adds the string length as an extra argument to help the C code
@@ -6824,8 +7355,10 @@ contains
 subroutine trexio_string_of_error (error, string)
    implicit none
    integer(trexio_exit_code), intent(in) :: error
-   character*(*), intent(out)            :: string
-   call  trexio_string_of_error_f(error, len(string), string)
+   character(len=*), intent(out)            :: string
+   integer(c_int32_t)                    :: lenstring
+   lenstring = len(string)
+   call  trexio_string_of_error_f(error, lenstring, string)
 end subroutine trexio_string_of_error
   #+end_src
 
@@ -6835,24 +7368,24 @@ end subroutine trexio_string_of_error
   Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
 
   #+begin_src f90 :tangle helper_fortran.f90
-   integer(trexio_t) function trexio_open (filename, mode, back_end, rc_open)
-     implicit none
-     character(len=*), intent(in)                    :: filename
-     character, intent(in), value                    :: mode
-     integer(trexio_back_end_t), intent(in), value   :: back_end
-     integer(trexio_exit_code), intent(out)          :: rc_open
-     integer(trexio_exit_code) :: rc
+integer(trexio_t) function trexio_open (filename, mode, back_end, rc_open)
+  implicit none
+  character(len=*), intent(in)                    :: filename
+  character, intent(in), value                    :: mode
+  integer(trexio_back_end_t), intent(in), value   :: back_end
+  integer(trexio_exit_code), intent(out)          :: rc_open
+  integer(trexio_exit_code) :: rc
 
-     trexio_open = trexio_open_c(trim(filename) // c_null_char, mode, back_end, rc_open)
-     if (trexio_open == 0_8 .or. rc_open /= TREXIO_SUCCESS) then
-       return
-     endif
-     rc = trexio_set_one_based(trexio_open)
-     if (rc /= TREXIO_SUCCESS) then
-        rc = trexio_close(trexio_open)
-        trexio_open = 0_8
-     endif
-   end function trexio_open
+  trexio_open = trexio_open_c(trim(filename) // c_null_char, mode, back_end, rc_open)
+  if (trexio_open == 0_8 .or. rc_open /= TREXIO_SUCCESS) then
+     return
+  endif
+  rc = trexio_set_one_based(trexio_open)
+  if (rc /= TREXIO_SUCCESS) then
+     rc = trexio_close(trexio_open)
+     trexio_open = 0_8
+  endif
+end function trexio_open
   #+end_src
 
   The function below adapts the original C-based ~trexio_inquire~ for Fortran.
@@ -6860,96 +7393,102 @@ end subroutine trexio_string_of_error
   Note, that Fortran interface calls the main ~TREXIO~ API, which is written in C.
 
   #+begin_src f90 :tangle helper_fortran.f90
-   integer(trexio_exit_code) function trexio_inquire (filename)
-     implicit none
-     character(len=*), intent(in)        :: filename
+integer(trexio_exit_code) function trexio_inquire (filename)
+  implicit none
+  character(len=*), intent(in)        :: filename
 
-     trexio_inquire = trexio_inquire_c(trim(filename) // c_null_char)
-   end function trexio_inquire
+  trexio_inquire = trexio_inquire_c(trim(filename) // c_null_char)
+end function trexio_inquire
   #+end_src
 
   Similarly, the following function adapts ~trexio_cp~.
 
   #+begin_src f90 :tangle helper_fortran.f90
-  integer(trexio_exit_code) function trexio_cp (source, destination)
-    implicit none
-    character(len=*), intent(in)           :: source
-    character(len=*), intent(in)           :: destination
+integer(trexio_exit_code) function trexio_cp (source, destination)
+  implicit none
+  character(len=*), intent(in)           :: source
+  character(len=*), intent(in)           :: destination
 
-    trexio_cp = trexio_cp_c(trim(source) // c_null_char, trim(destination) // c_null_char)
-  end function trexio_cp
+  trexio_cp = trexio_cp_c(trim(source) // c_null_char, trim(destination) // c_null_char)
+end function trexio_cp
    #+end_src
 
   The subroutines below wrap the ~to_orbital_list~ functions to shift the MO indices
   by 1 since in Fortran arrays are 1-based and C/Python they are 0-based.
 
   #+begin_src f90 :tangle helper_fortran.f90
-   integer(trexio_exit_code) function trexio_to_bitfield_list(list, occupied_num, det_list, N_int)
-     implicit none
+integer(trexio_exit_code) function &
+     trexio_to_bitfield_list &
+     (list, occupied_num, det_list, N_int)
+  implicit none
 
-     integer(c_int32_t), intent(in)        :: list(*)
-     integer(c_int32_t), intent(in), value :: occupied_num
-     integer(c_int64_t), intent(out)       :: det_list(*)
-     integer(c_int32_t), intent(in), value :: N_int
-     integer(c_int32_t)                    :: list_0based(occupied_num)
+  integer(c_int32_t), intent(in)        :: list(*)
+  integer(c_int32_t), intent(in), value :: occupied_num
+  integer(c_int64_t), intent(out)       :: det_list(*)
+  integer(c_int32_t), intent(in), value :: N_int
+  integer(c_int32_t)                    :: list_0based(occupied_num)
 
-     integer :: i
-     do i = 1,occupied_num
-       list_0based(i) = list(i) - 1
-     enddo
+  integer :: i
+  do i = 1,occupied_num
+    list_0based(i) = list(i) - 1
+  enddo
 
-     trexio_to_bitfield_list = trexio_to_bitfield_list_c(list_0based, occupied_num, det_list, N_int)
-     if (trexio_to_bitfield_list /= TREXIO_SUCCESS) then
-       return
-     endif
+  trexio_to_bitfield_list = trexio_to_bitfield_list_c(list_0based, occupied_num, det_list, N_int)
+  if (trexio_to_bitfield_list /= TREXIO_SUCCESS) then
+    return
+  endif
 
-   end function trexio_to_bitfield_list
-
-
-   integer(trexio_exit_code) function trexio_to_orbital_list(N_int, d1, list, occupied_num)
-     implicit none
-
-     integer(c_int32_t), intent(in), value :: N_int
-     integer(c_int64_t), intent(in)        :: d1(*)
-     integer(c_int32_t), intent(out)       :: list(*)
-     integer(c_int32_t), intent(out)       :: occupied_num
-
-     integer :: i
-
-     trexio_to_orbital_list = trexio_to_orbital_list_c(N_int, d1, list, occupied_num)
-     if (trexio_to_orbital_list /= TREXIO_SUCCESS) then
-       return
-     endif
-
-     do i = 1,occupied_num
-       list(i) = list(i) + 1
-     enddo
-   end function trexio_to_orbital_list
+end function trexio_to_bitfield_list
 
 
-   integer(trexio_exit_code) function trexio_to_orbital_list_up_dn(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn)
-     implicit none
-     integer(c_int32_t), intent(in), value :: N_int
-     integer(c_int64_t), intent(in)        :: d1(*)
-     integer(c_int32_t), intent(out)       :: list_up(*)
-     integer(c_int32_t), intent(out)       :: list_dn(*)
-     integer(c_int32_t), intent(out)       :: occ_num_up
-     integer(c_int32_t), intent(out)       :: occ_num_dn
+integer(trexio_exit_code) function trexio_to_orbital_list(N_int, d1, list, occupied_num)
+  implicit none
 
-     integer :: i
+  integer(c_int32_t), intent(in), value :: N_int
+  integer(c_int64_t), intent(in)        :: d1(*)
+  integer(c_int32_t), intent(out)       :: list(*)
+  integer(c_int32_t), intent(out)       :: occupied_num
 
-     trexio_to_orbital_list_up_dn = trexio_to_orbital_list_up_dn_c(N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn)
-     if (trexio_to_orbital_list_up_dn /= TREXIO_SUCCESS) then
-       return
-     endif
+  integer :: i
 
-     do i = 1,occ_num_up
-       list_up(i) = list_up(i) + 1
-     enddo
-     do i = 1,occ_num_dn
-       list_dn(i) = list_dn(i) + 1
-     enddo
-   end function trexio_to_orbital_list_up_dn
+  trexio_to_orbital_list = trexio_to_orbital_list_c(N_int, d1, list, occupied_num)
+  if (trexio_to_orbital_list /= TREXIO_SUCCESS) then
+    return
+  endif
+
+  do i = 1,occupied_num
+    list(i) = list(i) + 1
+  enddo
+end function trexio_to_orbital_list
+
+
+integer(trexio_exit_code) function &
+     trexio_to_orbital_list_up_dn &
+     (N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn)
+  implicit none
+  integer(c_int32_t), intent(in), value :: N_int
+  integer(c_int64_t), intent(in)        :: d1(*)
+  integer(c_int32_t), intent(out)       :: list_up(*)
+  integer(c_int32_t), intent(out)       :: list_dn(*)
+  integer(c_int32_t), intent(out)       :: occ_num_up
+  integer(c_int32_t), intent(out)       :: occ_num_dn
+
+  integer :: i
+
+  trexio_to_orbital_list_up_dn = &
+       trexio_to_orbital_list_up_dn_c &
+       (N_int, d1, list_up, list_dn, occ_num_up, occ_num_dn)
+  if (trexio_to_orbital_list_up_dn /= TREXIO_SUCCESS) then
+    return
+  endif
+
+  do i = 1,occ_num_up
+    list_up(i) = list_up(i) + 1
+  enddo
+  do i = 1,occ_num_dn
+    list_dn(i) = list_dn(i) + 1
+  enddo
+end function trexio_to_orbital_list_up_dn
   #+end_src
 
   The subroutine below transforms an array of Fortran strings into one big string using ~TREXIO_DELIM~ symbol
@@ -6957,55 +7496,55 @@ end subroutine trexio_string_of_error
   C API. This is needed due to the fact that strings in C are terminated by ~NULL~ character ~\0~.
 
   #+begin_src f90 :tangle helper_fortran.f90
-   subroutine trexio_strarray2str(str_array, max_num_str, str_res)
-     implicit none
+subroutine trexio_strarray2str(str_array, max_num_str, str_res)
+  implicit none
 
-     integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in string array
-     character(len=*), intent(in)  :: str_array(*)
-     character(len=:), allocatable, intent(out) :: str_res
-     integer(c_int64_t) :: i
+  integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in string array
+  character(len=*), intent(in)  :: str_array(*)
+  character(len=:), allocatable, intent(out) :: str_res
+  integer(c_int64_t) :: i
 
-     str_res = ''
-     do i = 1, max_num_str
-       str_res = str_res // trim(str_array(i)) // TREXIO_DELIM
-     enddo
-     str_res = str_res // c_null_char
+  str_res = ''
+  do i = 1, max_num_str
+     str_res = str_res // trim(str_array(i)) // TREXIO_DELIM
+  enddo
+  str_res = str_res // c_null_char
 
-   end subroutine trexio_strarray2str
+end subroutine trexio_strarray2str
      #+end_src
 
   The subroutine below does the reverse tranformation from one big string with delimeters into an array of Fortran strings.
 
   #+begin_src f90 :tangle helper_fortran.f90
-   subroutine trexio_str2strarray(str_flat, max_num_str, max_len_str, str_array)
-     implicit none
+subroutine trexio_str2strarray(str_flat, max_num_str, max_len_str, str_array)
+  implicit none
 
-     integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in strign array
-     integer, intent(in), value              :: max_len_str  ! maximum length of a string in an array
-     character(kind=c_char), intent(in)      :: str_flat(*)
-     character(len=*), intent(inout)         :: str_array(*)
+  integer(c_int64_t), intent(in), value   :: max_num_str  ! number of elements in strign array
+  integer(c_int32_t), intent(in), value   :: max_len_str  ! maximum length of a string in an array
+  character(kind=c_char), intent(in)      :: str_flat(*)
+  character(len=*), intent(inout)         :: str_array(*)
 
-     character(len=max_len_str)  :: tmp_str
-     integer(c_int64_t) :: i, j, k, ind, len_flat
+  character(len=max_len_str)  :: tmp_str
+  integer(c_int64_t) :: i, j, k, ind, len_flat
 
-     len_flat = (max_len_str+1)*max_num_str + 1
+  len_flat = (max_len_str+1)*max_num_str + 1
 
-     ind=1
-     do i=1,max_num_str
-       k = 1
-       tmp_str=''
-       do j=ind,len_flat
-         if (str_flat(j) == TREXIO_DELIM) then
+  ind=1
+  do i=1,max_num_str
+     k = 1
+     tmp_str=''
+     do j=ind,len_flat
+        if (str_flat(j) == TREXIO_DELIM) then
            ind=j+1
            exit
-         endif
-         tmp_str(k:k) = str_flat(j)
-         k = k + 1
-       enddo
-       str_array(i)=tmp_str
+        endif
+        tmp_str(k:k) = str_flat(j)
+        k = k + 1
      enddo
+     str_array(i)=tmp_str
+  enddo
 
-   end subroutine trexio_str2strarray
+end subroutine trexio_str2strarray
      #+end_src
 
 
@@ -7014,24 +7553,24 @@ end subroutine trexio_string_of_error
   two code are identical, i.e. if the ~assert~ statement pass.
 
   #+begin_src f90 :tangle helper_fortran.f90
-   subroutine trexio_assert(trexio_rc, check_rc, success_message)
-     implicit none
+subroutine trexio_assert(trexio_rc, check_rc, success_message)
+  implicit none
 
-     integer, intent(in), value :: trexio_rc
-     integer, intent(in), value :: check_rc
-     character(len=*), intent(in), optional  :: success_message
+  integer(trexio_exit_code), intent(in), value :: trexio_rc
+  integer(trexio_exit_code), intent(in), value :: check_rc
+  character(len=*), intent(in), optional  :: success_message
 
-     character*(128) :: str
+  character(len=128) :: str
 
-     if (trexio_rc == check_rc) then
-       if (present(success_message)) write(*,*) success_message
-     else
-       call trexio_string_of_error(trexio_rc, str)
-       print *, trim(str)
-       stop 1
-     endif
+  if (trexio_rc == check_rc) then
+     if (present(success_message)) write(*,*) success_message
+  else
+     call trexio_string_of_error(trexio_rc, str)
+     print *, trim(str)
+     stop 1
+  endif
 
-   end subroutine trexio_assert
+end subroutine trexio_assert
      #+end_src
 
 * File suffixes                                                     :noexport:
