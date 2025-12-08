@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
-AC_INIT([trexio],[2.5.1],[https://github.com/TREX-CoE/trexio/issues])
+AC_PREREQ([2.71])
+AC_INIT([trexio],[2.6.0],[https://github.com/TREX-CoE/trexio/issues])
 
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([include/config.h])
@@ -72,8 +72,6 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 
 
-# pkg-config
-PKG_PROG_PKG_CONFIG()
 
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -122,29 +120,36 @@ AC_CHECK_HEADERS([fcntl.h inttypes.h stdint.h stdbool.h stdlib.h string.h unistd
 ### HDF5
 ### ----
 
+# Initialize variables
 PKG_HDF5=""
 HDF5_LIBS=""
 HDF5_LDFLAGS=""
 HDF5_CFLAGS=""
 HDF5_CPPFLAGS=""
-AC_ARG_WITH([hdf5],
-  AS_HELP_STRING([--with-hdf5=PATH], [Path to HDF5 library and headers]), [
-  with_hdf5="$withval"], [with_hdf5="yes"])
 
-AS_IF([test "x$with_hdf5" == "xno"], [],
-      [test "x$with_hdf5" != "xyes"], [
-           HDF5_LIBS="-lhdf5"
-           HDF5_PATH="$with_hdf5"
-           HDF5_LDFLAGS="-L$HDF5_PATH/lib"
-           HDF5_CPPFLAGS="-I$HDF5_PATH/include"
-           AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available]) ],
-      [
-           PKG_CHECK_EXISTS([hdf5], [
-             PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
-             PKG_HDF5="hdf5"
-           ],
-           [ AC_PATH_PROG([H5CC],[h5cc],[not_found])
-             AS_IF([test "$H5CC" != "not_found"], [
+AC_ARG_WITH([hdf5],
+  AS_HELP_STRING([--with-hdf5=PATH], [Use HDF5 (yes|no|/custom/path)]),
+  [],
+  [with_hdf5=yes])
+
+AS_IF([test "x$with_hdf5" = "xno"],
+  [AC_MSG_NOTICE([HDF5 support disabled by user.])],
+  [AS_IF([test "x$with_hdf5" = "xyes"],
+    [
+      # pkg-config
+      PKG_PROG_PKG_CONFIG()
+
+      # Try pkg-config first
+      PKG_CHECK_EXISTS([hdf5 >= 1.8],
+        [
+          PKG_CHECK_MODULES([HDF5], [hdf5 >= 1.8])
+          PKG_HDF5="hdf5"
+        ],
+        [
+          # Fallback: Try to find h5cc
+          AC_PATH_PROG([H5CC], [h5cc], [not_found])
+          AS_IF([test "$H5CC" != "not_found"],
+            [
               HDF5_LIBS="-lhdf5"
               AC_REQUIRE([AC_PROG_SED])
               AC_REQUIRE([AC_PROG_AWK])
@@ -190,32 +195,54 @@ AS_IF([test "x$with_hdf5" == "xno"], [],
                     ;;
                 esac
               done
+            ],
+            [AC_MSG_ERROR([HDF5 not found: install pkg-config .pc file or h5cc, or use --with-hdf5=PATH])]
+          )
+        ]
+      )
+    ],
+    [
+      # User-provided path
+      HDF5_PATH="$with_hdf5"
+      HDF5_LDFLAGS="-L$HDF5_PATH/lib"
+      HDF5_CPPFLAGS="-I$HDF5_PATH/include"
+      HDF5_LIBS="-lhdf5"
+    ]
+  )
 
-             ])
-           ])
-           AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
-      ])
+  AC_DEFINE([HAVE_HDF5], 1, [Define to 1 if HDF5 is available])
+])
+AM_CONDITIONAL([HAVE_HDF5], [test "x$with_hdf5" != "xno"])
 
-AM_CONDITIONAL([HAVE_HDF5],[test "x$with_hdf5" != "xno"])
-
+# Export variables to the Makefiles
 AC_SUBST([PKG_HDF5])
 AC_SUBST([HDF5_LDFLAGS])
 AC_SUBST([HDF5_LIBS])
 AC_SUBST([HDF5_CFLAGS])
 AC_SUBST([HDF5_CPPFLAGS])
+
+# Append flags to global variables
 CPPFLAGS="${HDF5_CPPFLAGS} ${CPPFLAGS}"
 CFLAGS="${HDF5_CFLAGS} ${CFLAGS}"
 LDFLAGS="${HDF5_LDFLAGS} ${LDFLAGS}"
 LIBS="${HDF5_LIBS} ${LIBS}"
 
-AS_IF([test "x$with_hdf5" != "xno"], [
-  OLD_LIBS=$LIBS
-  AC_CHECK_LIB([hdf5], [H5Fcreate], [], [
-    AC_MSG_ERROR([-lhdf5 fails, use ./configure --with-hdf5=... OR check your $LIBRARY_PATH]) ])
-  AC_CHECK_HEADER([hdf5.h], [], [
-    AC_MSG_ERROR([hdf5.h not found, use ./configure --with-hdf5=...]) ])
-  LIBS=$OLD_LIBS
-])
+# Final link and header check (only if enabled)
+AS_IF([test "x$with_hdf5" != "xno"],
+  [
+    OLD_LIBS="$LIBS"
+    AC_CHECK_LIB([hdf5], [H5Fcreate],
+      [],
+      [AC_MSG_ERROR([HDF5 library (-lhdf5) not found or link failed. Provide --with-hdf5=PATH])]
+    )
+    AC_CHECK_HEADER([hdf5.h],
+      [],
+      [AC_MSG_ERROR([hdf5.h not found. Provide --with-hdf5=PATH or check CPPFLAGS])]
+    )
+    LIBS="$OLD_LIBS"
+  ]
+)
+####
 
 # The block below should only execute if the ax_lib_hdf5.m4 macro failed to find HDF5.
 # It is only needed to manually build Python API because setup.py depends on HDF5.
@@ -239,8 +266,8 @@ AC_C_INLINE
 # AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
-if test "x$enable_maintainer_mode" == "xyes"; then
-  TREXIO_DEVEL=" -- Developer mode"
+if test "x$enable_maintainer_mode" = "xyes"; then
+  TREXIO_DEVEL=" -- Maintainer mode"
 else
   TREXIO_DEVEL=""
 fi
@@ -278,7 +305,7 @@ if test "x${TREXIO_DEVEL}" != "x"; then
   #AX_SWIG_PYTHON
 
   AC_CHECK_PROGS([EMACS],[emacs26 emacs],[no])
-  if test x${EMACS} == xno ; then
+  if test x${EMACS} = "xno" ; then
     AC_MSG_ERROR([
     --------------------------------------
     Error: Emacs is required for org-mode.

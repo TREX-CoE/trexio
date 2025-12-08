@@ -31,6 +31,8 @@ single- and/or multi-reference wave functions:
 | [Spicy](https://gitlab.com/theoretical-chemistry-jena/quantum-chemistry/Spicy) | Read             | ---             |
 | [QMC=Chem](https://github.com/TREX-CoE/qmcchem2)                               | Read             | ---             |
 | [QMCkl](https://github.com/TREX-CoE/qmckl)                                     | Read             | ---             |
+| [Dirac](https://www.diracprogram.org)                                          | Write            | ---             |
+| [pymolpro](https://molpro.github.io/pymolpro)                                  | Write            | ---             |
 
 
 * [Installation](#installation)
@@ -181,7 +183,7 @@ To build TREXIO without HDF5 back end, append `--without-hdf5` option to `config
 
 Additional requirements:
 
-- Python3       (>= 3.6)
+- Python3       (>= 3.8)
 - Emacs         (>= 26.0)
 - SWIG          (>= 4.0)   [required for the Python API]
 

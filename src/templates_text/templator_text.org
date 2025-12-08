@@ -178,7 +178,11 @@ char* mkdtemp(char* template) {
     dir = tmpnam(dir);
     if (dir == NULL) return NULL;
 
+#ifdef _WIN32
+    if (mkdir(dir) != 0) {
+#else
     if (mkdir(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+#endif
         return NULL;
     }
 
@@ -211,13 +215,17 @@ trexio_text_init (trexio_t* const file)
 
     if (file->mode == 'r') return TREXIO_READONLY;
 
+#ifdef _WIN32
+    int rc_dir = mkdir(file->file_name);
+#else
     int rc_dir = mkdir(file->file_name, 0777);
+#endif
     if (rc_dir != 0) return TREXIO_ERRNO;
 
   }
 
   /* Create the lock file in the directory */
-  const char* lock_file_name = "/.lock";
+  const char lock_file_name[] = "/.lock";
 
   char file_name[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -232,6 +240,11 @@ trexio_text_init (trexio_t* const file)
   f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
 
   if (f->lock_file <= 0) {
+#ifdef _WIN32
+    /* On Windows, we can't lock files but we should still be able to create them.
+       If we can't create the lock file, return an error */
+    return TREXIO_LOCK_ERROR;
+#else
     if (file->mode != 'r') {
       return TREXIO_ERRNO;
     } else {
@@ -251,6 +264,7 @@ trexio_text_init (trexio_t* const file)
         return TREXIO_ERRNO;
       }
     }
+#endif
   }
 
   return TREXIO_SUCCESS;
@@ -263,6 +277,9 @@ trexio_exit_code trexio_text_lock(trexio_t* const file) {
 
   trexio_text_t* const f = (trexio_text_t*) file;
 
+#ifndef _WIN32
+  /* On Windows, we can't lock the file, so we pass here */
+
   struct flock fl;
 
   fl.l_type   = F_WRLCK;
@@ -273,6 +290,8 @@ trexio_exit_code trexio_text_lock(trexio_t* const file) {
 
   int rc = fcntl(f->lock_file, F_SETLKW, &fl);
   if (rc == -1) return TREXIO_FAILURE;
+
+#endif
 
   return TREXIO_SUCCESS;
 
@@ -288,6 +307,8 @@ trexio_text_unlock (trexio_t* const file)
 
   trexio_text_t* const f = (trexio_text_t*) file;
 
+#ifndef _WIN32
+
   struct flock fl;
 
   fl.l_type   = F_UNLCK;
@@ -296,6 +317,8 @@ trexio_text_unlock (trexio_t* const file)
   fl.l_len    = 0;
   fl.l_pid    = getpid();
   fcntl(f->lock_file, F_SETLK, &fl);
+
+#endif
 
   close(f->lock_file);
   return TREXIO_SUCCESS;
@@ -366,7 +389,7 @@ trexio_text_read_$group$ (trexio_text_t* const file)
   memset($group$,0,sizeof($group$_t));
 
   /* Build the file name */
-  const char* $group$_file_name = "/$group$.txt";
+  const char $group$_file_name[] = "/$group$.txt";
 
   strncpy ($group$->file_name, file->parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
   $group$->file_name[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
@@ -595,7 +618,7 @@ trexio_text_has_$group$ (trexio_t* const file)
   /* Build the file name */
   char $group$_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
-  const char* $group$_file_name = "/$group$.txt";
+  const char $group$_file_name[] = "/$group$.txt";
 
   strncpy ($group$_full_path, file->file_name, TREXIO_MAX_FILENAME_LENGTH);
   $group$_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
@@ -1121,7 +1144,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
 
   /* Build the name of the file with sparse data*/
   /* The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed? */
-  const char $group_dset$_file_name[256] = "/$group_dset$.txt";
+  const char $group_dset$_file_name[] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1132,8 +1155,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
-  FILE* f = fopen(file_full_path, "a");
+  /* Open the file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE* f = fopen(file_full_path, "ab");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
@@ -1187,8 +1210,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* Append .size to the file_full_path in order to write additional info about the written buffer of data */
   strncat(file_full_path, ".size", 6);
 
-  /* Open the new file in "a" (append) mode to append info about the buffer that has been just written */
-  FILE *f_wSize = fopen(file_full_path, "a");
+  /* Open the new file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE *f_wSize = fopen(file_full_path, "ab");
   if (f_wSize == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the buffer_size */
@@ -1202,7 +1225,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   rc = fclose(f_wSize);
   if (rc != 0) return TREXIO_FILE_ERROR;
 
-  const char $group$_file_name[256] = "/$group$.txt";
+  const char $group$_file_name[] = "/$group$.txt";
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* Copy directory name in file_full_path */
@@ -1241,7 +1264,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   /* Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
    ,*/
-  const char $group_dset$_file_name[256] = "/$group_dset$.txt";
+  const char $group_dset$_file_name[] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1252,8 +1275,8 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
-  FILE* f = fopen(file_full_path, "r");
+  /* Open the file in "rb" (read binary) mode to guarantee consistent file positions across platforms */
+  FILE* f = fopen(file_full_path, "rb");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly. For example, for 4-index quantities
@@ -1317,7 +1340,7 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
   /* Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
    ,*/
-  const char $group_dset$_file_name[256] = "/$group_dset$.txt.size";
+  const char $group_dset$_file_name[] = "/$group_dset$.txt.size";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1328,8 +1351,8 @@ trexio_exit_code trexio_text_read_$group_dset$_size(trexio_t* const file, int64_
   strncat (file_full_path, $group_dset$_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
-  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
-  FILE* f = fopen(file_full_path, "r");
+  /* Open the file in "rb" (read binary) mode to guarantee consistent file positions across platforms */
+  FILE* f = fopen(file_full_path, "rb");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
 
@@ -1368,7 +1391,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
   /* Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
    ,*/
-  const char $group_dset$_file_name[256] = "/$group_dset$.txt";
+  const char $group_dset$_file_name[] = "/$group_dset$.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1417,7 +1440,7 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (dset == NULL) return TREXIO_INVALID_ARG_6;
 
-  const char file_name[256] = "/$group_dset$.txt";
+  const char file_name[] = "/$group_dset$.txt";
 
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
@@ -1427,8 +1450,8 @@ trexio_exit_code trexio_text_read_$group_dset$(trexio_t* const file,
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
-  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
-  FILE* f = fopen(file_full_path, "r");
+  /* Open the file in "rb" (read binary) mode to guarantee consistent file positions across platforms */
+  FILE* f = fopen(file_full_path, "rb");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly.
@@ -1480,7 +1503,7 @@ trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (size_max == NULL) return TREXIO_INVALID_ARG_2;
 
-  const char file_name[256] = "/$group_dset$.txt.size";
+  const char file_name[] = "/$group_dset$.txt.size";
 
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
@@ -1490,8 +1513,8 @@ trexio_text_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
-  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
-  FILE* f = fopen(file_full_path, "r");
+  /* Open the file in "rb" (read binary) mode to guarantee consistent file positions across platforms */
+  FILE* f = fopen(file_full_path, "rb");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Read the data from the file and check the return code of fprintf to verify that > 0 bytes have been read or reached EOF */
@@ -1533,7 +1556,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (dset == NULL) return TREXIO_INVALID_ARG_5;
 
-  const char file_name[256] = "/$group_dset$.txt";
+  const char file_name[] = "/$group_dset$.txt";
   const int append_str_len = 6;
 
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
@@ -1544,8 +1567,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* Append name of the file with sparse data */
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
-  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
-  FILE* f = fopen(file_full_path, "a");
+  /* Open the file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE* f = fopen(file_full_path, "ab");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
@@ -1567,8 +1590,8 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   /* Append .size to the file_full_path in order to write additional info about the written buffer of data */
   strncat(file_full_path, ".size", append_str_len);
 
-  /* Open the new file in "a" (append) mode to append info about the buffer that has been just written */
-  FILE *f_wSize = fopen(file_full_path, "a");
+  /* Open the new file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE *f_wSize = fopen(file_full_path, "ab");
   if (f_wSize == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the buffer_size */
@@ -1583,7 +1606,7 @@ trexio_exit_code trexio_text_write_$group_dset$(trexio_t* const file,
   if (rc != 0) return TREXIO_FILE_ERROR;
 
   /* Additional part for the trexio_text_has_group to work */
-  const char group_file_name[256] = "/$group$.txt";
+  const char group_file_name[] = "/$group$.txt";
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* Copy directory name in file_full_path */
@@ -1611,7 +1634,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
-  const char file_name[256] = "/$group_dset$.txt";
+  const char file_name[] = "/$group_dset$.txt";
 
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
@@ -1687,7 +1710,7 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
   if (eof_read_size == NULL) return TREXIO_INVALID_ARG_5;
   if (list == NULL) return TREXIO_INVALID_ARG_6;
 
-  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  const char determinant_list_file_name[] = "/determinant_list.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1698,8 +1721,8 @@ trexio_exit_code trexio_text_read_determinant_list(trexio_t* const file,
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
-  /* Open the file in "r" (read) mode to guarantee that no truncation happens upon consecutive reads */
-  FILE* f = fopen(file_full_path, "r");
+  /* Open the file in "rb" (read binary) mode to guarantee consistent file positions across platforms */
+  FILE* f = fopen(file_full_path, "rb");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Specify the line length in order to offset properly.
@@ -1774,7 +1797,7 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
   if (dims == NULL) return TREXIO_INVALID_ARG_4;
   if (list == NULL) return TREXIO_INVALID_ARG_5;
 
-  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  const char determinant_list_file_name[] = "/determinant_list.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1785,8 +1808,8 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
   strncat (file_full_path, determinant_list_file_name,
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
-  /* Open the file in "a" (append) mode to guarantee that no truncation happens upon consecutive writes */
-  FILE* f = fopen(file_full_path, "a");
+  /* Open the file in "ab" (append binary) mode to guarantee consistent line endings across platforms */
+  FILE* f = fopen(file_full_path, "ab");
   if (f == NULL) return TREXIO_FILE_ERROR;
 
   /* Write the data in the file and check the return code of fprintf to verify that > 0 bytes have been written */
@@ -1810,7 +1833,7 @@ trexio_exit_code trexio_text_write_determinant_list(trexio_t* const file,
   if (rc != 0) return TREXIO_FILE_ERROR;
 
   /* Additional part for the trexio_text_has_group to work */
-  const char det_file_name[256] = "/determinant.txt";
+  const char det_file_name[] = "/determinant.txt";
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* Copy directory name in file_full_path */
@@ -1838,7 +1861,7 @@ trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file)
 {
   if (file == NULL) return TREXIO_INVALID_ARG_1;
 
-  const char determinant_list_file_name[256] = "/determinant_list.txt";
+  const char determinant_list_file_name[] = "/determinant_list.txt";
   /* The full path to the destination TXT file with sparse data. This will include TREXIO directory name. */
   char file_full_path[TREXIO_MAX_FILENAME_LENGTH];
 

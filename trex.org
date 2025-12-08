@@ -13,6 +13,8 @@
 {
    #+end_src
 
+   #+RESULTS:
+
    Dimensions are given both in row-major ~[]~ and column-major ~()~
    formats. Pick the one adapted to the programming language in which
    you use TREXIO (Numpy is by default row-major, and Fortran is column-major).
@@ -47,19 +49,23 @@
   value can be manually overwritten (in unsafe mode) from ~1~ to ~0~.
 
   #+CALL: json(data=metadata, title="metadata")
+
   #+RESULTS:
   :results:
   #+begin_src python :tangle trex.json
       "metadata": {
-                 "code_num" : [ "dim", []                        ]
-        ,            "code" : [ "str", [ "metadata.code_num" ]   ]
-        ,      "author_num" : [ "dim", []                        ]
-        ,          "author" : [ "str", [ "metadata.author_num" ] ]
-        , "package_version" : [ "str", []                        ]
-        ,     "description" : [ "str", []                        ]
-        ,          "unsafe" : [ "int", []                        ]
+		 "code_num" : [ "dim", []                        ]
+	,            "code" : [ "str", [ "metadata.code_num" ]   ]
+	,      "author_num" : [ "dim", []                        ]
+	,          "author" : [ "str", [ "metadata.author_num" ] ]
+	, "package_version" : [ "str", []                        ]
+	,     "description" : [ "str", []                        ]
+	,          "unsafe" : [ "int", []                        ]
       } ,
   #+end_src
+
+  #+RESULTS:
+
   :end:
 
 * System
@@ -69,28 +75,32 @@
    given in Cartesian $(x,y,z)$ format.
 
    #+NAME: nucleus
-  | Variable      | Type    | Row-major Dimensions | Column-major Dimensions | Description              |   |
-  |---------------+---------+----------------------+-------------------------+--------------------------+---|
-  | ~num~         | ~dim~   |                      |                         | Number of nuclei         |   |
-  | ~charge~      | ~float~ | ~[nucleus.num]~      | ~(nucleus.num)~         | Charges of the nuclei    |   |
-  | ~coord~       | ~float~ | ~[nucleus.num, 3]~   | ~(3, nucleus.num)~      | Coordinates of the atoms |   |
-  | ~label~       | ~str~   | ~[nucleus.num]~      | ~(nucleus.num)~         | Atom labels              |   |
-  | ~point_group~ | ~str~   |                      |                         | Symmetry point group     |   |
-  | ~repulsion~   | ~float~ |                      |                         | Nuclear repulsion energy |   |
+  | Variable      | Type    | Row-major Dimensions | Column-major Dimensions | Description              |
+  |---------------+---------+----------------------+-------------------------+--------------------------|
+  | ~num~         | ~dim~   |                      |                         | Number of nuclei         |
+  | ~charge~      | ~float~ | ~[nucleus.num]~      | ~(nucleus.num)~         | Charges of the nuclei    |
+  | ~coord~       | ~float~ | ~[nucleus.num, 3]~   | ~(3, nucleus.num)~      | Coordinates of the atoms |
+  | ~label~       | ~str~   | ~[nucleus.num]~      | ~(nucleus.num)~         | Atom labels              |
+  | ~point_group~ | ~str~   |                      |                         | Symmetry point group     |
+  | ~repulsion~   | ~float~ |                      |                         | Nuclear repulsion energy |
 
    #+CALL: json(data=nucleus, title="nucleus")
+
    #+RESULTS:
    :results:
    #+begin_src python :tangle trex.json
        "nucleus": {
-                   "num" : [ "dim"  , []                     ]
-         ,      "charge" : [ "float", [ "nucleus.num" ]      ]
-         ,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
-         ,       "label" : [ "str"  , [ "nucleus.num" ]      ]
-         , "point_group" : [ "str"  , []                     ]
-         ,   "repulsion" : [ "float", []                     ]
+		   "num" : [ "dim"  , []                     ]
+	 ,      "charge" : [ "float", [ "nucleus.num" ]      ]
+	 ,       "coord" : [ "float", [ "nucleus.num", "3" ] ]
+	 ,       "label" : [ "str"  , [ "nucleus.num" ]      ]
+	 , "point_group" : [ "str"  , []                     ]
+	 ,   "repulsion" : [ "float", []                     ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 ** Cell (cell group)
@@ -115,28 +125,31 @@
    :results:
    #+begin_src python :tangle trex.json
        "cell": {
-                "a" : [ "float", [ "3" ] ]
-         ,      "b" : [ "float", [ "3" ] ]
-         ,      "c" : [ "float", [ "3" ] ]
-         ,    "g_a" : [ "float", [ "3" ] ]
-         ,    "g_b" : [ "float", [ "3" ] ]
-         ,    "g_c" : [ "float", [ "3" ] ]
-         , "two_pi" : [ "int"  , []      ]
+		"a" : [ "float", [ "3" ] ]
+	 ,      "b" : [ "float", [ "3" ] ]
+	 ,      "c" : [ "float", [ "3" ] ]
+	 ,    "g_a" : [ "float", [ "3" ] ]
+	 ,    "g_b" : [ "float", [ "3" ] ]
+	 ,    "g_c" : [ "float", [ "3" ] ]
+	 , "two_pi" : [ "int"  , []      ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 ** Periodic boundary calculations (pbc group)
 
 
    #+NAME: pbc
-  | Variable         | Type    | Row-major Dimensions | Column-major Dimensions | Description                                          |
-  |------------------+---------+----------------------+-------------------------+------------------------------------------------------|
-  | ~periodic~       | ~int~   |                      |                         | ~1~: true or ~0~: false                              |
-  | ~k_point_num~    | ~dim~   |                      |                         | Number of $k$-points                                 |
-  | ~k_point~        | ~float~ | ~[3]~                | ~(3)~                   | $k$-point sampling                                   |
-  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~  | ~(pbc.k_point_num)~     | $k$-point weight                                     |
-  | ~madelung~       | ~float~ |                      |                         | Madelung correction of the Ewald probe charge method |
+  | Variable         | Type    | Row-major Dimensions  | Column-major Dimensions | Description                                          |
+  |------------------+---------+-----------------------+-------------------------+------------------------------------------------------|
+  | ~periodic~       | ~int~   |                       |                         | ~1~: true or ~0~: false                              |
+  | ~k_point_num~    | ~dim~   |                       |                         | Number of $k$-points                                 |
+  | ~k_point~        | ~float~ | ~[pbc.k_point_num,3]~ | ~(3,pbc.k_point_num)~   | $k$-point sampling                                   |
+  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~   | ~(pbc.k_point_num)~     | $k$-point weight                                     |
+  | ~madelung~       | ~float~ |                       |                         | Madelung correction of the Ewald probe charge method |
 
    #+CALL: json(data=pbc, title="pbc")
 
@@ -144,13 +157,16 @@
    :results:
    #+begin_src python :tangle trex.json
        "pbc": {
-                 "periodic" : [ "int"  , []                    ]
-         ,    "k_point_num" : [ "dim"  , []                    ]
-         ,        "k_point" : [ "float", [ "3" ]               ]
-         , "k_point_weight" : [ "float", [ "pbc.k_point_num" ] ]
-         ,       "madelung" : [ "float", []                    ]
+		 "periodic" : [ "int"  , []                         ]
+	 ,    "k_point_num" : [ "dim"  , []                         ]
+	 ,        "k_point" : [ "float", [ "pbc.k_point_num", "3" ] ]
+	 , "k_point_weight" : [ "float", [ "pbc.k_point_num" ]      ]
+	 ,       "madelung" : [ "float", []                         ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 ** Electron (electron group)
@@ -176,15 +192,19 @@
   | ~dn_num~ | ~int~ |                      |                         | Number of \downarrow-spin electrons |
 
    #+CALL: json(data=electron, title="electron")
+
    #+RESULTS:
    :results:
    #+begin_src python :tangle trex.json
        "electron": {
-              "num" : [ "dim", []  ]
-         , "up_num" : [ "int", []  ]
-         , "dn_num" : [ "int", []  ]
+	      "num" : [ "dim", []  ]
+	 , "up_num" : [ "int", []  ]
+	 , "dn_num" : [ "int", []  ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 ** Ground or excited states (state group)
@@ -216,60 +236,85 @@
    :results:
    #+begin_src python :tangle trex.json
        "state": {
-                     "num" : [ "dim"  , []              ]
-         ,            "id" : [ "index", []              ]
-         ,        "energy" : [ "float", []              ]
-         , "current_label" : [ "str"  , []              ]
-         ,         "label" : [ "str"  , [ "state.num" ] ]
-         ,     "file_name" : [ "str"  , [ "state.num" ] ]
+		     "num" : [ "dim"  , []              ]
+	 ,            "id" : [ "index", []              ]
+	 ,        "energy" : [ "float", []              ]
+	 , "current_label" : [ "str"  , []              ]
+	 ,         "label" : [ "str"  , [ "state.num" ] ]
+	 ,     "file_name" : [ "str"  , [ "state.num" ] ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 * Basis functions
 ** Basis set (basis group)
 
-*** Gaussian and Slater-type orbitals
+  Different computational chemistry codes apply normalization at
+  various levels. The normalization of basis functions requires the
+  evaluation of overlap integrals, which might not always be
+  supported by the client software. For this reason, normalization
+  constants should be explicitly provided in the TREXIO files to
+  ensure portability and completeness.
 
-    We consider here basis functions centered on nuclei. Hence, it is
-    possibile to define /dummy atoms/ to place basis functions in
-    arbitrary positions.
+*** Gaussian- and Slater-type orbitals
 
-    The atomic basis set is defined as a list of shells. Each shell $s$ is
-    centered on a center $A$, possesses a given angular momentum $l$ and a
-    radial function $R_s$. The radial function is a linear combination of
-    $N_{\text{prim}}$ /primitive/ functions that can be of type
-    Slater ($p=1$) or Gaussian ($p=2$),
-    parameterized by exponents $\gamma_{ks}$ and coefficients $a_{ks}$:
+    We consider here basis functions centered on nuclei. It is
+    therefore possible to introduce *dummy atoms* (artificial centers
+    with no physical meaning) solely for the purpose of placing basis
+    functions at arbitrary locations in space.
+
+    The atomic basis set is defined as a list of shells. Each shell
+    $s$ is centered on a point $\mathbf{R}_A$, associated with a given
+    angular momentum $\ell_s$, and characterized by a radial function
+    $R_s(\mathbf{r})$. Note that since the angular functions are
+    defined as regular solid harmonics that include the $r^{\ell_s}$ factor,
+    the radial functions in TREXIO differ from the textbook definition
+    by a factor of $r^{-\ell_s}$.
+
+    The radial function is a linear combination of
+    $N_{\text{prim}}$ *primitive* functions. These primitives may be
+    of Slater-type or Gaussian-type, and are parameterized by
+    exponents $\gamma_{ks}$ and contraction coefficients $a_{ks}$.
+
+    Slater orbitals are written as:
+
     \[
-    R_s(\mathbf{r}) = \mathcal{N}_s \vert\mathbf{r}-\mathbf{R}_A\vert^{n_s}
-    \sum_{k=1}^{N_{\text{prim}}} a_{ks}\, f_{ks}(\gamma_{ks},p)\,
-    \exp \left( - \gamma_{ks}
-    \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right).
+    R_s^{\text{STO}}(\mathbf{r}) = \mathcal{N}_s  \left| \mathbf{r} - \mathbf{R}_A \right|^{n_s-1-\ell_s}
+\sum_{k=1}^{N_{\text{prim}}}
+f_{ks}\,a_{ks}\,
+\exp\left( -\zeta_{ks} \left| \mathbf{r} - \mathbf{R}_A \right| \right)
     \]
 
-    In the case of Gaussian functions, $n_s$ is always zero.
+    Gaussian-type orbitals (GTOs) are usually defined as:
 
-    Different codes normalize functions at different levels. Computing
-    normalization factors requires the ability to compute overlap
-    integrals, so the normalization factors should be written in the
-    file to ensure that the file is self-contained and does not need the
-    client program to have the ability to compute such integrals.
+    \[
+    R_s^{\text{GTO}}(\mathbf{r}) = \mathcal{N}_s
+    \sum_{k=1}^{N_{\text{prim}}} f_{ks} \, a_{ks}\,
+    \exp\left( -\gamma_{ks} \left| \mathbf{r} - \mathbf{R}_A \right|^2 \right)
+    \]
 
-    Some codes assume that the contraction coefficients are for a linear
-    combination of /normalized/ primitives. This implies that a normalization
-    constant for the primitive $ks$ needs to be computed and stored. If
-    this normalization factor is not required, $f_{ks}=1$.
+    GTO-based codes usually use *spherically pure* Gaussians, in which
+    case the radial prefactor exponent is zero, as the
+    $r^{\ell_s}$ factor is already included in the solid harmonics.
 
-    Some codes assume that the basis functions are normalized. This
-    implies the computation of an extra normalization factor, $\mathcal{N}_s$.
-    If the the basis function is not considered normalized, $\mathcal{N}_s=1$.
+    Standard basis sets assume that the primitive functions are
+    normalized. In that case, a normalization constant $f_{ks}$ must
+    be computed and applied to each primitive. This normalization
+    constant usually depends on the exponent and on the quantum
+    numbers $n$ and $\ell$. If this normalization is not required,
+    then $f_{ks} = 1$.
 
-    All the basis set parameters are stored in one-dimensional arrays.
+    Similarly, some codes expect the contracted basis functions
+    $R_s(\mathbf{r})$ to be normalized. In this case, an additional
+    normalization factor $\mathcal{N}_s$ must be computed. If the
+    full basis function is not normalized, then $\mathcal{N}_s = 1$.
 
 *** Numerical orbitals
 
-    Trexio supports numerical atom centered orbitals. The implementation is
+    TREXIO supports numerical atom centered orbitals. The implementation is
     based on the approach of FHI-aims [Blum, V. et al; Ab initio molecular
     simulations with numeric atom-centered orbitals; Computer Physics
     Communications 2009]. These orbitals are
@@ -343,11 +388,11 @@
     \exp \left( - \gamma_{ks}
     \vert \mathbf{r}-\mathbf{R}_A \vert ^p \right)\, \cos \left( \beta_{ks} \vert \mathbf{r}-\mathbf{R}_A \vert ^q \right)
     \]
-    
+
     Oscillation kind can be:
     - ~Cos1~ for $q=1$
     - ~Cos2~ for $q=2$
-    
+
 *** Data definitions
 
     #+NAME: basis
@@ -389,37 +434,40 @@
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "basis": {
-                         "type" : [ "str"  , []                                                 ]
-          ,          "prim_num" : [ "dim"  , []                                                 ]
-          ,         "shell_num" : [ "dim"  , []                                                 ]
-          ,      "nao_grid_num" : [ "dim"  , []                                                 ]
-          ,  "interp_coeff_cnt" : [ "dim"  , []                                                 ]
-          ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                              ]
-          ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                              ]
-          ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                              ]
-          ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                              ]
-          ,    "nao_grid_start" : [ "index", [ "basis.shell_num" ]                              ]
-          ,     "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                              ]
-          ,       "shell_index" : [ "index", [ "basis.prim_num" ]                               ]
-          ,          "exponent" : [ "float", [ "basis.prim_num" ]                               ]
-          ,       "exponent_im" : [ "float", [ "basis.prim_num" ]                               ]
-          ,       "coefficient" : [ "float", [ "basis.prim_num" ]                               ]
-          ,    "coefficient_im" : [ "float", [ "basis.prim_num" ]                               ]
-          ,   "oscillation_arg" : [ "float", [ "basis.prim_num" ]                               ]
-          ,  "oscillation_kind" : [ "str"  , []                                                 ]
-          ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                               ]
-          ,             "e_cut" : [ "float", []                                                 ]
-          ,   "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
-          ,      "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
-          ,     "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
-          ,      "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
-          , "interpolator_kind" : [ "str"  , []                                                 ]
-          ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
-          , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
-          ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
-        } ,
+	"basis": {
+			 "type" : [ "str"  , []                                                 ]
+	  ,          "prim_num" : [ "dim"  , []                                                 ]
+	  ,         "shell_num" : [ "dim"  , []                                                 ]
+	  ,      "nao_grid_num" : [ "dim"  , []                                                 ]
+	  ,  "interp_coeff_cnt" : [ "dim"  , []                                                 ]
+	  ,     "nucleus_index" : [ "index", [ "basis.shell_num" ]                              ]
+	  ,     "shell_ang_mom" : [ "int"  , [ "basis.shell_num" ]                              ]
+	  ,      "shell_factor" : [ "float", [ "basis.shell_num" ]                              ]
+	  ,           "r_power" : [ "int"  , [ "basis.shell_num" ]                              ]
+	  ,    "nao_grid_start" : [ "index", [ "basis.shell_num" ]                              ]
+	  ,     "nao_grid_size" : [ "dim"  , [ "basis.shell_num" ]                              ]
+	  ,       "shell_index" : [ "index", [ "basis.prim_num" ]                               ]
+	  ,          "exponent" : [ "float", [ "basis.prim_num" ]                               ]
+	  ,       "exponent_im" : [ "float", [ "basis.prim_num" ]                               ]
+	  ,       "coefficient" : [ "float", [ "basis.prim_num" ]                               ]
+	  ,    "coefficient_im" : [ "float", [ "basis.prim_num" ]                               ]
+	  ,   "oscillation_arg" : [ "float", [ "basis.prim_num" ]                               ]
+	  ,  "oscillation_kind" : [ "str"  , []                                                 ]
+	  ,       "prim_factor" : [ "float", [ "basis.prim_num" ]                               ]
+	  ,             "e_cut" : [ "float", []                                                 ]
+	  ,   "nao_grid_radius" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,      "nao_grid_phi" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,     "nao_grid_grad" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  ,      "nao_grid_lap" : [ "float", [ "basis.nao_grid_num" ]                           ]
+	  , "interpolator_kind" : [ "str"  , []                                                 ]
+	  ,  "interpolator_phi" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	  , "interpolator_grad" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	  ,  "interpolator_lap" : [ "float", [ "basis.nao_grid_num", "basis.interp_coeff_cnt" ] ]
+	} ,
     #+end_src
+
+    #+RESULTS:
+
     :end:
 
 *** Example
@@ -538,7 +586,7 @@ prim_factor =
    ECP that replaces the core electrons.
    *Note*, that the latter $\ell_{\max}$ is always higher by 1 than the former.
 
-   *Note for developers*: avoid having variables with similar prefix
+   *Note for developers of TREXIO*: avoid having variables with similar prefix
    in their name. The HDF5 back end might cause issues due to the way
    ~find_dataset~ function works.  For example, in the ECP group we
    use ~max_ang_mom~ and not ~ang_mom_max~. The latter causes issues
@@ -557,16 +605,19 @@ prim_factor =
    :results:
    #+begin_src python :tangle trex.json
        "ecp": {
-           "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
-         ,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
-         ,                "num" : [ "dim"  , []                ]
-         ,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
-         ,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
-         ,           "exponent" : [ "float", [ "ecp.num" ]     ]
-         ,        "coefficient" : [ "float", [ "ecp.num" ]     ]
-         ,              "power" : [ "int"  , [ "ecp.num" ]     ]
+	   "max_ang_mom_plus_1" : [ "int"  , [ "nucleus.num" ] ]
+	 ,             "z_core" : [ "int"  , [ "nucleus.num" ] ]
+	 ,                "num" : [ "dim"  , []                ]
+	 ,            "ang_mom" : [ "int"  , [ "ecp.num" ]     ]
+	 ,      "nucleus_index" : [ "index", [ "ecp.num" ]     ]
+	 ,           "exponent" : [ "float", [ "ecp.num" ]     ]
+	 ,        "coefficient" : [ "float", [ "ecp.num" ]     ]
+	 ,              "power" : [ "int"  , [ "ecp.num" ]     ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 *** Example
@@ -658,22 +709,25 @@ power = [
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "grid": {
-              "description" : [ "str"  , []                 ]
-          , "rad_precision" : [ "float", []                 ]
-          ,           "num" : [ "dim"  , []                 ]
-          ,   "max_ang_num" : [ "int"  , []                 ]
-          ,   "min_ang_num" : [ "int"  , []                 ]
-          ,         "coord" : [ "float", [ "grid.num" ]     ]
-          ,        "weight" : [ "float", [ "grid.num" ]     ]
-          ,       "ang_num" : [ "dim"  , []                 ]
-          ,     "ang_coord" : [ "float", [ "grid.ang_num" ] ]
-          ,    "ang_weight" : [ "float", [ "grid.ang_num" ] ]
-          ,       "rad_num" : [ "dim"  , []                 ]
-          ,     "rad_coord" : [ "float", [ "grid.rad_num" ] ]
-          ,    "rad_weight" : [ "float", [ "grid.rad_num" ] ]
-        } ,
+	"grid": {
+	      "description" : [ "str"  , []                 ]
+	  , "rad_precision" : [ "float", []                 ]
+	  ,           "num" : [ "dim"  , []                 ]
+	  ,   "max_ang_num" : [ "int"  , []                 ]
+	  ,   "min_ang_num" : [ "int"  , []                 ]
+	  ,         "coord" : [ "float", [ "grid.num" ]     ]
+	  ,        "weight" : [ "float", [ "grid.num" ]     ]
+	  ,       "ang_num" : [ "dim"  , []                 ]
+	  ,     "ang_coord" : [ "float", [ "grid.ang_num" ] ]
+	  ,    "ang_weight" : [ "float", [ "grid.ang_num" ] ]
+	  ,       "rad_num" : [ "dim"  , []                 ]
+	  ,     "rad_coord" : [ "float", [ "grid.rad_num" ] ]
+	  ,    "rad_weight" : [ "float", [ "grid.rad_num" ] ]
+	} ,
     #+end_src
+
+    #+RESULTS:
+
     :end:
 
 * Orbitals
@@ -686,15 +740,19 @@ power = [
    \]
 
    where $i$ is the atomic orbital index, $P$ refers to either
-   polynomials in $x,y,z$ or real solid harmonics
+   polynomials in $x,y,z$
    \[
-   S^m_{\ell}(\mathbf{r}) \equiv \sqrt{\frac{4\pi}{2\ell+1}}\; r^\ell
-   Y^m_{\ell}(\theta,\varphi)
+   P_{\eta(i)}(\mathbf{r}) \equiv x^{\eta(i)_x} y^{\eta(i)_y} z^{\eta(i)_z}
+   \]
+   or /regular/ solid harmonics
+   \[
+   P_{\eta(i)}(\mathbf{r}) \to S^{m_i}_{\ell}(\mathbf{r}) \equiv \sqrt{\frac{4\pi}{2\ell+1}}\; r^\ell
+   Y^{m_i}_{\ell}(\theta,\varphi)
    \]
    (see [[https://en.wikipedia.org/wiki/Solid_harmonics][Wikipedia]]), and $s(i)$
    specifies the shell on which the AO is expanded.
 
-   
+
    $\eta(i)$ denotes the chosen angular function.  The AOs can be
    expressed using real solid harmonics or polynomials in Cartesian
    coordinates.  In the case of real solid harmonics, the AOs are
@@ -736,12 +794,15 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "ao": {
-               "cartesian" : [ "int"  , []           ]
-         ,           "num" : [ "dim"  , []           ]
-         ,         "shell" : [ "index", [ "ao.num" ] ]
-         , "normalization" : [ "float", [ "ao.num" ] ]
+	       "cartesian" : [ "int"  , []           ]
+	 ,           "num" : [ "dim"  , []           ]
+	 ,         "shell" : [ "index", [ "ao.num" ] ]
+	 , "normalization" : [ "float", [ "ao.num" ] ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 *** One-electron integrals (~ao_1e_int~ group)
@@ -755,6 +816,7 @@ power = [
     - \[ \hat{T}_{\text{e}} =
       \sum_{i=1}^{N_\text{elec}} -\frac{1}{2}\hat{\Delta}_i \] : electronic kinetic energy
     - $\hat{h} = \hat{T}_\text{e} + \hat{V}_\text{ne} + \hat{V}_\text{ECP}$ : core electronic Hamiltonian
+    - $\hat{\mu}_x = -x$, $\hat{\mu}_y = -y$, $\hat{\mu}_z = -z$ : dipole moment operators
 
     The one-electron integrals for a one-electron operator $\hat{O}$ are
     \[ \langle p \vert \hat{O} \vert q \rangle \], returned as a matrix
@@ -768,30 +830,45 @@ power = [
   | ~potential_n_e~       | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$                    |
   | ~ecp~                 | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ecp}} \vert q \rangle$                   |
   | ~core_hamiltonian~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$                                |
+  | ~dipole_x~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_x \vert q \rangle$                            |
+  | ~dipole_y~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_y \vert q \rangle$                            |
+  | ~dipole_z~            | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_z \vert q \rangle$                            |
   | ~overlap_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert q \rangle$ (imaginary part)                             |
   | ~kinetic_im~          | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{T}_e \vert q \rangle$   (imaginary part)           |
   | ~potential_n_e_im~    | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ne}} \vert q \rangle$  (imaginary part)  |
   | ~ecp_im~              | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{V}_{\text{ECP}} \vert q \rangle$  (imaginary part) |
   | ~core_hamiltonian_im~ | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{h} \vert q \rangle$ (imaginary part)               |
+  | ~dipole_x_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_x \vert q \rangle$ (imaginary part)           |
+  | ~dipole_y_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_y \vert q \rangle$ (imaginary part)           |
+  | ~dipole_z_im~         | ~float~ | ~[ao.num, ao.num]~   | ~(ao.num, ao.num)~      | $\langle p \vert \hat{\mu}_z \vert q \rangle$ (imaginary part)           |
 
     #+CALL: json(data=ao_1e_int, title="ao_1e_int")
 
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "ao_1e_int": {
-                        "overlap" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,             "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
-          ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
-          , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
-        } ,
+	"ao_1e_int": {
+			"overlap" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,             "kinetic" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,       "potential_n_e" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,                 "ecp" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,    "core_hamiltonian" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_x" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_y" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,            "dipole_z" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,          "overlap_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,          "kinetic_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,    "potential_n_e_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,              "ecp_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  , "core_hamiltonian_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_x_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_y_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	  ,         "dipole_z_im" : [ "float", [ "ao.num", "ao.num" ] ]
+	} ,
     #+end_src
+
+    #+RESULTS:
+
     :end:
 
 *** Two-electron integrals (~ao_2e_int~ group)
@@ -833,15 +910,18 @@ power = [
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "ao_2e_int": {
-                            "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
-          ,              "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
-          ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
-          ,        "eri_cholesky" : [ "float sparse", [ "ao_2e_int.eri_cholesky_num", "ao.num", "ao.num" ]    ]
-          , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
-          ,     "eri_lr_cholesky" : [ "float sparse", [ "ao_2e_int.eri_lr_cholesky_num", "ao.num", "ao.num" ] ]
-        } ,
+	"ao_2e_int": {
+			    "eri" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+	  ,              "eri_lr" : [ "float sparse", [ "ao.num", "ao.num", "ao.num", "ao.num" ]              ]
+	  ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+	  ,        "eri_cholesky" : [ "float sparse", [ "ao_2e_int.eri_cholesky_num", "ao.num", "ao.num" ]    ]
+	  , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+	  ,     "eri_lr_cholesky" : [ "float sparse", [ "ao_2e_int.eri_lr_cholesky_num", "ao.num", "ao.num" ] ]
+	} ,
     #+end_src
+
+    #+RESULTS:
+
     :end:
 
 ** Molecular orbitals (mo group)
@@ -872,18 +952,21 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "mo": {
-                     "type" : [ "str"  , []                     ]
-         ,            "num" : [ "dim"  , []                     ]
-         ,    "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
-         , "coefficient_im" : [ "float", [ "mo.num", "ao.num" ] ]
-         ,          "class" : [ "str"  , [ "mo.num" ]           ]
-         ,       "symmetry" : [ "str"  , [ "mo.num" ]           ]
-         ,     "occupation" : [ "float", [ "mo.num" ]           ]
-         ,         "energy" : [ "float", [ "mo.num" ]           ]
-         ,           "spin" : [ "int"  , [ "mo.num" ]           ]
-         ,        "k_point" : [ "index", [ "mo.num" ]           ]
+		     "type" : [ "str"  , []                     ]
+	 ,            "num" : [ "dim"  , []                     ]
+	 ,    "coefficient" : [ "float", [ "mo.num", "ao.num" ] ]
+	 , "coefficient_im" : [ "float", [ "mo.num", "ao.num" ] ]
+	 ,          "class" : [ "str"  , [ "mo.num" ]           ]
+	 ,       "symmetry" : [ "str"  , [ "mo.num" ]           ]
+	 ,     "occupation" : [ "float", [ "mo.num" ]           ]
+	 ,         "energy" : [ "float", [ "mo.num" ]           ]
+	 ,           "spin" : [ "int"  , [ "mo.num" ]           ]
+	 ,        "k_point" : [ "index", [ "mo.num" ]           ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 
@@ -901,30 +984,45 @@ power = [
   | ~potential_n_e~       | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$                    |
   | ~ecp~                 | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$                   |
   | ~core_hamiltonian~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$                                |
+  | ~dipole_x~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_x \vert j \rangle$                            |
+  | ~dipole_y~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_y \vert j \rangle$                            |
+  | ~dipole_z~            | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_z \vert j \rangle$                            |
   | ~overlap_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert j \rangle$ (imaginary part)                             |
   | ~kinetic_im~          | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{T}_e \vert j \rangle$   (imaginary part)           |
   | ~potential_n_e_im~    | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ne}} \vert j \rangle$  (imaginary part)  |
   | ~ecp_im~              | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{V}_{\text{ECP}} \vert j \rangle$  (imaginary part) |
   | ~core_hamiltonian_im~ | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{h} \vert j \rangle$ (imaginary part)               |
+  | ~dipole_x_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_x \vert j \rangle$ (imaginary part)           |
+  | ~dipole_y_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_y \vert j \rangle$ (imaginary part)           |
+  | ~dipole_z_im~         | ~float~ | ~[mo.num, mo.num]~   | ~(mo.num, mo.num)~      | $\langle i \vert \hat{\mu}_z \vert j \rangle$ (imaginary part)           |
 
     #+CALL: json(data=mo_1e_int, title="mo_1e_int")
 
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "mo_1e_int": {
-                        "overlap" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,             "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
-          ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
-          , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
-        } ,
+	"mo_1e_int": {
+			"overlap" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,             "kinetic" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,       "potential_n_e" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,                 "ecp" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,    "core_hamiltonian" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_x" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_y" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,            "dipole_z" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,          "overlap_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,          "kinetic_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,    "potential_n_e_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,              "ecp_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  , "core_hamiltonian_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_x_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_y_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	  ,         "dipole_z_im" : [ "float", [ "mo.num", "mo.num" ] ]
+	} ,
     #+end_src
+
+    #+RESULTS:
+
     :end:
 
 *** Two-electron integrals (~mo_2e_int~ group)
@@ -948,15 +1046,18 @@ power = [
     #+RESULTS:
     :results:
     #+begin_src python :tangle trex.json
-        "mo_2e_int": {
-                            "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
-          ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
-          ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
-          ,        "eri_cholesky" : [ "float sparse", [ "mo_2e_int.eri_cholesky_num", "mo.num", "mo.num" ]    ]
-          , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
-          ,     "eri_lr_cholesky" : [ "float sparse", [ "mo_2e_int.eri_lr_cholesky_num", "mo.num", "mo.num" ] ]
-        } ,
+	"mo_2e_int": {
+			    "eri" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+	  ,              "eri_lr" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]              ]
+	  ,    "eri_cholesky_num" : [ "dim"         , []                                                      ]
+	  ,        "eri_cholesky" : [ "float sparse", [ "mo_2e_int.eri_cholesky_num", "mo.num", "mo.num" ]    ]
+	  , "eri_lr_cholesky_num" : [ "dim"         , []                                                      ]
+	  ,     "eri_lr_cholesky" : [ "float sparse", [ "mo_2e_int.eri_lr_cholesky_num", "mo.num", "mo.num" ] ]
+	} ,
     #+end_src
+
+    #+RESULTS:
+
     :end:
 
 * Multi-determinant information
@@ -983,10 +1084,19 @@ power = [
    where $\alpha$ and $\beta$ denote \uparrow-spin and \downarrow-spin electrons, respectively,
    $n_\uparrow$ and $n_\downarrow$ correspond to ~electron.up_num~ and ~electron.dn_num~, respectively.
 
+   The ordering of determinants in TREXIO files is $\alpha \alpha \ldots \alpha_{n_\uparrow} \beta \beta \ldots \beta_{n_\downarrow}$.
+   The functions ~trexio_phase_aabb_to_abab~ and ~trexio_phase_aabb_to_abab_list~ help switching to the 
+   $\alpha \beta \alpha \beta \ldots$ ordering by checking if a change of phase is required. These functions return ~TREXIO_SUCCESS~ if
+   a change of phase is not required, or ~TREXIO_PHASE_CHANGE~ otherwise.
+
    Note: the ~special~ attribute is present in the types, meaning that the source node is not
    produced by the code generator.
 
    An illustration on how to read determinants is presented in the [[./examples.html][examples]].
+
+   *Important*: The number of determinants is not explicitly written
+   by the user (~dim_readonly~). It is automatically set by the number
+   of determinants written in the determinant list.
 
    #+NAME: determinant
   | Variable      | Type             | Row-major Dimensions | Column-major Dimensions | Description                                            |
@@ -1001,11 +1111,14 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "determinant": {
-                   "num" : [ "dim readonly"  , []                    ]
-         ,        "list" : [ "int special"   , [ "determinant.num" ] ]
-         , "coefficient" : [ "float buffered", [ "determinant.num" ] ]
+		   "num" : [ "dim readonly"  , []                    ]
+	 ,        "list" : [ "int special"   , [ "determinant.num" ] ]
+	 , "coefficient" : [ "float buffered", [ "determinant.num" ] ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 ** Configuration state functions (csf group)
@@ -1024,10 +1137,13 @@ power = [
    matrix $\langle D_I | \psi_J \rangle$ needed to project the CSFs in
    the basis of Slater determinants.
 
+   *Important*: As opposed to the determinants, the number of CSFs
+   (~csf.num~) has to be written by the user.
+
    #+NAME: csf
   | Variable          | Type             | Row-major Dimensions         | Column-major Dimensions      | Description                             |
   |-------------------+------------------+------------------------------+------------------------------+-----------------------------------------|
-  | ~num~             | ~dim readonly~   |                              |                              | Number of CSFs                          |
+  | ~num~             | ~dim~            |                              |                              | Number of CSFs                          |
   | ~coefficient~     | ~float buffered~ | ~[csf.num]~                  | ~(csf.num)~                  | Coefficients $C_I$ of the CSF expansion |
   | ~det_coefficient~ | ~float sparse~   | ~[csf.num, determinant.num]~ | ~(determinant.num, csf.num)~ | Projection on the determinant basis     |
 
@@ -1037,11 +1153,14 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "csf": {
-                       "num" : [ "dim readonly"  , []                               ]
-         ,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
-         , "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
+		       "num" : [ "dim"           , []                               ]
+	 ,     "coefficient" : [ "float buffered", [ "csf.num" ]                    ]
+	 , "det_coefficient" : [ "float sparse"  , [ "csf.num", "determinant.num" ] ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 ** Amplitudes (amplitude group)
@@ -1105,16 +1224,19 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "amplitude": {
-                  "single" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
-         ,    "single_exp" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
-         ,        "double" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
-         ,    "double_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
-         ,        "triple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
-         ,    "triple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
-         ,     "quadruple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-         , "quadruple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+		  "single" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
+	 ,    "single_exp" : [ "float sparse", [ "mo.num", "mo.num" ]                                                             ]
+	 ,        "double" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+	 ,    "double_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                                         ]
+	 ,        "triple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+	 ,    "triple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ]                     ]
+	 ,     "quadruple" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+	 , "quadruple_exp" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 ** Reduced density matrices (rdm group)
@@ -1198,25 +1320,28 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "rdm": {
-                             "1e" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
-         ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
-         ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
-         ,        "1e_transition" : [ "float"       , [ "state.num", "state.num", "mo.num", "mo.num" ]                     ]
-         ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
-         ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
-         ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
-         ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
-         ,        "2e_transition" : [ "float sparse", [ "state.num", "state.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
-         ,      "2e_cholesky_num" : [ "dim"         , []                                                                   ]
-         ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]                        ]
-         , "2e_upup_cholesky_num" : [ "dim"         , []                                                                   ]
-         ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ]                   ]
-         , "2e_dndn_cholesky_num" : [ "dim"         , []                                                                   ]
-         ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ]                   ]
-         , "2e_updn_cholesky_num" : [ "dim"         , []                                                                   ]
-         ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ]                   ]
+			     "1e" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
+	 ,                "1e_up" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
+	 ,                "1e_dn" : [ "float"       , [ "mo.num", "mo.num" ]                                               ]
+	 ,        "1e_transition" : [ "float"       , [ "state.num", "state.num", "mo.num", "mo.num" ]                     ]
+	 ,                   "2e" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+	 ,              "2e_upup" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+	 ,              "2e_dndn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+	 ,              "2e_updn" : [ "float sparse", [ "mo.num", "mo.num", "mo.num", "mo.num" ]                           ]
+	 ,        "2e_transition" : [ "float sparse", [ "state.num", "state.num", "mo.num", "mo.num", "mo.num", "mo.num" ] ]
+	 ,      "2e_cholesky_num" : [ "dim"         , []                                                                   ]
+	 ,          "2e_cholesky" : [ "float sparse", [ "rdm.2e_cholesky_num", "mo.num", "mo.num" ]                        ]
+	 , "2e_upup_cholesky_num" : [ "dim"         , []                                                                   ]
+	 ,     "2e_upup_cholesky" : [ "float sparse", [ "rdm.2e_upup_cholesky_num", "mo.num", "mo.num" ]                   ]
+	 , "2e_dndn_cholesky_num" : [ "dim"         , []                                                                   ]
+	 ,     "2e_dndn_cholesky" : [ "float sparse", [ "rdm.2e_dndn_cholesky_num", "mo.num", "mo.num" ]                   ]
+	 , "2e_updn_cholesky_num" : [ "dim"         , []                                                                   ]
+	 ,     "2e_updn_cholesky" : [ "float sparse", [ "rdm.2e_updn_cholesky_num", "mo.num", "mo.num" ]                   ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 * Correlation factors
@@ -1397,19 +1522,22 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "jastrow": {
-                  "type" : [ "str"  , []                    ]
-         ,      "en_num" : [ "dim"  , []                    ]
-         ,      "ee_num" : [ "dim"  , []                    ]
-         ,     "een_num" : [ "dim"  , []                    ]
-         ,          "en" : [ "float", [ "jastrow.en_num" ]  ]
-         ,          "ee" : [ "float", [ "jastrow.ee_num" ]  ]
-         ,         "een" : [ "float", [ "jastrow.een_num" ] ]
-         ,  "en_nucleus" : [ "index", [ "jastrow.en_num" ]  ]
-         , "een_nucleus" : [ "index", [ "jastrow.een_num" ] ]
-         ,  "ee_scaling" : [ "float", []                    ]
-         ,  "en_scaling" : [ "float", [ "nucleus.num" ]     ]
+		  "type" : [ "str"  , []                    ]
+	 ,      "en_num" : [ "dim"  , []                    ]
+	 ,      "ee_num" : [ "dim"  , []                    ]
+	 ,     "een_num" : [ "dim"  , []                    ]
+	 ,          "en" : [ "float", [ "jastrow.en_num" ]  ]
+	 ,          "ee" : [ "float", [ "jastrow.ee_num" ]  ]
+	 ,         "een" : [ "float", [ "jastrow.een_num" ] ]
+	 ,  "en_nucleus" : [ "index", [ "jastrow.en_num" ]  ]
+	 , "een_nucleus" : [ "index", [ "jastrow.een_num" ] ]
+	 ,  "ee_scaling" : [ "float", []                    ]
+	 ,  "en_scaling" : [ "float", [ "nucleus.num" ]     ]
        } ,
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 * Quantum Monte Carlo data (qmc group)
@@ -1436,66 +1564,77 @@ power = [
    :results:
    #+begin_src python :tangle trex.json
        "qmc": {
-             "num" : [ "dim"  , []                                 ]
-         , "point" : [ "float", [ "qmc.num", "electron.num", "3" ] ]
-         ,   "psi" : [ "float", [ "qmc.num" ]                      ]
-         , "e_loc" : [ "float", [ "qmc.num" ]                      ]
+	     "num" : [ "dim"  , []                                 ]
+	 , "point" : [ "float", [ "qmc.num", "electron.num", "3" ] ]
+	 ,   "psi" : [ "float", [ "qmc.num" ]                      ]
+	 , "e_loc" : [ "float", [ "qmc.num" ]                      ]
        }
    #+end_src
+
+   #+RESULTS:
+
    :end:
 
 * Appendix    :noexport:
 ** Python script from table to json
 
  #+NAME: json
- #+begin_src python :var data=nucleus title="nucleus" last=0 :results output drawer
+ #+begin_src python :var data=nucleus title="End" last=0 :results output drawer
 print("""#+begin_src python :tangle trex.json""")
-print("""    "%s": {"""%(title))
-indent = "        "
-f1 = 0 ; f2 = 0 ; f3 = 0
-for line in data:
-    line = [ x.replace("~","") for x in line ]
-    name = '"'+line[0]+'"'
-    typ  = '"'+line[1]+'"'
-    dims = line[2]
-    if '[' in dims:
-        dims = dims.strip()[1:-1]
-        dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
-        dims = "[ " + ", ".join(dims) + " ]"
-    else:
-        dims = "[ ]"
-    f1 = max(f1, len(name))
-    f2 = max(f2, len(typ))
-    f3 = max(f3, len(dims))
-
-fmt = "%%s%%%ds : [ %%%ds, %%%ds ]" % (f1, f2, f3)
-for line in data:
-    line = [ x.replace("~","") for x in line ]
-    name = '"'+line[0]+'"'
-    typ  = '"'+line[1]+'"'
-    dims = line[2]
-    if '[' in dims:
-        dims = dims.strip()[1:-1]
-        dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
-        dims = "[ " + ", ".join(dims) + " ]"
-    else:
-        if dims.strip() != "":
-            dims = "ERROR"
+if title != "End":
+    print("""    "%s": {"""%(title))
+    indent = "        "
+    f1 = 0 ; f2 = 0 ; f3 = 0
+    for line in data:
+        line = [ x.replace("~","") for x in line ]
+        name = '"'+line[0]+'"'
+        typ  = '"'+line[1]+'"'
+        dims = line[2]
+        if '[' in dims:
+            dims = dims.strip()[1:-1]
+            dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
+            dims = "[ " + ", ".join(dims) + " ]"
         else:
-            dims = "[]"
-    buffer = fmt % (indent, name, typ.ljust(f2), dims.ljust(f3))
-    indent = "      , "
-    print(buffer)
+            dims = "[ ]"
+        f1 = max(f1, len(name))
+        f2 = max(f2, len(typ))
+        f3 = max(f3, len(dims))
 
-if last == 0:
-    print("    } ,")
+    fmt = "%%s%%%ds : [ %%%ds, %%%ds ]" % (f1, f2, f3)
+    for line in data:
+        line = [ x.replace("~","") for x in line ]
+        name = '"'+line[0]+'"'
+        typ  = '"'+line[1]+'"'
+        dims = line[2]
+        if '[' in dims:
+            dims = dims.strip()[1:-1]
+            dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]
+            dims = "[ " + ", ".join(dims) + " ]"
+        else:
+            if dims.strip() != "":
+                dims = "ERROR"
+            else:
+                dims = "[]"
+        buffer = fmt % (indent, name, typ.ljust(f2), dims.ljust(f3))
+        indent = "      , "
+        print(buffer)
+
+    if last == 0:
+        print("    } ,")
+    else:
+        print("    }")
 else:
-    print("    }")
-print("""#+end_src""")
+    print("}")
 
+print("""#+end_src""")
  #+end_src
 
+ #+RESULTS: json
+ :results:
+ #+begin_src python :tangle trex.json
+ }
+ #+end_src
 
-  #+begin_src python :tangle trex.json :results output drawer :exports none
-}
-  #+end_src
+ #+RESULTS:
+
+ :end:

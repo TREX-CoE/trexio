@@ -73,12 +73,12 @@ int main(void) {
 /*============== Test launcher ================*/
 
   int rc;
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   test_write_delete_group (TREXIO_FILE, TEST_BACKEND);
 
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   return 0;
