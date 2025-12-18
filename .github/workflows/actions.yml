@@ -51,7 +51,7 @@ jobs:
           grep version python/pytrexio/_version.py | tr -d '"' | awk '{ print $3 }' > python_v
           grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
           grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
-          diff configure_v cmake_v 
+          diff configure_v cmake_v
           diff configure_v rust_v
           diff configure_v ocaml_v
 
@@ -68,7 +68,7 @@ jobs:
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules 
+          ./configure --enable-silent-rules
 
       - name: compile TREXIO
         run: make -j2
@@ -124,32 +124,32 @@ jobs:
         if: >-
           contains(needs.get_commit_message.outputs.message, '[wheel build]') &&
           matrix.os == 'ubuntu-22.04-arm'
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
 
       - name: maintainer clean
         run: make maintainer-clean
-      
-      - name: reconfigure with debugging 
+
+      - name: reconfigure with debugging
         run: |
           ./autogen.sh
           ./configure --enable-silent-rules --enable-debug --enable-sanitizer
-      
+
       - name: recompile TREXIO
         run: make -j2
-      
-      - name: recheck TREXIO 
+
+      - name: recheck TREXIO
         run: make -j2 check
-      
+
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: test-report-ubuntu-memory
           path: test-suite.log
-      
+
       - name: maintainer clean
         run: make maintainer-clean
 
@@ -163,20 +163,22 @@ jobs:
       - name: check TREXIO
         working-directory: builddir
         run: ctest -j2
- 
+
       - name: maintainer clean
         run: rm -rf -- builddir/
 
   trexio_macos:
-    name: x86 and arm64 MacOS
+    name: MacOS Latest
     strategy:
-      # macos-13 = x86_64 ; macos-14 = aarch64
       matrix:
-        os: [macos-13, macos-14]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
 
+    env:
+      GCC_VERSION: 14
+
     steps:
-      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+      - uses: actions/checkout@v3
 
       - name: setup fixed Python version for testing
         uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
@@ -186,24 +188,25 @@ jobs:
       - name: install dependencies
         run: |
           brew install emacs
+          brew install gcc
           brew install hdf5@1.14
           brew install automake
           brew install libtool
           pip install swig==4.3
           swig -version
-          
+
       - name: configure with autotools
         run: |
           brew --prefix hdf5
           ./autogen.sh
-          ./configure CC=gcc-12 FC=gfortran-12 --enable-silent-rules
+          ./configure CC=gcc-$GCC_VERSION FC=gfortran-$GCC_VERSION --enable-silent-rules
 
       - name: compile TREXIO
         run: make -j3
 
       - name: check TREXIO
         run: make -j3 check
-      
+
       - name: create venv
         run: |
           python3 -m venv trexio-venv
@@ -215,7 +218,7 @@ jobs:
           export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
           source trexio-venv/bin/activate
           make python-install
-      
+
       - name: test Python API
         run: |
           source trexio-venv/bin/activate
@@ -223,7 +226,7 @@ jobs:
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: test-report-${{ matrix.os }}
           path: test-suite.log
@@ -240,7 +243,7 @@ jobs:
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
 
-      - name: Setup MSYS2 
+      - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
