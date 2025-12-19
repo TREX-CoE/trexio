@@ -60,7 +60,7 @@ ctest -j $(nproc)
 
 ### C Code
 - **Standard**: C99 compliant
-- **Style**: Follow [CERT C coding standard](https://resources.sei.cmu.edu/downloads/secure-coding/assets/sei-cert-c-coding-standard-2016-v01.pdf)
+- **Style**: Follow [SEI CERT C Coding Standard](https://wiki.sei.cmu.edu/confluence/display/c/SEI+CERT+C+Coding+Standard)
 - **Checking**: Use `cppcheck` for compliance verification
 - All data stored in **atomic units**
 - Arrays are in **column-major order** (Fortran-style) in memory
@@ -108,7 +108,11 @@ trexio/
 - HDF5 support is **optional but recommended**
 - Configure without HDF5: `./configure --without-hdf5` or `cmake -DENABLE_HDF5=OFF`
 - Link against **serial (non-MPI) HDF5** for simplicity
-- If HDF5 detection fails, check `$LIBRARY_PATH` (not just `$LD_LIBRARY_PATH`)
+- **Library Detection**: If HDF5 detection fails during configuration:
+  - The linker needs `$LIBRARY_PATH` (for finding libraries during linking)
+  - This is different from `$LD_LIBRARY_PATH` (for finding libraries at runtime)
+  - Workaround: `export LIBRARY_PATH=$LD_LIBRARY_PATH` before running `./configure`
+  - Better solution: Contact system administrators to set both variables in HDF5 module
 
 ## Python API
 
