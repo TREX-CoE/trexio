@@ -19,6 +19,7 @@ TREXIO uses **literate programming** with Emacs org-mode files:
 - **Never directly edit generated source files** - always modify the corresponding `.org` files
 - Generation requires: Emacs (>= 26.0), Python3 (>= 3.8)
 - The `src/` directory is initially empty in a fresh clone
+- Only `git add` the minimal number of files: make sure to avoid adding generated files to the repo
 
 ### Code Generation Workflow
 1. Edit `.org` files to make changes
@@ -162,6 +163,6 @@ The project uses pre-commit hooks:
 - For API changes: Modify `trex.org` and regenerate
 - For templates: Edit `.org` files in `src/templates_*/`
 - For tests: Follow existing patterns in `tests/`
-- Always run `make check` or `ctest` before committing
+- Always run `make check` before committing
 - Verify version consistency across all version files
 - Consider both HDF5 and text backend implications
