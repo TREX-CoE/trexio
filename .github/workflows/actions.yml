@@ -167,6 +167,120 @@ jobs:
       - name: maintainer clean
         run: rm -rf -- builddir/
 
+
+  trexio_i686:
+    name: i686 (32-bit) Linux cross-compilation
+    runs-on: ubuntu-22.04
+    needs: get_commit_message
+
+    steps:
+      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+
+      - name: Install 32-bit development environment
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-multilib \
+            g++-multilib \
+            gfortran-multilib \
+            libc6-dev:i386 \
+            zlib1g-dev:i386 \
+            emacs \
+            libtool-bin \
+            python3 \
+            python3-pip \
+            python3-venv \
+            python3-dev \
+            build-essential \
+            autoconf \
+            automake \
+            git \
+            pkg-config \
+            swig
+          echo 'NOTE: HDF5 disabled for i686 build due to unavailability of libhdf5-dev:i386 in Ubuntu 22.04'
+
+      - name: check versions
+        run: |
+          grep AC_INIT configure.ac | tr -d '[]' | awk -F, '{ print $2 }' > configure_v
+          grep -w VERSION CMakeLists.txt | grep -v 'cmake_minimum_required' | awk '{ print $2 }' > cmake_v
+          grep version python/pytrexio/_version.py | tr -d '"' | awk '{ print $3 }' > python_v
+          grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
+          grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
+          diff configure_v cmake_v 
+          diff configure_v rust_v
+          diff configure_v ocaml_v
+
+      - name: Cross-compile for i686
+        run: |
+          echo 'Configuring for i686 cross-compilation:'
+          ./autogen.sh
+          ./configure --host=i686-unknown-linux-gnu CC='gcc -m32' FC='gfortran -m32' --with-hdf5=no --enable-silent-rules
+          
+          echo 'Compiling TREXIO for i686:'
+          make -j2
+          
+          echo 'Verifying 32-bit binaries:'
+          file -L src/.libs/libtrexio.so | grep '32-bit'
+          
+          echo 'Testing TREXIO:'
+          make -j2 check
+          
+          echo 'Creating distribution package:'
+          make -j2 distcheck
+
+      - name: Test in genuine i686 environment
+        run: |
+          # Create a simple i686 test container
+          cat > Dockerfile.i686test << 'EOF'
+          FROM i386/ubuntu:22.04
+          RUN apt-get update && apt-get install -y \
+            build-essential \
+            python3 \
+            python3-pip \
+            python3-venv \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            file
+          WORKDIR /test
+          EOF
+          
+          docker build -f Dockerfile.i686test -t trexio-i686test .
+          
+          # Extract the distribution and test in genuine i686 environment
+          TARBALL=$(ls trexio-*.tar.gz | head -1)
+          docker run --rm -v "$PWD:/host" trexio-i686test bash -c "
+            set -xe
+            echo 'Testing in genuine i686 environment:'
+            file /bin/bash
+            
+            # Extract and test the distribution
+            cd /host
+            tar -xzf $TARBALL
+            cd trexio-*/
+            
+            echo 'Configuring in i686 environment:'
+            ./configure --with-hdf5=no --enable-silent-rules
+            
+            echo 'Building in i686 environment:'
+            make -j2
+            
+            echo 'Testing in i686 environment:'
+            make -j2 check
+            
+            echo 'i686 environment test completed successfully!'
+          "
+
+      - name: Archive test log file on failure
+        if: failure()
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: test-report-i686
+          path: test-suite.log
+
+
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
