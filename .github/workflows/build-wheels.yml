@@ -50,13 +50,13 @@ jobs:
         # Github Actions doesn't support pairing matrix values together, let's improvise
         # https://github.com/github/feedback/discussions/7835#discussioncomment-1769026
         buildplat:
-          - [macos-13, macosx_x86_64]
-          - [macos-14, macosx_arm64]
+          - [macos-15-intel, macosx_x86_64]
+          - [macos-15, macosx_arm64]
         # test config
-        python: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+        python: ["cp39", "cp310", "cp311", "cp312", "cp313"] # "cp314" - disable for now due to pinned cibuildwheel version
         exclude:
-          - buildplat: [macos-14, macosx_arm64]
-            python: ["cp38", "cp39", "cp310"]
+          - buildplat: [macos-15, macosx_arm64]
+            python: ["cp39", "cp310", "cp314"]
 
     steps:
       - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
@@ -70,7 +70,7 @@ jobs:
           brew install emacs
           brew install automake
           brew install libtool
-          brew install swig
+          pip install swig==4.3
 
       - uses: actions/cache@v3
         id: cache-hdf5
@@ -90,7 +90,7 @@ jobs:
             export MACOSX_DEPLOYMENT_TARGET="10.9"
           fi
           ./autogen.sh
-          ./configure CC=gcc-12 --prefix $HDF5_INSTALLDIR --enable-build-mode=production --with-szlib
+          ./configure CC=gcc-14 --prefix $HDF5_INSTALLDIR --enable-build-mode=production --with-szlib
           make -j3
           make install
 
@@ -98,7 +98,7 @@ jobs:
         run: |
           ./autogen.sh
           export PATH=${PATH}:${HDF5_INSTALLDIR}/bin
-          ./configure FC=gfortran-12 --enable-silent-rules
+          ./configure FC=gfortran-14 --enable-silent-rules
           make -j3
           
       - name: prepare python 
@@ -111,6 +111,8 @@ jobs:
           mv python/* .
 
       - name: Build wheels
+      # cibuildwheel 2.20.0 did not support Python 3.14
+      # in the future, we will need to bump its version here to build MacOS wheels for Python 3.14
         uses: pypa/cibuildwheel@bd033a44476646b606efccdd5eed92d5ea1d77ad  # v2.20.0
         env:
           CIBW_PRERELEASE_PYTHONS: False
@@ -297,11 +299,11 @@ jobs:
           ls -sh -w 1
         working-directory: dist
   
-     #- name: Publish distribution 📦 to Test PyPI
-     #   uses: pypa/gh-action-pypi-publish@release/v1
-     #   with:
-     #     repository_url: https://test.pypi.org/legacy/
-     #     verbose: true
+      # - name: Publish distribution 📦 to Test PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     repository_url: https://test.pypi.org/legacy/
+      #     verbose: true
       #   ##verify-metadata: false
 
       - name: Publish distribution 📦 to PyPI
