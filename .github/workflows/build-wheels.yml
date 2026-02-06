@@ -14,7 +14,7 @@ name: Build CPython wheels
 jobs:
 
   get_commit_message:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.repository == 'trex-coe/trexio' }}
     name: Get commit message
     runs-on: ubuntu-22.04
     outputs:
@@ -259,6 +259,7 @@ jobs:
   publish_wheels:
     name: Publish all wheels on PyPI
     needs: [build_linux_x86_wheels, build_linux_arm_wheels, build_macos_wheels]
+    if: github.repository == 'trex-coe/trexio'
     runs-on: ubuntu-22.04
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
