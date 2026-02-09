@@ -283,3 +283,62 @@ jobs:
     - uses: actions/checkout@v3
     - uses: cachix/install-nix-action@v31.4.1
     - run: nix flake check -L && nix build -L
+
+  trexio_release_tarball:
+    name: Test CMake build from release tarball
+    runs-on: ubuntu-22.04
+    steps:
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev cmake
+
+      - name: get latest release
+        id: get_release
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/TREX-CoE/trexio/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+          echo "tag=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+          echo "Latest release: $LATEST_RELEASE"
+
+      - name: download release tarball
+        run: |
+          wget https://github.com/TREX-CoE/trexio/releases/download/${{ steps.get_release.outputs.tag }}/trexio-${LATEST_VERSION}.tar.gz
+        env:
+          LATEST_VERSION: ${{ steps.get_release.outputs.tag }}
+        continue-on-error: true
+
+      - name: download release tarball (alternative)
+        if: failure()
+        run: |
+          # Extract version without 'v' prefix
+          VERSION=$(echo "${{ steps.get_release.outputs.tag }}" | sed 's/^v//')
+          echo "Downloading version: $VERSION"
+          wget https://github.com/TREX-CoE/trexio/releases/download/${{ steps.get_release.outputs.tag }}/trexio-${VERSION}.tar.gz
+
+      - name: extract tarball
+        run: |
+          VERSION=$(echo "${{ steps.get_release.outputs.tag }}" | sed 's/^v//')
+          tar -xzf trexio-${VERSION}.tar.gz
+          echo "TREXIO_DIR=trexio-${VERSION}" >> $GITHUB_ENV
+
+      - name: configure with CMake
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          cmake -S. -Bbuild
+
+      - name: compile TREXIO
+        run: |
+          cd ${{ env.TREXIO_DIR }}/build
+          make -j2
+
+      - name: test TREXIO
+        run: |
+          cd ${{ env.TREXIO_DIR }}/build
+          ctest -j2
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: test-report-tarball
+          path: ${{ env.TREXIO_DIR }}/build/Testing/Temporary/LastTest.log
