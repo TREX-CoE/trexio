@@ -297,29 +297,16 @@ jobs:
         id: get_release
         run: |
           LATEST_RELEASE=$(curl -s https://api.github.com/repos/TREX-CoE/trexio/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+          VERSION=$(echo "$LATEST_RELEASE" | sed 's/^v//')
           echo "tag=$LATEST_RELEASE" >> $GITHUB_OUTPUT
-          echo "Latest release: $LATEST_RELEASE"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Latest release: $LATEST_RELEASE (version: $VERSION)"
 
-      - name: download release tarball
+      - name: download and extract release tarball
         run: |
-          wget https://github.com/TREX-CoE/trexio/releases/download/${{ steps.get_release.outputs.tag }}/trexio-${LATEST_VERSION}.tar.gz
-        env:
-          LATEST_VERSION: ${{ steps.get_release.outputs.tag }}
-        continue-on-error: true
-
-      - name: download release tarball (alternative)
-        if: failure()
-        run: |
-          # Extract version without 'v' prefix
-          VERSION=$(echo "${{ steps.get_release.outputs.tag }}" | sed 's/^v//')
-          echo "Downloading version: $VERSION"
-          wget https://github.com/TREX-CoE/trexio/releases/download/${{ steps.get_release.outputs.tag }}/trexio-${VERSION}.tar.gz
-
-      - name: extract tarball
-        run: |
-          VERSION=$(echo "${{ steps.get_release.outputs.tag }}" | sed 's/^v//')
-          tar -xzf trexio-${VERSION}.tar.gz
-          echo "TREXIO_DIR=trexio-${VERSION}" >> $GITHUB_ENV
+          wget https://github.com/TREX-CoE/trexio/releases/download/${{ steps.get_release.outputs.tag }}/trexio-${{ steps.get_release.outputs.version }}.tar.gz
+          tar -xzf trexio-${{ steps.get_release.outputs.version }}.tar.gz
+          echo "TREXIO_DIR=trexio-${{ steps.get_release.outputs.version }}" >> $GITHUB_ENV
 
       - name: configure with CMake
         run: |
