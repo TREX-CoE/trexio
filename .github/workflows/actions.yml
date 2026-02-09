@@ -283,3 +283,78 @@ jobs:
     - uses: actions/checkout@v3
     - uses: cachix/install-nix-action@v31.4.1
     - run: nix flake check -L && nix build -L
+
+  trexio_release_tarball:
+    name: Test release tarball with CMake and autotools
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev cmake
+
+      - name: get latest release
+        id: get_release
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/TREX-CoE/trexio/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+          VERSION=$(echo "$LATEST_RELEASE" | sed 's/^v//')
+          echo "tag=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Latest release: $LATEST_RELEASE (version: $VERSION)"
+
+      - name: download and extract release tarball
+        run: |
+          wget https://github.com/TREX-CoE/trexio/releases/download/${{ steps.get_release.outputs.tag }}/trexio-${{ steps.get_release.outputs.version }}.tar.gz
+          tar -xzf trexio-${{ steps.get_release.outputs.version }}.tar.gz
+          echo "TREXIO_DIR=trexio-${{ steps.get_release.outputs.version }}" >> $GITHUB_ENV
+
+      - name: configure with CMake
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          cmake -S. -Bbuild
+
+      - name: compile TREXIO
+        run: |
+          cd ${{ env.TREXIO_DIR }}/build
+          make -j2
+
+      - name: test TREXIO
+        run: |
+          cd ${{ env.TREXIO_DIR }}/build
+          ctest -j2
+
+      - name: Archive CMake test log file
+        if: failure()
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: test-report-tarball-cmake
+          path: ${{ env.TREXIO_DIR }}/build/Testing/Temporary/LastTest.log
+
+      - name: clean CMake build
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          rm -rf build
+
+      - name: configure with autotools
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          ./configure --enable-silent-rules
+
+      - name: compile TREXIO with autotools
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          make -j2
+
+      - name: test TREXIO with autotools
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          make -j2 check
+
+      - name: Archive autotools test log file
+        if: failure()
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: test-report-tarball-autotools
+          path: ${{ env.TREXIO_DIR }}/test-suite.log
