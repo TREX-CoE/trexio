@@ -16,6 +16,10 @@ set(Tests_text
   delete_group_text
   overwrite_all_text
   pre_close
+  utility_functions_text
+  delete_operations_text
+  comprehensive_io_text
+  error_handling_text
   )
 
 if(ENABLE_HDF5)
@@ -33,6 +37,10 @@ if(ENABLE_HDF5)
     io_state_energy_hdf5
     delete_group_hdf5
     overwrite_all_hdf5
+    utility_functions_hdf5
+    delete_operations_hdf5
+    comprehensive_io_hdf5
+    error_handling_hdf5
     )
 
 # Set ${Tests} variable to the complete list of tests.

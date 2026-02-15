@@ -143,7 +143,19 @@ TEST_FILES = \
     tests/template_text.c \
     tests/test_f.f90 \
     tests/test_macros.h \
-    tests/trexio_f.f90
+    tests/trexio_f.f90 \
+    tests/utility_functions.c \
+    tests/utility_functions_hdf5.c \
+    tests/utility_functions_text.c \
+    tests/delete_operations.c \
+    tests/delete_operations_hdf5.c \
+    tests/delete_operations_text.c \
+    tests/comprehensive_io.c \
+    tests/comprehensive_io_hdf5.c \
+    tests/comprehensive_io_text.c \
+    tests/error_handling.c \
+    tests/error_handling_hdf5.c \
+    tests/error_handling_text.c
 
 EXTRA_DIST += $(TEST_FILES)
 
@@ -162,7 +174,11 @@ TESTS_C = \
   tests/delete_group_text \
   tests/overwrite_all_text \
   tests/io_all \
-  tests/pre_close
+  tests/pre_close \
+  tests/utility_functions_text \
+  tests/delete_operations_text \
+  tests/comprehensive_io_text \
+  tests/error_handling_text
 
 if HAVE_HDF5
 TESTS_C += \
@@ -178,7 +194,11 @@ TESTS_C += \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
   tests/delete_group_hdf5 \
-  tests/overwrite_all_hdf5
+  tests/overwrite_all_hdf5 \
+  tests/utility_functions_hdf5 \
+  tests/delete_operations_hdf5 \
+  tests/comprehensive_io_hdf5 \
+  tests/error_handling_hdf5
 endif
 
 TESTS = $(TESTS_C)
