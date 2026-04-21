@@ -338,9 +338,35 @@
   to preserve consistency between the stored MO coefficients and the
   contracted basis functions. If no additional normalization is
   applied, then $\mathcal{N}_s = 1$.
-  The ~shell_factor~ stores this shell-level factor $\mathcal{N}_s$.
+  This factor is stored in the ~shell_factor~ field of the ~basis~ group (see the data definitions table below).
 
+*** Flexibility and validation
 
+  The normalization factors $f_{ks}$, $\mathcal{N}_s$, and $\mathcal{N}_i'$
+  described above are designed to make TREXIO flexible enough to be
+  compatible with most quantum chemistry codes.  Their sole purpose is
+  to provide additional degrees of freedom in the expression of the
+  basis functions, and they do not have a single rigid definition.
+  Because of this built-in redundancy, the same physical basis function
+  can be stored in multiple equivalent ways.
+
+  The only requirement is *self-consistency*: when a basis function is
+  evaluated numerically at a point in space, the result must be the
+  same function that was used to compute the integrals stored in the
+  file.  Concretely, this means that the product
+  \[
+  \mathcal{N}_s \, f_{ks} \, a_{ks}
+  \]
+  must remain invariant under any redistribution of the normalization
+  between the three factors.
+
+  To verify that a TREXIO file is self-consistent, use the ~check-basis~
+  and ~check-mo~ utilities provided by the [[https://github.com/TREX-CoE/trexio-tools][trexio-tools]] package.  These
+  programs evaluate the AOs and MOs on a regular grid, compute a
+  numerical approximation of the overlap matrices, and compare the
+  result with the matrices stored in the TREXIO file.  Any
+  inconsistency in the normalization factors will show up as a
+  discrepancy between the numerical and stored overlaps.
 
 *** Numerical orbitals
 
@@ -568,8 +594,8 @@ prim_factor =
   3.0734305383061117e-01, 1.2929684417481876e-01, 2.1842769845268308e+00,
   4.3649547399719840e-01, 1.8135965626177861e+00 ]
 
-# these values correspond to normalization of the full primitive basis functions
-# in the TREXIO spherical convention (regular solid harmonics)
+# Note: the prim_factor values above normalize the full primitive basis functions
+# (radial & angular) under the TREXIO regular solid harmonics convention.
     #+END_EXAMPLE
 
 ** Effective core potentials (ecp group)
