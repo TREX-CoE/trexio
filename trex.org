@@ -308,14 +308,17 @@
 
 
   Contracted Gaussian basis sets, such as those available from the Basis
-  Set Exchange, are typically expressed in terms of normalized 
+  Set Exchange, are typically expressed in terms of normalized
   /primitive/ functions.
   That is, for a primitive Gaussian of the form
   \[
-  g_{ks}(\mathbf{r}) = ||\mathbf{r} - \mathbf{R}_k||^{\ell} \exp(-\alpha_s ||\mathbf{r} - \mathbf{R}_k||^2),
+  g_{ks}(\mathbf{r}) = ||\mathbf{r} - \mathbf{R}_A||^{\ell_s} \exp(-\gamma_{ks} ||\mathbf{r} - \mathbf{R}_A||^2),
   \]
   a normalization constant $f_{ks}$ is computed so that the integral
   of $|f_{ks} g_{ks}|^2$ over all space is equal to 1.
+  This is the normalization of the /full primitive basis function/
+  (radial and angular parts in the chosen TREXIO convention), not only
+  of the radial Gaussian factor.
   Normalization is applied independently for each primitive function.
   If this normalization is not required, then $f_{ks} = 1$.
 
@@ -333,8 +336,9 @@
   In TREXIO, if this additional renormalization is applied by the code,
   the overall normalization factor $\mathcal{N}_s$ should be stored explicitly
   to preserve consistency between the stored MO coefficients and the
-  contracted basis functions.  If no additional normalization is
+  contracted basis functions. If no additional normalization is
   applied, then $\mathcal{N}_s = 1$.
+  The ~shell_factor~ stores this shell-level factor $\mathcal{N}_s$.
 
 
 
@@ -563,6 +567,9 @@ prim_factor =
   7.9610924849766440e-01, 3.0734305383061117e-01, 1.2929684417481876e-01,
   3.0734305383061117e-01, 1.2929684417481876e-01, 2.1842769845268308e+00,
   4.3649547399719840e-01, 1.8135965626177861e+00 ]
+
+# these values correspond to normalization of the full primitive basis functions
+# in the TREXIO spherical convention (regular solid harmonics)
     #+END_EXAMPLE
 
 ** Effective core potentials (ecp group)
@@ -797,11 +804,11 @@ power = [
    normalization coefficients within a single shell, as in the GAMESS
    convention where each individual function is unit-normalized.
    Using GAMESS convention, the normalization factor of the shell
-   $\mathcal{N}_d$ in the ~basis~ group is appropriate for instance
+   $\mathcal{N}_s$ in the ~basis~ group is appropriate for instance
    for the $d_z^2$ function (i.e.
    $\mathcal{N}_{d}\equiv\mathcal{N}_{z^2}$) but not for the $d_{xy}$
    AO, so the correction factor $\mathcal{N}_i'$ for $d_{xy}$ in the
-   ~ao~ groups is the ratio $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
+   ~ao~ group is the ratio $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
 
 
    #+NAME: ao
@@ -810,7 +817,7 @@ power = [
   | ~cartesian~     | ~int~   |                      |                         | ~1~: true, ~0~: false                |
   | ~num~           | ~dim~   |                      |                         | Total number of atomic orbitals      |
   | ~shell~         | ~index~ | ~[ao.num]~           | ~(ao.num)~              | Basis set shell for each AO          |
-  | ~normalization~ | ~float~ | ~[ao.num]~           | ~(ao.num)~              | Normalization factor $\mathcal{N}_i$ |
+  | ~normalization~ | ~float~ | ~[ao.num]~           | ~(ao.num)~              | Normalization factor $\mathcal{N}_i'$ |
 
    #+CALL: json(data=ao, title="ao")
 
