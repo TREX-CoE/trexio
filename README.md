@@ -27,6 +27,7 @@ single- and/or multi-reference wave functions:
 | [CHAMP](https://github.com/filippi-claudia/champ)                              | Read             | Read            |
 | [GammCor](https://github.com/pernalk/GAMMCOR)                                  | Read             | Read            |
 | [ipie](https://github.com/JoonhoLee-Group/ipie)                                | Read             | Read            |
+| [moltui](https://github.com/kszenes/moltui)                                    | Read             | ---             |
 | [TurboRVB](https://github.com/sissaschool/turborvb)                            | Read             | ---             |
 | [Spicy](https://gitlab.com/theoretical-chemistry-jena/quantum-chemistry/Spicy) | Read             | ---             |
 | [QMC=Chem](https://github.com/TREX-CoE/qmcchem2)                               | Read             | ---             |
