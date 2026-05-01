@@ -5,12 +5,15 @@ on:
     branches:
       - master
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     if: github.repository == 'trex-coe/trexio'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
            submodules: true  
 
@@ -34,12 +37,11 @@ jobs:
         run: ls -sh ./docs
 
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@4.1.0
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
            branch: gh-pages
            folder: ./docs
 
 #          github_token: ${{ secrets.GITHUB_TOKEN }}
 #          publish_dir: ./docs
-
 
