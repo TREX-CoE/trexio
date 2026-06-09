@@ -58,6 +58,11 @@ set_target_properties(trexio PROPERTIES
 	PUBLIC_HEADER ${TREXIO_PUBLIC_HEADERS}
 	)
 
+# Require C99 to build TREXIO, and propagate it as a usage requirement to
+# anything that links the library (tests and external consumers). This is
+# scoped to the target, unlike the global CMAKE_C_STANDARD variable.
+target_compile_features(trexio PUBLIC c_std_99)
+
 include(standard_math_lib)
 target_link_std_math(trexio PRIVATE)
 

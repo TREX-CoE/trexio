@@ -9,9 +9,10 @@ project(Trexio
 	LANGUAGES C Fortran
 	)
 
-# Request the C99 standard.
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+# The C99 requirement is expressed per target on the trexio library (see
+# src/CMakeLists.txt) rather than via the global CMAKE_C_STANDARD variable,
+# which would otherwise leak into every target of a parent project that adds
+# TREXIO through add_subdirectory() or FetchContent.
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
