@@ -188,7 +188,7 @@ jobs:
       - name: install dependencies
         run: |
           brew install emacs
-          brew install hdf5@2.0
+          brew install hdf5@1.10
           brew install automake
           brew install libtool
           pip install swig==4.3
@@ -196,7 +196,7 @@ jobs:
 
       - name: configure with autotools
         run: |
-          brew --prefix hdf5
+          brew --prefix hdf5@1.10
           ./autogen.sh
           ./configure CC=gcc-$GCC_VERSION FC=gfortran-$GCC_VERSION --enable-silent-rules
 
@@ -213,8 +213,8 @@ jobs:
 
       - name: compile Python API
         run: |
-          export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
-          export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          export H5_CFLAGS="-I$(brew --prefix hdf5@1.10)/include"
+          export H5_LDFLAGS="-L$(brew --prefix hdf5@1.10)/lib"
           source trexio-venv/bin/activate
           make python-install
 
