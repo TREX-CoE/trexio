@@ -64,18 +64,16 @@ int main(void)
   CHECK(trexio_write_basis_prim_num(file, 3));
   { const int32_t v[3] = {0, 0, 1}; CHECK(trexio_write_basis_nucleus_index(file, v)); }
   { const int32_t v[3] = {0, 2, 0}; CHECK(trexio_write_basis_shell_ang_mom(file, v)); }
-  { const double  v[3] = {1.0, 1.0, 1.0}; CHECK(trexio_write_basis_shell_factor(file, v)); }
-  { const int32_t v[3] = {0, 0, 0}; CHECK(trexio_write_basis_r_power(file, v)); }
   { const int32_t v[3] = {0, 1, 2}; CHECK(trexio_write_basis_shell_index(file, v)); }
   { const double  v[3] = {a0, a1, a2}; CHECK(trexio_write_basis_exponent(file, v)); }
   { const double  v[3] = {1.0, 1.0, 1.0}; CHECK(trexio_write_basis_coefficient(file, v)); }
-  { const double  v[3] = {1.0, 1.0, 1.0}; CHECK(trexio_write_basis_prim_factor(file, v)); }
+  /* Deliberately omit shell_factor, prim_factor, r_power and ao_normalization
+   * here: this exercises the helper's default-to-1 (and r_power=0) path for
+   * these optional fields. The read path is covered by test_overlap_checks. */
 
   CHECK(trexio_write_ao_cartesian(file, 0));
   CHECK(trexio_write_ao_num(file, 7));
   { const int32_t v[7] = {0, 1, 1, 1, 1, 1, 2}; CHECK(trexio_write_ao_shell(file, v)); }
-  { double v[7]; for (int i = 0; i < 7; ++i) v[i] = 1.0;
-    CHECK(trexio_write_ao_normalization(file, v)); }
 
   CHECK(trexio_close(file));
 

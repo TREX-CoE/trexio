@@ -38,6 +38,15 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
   if (rc != TREXIO_SUCCESS) return rc;
   if (strcmp(btype, "Gaussian") != 0) return TREXIO_NOT_IMPLEMENTED;
 
+  /* The kernel assumes plain real Gaussians. Complex exponents/coefficients
+   * and oscillating primitives change the integrand, so refuse them rather
+   * than silently returning a wrong matrix. */
+  if (trexio_has_basis_exponent_im   (file) == TREXIO_SUCCESS ||
+      trexio_has_basis_coefficient_im(file) == TREXIO_SUCCESS ||
+      trexio_has_basis_oscillation_arg (file) == TREXIO_SUCCESS ||
+      trexio_has_basis_oscillation_kind(file) == TREXIO_SUCCESS)
+    return TREXIO_NOT_IMPLEMENTED;
+
   /* --- dimensions ------------------------------------------------------- */
   int32_t nucleus_num = 0, shell_num = 0, prim_num = 0, ao_num = 0, cartesian = 0;
   if ((rc = trexio_read_nucleus_num (file, &nucleus_num)) != TREXIO_SUCCESS) return rc;
@@ -57,6 +66,7 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
   double*  coef     = malloc(sizeof(double)      * (size_t) prim_num);
   double*  pfac     = malloc(sizeof(double)      * (size_t) prim_num);
   double*  ao_norm  = malloc(sizeof(double)      * (size_t) ao_num);
+  int32_t* ao_shell = malloc(sizeof(int32_t)     * (size_t) ao_num);
 
   int32_t* prim_off = malloc(sizeof(int32_t)     * (size_t) (shell_num + 1));
   int32_t* cursor   = malloc(sizeof(int32_t)     * (size_t) shell_num);
@@ -66,20 +76,40 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
 
   rc = TREXIO_ALLOCATION_FAILED;
   if (!coord || !nuc_idx || !ang_mom || !sh_fac || !r_power || !sh_idx ||
-      !expo || !coef || !pfac || !ao_norm || !prim_off || !cursor ||
+      !expo || !coef || !pfac || !ao_norm || !ao_shell || !prim_off || !cursor ||
       !ao_off || !pexpo || !pcoef) goto cleanup;
 
-  /* --- read groups ------------------------------------------------------ */
+  /* --- read mandatory groups -------------------------------------------- */
   if ((rc = trexio_read_nucleus_coord        (file, coord  )) != TREXIO_SUCCESS) goto cleanup;
   if ((rc = trexio_read_basis_nucleus_index  (file, nuc_idx)) != TREXIO_SUCCESS) goto cleanup;
   if ((rc = trexio_read_basis_shell_ang_mom  (file, ang_mom)) != TREXIO_SUCCESS) goto cleanup;
-  if ((rc = trexio_read_basis_shell_factor   (file, sh_fac )) != TREXIO_SUCCESS) goto cleanup;
-  if ((rc = trexio_read_basis_r_power        (file, r_power)) != TREXIO_SUCCESS) goto cleanup;
   if ((rc = trexio_read_basis_shell_index    (file, sh_idx )) != TREXIO_SUCCESS) goto cleanup;
   if ((rc = trexio_read_basis_exponent       (file, expo   )) != TREXIO_SUCCESS) goto cleanup;
   if ((rc = trexio_read_basis_coefficient    (file, coef   )) != TREXIO_SUCCESS) goto cleanup;
-  if ((rc = trexio_read_basis_prim_factor    (file, pfac   )) != TREXIO_SUCCESS) goto cleanup;
-  if ((rc = trexio_read_ao_normalization     (file, ao_norm)) != TREXIO_SUCCESS) goto cleanup;
+  if ((rc = trexio_read_ao_shell             (file, ao_shell)) != TREXIO_SUCCESS) goto cleanup;
+
+  /* --- optional normalization factors (default to identity if absent) ---- */
+  if (trexio_has_basis_shell_factor(file) == TREXIO_SUCCESS) {
+    if ((rc = trexio_read_basis_shell_factor(file, sh_fac)) != TREXIO_SUCCESS) goto cleanup;
+  } else {
+    for (int32_t s = 0; s < shell_num; ++s) sh_fac[s] = 1.0;
+  }
+  if (trexio_has_basis_prim_factor(file) == TREXIO_SUCCESS) {
+    if ((rc = trexio_read_basis_prim_factor(file, pfac)) != TREXIO_SUCCESS) goto cleanup;
+  } else {
+    for (int32_t k = 0; k < prim_num; ++k) pfac[k] = 1.0;
+  }
+  if (trexio_has_ao_normalization(file) == TREXIO_SUCCESS) {
+    if ((rc = trexio_read_ao_normalization(file, ao_norm)) != TREXIO_SUCCESS) goto cleanup;
+  } else {
+    for (int32_t i = 0; i < ao_num; ++i) ao_norm[i] = 1.0;
+  }
+  /* r_power (n_s): optional, defaults to 0 (ordinary GTOs). */
+  if (trexio_has_basis_r_power(file) == TREXIO_SUCCESS) {
+    if ((rc = trexio_read_basis_r_power(file, r_power)) != TREXIO_SUCCESS) goto cleanup;
+  } else {
+    for (int32_t s = 0; s < shell_num; ++s) r_power[s] = 0;
+  }
 
   /* r_power != 0 (e.g. Cartesian-as-spherical shells) is not supported. */
   for (int32_t s = 0; s < shell_num; ++s)
@@ -96,12 +126,18 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
     pcoef[pos] = pfac[k] * coef[k];
   }
 
-  /* --- AO offset of each shell (shells stored consecutively) ------------ */
+  /* --- AO offset of each shell, validated against ao.shell -------------- */
   {
     int32_t off = 0;
     for (int32_t s = 0; s < shell_num; ++s) {
       ao_off[s] = off;
-      off += shell_ao_num(ang_mom[s], cartesian);
+      const int n = shell_ao_num(ang_mom[s], cartesian);
+      /* The AOs of a shell must be stored consecutively and in shell order. */
+      for (int j = 0; j < n; ++j)
+        if (off + j >= ao_num || ao_shell[off + j] != s) {
+          rc = TREXIO_FAILURE; goto cleanup;
+        }
+      off += n;
     }
     if (off != ao_num) { rc = TREXIO_FAILURE; goto cleanup; } /* inconsistent file */
   }
@@ -179,6 +215,7 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
 cleanup:
   free(coord);  free(nuc_idx); free(ang_mom); free(sh_fac); free(r_power);
   free(sh_idx); free(expo);    free(coef);    free(pfac);   free(ao_norm);
+  free(ao_shell);
   free(prim_off); free(cursor); free(ao_off); free(pexpo);  free(pcoef);
   return rc;
 }
@@ -190,6 +227,10 @@ trexio_check_mo_orthonormality(trexio_t* const file, double* const max_deviation
   if (max_deviation == NULL) return TREXIO_INVALID_ARG_2;
 
   trexio_exit_code rc;
+
+  /* Real MO coefficients only. */
+  if (trexio_has_mo_coefficient_im(file) == TREXIO_SUCCESS) return TREXIO_NOT_IMPLEMENTED;
+
   int32_t ao_num = 0, mo_num = 0;
   if ((rc = trexio_read_ao_num(file, &ao_num)) != TREXIO_SUCCESS) return rc;
   if ((rc = trexio_read_mo_num(file, &mo_num)) != TREXIO_SUCCESS) return rc;
