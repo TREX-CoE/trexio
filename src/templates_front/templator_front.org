@@ -512,6 +512,7 @@ __trexio_path__ = None
    | ~TREXIO_INVALID_ARG_13~          |   43 | 'Invalid argument 13'                          |
    | ~TREXIO_INVALID_ARG_14~          |   44 | 'Invalid argument 14'                          |
    | ~TREXIO_CORRUPTION_ATTEMPT~      |   45 | 'File offset is wrong, corruption risk'        |
+   | ~TREXIO_NOT_IMPLEMENTED~         |   46 | 'Functionality is not implemented'             |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -603,6 +604,7 @@ return '\n'.join(result)
    #define TREXIO_INVALID_ARG_13          ((trexio_exit_code) 43)
    #define TREXIO_INVALID_ARG_14          ((trexio_exit_code) 44)
    #define TREXIO_CORRUPTION_ATTEMPT      ((trexio_exit_code) 45)
+   #define TREXIO_NOT_IMPLEMENTED         ((trexio_exit_code) 46)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -653,6 +655,7 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_13          = 43
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_14          = 44
       integer(trexio_exit_code), parameter :: TREXIO_CORRUPTION_ATTEMPT      = 45
+      integer(trexio_exit_code), parameter :: TREXIO_NOT_IMPLEMENTED         = 46
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
@@ -704,6 +707,7 @@ return '\n'.join(result)
    TREXIO_INVALID_ARG_13          = 43
    TREXIO_INVALID_ARG_14          = 44
    TREXIO_CORRUPTION_ATTEMPT      = 45
+   TREXIO_NOT_IMPLEMENTED         = 46
    #+end_src
    :end:
 
@@ -1083,6 +1087,91 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
 
    #+begin_src c :tangle prefix_front.h
 typedef struct trexio_s trexio_t;
+   #+end_src
+
+** Real solid harmonics
+
+   These routines expose TREXIO's Cartesian <-> real solid harmonic
+   convention (see the ~ao~ group): the spherical functions of a shell are
+   ordered 0, +1, -1, +2, -2, ...; +m is the cosine and -m the sine
+   combination; the Condon--Shortley phase is folded out; and the harmonics
+   are Racah (Schmidt) semi-normalized, S_l^m = sqrt(4 pi/(2l+1)) r^l Y_l^m,
+   so that S_l^0 has unit coefficient on z^l. They are always available,
+   independently of the optional overlap helper, and are useful for
+   converting coefficients between the Cartesian and spherical
+   representations.
+
+   #+begin_src c :tangle prefix_front.h
+/* Number of Cartesian components in a shell of angular momentum l. */
+static inline int trexio_cart_num(const int l) { return (l + 1) * (l + 2) / 2; }
+
+/* Number of real solid-harmonic (spherical) components. */
+static inline int trexio_sphe_num(const int l) { return 2 * l + 1; }
+
+/* Canonical TREXIO Cartesian index of the monomial x^nx y^ny z^nz within its
+   shell (e.g. d: xx, xy, xz, yy, yz, zz). */
+static inline int trexio_cart_index(const int nx, const int ny, const int nz)
+{
+  (void) nx;                       /* fixed by nx = l - ny - nz */
+  const int ii = ny + nz;
+  return ii * (ii + 1) / 2 + nz;
+}
+
+/* Signed m of the j-th spherical function in TREXIO storage order
+   (0, +1, -1, +2, -2, ...), with j in [0, 2l]. */
+static inline int trexio_sphe_m(const int j)
+{
+  if (j == 0) return 0;
+  return (j & 1) ? (j + 1) / 2 : -(j / 2);
+}
+
+/* Inverse of trexio_cart_index: the Cartesian powers (nx,ny,nz) summing to l
+   of the monomial stored at position idx (canonical order). */
+static inline void trexio_cart_powers(const int l, const int idx,
+                                      int* const nx, int* const ny, int* const nz)
+{
+  for (int x = l; x >= 0; --x)
+    for (int y = l - x; y >= 0; --y) {
+      const int z = l - x - y;
+      if (trexio_cart_index(x, y, z) == idx) { *nx = x; *ny = y; *nz = z; return; }
+    }
+  *nx = *ny = *nz = -1;            /* unreachable for valid idx in [0, ncart) */
+}
+
+/* Cartesian coefficients of the real solid harmonic S_l^m (mval signed).
+   coeff must hold trexio_cart_num(l) doubles and is filled with the
+   coefficient of each Cartesian monomial, indexed by trexio_cart_index. */
+void trexio_solid_harmonic_coeff(const int l, const int mval, double* const coeff);
+
+/* Full (2l+1) x trexio_cart_num(l) Cartesian-to-solid transform, rows in
+   TREXIO storage order; row-major mat[j * trexio_cart_num(l) + c]. */
+void trexio_solid_harmonic_transmat(const int l, double* const mat);
+   #+end_src
+
+** Atomic-orbital overlap helper
+
+   ~trexio_compute_ao_overlap~ assembles the atomic-orbital overlap matrix
+   from the ~basis~ and ~ao~ groups. It is a validation helper intended to
+   let interface writers check that orbitals are orthonormal and that
+   density matrices have the correct trace. It currently supports Gaussian
+   basis sets with ~r_power~ = 0 (ordinary spherical or Cartesian GTOs) and
+   returns ~TREXIO_NOT_IMPLEMENTED~ for other basis types.
+
+   #+begin_src c :tangle prefix_front.h
+trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const overlap);
+   #+end_src
+
+   The following routines build on the overlap matrix to report sanity-check
+   /metrics/ (not pass/fail verdicts) for an interface: the caller chooses the
+   acceptance tolerance. ~trexio_check_mo_orthonormality~ returns the largest
+   deviation of \(C^\dagger S C\) from the identity over all MO pairs (0 for
+   perfectly orthonormal orbitals). ~trexio_check_rdm_1e_trace~ returns the
+   trace of the one-body density matrix, which should equal the number of
+   electrons.
+
+   #+begin_src c :tangle prefix_front.h
+trexio_exit_code trexio_check_mo_orthonormality(trexio_t* const file, double* const max_deviation);
+trexio_exit_code trexio_check_rdm_1e_trace(trexio_t* const file, double* const trace);
    #+end_src
 
    #+begin_src c :tangle prefix_s_front.h
