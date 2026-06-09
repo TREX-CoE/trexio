@@ -41,6 +41,9 @@ else()
   set(Tests ${Tests_text})
 endif()
 
+# The in-memory back end is always available.
+list(APPEND Tests io_memory)
+
 # Compile each TREXIO test as an executable and add them to CTest using add_test.
 foreach(Test ${Tests})
   add_executable(${Test} ${Test}.c)

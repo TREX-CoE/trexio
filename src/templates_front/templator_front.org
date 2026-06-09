@@ -333,6 +333,7 @@ typedef int32_t trexio_exit_code;
 #include "trexio_private.h"
 #include "trexio_s.h"
 #include "trexio_text.h"
+#include "trexio_memory.h"
 #ifdef HAVE_HDF5
   #include "trexio_hdf5.h"
 #endif
@@ -974,9 +975,10 @@ typedef int32_t back_end_t;
 
 #define TREXIO_HDF5             ( (back_end_t) 0 )
 #define TREXIO_TEXT             ( (back_end_t) 1 )
-#define TREXIO_INVALID_BACK_END ( (back_end_t) 2 )
+#define TREXIO_MEMORY           ( (back_end_t) 2 )
+#define TREXIO_INVALID_BACK_END ( (back_end_t) 3 )
 #define TREXIO_AUTO             TREXIO_INVALID_BACK_END
-/*#define TREXIO_JSON             ( (back_end_t) 2 )*/
+/*#define TREXIO_JSON             ( (back_end_t) 3 )*/
 
 #define TREXIO_DELIM            "\n"
    #+end_src
@@ -993,6 +995,8 @@ bool trexio_has_back_end(back_end_t back_end);
 bool trexio_has_back_end(back_end_t back_end) {
   switch (back_end) {
     case TREXIO_TEXT:
+      return true;
+    case TREXIO_MEMORY:
       return true;
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
@@ -1014,8 +1018,9 @@ bool trexio_has_backend(back_end_t back_end) {
   #+begin_src f90 :tangle prefix_fortran.f90
   integer(trexio_back_end_t), parameter :: TREXIO_HDF5 = 0
   integer(trexio_back_end_t), parameter :: TREXIO_TEXT = 1
-! integer(trexio_back_end_t), parameter :: TREXIO_JSON = 2
-  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 2
+  integer(trexio_back_end_t), parameter :: TREXIO_MEMORY = 2
+! integer(trexio_back_end_t), parameter :: TREXIO_JSON = 3
+  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 3
   integer(trexio_back_end_t), parameter :: TREXIO_AUTO = TREXIO_INVALID_BACK_END
   #+end_src
 
@@ -1046,8 +1051,9 @@ end interface
 # define TREXIO back ends
 TREXIO_HDF5 = 0
 TREXIO_TEXT = 1
-#TREXIO_JSON = 2
-TREXIO_INVALID_BACK_END = 2
+TREXIO_MEMORY = 2
+#TREXIO_JSON = 3
+TREXIO_INVALID_BACK_END = 3
 TREXIO_AUTO = TREXIO_INVALID_BACK_END
   #+end_src
 
@@ -1330,6 +1336,10 @@ trexio_open(const char* file_name, const char mode,
     result_tmp = malloc(sizeof(trexio_text_t));
     break;
 
+  case TREXIO_MEMORY:
+    result_tmp = malloc(sizeof(trexio_memory_t));
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     result_tmp = malloc(sizeof(trexio_hdf5_t));
@@ -1387,6 +1397,10 @@ trexio_open(const char* file_name, const char mode,
     rc = trexio_text_init(result);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_init(result);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_init(result);
@@ -1418,6 +1432,10 @@ trexio_open(const char* file_name, const char mode,
 
   case TREXIO_TEXT:
     rc = trexio_text_lock(result);
+    break;
+  /* HDF5 v.>=1.10 has file locking activated by default */
+  case TREXIO_MEMORY:
+    rc = trexio_memory_lock(result);
     break;
   /* HDF5 v.>=1.10 has file locking activated by default */
   case TREXIO_HDF5:
@@ -1458,6 +1476,10 @@ trexio_open(const char* file_name, const char mode,
       rc = trexio_text_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
       break;
 
+    case TREXIO_MEMORY:
+      rc = trexio_memory_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
+      break;
+
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
       rc = trexio_hdf5_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
@@ -1489,6 +1511,10 @@ trexio_open(const char* file_name, const char mode,
 
     case TREXIO_TEXT:
       rc = trexio_text_read_metadata_package_version(result, version_origin, 16);
+      break;
+
+    case TREXIO_MEMORY:
+      rc = trexio_memory_read_metadata_package_version(result, version_origin, 16);
       break;
 
     case TREXIO_HDF5:
@@ -1548,6 +1574,10 @@ trexio_open(const char* file_name, const char mode,
 
       case TREXIO_TEXT:
         rc = trexio_text_write_metadata_unsafe(result, unsafe_val);
+        break;
+
+      case TREXIO_MEMORY:
+        rc = trexio_memory_write_metadata_unsafe(result, unsafe_val);
         break;
 
       case TREXIO_HDF5:
@@ -1704,6 +1734,10 @@ trexio_close (trexio_t* file)
     rc = trexio_text_deinit(file);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_deinit(file);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_deinit(file);
@@ -1732,6 +1766,10 @@ trexio_close (trexio_t* file)
 
   case TREXIO_TEXT:
     rc = trexio_text_unlock(file);
+    break;
+
+  case TREXIO_MEMORY:
+    rc = trexio_memory_unlock(file);
     break;
 
   case TREXIO_HDF5:
@@ -1819,6 +1857,10 @@ trexio_flush (trexio_t* file)
 
   case TREXIO_TEXT:
     rc = trexio_text_flush(file);
+    break;
+
+  case TREXIO_MEMORY:
+    rc = trexio_memory_flush(file);
     break;
 
   case TREXIO_HDF5:
@@ -2684,6 +2726,9 @@ trexio_has_$group$ (trexio_t* const file)
   case TREXIO_TEXT:
     return trexio_text_has_$group$(file);
 
+  case TREXIO_MEMORY:
+    return trexio_memory_has_$group$(file);
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_has_$group$(file);
@@ -2797,6 +2842,10 @@ trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* cons
     rc = trexio_text_read_$group_num$(file, num);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_read_$group_num$(file, num);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_read_$group_num$(file, num);
@@ -2840,6 +2889,9 @@ trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double
   case TREXIO_TEXT:
     return trexio_text_write_$group_num$(file, num_write);
 
+  case TREXIO_MEMORY:
+    return trexio_memory_write_$group_num$(file, num_write);
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_write_$group_num$(file, num_write);
@@ -2873,6 +2925,10 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
 
   case TREXIO_TEXT:
     rc = trexio_text_read_$group_num$(file, &num_64);
+    break;
+
+  case TREXIO_MEMORY:
+    rc = trexio_memory_read_$group_num$(file, &num_64);
     break;
 
   case TREXIO_HDF5:
@@ -2923,6 +2979,9 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
   case TREXIO_TEXT:
     return trexio_text_write_$group_num$(file, ($group_num_dtype_double$) num_write);
 
+  case TREXIO_MEMORY:
+    return trexio_memory_write_$group_num$(file, ($group_num_dtype_double$) num_write);
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_write_$group_num$(file, ($group_num_dtype_double$) num_write);
@@ -2971,6 +3030,9 @@ trexio_has_$group_num$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_num$(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_has_$group_num$(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
@@ -3219,6 +3281,10 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
     rc = trexio_text_read_$group_dset$(file, $group_dset$, rank, dims);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_read_$group_dset$(file, $group_dset$, rank, dims);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_read_$group_dset$(file, $group_dset$, rank, dims);
@@ -3298,6 +3364,12 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
                                           rank, dims);
       break;
 
+    case TREXIO_MEMORY:
+      rc = trexio_memory_write_$group_dset$(file,
+                                          (const $group_dset_dtype_double$*) $group_dset$_p,
+                                          rank, dims);
+      break;
+
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
       rc = trexio_hdf5_write_$group_dset$(file,
@@ -3324,6 +3396,10 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
 
     case TREXIO_TEXT:
       rc = trexio_text_write_$group_dset$(file, $group_dset$, rank, dims);
+      break;
+
+    case TREXIO_MEMORY:
+      rc = trexio_memory_write_$group_dset$(file, $group_dset$, rank, dims);
       break;
 
     case TREXIO_HDF5:
@@ -3386,6 +3462,10 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
 
   case TREXIO_TEXT:
     rc = trexio_text_read_$group_dset$(file, $group_dset$_64, rank, dims);
+    break;
+
+  case TREXIO_MEMORY:
+    rc = trexio_memory_read_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
 
   case TREXIO_HDF5:
@@ -3471,6 +3551,10 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
 
   case TREXIO_TEXT:
     rc = trexio_text_write_$group_dset$(file, $group_dset$_64, rank, dims);
+    break;
+
+  case TREXIO_MEMORY:
+    rc = trexio_memory_write_$group_dset$(file, $group_dset$_64, rank, dims);
     break;
 
   case TREXIO_HDF5:
@@ -3642,6 +3726,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_dset$(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_has_$group_dset$(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
@@ -4646,6 +4733,9 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const int32_
   case TREXIO_TEXT:
     return trexio_text_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
 
+  case TREXIO_MEMORY:
+    return trexio_memory_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
@@ -4770,6 +4860,10 @@ trexio_write_$group_dset$_low (trexio_t* const file, char* dset_in, const int32_
     rc = trexio_text_write_$group_dset$(file, (const char**) dset_str, rank, dims);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_write_$group_dset$(file, (const char**) dset_str, rank, dims);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_write_$group_dset$(file, (const char**) dset_str, rank, dims);
@@ -4840,6 +4934,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_dset$(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_has_$group_dset$(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
@@ -5521,6 +5618,9 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const int32_
   case TREXIO_TEXT:
     return trexio_text_read_$group_str$(file, str_out, (uint32_t) max_str_len);
 
+  case TREXIO_MEMORY:
+    return trexio_memory_read_$group_str$(file, str_out, (uint32_t) max_str_len);
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_read_$group_str$(file, str_out, (uint32_t) max_str_len);
@@ -5556,6 +5656,9 @@ trexio_write_$group_str$ (trexio_t* const file, const char* str, const int32_t m
   case TREXIO_TEXT:
     return trexio_text_write_$group_str$(file, str);
 
+  case TREXIO_MEMORY:
+    return trexio_memory_write_$group_str$(file, str);
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_write_$group_str$(file, str);
@@ -5585,6 +5688,9 @@ trexio_has_$group_str$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_str$(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_has_$group_str$(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
@@ -5776,6 +5882,9 @@ trexio_delete_$group$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_delete_$group$(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_delete_$group$(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
