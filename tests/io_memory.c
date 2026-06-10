@@ -9,7 +9,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "trexio.h"
+
+/* Exact float comparison trips -Werror=float-equal; compare within a tol. */
+static int dclose(const double a, const double b) { return fabs(a - b) < 1e-12; }
 
 static int failures = 0;
 #define CHECK_RC(rc) do { if ((rc) != TREXIO_SUCCESS) {                  \
@@ -57,7 +61,7 @@ int main(void)
 
   double charge_r[3] = {0};
   CHECK_RC(trexio_read_nucleus_charge(f, charge_r));
-  EXPECT(charge_r[0] == 1.0 && charge_r[1] == 8.0 && charge_r[2] == 1.0);
+  EXPECT(dclose(charge_r[0], 1.0) && dclose(charge_r[1], 8.0) && dclose(charge_r[2], 1.0));
 
   char pg[16];
   CHECK_RC(trexio_read_nucleus_point_group(f, pg, 16));
@@ -89,7 +93,7 @@ int main(void)
     EXPECT(rc == TREXIO_SUCCESS || rc == TREXIO_END);
     EXPECT(read_size == 3);
     EXPECT(idx_r[0]==0 && idx_r[4]==1 && idx_r[8]==2 && idx_r[11]==2);
-    EXPECT(val_r[0]==1.5 && val_r[1]==-0.25 && val_r[2]==0.75);
+    EXPECT(dclose(val_r[0], 1.5) && dclose(val_r[1], -0.25) && dclose(val_r[2], 0.75));
     EXPECT(trexio_has_mo_2e_int_eri(f) == TREXIO_SUCCESS);
   }
 
@@ -118,7 +122,7 @@ int main(void)
     int64_t ncoef = 2;
     rc = trexio_read_determinant_coefficient(f, 0, &ncoef, coef_r);
     EXPECT(rc == TREXIO_SUCCESS || rc == TREXIO_END);
-    EXPECT(coef_r[0]==0.99 && coef_r[1]==-0.14);
+    EXPECT(dclose(coef_r[0], 0.99) && dclose(coef_r[1], -0.14));
   }
 
   CHECK_RC(trexio_close(f));

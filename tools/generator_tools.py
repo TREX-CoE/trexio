@@ -1,3 +1,4 @@
+import re
 from os import listdir
 from os.path import join, dirname, abspath, isfile
 from json import load as json_load
@@ -225,7 +226,7 @@ def iterative_populate_file (filename: str, paths: dict, detailed_all: dict) -> 
             Returns:
                     None
     """
-    add_trigger = 'rc = trexio_text_free_$group$'
+    add_trigger = r'rc = trexio_(text|memory)_free_\S+'
     triggers = [add_trigger, '$group_dset$', '$group_num$', '$group_str$', '$group$']
 
     templ_path = get_template_path(filename, paths)
@@ -238,7 +239,7 @@ def iterative_populate_file (filename: str, paths: dict, detailed_all: dict) -> 
             for line in f_in :
                 id = check_triggers(line, triggers)
                 if id == 0:
-                    # special case for proper error handling when deallocating text groups
+                    # special case for proper error handling when deallocating text/memory groups
                     error_handler = '  if (rc != TREXIO_SUCCESS) return rc;\n'
                     populated_line = iterative_replace_line(line, '$group$', detailed_all['groups'], add_line=error_handler)
                     f_out.write(populated_line)
@@ -298,7 +299,11 @@ def check_triggers (input_line: str, triggers: list) -> int:
     """
     out_id = -1
     for id,trig in enumerate(triggers):
-        if trig in input_line or trig.upper() in input_line:
+        # Handle triggers with $group$ template
+        if '$' in trig and (trig in input_line or trig.upper() in input_line):
+            out_id = id
+            return out_id
+        elif '$' not in trig and re.search(trig, input_line, re.IGNORECASE):
             out_id = id
             return out_id
 

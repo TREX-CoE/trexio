@@ -1301,6 +1301,14 @@ trexio_open(const char* file_name, const char mode,
     return NULL;
   }
 
+  /* The in-memory back end is ephemeral: there is no on-disk file to reopen,
+     so read-only mode is meaningless (and would otherwise fail later when the
+     metadata is written). Reject it explicitly at open time. */
+  if (back_end == TREXIO_MEMORY && mode == 'r') {
+    if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
+    return NULL;
+  }
+
   back_end_t back_end_local = back_end;
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
   if (back_end == TREXIO_AUTO && mode == 'r') {
