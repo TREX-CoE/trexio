@@ -283,6 +283,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>   /* NULL, used by the inline solid-harmonic helpers */
 
 <<trex_json()>>
 typedef int32_t trexio_exit_code;
@@ -1096,56 +1097,74 @@ typedef struct trexio_s trexio_t;
    ordered 0, +1, -1, +2, -2, ...; +m is the cosine and -m the sine
    combination; the Condon--Shortley phase is folded out; and the harmonics
    are Racah (Schmidt) semi-normalized, S_l^m = sqrt(4 pi/(2l+1)) r^l Y_l^m,
-   so that S_l^0 has unit coefficient on z^l. They are always available,
-   independently of the optional overlap helper, and are useful for
-   converting coefficients between the Cartesian and spherical
-   representations.
+   so that S_l^0 has unit coefficient on z^l. They are useful for converting
+   coefficients between the Cartesian and spherical representations.
 
    #+begin_src c :tangle prefix_front.h
-/* Number of Cartesian components in a shell of angular momentum l. */
-static inline int trexio_cart_num(const int l) { return (l + 1) * (l + 2) / 2; }
+/* Number of Cartesian components in a shell of angular momentum l.
+   These small index helpers are total functions for l >= 0; like the
+   equivalent macros they return their computed value and do no error
+   reporting, so the caller is responsible for passing l >= 0. */
+static inline int32_t trexio_cart_num(const int32_t l) { return (l + 1) * (l + 2) / 2; }
 
 /* Number of real solid-harmonic (spherical) components. */
-static inline int trexio_sphe_num(const int l) { return 2 * l + 1; }
+static inline int32_t trexio_sphe_num(const int32_t l) { return 2 * l + 1; }
 
 /* Canonical TREXIO Cartesian index of the monomial x^nx y^ny z^nz within its
    shell (e.g. d: xx, xy, xz, yy, yz, zz). */
-static inline int trexio_cart_index(const int nx, const int ny, const int nz)
+static inline int32_t trexio_cart_index(const int32_t nx, const int32_t ny, const int32_t nz)
 {
   (void) nx;                       /* fixed by nx = l - ny - nz */
-  const int ii = ny + nz;
+  const int32_t ii = ny + nz;
   return ii * (ii + 1) / 2 + nz;
 }
 
 /* Signed m of the j-th spherical function in TREXIO storage order
    (0, +1, -1, +2, -2, ...), with j in [0, 2l]. */
-static inline int trexio_sphe_m(const int j)
+static inline int32_t trexio_sphe_m(const int32_t j)
 {
   if (j == 0) return 0;
   return (j & 1) ? (j + 1) / 2 : -(j / 2);
 }
 
 /* Inverse of trexio_cart_index: the Cartesian powers (nx,ny,nz) summing to l
-   of the monomial stored at position idx (canonical order). */
-static inline void trexio_cart_powers(const int l, const int idx,
-                                      int* const nx, int* const ny, int* const nz)
+   of the monomial stored at position idx (canonical order). Returns
+   TREXIO_INVALID_ARG_* on a NULL output pointer, a negative l, or an idx
+   outside [0, trexio_cart_num(l)). */
+static inline trexio_exit_code
+trexio_cart_powers(const int32_t l, const int32_t idx,
+                   int32_t* const nx, int32_t* const ny, int32_t* const nz)
 {
-  for (int x = l; x >= 0; --x)
-    for (int y = l - x; y >= 0; --y) {
-      const int z = l - x - y;
-      if (trexio_cart_index(x, y, z) == idx) { *nx = x; *ny = y; *nz = z; return; }
+  if (l < 0)                                return TREXIO_INVALID_ARG_1;
+  if (idx < 0 || idx >= trexio_cart_num(l)) return TREXIO_INVALID_ARG_2;
+  if (nx == NULL)                           return TREXIO_INVALID_ARG_3;
+  if (ny == NULL)                           return TREXIO_INVALID_ARG_4;
+  if (nz == NULL)                           return TREXIO_INVALID_ARG_5;
+  for (int32_t x = l; x >= 0; --x)
+    for (int32_t y = l - x; y >= 0; --y) {
+      const int32_t z = l - x - y;
+      if (trexio_cart_index(x, y, z) == idx) {
+        *nx = x; *ny = y; *nz = z; return TREXIO_SUCCESS;
+      }
     }
-  *nx = *ny = *nz = -1;            /* unreachable for valid idx in [0, ncart) */
+  return TREXIO_FAILURE;            /* unreachable for valid idx in [0, ncart) */
 }
 
 /* Cartesian coefficients of the real solid harmonic S_l^m (mval signed).
-   coeff must hold trexio_cart_num(l) doubles and is filled with the
-   coefficient of each Cartesian monomial, indexed by trexio_cart_index. */
-void trexio_solid_harmonic_coeff(const int l, const int mval, double* const coeff);
+   coeff must hold at least trexio_cart_num(l) doubles (coeff_size is its
+   length) and is filled with the coefficient of each Cartesian monomial,
+   indexed by trexio_cart_index. Returns TREXIO_INVALID_ARG_* on a NULL or
+   undersized buffer, a negative l, or |mval| > l. */
+trexio_exit_code trexio_solid_harmonic_coeff(const int32_t l, const int32_t mval,
+                                             const int64_t coeff_size, double* const coeff);
 
 /* Full (2l+1) x trexio_cart_num(l) Cartesian-to-solid transform, rows in
-   TREXIO storage order; row-major mat[j * trexio_cart_num(l) + c]. */
-void trexio_solid_harmonic_transmat(const int l, double* const mat);
+   TREXIO storage order; row-major mat[j * trexio_cart_num(l) + c]. mat must
+   hold at least trexio_sphe_num(l) * trexio_cart_num(l) doubles (mat_size is
+   its length). Returns TREXIO_INVALID_ARG_* on a NULL or undersized buffer
+   or a negative l. */
+trexio_exit_code trexio_solid_harmonic_transmat(const int32_t l,
+                                                const int64_t mat_size, double* const mat);
    #+end_src
 
 ** Atomic-orbital overlap helper
@@ -1155,10 +1174,14 @@ void trexio_solid_harmonic_transmat(const int l, double* const mat);
    let interface writers check that orbitals are orthonormal and that
    density matrices have the correct trace. It currently supports Gaussian
    basis sets with ~r_power~ = 0 (ordinary spherical or Cartesian GTOs) and
-   returns ~TREXIO_NOT_IMPLEMENTED~ for other basis types.
+   returns ~TREXIO_NOT_IMPLEMENTED~ for other basis types. ~overlap~ must hold
+   at least ~ao_num * ao_num~ doubles (~overlap_size~ is its length) and is
+   filled in row-major order; the routine returns ~TREXIO_INVALID_ARG_2~ if
+   the buffer is too small.
 
    #+begin_src c :tangle prefix_front.h
-trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const overlap);
+trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
+                                           const int64_t overlap_size, double* const overlap);
    #+end_src
 
    The following routines build on the overlap matrix to report sanity-check

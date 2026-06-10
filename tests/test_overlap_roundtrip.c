@@ -82,7 +82,7 @@ int main(void)
   CHECK(rc);
 
   double S[49];
-  rc = trexio_compute_ao_overlap(file, S);
+  rc = trexio_compute_ao_overlap(file, 49, S);
   CHECK(rc);
   CHECK(trexio_close(file));
   trexio_remove_file(fname);

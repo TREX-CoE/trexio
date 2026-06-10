@@ -18,7 +18,7 @@ static int failures = 0;
 static void chk(int l, int m, int nx, int ny, int nz, double val)
 {
   double c[64];
-  trexio_solid_harmonic_coeff(l, m, c);
+  if (trexio_solid_harmonic_coeff(l, m, 64, c) != TREXIO_SUCCESS) { ++failures; return; }
   const double got = c[trexio_cart_index(nx, ny, nz)];
   if (fabs(got - val) > 1e-12) {
     printf("FAIL  S(l=%d,m=%+d) coeff of x^%d y^%d z^%d : got %.12f, want %.12f\n",
@@ -31,7 +31,7 @@ static void chk(int l, int m, int nx, int ny, int nz, double val)
 static void chk_nnz(int l, int m, int n)
 {
   double c[64];
-  trexio_solid_harmonic_coeff(l, m, c);
+  if (trexio_solid_harmonic_coeff(l, m, 64, c) != TREXIO_SUCCESS) { ++failures; return; }
   int cnt = 0;
   for (int k = 0; k < trexio_cart_num(l); ++k)
     if (fabs(c[k]) > 1e-12) ++cnt;

@@ -27,7 +27,9 @@
  * blocks (the routine is shell-driven and carries no angular-momentum limit),
  * plus the single-primitive overlap and the Cartesian-Gaussian normalization
  * constant. The contraction / TREXIO-data-reading layer is built on top of
- * this and is compiled only when the optional overlap feature is enabled.
+ * this. Both layers are compiled unconditionally into the library; this is a
+ * private (uninstalled) header, so these kernels are not part of the public
+ * API.
  */
 
 #ifndef TREXIO_OVERLAP_H

@@ -60,12 +60,18 @@ static double tsh_binom(const int m, int n)
   return r;
 }
 
-void trexio_solid_harmonic_coeff(const int l, const int mval, double* const coeff)
+trexio_exit_code trexio_solid_harmonic_coeff(const int32_t l, const int32_t mval,
+                                             const int64_t coeff_size, double* const coeff)
 {
+  if (l < 0)                            return TREXIO_INVALID_ARG_1;
+  if (mval < -l || mval > l)            return TREXIO_INVALID_ARG_2;
+  if (coeff_size < trexio_cart_num(l))  return TREXIO_INVALID_ARG_3;
+  if (coeff == NULL)                    return TREXIO_INVALID_ARG_4;
+
   const int ncart = trexio_cart_num(l);
   for (int i = 0; i < ncart; ++i) coeff[i] = 0.0;
 
-  const int m = abs(mval);
+  const int m = abs((int) mval);
 
   /* Racah / Schmidt semi-normalization: S_l^m = sqrt(4 pi / (2l+1)) r^l Y_l^m.
    * (ERKALE's unit-sphere Y_l^m carries an extra sqrt((2l+1)/4 pi), dropped
@@ -121,11 +127,24 @@ void trexio_solid_harmonic_coeff(const int l, const int mval, double* const coef
       }
     }
   }
+
+  return TREXIO_SUCCESS;
 }
 
-void trexio_solid_harmonic_transmat(const int l, double* const mat)
+trexio_exit_code trexio_solid_harmonic_transmat(const int32_t l,
+                                                const int64_t mat_size, double* const mat)
 {
+  if (l < 0)                                                  return TREXIO_INVALID_ARG_1;
+  if (mat_size < (int64_t) trexio_sphe_num(l) * trexio_cart_num(l))
+                                                              return TREXIO_INVALID_ARG_2;
+  if (mat == NULL)                                            return TREXIO_INVALID_ARG_3;
+
   const int ncart = trexio_cart_num(l);
-  for (int j = 0; j < trexio_sphe_num(l); ++j)
-    trexio_solid_harmonic_coeff(l, trexio_sphe_m(j), &mat[j * ncart]);
+  for (int j = 0; j < trexio_sphe_num(l); ++j) {
+    const trexio_exit_code rc =
+      trexio_solid_harmonic_coeff(l, trexio_sphe_m(j), ncart, &mat[j * ncart]);
+    if (rc != TREXIO_SUCCESS) return rc;
+  }
+
+  return TREXIO_SUCCESS;
 }

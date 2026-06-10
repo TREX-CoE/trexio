@@ -1,5 +1,6 @@
-/* Optional GTO overlap validation helper: reads the basis/ao groups of a
- * TREXIO file and assembles the AO overlap matrix, shell-pair by shell-pair.
+/* GTO overlap validation helper: reads the basis/ao groups of a TREXIO file
+ * and assembles the AO overlap matrix, shell-pair by shell-pair. Built
+ * unconditionally as part of the library (libm is already required).
  *
  * BSD 3-Clause License
  *
@@ -25,10 +26,12 @@ static int shell_ao_num(const int l, const int cartesian)
   return cartesian ? trexio_cart_num(l) : trexio_sphe_num(l);
 }
 
-trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const overlap)
+trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
+                                           const int64_t overlap_size,
+                                           double* const overlap)
 {
   if (file == NULL)    return TREXIO_INVALID_ARG_1;
-  if (overlap == NULL) return TREXIO_INVALID_ARG_2;
+  if (overlap == NULL) return TREXIO_INVALID_ARG_3;
 
   trexio_exit_code rc;
 
@@ -54,6 +57,9 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
   if ((rc = trexio_read_basis_prim_num (file, &prim_num )) != TREXIO_SUCCESS) return rc;
   if ((rc = trexio_read_ao_num         (file, &ao_num    )) != TREXIO_SUCCESS) return rc;
   if ((rc = trexio_read_ao_cartesian   (file, &cartesian )) != TREXIO_SUCCESS) return rc;
+
+  /* The output matrix is ao_num x ao_num. */
+  if (overlap_size < (int64_t) ao_num * (int64_t) ao_num) return TREXIO_INVALID_ARG_2;
 
   /* --- allocate all buffers (single cleanup path) ---------------------- */
   double*  coord    = malloc(sizeof(double)  * 3 * (size_t) nucleus_num);
@@ -114,6 +120,15 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
   /* r_power != 0 (e.g. Cartesian-as-spherical shells) is not supported. */
   for (int32_t s = 0; s < shell_num; ++s)
     if (r_power[s] != 0) { rc = TREXIO_NOT_IMPLEMENTED; goto cleanup; }
+
+  /* --- validate file-supplied indices before using them ----------------- */
+  /* A corrupted file must not be able to drive an out-of-bounds access. */
+  for (int32_t s = 0; s < shell_num; ++s) {
+    if (nuc_idx[s] < 0 || nuc_idx[s] >= nucleus_num) { rc = TREXIO_FAILURE; goto cleanup; }
+    if (ang_mom[s] < 0)                              { rc = TREXIO_FAILURE; goto cleanup; }
+  }
+  for (int32_t k = 0; k < prim_num; ++k)
+    if (sh_idx[k] < 0 || sh_idx[k] >= shell_num)     { rc = TREXIO_FAILURE; goto cleanup; }
 
   /* --- group primitives by shell and fold prim_factor into coefficient -- */
   for (int32_t s = 0; s <= shell_num; ++s) prim_off[s] = 0;
@@ -178,8 +193,10 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file, double* const o
         double* TB = malloc(sizeof(double) * (size_t) (nAOb * ncB));
         if (!TA || !TB) { free(TA); free(TB); free(M); free(blk);
                           rc = TREXIO_ALLOCATION_FAILED; goto cleanup; }
-        trexio_solid_harmonic_transmat(lA, TA);
-        trexio_solid_harmonic_transmat(lB, TB);
+        rc = trexio_solid_harmonic_transmat(lA, (int64_t) nAOa * ncA, TA);
+        if (rc != TREXIO_SUCCESS) { free(TA); free(TB); free(M); free(blk); goto cleanup; }
+        rc = trexio_solid_harmonic_transmat(lB, (int64_t) nAOb * ncB, TB);
+        if (rc != TREXIO_SUCCESS) { free(TA); free(TB); free(M); free(blk); goto cleanup; }
         for (int ia = 0; ia < nAOa; ++ia) {
           for (int jb = 0; jb < nAOb; ++jb) {
             double acc = 0.0;
@@ -242,7 +259,7 @@ trexio_check_mo_orthonormality(trexio_t* const file, double* const max_deviation
   rc = TREXIO_ALLOCATION_FAILED;
   if (!S || !C || !SC) goto cleanup;
 
-  if ((rc = trexio_compute_ao_overlap(file, S))   != TREXIO_SUCCESS) goto cleanup;
+  if ((rc = trexio_compute_ao_overlap(file, (int64_t) ao_num * ao_num, S)) != TREXIO_SUCCESS) goto cleanup;
   if ((rc = trexio_read_mo_coefficient(file, C))  != TREXIO_SUCCESS) goto cleanup;
   /* C is row-major [mo_num, ao_num]: C[i*ao_num + a] = c_{i a}. */
 
