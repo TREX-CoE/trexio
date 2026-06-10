@@ -8,7 +8,7 @@ TREXIO is an open-source file format and library for storing and manipulating da
 - **Core Library**: C (C99 standard)
 - **Language Interfaces**: Fortran, Python, OCaml, Rust
 - **Backends**: Text-based and HDF5 binary
-- **Build Systems**: Autotools (primary) and CMake
+- **Build Systems**: Autotools (primary) and CMake. Use POSIX for Makefile, and avoid GNU Make extensions.
 
 ## Development Approach
 
