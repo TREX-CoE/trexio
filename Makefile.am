@@ -197,8 +197,7 @@ if HAVE_FORTRAN
 test_trexio_f = tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
-	$(MKDIR_P) $(@D)
-	cp $< $@
+	cp $(srcdir)/$(trexio_f) $(test_trexio_f)
 
 trexio.mod: tests/trexio_f.o
 
@@ -280,7 +279,7 @@ $(trexio_h): $(ORG_FILES) $(GENERATOR_FILES) trex.json
 	cd $(srcdir)/tools && ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
-	$(MKDIR_P) $(@D)
+	$(MKDIR_P) docs
 	touch $(htmlizer)
 	cd $(srcdir)/tools && ./build_doc.sh
 

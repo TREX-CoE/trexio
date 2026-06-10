@@ -21,7 +21,7 @@ LT_INIT
 # The marker is looked up in $srcdir so that out-of-source (object directory)
 # builds detect it correctly instead of silently dropping to non-developer mode.
 TEST_IFEXISTS="$srcdir/.devel"
-AS_IF([test -f $TEST_IFEXISTS],
+AS_IF([test -f "$TEST_IFEXISTS"],
         [enable_maintainer_mode="yes"]
 )
 
