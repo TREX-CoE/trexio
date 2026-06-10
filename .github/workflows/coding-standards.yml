@@ -1,0 +1,24 @@
+name: Coding Standards
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - '**.c'
+      - '**.h'
+
+jobs:
+  check-coding-conventions:
+    name: Check C coding conventions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+        with:
+          fetch-depth: 0
+
+      - name: Check coding conventions
+        run: .github/scripts/check-coding-conventions.sh
