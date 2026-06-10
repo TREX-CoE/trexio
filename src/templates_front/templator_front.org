@@ -4147,6 +4147,10 @@ trexio_read_$group_dset$(trexio_t* const file,
     rc = trexio_text_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
@@ -4195,6 +4199,10 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 
   case TREXIO_TEXT:
     return trexio_text_read_$group_dset$_size(file, size_max);
+    break;
+
+  case TREXIO_MEMORY:
+    return trexio_memory_read_$group_dset$_size(file, size_max);
     break;
 
   case TREXIO_HDF5:
@@ -4298,6 +4306,11 @@ trexio_write_$group_dset$(trexio_t* const file,
                                           size_max, index_sparse_p, value_sparse);
       break;
 
+    case TREXIO_MEMORY:
+      rc = trexio_memory_write_$group_dset$(file, offset_file, buffer_size, max_dim,
+                                          size_max, index_sparse_p, value_sparse);
+      break;
+
     case TREXIO_HDF5:
 #ifdef HAVE_HDF5
       rc = trexio_hdf5_write_$group_dset$(file, offset_file, buffer_size, max_dim,
@@ -4326,6 +4339,11 @@ trexio_write_$group_dset$(trexio_t* const file,
 
     case TREXIO_TEXT:
       rc = trexio_text_write_$group_dset$(file, offset_file, buffer_size, max_dim,
+                                          size_max, index_sparse, value_sparse);
+      break;
+
+    case TREXIO_MEMORY:
+      rc = trexio_memory_write_$group_dset$(file, offset_file, buffer_size, max_dim,
                                           size_max, index_sparse, value_sparse);
       break;
 
@@ -4368,6 +4386,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_dset$(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_has_$group_dset$(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
@@ -5204,6 +5225,10 @@ trexio_read_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64
     rc = trexio_text_read_$group_dset$(file, offset_file, rank, dims, &eof_read_size, dset);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_read_$group_dset$(file, offset_file, rank, dims, &eof_read_size, dset);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_read_$group_dset$(file, offset_file, rank, dims, &eof_read_size, dset);
@@ -5243,6 +5268,10 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 
   case TREXIO_TEXT:
     return trexio_text_read_$group_dset$_size(file, size_max);
+    break;
+
+  case TREXIO_MEMORY:
+    return trexio_memory_read_$group_dset$_size(file, size_max);
     break;
 
   case TREXIO_HDF5:
@@ -5291,6 +5320,10 @@ trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, cons
     return trexio_text_write_$group_dset$(file, offset_file, rank, dims, dset);
     break;
 
+  case TREXIO_MEMORY:
+    return trexio_memory_write_$group_dset$(file, offset_file, rank, dims, dset);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     return trexio_hdf5_write_$group_dset$(file, offset_file, rank, dims, dset);
@@ -5334,6 +5367,9 @@ trexio_has_$group_dset$ (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_$group_dset$(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_has_$group_dset$(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
@@ -6021,6 +6057,10 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
     rc = trexio_text_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
@@ -6159,6 +6199,10 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
     rc = trexio_text_write_determinant_list(file, offset_file, rank, dims, dset);
     break;
 
+  case TREXIO_MEMORY:
+    rc = trexio_memory_write_determinant_list(file, offset_file, rank, dims, dset);
+    break;
+
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = trexio_hdf5_write_determinant_list(file, offset_file, rank, dims, dset);
@@ -6230,6 +6274,9 @@ trexio_has_determinant_list (trexio_t* const file)
 
   case TREXIO_TEXT:
     return trexio_text_has_determinant_list(file);
+
+  case TREXIO_MEMORY:
+    return trexio_memory_has_determinant_list(file);
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5

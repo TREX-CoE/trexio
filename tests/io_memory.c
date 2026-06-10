@@ -71,6 +71,56 @@ int main(void)
   EXPECT(strcmp(labels_r[2], "H") == 0);
   for (int i = 0; i < 3; ++i) free(labels_r[i]);
 
+  /* ---- sparse data: a few two-electron integrals (4-index) ---- */
+  CHECK_RC(trexio_write_mo_num(f, 4));
+  {
+    const int32_t idx[3*4] = { 0,0,0,0,  1,0,1,0,  2,1,3,2 };
+    const double  val[3]   = { 1.5, -0.25, 0.75 };
+    CHECK_RC(trexio_write_mo_2e_int_eri(f, 0, 3, idx, val));
+
+    int64_t nmax = 0;
+    CHECK_RC(trexio_read_mo_2e_int_eri_size(f, &nmax));
+    EXPECT(nmax == 3);
+
+    int32_t idx_r[3*4] = {0};
+    double  val_r[3]   = {0};
+    int64_t read_size  = 3;
+    rc = trexio_read_mo_2e_int_eri(f, 0, &read_size, idx_r, val_r);
+    EXPECT(rc == TREXIO_SUCCESS || rc == TREXIO_END);
+    EXPECT(read_size == 3);
+    EXPECT(idx_r[0]==0 && idx_r[4]==1 && idx_r[8]==2 && idx_r[11]==2);
+    EXPECT(val_r[0]==1.5 && val_r[1]==-0.25 && val_r[2]==0.75);
+    EXPECT(trexio_has_mo_2e_int_eri(f) == TREXIO_SUCCESS);
+  }
+
+  /* ---- determinant list (int64 bit fields) + coefficients (buffered) ---- */
+  CHECK_RC(trexio_write_electron_up_num(f, 2));
+  CHECK_RC(trexio_write_electron_dn_num(f, 2));
+  {
+    /* mo_num=4 -> 1 int64 per spin -> 2 int64 per determinant.
+       Each spin bit-field must have 2 set bits (up_num = dn_num = 2). */
+    const int64_t dets[2*2] = { 0x3, 0x3,   0x5, 0x6 };
+    CHECK_RC(trexio_write_determinant_list(f, 0, 2, dets));
+    const double coef[2] = { 0.99, -0.14 };
+    CHECK_RC(trexio_write_determinant_coefficient(f, 0, 2, coef));
+
+    int32_t ndet = 0;
+    CHECK_RC(trexio_read_determinant_num(f, &ndet));
+    EXPECT(ndet == 2);
+
+    int64_t dets_r[2*2] = {0};
+    int64_t nread = 2;
+    rc = trexio_read_determinant_list(f, 0, &nread, dets_r);
+    EXPECT(rc == TREXIO_SUCCESS || rc == TREXIO_END);
+    EXPECT(dets_r[0]==0x3 && dets_r[1]==0x3 && dets_r[2]==0x5 && dets_r[3]==0x6);
+
+    double coef_r[2] = {0};
+    int64_t ncoef = 2;
+    rc = trexio_read_determinant_coefficient(f, 0, &ncoef, coef_r);
+    EXPECT(rc == TREXIO_SUCCESS || rc == TREXIO_END);
+    EXPECT(coef_r[0]==0.99 && coef_r[1]==-0.14);
+  }
+
   CHECK_RC(trexio_close(f));
 
   if (failures == 0) {
