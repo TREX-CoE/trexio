@@ -67,13 +67,12 @@ int main(void)
   CHECK_RC(trexio_read_nucleus_point_group(f, pg, 16));
   EXPECT(strcmp(pg, "C2v") == 0);
 
-  char* labels_r[3];
-  for (int i = 0; i < 3; ++i) labels_r[i] = calloc(8, sizeof(char));
+  char labels_buf[3][8] = {{0}};
+  char* labels_r[3] = { labels_buf[0], labels_buf[1], labels_buf[2] };
   CHECK_RC(trexio_read_nucleus_label(f, labels_r, 8));
   EXPECT(strcmp(labels_r[0], "H") == 0);
   EXPECT(strcmp(labels_r[1], "O") == 0);
   EXPECT(strcmp(labels_r[2], "H") == 0);
-  for (int i = 0; i < 3; ++i) free(labels_r[i]);
 
   /* ---- sparse data: a few two-electron integrals (4-index) ---- */
   CHECK_RC(trexio_write_mo_num(f, 4));
