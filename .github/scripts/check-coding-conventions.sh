@@ -27,13 +27,13 @@ if [ -n "$GITHUB_BASE_REF" ]; then
     BASE="origin/${GITHUB_BASE_REF}"
     git fetch --depth=1 origin "$GITHUB_BASE_REF" 2>/dev/null || true
     CHANGED_FILES=$(git diff --name-only --diff-filter=ACM "$BASE"...HEAD -- '*.c' '*.h' \
-                    | grep -v '^src/' || true)
+                    | grep '^src/' || true)
 else
     CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM -- '*.c' '*.h' \
-                    | grep -v '^src/' || true)
+                    | grep '^src/' || true)
     if [ -z "$CHANGED_FILES" ]; then
         CHANGED_FILES=$(git diff --name-only --diff-filter=ACM HEAD~1 -- '*.c' '*.h' \
-                        | grep -v '^src/' || true)
+                        | grep '^src/' || true)
     fi
 fi
 
