@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "trexio.h"
+#include "trexio_private.h"   /* FREE() */
 #include "trexio_overlap.h"
 
 /* Number of AOs contributed by a shell of angular momentum l. */
@@ -175,7 +176,7 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
       /* contracted Cartesian block */
       double* M = malloc(sizeof(double) * (size_t) (ncA * ncB));
       double* blk = malloc(sizeof(double) * (size_t) (nAOa * nAOb));
-      if (!M || !blk) { free(M); free(blk); rc = TREXIO_ALLOCATION_FAILED; goto cleanup; }
+      if (!M || !blk) { FREE(M); FREE(blk); rc = TREXIO_ALLOCATION_FAILED; goto cleanup; }
 
       trexio_shell_pair_overlap_cart(
         lA, RA, prim_off[sA + 1] - prim_off[sA], &pexpo[prim_off[sA]], &pcoef[prim_off[sA]],
@@ -191,12 +192,12 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
         /* blk = TA * M * TB^T, with TA/TB the cart->solid transforms */
         double* TA = malloc(sizeof(double) * (size_t) (nAOa * ncA));
         double* TB = malloc(sizeof(double) * (size_t) (nAOb * ncB));
-        if (!TA || !TB) { free(TA); free(TB); free(M); free(blk);
+        if (!TA || !TB) { FREE(TA); FREE(TB); FREE(M); FREE(blk);
                           rc = TREXIO_ALLOCATION_FAILED; goto cleanup; }
         rc = trexio_solid_harmonic_transmat(lA, (int64_t) nAOa * ncA, TA);
-        if (rc != TREXIO_SUCCESS) { free(TA); free(TB); free(M); free(blk); goto cleanup; }
+        if (rc != TREXIO_SUCCESS) { FREE(TA); FREE(TB); FREE(M); FREE(blk); goto cleanup; }
         rc = trexio_solid_harmonic_transmat(lB, (int64_t) nAOb * ncB, TB);
-        if (rc != TREXIO_SUCCESS) { free(TA); free(TB); free(M); free(blk); goto cleanup; }
+        if (rc != TREXIO_SUCCESS) { FREE(TA); FREE(TB); FREE(M); FREE(blk); goto cleanup; }
         for (int ia = 0; ia < nAOa; ++ia) {
           for (int jb = 0; jb < nAOb; ++jb) {
             double acc = 0.0;
@@ -208,7 +209,7 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
             blk[ia * nAOb + jb] = acc;
           }
         }
-        free(TA); free(TB);
+        FREE(TA); FREE(TB);
       }
 
       /* per-AO normalization and scatter into both triangles */
@@ -222,17 +223,17 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
         }
       }
 
-      free(M); free(blk);
+      FREE(M); FREE(blk);
     }
   }
 
   rc = TREXIO_SUCCESS;
 
 cleanup:
-  free(coord);  free(nuc_idx); free(ang_mom); free(sh_fac); free(r_power);
-  free(sh_idx); free(expo);    free(coef);    free(pfac);   free(ao_norm);
-  free(ao_shell);
-  free(prim_off); free(cursor); free(ao_off); free(pexpo);  free(pcoef);
+  FREE(coord);  FREE(nuc_idx); FREE(ang_mom); FREE(sh_fac); FREE(r_power);
+  FREE(sh_idx); FREE(expo);    FREE(coef);    FREE(pfac);   FREE(ao_norm);
+  FREE(ao_shell);
+  FREE(prim_off); FREE(cursor); FREE(ao_off); FREE(pexpo);  FREE(pcoef);
   return rc;
 }
 
@@ -285,7 +286,7 @@ trexio_check_mo_orthonormality(trexio_t* const file, double* const max_deviation
   rc = TREXIO_SUCCESS;
 
 cleanup:
-  free(S); free(C); free(SC);
+  FREE(S); FREE(C); FREE(SC);
   return rc;
 }
 
@@ -309,6 +310,6 @@ trexio_check_rdm_1e_trace(trexio_t* const file, double* const trace)
     *trace = tr;
   }
 
-  free(g);
+  FREE(g);
   return rc;
 }
