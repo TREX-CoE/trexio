@@ -40,6 +40,12 @@ cp ${SRC}/pytrexio.py ${PYTREXIODIR}/pytrexio.py
 cp ${SRC}/trexio.py ${PYDIR}/trexio.py
 cp ${SRC}/trexio.c ${SRC}/trexio_s.h ${SRC}/trexio_private.h ${PYDIR}/src
 cp ${SRC}/trexio_text.{c,h} ${PYDIR}/src
+# Solid-harmonic / GTO-overlap helpers exposed in the public header (and thus
+# wrapped by SWIG) must be compiled into the extension to avoid undefined
+# symbols at import time.
+cp ${SRC}/trexio_solid_harmonics.c ${PYDIR}/src
+cp ${SRC}/trexio_overlap.{c,h} ${PYDIR}/src
+cp ${SRC}/trexio_overlap_compute.c ${PYDIR}/src
 cp ${SRC}/pytrexio_wrap.c ${PYDIR}/src/pytrexio_wrap.c
 cp ${INCLUDIR}/trexio.h ${PYDIR}/src
 cp ${INCLUDIR}/config.h ${PYDIR}/src
