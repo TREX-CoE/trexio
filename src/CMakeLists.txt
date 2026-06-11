@@ -58,6 +58,11 @@ set_target_properties(trexio PROPERTIES
 	PUBLIC_HEADER ${TREXIO_PUBLIC_HEADERS}
 	)
 
+# Require C99 to build TREXIO, and propagate it as a usage requirement to
+# anything that links the library (tests and external consumers). This is
+# scoped to the target, unlike the global CMAKE_C_STANDARD variable.
+target_compile_features(trexio PUBLIC c_std_99)
+
 include(standard_math_lib)
 target_link_std_math(trexio PRIVATE)
 
@@ -108,18 +113,20 @@ target_include_directories(trexio PUBLIC
 
 # ============= FORTRAN SUPPORT ==============
 
-include(FortranCInterface)
-# Check that C and Fortran compilers can talk to each other.
-FortranCInterface_VERIFY()
+if(TREXIO_FORTRAN)
+  include(FortranCInterface)
+  # Check that C and Fortran compilers can talk to each other.
+  FortranCInterface_VERIFY()
 
-# Fortran module
-set(TREXIO_MOD_FILE ${PROJECT_SOURCE_DIR}/include/trexio_f.f90)
-# Export to parent scope so tests directory picks this up.
-set(TREXIO_MOD_FILE ${TREXIO_MOD_FILE} PARENT_SCOPE)
-# Add TREXIO Fortran module as a library.
-add_library(trexio_f SHARED)
-target_sources(trexio_f PUBLIC ${TREXIO_MOD_FILE})
-target_link_libraries(trexio_f PUBLIC trexio)
+  # Fortran module
+  set(TREXIO_MOD_FILE ${PROJECT_SOURCE_DIR}/include/trexio_f.f90)
+  # Export to parent scope so tests directory picks this up.
+  set(TREXIO_MOD_FILE ${TREXIO_MOD_FILE} PARENT_SCOPE)
+  # Add TREXIO Fortran module as a library.
+  add_library(trexio_f SHARED)
+  target_sources(trexio_f PUBLIC ${TREXIO_MOD_FILE})
+  target_link_libraries(trexio_f PUBLIC trexio)
+endif()
 
 # ====== CODE GENERATION FOR DEVEL MODE =====
 
@@ -171,7 +178,9 @@ install(TARGETS trexio
 	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	)
 # Also install trexio_f.f90 file with TREXIO Fortran module.
-install(FILES ${TREXIO_MOD_FILE} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+if(TREXIO_FORTRAN)
+  install(FILES ${TREXIO_MOD_FILE} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
 
 # Uninstall target, copied from CMake FAQ:
 # https://gitlab.kitware.com/cmake/community/wikis/FAQ#can-i-do-make-uninstall-with-cmake

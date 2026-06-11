@@ -2,16 +2,24 @@ cmake_minimum_required(VERSION 3.16)
 
 # =========== SETUP THE PROJECT =============
 
-# Initialize the CMake project.
+# Initialize the CMake project. Fortran is enabled conditionally below so that
+# the C library can be built without a Fortran compiler (mirrors the autotools
+# --without-fortran option).
 project(Trexio
 	VERSION 2.6.1
 	DESCRIPTION "TREX I/O library"
-	LANGUAGES C Fortran
+	LANGUAGES C
 	)
 
-# Request the C99 standard.
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+option(TREXIO_FORTRAN "Build and test the TREXIO Fortran interface" ON)
+if(TREXIO_FORTRAN)
+  enable_language(Fortran)
+endif()
+
+# The C99 requirement is expressed per target on the trexio library (see
+# src/CMakeLists.txt) rather than via the global CMAKE_C_STANDARD variable,
+# which would otherwise leak into every target of a parent project that adds
+# TREXIO through add_subdirectory() or FetchContent.
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
