@@ -18,12 +18,14 @@ check_include_file(stdint.h HAVE_STDINT_H)
 set(TREXIO_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio.c
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_text.c
+	${CMAKE_CURRENT_SOURCE_DIR}/trexio_memory.c
 	)
 set(TREXIO_PUBLIC_HEADERS ${PROJECT_SOURCE_DIR}/include/trexio.h)
 set(TREXIO_PRIVATE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_s.h
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_private.h
 	${CMAKE_CURRENT_SOURCE_DIR}/trexio_text.h
+	${CMAKE_CURRENT_SOURCE_DIR}/trexio_memory.h
 	)
 
 # By default, the shared TREXIO library is built (even without -DBUILD_SHARED_LIBS=ON).

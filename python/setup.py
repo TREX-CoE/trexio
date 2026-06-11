@@ -40,7 +40,7 @@ if numpy_isUndefined and not do_sdist:
 
 rootpath = os.path.dirname(os.path.abspath(__file__))
 srcpath = os.path.join(rootpath, 'src')
-c_files = ['trexio.c', 'trexio_text.c']
+c_files = ['trexio.c', 'trexio_text.c', 'trexio_memory.c']
 
 
 with open("README.md", "r") as fh:
