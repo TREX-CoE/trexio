@@ -82,7 +82,16 @@ if HAVE_HDF5
 ORG_FILES += src/templates_hdf5/templator_hdf5.org
 endif
 
-src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
+# Real solid harmonic transform and the GTO atomic-orbital overlap validation
+# helper. These are lightweight and only depend on libm, which TREXIO already
+# requires, so they are always compiled in.
+OVERLAP_SOURCES = src/trexio_solid_harmonics.c \
+                  src/trexio_overlap.c \
+                  src/trexio_overlap_compute.c
+
+EXTRA_DIST += src/trexio_overlap.h
+
+src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES) $(OVERLAP_SOURCES)
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
@@ -180,6 +189,13 @@ TESTS_C += \
   tests/delete_group_hdf5 \
   tests/overwrite_all_hdf5
 endif
+
+# Solid harmonic transform and overlap helper tests (always built).
+TESTS_C += \
+  tests/test_solid_harmonics \
+  tests/test_overlap_kernel \
+  tests/test_overlap_roundtrip \
+  tests/test_overlap_checks
 
 TESTS = $(TESTS_C)
 

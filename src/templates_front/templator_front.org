@@ -512,6 +512,7 @@ __trexio_path__ = None
    | ~TREXIO_INVALID_ARG_13~          |   43 | 'Invalid argument 13'                          |
    | ~TREXIO_INVALID_ARG_14~          |   44 | 'Invalid argument 14'                          |
    | ~TREXIO_CORRUPTION_ATTEMPT~      |   45 | 'File offset is wrong, corruption risk'        |
+   | ~TREXIO_NOT_IMPLEMENTED~         |   46 | 'Functionality is not implemented'             |
 
    # We need to force Emacs not to indent the Python code:
    # -*- org-src-preserve-indentation: t
@@ -603,6 +604,7 @@ return '\n'.join(result)
    #define TREXIO_INVALID_ARG_13          ((trexio_exit_code) 43)
    #define TREXIO_INVALID_ARG_14          ((trexio_exit_code) 44)
    #define TREXIO_CORRUPTION_ATTEMPT      ((trexio_exit_code) 45)
+   #define TREXIO_NOT_IMPLEMENTED         ((trexio_exit_code) 46)
    #+end_src
 
    #+begin_src f90 :tangle prefix_fortran.f90 :exports none
@@ -653,6 +655,7 @@ return '\n'.join(result)
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_13          = 43
       integer(trexio_exit_code), parameter :: TREXIO_INVALID_ARG_14          = 44
       integer(trexio_exit_code), parameter :: TREXIO_CORRUPTION_ATTEMPT      = 45
+      integer(trexio_exit_code), parameter :: TREXIO_NOT_IMPLEMENTED         = 46
    #+end_src
 
    #+begin_src python :tangle prefix_python.py :exports none
@@ -704,6 +707,7 @@ return '\n'.join(result)
    TREXIO_INVALID_ARG_13          = 43
    TREXIO_INVALID_ARG_14          = 44
    TREXIO_CORRUPTION_ATTEMPT      = 45
+   TREXIO_NOT_IMPLEMENTED         = 46
    #+end_src
    :end:
 
@@ -1083,6 +1087,88 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
 
    #+begin_src c :tangle prefix_front.h
 typedef struct trexio_s trexio_t;
+   #+end_src
+
+** Real solid harmonics
+
+   These routines expose TREXIO's Cartesian <-> real solid harmonic
+   convention (see the ~ao~ group): the spherical functions of a shell are
+   ordered 0, +1, -1, +2, -2, ...; +m is the cosine and -m the sine
+   combination; the Condon--Shortley phase is folded out; and the harmonics
+   are Racah (Schmidt) semi-normalized, S_l^m = sqrt(4 pi/(2l+1)) r^l Y_l^m,
+   so that S_l^0 has unit coefficient on z^l. They are useful for converting
+   coefficients between the Cartesian and spherical representations.
+
+   #+begin_src c :tangle prefix_front.h
+/* Number of Cartesian components in a shell of angular momentum l. These
+   small index helpers are total functions for l >= 0; like the equivalent
+   macros they return their computed value and do no error reporting, so the
+   caller is responsible for passing l >= 0. */
+int32_t trexio_cart_num(const int32_t l);
+
+/* Number of real solid-harmonic (spherical) components. */
+int32_t trexio_sphe_num(const int32_t l);
+
+/* Canonical TREXIO Cartesian index of the monomial x^nx y^ny z^nz within its
+   shell (e.g. d: xx, xy, xz, yy, yz, zz). */
+int32_t trexio_cart_index(const int32_t nx, const int32_t ny, const int32_t nz);
+
+/* Signed m of the j-th spherical function in TREXIO storage order
+   (0, +1, -1, +2, -2, ...), with j in [0, 2l]. */
+int32_t trexio_sphe_m(const int32_t j);
+
+/* Inverse of trexio_cart_index: the Cartesian powers (nx,ny,nz) summing to l
+   of the monomial stored at position idx (canonical order). Returns
+   TREXIO_INVALID_ARG_* on a NULL output pointer, a negative l, or an idx
+   outside [0, trexio_cart_num(l)). */
+trexio_exit_code trexio_cart_powers(const int32_t l, const int32_t idx,
+                                    int32_t* const nx, int32_t* const ny, int32_t* const nz);
+
+/* Cartesian coefficients of the real solid harmonic S_l^m (mval signed).
+   coeff must hold at least trexio_cart_num(l) doubles (coeff_size is its
+   length) and is filled with the coefficient of each Cartesian monomial,
+   indexed by trexio_cart_index. Returns TREXIO_INVALID_ARG_* on a NULL or
+   undersized buffer, a negative l, or |mval| > l. */
+trexio_exit_code trexio_solid_harmonic_coeff(const int32_t l, const int32_t mval,
+                                             const int64_t coeff_size, double* const coeff);
+
+/* Full (2l+1) x trexio_cart_num(l) Cartesian-to-solid transform, rows in
+   TREXIO storage order; row-major mat[j * trexio_cart_num(l) + c]. mat must
+   hold at least trexio_sphe_num(l) * trexio_cart_num(l) doubles (mat_size is
+   its length). Returns TREXIO_INVALID_ARG_* on a NULL or undersized buffer
+   or a negative l. */
+trexio_exit_code trexio_solid_harmonic_transmat(const int32_t l,
+                                                const int64_t mat_size, double* const mat);
+   #+end_src
+
+** Atomic-orbital overlap helper
+
+   ~trexio_compute_ao_overlap~ assembles the atomic-orbital overlap matrix
+   from the ~basis~ and ~ao~ groups. It is a validation helper intended to
+   let interface writers check that orbitals are orthonormal and that
+   density matrices have the correct trace. It currently supports Gaussian
+   basis sets with ~r_power~ = 0 (ordinary spherical or Cartesian GTOs) and
+   returns ~TREXIO_NOT_IMPLEMENTED~ for other basis types. ~overlap~ must hold
+   at least ~ao_num * ao_num~ doubles (~overlap_size~ is its length) and is
+   filled in row-major order; the routine returns ~TREXIO_INVALID_ARG_2~ if
+   the buffer is too small.
+
+   #+begin_src c :tangle prefix_front.h
+trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
+                                           const int64_t overlap_size, double* const overlap);
+   #+end_src
+
+   The following routines build on the overlap matrix to report sanity-check
+   /metrics/ (not pass/fail verdicts) for an interface: the caller chooses the
+   acceptance tolerance. ~trexio_check_mo_orthonormality~ returns the largest
+   deviation of \(C^\dagger S C\) from the identity over all MO pairs (0 for
+   perfectly orthonormal orbitals). ~trexio_check_rdm_1e_trace~ returns the
+   trace of the one-body density matrix, which should equal the number of
+   electrons.
+
+   #+begin_src c :tangle prefix_front.h
+trexio_exit_code trexio_check_mo_orthonormality(trexio_t* const file, double* const max_deviation);
+trexio_exit_code trexio_check_rdm_1e_trace(trexio_t* const file, double* const trace);
    #+end_src
 
    #+begin_src c :tangle prefix_s_front.h

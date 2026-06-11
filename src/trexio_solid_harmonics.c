@@ -1,0 +1,189 @@
+/* Cartesian <-> real solid harmonic transformation for TREXIO.
+ *
+ * BSD 3-Clause License
+ *
+ * Copyright (c) 2010-2026, Susi Lehtola
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * Originally written by Susi Lehtola for ERKALE (src/solidharmonics.cpp) and
+ * relicensed by the author under the BSD 3-Clause License above for inclusion
+ * in TREXIO; stripped of the Armadillo dependency and re-normalized to the
+ * TREXIO (Racah) convention. Based on the closed-form Cartesian expansion of
+ * the real solid harmonics, see https://en.wikipedia.org/wiki/Solid_harmonics
+ */
+
+#include <math.h>
+#include <stdlib.h>
+
+#include "trexio.h"
+
+/* Small index helpers, declared in trexio.h. Defined here (rather than as
+   inline functions in the public header) so the build does not rely on
+   inlining: the --enable-debug build uses -fno-inline -Winline -Werror, which
+   rejects any inline function that is actually called. */
+int32_t trexio_cart_num(const int32_t l) { return (l + 1) * (l + 2) / 2; }
+
+int32_t trexio_sphe_num(const int32_t l) { return 2 * l + 1; }
+
+int32_t trexio_cart_index(const int32_t nx, const int32_t ny, const int32_t nz)
+{
+  (void) nx;                       /* fixed by nx = l - ny - nz */
+  const int32_t ii = ny + nz;
+  return ii * (ii + 1) / 2 + nz;
+}
+
+int32_t trexio_sphe_m(const int32_t j)
+{
+  if (j == 0) return 0;
+  return (j & 1) ? (j + 1) / 2 : -(j / 2);
+}
+
+trexio_exit_code trexio_cart_powers(const int32_t l, const int32_t idx,
+                                    int32_t* const nx, int32_t* const ny, int32_t* const nz)
+{
+  if (l < 0)                                return TREXIO_INVALID_ARG_1;
+  if (idx < 0 || idx >= trexio_cart_num(l)) return TREXIO_INVALID_ARG_2;
+  if (nx == NULL)                           return TREXIO_INVALID_ARG_3;
+  if (ny == NULL)                           return TREXIO_INVALID_ARG_4;
+  if (nz == NULL)                           return TREXIO_INVALID_ARG_5;
+  for (int32_t x = l; x >= 0; --x)
+    for (int32_t y = l - x; y >= 0; --y) {
+      const int32_t z = l - x - y;
+      if (trexio_cart_index(x, y, z) == idx) {
+        *nx = x; *ny = y; *nz = z; return TREXIO_SUCCESS;
+      }
+    }
+  return TREXIO_FAILURE;            /* unreachable for valid idx in [0, ncart) */
+}
+
+static double tsh_factorial(const int n)
+{
+  double r = 1.0;
+  for (int i = 2; i <= n; ++i) r *= (double) i;
+  return r;
+}
+
+/* Binomial coefficient C(m,n) as a double (exact for the small arguments
+ * used here). Returns 0 for out-of-range n, matching the series bounds. */
+static double tsh_binom(const int m, int n)
+{
+  if (n < 0 || m < 0 || n > m) return 0.0;
+  if (n > m - n) n = m - n;
+  double r = 1.0;
+  for (int k = 0; k < n; ++k) r = r * (double) (m - k) / (double) (k + 1);
+  return r;
+}
+
+trexio_exit_code trexio_solid_harmonic_coeff(const int32_t l, const int32_t mval,
+                                             const int64_t coeff_size, double* const coeff)
+{
+  if (l < 0)                            return TREXIO_INVALID_ARG_1;
+  if (mval < -l || mval > l)            return TREXIO_INVALID_ARG_2;
+  if (coeff_size < trexio_cart_num(l))  return TREXIO_INVALID_ARG_3;
+  if (coeff == NULL)                    return TREXIO_INVALID_ARG_4;
+
+  const int ncart = trexio_cart_num(l);
+  for (int i = 0; i < ncart; ++i) coeff[i] = 0.0;
+
+  const int m = abs((int) mval);
+
+  /* Racah / Schmidt semi-normalization: S_l^m = sqrt(4 pi / (2l+1)) r^l Y_l^m.
+   * (ERKALE's unit-sphere Y_l^m carries an extra sqrt((2l+1)/4 pi), dropped
+   * here so that S_l^0 has unit coefficient on z^l.) */
+  double prefac = pow(2.0, -l);
+  if (m != 0)
+    prefac *= sqrt(2.0 * tsh_factorial(l - m) / tsh_factorial(l + m));
+
+  for (int k = 0; k <= (l - m) / 2; ++k) {
+    double ffac = pow(-1.0, k) * tsh_binom(l, k) * tsh_binom(2 * (l - k), l);
+    if (m != 0)
+      ffac *= tsh_factorial(l - 2 * k) / tsh_factorial(l - 2 * k - m);
+    ffac *= prefac;
+
+    for (int a = 0; a <= k; ++a) {
+      const double afac = tsh_binom(k, a) * ffac;
+      for (int b = 0; b <= a; ++b) {
+        const double fac = tsh_binom(a, b) * afac;
+
+        const int zexp = 2 * b - 2 * k + l - m;
+        const int yexp = 2 * (a - b);
+        const int xexp = 2 * (k - a);
+
+        if (mval > 0) {
+          /* cosine combination: contribution of Re[(x+iy)^m] */
+          for (int p = 0; p <= m; ++p) {
+            int cosfac;
+            switch ((m - p) & 3) {       /* cos((m-p) pi/2) */
+            case 0:  cosfac =  1; break;
+            case 2:  cosfac = -1; break;
+            default: cosfac =  0; break;
+            }
+            if (cosfac)
+              coeff[trexio_cart_index(xexp + p, yexp + m - p, zexp)]
+                += cosfac * tsh_binom(m, p) * fac;
+          }
+        } else if (mval == 0) {
+          coeff[trexio_cart_index(xexp, yexp, zexp)] += fac;
+        } else {
+          /* sine combination: contribution of Im[(x+iy)^m] */
+          for (int p = 0; p <= m; ++p) {
+            int sinfac;
+            switch ((m - p) & 3) {       /* sin((m-p) pi/2) */
+            case 1:  sinfac =  1; break;
+            case 3:  sinfac = -1; break;
+            default: sinfac =  0; break;
+            }
+            if (sinfac)
+              coeff[trexio_cart_index(xexp + p, yexp + m - p, zexp)]
+                += sinfac * tsh_binom(m, p) * fac;
+          }
+        }
+      }
+    }
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code trexio_solid_harmonic_transmat(const int32_t l,
+                                                const int64_t mat_size, double* const mat)
+{
+  if (l < 0)                                                  return TREXIO_INVALID_ARG_1;
+  if (mat_size < (int64_t) trexio_sphe_num(l) * trexio_cart_num(l))
+                                                              return TREXIO_INVALID_ARG_2;
+  if (mat == NULL)                                            return TREXIO_INVALID_ARG_3;
+
+  const int ncart = trexio_cart_num(l);
+  for (int j = 0; j < trexio_sphe_num(l); ++j) {
+    const trexio_exit_code rc =
+      trexio_solid_harmonic_coeff(l, trexio_sphe_m(j), ncart, &mat[j * ncart]);
+    if (rc != TREXIO_SUCCESS) return rc;
+  }
+
+  return TREXIO_SUCCESS;
+}

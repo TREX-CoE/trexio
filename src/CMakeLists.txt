@@ -98,6 +98,17 @@ if(ENABLE_HDF5)
   endif ()
 endif()
 
+# ====== REAL SOLID HARMONICS + AO OVERLAP HELPER ======
+# Real solid harmonic transform and the GTO AO overlap validation helper.
+# These are lightweight and only depend on libm (already required by TREXIO),
+# so they are always compiled in.
+list(APPEND TREXIO_SOURCES
+	${CMAKE_CURRENT_SOURCE_DIR}/trexio_solid_harmonics.c
+	${CMAKE_CURRENT_SOURCE_DIR}/trexio_overlap.c
+	${CMAKE_CURRENT_SOURCE_DIR}/trexio_overlap_compute.c
+	)
+list(APPEND TREXIO_PRIVATE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/trexio_overlap.h)
+
 # Private headers have to be listed as sources, otherwise they are installed
 # with public headers upon make install (when using PRIVATE_HEADER property).
 target_sources(trexio PRIVATE ${TREXIO_SOURCES} ${TREXIO_PRIVATE_HEADERS})
