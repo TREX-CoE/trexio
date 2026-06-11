@@ -202,7 +202,6 @@ trexio_exit_code trexio_compute_ao_overlap(trexio_t* const file,
             double acc = 0.0;
             for (int a = 0; a < ncA; ++a) {
               const double ta = TA[ia * ncA + a];
-              if (ta == 0.0) continue;
               for (int b = 0; b < ncB; ++b)
                 acc += ta * M[a * ncB + b] * TB[jb * ncB + b];
             }

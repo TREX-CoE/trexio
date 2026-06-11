@@ -283,7 +283,6 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stddef.h>   /* NULL, used by the inline solid-harmonic helpers */
 
 <<trex_json()>>
 typedef int32_t trexio_exit_code;
@@ -1101,54 +1100,29 @@ typedef struct trexio_s trexio_t;
    coefficients between the Cartesian and spherical representations.
 
    #+begin_src c :tangle prefix_front.h
-/* Number of Cartesian components in a shell of angular momentum l.
-   These small index helpers are total functions for l >= 0; like the
-   equivalent macros they return their computed value and do no error
-   reporting, so the caller is responsible for passing l >= 0. */
-static inline int32_t trexio_cart_num(const int32_t l) { return (l + 1) * (l + 2) / 2; }
+/* Number of Cartesian components in a shell of angular momentum l. These
+   small index helpers are total functions for l >= 0; like the equivalent
+   macros they return their computed value and do no error reporting, so the
+   caller is responsible for passing l >= 0. */
+int32_t trexio_cart_num(const int32_t l);
 
 /* Number of real solid-harmonic (spherical) components. */
-static inline int32_t trexio_sphe_num(const int32_t l) { return 2 * l + 1; }
+int32_t trexio_sphe_num(const int32_t l);
 
 /* Canonical TREXIO Cartesian index of the monomial x^nx y^ny z^nz within its
    shell (e.g. d: xx, xy, xz, yy, yz, zz). */
-static inline int32_t trexio_cart_index(const int32_t nx, const int32_t ny, const int32_t nz)
-{
-  (void) nx;                       /* fixed by nx = l - ny - nz */
-  const int32_t ii = ny + nz;
-  return ii * (ii + 1) / 2 + nz;
-}
+int32_t trexio_cart_index(const int32_t nx, const int32_t ny, const int32_t nz);
 
 /* Signed m of the j-th spherical function in TREXIO storage order
    (0, +1, -1, +2, -2, ...), with j in [0, 2l]. */
-static inline int32_t trexio_sphe_m(const int32_t j)
-{
-  if (j == 0) return 0;
-  return (j & 1) ? (j + 1) / 2 : -(j / 2);
-}
+int32_t trexio_sphe_m(const int32_t j);
 
 /* Inverse of trexio_cart_index: the Cartesian powers (nx,ny,nz) summing to l
    of the monomial stored at position idx (canonical order). Returns
    TREXIO_INVALID_ARG_* on a NULL output pointer, a negative l, or an idx
    outside [0, trexio_cart_num(l)). */
-static inline trexio_exit_code
-trexio_cart_powers(const int32_t l, const int32_t idx,
-                   int32_t* const nx, int32_t* const ny, int32_t* const nz)
-{
-  if (l < 0)                                return TREXIO_INVALID_ARG_1;
-  if (idx < 0 || idx >= trexio_cart_num(l)) return TREXIO_INVALID_ARG_2;
-  if (nx == NULL)                           return TREXIO_INVALID_ARG_3;
-  if (ny == NULL)                           return TREXIO_INVALID_ARG_4;
-  if (nz == NULL)                           return TREXIO_INVALID_ARG_5;
-  for (int32_t x = l; x >= 0; --x)
-    for (int32_t y = l - x; y >= 0; --y) {
-      const int32_t z = l - x - y;
-      if (trexio_cart_index(x, y, z) == idx) {
-        *nx = x; *ny = y; *nz = z; return TREXIO_SUCCESS;
-      }
-    }
-  return TREXIO_FAILURE;            /* unreachable for valid idx in [0, ncart) */
-}
+trexio_exit_code trexio_cart_powers(const int32_t l, const int32_t idx,
+                                    int32_t* const nx, int32_t* const ny, int32_t* const nz);
 
 /* Cartesian coefficients of the real solid harmonic S_l^m (mval signed).
    coeff must hold at least trexio_cart_num(l) doubles (coeff_size is its

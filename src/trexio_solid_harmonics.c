@@ -42,6 +42,45 @@
 
 #include "trexio.h"
 
+/* Small index helpers, declared in trexio.h. Defined here (rather than as
+   inline functions in the public header) so the build does not rely on
+   inlining: the --enable-debug build uses -fno-inline -Winline -Werror, which
+   rejects any inline function that is actually called. */
+int32_t trexio_cart_num(const int32_t l) { return (l + 1) * (l + 2) / 2; }
+
+int32_t trexio_sphe_num(const int32_t l) { return 2 * l + 1; }
+
+int32_t trexio_cart_index(const int32_t nx, const int32_t ny, const int32_t nz)
+{
+  (void) nx;                       /* fixed by nx = l - ny - nz */
+  const int32_t ii = ny + nz;
+  return ii * (ii + 1) / 2 + nz;
+}
+
+int32_t trexio_sphe_m(const int32_t j)
+{
+  if (j == 0) return 0;
+  return (j & 1) ? (j + 1) / 2 : -(j / 2);
+}
+
+trexio_exit_code trexio_cart_powers(const int32_t l, const int32_t idx,
+                                    int32_t* const nx, int32_t* const ny, int32_t* const nz)
+{
+  if (l < 0)                                return TREXIO_INVALID_ARG_1;
+  if (idx < 0 || idx >= trexio_cart_num(l)) return TREXIO_INVALID_ARG_2;
+  if (nx == NULL)                           return TREXIO_INVALID_ARG_3;
+  if (ny == NULL)                           return TREXIO_INVALID_ARG_4;
+  if (nz == NULL)                           return TREXIO_INVALID_ARG_5;
+  for (int32_t x = l; x >= 0; --x)
+    for (int32_t y = l - x; y >= 0; --y) {
+      const int32_t z = l - x - y;
+      if (trexio_cart_index(x, y, z) == idx) {
+        *nx = x; *ny = y; *nz = z; return TREXIO_SUCCESS;
+      }
+    }
+  return TREXIO_FAILURE;            /* unreachable for valid idx in [0, ncart) */
+}
+
 static double tsh_factorial(const int n)
 {
   double r = 1.0;
