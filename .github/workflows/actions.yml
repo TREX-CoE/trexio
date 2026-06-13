@@ -10,6 +10,10 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+  actions: write
+
 
 jobs:
 
@@ -20,7 +24,7 @@ jobs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+        uses: actions/checkout@v4
         # Gets the correct commit message for pull request
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -41,7 +45,7 @@ jobs:
     needs: get_commit_message
 
     steps:
-      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+      - uses: actions/checkout@v4
 
       - name: check versions
         # TODO: bring back "diff configure_v python_v"
@@ -56,7 +60,7 @@ jobs:
           diff configure_v ocaml_v
 
       - name: setup fixed Python version for testing
-        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -82,7 +86,7 @@ jobs:
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-ubuntu
           path: test-suite.log
@@ -124,7 +128,7 @@ jobs:
         if: >-
           contains(needs.get_commit_message.outputs.message, '[wheel build]') &&
           matrix.os == 'ubuntu-22.04-arm'
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
@@ -145,7 +149,7 @@ jobs:
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-ubuntu-memory
           path: test-suite.log
@@ -178,10 +182,10 @@ jobs:
       GCC_VERSION: 14
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: setup fixed Python version for testing
-        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
@@ -225,7 +229,7 @@ jobs:
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-${{ matrix.os }}
           path: test-suite.log
@@ -240,7 +244,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+      - uses: actions/checkout@v4
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -271,7 +275,7 @@ jobs:
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-windows
           path: test-suite.log
@@ -280,7 +284,7 @@ jobs:
     name: Nix
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v31.4.1
     - run: nix flake check -L && nix build -L
 
@@ -327,7 +331,7 @@ jobs:
 
       - name: Archive CMake test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-tarball-cmake
           path: ${{ env.TREXIO_DIR }}/build/Testing/Temporary/LastTest.log
@@ -354,7 +358,7 @@ jobs:
 
       - name: Archive autotools test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-tarball-autotools
           path: ${{ env.TREXIO_DIR }}/test-suite.log
