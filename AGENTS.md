@@ -18,6 +18,8 @@ This repository uses literate programming and has a few project rules that AI-ge
   - `src/templates_front/*.org` for the front end
   - `src/templates_text/*.org` for the text backend
   - `src/templates_hdf5/*.org` for the HDF5 backend
+- When you modify an org-mode source, add or update nearby prose so the org file explains what the new code is doing.
+- Keep the org documentation synchronized with the generated behavior and API changes.
 - Regenerate from org-mode sources with `./autogen.sh`.
 - Commit only the minimal tracked source changes; do not add generated files just because they appeared locally.
 
@@ -45,6 +47,7 @@ This repository uses literate programming and has a few project rules that AI-ge
 - Suffix struct tags with `_s`.
 - Suffix typedef names with `_t`.
 - Return `trexio_exit_code` from API functions, except for `trexio_open`.
+- Aim for CERT-quality code and review changes with the same level of defensive programming and input validation.
 
 ## 5. Respect cross-language and cross-backend consistency
 
@@ -61,9 +64,10 @@ This repository uses literate programming and has a few project rules that AI-ge
 
 - Preferred developer flow:
   1. `./autogen.sh`
-  2. `./configure --enable-silent-rules`
+  2. `./configure --enable-silent-rules --enable-debug`
   3. `make -j2`
   4. `make -j2 check`
+  5. `make -j2 check`
 - Also run `pre-commit run --all-files` for Markdown, YAML, and whitespace checks.
 - If you touch C code, run the repository coding-convention check as well.
 - Treat failures caused by missing local tooling separately from real code failures, and report them clearly.
@@ -73,7 +77,9 @@ This repository uses literate programming and has a few project rules that AI-ge
 Before opening a PR, verify that:
 
 - the edited files are the correct org-mode sources;
+- org-mode source updates include matching explanatory text when code changes were added there;
 - the change is minimal and focused;
+- CERT-quality expectations were met for the modified code paths;
 - naming, units, and array-order conventions still hold;
-- tests relevant to the change were run;
+- tests relevant to the change were run, including `make -j2 check` twice when using the Autotools flow;
 - the PR description explains the intent and any generated-code impact.

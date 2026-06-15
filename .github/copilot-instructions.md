@@ -11,6 +11,8 @@ Start with `/home/runner/work/trexio/trexio/TREX-CoE/trexio/AGENTS.md`. The rule
   - `src/templates_front/*.org`
   - `src/templates_text/*.org`
   - `src/templates_hdf5/*.org`
+- If you change an org-mode source, add or update prose in that org file so it explains what the added code is doing.
+- Keep org documentation aligned with the behavior and API produced from it.
 - Regenerate with `./autogen.sh` when needed.
 
 ## Keep AI PRs reviewable
@@ -41,6 +43,7 @@ The authoritative source is `src/templates_front/templator_front.org`.
 - Suffix typedefs with `_t`.
 - Return `trexio_exit_code` from API functions except `trexio_open`.
 - Use `assert` for internal consistency checks.
+- Aim for CERT-quality code in validation, error handling, and defensive checks.
 
 ## Check repository-wide impact
 
@@ -55,9 +58,10 @@ The authoritative source is `src/templates_front/templator_front.org`.
 ## Validate before submitting
 
 - Run `./autogen.sh`
-- Run `./configure --enable-silent-rules`
+- Run `./configure --enable-silent-rules --enable-debug`
 - Run `make -j2`
 - Run `make -j2 check`
+- Run `make -j2 check` a second time to catch cleanup regressions
 - Run `pre-commit run --all-files`
 
 If a validation command fails because of a missing local dependency, say so explicitly in the PR summary.
