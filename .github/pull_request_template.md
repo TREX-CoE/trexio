@@ -17,7 +17,7 @@
 - [ ] I ran `cmake --build builddir -j2`
 - [ ] I ran `ctest --test-dir builddir -j2`
 - [ ] I ran `pre-commit run --all-files`
-- [ ] If this PR touches C or headers, I ran `.github/scripts/check-coding-conventions.sh`
+- [ ] If this PR touches C or headers, I ran `tools/check-coding-conventions.sh`
 - [ ] If this PR affects the Python API, I ran `make python-install` and `make python-test`
 - [ ] I noted any CI-equivalent validation step that was not relevant or could not run because of a missing local dependency
 

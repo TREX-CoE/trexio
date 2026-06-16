@@ -69,7 +69,7 @@ This repository uses literate programming and has a few project rules that AI-ge
   4. `make -j2 check`
   5. `make -j2 check`
 - Also run `pre-commit run --all-files` for Markdown, YAML, and whitespace checks.
-- If you touch C code, run the repository coding-convention check as well.
+- If you touch C code, run `tools/check-coding-conventions.sh` as well.
 - Treat failures caused by missing local tooling separately from real code failures, and report them clearly.
 
 ## 7. Reviewability checklist
