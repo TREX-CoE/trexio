@@ -847,6 +847,66 @@ power = [
    Note that for \(p\) orbitals in spherical coordinates, the ordering
    is $0,+1,-1$ which corresponds to $p_z, p_x, p_y$.
 
+   The ordering above fixes only the sequence of the functions, not
+   their sign relative to the Cartesian axes.  To remove any ambiguity,
+   TREXIO fixes the phase of the real solid harmonics as follows.
+   Writing the complex regular solid harmonics including the
+   Condon--Shortley phase as $C^m_\ell(\mathbf{r}) \equiv
+   \sqrt{\frac{4\pi}{2\ell+1}}\, r^\ell Y^m_\ell(\theta,\varphi)$, the
+   real functions $S^m_\ell$ used by TREXIO are
+
+   \[
+   S^{0}_\ell = C^{0}_\ell, \qquad
+   S^{+m}_\ell = \frac{1}{\sqrt{2}}\left(C^{-m}_\ell + (-1)^m C^{m}_\ell\right), \qquad
+   S^{-m}_\ell = \frac{i}{\sqrt{2}}\left(C^{-m}_\ell - (-1)^m C^{m}_\ell\right)
+   \quad (m>0).
+   \]
+
+   Equivalently, $S^{+m}_\ell \propto \left(Y^{-m}_\ell + (-1)^m
+   Y^{m}_\ell\right)$ is the cosine ($\cos m\varphi$) combination and
+   $S^{-m}_\ell \propto i\left(Y^{-m}_\ell - (-1)^m Y^{m}_\ell\right)$
+   is the sine ($\sin m\varphi$) combination.  The factor $(-1)^m$
+   cancels the Condon--Shortley phase carried by $Y^m_\ell$, so the
+   resulting $S^m_\ell$ are real polynomials with a positive leading
+   coefficient (e.g. $S^{+1}_1 = +x$, $S^{-1}_1 = +y$, consistent with
+   the $p$ ordering above).  Explicitly, in Cartesian form (with
+   $r^2 = x^2 + y^2 + z^2$):
+
+   | $\ell$ | $m$  | $S^m_\ell(\mathbf{r})$                          |
+   |--------+------+------------------------------------------------|
+   | 0      | $0$  | $1$                                            |
+   | 1      | $0$  | $z$                                            |
+   | 1      | $+1$ | $x$                                            |
+   | 1      | $-1$ | $y$                                            |
+   | 2      | $0$  | $\frac{1}{2}(3z^2 - r^2)$                       |
+   | 2      | $+1$ | $\sqrt{3}\,xz$                                  |
+   | 2      | $-1$ | $\sqrt{3}\,yz$                                  |
+   | 2      | $+2$ | $\frac{\sqrt{3}}{2}(x^2 - y^2)$                 |
+   | 2      | $-2$ | $\sqrt{3}\,xy$                                  |
+   | 3      | $0$  | $\frac{1}{2}z(5z^2 - 3r^2)$                     |
+   | 3      | $+1$ | $\frac{\sqrt{6}}{4}x(5z^2 - r^2)$              |
+   | 3      | $-1$ | $\frac{\sqrt{6}}{4}y(5z^2 - r^2)$              |
+   | 3      | $+2$ | $\frac{\sqrt{15}}{2}z(x^2 - y^2)$              |
+   | 3      | $-2$ | $\sqrt{15}\,xyz$                                |
+   | 3      | $+3$ | $\frac{\sqrt{10}}{4}x(x^2 - 3y^2)$            |
+   | 3      | $-3$ | $\frac{\sqrt{10}}{4}y(3x^2 - y^2)$            |
+   | 4      | $0$  | $\frac{1}{8}(35z^4 - 30z^2 r^2 + 3r^4)$        |
+   | 4      | $+1$ | $\frac{\sqrt{10}}{4}xz(7z^2 - 3r^2)$          |
+   | 4      | $-1$ | $\frac{\sqrt{10}}{4}yz(7z^2 - 3r^2)$          |
+   | 4      | $+2$ | $\frac{\sqrt{5}}{4}(x^2 - y^2)(7z^2 - r^2)$    |
+   | 4      | $-2$ | $\frac{\sqrt{5}}{2}xy(7z^2 - r^2)$            |
+   | 4      | $+3$ | $\frac{\sqrt{70}}{4}xz(x^2 - 3y^2)$          |
+   | 4      | $-3$ | $\frac{\sqrt{70}}{4}yz(3x^2 - y^2)$          |
+   | 4      | $+4$ | $\frac{\sqrt{35}}{8}(x^4 - 6x^2 y^2 + y^4)$    |
+   | 4      | $-4$ | $\frac{\sqrt{35}}{2}xy(x^2 - y^2)$            |
+
+   The numerical prefactors correspond to the normalization implied by
+   the defining equation $S^m_\ell = \sqrt{\frac{4\pi}{2\ell+1}}\,
+   r^\ell Y^m_\ell$ (Racah / Schmidt semi-normalization); the overall
+   magnitude of each function is in any case rescaled by the
+   normalization factors $\mathcal{N}_i$ and $\mathcal{N}_i'$, so only
+   the relative signs of the entries above are normative.
+
    $\mathcal{N}_i'$ is a normalization factor that allows for different
    normalization coefficients within a single shell, as in the GAMESS
    convention where each individual function is unit-normalized.
