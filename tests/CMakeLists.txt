@@ -41,12 +41,32 @@ else()
   set(Tests ${Tests_text})
 endif()
 
+# Solid harmonic transform and overlap helper tests (always built).
+list(APPEND Tests
+  test_solid_harmonics
+  test_overlap_kernel
+  test_overlap_roundtrip
+  test_overlap_checks
+  )
+
 # Compile each TREXIO test as an executable and add them to CTest using add_test.
 foreach(Test ${Tests})
   add_executable(${Test} ${Test}.c)
   target_link_libraries(${Test} PRIVATE trexio)
   add_test(NAME ${Test} COMMAND $<TARGET_FILE:${Test}>)
 endforeach()
+
+# The solid-harmonic / overlap tests call math functions directly, so they
+# must be linked against the standard math library (the trexio target links it
+# privately, hence it is not propagated to the test executables).
+include(standard_math_lib)
+target_link_std_math(test_solid_harmonics PRIVATE)
+target_link_std_math(test_overlap_kernel PRIVATE)
+target_link_std_math(test_overlap_roundtrip PRIVATE)
+target_link_std_math(test_overlap_checks PRIVATE)
+
+# The overlap kernel test includes private headers from the src directory.
+target_include_directories(test_overlap_kernel PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
 # Add Fortran test and link it with trexio_f (Fortran module) library.
 if(TREXIO_FORTRAN)
