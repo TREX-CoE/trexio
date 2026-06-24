@@ -22,6 +22,7 @@ single- and/or multi-reference wave functions:
 | ------------------------------------------------------------------------------ | ---------------- | --------------- |
 | [Quantum Package](https://github.com/QuantumPackage/qp2)                       | Write/Read       | Write/Read      |
 | [PySCF](https://github.com/pyscf/pyscf)                                        | Write/Read       | Write/Read      |
+| [VeloxChem](https://github.com/VeloxChem/VeloxChem)                            | Write            | ---             |
 | [FHI-aims](https://fhi-aims.org/)                                              | Write            | ---             |
 | [CP2K](https://github.com/cp2k/cp2k)                                           | Write            | ---             |
 | [CHAMP](https://github.com/filippi-claudia/champ)                              | Read             | Read            |
