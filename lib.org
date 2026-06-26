@@ -144,9 +144,10 @@ align="left" width="300" vspace="20" hspace="20" />
 
 ** The back-end
 
-   At present, TREXIO supports two back-ends: one relying only on the
+   At present, TREXIO supports three back-ends: one relying only on the
    C standard library to produce plain text files (the so-called /text/
-   back-end), and one relying on the HDF5 library.
+   back-end), one relying on the HDF5 library, and an in-memory (/memory/)
+   back-end that keeps all the data in RAM.
 
    With the text back-end, the TREXIO "file" is a directory containing
    multiple text files, one for each group.  This back end is intended
@@ -192,8 +193,20 @@ align="left" width="300" vspace="20" hspace="20" />
    SSD, while the text back-end's performance was limited by the speed
    of the CPU for performing binary to ASCII conversions.
 
-   In addition to the HDF5 and text back-ends, it is also possible to
-   introduce new back-ends to the library.  For example, a back-end
+   The /memory/ back-end (~TREXIO_MEMORY~) keeps the entire TREXIO file in
+   RAM and never touches the file system.  It is intended for disk-free
+   exchange of data between components running in the same process: a
+   producer opens an in-memory file, writes into it, and the consumer reads
+   the data back from the *same* open handle.  Because nothing is written
+   to disk, an in-memory file is /ephemeral/ — it does not persist once the
+   handle is closed, and it cannot be reopened by name.  All groups are
+   supported, including the sparse (e.g. two-electron integrals, Cholesky
+   vectors, reduced density matrices), buffered (CI/CSF coefficients) and
+   determinant data.  The file name passed to ~trexio_open~ is ignored for
+   this back-end.
+
+   In addition to the HDF5, text and memory back-ends, it is also possible
+   to introduce new back-ends to the library.  For example, a back-end
    could be created to support object storage systems, such as those
    used in cloud-based applications or for archiving in open data
    repositories.
