@@ -40,6 +40,9 @@ cp ${SRC}/pytrexio.py ${PYTREXIODIR}/pytrexio.py
 cp ${SRC}/trexio.py ${PYDIR}/trexio.py
 cp ${SRC}/trexio.c ${SRC}/trexio_s.h ${SRC}/trexio_private.h ${PYDIR}/src
 cp ${SRC}/trexio_text.{c,h} ${PYDIR}/src
+# The in-memory back end is always compiled in (no optional dependency), and
+# trexio.c includes trexio_memory.h unconditionally, so both must be present.
+cp ${SRC}/trexio_memory.{c,h} ${PYDIR}/src
 cp ${SRC}/pytrexio_wrap.c ${PYDIR}/src/pytrexio_wrap.c
 cp ${INCLUDIR}/trexio.h ${PYDIR}/src
 cp ${INCLUDIR}/config.h ${PYDIR}/src
