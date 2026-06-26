@@ -18,8 +18,10 @@ LT_INIT
 
 # Activate developer mode if a dummy file is present (true when cloning the git repository).
 # Otherwise, it is the source distribution and the developer mode should not be activated.
-TEST_IFEXISTS=".devel"
-AS_IF([test -f $TEST_IFEXISTS],
+# The marker is looked up in $srcdir so that out-of-source (object directory)
+# builds detect it correctly instead of silently dropping to non-developer mode.
+TEST_IFEXISTS="$srcdir/.devel"
+AS_IF([test -f "$TEST_IFEXISTS"],
         [enable_maintainer_mode="yes"]
 )
 
