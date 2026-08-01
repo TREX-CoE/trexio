@@ -21,7 +21,11 @@ function tangle()
         --eval "(progn
               (require 'ob)
               (require 'ob-python)
-              (org-babel-execute-buffer)
+              (goto-char (point-min))
+              (while (re-search-forward \"^[[:space:]]*#\\\\+CALL:\" nil t)
+                (beginning-of-line)
+                (org-babel-lob-execute-maybe)
+                (forward-line 1))
               (org-babel-tangle))" &> /dev/null
 }
 
@@ -29,4 +33,3 @@ function tangle()
 cd ${TREXIO_ROOT}
 tangle trex.org
 touch trex.json
-
