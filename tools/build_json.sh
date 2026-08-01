@@ -21,7 +21,13 @@ function tangle()
         --eval "(progn
               (require 'ob)
               (require 'ob-python)
-              (org-babel-execute-buffer)
+              (goto-char (point-min))
+              (while (re-search-forward \"^[[:space:]]*#\\\\+CALL:\" nil t)
+                (beginning-of-line)
+                (org-babel-lob-execute-maybe)
+                (let ((current-prefix-arg '(4)))
+                  (call-interactively 'org-ctrl-c-ctrl-c))
+                (forward-line 1))
               (org-babel-tangle))" &> /dev/null
 }
 
