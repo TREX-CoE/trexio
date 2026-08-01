@@ -251,7 +251,7 @@ impl File {
             .chunks(2 * n_int)
             .collect::<Vec<_>>()
             .iter()
-            .map(|x| (Bitfield::from_vec(x)))
+            .map(|x| Bitfield::from_vec(x))
             .collect::<Vec<_>>();
         rc_return(result, rc)
     }
