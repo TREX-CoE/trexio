@@ -15,10 +15,10 @@ use pkg_config::Config;
 /// 1. pkg-config
 /// 2. Environment variable TREXIO_INCLUDE_DIR
 /// 3. Common system paths
-/// 4. Bundled fallback header (trexio_for_docs_rs.h) copied to OUT_DIR, for docs.rs builds
 ///
 /// If the header is found, the JSON configuration will be extracted and
-/// written to trex.json in the output directory
+/// written to trex.json in the output directory.
+/// For documentation builds on docs.rs, see `make_docs_rs_bindings()` instead.
 fn find_header_path() -> Option<PathBuf> {
     // First try pkg-config
     if let Ok(lib) = Config::new().probe("trexio") {
@@ -50,24 +50,6 @@ fn find_header_path() -> Option<PathBuf> {
         let p = PathBuf::from(path);
         if p.exists() {
             return Some(p);
-        }
-    }
-
-    // Last resort: use the bundled fallback header for building documentation on docs.rs.
-    // trexio_for_docs_rs.h is a verbatim copy of trexio.h kept in the crate sources
-    // exclusively to allow `cargo doc` / docs.rs to succeed without a system installation.
-    // Do not use this file as a system header.
-    if let Ok(src_dir) = env::current_dir() {
-        let backup = src_dir.join("trexio_for_docs_rs.h");
-        if backup.exists() {
-            // Copy to OUT_DIR as trexio.h so that `#include <trexio.h>` in wrapper.h resolves.
-            if let Ok(out_dir) = env::var("OUT_DIR") {
-                let dest = PathBuf::from(&out_dir).join("trexio.h");
-                if std::fs::copy(&backup, &dest).is_ok() {
-                    println!("cargo:rerun-if-changed=trexio_for_docs_rs.h");
-                    return Some(dest);
-                }
-            }
         }
     }
 
@@ -730,14 +712,258 @@ impl File {
 
 
 
+/// Generates a minimal `bindings.rs` stub for documentation builds on docs.rs.
+///
+/// When the `DOCS_RS` environment variable is set (as it is on the docs.rs build
+/// infrastructure), the C trexio library is not available. This function writes a
+/// self-contained `bindings.rs` that contains:
+///
+/// - The TREXIO C type aliases (`trexio_exit_code`, `back_end_t`, `trexio_t`, …)
+/// - All exit-code and back-end constants, hard-coded from the TREXIO 2.x API
+/// - The small set of non-schema C function declarations used by `lib.rs` and `bitfield.rs`
+/// - Schema-derived `trexio_has_*`, `trexio_read_*` and `trexio_write_*` declarations
+///   generated from the bundled `trexio_for_docs_rs.json` schema file
+///
+/// The resulting stub is enough for `rustdoc` to type-check and document the crate
+/// without a system trexio installation.
+fn make_docs_rs_bindings(json_fallback: &PathBuf, out_path: &PathBuf) -> io::Result<()> {
+    let bindings_path = out_path.join("bindings.rs");
+    let mut f = File::create(&bindings_path)?;
+
+    // --- Types ---
+    write!(f, "// Auto-generated stub for docs.rs builds. Do not edit manually.\n\n")?;
+    write!(f, "pub type trexio_exit_code = i32;\n")?;
+    write!(f, "pub type back_end_t = i32;\n")?;
+    write!(f, "pub type bitfield_t = i64;\n")?;
+    write!(f, "#[repr(C)]\n#[derive(Debug, Copy, Clone)]\npub struct trexio_s {{ _unused: [u8; 0] }}\n")?;
+    write!(f, "pub type trexio_t = trexio_s;\n\n")?;
+
+    // --- TREXIO_PACKAGE_VERSION (use Cargo package version) ---
+    let pkg_ver = env::var("CARGO_PKG_VERSION").unwrap_or_else(|_| "0.0.0".to_string());
+    let ver_len = pkg_ver.len() + 1; // +1 for null terminator
+    write!(f, "pub const TREXIO_PACKAGE_VERSION: &[u8; {ver_len}usize] = b\"{pkg_ver}\\0\";\n\n")?;
+
+    // --- Exit-code constants (TREXIO 2.x, from trexio.h) ---
+    let exit_codes: &[(&str, i32)] = &[
+        ("TREXIO_FAILURE",                -1),
+        ("TREXIO_SUCCESS",                 0),
+        ("TREXIO_INVALID_ARG_1",           1),
+        ("TREXIO_INVALID_ARG_2",           2),
+        ("TREXIO_INVALID_ARG_3",           3),
+        ("TREXIO_INVALID_ARG_4",           4),
+        ("TREXIO_INVALID_ARG_5",           5),
+        ("TREXIO_END",                     6),
+        ("TREXIO_READONLY",                7),
+        ("TREXIO_ERRNO",                   8),
+        ("TREXIO_INVALID_ID",              9),
+        ("TREXIO_ALLOCATION_FAILED",      10),
+        ("TREXIO_HAS_NOT",                11),
+        ("TREXIO_INVALID_NUM",            12),
+        ("TREXIO_ATTR_ALREADY_EXISTS",    13),
+        ("TREXIO_DSET_ALREADY_EXISTS",    14),
+        ("TREXIO_OPEN_ERROR",             15),
+        ("TREXIO_LOCK_ERROR",             16),
+        ("TREXIO_UNLOCK_ERROR",           17),
+        ("TREXIO_FILE_ERROR",             18),
+        ("TREXIO_GROUP_READ_ERROR",       19),
+        ("TREXIO_GROUP_WRITE_ERROR",      20),
+        ("TREXIO_ELEM_READ_ERROR",        21),
+        ("TREXIO_ELEM_WRITE_ERROR",       22),
+        ("TREXIO_UNSAFE_ARRAY_DIM",       23),
+        ("TREXIO_ATTR_MISSING",           24),
+        ("TREXIO_DSET_MISSING",           25),
+        ("TREXIO_BACK_END_MISSING",       26),
+        ("TREXIO_INVALID_ARG_6",          27),
+        ("TREXIO_INVALID_ARG_7",          28),
+        ("TREXIO_INVALID_ARG_8",          29),
+        ("TREXIO_INVALID_STR_LEN",        30),
+        ("TREXIO_INT_SIZE_OVERFLOW",      31),
+        ("TREXIO_SAFE_MODE",              32),
+        ("TREXIO_INVALID_ELECTRON_NUM",   33),
+        ("TREXIO_INVALID_DETERMINANT_NUM",34),
+        ("TREXIO_INVALID_STATE",          35),
+        ("TREXIO_VERSION_PARSING_ISSUE",  36),
+        ("TREXIO_PHASE_CHANGE",           37),
+        ("TREXIO_INVALID_MO_INDEX",       38),
+        ("TREXIO_INVALID_ARG_9",          39),
+        ("TREXIO_INVALID_ARG_10",         40),
+        ("TREXIO_INVALID_ARG_11",         41),
+        ("TREXIO_INVALID_ARG_12",         42),
+        ("TREXIO_INVALID_ARG_13",         43),
+        ("TREXIO_INVALID_ARG_14",         44),
+        ("TREXIO_CORRUPTION_ATTEMPT",     45),
+    ];
+    for (name, val) in exit_codes {
+        write!(f, "pub const {name}: trexio_exit_code = {val};\n")?;
+    }
+    write!(f, "\n")?;
+
+    // --- Back-end constants ---
+    write!(f, "pub const TREXIO_HDF5: back_end_t = 0;\n")?;
+    write!(f, "pub const TREXIO_TEXT: back_end_t = 1;\n")?;
+    write!(f, "pub const TREXIO_INVALID_BACK_END: back_end_t = 2;\n")?;
+    write!(f, "pub const TREXIO_AUTO: back_end_t = 2;\n\n")?;
+
+    // --- Fixed non-schema C function declarations ---
+    write!(f, "extern \"C\" {{\n")?;
+    write!(f, "    pub fn trexio_string_of_error(error: trexio_exit_code) -> *const ::std::os::raw::c_char;\n")?;
+    write!(f, "    pub fn trexio_open(file_name: *const ::std::os::raw::c_char, mode: ::std::os::raw::c_char, back_end: back_end_t, rc_open: *mut trexio_exit_code) -> *mut trexio_t;\n")?;
+    write!(f, "    pub fn trexio_close(file: *mut trexio_t) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_inquire(file_name: *const ::std::os::raw::c_char) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_get_state(file: *mut trexio_t, num: *mut i32) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_set_state(file: *mut trexio_t, num: i32) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_get_int64_num(file: *mut trexio_t, num: *mut i32) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_write_determinant_list(file: *mut trexio_t, offset: i64, buffer_size: i64, dset: *const i64) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_read_determinant_list(file: *mut trexio_t, offset: i64, buffer_size: *mut i64, dset: *mut i64) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_info() -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_to_orbital_list(n_int: i32, d1: *const bitfield_t, list: *mut i32, occupied_num: *mut i32) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_to_orbital_list_up_dn(n_int: i32, d1: *const bitfield_t, list_up: *mut i32, list_dn: *mut i32, occ_num_up: *mut i32, occ_num_dn: *mut i32) -> trexio_exit_code;\n")?;
+    write!(f, "    pub fn trexio_to_bitfield_list(orb_list: *const i32, occupied_num: i32, bit_list: *mut bitfield_t, n_int: i32) -> trexio_exit_code;\n")?;
+    write!(f, "}}\n\n")?;
+
+    // --- Schema-derived C function declarations (from trexio_for_docs_rs.json) ---
+    let schema_file = File::open(json_fallback)?;
+    let data: Value = serde_json::from_reader(schema_file)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+
+    let groups = data.as_object().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::InvalidData, "JSON root is not an object")
+    })?;
+
+    for (group, elements) in groups {
+        // trexio_has_{Group}
+        write!(f, "extern \"C\" {{\n")?;
+        write!(f, "    pub fn trexio_has_{group}(file: *mut trexio_t) -> trexio_exit_code;\n")?;
+        write!(f, "}}\n")?;
+
+        let elements_map = match elements.as_object() {
+            Some(m) => m,
+            None => continue,
+        };
+
+        for (element, attrs) in elements_map {
+            let typ = match attrs[0].as_str() {
+                Some(t) => t,
+                None => continue,
+            };
+            let dimensions = attrs[1].as_array().unwrap();
+            let is_array = !dimensions.is_empty();
+
+            // trexio_has_{Group}_{Element}
+            write!(f, "extern \"C\" {{\n")?;
+            write!(f, "    pub fn trexio_has_{group}_{element}(file: *mut trexio_t) -> trexio_exit_code;\n")?;
+            write!(f, "}}\n")?;
+
+            match (typ, is_array) {
+                // Scalar int/dim/index/dim_readonly → _64 variants using i64
+                ("int" | "dim" | "index", false) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_{group}_{element}_64(file: *mut trexio_t, val: *mut i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_write_{group}_{element}_64(file: *mut trexio_t, val: i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // Scalar dim readonly → read-only _64 variant using i64
+                ("dim readonly", false) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_{group}_{element}_64(file: *mut trexio_t, val: *mut i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // Scalar float → _64 variants using f64
+                ("float", false) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_{group}_{element}_64(file: *mut trexio_t, val: *mut f64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_write_{group}_{element}_64(file: *mut trexio_t, val: f64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // Scalar string
+                ("str", false) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_{group}_{element}(file: *mut trexio_t, buf: *mut ::std::os::raw::c_char, max_str_len: i32) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_write_{group}_{element}(file: *mut trexio_t, buf: *const ::std::os::raw::c_char, size: i32) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // Array int/dim/index → safe _64 variants using i64
+                ("int" | "dim" | "index", true) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_safe_{group}_{element}_64(file: *mut trexio_t, dset_out: *mut i64, dim_out: i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_write_safe_{group}_{element}_64(file: *mut trexio_t, dset_in: *const i64, dim_in: i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // Array float → safe _64 variants using f64
+                ("float", true) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_safe_{group}_{element}_64(file: *mut trexio_t, dset_out: *mut f64, dim_out: i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_write_safe_{group}_{element}_64(file: *mut trexio_t, dset_in: *const f64, dim_in: i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // Array string
+                ("str", true) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_{group}_{element}(file: *mut trexio_t, dset: *mut *mut ::std::os::raw::c_char, capacity: i32) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_write_{group}_{element}(file: *mut trexio_t, dset: *mut *const ::std::os::raw::c_char, size: i32) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // Sparse float (float sparse / float buffered) → safe variants without _64
+                ("float sparse" | "float buffered", true) => {
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_read_safe_{group}_{element}(file: *mut trexio_t, offset: i64, buffer_size: *mut i64, idx: *mut i32, size_max_idx: i64, val: *mut f64, size_max_val: i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                    write!(f, "extern \"C\" {{\n")?;
+                    write!(f, "    pub fn trexio_write_safe_{group}_{element}(file: *mut trexio_t, offset: i64, buffer_size: i64, idx: *const i32, size_max_idx: i64, val: *const f64, size_max_val: i64) -> trexio_exit_code;\n")?;
+                    write!(f, "}}\n")?;
+                },
+                // int special and other unhandled types: only has_* needed (already written above)
+                _ => {},
+            }
+        }
+    }
+
+    Ok(())
+}
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>>  {
+    let out_path = PathBuf::from(env::var("OUT_DIR")?);
+
+    // When building on docs.rs (DOCS_RS env var is set), the C trexio library is not
+    // available. Use the bundled trexio_for_docs_rs.json schema and a generated bindings
+    // stub so that `rustdoc` can type-check and document the crate without a system install.
+    if env::var("DOCS_RS").is_ok() {
+        let src_dir = env::current_dir()?;
+        let json_fallback = src_dir.join("trexio_for_docs_rs.json");
+        if !json_fallback.exists() {
+            return Err(format!(
+                "trexio_for_docs_rs.json not found in {}. \
+                 This file must be present for docs.rs builds.",
+                src_dir.display()
+            ).into());
+        }
+        println!("cargo:warning=docs.rs build: using trexio_for_docs_rs.json");
+        let json_path = out_path.join("trex.json");
+        std::fs::copy(&json_fallback, &json_path)?;
+        make_docs_rs_bindings(&json_fallback, &out_path)?;
+        make_functions(&json_path)?;
+        println!("cargo:rerun-if-changed=trexio_for_docs_rs.json");
+        return Ok(());
+    }
+
     let trexio_h = find_header_path()
         .ok_or("Could not find trexio.h - please ensure trexio is installed and findable via pkg-config, TREXIO_INCLUDE_DIR, or in system paths")?;
 
     // Print some helpful information during build
     println!("cargo:warning=Found trexio.h at: {}", trexio_h.display());
-
-    let out_path = PathBuf::from(env::var("OUT_DIR")?);
 
     make_interface(&trexio_h)?;
     extract_json(&trexio_h)?;
