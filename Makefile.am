@@ -33,7 +33,7 @@
 # =============== SETTINGS =============== #
 
 ACLOCAL_AMFLAGS = -I m4
-CLEANFILES = trexio.mod
+CLEANFILES = trexio.mod tests/trexio_f.f90
 BUILT_SOURCES = trex.json
 if HAVE_FORTRAN
 BUILT_SOURCES += trexio.mod
@@ -66,7 +66,9 @@ SOURCES = \
   src/trexio_private.h \
   src/trexio_s.h \
   src/trexio_text.c \
-  src/trexio_text.h
+  src/trexio_text.h \
+  src/trexio_memory.c \
+  src/trexio_memory.h
 
 if HAVE_HDF5
 SOURCES += src/trexio_hdf5.c \
@@ -76,6 +78,7 @@ endif
 ORG_FILES = \
   src/templates_front/templator_front.org \
   src/templates_text/templator_text.org \
+  src/templates_memory/templator_memory.org \
   trex.org
 
 if HAVE_HDF5
@@ -91,7 +94,9 @@ EXTRA_DIST += CMakeLists.txt \
               tests/CMakeLists.txt \
               tests/test_macros.h  \
               cmake/cmake_uninstall.cmake.in \
-              cmake/FindTREXIO.cmake
+              cmake/standard_math_lib.cmake \
+              cmake/trexio-config.cmake.in \
+              cmake/trexio.pc.in
 
 
 # =============== TESTS =============== #
@@ -119,12 +124,16 @@ TEST_FILES = \
     tests/io_jastrow.c \
     tests/io_jastrow_hdf5.c \
     tests/io_jastrow_text.c \
+    tests/io_memory.c \
     tests/io_num.c \
     tests/io_num_hdf5.c \
     tests/io_num_text.c \
     tests/io_safe_dset_float.c \
     tests/io_safe_dset_float_hdf5.c \
     tests/io_safe_dset_float_text.c \
+    tests/io_state_energy.c \
+    tests/io_state_energy_hdf5.c \
+    tests/io_state_energy_text.c \
     tests/io_str.c \
     tests/io_str_hdf5.c \
     tests/io_str_text.c \
@@ -152,11 +161,13 @@ TESTS_C = \
   tests/io_determinant_text \
   tests/io_jastrow_text \
   tests/io_safe_dset_float_text \
+  tests/io_state_energy_text \
   tests/io_str_text \
   tests/io_dset_str_text \
   tests/delete_group_text \
   tests/overwrite_all_text \
   tests/io_all \
+  tests/io_memory \
   tests/pre_close
 
 if HAVE_HDF5
@@ -169,6 +180,7 @@ TESTS_C += \
   tests/io_determinant_hdf5 \
   tests/io_jastrow_hdf5 \
   tests/io_safe_dset_float_hdf5 \
+  tests/io_state_energy_hdf5 \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
   tests/delete_group_hdf5 \
@@ -191,7 +203,7 @@ if HAVE_FORTRAN
 test_trexio_f = tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
-	cp $(trexio_f) $(test_trexio_f)
+	cp $(srcdir)/$(trexio_f) $(test_trexio_f)
 
 trexio.mod: tests/trexio_f.o
 
@@ -266,12 +278,14 @@ GENERATOR_FILES = $(srcdir)/tools/generator.py \
 $(SOURCES): $(trexio_h)
 src/trexio.c: $(trexio_h)
 
-$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES)
+trex.json: trex.org
+	cd $(srcdir)/tools && ./build_json.sh
+
+$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES) trex.json
 	cd $(srcdir)/tools && ./build_trexio.sh
 
-trex.json: $(trexio_h)
-
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
+	$(MKDIR_P) docs
 	touch $(htmlizer)
 	cd $(srcdir)/tools && ./build_doc.sh
 
@@ -280,7 +294,7 @@ cppcheck: cppcheck.out
 
 cppcheck.out: $(trexio_h)
 	cd src/ && \
-	cppcheck --addon=cert -q --error-exitcode=0  \
+	cppcheck -q --error-exitcode=0  \
 	  --enable=all \
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
@@ -305,7 +319,7 @@ setup_py      = $(srcdir)/python/setup.py
 setup_cfg     = $(srcdir)/python/setup.cfg
 pytrexio_py   = $(srcdir)/python/pytrexio/pytrexio.py
 trexio_py     = $(srcdir)/python/trexio.py
-TEST_PY       = python/test/test_api.py
+TEST_PY       = python/test/test_api.py python/test/test_memory.py
 pytrexio_c    = $(srcdir)/src/pytrexio_wrap.c
 pytrexio_i    = $(srcdir)/src/pytrexio.i
 numpy_i       = $(srcdir)/src/numpy.i
@@ -341,7 +355,7 @@ $(pytrexio_py): $(pytrexio_c)
 endif
 
 # Build Python module and C wrapper code for TREXIO using SWIG
-$(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
+$(pytrexio_c): FORCE $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	@if [[ $(SWIG).x != ".x" ]] ; then \
 	cp $(trexio_h) src/ ; \
 	cd src/ && \

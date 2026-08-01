@@ -40,7 +40,7 @@ if numpy_isUndefined and not do_sdist:
 
 rootpath = os.path.dirname(os.path.abspath(__file__))
 srcpath = os.path.join(rootpath, 'src')
-c_files = ['trexio.c', 'trexio_text.c']
+c_files = ['trexio.c', 'trexio_text.c', 'trexio_memory.c']
 
 
 with open("README.md", "r") as fh:
@@ -137,7 +137,7 @@ setup(name             = 'trexio',
       py_modules       = ['trexio'],
       packages         = ['pytrexio'],
       url              = 'https://github.com/TREX-CoE/trexio',
-      license          = 'BSD',
+      license          = 'BSD-3-Clause',
       classifiers=[
          "Intended Audience :: Science/Research",
          "Intended Audience :: Developers",
@@ -147,7 +147,6 @@ setup(name             = 'trexio',
          "Programming Language :: Python :: 3",
          "Programming Language :: Python :: 3 :: Only",
          "Programming Language :: Python :: Implementation :: CPython",
-         "License :: OSI Approved :: BSD License",
          "Operating System :: POSIX",
          "Operating System :: Unix",
          "Operating System :: MacOS"

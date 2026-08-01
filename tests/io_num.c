@@ -136,14 +136,14 @@ int main(void) {
 /*============== Test launcher ================*/
 
   int rc;
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   test_write_num (TREXIO_FILE, TEST_BACKEND);
   test_has_num   (TREXIO_FILE, TEST_BACKEND);
   test_read_num  (TREXIO_FILE, TEST_BACKEND);
 
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   return 0;

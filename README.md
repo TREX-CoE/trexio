@@ -22,15 +22,20 @@ single- and/or multi-reference wave functions:
 | ------------------------------------------------------------------------------ | ---------------- | --------------- |
 | [Quantum Package](https://github.com/QuantumPackage/qp2)                       | Write/Read       | Write/Read      |
 | [PySCF](https://github.com/pyscf/pyscf)                                        | Write/Read       | Write/Read      |
+| [VeloxChem](https://github.com/VeloxChem/VeloxChem)                            | Write            | ---             |
 | [FHI-aims](https://fhi-aims.org/)                                              | Write            | ---             |
 | [CP2K](https://github.com/cp2k/cp2k)                                           | Write            | ---             |
 | [CHAMP](https://github.com/filippi-claudia/champ)                              | Read             | Read            |
 | [GammCor](https://github.com/pernalk/GAMMCOR)                                  | Read             | Read            |
 | [ipie](https://github.com/JoonhoLee-Group/ipie)                                | Read             | Read            |
+| [moltui](https://github.com/kszenes/moltui)                                    | Read             | ---             |
 | [TurboRVB](https://github.com/sissaschool/turborvb)                            | Read             | ---             |
 | [Spicy](https://gitlab.com/theoretical-chemistry-jena/quantum-chemistry/Spicy) | Read             | ---             |
 | [QMC=Chem](https://github.com/TREX-CoE/qmcchem2)                               | Read             | ---             |
 | [QMCkl](https://github.com/TREX-CoE/qmckl)                                     | Read             | ---             |
+| [Dirac](https://www.diracprogram.org)                                          | Write            | ---             |
+| [pymolpro](https://molpro.github.io/pymolpro)                                  | Write            | ---             |
+| [tblite](https://github.com/tblite/tblite)                                     | Write            | ---             |
 
 
 * [Installation](#installation)
@@ -134,7 +139,7 @@ sudo apt-get update && sudo apt-get install libtrexio-dev
 ### Installation from source
 #### Minimal requirements (for users):
 
-- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2) or CMake (>= 3.16)
+- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2) or CMake (>= 3.19)
 - C compiler            (gcc/icc/clang)
 - Fortran compiler      (gfortran/ifort)
 - HDF5 library          (>= 1.8) [optional, recommended for high performance]
@@ -172,16 +177,16 @@ simplicity.
 
 By default, the configuration step proceeds to search for the [HDF5 library](https://portal.hdfgroup.org/display/HDF5/HDF5).
 This search can be disabled if HDF5 is not present/installable on the user machine.
-To build TREXIO without HDF5 back end, append `--without-hdf5` option to `configure` script or `-DENABLE_HDF5=OFF` option to `cmake`. For example,
+To build TREXIO without HDF5 back end, append `--without-hdf5` option to `configure` script or `-DTREXIO_USE_HDF5=OFF` option to `cmake`. For example,
 
 - `./configure --without-hdf5`
-- `cmake -S. -Bbuild -DENABLE_HDF5=OFF`
+- `cmake -S. -Bbuild -DTREXIO_USE_HDF5=OFF`
 
 #### For TREXIO developers: from the GitHub repo clone
 
 Additional requirements:
 
-- Python3       (>= 3.6)
+- Python3       (>= 3.8)
 - Emacs         (>= 26.0)
 - SWIG          (>= 4.0)   [required for the Python API]
 
@@ -205,6 +210,9 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 3. ```make -j 4```
 4. ```ctest -j $(nproc)```
 5. `sudo make install`
+
+By default, CMake builds a shared TREXIO library. Pass
+`-DBUILD_SHARED_LIBS=OFF` to build a static library instead.
 
 **Note**: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.
 
@@ -247,7 +255,7 @@ For example, the tutorial covering TREXIO basics using benzene molecule as an ex
 
 ### Linking to your program
 
-The `make install` command takes care of installing the TREXIO shared library on the user machine.
+The `make install` command takes care of installing the TREXIO library on the user machine.
 After installation, append `-ltrexio` to the list of compiler  (`$LIBS`) options.
 
 In some cases (e.g. when using custom installation prefix during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LD_LIBRARY_PATH`.
@@ -257,9 +265,23 @@ In order to link the program against TREXIO, the search path can be modified as 
 
 where the `<path_to_trexio>` has to be replaced by the prefix used during the installation.
 
-If your project relies on CMake build system, feel free to use the
-[FindTREXIO.cmake](https://github.com/TREX-CoE/trexio/blob/master/cmake/FindTREXIO.cmake)
-module to find and link TREXIO library automatically.
+For CMake projects, use the package configuration installed by TREXIO:
+
+```cmake
+find_package(trexio CONFIG REQUIRED)
+target_link_libraries(your_target PRIVATE trexio::trexio)
+```
+
+This will make CMake detect and use `trexio-config.cmake`, which also exposes `TREXIO_WITH_HDF5`,
+`TREXIO_HDF5_IS_PARALLEL`, and `TREXIO_WITH_FORTRAN` so downstream projects can inspect the installed
+TREXIO configuration when necessary. You will need to make sure the path to TREXIO CMake config files
+and target files are included in environment variable `CMAKE_PREFIX_PATH` if it is not in the standard
+locations.
+
+**Hint:** Instead of leveraging `trexio-config.cmake`, downstream can also use their custom Find-module
+file for package discovery. For example, one can create a `FindTREXIO.cmake` in their CMake module path,
+and use `find_package(TREXIO REQUIRED)` (dropping `CONFIG` makes CMake use custom Find-module first if
+it exists). However, this way is usually not as robust as leveraging upstream config files.
 
 In Fortran applications, make sure that the `trexio_f.f90` module file is included in the source tree.
 You might have to manually copy it into your program source directory.

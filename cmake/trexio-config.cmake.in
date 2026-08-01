@@ -1,0 +1,25 @@
+@PACKAGE_INIT@
+
+set(TREXIO_VERSION @PROJECT_VERSION@)
+set(TREXIO_WITH_FORTRAN @TREXIO_FORTRAN@)
+set(TREXIO_WITH_HDF5 @TREXIO_USE_HDF5@)
+set(TREXIO_HDF5_IS_PARALLEL @TREXIO_HDF5_IS_PARALLEL@)
+
+include("${CMAKE_CURRENT_LIST_DIR}/trexio-targets.cmake")
+
+get_target_property(_trexio_target_type trexio::trexio TYPE)
+if(_trexio_target_type STREQUAL "STATIC_LIBRARY")
+  include(CMakeFindDependencyMacro)
+  if(NOT TARGET Threads::Threads)
+    find_dependency(Threads)
+  endif()
+  if(TREXIO_WITH_HDF5 AND NOT TARGET HDF5::HDF5)
+    find_dependency(HDF5 COMPONENTS C)
+  endif()
+  if(TREXIO_HDF5_IS_PARALLEL AND NOT TARGET MPI::MPI_C)
+    find_dependency(MPI COMPONENTS C)
+  endif()
+endif()
+unset(_trexio_target_type)
+
+check_required_components(trexio)

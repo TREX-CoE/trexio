@@ -66,6 +66,9 @@ program test_trexio
     call test_read_void('test_write_f.h5', TREXIO_HDF5)
   endif
 
+  print *, 'call test_memory'
+  call test_memory()
+
 end program test_trexio
 
 subroutine test_write(file_name, back_end)
@@ -678,3 +681,47 @@ subroutine test_read_void(file_name, back_end)
 ! ================= END OF TEST ===================== !
 
 end subroutine test_read_void
+
+! In-memory (RAM) back end: write data and read it back from the SAME open
+! handle (the back end is ephemeral and does not persist across open/close).
+subroutine test_memory()
+  use trexio
+  implicit none
+
+  integer(trexio_t)         :: trex_file
+  integer(trexio_exit_code) :: rc = 1
+  integer                   :: num_read
+  double precision          :: coord(3,3), coord_read(3,3)
+
+  coord(:,1) = (/ 0.d0, 0.d0, 0.d0  /)
+  coord(:,2) = (/ 0.d0, 0.d0, 1.4d0 /)
+  coord(:,3) = (/ 0.d0, 1.1d0, 0.d0 /)
+
+  trex_file = trexio_open('memory_unused_f', 'w', TREXIO_MEMORY, rc)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'MEMORY OPEN')
+
+  rc = trexio_write_nucleus_num(trex_file, 3)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'MEMORY WRITE NUM')
+
+  rc = trexio_write_nucleus_coord(trex_file, coord)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'MEMORY WRITE COORD')
+
+  rc = trexio_read_nucleus_num(trex_file, num_read)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'MEMORY READ NUM')
+  if (num_read /= 3) then
+     print *, 'MEMORY READ NUM mismatch:', num_read
+     call exit(1)
+  endif
+
+  rc = trexio_read_nucleus_coord(trex_file, coord_read)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'MEMORY READ COORD')
+  if (dabs(coord_read(3,2) - 1.4d0) > 1.d-12) then
+     print *, 'MEMORY READ COORD mismatch:', coord_read(3,2)
+     call exit(1)
+  endif
+
+  rc = trexio_close(trex_file)
+  call trexio_assert(rc, TREXIO_SUCCESS, 'MEMORY CLOSE')
+
+  print *, 'test_memory: OK'
+end subroutine test_memory

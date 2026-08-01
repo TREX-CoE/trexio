@@ -236,7 +236,7 @@ int main(){
 /*============== Test launcher ================*/
 
   int rc;
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   int32_t mo_num[8] = {6,12,30,62,252,510,1020,9000};
@@ -256,7 +256,7 @@ int main(){
     test_read_dset_sparse     (TREXIO_FILE, TEST_BACKEND, size);
     test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, 2*size);
 
-    rc = system(RM_COMMAND);
+    rc = RM_COMMAND_RESULT;
     assert (rc == 0);
 
   }

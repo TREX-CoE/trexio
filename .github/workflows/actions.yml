@@ -10,6 +10,10 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+  actions: write
+
 
 jobs:
 
@@ -20,7 +24,7 @@ jobs:
       message: ${{ steps.commit_message.outputs.message }}
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+        uses: actions/checkout@v4
         # Gets the correct commit message for pull request
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -33,39 +37,42 @@ jobs:
           echo github.ref ${{ github.ref }}
 
   trexio_ubuntu:
-    name: x86 Ubuntu
-    runs-on: ubuntu-22.04
+    name: x86 and arm64 Ubuntu
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
     needs: get_commit_message
 
     steps:
-      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+      - uses: actions/checkout@v4
 
       - name: check versions
+        # TODO: bring back "diff configure_v python_v"
         run: |
           grep AC_INIT configure.ac | tr -d '[]' | awk -F, '{ print $2 }' > configure_v
           grep -w VERSION CMakeLists.txt | grep -v 'cmake_minimum_required' | awk '{ print $2 }' > cmake_v
           grep version python/pytrexio/_version.py | tr -d '"' | awk '{ print $3 }' > python_v
           grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
           grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
-          diff configure_v cmake_v 
-          diff configure_v python_v
+          diff configure_v cmake_v
           diff configure_v rust_v
           diff configure_v ocaml_v
 
       - name: setup fixed Python version for testing
-        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libhdf5-dev emacs libtool-bin valgrind
+          sudo apt-get install libhdf5-dev emacs libtool-bin valgrind cmake
 
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules 
+          ./configure --enable-silent-rules
 
       - name: compile TREXIO
         run: make -j2
@@ -74,21 +81,21 @@ jobs:
         run: make -j2 check
 
       - name: check via valgrind
-        run: |
-          which libtool
-          cd tests && ./run_valgrind.sh
+        if: matrix.os != 'ubuntu-22.04-arm'
+        run: cd tests && ./run_valgrind.sh
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-ubuntu
           path: test-suite.log
 
-      - name: create venv
+      - name: create venv with swig 4.1
         run: |
           python3 -m venv trexio-venv
           source trexio-venv/bin/activate
+          pip install swig==4.1
 
       - name: install Python API
         run: |
@@ -96,6 +103,17 @@ jobs:
           make python-install
 
       - name: check Python API
+        run: |
+          source trexio-venv/bin/activate
+          make python-test
+
+      - name: install Python API with swig 4.3
+        run: |
+          source trexio-venv/bin/activate
+          pip install swig==4.3
+          make python-install
+
+      - name: check Python API with swig 4.3
         run: |
           source trexio-venv/bin/activate
           make python-test
@@ -108,75 +126,90 @@ jobs:
 
       - name: publish Python API distribution as an artifact
         if: >-
-          contains(needs.get_commit_message.outputs.message, '[wheel build]') ||
-          github.event_name == 'release'
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
+          contains(needs.get_commit_message.outputs.message, '[wheel build]') &&
+          matrix.os == 'ubuntu-22.04-arm'
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: pytrexio-source
           path: ./trexio-*.tar.gz
 
       - name: maintainer clean
         run: make maintainer-clean
-      
-      - name: reconfigure with debugging 
+
+      - name: reconfigure with debugging
         run: |
           ./autogen.sh
           ./configure --enable-silent-rules --enable-debug --enable-sanitizer
-      
+
       - name: recompile TREXIO
         run: make -j2
-      
-      - name: recheck TREXIO 
+
+      - name: recheck TREXIO
         run: make -j2 check
-      
+
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-ubuntu-memory
           path: test-suite.log
-      
+
       - name: maintainer clean
         run: make maintainer-clean
+
+      - name: configure with CMake
+        run: cmake -S. -Bbuilddir
+
+      - name: compile TREXIO
+        working-directory: builddir
+        run: make -j2
+
+      - name: check TREXIO
+        working-directory: builddir
+        run: ctest -j2
+
+      - name: maintainer clean
+        run: rm -rf -- builddir/
 
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
-      # macos-13 = x86_64 ; macos-14 = aarch64
       matrix:
-        os: [macos-13, macos-14]
+        os: [macos-15] #, macos-15-intel]
     runs-on: ${{ matrix.os }}
 
+    env:
+      GCC_VERSION: 14
+
     steps:
-      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
+      - uses: actions/checkout@v4
 
       - name: setup fixed Python version for testing
-        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: install dependencies
         run: |
           brew install emacs
-          brew install hdf5@1.14
+          brew install hdf5@1.10
           brew install automake
           brew install libtool
-          # SWIG 4.3.0 from homebrew with clang failed CI for macos@aarch64 - lol what?
-          pip install swig==4.2.1.post0
+          pip install swig==4.3
           swig -version
-          
+
       - name: configure with autotools
         run: |
-          brew --prefix hdf5
+          brew --prefix hdf5@1.10
           ./autogen.sh
-          ./configure CC=gcc-12 FC=gfortran-12 --enable-silent-rules
+          ./configure CC=gcc-$GCC_VERSION FC=gfortran-$GCC_VERSION --enable-silent-rules
 
       - name: compile TREXIO
         run: make -j3
 
       - name: check TREXIO
         run: make -j3 check
-      
+
       - name: create venv
         run: |
           python3 -m venv trexio-venv
@@ -184,11 +217,11 @@ jobs:
 
       - name: compile Python API
         run: |
-          export H5_CFLAGS="-I$(brew --prefix hdf5)/include"
-          export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"
+          export H5_CFLAGS="-I$(brew --prefix hdf5@1.10)/include"
+          export H5_LDFLAGS="-L$(brew --prefix hdf5@1.10)/lib"
           source trexio-venv/bin/activate
           make python-install
-      
+
       - name: test Python API
         run: |
           source trexio-venv/bin/activate
@@ -196,10 +229,136 @@ jobs:
 
       - name: Archive test log file
         if: failure()
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6 
+        uses: actions/upload-artifact@v4 # v4.3.6
         with:
           name: test-report-${{ matrix.os }}
           path: test-suite.log
 
       - name: clean
         run: make clean
+
+  trexio_windows:
+    name: Windows MinGW
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-fortran
+            mingw-w64-x86_64-hdf5
+            mingw-w64-x86_64-autotools
+            mingw-w64-x86_64-libtool
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-emacs
+            git
+            make
+
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules
+
+      - name: compile TREXIO
+        run: make -j2
+
+      - name: check TREXIO
+        run: make -j2 check
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v4 # v4.3.6
+        with:
+          name: test-report-windows
+          path: test-suite.log
+
+  trexio_nix:
+    name: Nix
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v31.4.1
+    - run: nix flake check -L && nix build -L
+
+  trexio_release_tarball:
+    name: Test release tarball with CMake and autotools
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev cmake
+
+      - name: get latest release
+        id: get_release
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/TREX-CoE/trexio/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+          VERSION=$(echo "$LATEST_RELEASE" | sed 's/^v//')
+          echo "tag=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Latest release: $LATEST_RELEASE (version: $VERSION)"
+
+      - name: download and extract release tarball
+        run: |
+          wget https://github.com/TREX-CoE/trexio/releases/download/${{ steps.get_release.outputs.tag }}/trexio-${{ steps.get_release.outputs.version }}.tar.gz
+          tar -xzf trexio-${{ steps.get_release.outputs.version }}.tar.gz
+          echo "TREXIO_DIR=trexio-${{ steps.get_release.outputs.version }}" >> $GITHUB_ENV
+
+      - name: configure with CMake
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          cmake -S. -Bbuild
+
+      - name: compile TREXIO
+        run: |
+          cd ${{ env.TREXIO_DIR }}/build
+          make -j2
+
+      - name: test TREXIO
+        run: |
+          cd ${{ env.TREXIO_DIR }}/build
+          ctest -j2
+
+      - name: Archive CMake test log file
+        if: failure()
+        uses: actions/upload-artifact@v4 # v4.3.6
+        with:
+          name: test-report-tarball-cmake
+          path: ${{ env.TREXIO_DIR }}/build/Testing/Temporary/LastTest.log
+
+      - name: clean CMake build
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          rm -rf build
+
+      - name: configure with autotools
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          ./configure --enable-silent-rules
+
+      - name: compile TREXIO with autotools
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          make -j2
+
+      - name: test TREXIO with autotools
+        run: |
+          cd ${{ env.TREXIO_DIR }}
+          make -j2 check
+
+      - name: Archive autotools test log file
+        if: failure()
+        uses: actions/upload-artifact@v4 # v4.3.6
+        with:
+          name: test-report-tarball-autotools
+          path: ${{ env.TREXIO_DIR }}/test-suite.log

@@ -182,13 +182,13 @@ int main(){
 
   int rc;
 
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   test_write_jastrow (TREXIO_FILE, TEST_BACKEND);
   test_read_jastrow  (TREXIO_FILE, TEST_BACKEND);
 
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   return 0;

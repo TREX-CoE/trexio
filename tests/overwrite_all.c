@@ -247,7 +247,7 @@ int main(void) {
 /*============== Test launcher ================*/
 
   int rc;
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   test_write            (TREXIO_FILE, TEST_BACKEND);
@@ -255,7 +255,7 @@ int main(void) {
   test_overwrite_unsafe (TREXIO_FILE, TEST_BACKEND);
   test_read             (TREXIO_FILE, TEST_BACKEND);
 
-  rc = system(RM_COMMAND);
+  rc = RM_COMMAND_RESULT;
   assert (rc == 0);
 
   return 0;

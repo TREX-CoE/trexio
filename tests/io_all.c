@@ -18,26 +18,36 @@ int main() {
 
   bool have_hdf5 = trexio_has_backend(TREXIO_HDF5);
   if(have_hdf5) {
-    rc = system("rm -f -- test_all.h5 test_all2.h5");
-    assert (rc == 0);
+    rc = trexio_remove_file("test_all.h5");
+    assert (rc == TREXIO_SUCCESS || rc == TREXIO_FILE_ERROR); /* OK if file doesn't exist */
+    rc = trexio_remove_file("test_all2.h5");
+    assert (rc == TREXIO_SUCCESS || rc == TREXIO_FILE_ERROR); /* OK if file doesn't exist */
+    
     test_write("test_all.h5" , TREXIO_HDF5);
     rc = trexio_cp ("test_all.h5", "test_all2.h5");
     assert (rc == TREXIO_SUCCESS);
     test_read ("test_all2.h5", TREXIO_HDF5);
-    rc = system("rm -f -- test_all.h5 test_all2.h5");
-    assert (rc == 0);
+    
+    rc = trexio_remove_file("test_all.h5");
+    assert (rc == TREXIO_SUCCESS);
+    rc = trexio_remove_file("test_all2.h5");
+    assert (rc == TREXIO_SUCCESS);
   }
 
-  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir && \
-               rm -f -- test_all2.dir/*.txt test_all2.dir/*.txt.size test_all2.dir/.lock && rm -fd -- test_all2.dir");
-  assert (rc == 0);
+  rc = trexio_remove_directory_recursive("test_all.dir");
+  assert (rc == TREXIO_SUCCESS || rc == TREXIO_FILE_ERROR); /* OK if dir doesn't exist */
+  rc = trexio_remove_directory_recursive("test_all2.dir");
+  assert (rc == TREXIO_SUCCESS || rc == TREXIO_FILE_ERROR); /* OK if dir doesn't exist */
+  
   test_write("test_all.dir" , TREXIO_TEXT);
   rc = trexio_cp ("test_all.dir" , "test_all2.dir");
   assert (rc == TREXIO_SUCCESS);
   test_read ("test_all2.dir", TREXIO_TEXT);
-  rc = system("rm -f -- test_all.dir/*.txt test_all.dir/*.txt.size test_all.dir/.lock && rm -fd -- test_all.dir && \
-               rm -f -- test_all2.dir/*.txt test_all2.dir/*.txt.size test_all2.dir/.lock && rm -fd -- test_all2.dir");
-  assert (rc == 0);
+  
+  rc = trexio_remove_directory_recursive("test_all.dir");
+  assert (rc == TREXIO_SUCCESS);
+  rc = trexio_remove_directory_recursive("test_all2.dir");
+  assert (rc == TREXIO_SUCCESS);
 
   return 0;
 }
