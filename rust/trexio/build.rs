@@ -15,7 +15,7 @@ use pkg_config::Config;
 /// 1. pkg-config
 /// 2. Environment variable TREXIO_INCLUDE_DIR
 /// 3. Common system paths
-/// 4. Rust sources (may not be adapted to the installed library)
+/// 4. Bundled fallback header (trexio_for_docs_rs.h) copied to OUT_DIR, for docs.rs builds
 ///
 /// If the header is found, the JSON configuration will be extracted and
 /// written to trex.json in the output directory
@@ -53,13 +53,25 @@ fn find_header_path() -> Option<PathBuf> {
         }
     }
 
-    // Default for generating the documentation on Doc.rs
-    if let Ok(dir) = env::current_dir() {
-        let path = PathBuf::from(dir).join("trexio.h");
-        Some(path)
-    } else {
-        None
+    // Last resort: use the bundled fallback header for building documentation on docs.rs.
+    // trexio_for_docs_rs.h is a verbatim copy of trexio.h kept in the crate sources
+    // exclusively to allow `cargo doc` / docs.rs to succeed without a system installation.
+    // Do not use this file as a system header.
+    if let Ok(src_dir) = env::current_dir() {
+        let backup = src_dir.join("trexio_for_docs_rs.h");
+        if backup.exists() {
+            // Copy to OUT_DIR as trexio.h so that `#include <trexio.h>` in wrapper.h resolves.
+            if let Ok(out_dir) = env::var("OUT_DIR") {
+                let dest = PathBuf::from(&out_dir).join("trexio.h");
+                if std::fs::copy(&backup, &dest).is_ok() {
+                    println!("cargo:rerun-if-changed=trexio_for_docs_rs.h");
+                    return Some(dest);
+                }
+            }
+        }
     }
+
+    None
 }
 
 
@@ -740,6 +752,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>>  {
         // The input header we would like to generate
         // bindings for.
         .header(wrapper_h.to_str().unwrap())
+        // Add the directory containing trexio.h to the clang include search path.
+        // This is essential when using the bundled fallback header (e.g. on docs.rs)
+        // where trexio.h is not installed in a system include directory.
+        .clang_arg(format!("-I{}", trexio_h.parent().unwrap().to_str().unwrap()))
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
