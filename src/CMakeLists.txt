@@ -205,6 +205,19 @@ install(
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 
+# Install documentation
+if(TREXIO_BUILD_DOCS)
+  install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/docs/"
+    DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+    FILES_MATCHING
+      PATTERN "*.html"
+      PATTERN "*.css"
+      PATTERN "*.png"
+      PATTERN "org-html-themes" EXCLUDE
+  )
+endif()
+
 # Uninstall target, copied from CMake FAQ:
 # https://gitlab.kitware.com/cmake/community/wikis/FAQ#can-i-do-make-uninstall-with-cmake
 if(NOT TARGET uninstall)
