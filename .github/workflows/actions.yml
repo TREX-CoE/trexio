@@ -172,21 +172,20 @@ jobs:
         run: rm -rf -- builddir/
 
   trexio_i686:
-    name: i686 (32-bit) Ubuntu
+    name: i686 (32-bit) Linux
     runs-on: ubuntu-22.04
     needs: get_commit_message
     container:
-      image: i386/ubuntu:22.04
-      options: --platform linux/386
+      image: i386/debian:bookworm
 
     steps:
-      - uses: actions/checkout@v7
-
       - name: install dependencies
         run: |
           apt-get update
-          apt-get install -y gcc gfortran libhdf5-dev emacs libtool-bin cmake \
-                             automake autoconf pkg-config git make
+          apt-get install -y gcc gfortran libhdf5-dev emacs-nox libtool-bin cmake \
+                             automake autoconf pkg-config git make ca-certificates
+
+      - uses: actions/checkout@v7
 
       - name: configure with autotools
         run: |
