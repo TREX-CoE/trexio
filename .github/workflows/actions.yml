@@ -184,16 +184,13 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install -y gcc-multilib gfortran-multilib \
-                                  emacs libtool-bin automake autoconf pkg-config \
-                                  libhdf5-dev:i386 zlib1g-dev:i386
+                                  emacs libtool-bin automake autoconf pkg-config
 
       - name: configure with autotools (32-bit)
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules \
-                      CC="gcc -m32" FC="gfortran -m32" \
-                      LDFLAGS="-L/usr/lib/i386-linux-gnu/hdf5/serial" \
-                      CFLAGS="-I/usr/include/hdf5/serial"
+          ./configure --enable-silent-rules --without-hdf5 \
+                      CC="gcc -m32" FC="gfortran -m32"
 
       - name: compile TREXIO
         run: make -j2
