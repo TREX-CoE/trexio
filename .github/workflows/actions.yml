@@ -171,6 +171,58 @@ jobs:
       - name: maintainer clean
         run: rm -rf -- builddir/
 
+  trexio_i686:
+    name: i686 (32-bit) Ubuntu
+    runs-on: ubuntu-22.04
+    needs: get_commit_message
+    container:
+      image: i386/ubuntu:22.04
+      options: --platform linux/386
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install dependencies
+        run: |
+          apt-get update
+          apt-get install -y gcc gfortran libhdf5-dev emacs libtool-bin cmake \
+                             automake autoconf pkg-config git make
+
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules
+
+      - name: compile TREXIO
+        run: make -j2
+
+      - name: check TREXIO
+        run: make -j2 check
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-i686
+          path: test-suite.log
+
+      - name: maintainer clean
+        run: make maintainer-clean
+
+      - name: configure with CMake
+        run: cmake -S. -Bbuilddir
+
+      - name: compile TREXIO with CMake
+        working-directory: builddir
+        run: make -j2
+
+      - name: check TREXIO with CMake
+        working-directory: builddir
+        run: ctest -j2
+
+      - name: maintainer clean
+        run: rm -rf -- builddir/
+
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
