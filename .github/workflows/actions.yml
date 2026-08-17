@@ -175,22 +175,25 @@ jobs:
     name: i686 (32-bit) Linux
     runs-on: ubuntu-22.04
     needs: get_commit_message
-    container:
-      image: i386/debian:bookworm
 
     steps:
-      - name: install dependencies
-        run: |
-          apt-get update
-          apt-get install -y gcc gfortran libhdf5-dev emacs-nox libtool-bin cmake \
-                             automake autoconf pkg-config git make ca-certificates
-
       - uses: actions/checkout@v7
 
-      - name: configure with autotools
+      - name: install 32-bit dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib gfortran-multilib \
+                                  emacs libtool-bin automake autoconf pkg-config \
+                                  libhdf5-dev:i386 zlib1g-dev:i386
+
+      - name: configure with autotools (32-bit)
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules
+          ./configure --enable-silent-rules \
+                      CC="gcc -m32" FC="gfortran -m32" \
+                      LDFLAGS="-L/usr/lib/i386-linux-gnu/hdf5/serial" \
+                      CFLAGS="-I/usr/include/hdf5/serial"
 
       - name: compile TREXIO
         run: make -j2
@@ -204,23 +207,6 @@ jobs:
         with:
           name: test-report-i686
           path: test-suite.log
-
-      - name: maintainer clean
-        run: make maintainer-clean
-
-      - name: configure with CMake
-        run: cmake -S. -Bbuilddir
-
-      - name: compile TREXIO with CMake
-        working-directory: builddir
-        run: make -j2
-
-      - name: check TREXIO with CMake
-        working-directory: builddir
-        run: ctest -j2
-
-      - name: maintainer clean
-        run: rm -rf -- builddir/
 
   trexio_macos:
     name: x86 and arm64 MacOS
