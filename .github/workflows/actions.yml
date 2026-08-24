@@ -171,6 +171,61 @@ jobs:
       - name: maintainer clean
         run: rm -rf -- builddir/
 
+  trexio_i686:
+    name: i686 (32-bit) Linux
+    runs-on: ubuntu-22.04
+    needs: get_commit_message
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install 32-bit dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib gfortran-multilib \
+                                  emacs libtool-bin automake autoconf pkg-config \
+                                  zlib1g-dev:i386 wget
+
+      - name: cache 32-bit HDF5
+        id: cache-hdf5-i686
+        uses: actions/cache@v5
+        with:
+          path: ~/hdf5-i686
+          key: hdf5-1.14.6-i686-static
+
+      - name: build 32-bit HDF5
+        if: steps.cache-hdf5-i686.outputs.cache-hit != 'true'
+        run: |
+          wget -q https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/hdf5-1.14.6.tar.gz
+          tar xf hdf5-1.14.6.tar.gz
+          cd hdf5-1.14.6
+          CC="gcc -m32" ./configure --prefix=$HOME/hdf5-i686 --disable-shared --enable-static \
+                                    --disable-tests --disable-tools
+          make -j2
+          make install
+
+      - name: configure with autotools (32-bit)
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules \
+                      CC="gcc -m32" FC="gfortran -m32" \
+                      --with-hdf5=$HOME/hdf5-i686 \
+                      LIBS="-lz -lm -ldl"
+
+      - name: compile TREXIO
+        run: make -j2
+
+      - name: check TREXIO
+        run: make -j2 check
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-i686
+          path: test-suite.log
+
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
