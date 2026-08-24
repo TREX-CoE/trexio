@@ -187,7 +187,15 @@ jobs:
                                   emacs libtool-bin automake autoconf pkg-config \
                                   zlib1g-dev:i386 wget
 
+      - name: cache 32-bit HDF5
+        id: cache-hdf5-i686
+        uses: actions/cache@v4
+        with:
+          path: ~/hdf5-i686
+          key: hdf5-1.14.6-i686-static
+
       - name: build 32-bit HDF5
+        if: steps.cache-hdf5-i686.outputs.cache-hit != 'true'
         run: |
           wget -q https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/hdf5-1.14.6.tar.gz
           tar xf hdf5-1.14.6.tar.gz
