@@ -184,13 +184,25 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install -y gcc-multilib gfortran-multilib \
-                                  emacs libtool-bin automake autoconf pkg-config
+                                  emacs libtool-bin automake autoconf pkg-config \
+                                  zlib1g-dev:i386 wget
+
+      - name: build 32-bit HDF5
+        run: |
+          wget -q https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/hdf5-1.14.6.tar.gz
+          tar xf hdf5-1.14.6.tar.gz
+          cd hdf5-1.14.6
+          CC="gcc -m32" ./configure --prefix=$HOME/hdf5-i686 --disable-shared --enable-static \
+                                    --disable-tests --disable-tools
+          make -j2
+          make install
 
       - name: configure with autotools (32-bit)
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules --without-hdf5 \
-                      CC="gcc -m32" FC="gfortran -m32"
+          ./configure --enable-silent-rules \
+                      CC="gcc -m32" FC="gfortran -m32" \
+                      --with-hdf5=$HOME/hdf5-i686
 
       - name: compile TREXIO
         run: make -j2
