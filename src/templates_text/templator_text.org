@@ -492,14 +492,14 @@ trexio_text_read_$group$ (trexio_text_t* const file)
             return NULL;
           }
 
-          /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
-           ,* BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+          /* First pass: measure the total length required to store all the
+           ,* strings contiguously in a single block, instead of assuming an
+           ,* arbitrary maximum string length which could truncate longer
+           ,* strings and overflow the allocated block.
            ,*/
-          char* tmp_$group_dset$;
-          tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
-
+          long pos_$group_dset$ = ftell(f);
+          size_t total_len_$group_dset$ = 0;
           for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-            $group$->$group_dset$[i] = tmp_$group_dset$;
             /* conventional fcanf with "%s" only return the string before the first space character
              ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
              ,*/
@@ -508,11 +508,29 @@ trexio_text_read_$group$ (trexio_text_t* const file)
               trexio_text_free_read_$group$(buffer, f, file, $group$);
               return NULL;
             }
+            total_len_$group_dset$ += strlen(buffer) + 1;
+          }
+          fseek(f, pos_$group_dset$, SEEK_SET);
 
-            size_t tmp_$group_dset$_len = strlen(buffer);
-            strncpy(tmp_$group_dset$, buffer, 32);
-            tmp_$group_dset$[31] = '\0';
-            tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+          char* tmp_$group_dset$;
+          tmp_$group_dset$ = CALLOC(total_len_$group_dset$, char);
+          if (tmp_$group_dset$ == NULL) {
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
+            return NULL;
+          }
+
+          for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
+            $group$->$group_dset$[i] = tmp_$group_dset$;
+
+            rc = fscanf(f, " %1023[^\n]", buffer);
+            if (rc != 1) {
+              trexio_text_free_read_$group$(buffer, f, file, $group$);
+              return NULL;
+            }
+
+            size_t tmp_$group_dset$_len = strlen(buffer) + 1;
+            memcpy(tmp_$group_dset$, buffer, tmp_$group_dset$_len);
+            tmp_$group_dset$ += tmp_$group_dset$_len;
           }
         }
 
@@ -1000,7 +1018,15 @@ trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const u
   $group$->$group_dset$ = CALLOC(dims[0], char*);
   if ($group$->$group_dset$ == NULL) return TREXIO_ALLOCATION_FAILED;
 
-  char* tmp_str = CALLOC(dims[0]*32 + 1, char);
+  /* Compute the exact amount of memory needed to store all the strings
+   ,* contiguously instead of assuming an arbitrary maximum string length,
+   ,* which would silently truncate or overflow longer strings. */
+  size_t tmp_str_size = 0;
+  for (uint64_t i=0 ; i<dims[0] ; ++i) {
+    tmp_str_size += strlen(dset[i]) + 2;
+  }
+
+  char* tmp_str = CALLOC(tmp_str_size, char);
   if (tmp_str == NULL) return TREXIO_ALLOCATION_FAILED;
 
   for (uint64_t i=0 ; i<dims[0] ; ++i) {
