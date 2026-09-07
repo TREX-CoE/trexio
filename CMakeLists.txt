@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.19)
 # Initialize the CMake project. Fortran is enabled conditionally below so that
 # the C library can be built without a Fortran compiler (mirrors the autotools
 # --without-fortran option).
-project(Trexio
+project(trexio
 	VERSION 2.6.1
 	DESCRIPTION "TREX I/O library"
 	HOMEPAGE_URL "https://trex-coe.github.io/trexio/"
@@ -17,6 +17,7 @@ option(BUILD_TESTING "Whether to perform tests for TREXIO" ON)
 
 option(TREXIO_FORTRAN "Build and test the TREXIO Fortran interface" ON)
 option(TREXIO_USE_HDF5 "Enable HDF5 support" ON)
+option(TREXIO_BUILD_DOCS "Build and install documentation" OFF)
 
 # Optional configure for developer mode to generate source code from org-mode files.
 option(TREXIO_DEVEL "TREXIO developer mode (for code generation)." OFF)
@@ -83,6 +84,39 @@ if(TREXIO_DEVEL)
     "${PROJECT_SOURCE_DIR}/include/config.h"
     @ONLY)
 endif()
+
+# ============= DOCUMENTATION =============
+
+if(TREXIO_DEVEL AND TREXIO_BUILD_DOCS)
+  file(GLOB_RECURSE TREXIO_DOC_SOURCES CONFIGURE_DEPENDS
+    "${PROJECT_SOURCE_DIR}/docs/*.org"
+    "${PROJECT_SOURCE_DIR}/src/*.org"
+  )
+  list(APPEND TREXIO_DOC_SOURCES
+    "${PROJECT_SOURCE_DIR}/trex.org"
+    "${PROJECT_SOURCE_DIR}/docs/theme.setup"
+    "${PROJECT_SOURCE_DIR}/tools/emacs/config_doc.el"
+    "${PROJECT_SOURCE_DIR}/tools/emacs/config_tangle.el"
+    "${PROJECT_SOURCE_DIR}/tools/build_doc.sh"
+  )
+  set(TREXIO_DOC_STAMP
+    "${PROJECT_BINARY_DIR}/trexio-doc.stamp"
+  )
+  add_custom_command(
+    OUTPUT "${TREXIO_DOC_STAMP}"
+    COMMAND bash "${PROJECT_SOURCE_DIR}/tools/build_doc.sh"
+    COMMAND "${CMAKE_COMMAND}" -E touch "${TREXIO_DOC_STAMP}"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/tools"
+    DEPENDS ${TREXIO_DOC_SOURCES}
+    COMMENT "Generating HTML documentation from Org files"
+    VERBATIM
+  )
+  add_custom_target(trexio_docs ALL
+    DEPENDS "${TREXIO_DOC_STAMP}"
+  )
+endif()
+
+# ============= BUILD TARGETS =============
 
 # Add subdirectory with add_library(trexio) specifications.
 add_subdirectory(src)
