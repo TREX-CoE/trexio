@@ -79,6 +79,7 @@ ORG_FILES = \
   src/templates_front/templator_front.org \
   src/templates_text/templator_text.org \
   src/templates_memory/templator_memory.org \
+  src/fortran_modules.org \
   trex.org
 
 if HAVE_HDF5
@@ -225,6 +226,7 @@ HTML_TANGLED = docs/index.html            \
                docs/trex.html             \
                docs/README.html           \
                docs/templator_front.html  \
+               docs/fortran_modules.html  \
                docs/templator_text.html
 if HAVE_HDF5
 HTML_TANGLED += docs/templator_hdf5.html

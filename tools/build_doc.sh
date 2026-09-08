@@ -81,7 +81,7 @@ function extract_doc()
       ${org}                     \
       --load ${CONFIG_TANGLE}    \
       -f org-html-export-to-html  &> /dev/null
-    mv -f ${local_html} ${DOCS}
+      [[ ${local_html} = ${DOCS}/$(basename ${local_html}) ]] || mv ${local_html} ${DOCS}
     rm -f "${local_html}~" 
 
 }
