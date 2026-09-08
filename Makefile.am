@@ -79,7 +79,7 @@ ORG_FILES = \
   src/templates_front/templator_front.org \
   src/templates_text/templator_text.org \
   src/templates_memory/templator_memory.org \
-  src/fortran_modules.org \
+  docs/fortran_modules.org \
   trex.org
 
 if HAVE_HDF5
