@@ -16,6 +16,20 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_TESTING "Whether to perform tests for TREXIO" ON)
 
 option(TREXIO_FORTRAN "Build and test the TREXIO Fortran interface" ON)
+
+# A project that adds TREXIO through add_subdirectory() or FetchContent links
+# the trexio_f target, so the Fortran library has to be installed along with the
+# rest of that project; installing the trexio_f.f90 source instead would leave
+# the installed consumer with a dangling dependency. A standalone build defaults
+# to the source, which is what the Autotools build installs as well.
+if(NOT TREXIO_FORTRAN OR CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(_trexio_install_fortran_library_default OFF)
+else()
+  set(_trexio_install_fortran_library_default ON)
+endif()
+option(TREXIO_INSTALL_FORTRAN_LIBRARY
+  "Install the compiled Fortran interface (libtrexio_f and the trexio module file) instead of the trexio_f.f90 source"
+  ${_trexio_install_fortran_library_default})
 option(TREXIO_USE_HDF5 "Enable HDF5 support" ON)
 option(TREXIO_BUILD_DOCS "Build and install documentation" OFF)
 
@@ -24,7 +38,20 @@ option(TREXIO_DEVEL "TREXIO developer mode (for code generation)." OFF)
 
 if(TREXIO_FORTRAN)
   enable_language(Fortran)
+elseif(TREXIO_INSTALL_FORTRAN_LIBRARY)
+  message(FATAL_ERROR
+    "TREXIO_INSTALL_FORTRAN_LIBRARY requires the Fortran interface; "
+    "reconfigure with -DTREXIO_FORTRAN=ON.")
 endif()
+
+include(GNUInstallDirs)
+
+# Fortran module files are specific to the compiler and even to its version, so
+# they cannot be shared the way C headers are. Distributions therefore keep them
+# in a separate directory (e.g. ${CMAKE_INSTALL_LIBDIR}/gfortran/modules), which
+# packagers can select here.
+set(TREXIO_INSTALL_MODULEDIR "${CMAKE_INSTALL_INCLUDEDIR}" CACHE STRING
+  "Installation directory for the Fortran module file, relative to CMAKE_INSTALL_PREFIX unless absolute")
 
 # The C99 requirement is expressed per target on the trexio library (see
 # src/CMakeLists.txt) rather than via the global CMAKE_C_STANDARD variable,

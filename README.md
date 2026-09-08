@@ -215,6 +215,34 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 By default, CMake builds a shared TREXIO library. Pass
 `-DBUILD_SHARED_LIBS=OFF` to build a static library instead.
 
+##### Installing a compiled Fortran interface
+
+In a standalone build, and like the Autotools build, the Fortran interface is
+installed as the `trexio_f.f90` source file in the include directory, and it is
+up to the consumer to compile it. Passing `-DTREXIO_INSTALL_FORTRAN_LIBRARY=ON`
+instead installs a compiled Fortran interface: the `trexio_f` library goes into
+the library directory, and the `trexio` module file into the Fortran module
+directory. Fortran codes can then simply `use trexio` and link against
+`-ltrexio_f`, either through the exported `trexio::trexio_f` CMake target or
+through the installed `trexio_f.pc` pkg-config file.
+
+The option is **on by default when TREXIO is built as a subproject**, i.e. when
+it is pulled in with `add_subdirectory()` or `FetchContent`. Such a project
+links the `trexio_f` target and finds the module in its include path, so the
+library has to be installed together with the rest of that project; installing
+the Fortran source instead would leave the installed consumer with a dangling
+dependency.
+
+Since Fortran module files are specific to the compiler and its version, the
+directory they are installed into can be chosen with
+`-DTREXIO_INSTALL_MODULEDIR=<dir>`; it defaults to the include directory. For
+example, on Fedora one would use
+
+```
+cmake -S. -Bbuild -DTREXIO_INSTALL_FORTRAN_LIBRARY=ON \
+      -DTREXIO_INSTALL_MODULEDIR=lib64/gfortran/modules
+```
+
 **Note**: on systems with no `sudo` access, one can add `-DCMAKE_INSTALL_PREFIX=build` as an argument to the `cmake` command so that `make install/uninstall` can be run without `sudo` privileges.
 
 **Note**: when linking against an MPI-enabled HDF5 library one usually has to specify the MPI wrapper for the C compiler by adding, e.g., `-DCMAKE_C_COMPILER=mpicc` to the `cmake` command.

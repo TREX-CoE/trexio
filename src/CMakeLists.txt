@@ -61,11 +61,16 @@ if(TREXIO_FORTRAN)
   set(_trexio_fortran_module_dir "${CMAKE_CURRENT_BINARY_DIR}/modules")
 
   add_library(trexio_f ${TREXIO_MOD_FILE})
+  add_library(trexio::trexio_f ALIAS trexio_f)
   target_link_libraries(trexio_f PUBLIC trexio::trexio)
   target_include_directories(trexio_f INTERFACE
     $<BUILD_INTERFACE:${_trexio_fortran_module_dir}>
+    $<INSTALL_INTERFACE:${TREXIO_INSTALL_MODULEDIR}>
   )
   set_target_properties(trexio_f PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    POSITION_INDEPENDENT_CODE ON
     Fortran_MODULE_DIRECTORY "${_trexio_fortran_module_dir}"
   )
 endif()
@@ -121,7 +126,28 @@ install(TARGETS trexio
 )
 
 if(TREXIO_FORTRAN)
-  install(FILES ${TREXIO_MOD_FILE} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  if(TREXIO_INSTALL_FORTRAN_LIBRARY)
+    # Install the compiled Fortran interface: the library goes next to the C
+    # one, and the module file it produces goes into the Fortran module
+    # directory. Consumers then link trexio::trexio_f instead of compiling
+    # trexio_f.f90 themselves.
+    install(TARGETS trexio_f
+      EXPORT trexio-targets
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    # The name of the module file is compiler-dependent (trexio.mod or
+    # TREXIO.mod), and some compilers emit additional submodule files, so the
+    # whole module directory is installed rather than a single known file.
+    install(DIRECTORY "${_trexio_fortran_module_dir}/"
+      DESTINATION ${TREXIO_INSTALL_MODULEDIR}
+      FILES_MATCHING PATTERN "*.mod" PATTERN "*.smod"
+    )
+  else()
+    # Legacy behaviour: ship the Fortran source and let the consumer compile it.
+    install(FILES ${TREXIO_MOD_FILE} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  endif()
 endif()
 
 set(_trexio_install_cmakedir "${CMAKE_INSTALL_LIBDIR}/cmake/trexio")
@@ -193,6 +219,11 @@ if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
 else()
   set(TREXIO_PC_INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
+if(IS_ABSOLUTE "${TREXIO_INSTALL_MODULEDIR}")
+  set(TREXIO_PC_MODULEDIR "${TREXIO_INSTALL_MODULEDIR}")
+else()
+  set(TREXIO_PC_MODULEDIR "\${prefix}/${TREXIO_INSTALL_MODULEDIR}")
+endif()
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/trexio.pc.in"
@@ -204,6 +235,20 @@ install(
   FILES "${CMAKE_CURRENT_BINARY_DIR}/trexio.pc"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
+
+# The Fortran interface gets its own module, because it is a separate library
+# and its module file may live outside the include directory.
+if(TREXIO_FORTRAN AND TREXIO_INSTALL_FORTRAN_LIBRARY)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/cmake/trexio_f.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/trexio_f.pc"
+    @ONLY
+  )
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/trexio_f.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+  )
+endif()
 
 # Install documentation
 if(TREXIO_BUILD_DOCS)
