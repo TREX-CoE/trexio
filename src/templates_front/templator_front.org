@@ -4712,6 +4712,7 @@ def has_$group_dset$(trexio_file) -> bool:
 ** Templates for front end has/read/write a dataset of strings
 *** Introduction
    This section concerns API calls related to datasets of strings.
+   Only ASCII strings are supported, for compatibility with C and Fortran.
 
    | Function name               | Description                         |
    |-----------------------------+-------------------------------------|
@@ -5108,6 +5109,8 @@ def write_$group_dset$(trexio_file, dset_w: list) -> None:
     """
 
     max_str_length = len(max(dset_w, key=len)) + 1
+    for s in dset_w:
+        s.encode('ascii')
 
     rc = pytr.trexio_write_$group_dset$(trexio_file.pytrexio_s, dset_w, max_str_length)
     if rc != TREXIO_SUCCESS:
@@ -5629,6 +5632,10 @@ def has_$group_dset$(trexio_file) -> bool:
 *** Introduction
 
    This section concerns API calls related to string attributes.
+   Only ASCII strings are supported, for compatibility with C and Fortran.
+   The Python wrappers enforce this by encoding strings as ASCII before
+   writing; a ~UnicodeEncodeError~ is raised if non-ASCII characters are
+   present.
 
    | Function name              | Description                                  |
    |----------------------------+----------------------------------------------|
@@ -5848,7 +5855,7 @@ def write_$group_str$(trexio_file, str_w: str) -> None:
         - Exception from some other error (e.g. RuntimeError).
     """
 
-    max_str_length = len(str_w) + 1
+    max_str_length = len(str_w.encode('ascii')) + 1
 
     rc = pytr.trexio_write_$group_str$(trexio_file.pytrexio_s, str_w, max_str_length)
     if rc != TREXIO_SUCCESS:
