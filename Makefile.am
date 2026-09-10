@@ -372,23 +372,29 @@ $(numpy_i):
 check-numpy:
 	cd tools && ./check_numpy_i.sh
 
-# Include files needed to produce the debian package.
+# Include distribution packaging files.
+RPM_FILES = \
+  tools/fedora/trexio.spec
+
 DEB_FILES = \
-  helpers-debian/changelog     \
-  helpers-debian/compat        \
-  helpers-debian/control       \
-  helpers-debian/copyright     \
-  helpers-debian/rules         \
-  helpers-debian/source        \
-  helpers-debian/libtrexio0.install \
-  helpers-debian/libtrexio-dev.install \
-  helpers-debian/source        \
-  helpers-debian/README.source
+  tools/debian/changelog     \
+  tools/debian/compat        \
+  tools/debian/control       \
+  tools/debian/copyright     \
+  tools/debian/rules         \
+  tools/debian/source        \
+  tools/debian/libtrexio0.install \
+  tools/debian/libtrexio-dev.install \
+  tools/debian/source        \
+  tools/debian/README.source
 
-debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
-	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
-	debuild
+NIX_FILES = \
+  flake.nix \
+  flake.lock \
+  tools/nix/overlay.nix \
+  tools/nix/trexio.nix
 
+EXTRA_DIST += $(DEB_FILES) $(RPM_FILES) $(NIX_FILES)
 
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
