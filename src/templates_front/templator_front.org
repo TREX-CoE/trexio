@@ -1691,6 +1691,10 @@ def _open(file_name: str, mode: str, back_end: int):
                 assert trexio_file is not None
 
             return trexio_file
+    except Error:
+        # the C library already told us what went wrong (e.g. that the requested
+        # back end is disabled), so do not mask it behind TREXIO_FILE_ERROR
+        raise
     except:
         raise Error(18) # 18 is an error code for encountering an invalid file
    #+end_src
