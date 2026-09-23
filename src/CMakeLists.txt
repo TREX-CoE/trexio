@@ -82,6 +82,77 @@ if(TREXIO_FORTRAN)
   )
 endif()
 
+# ============= PYTHON SUPPORT ==============
+
+if(TREXIO_PYTHON)
+  set(TREXIO_SWIG_WRAPPER "${CMAKE_CURRENT_SOURCE_DIR}/pytrexio_wrap.c")
+  set(TREXIO_SWIG_MODULE "${CMAKE_CURRENT_SOURCE_DIR}/pytrexio.py")
+
+  # Python modules are tied to the interpreter that imports them, so they are
+  # installed next to the library rather than into the include directory.
+  set(TREXIO_INSTALL_PYTHONDIR
+    "${CMAKE_INSTALL_LIBDIR}/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages"
+    CACHE STRING
+    "Installation directory for the Python interface, relative to CMAKE_INSTALL_PREFIX unless absolute")
+
+  # The wrapper is shipped in the distribution, so SWIG is only needed when it is
+  # missing or when it has to be regenerated in developer mode. It is written to
+  # the build directory rather than next to the sources, so that a CMake build
+  # never competes with the Autotools one over the same generated files.
+  if(TREXIO_DEVEL OR NOT EXISTS "${TREXIO_SWIG_WRAPPER}")
+    find_program(SWIG_EXECUTABLE NAMES swig REQUIRED)
+    set(TREXIO_SWIG_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/pytrexio_wrap.c")
+    set(TREXIO_SWIG_MODULE "${CMAKE_CURRENT_BINARY_DIR}/pytrexio.py")
+    add_custom_command(
+      OUTPUT "${TREXIO_SWIG_WRAPPER}" "${TREXIO_SWIG_MODULE}"
+      COMMAND "${SWIG_EXECUTABLE}" -python
+              -I${PROJECT_SOURCE_DIR}/include
+              -I${CMAKE_CURRENT_SOURCE_DIR}
+              -o "${TREXIO_SWIG_WRAPPER}"
+              -outdir "${CMAKE_CURRENT_BINARY_DIR}"
+              "${CMAKE_CURRENT_SOURCE_DIR}/pytrexio.i"
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/pytrexio.i"
+              "${CMAKE_CURRENT_SOURCE_DIR}/numpy.i"
+              ${TREXIO_PUBLIC_HEADERS}
+      COMMENT "Generating the Python interface with SWIG"
+      VERBATIM)
+  endif()
+
+  # No SOABI suffix, so that both build systems produce the same _pytrexio.so.
+  Python3_add_library(_pytrexio MODULE "${TREXIO_SWIG_WRAPPER}")
+  target_link_libraries(_pytrexio PRIVATE trexio::trexio Python3::NumPy)
+
+  # Let the installed module find libtrexio inside the same prefix, so that
+  # importing it does not depend on LD_LIBRARY_PATH. The path is computed rather
+  # than hardcoded, so that it still holds when TREXIO_INSTALL_PYTHONDIR is
+  # pointed somewhere else.
+  if(NOT IS_ABSOLUTE "${TREXIO_INSTALL_PYTHONDIR}" AND NOT IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
+    file(RELATIVE_PATH _trexio_module_to_libdir
+      "${CMAKE_INSTALL_PREFIX}/${TREXIO_INSTALL_PYTHONDIR}/pytrexio"
+      "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+    if(APPLE)
+      set_target_properties(_pytrexio PROPERTIES
+        INSTALL_RPATH "@loader_path/${_trexio_module_to_libdir}")
+    else()
+      set_target_properties(_pytrexio PROPERTIES
+        INSTALL_RPATH "$ORIGIN/${_trexio_module_to_libdir}")
+    endif()
+  endif()
+
+  install(TARGETS _pytrexio
+    LIBRARY DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/pytrexio"
+  )
+  install(FILES "${PROJECT_SOURCE_DIR}/src/trexio.py"
+    DESTINATION "${TREXIO_INSTALL_PYTHONDIR}"
+  )
+  install(FILES
+      "${PROJECT_SOURCE_DIR}/python/pytrexio/__init__.py"
+      "${PROJECT_SOURCE_DIR}/python/pytrexio/_version.py"
+      "${TREXIO_SWIG_MODULE}"
+    DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/pytrexio"
+  )
+endif()
+
 # ====== CODE GENERATION FOR DEVEL MODE =====
 
 if(TREXIO_DEVEL)

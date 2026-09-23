@@ -248,6 +248,124 @@ $(HTML_TANGLED): $(htmlizer)
 html-local: $(dist_html_DATA)
 doc: html-local
 
+# =============== PYTHON API =============== #
+
+# SWIG output, generated in maintainer mode and shipped in the distribution.
+pytrexio_c    = src/pytrexio_wrap.c
+pytrexio_py   = src/pytrexio.py
+trexio_py     = src/trexio.py
+pytrexio_i    = src/pytrexio.i
+numpy_i       = src/numpy.i
+
+# Files of the standalone (PyPI) build, which compiles the library itself
+# because a wheel cannot run configure.
+setup_py      = python/setup.py
+setup_cfg     = python/setup.cfg
+python_pkg_py = python/pytrexio/pytrexio.py
+TEST_PY       = python/test/test_api.py python/test/test_memory.py
+
+# Distributed unconditionally, so that a tarball made without --enable-python
+# can still be configured with it.
+EXTRA_DIST += $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(pytrexio_i) $(numpy_i) \
+              $(setup_py) $(setup_cfg) \
+              python/MANIFEST.in \
+              python/README.md \
+              python/requirements.txt \
+              python/pyproject.toml \
+              python/pytrexio/__init__.py \
+              python/pytrexio/_version.py \
+              python/test/benzene_data.py \
+              python/test/conftest.py \
+              $(TEST_PY)
+
+if HAVE_PYTHON
+
+# The extension module is compiled from the SWIG wrapper and linked against the
+# TREXIO library built here, instead of compiling a second copy of the library
+# the way setup.py has to.
+# The package carries a compiled extension, so all of it is installed into the
+# platform-specific directory: on a system where pythondir and pyexecdir differ
+# (lib versus lib64), a regular package split across the two cannot be imported,
+# and this also keeps the whole API under a single PYTHONPATH entry.
+trexiomoddir    = $(pyexecdir)
+pytrexiodir     = $(pyexecdir)/pytrexio
+pytrexioexecdir = $(pyexecdir)/pytrexio
+
+nodist_trexiomod_PYTHON = $(trexio_py)
+nodist_pytrexio_PYTHON  = python/pytrexio/__init__.py \
+                          python/pytrexio/_version.py \
+                          $(pytrexio_py)
+
+pytrexioexec_LTLIBRARIES     = _pytrexio.la
+nodist__pytrexio_la_SOURCES  = $(pytrexio_c)
+_pytrexio_la_CPPFLAGS        = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS) $(NUMPY_CPPFLAGS)
+_pytrexio_la_LDFLAGS         = -module -avoid-version -shared
+_pytrexio_la_LIBADD          = src/libtrexio.la
+
+# A libtool archive is of no use inside a Python package.
+install-exec-hook:
+	$(RM) -f -- $(DESTDIR)$(pytrexioexecdir)/_pytrexio.la
+
+endif
+
+# The standalone build compiles the library itself, so it needs its own copy of
+# the C sources beside the SWIG wrapper. This staging step used to live in
+# tools/prepare_python.sh.
+PYTHON_STAGED_FILES = src/trexio.c \
+                      src/trexio_s.h \
+                      src/trexio_private.h \
+                      src/trexio_text.c \
+                      src/trexio_text.h \
+                      src/trexio_memory.c \
+                      src/trexio_memory.h
+if HAVE_HDF5
+PYTHON_STAGED_FILES += src/trexio_hdf5.c src/trexio_hdf5.h
+endif
+
+$(python_pkg_py): $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(trexio_h)
+	$(MKDIR_P) $(srcdir)/python/src $(srcdir)/python/pytrexio
+	cp -f $(srcdir)/$(pytrexio_py) $(srcdir)/python/pytrexio/pytrexio.py
+	cp -f $(srcdir)/$(trexio_py) $(srcdir)/python/trexio.py
+	for f in $(PYTHON_STAGED_FILES) $(pytrexio_c) $(trexio_h) ; do \
+	  cp -f $(srcdir)/$$f $(srcdir)/python/src/ || exit 1 ; \
+	done
+	cp -f include/config.h $(srcdir)/python/src/
+	cp -f $(srcdir)/AUTHORS $(srcdir)/LICENSE $(srcdir)/python/
+
+# Legacy target: build a wheel with pip and install it into the active Python
+# environment, for users who want a pip-managed installation instead of the one
+# produced by --enable-python. The HDF5 flags are the ones configure found, so
+# no separate detection script is needed.
+python-install: $(python_pkg_py) $(setup_py) $(setup_cfg)
+	cd python && \
+	  python3 -m pip install build && \
+	  python3 -m pip install -r requirements.txt && \
+	  python3 -m pip install pytest && \
+	  H5_CFLAGS="$(HDF5_CFLAGS) $(HDF5_CPPFLAGS)" \
+	  H5_LDFLAGS="$(HDF5_LDFLAGS)" \
+	  python3 -m build --wheel --outdir dist/ && \
+	  python3 -m pip install dist/trexio-*.whl --force-reinstall
+	$(RM) -rf -- python/build python/trexio.egg-info
+
+python-sdist: $(python_pkg_py) $(setup_py) $(setup_cfg)
+	cd python && \
+		python3 -m build --sdist
+
+if HAVE_HDF5
+python-test: $(TEST_PY)
+	python3 -m pytest -v --all $(TEST_PY)
+	$(RM) -r  -- __pycache__
+	$(RM) -f  -- test_file_py.h5 unsafe_test_file_py.h5
+	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
+else
+python-test: $(TEST_PY)
+	python3 -m pytest -v $(TEST_PY)
+	$(RM) -r  -- __pycache__
+	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
+endif
+
+.PHONY: python-test python-install python-sdist cppcheck check-numpy FORCE ocaml
+
 # =============== DEVELOPER MODE =============== #
 
 SWIG          = @SWIG@
@@ -315,52 +433,11 @@ ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
 # Python binding #
 ##################
 
-setup_py      = $(srcdir)/python/setup.py
-setup_cfg     = $(srcdir)/python/setup.cfg
-pytrexio_py   = $(srcdir)/python/pytrexio/pytrexio.py
-trexio_py     = $(srcdir)/python/trexio.py
-TEST_PY       = python/test/test_api.py python/test/test_memory.py
-pytrexio_c    = $(srcdir)/src/pytrexio_wrap.c
-pytrexio_i    = $(srcdir)/src/pytrexio.i
-numpy_i       = $(srcdir)/src/numpy.i
-
-
-if HAVE_HDF5
-python-test: $(TEST_PY)
-	python3 -m pytest -v --all $(TEST_PY)
-	$(RM) -r  -- __pycache__
-	$(RM) -f  -- test_file_py.h5 unsafe_test_file_py.h5
-	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
-else
-python-test: $(TEST_PY)
-	python3 -m pytest -v $(TEST_PY)
-	$(RM) -r  -- __pycache__
-	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
-endif
-
-python-install: $(pytrexio_py) $(setup_py) $(setup_cfg)
-	cd python && \
-		./install_pytrexio.sh $(HDF5_CFLAGS) $(HDF5_CPPFLAGS) $(HDF5_LDFLAGS)
-
-python-sdist: $(pytrexio_py) $(setup_py) $(setup_cfg)
-	cd python && \
-		python3 -m build --sdist
-
-if HAVE_HDF5
-$(pytrexio_py): $(pytrexio_c)
-	cd tools && ./prepare_python.sh
-else
-$(pytrexio_py): $(pytrexio_c)
-	cd tools && ./prepare_python.sh --without-hdf5
-endif
-
 # Build Python module and C wrapper code for TREXIO using SWIG
-$(pytrexio_c): FORCE $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
+$(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	@if [[ $(SWIG).x != ".x" ]] ; then \
-	cp $(trexio_h) src/ ; \
-	cd src/ && \
-		$(SWIG) -python -py3 -o pytrexio_wrap.c pytrexio.i ; \
-	$(RM) -- src/trexio.h ;\
+	cd $(srcdir)/src/ && \
+		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i ; \
 	else echo "Error: SWIG is not installed" ; \
 	exit 1 ; \
 	fi
@@ -390,15 +467,16 @@ debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
 	debuild
 
 
+# The SWIG output and the staged copies are regenerated from the org sources in
+# maintainer mode, so they are cleaned only here and not in a distribution build,
+# where they are shipped rather than built.
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
               $(trexio_py) \
-              $(srcdir)/src/trexio.py \
-              $(srcdir)/src/pytrexio.py \
-              $(srcdir)/src/trexio.h \
+              $(srcdir)/python/trexio.py \
+              $(srcdir)/$(python_pkg_py) \
               python/src/*.c \
               python/src/*.h
 
-.PHONY: cppcheck python-test python-install python-sdist check-numpy FORCE ocaml
 
 endif

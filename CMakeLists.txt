@@ -16,6 +16,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_TESTING "Whether to perform tests for TREXIO" ON)
 
 option(TREXIO_FORTRAN "Build and test the TREXIO Fortran interface" ON)
+option(TREXIO_PYTHON "Build and install the TREXIO Python interface" OFF)
 option(TREXIO_USE_HDF5 "Enable HDF5 support" ON)
 option(TREXIO_BUILD_DOCS "Build and install documentation" OFF)
 
@@ -51,6 +52,13 @@ endif()
 if(TREXIO_FORTRAN)
   include(FortranCInterface)
   FortranCInterface_VERIFY()
+endif()
+
+# The Python extension module is compiled from the SWIG wrapper and linked
+# against the TREXIO library built here, so the Python and NumPy headers are
+# needed in addition to the interpreter.
+if(TREXIO_PYTHON)
+  find_package(Python3 3.6 REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 endif()
 
 set(TREXIO_MOD_FILE "${PROJECT_SOURCE_DIR}/include/trexio_f.f90")

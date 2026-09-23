@@ -316,12 +316,39 @@ requirements.
 For more details regarding the installation and usage of the TREXIO Python API,
 see [this page](python/README.md).
 
-The aforementioned instructions are adapted for users installing from the source code distribution (periodically updated).
-In order to install the Python API with the latest changes, follow the developer installation guide and run the following command in the end
+The instructions on that page are for installing the Python API on its own, with
+`pip`, from the source distribution published on PyPI. That build compiles its
+own copy of the TREXIO library, because a wheel cannot run `configure`.
+
+The Python interface can also be built and installed together with the rest of
+the library, in which case the extension module links against the `libtrexio`
+built alongside it instead of compiling the sources a second time. It is off by
+default; enable it with
+
+- `./configure --enable-python`
+- `cmake -S. -Bbuild -DTREXIO_PYTHON=ON`
+
+`make` then builds the extension with the other objects, and `make install`
+installs `trexio.py` and the `pytrexio` package under the installation prefix,
+in `$prefix/lib/python<X.Y>/site-packages`. Since that is usually not on the
+default module search path, add it to `PYTHONPATH`, or point the installation at
+the interpreter's own directory:
+
+- `./configure --enable-python pythondir=... pyexecdir=...`
+- `cmake -S. -Bbuild -DTREXIO_PYTHON=ON -DTREXIO_INSTALL_PYTHONDIR=...`
+
+Building this way needs the Python development headers and NumPy. SWIG is
+needed only when the generated wrapper has to be regenerated, which is the case
+in a Git checkout but not in a release tarball, where it is shipped.
+
+The older
 
 ```
 make python-install
 ```
+
+target is still available. It builds a wheel with `pip` and installs it into the
+active Python environment, using the HDF5 flags that `configure` already found.
 
 **Note: this implies that SWIG is installed and available.**
 
