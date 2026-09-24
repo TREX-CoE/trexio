@@ -62,8 +62,15 @@ endif()
 
 if(TREXIO_DEVEL)
   find_package(Python3 3.6 REQUIRED COMPONENTS Interpreter)
-  find_program(EMACS_EXECUTABLE NAMES emacs REQUIRED)
-  message(STATUS "Emacs executable: ${EMACS_EXECUTABLE}")
+  # Emacs no longer generates the sources, which tools/generate.py does in
+  # Python. It is still what exports the org files to HTML, so it is only
+  # required when the documentation is being built.
+  find_program(EMACS_EXECUTABLE NAMES emacs)
+  if(EMACS_EXECUTABLE)
+    message(STATUS "Emacs executable: ${EMACS_EXECUTABLE}")
+  else()
+    message(STATUS "Emacs not found: the documentation cannot be built")
+  endif()
   # In case Git is not available, default to "unknown".
   set(GIT_HASH "unknown")
   find_package(Git QUIET)
@@ -86,6 +93,12 @@ if(TREXIO_DEVEL)
 endif()
 
 # ============= DOCUMENTATION =============
+
+if(TREXIO_DEVEL AND TREXIO_BUILD_DOCS AND NOT EMACS_EXECUTABLE)
+  message(FATAL_ERROR
+    "TREXIO_BUILD_DOCS needs Emacs to export the org files to HTML, and it was "
+    "not found. Install it, or configure with -DTREXIO_BUILD_DOCS=OFF.")
+endif()
 
 if(TREXIO_DEVEL AND TREXIO_BUILD_DOCS)
   file(GLOB_RECURSE TREXIO_DOC_SOURCES CONFIGURE_DEPENDS
