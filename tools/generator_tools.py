@@ -14,10 +14,15 @@ def read_json(fname: str) -> dict:
             Returns:
                     config (dict)   : full configuration dictionary loaded from the input file
     """
-    fileDir = dirname(abspath(__file__))
-    parentDir = dirname(fileDir)
+    if isfile(fname):
+        path = fname
+    else:
+        # Historically the file was looked up next to the source tree, which
+        # required this module to be copied into src/ before running. A path
+        # given directly is used as it stands.
+        path = join(dirname(dirname(abspath(__file__))), fname)
 
-    with open(join(parentDir,fname), 'r') as f:
+    with open(path, 'r') as f:
         config = json_load(f)
 
     return config
@@ -74,7 +79,7 @@ def get_source_files(paths: dict) -> dict:
     return file_dict
 
 
-def get_template_paths(source: list) -> dict:
+def get_template_paths(source: list, base: str = None) -> dict:
     """
     Build dictionary of the absolute paths to directory with templates per source.
 
@@ -84,11 +89,15 @@ def get_template_paths(source: list) -> dict:
             Returns:
                     path_dict (dict) : dictionary with source title : absolute path as key-value pairs
     """
-    fileDir = dirname(abspath(__file__))
+    if base is None:
+        # As above: without a directory to work from, the templates are assumed
+        # to sit next to this module.
+        base = dirname(abspath(__file__))
+
     path_dict = {}
 
     for dir in source:
-        path_dict[dir] = join(fileDir,f'templates_{dir}')
+        path_dict[dir] = join(base,f'templates_{dir}')
 
     return path_dict
 

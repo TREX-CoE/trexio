@@ -210,26 +210,15 @@ def clean_templates(directory):
 
 
 def run_generator(root):
-    """Populate the templates with generator.py.
-
-    The generator resolves trex.json relative to the parent of its own
-    directory, so it is copied into src/ and run there, exactly as
-    build_trexio.sh did. Teaching it to take a path would be a better fix and is
-    left for later.
-    """
-    src = os.path.join(root, 'src')
+    """Populate the templates with generator.py, in place."""
     tools = os.path.join(root, 'tools')
-    copied = []
-    for name in ('generator.py', 'generator_tools.py'):
-        destination = os.path.join(src, name)
-        shutil.copy(os.path.join(tools, name), destination)
-        copied.append(destination)
     try:
-        subprocess.run([sys.executable, 'generator.py'], cwd=src, check=True)
+        subprocess.run([sys.executable,
+                        os.path.join(tools, 'generator.py'),
+                        '--json', os.path.join(root, 'trex.json'),
+                        '--src', os.path.join(root, 'src')], check=True)
     finally:
-        for path in copied:
-            os.remove(path)
-        shutil.rmtree(os.path.join(src, '__pycache__'), ignore_errors=True)
+        shutil.rmtree(os.path.join(tools, '__pycache__'), ignore_errors=True)
 
 
 def assemble(root, backend, config_h):

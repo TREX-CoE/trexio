@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
+import argparse
+
 from generator_tools import *
 
+# The paths are arguments rather than assumptions about where this file sits, so
+# that it can be run from the tools directory instead of being copied into src/.
+parser = argparse.ArgumentParser(description='Populate the TREXIO templates.')
+parser.add_argument('--json', default='trex.json',
+                    help='the trex.json to read (default: beside the source tree)')
+parser.add_argument('--src', default=None,
+                    help='directory holding the templates_* directories')
+options = parser.parse_args()
+
 # --------------------- GET CONFIGURATION FROM THE TREX.JSON ---------------- #
-config_file = 'trex.json'
+config_file = options.json
 trex_config = read_json(config_file)
 # --------------------------------------------------------------------------- #
 
@@ -29,7 +40,7 @@ check_dim_consistency(detailed_nums, dsets)
 # -------------------- GET TEMPLATED FILES TO BE POPULATED ------------------ #
 source = ['front', 'text', 'hdf5', 'memory']
 # build helper dictionaries with paths per source directory
-template_paths = get_template_paths(source)
+template_paths = get_template_paths(source, options.src)
 # build helper dictionaries with source files per source directory
 source_files = get_source_files(template_paths)
 # build helper dictionaries with templated files
