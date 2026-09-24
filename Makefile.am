@@ -212,6 +212,7 @@ endif
 
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/
+	-rm -rf -- python-test-package python/test/__pycache__
 
 # =============== GUIX MANIFEST =============== #
 
@@ -350,6 +351,42 @@ python-install: $(python_pkg_py) $(setup_py) $(setup_cfg)
 python-sdist: $(python_pkg_py) $(setup_py) $(setup_cfg)
 	cd python && \
 		python3 -m build --sdist
+
+# Stage the freshly built module so that both `make check` and the manual
+# python-test target import what was just compiled, rather than whatever copy of
+# TREXIO happens to be installed on the system.
+if HAVE_PYTHON
+PYTHON_TEST_PKG = python-test-package
+
+$(PYTHON_TEST_PKG)/pytrexio/_pytrexio.so: _pytrexio.la
+	$(MKDIR_P) $(PYTHON_TEST_PKG)/pytrexio
+	cp -f $(srcdir)/$(trexio_py) $(PYTHON_TEST_PKG)/
+	cp -f $(srcdir)/$(pytrexio_py) $(PYTHON_TEST_PKG)/pytrexio/
+	cp -f $(srcdir)/python/pytrexio/__init__.py $(PYTHON_TEST_PKG)/pytrexio/
+	cp -f $(srcdir)/python/pytrexio/_version.py $(PYTHON_TEST_PKG)/pytrexio/
+	cp -f .libs/_pytrexio.so $(PYTHON_TEST_PKG)/pytrexio/
+
+# Run the Python tests as part of `make check`, but only when pytest is
+# available: it is a test-only dependency and not everyone building the library
+# will have it.
+check-local: $(PYTHON_TEST_PKG)/pytrexio/_pytrexio.so
+	@if $(PYTHON) -c "import pytest" 2>/dev/null ; then \
+	  echo "  PYTEST   Python API" ; \
+	  PYTHONPATH="$(abs_builddir)/$(PYTHON_TEST_PKG)$${PYTHONPATH:+:$$PYTHONPATH}" \
+	    $(PYTHON) -m pytest -v $(PYTEST_FLAGS) $(TEST_PY) ; \
+	else \
+	  echo "  SKIP     Python API tests (pytest is not installed)" ; \
+	fi
+	-$(RM) -rf -- __pycache__ python/test/__pycache__
+	-$(RM) -rf -- test_file_py.h5 unsafe_test_file_py.h5
+	-$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
+endif
+
+if HAVE_HDF5
+PYTEST_FLAGS = --all
+else
+PYTEST_FLAGS =
+endif
 
 if HAVE_HDF5
 python-test: $(TEST_PY)

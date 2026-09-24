@@ -121,6 +121,27 @@ if(TREXIO_PYTHON)
   # No SOABI suffix, so that both build systems produce the same _pytrexio.so.
   Python3_add_library(_pytrexio MODULE "${TREXIO_SWIG_WRAPPER}")
   target_link_libraries(_pytrexio PRIVATE trexio::trexio Python3::NumPy)
+  # The wrapper includes trexio_s.h, a private header, which it no longer sits
+  # next to once it is generated into the build tree.
+  target_include_directories(_pytrexio PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  # Assemble an importable copy of the package in the build tree, so that the
+  # tests exercise what was just built instead of an installed copy.
+  set(TREXIO_PYTHON_TEST_PKG "${PROJECT_BINARY_DIR}/python-test-package"
+      CACHE INTERNAL "Staged Python package used by the test suite")
+  set_target_properties(_pytrexio PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${TREXIO_PYTHON_TEST_PKG}/pytrexio")
+  add_custom_command(TARGET _pytrexio POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${TREXIO_PYTHON_TEST_PKG}/pytrexio"
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/src/trexio.py" "${TREXIO_PYTHON_TEST_PKG}/"
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${TREXIO_SWIG_MODULE}"
+            "${PROJECT_SOURCE_DIR}/python/pytrexio/__init__.py"
+            "${PROJECT_SOURCE_DIR}/python/pytrexio/_version.py"
+            "${TREXIO_PYTHON_TEST_PKG}/pytrexio/"
+    COMMENT "Staging the Python package for the test suite"
+    VERBATIM)
 
   # Let the installed module find libtrexio inside the same prefix, so that
   # importing it does not depend on LD_LIBRARY_PATH. The path is computed rather

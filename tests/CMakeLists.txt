@@ -58,6 +58,31 @@ if(WIN32 AND BUILD_SHARED_LIBS)
     RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:trexio>")
 endif()
 
+# Run the Python test suite against the module staged in the build tree. pytest
+# is a test-only dependency, so the tests are only registered when it is there.
+if(TREXIO_PYTHON)
+  execute_process(
+    COMMAND "${Python3_EXECUTABLE}" -c "import pytest"
+    RESULT_VARIABLE _trexio_have_pytest
+    OUTPUT_QUIET ERROR_QUIET)
+  if(_trexio_have_pytest EQUAL 0)
+    if(TREXIO_USE_HDF5)
+      set(_trexio_pytest_flags --all)
+    else()
+      set(_trexio_pytest_flags "")
+    endif()
+    add_test(NAME python_api
+      COMMAND "${Python3_EXECUTABLE}" -m pytest -v ${_trexio_pytest_flags}
+              "${PROJECT_SOURCE_DIR}/python/test/test_api.py"
+              "${PROJECT_SOURCE_DIR}/python/test/test_memory.py"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    set_tests_properties(python_api PROPERTIES
+      ENVIRONMENT "PYTHONPATH=${TREXIO_PYTHON_TEST_PKG}")
+  else()
+    message(STATUS "pytest not found: the Python API tests will not be run")
+  endif()
+endif()
+
 # Add Fortran test and link it with trexio_f (Fortran module) library.
 if(TREXIO_FORTRAN)
   add_executable(test_f test_f.f90)
