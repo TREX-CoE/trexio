@@ -51,13 +51,8 @@ foreach(Test ${Tests})
   add_test(NAME ${Test} COMMAND $<TARGET_FILE:${Test}>)
 endforeach()
 
-# Windows has no RPATH: an executable finds trexio.dll only if the DLL sits in
-# the executable's own directory or on PATH. The library is built into
-# <build>/src while the tests are built here, so without this every test aborts
-# at startup with STATUS_DLL_NOT_FOUND (0xC0000135). Placing the test binaries
-# next to the DLL leaves their working directory untouched, so the files the
-# tests create still land in <build>/tests. The generator expression also keeps
-# multi-config generators from appending a second per-config subdirectory.
+# Windows has no RPATH so place the test binaries next to the DLL to avoid all
+# aborting with STATUS_DLL_NOT_FOUND (0xC0000135).
 if(WIN32 AND BUILD_SHARED_LIBS)
   set_target_properties(${Tests} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:trexio>")

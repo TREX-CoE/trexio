@@ -175,9 +175,9 @@ link against a non-MPI (serial) version of the HDF5 library for the sake of
 simplicity.
 
 Building the library on Windows is possible through CMake from the release tarball
-(not in developer mode from repository). Use `cmake -S. -Bbuild -GNinja` and
-`cmake --build build --target install`, as well as any other options. Tested with
-clang-cl, HDF5, and no Fortran.
+(not in developer mode from repository). Use `cmake -S. -Bbuild -GNinja
+-DTREXIO_FORTRAN=OFF` and `cmake --build build --target install`, as well as any
+other options. Tested with clang-cl, HDF5, and no Fortran.
 
 #### Compilation without the HDF5 library
 
