@@ -62,31 +62,76 @@ def unescape(lines):
     return [RE_ESCAPED.sub(r'\1\2', l) for l in lines]
 
 
+TAB_WIDTH = 8
+
+
+def indent_columns(line):
+    """Width of a line's leading whitespace in columns, counting tabs as 8."""
+    column = 0
+    for char in line:
+        if char == ' ':
+            column += 1
+        elif char == '\t':
+            column += TAB_WIDTH - (column % TAB_WIDTH)
+        else:
+            break
+    return column
+
+
+def strip_columns(line, cut):
+    """Remove `cut` columns of leading whitespace.
+
+    Whitespace is consumed character by character. A tab that would take the
+    count past `cut` cannot be split, so it and the rest of the line are left
+    alone -- which is why a tab-indented line among space-indented ones comes
+    through untouched.
+    """
+    column, index = 0, 0
+    while index < len(line) and column < cut:
+        char = line[index]
+        if char == ' ':
+            advance = column + 1
+        elif char == '\t':
+            advance = column + TAB_WIDTH - (column % TAB_WIDTH)
+        else:
+            break
+        if advance > cut:
+            break
+        column, index = advance, index + 1
+    return line[index:]
+
+
 def remove_indentation(lines):
     """Reproduce how Org dedents a source block body.
 
-    Established by experiment against ``org-babel-tangle``: the smallest
-    indentation found among all non-blank lines is removed from every line, and
-    the first line additionally loses whatever leading whitespace it still has.
+    Established by running ``org-babel-tangle`` on test inputs: the smallest
+    indentation among the non-blank lines is found in columns, that many columns
+    are removed from each line, and the first line additionally loses whatever
+    leading whitespace remains.
 
-    So a body indented 2/2/2 comes out 0/0/0, one indented 6/4/6 comes out
-    0/0/2, and one indented 0/4/4 -- a Python function with a docstring -- is
-    left alone apart from its already-flush first line.
+    Measuring in columns rather than characters is what makes the mixed
+    indentation in trex.org come out right -- its stored blocks combine tabs and
+    spaces, because Emacs re-indented them when inserting the results.
     """
     if not lines:
         return lines
-    widths = [len(l) - len(l.lstrip()) for l in lines if l.strip()]
+    widths = [indent_columns(l) for l in lines if l.strip()]
     cut = min(widths) if widths else 0
-    out = [l[cut:] if l.strip() else l for l in lines]
+    out = [strip_columns(l, cut) if l.strip() else l for l in lines]
     out[0] = out[0].lstrip()
     return out
 
 
 def parse(path):
     """Return (blocks, tables) for one Org file."""
-    blocks, tables = [], {}
     with open(path, encoding='utf-8') as handle:
-        lines = handle.read().split('\n')
+        return parse_text(handle.read())
+
+
+def parse_text(text):
+    """Return (blocks, tables) for Org markup held in a string."""
+    blocks, tables = [], {}
+    lines = text.split('\n')
 
     pending_name = None
     index = 0
