@@ -31,6 +31,169 @@ import org_tangle                                       # noqa: E402
 BACKENDS = ('front', 'text', 'hdf5', 'memory')
 
 
+# --- assembling the library sources -----------------------------------------
+#
+# What each back end's build.sh used to do with cat and shell globbing. The
+# order matters and is preserved exactly; a glob expands in sorted order, as the
+# shell did.
+
+CONFIG_DEFAULTS = {
+    'PACKAGE_VERSION': "'0.0.0'",
+    'VERSION_MAJOR': '0',
+    'VERSION_MINOR': '0',
+    'VERSION_PATCH': '0',
+    'GIT_HASH': "'0000'",
+}
+
+
+def config_values(config_h):
+    """Read the version and the git hash out of the generated config.h.
+
+    Mirrors `grep KEY config.h | cut -d " " -f 3`, including the placeholders
+    the shell substituted when a value was missing, so that a build without a
+    config.h still produces the same output it used to.
+    """
+    values = dict(CONFIG_DEFAULTS)
+    if not config_h or not os.path.exists(config_h):
+        return values
+    with open(config_h, encoding='utf-8') as handle:
+        lines = handle.read().split('\n')
+    for key in CONFIG_DEFAULTS:
+        for line in lines:
+            if key in line:
+                fields = line.split(' ')
+                if len(fields) >= 3 and fields[2]:
+                    values[key] = fields[2]
+                break
+    return values
+
+
+def expand(directory, pattern):
+    """Resolve one source name, which may be a glob."""
+    if any(character in pattern for character in '*?['):
+        matches = sorted(glob.glob(os.path.join(directory, pattern)))
+        if not matches:
+            raise SystemExit('generate: nothing matches %s in %s'
+                             % (pattern, directory))
+        return matches
+    return [os.path.join(directory, pattern)]
+
+
+def cat(directory, target, sources, truncate=False):
+    """Append the sources to the target, or write it from scratch."""
+    with open(os.path.join(directory, target), 'wb' if truncate else 'ab') as out:
+        for source in sources:
+            for path in expand(directory, source):
+                with open(path, 'rb') as handle:
+                    out.write(handle.read())
+
+
+def append_lines(directory, target, lines):
+    with open(os.path.join(directory, target), 'a', encoding='utf-8') as out:
+        for line in lines:
+            out.write(line + '\n')
+
+
+def assemble_front(directory, version):
+    cat(directory, 'trexio.c', ['prefix_front.c'], truncate=True)
+    cat(directory, 'trexio.h', ['prefix_front.h'], truncate=True)
+    append_lines(directory, 'trexio.h', [
+        '',
+        '#define TREXIO_PACKAGE_VERSION %s' % version['PACKAGE_VERSION'],
+        '#define TREXIO_VERSION_MAJOR %s' % version['VERSION_MAJOR'],
+        '#define TREXIO_VERSION_MINOR %s' % version['VERSION_MINOR'],
+        '#define TREXIO_VERSION_PATCH %s' % version['VERSION_PATCH'],
+        '#define TREXIO_GIT_HASH %s' % version['GIT_HASH'],
+        '',
+    ])
+    cat(directory, 'trexio_s.h', ['prefix_s_front.h'], truncate=True)
+    cat(directory, 'trexio_f.f90', ['prefix_fortran.f90'], truncate=True)
+    cat(directory, 'trexio.py', ['prefix_python.py'], truncate=True)
+    append_lines(directory, 'trexio_f.f90', [
+        '',
+        'character(len = 12) :: TREXIO_PACKAGE_VERSION = %s'
+        % version['PACKAGE_VERSION'],
+        'integer :: TREXIO_VERSION_MAJOR = %s' % version['VERSION_MAJOR'],
+        'integer :: TREXIO_VERSION_MINOR = %s' % version['VERSION_MINOR'],
+        'integer :: TREXIO_VERSION_PATCH = %s' % version['VERSION_PATCH'],
+        'character(len = 64) :: TREXIO_GIT_HASH = %s' % version['GIT_HASH'],
+        '',
+    ])
+    cat(directory, 'trexio.c', ['populated/pop_*.c'])
+    cat(directory, 'trexio.h', ['populated/pop_*.h'])
+    cat(directory, 'trexio.h', ['hrw_determinant_front.h'])
+    cat(directory, 'trexio.c', ['*_determinant_front.c'])
+    cat(directory, 'trexio_private.h', ['populated/private_pop_front.h'])
+    append_lines(directory, 'trexio_private.h', ['#endif'])
+    cat(directory, 'trexio_f.f90', ['populated/pop_*.f90'])
+    cat(directory, 'trexio_f.f90', ['*_determinant_front_fortran.f90'])
+    cat(directory, 'trexio_f.f90', ['helper_fortran.f90'])
+    cat(directory, 'trexio_f.f90', ['populated/pop_*.fh_90'])
+    cat(directory, 'trexio.py', ['basic_python.py'])
+    cat(directory, 'trexio.py', ['populated/pop_*.py'])
+    cat(directory, 'trexio.py', ['*_determinant_front.py'])
+    cat(directory, 'trexio_s.h', ['suffix_s_front.h'])
+    cat(directory, 'trexio.h', ['suffix_front.h'])
+    cat(directory, 'trexio_f.f90', ['suffix_fortran.f90'])
+
+
+def assemble_hdf5(directory):
+    cat(directory, 'trexio_hdf5.c', ['prefix_hdf5.c'], truncate=True)
+    cat(directory, 'trexio_hdf5.h', ['prefix_hdf5.h'], truncate=True)
+    cat(directory, 'trexio_hdf5.c', ['populated/pop_def_hdf5.c'])
+    cat(directory, 'trexio_hdf5.h', ['populated/pop_struct_hdf5.h'])
+    cat(directory, 'trexio_hdf5.c', ['populated/pop_basic_hdf5.c'])
+    cat(directory, 'trexio_hdf5.c', ['populated/pop_has_*.c'])
+    cat(directory, 'trexio_hdf5.c', ['populated/pop_read_*.c'])
+    cat(directory, 'trexio_hdf5.c', ['populated/pop_write_*.c'])
+    cat(directory, 'trexio_hdf5.c', ['populated/pop_delete_group_hdf5.c'])
+    cat(directory, 'trexio_hdf5.h', ['populated/pop_hrw_*.h'])
+    cat(directory, 'trexio_hdf5.h', ['populated/pop_delete_group_hdf5.h'])
+    cat(directory, 'trexio_hdf5.h', ['hrw_determinant_hdf5.h'])
+    cat(directory, 'trexio_hdf5.c', ['*_determinant_hdf5.c'])
+    cat(directory, 'trexio_hdf5.c', ['helpers_hdf5.c'])
+    cat(directory, 'trexio_hdf5.c', ['suffix_hdf5.c'])
+    cat(directory, 'trexio_hdf5.h', ['suffix_hdf5.h'])
+
+
+def assemble_flat(directory, backend):
+    """The text and memory back ends, whose recipes differ only in the name."""
+    source = 'trexio_%s.c' % backend
+    header = 'trexio_%s.h' % backend
+    cat(directory, source, ['prefix_%s.c' % backend], truncate=True)
+    cat(directory, header, ['prefix_%s.h' % backend], truncate=True)
+    cat(directory, source, ['basic_%s.c' % backend])
+    cat(directory, source, ['populated/pop_basic_%s_group.c' % backend])
+    cat(directory, header, ['populated/pop_struct_%s_group_dset.h' % backend])
+    cat(directory, header, ['populated/pop_struct_%s_group.h' % backend])
+    cat(directory, header, ['basic_%s.h' % backend])
+    cat(directory, header, ['hrw_determinant_%s.h' % backend])
+    cat(directory, source, ['*_determinant_%s.c' % backend])
+    cat(directory, source, ['populated/pop_has_group_%s.c' % backend])
+    cat(directory, header, ['populated/pop_hrw_group_%s.h' % backend])
+    for kind in ('free', 'read', 'flush', 'delete'):
+        cat(directory, source, ['populated/pop_%s_group_%s.c' % (kind, backend)])
+    for kind in ('free', 'read', 'flush', 'delete'):
+        cat(directory, header, ['populated/pop_%s_group_%s.h' % (kind, backend)])
+    # The order is not the same for every action: `has` takes attr_num before
+    # attr_str, while `read` and `write` take them the other way round. It looks
+    # accidental, but it decides the order of the generated functions, so it is
+    # kept exactly as build.sh had it.
+    has_shapes = ('dset_data', 'dset_str', 'dset_sparse', 'attr_num',
+                  'attr_str', 'buffered')
+    rw_shapes = ('dset_data', 'dset_str', 'dset_sparse', 'attr_str',
+                 'attr_num', 'buffered')
+    for action, shapes in (('has', has_shapes), ('read', rw_shapes),
+                           ('write', rw_shapes)):
+        for shape in shapes:
+            cat(directory, source,
+                ['populated/pop_%s_%s_%s.c' % (action, shape, backend)])
+    for shape in has_shapes:
+        cat(directory, header,
+            ['populated/pop_hrw_%s_%s.h' % (shape, backend)])
+    cat(directory, header, ['suffix_%s.h' % backend])
+
+
 def log(message):
     print('generate: %s' % message, flush=True)
 
@@ -70,13 +233,14 @@ def run_generator(root):
 
 
 def assemble(root, backend, config_h):
-    """Run one back end's build.sh and collect what it produced."""
+    """Put one back end's sources together and collect the result."""
     directory = os.path.join(root, 'src', 'templates_%s' % backend)
-    environment = dict(os.environ)
-    if config_h:
-        environment['TREXIO_CONFIG_H'] = config_h
-    subprocess.run(['bash', 'build.sh'], cwd=directory, check=True,
-                   env=environment)
+    if backend == 'front':
+        assemble_front(directory, config_values(config_h))
+    elif backend == 'hdf5':
+        assemble_hdf5(directory)
+    else:
+        assemble_flat(directory, backend)
     for path in sorted(glob.glob(os.path.join(directory, 'trexio*'))):
         shutil.copy(path, os.path.join(root, 'src'))
 
