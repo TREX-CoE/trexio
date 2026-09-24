@@ -9,7 +9,7 @@ AC_CONFIG_HEADERS([include/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-config])
 
-AM_INIT_AUTOMAKE([subdir-objects color-tests parallel-tests silent-rules 1.11])
+AM_INIT_AUTOMAKE([foreign subdir-objects color-tests parallel-tests silent-rules 1.11])
 AM_MAINTAINER_MODE()
 AM_PROG_AR
 
