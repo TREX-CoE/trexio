@@ -98,21 +98,19 @@ jobs:
           make -j3
           make install
 
-      - name: configure with autotools
+      # The wheel is built by pip through CMake, but this is a Git checkout, so
+      # the C sources and the SWIG wrapper have to be generated from the org
+      # files first. Removing the .devel marker afterwards makes the wheel build
+      # use those generated files instead of trying to regenerate them, which
+      # would need emacs and SWIG inside each isolated build environment.
+      - name: generate the sources
         run: |
           ./autogen.sh
           export PATH=${PATH}:${HDF5_INSTALLDIR}/bin
           ./configure FC=gfortran-14 --enable-silent-rules
           make -j3
-          
-      - name: prepare python 
-        run: |
-          make python-install
-
-      - name: cleanup python 
-        run: |
-          rm -rf src/ tools/ 
-          mv python/* .
+          make src/pytrexio_wrap.c
+          rm -f .devel
 
       - name: Build wheels
       # cibuildwheel 2.20.0 did not support Python 3.14
@@ -124,7 +122,9 @@ jobs:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_ENVIRONMENT: H5_CFLAGS="-I/Users/runner/work/trexio/trexio/hdf5/include" H5_LDFLAGS="-L/Users/runner/work/trexio/trexio/hdf5/lib"
+          # CMake locates HDF5 itself; it only needs to be told where it was
+          # installed by the step above.
+          CIBW_ENVIRONMENT: CMAKE_PREFIX_PATH="/Users/runner/work/trexio/trexio/hdf5" HDF5_ROOT="/Users/runner/work/trexio/trexio/hdf5"
         # disable pytest-ing for now - does not work as expected via CIBW on MacOS --> Ask Anthony to test locally  
         #CIBW_TEST_REQUIRES: pytest
         #CIBW_TEST_COMMAND: "python3 -m pytest -v test/test_api.py"

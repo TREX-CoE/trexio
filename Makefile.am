@@ -258,21 +258,14 @@ trexio_py     = src/trexio.py
 pytrexio_i    = src/pytrexio.i
 numpy_i       = src/numpy.i
 
-# Files of the standalone (PyPI) build, which compiles the library itself
-# because a wheel cannot run configure.
-setup_py      = python/setup.py
-setup_cfg     = python/setup.cfg
-python_pkg_py = python/trexio/pytrexio.py
 TEST_PY       = python/test/test_api.py python/test/test_memory.py
 
 # Distributed unconditionally, so that a tarball made without --enable-python
 # can still be configured with it.
 EXTRA_DIST += $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(pytrexio_i) $(numpy_i) \
-              $(setup_py) $(setup_cfg) \
-              python/MANIFEST.in \
+              pyproject.toml \
               python/README.md \
               python/requirements.txt \
-              python/pyproject.toml \
               python/pytrexio/__init__.py \
               python/pytrexio/_version.py \
               python/test/benzene_data.py \
@@ -282,14 +275,15 @@ EXTRA_DIST += $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(pytrexio_i) $(numpy_i)
 if HAVE_PYTHON
 
 # The extension module is compiled from the SWIG wrapper and linked against the
-# TREXIO library built here, instead of compiling a second copy of the library
-# the way setup.py has to.
+# TREXIO library built here, rather than compiling a second copy of it as the
+# wheel build used to.
+#
 # Everything goes into one importable package, so that `import trexio` pulls in
 # a single directory rather than a module beside a second package. The package
 # carries a compiled extension, so it is installed into the platform-specific
 # directory: where pythondir and pyexecdir differ (lib versus lib64), a regular
-# package split across the two cannot be imported at all, and this also keeps the
-# API under a single PYTHONPATH entry.
+# package split across the two cannot be imported at all, and this also keeps
+# the API under a single PYTHONPATH entry.
 trexiodir     = $(pyexecdir)/trexio
 trexioexecdir = $(pyexecdir)/trexio
 
@@ -317,56 +311,22 @@ install-exec-hook:
 
 endif
 
-# The standalone build compiles the library itself, so it needs its own copy of
-# the C sources beside the SWIG wrapper. This staging step used to live in
-# tools/prepare_python.sh.
-PYTHON_STAGED_FILES = src/trexio.c \
-                      src/trexio_s.h \
-                      src/trexio_private.h \
-                      src/trexio_text.c \
-                      src/trexio_text.h \
-                      src/trexio_memory.c \
-                      src/trexio_memory.h
-if HAVE_HDF5
-PYTHON_STAGED_FILES += src/trexio_hdf5.c src/trexio_hdf5.h
-endif
+# pip drives CMake through scikit-build-core, so these targets only have to
+# invoke it from the top of the tree. There is no staging step any more: the
+# wheel is built from the sources in place rather than from a copy of the
+# library under python/.
+python-install: $(pytrexio_c) $(pytrexio_py) $(trexio_py)
+	python3 -m pip install pytest
+	python3 -m pip install $(srcdir) --force-reinstall --no-deps
 
-# The standalone build stages the same single-package layout the build systems
-# install, so that the relative imports in the generated API resolve there too.
-$(python_pkg_py): $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(trexio_h)
-	$(MKDIR_P) $(srcdir)/python/src $(srcdir)/python/trexio
-	cp -f $(srcdir)/$(trexio_py) $(srcdir)/python/trexio/__init__.py
-	cp -f $(srcdir)/$(pytrexio_py) $(srcdir)/python/trexio/pytrexio.py
-	cp -f $(srcdir)/python/pytrexio/_version.py $(srcdir)/python/trexio/_version.py
-	for f in $(PYTHON_STAGED_FILES) $(pytrexio_c) $(trexio_h) ; do \
-	  cp -f $(srcdir)/$$f $(srcdir)/python/src/ || exit 1 ; \
-	done
-	cp -f include/config.h $(srcdir)/python/src/
-	cp -f $(srcdir)/AUTHORS $(srcdir)/LICENSE $(srcdir)/python/
-
-# Legacy target: build a wheel with pip and install it into the active Python
-# environment, for users who want a pip-managed installation instead of the one
-# produced by --enable-python. The HDF5 flags are the ones configure found, so
-# no separate detection script is needed.
-python-install: $(python_pkg_py) $(setup_py) $(setup_cfg)
-	cd python && \
-	  python3 -m pip install build && \
-	  python3 -m pip install -r requirements.txt && \
-	  python3 -m pip install pytest && \
-	  H5_CFLAGS="$(HDF5_CFLAGS) $(HDF5_CPPFLAGS)" \
-	  H5_LDFLAGS="$(HDF5_LDFLAGS)" \
-	  python3 -m build --wheel --outdir dist/ && \
-	  python3 -m pip install dist/trexio-*.whl --force-reinstall
-	$(RM) -rf -- python/build python/trexio.egg-info
-
-python-sdist: $(python_pkg_py) $(setup_py) $(setup_cfg)
-	cd python && \
-		python3 -m build --sdist
+python-sdist: $(pytrexio_c) $(pytrexio_py) $(trexio_py)
+	python3 -m pip install build
+	cd $(srcdir) && python3 -m build --sdist --outdir python/dist
 
 # Stage the freshly built module so that `make check` imports what was just
 # compiled, rather than whatever copy of TREXIO happens to be installed on the
 # system. The python-install and python-sdist targets do not use this copy: they
-# hand the sources in python/ to python -m build, which stages its own.
+# hand the whole tree to pip, which drives CMake and gets its own build.
 if HAVE_PYTHON
 PYTHON_TEST_PKG = python-test-package
 
@@ -520,11 +480,7 @@ debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
 # where they are shipped rather than built.
 CLEANFILES += $(pytrexio_c) \
               $(pytrexio_py) \
-              $(trexio_py) \
-              $(srcdir)/python/trexio.py \
-              $(srcdir)/$(python_pkg_py) \
-              python/src/*.c \
-              python/src/*.h
+              $(trexio_py)
 
 
 endif

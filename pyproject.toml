@@ -1,0 +1,108 @@
+# Build configuration for the TREXIO Python package.
+#
+# pip drives CMake through scikit-build-core, so that a wheel is produced by the
+# same build system as everything else. The hand-written HDF5 detection that
+# setup.py used to carry is gone: CMake finds HDF5, and a build without it fails
+# loudly instead of quietly producing a package with only the TEXT back end.
+
+[build-system]
+requires = ["scikit-build-core>=0.10", "numpy"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "trexio"
+dynamic = ["version"]
+description = "Python API of the TREXIO library"
+readme = "python/README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [
+    { name = "TREX-CoE", email = "posenitskiy@irsamc.ups-tlse.fr" },
+]
+requires-python = ">=3.8"
+dependencies = ["numpy>=1.17.3"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: C",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+]
+
+[project.urls]
+Homepage = "https://github.com/TREX-CoE/trexio"
+"Bug Tracker" = "https://github.com/TREX-CoE/trexio/issues"
+
+# The version is read from the file the release procedure already updates, so
+# that packaging does not become a fifth place to keep it in step.
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "python/pytrexio/_version.py"
+regex = '__version__ = "(?P<value>[^"]+)"'
+
+[tool.scikit-build]
+cmake.version = ">=3.19"
+# Only the files marked as the python component end up in the wheel; the
+# library, headers, pkg-config and CMake package files are for an ordinary
+# installation and have no business in a Python package.
+install.components = ["python"]
+
+[tool.scikit-build.cmake.define]
+TREXIO_PYTHON = "ON"
+# The Fortran interface is irrelevant to a wheel, and requiring a Fortran
+# compiler to pip install would be unreasonable.
+TREXIO_FORTRAN = "OFF"
+BUILD_TESTING = "OFF"
+# Link the library into the extension module, so that the wheel carries no
+# shared library of its own and nothing has to be resolved at import time.
+BUILD_SHARED_LIBS = "OFF"
+# Install the package at the root of the wheel rather than under a prefix.
+TREXIO_INSTALL_PYTHONDIR = "."
+
+[tool.scikit-build.sdist]
+# Allow-list rather than deny-list. In the default mode scikit-build-core ships
+# every file that git does not ignore, which includes untracked ones: a
+# maintainer's local objdir, install prefix or stray build output would be
+# published to PyPI. In explicit mode nothing is included unless it is named
+# here, so a file has to be added deliberately to reach a release.
+inclusion-mode = "explicit"
+# The patterns use gitignore syntax, where an unanchored name matches at any
+# depth, so the paths below are anchored with a leading slash. Generated files
+# are named individually rather than globbed, so that a stale one left in the
+# working tree cannot slip into a release.
+include = [
+    # packaging and licensing
+    "/pyproject.toml",
+    "/LICENSE",
+    "/AUTHORS",
+    "/ChangeLog",
+    # the build system that pip drives
+    "/CMakeLists.txt",
+    "/cmake/standard_math_lib.cmake",
+    "/cmake/trexio-config.cmake.in",
+    "/cmake/trexio.pc.in",
+    "/cmake/cmake_uninstall.cmake.in",
+    "/src/CMakeLists.txt",
+    "/tests/CMakeLists.txt",
+    # the library sources and headers, generated from the org files
+    "/src/*.c",
+    "/src/*.h",
+    "/include/trexio.h",
+    "/include/cmake_config.h.in",
+    # the SWIG wrapper and the generated Python modules, so that building the
+    # wheel needs neither SWIG nor emacs
+    "/src/pytrexio_wrap.c",
+    "/src/pytrexio.py",
+    "/src/trexio.py",
+    # the Python package itself
+    "/python/README.md",
+    "/python/requirements.txt",
+    "/python/pytrexio/*.py",
+    "/python/test/*.py",
+]
