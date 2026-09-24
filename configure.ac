@@ -306,12 +306,16 @@ if test "x${TREXIO_DEVEL}" != "x"; then
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
 
+  # Emacs is no longer needed to generate the sources, which tools/generate.py
+  # does in Python. It is still what exports the org files to HTML, so the
+  # documentation is simply not built when it is absent.
   AC_CHECK_PROGS([EMACS],[emacs26 emacs],[no])
   if test x${EMACS} = "xno" ; then
-    AC_MSG_ERROR([
-    --------------------------------------
-    Error: Emacs is required for org-mode.
-    --------------------------------------
+    AC_MSG_WARN([
+    ----------------------------------------------------
+    Emacs was not found: the documentation will not be
+    built. The library and its bindings do not need it.
+    ----------------------------------------------------
     ])
   fi
 
@@ -328,6 +332,11 @@ else
 
 fi
 AC_DEFINE_UNQUOTED(GIT_HASH, ["${GIT_HASH}"], [Git SHA1 Hash])
+
+# Declared here rather than earlier: AC_CHECK_PROGS sets EMACS inside the
+# maintainer-mode block above, and a conditional placed before it would be
+# evaluated against an unset variable.
+AM_CONDITIONAL([HAVE_EMACS],[test "x$EMACS" != "xno" && test "x$EMACS" != x])
 
 ## Libm
 ## ----

@@ -85,33 +85,21 @@ endif()
 # ====== CODE GENERATION FOR DEVEL MODE =====
 
 if(TREXIO_DEVEL)
-  add_custom_command(
-        # note writing trex.json to src tree
-        COMMAND bash build_json.sh
-        OUTPUT  "${PROJECT_SOURCE_DIR}/trex.json"
-        DEPENDS "${PROJECT_SOURCE_DIR}/trex.org"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
-        COMMENT "Generate trex.json from trex.org")
-
-  set(ORG_FILES
-      templates_front/templator_front.org
-      templates_text/templator_text.org
-      ${PROJECT_SOURCE_DIR}/trex.org
-  )
-  if(TREXIO_USE_HDF5)
-    list(APPEND ORG_FILES templates_hdf5/templator_hdf5.org)
-  endif()
-
+  # One entry point generates everything, with no Emacs involved: trex.json from
+  # the tables in trex.org, then the library sources from the templator files.
   add_custom_command(OUTPUT
         ${TREXIO_SOURCES}
         ${TREXIO_PUBLIC_HEADERS}
         ${TREXIO_PRIVATE_HEADERS}
         ${TREXIO_MOD_FILE}
-      COMMAND ./build_trexio.sh
-      DEPENDS ${ORG_FILES} ${PROJECT_SOURCE_DIR}/include/config.h
-              "${PROJECT_SOURCE_DIR}/trex.json"
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
-      COMMENT "Generating TREXIO source code from org-mode files."
+        "${PROJECT_SOURCE_DIR}/trex.json"
+      COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/generate.py"
+              --root "${PROJECT_SOURCE_DIR}"
+              --config-h "${PROJECT_SOURCE_DIR}/include/config.h"
+      DEPENDS ${ORG_FILES}
+              "${PROJECT_SOURCE_DIR}/trex.org"
+              "${PROJECT_SOURCE_DIR}/include/config.h"
+      COMMENT "Generating the TREXIO sources from the org files."
       VERBATIM)
 
   set_source_files_properties(${TREXIO_SOURCES}

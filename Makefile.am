@@ -241,11 +241,20 @@ HTML_FILES = $(HTML_TANGLED) \
              docs/tutorial_benzene.html \
              $(htmlizer)
 
+# The HTML is exported from the org files by Emacs, which is the only thing it is
+# still needed for. Without it the library, its bindings and the tests all build;
+# only the documentation is left out.
+if HAVE_EMACS
 dist_html_DATA = $(HTML_FILES)
 
 $(HTML_TANGLED): $(htmlizer)
 
 html-local: $(dist_html_DATA)
+else
+html-local:
+	@echo "Emacs was not found at configure time: skipping the documentation."
+endif
+
 doc: html-local
 
 # =============== DEVELOPER MODE =============== #
@@ -278,11 +287,17 @@ GENERATOR_FILES = $(srcdir)/tools/generator.py \
 $(SOURCES): $(trexio_h)
 src/trexio.c: $(trexio_h)
 
-trex.json: trex.org
-	cd $(srcdir)/tools && ./build_json.sh
+# One entry point generates everything: trex.json from the tables in trex.org,
+# then the library sources from the templator files. It needs no Emacs, and it
+# takes the paths it works on rather than deducing them from the directory it
+# happens to be run in.
+$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES) $(srcdir)/trex.org
+	$(PYTHON) $(srcdir)/tools/generate.py \
+	  --root $(srcdir) --config-h $(abs_builddir)/include/config.h
 
-$(trexio_h): $(ORG_FILES) $(GENERATOR_FILES) trex.json
-	cd $(srcdir)/tools && ./build_trexio.sh
+# trex.json is written by the same run, so it only has to be ordered after it.
+trex.json: $(trexio_h)
+	@:
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
 	$(MKDIR_P) docs
