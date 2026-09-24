@@ -354,27 +354,13 @@ typedef int32_t trexio_exit_code;
 #ifdef _WIN32
 #include <windows.h>
 typedef SRWLOCK trexio_mutex_t;
-static inline int trexio_mutex_init (trexio_mutex_t* const mutex)
-{
-  InitializeSRWLock(mutex);
-  return 0;
-}
-static inline int trexio_mutex_destroy (trexio_mutex_t* const mutex)
-{
-  (void) mutex;
-  return 0;
-}
+#define TREXIO_MUTEX_INIT(mutex)    (InitializeSRWLock(mutex), 0)
+#define TREXIO_MUTEX_DESTROY(mutex) ((void) (mutex), 0)
 #else
 #include <pthread.h>
 typedef pthread_mutex_t trexio_mutex_t;
-static inline int trexio_mutex_init (trexio_mutex_t* const mutex)
-{
-  return pthread_mutex_init(mutex, NULL);
-}
-static inline int trexio_mutex_destroy (trexio_mutex_t* const mutex)
-{
-  return pthread_mutex_destroy(mutex);
-}
+#define TREXIO_MUTEX_INIT(mutex)    pthread_mutex_init((mutex), NULL)
+#define TREXIO_MUTEX_DESTROY(mutex) pthread_mutex_destroy(mutex)
 #endif
   #+end_src
 
@@ -1411,7 +1397,7 @@ trexio_open(const char* file_name, const char mode,
   result->mode        = mode;
   result->one_based   = false;  // Need to be flipped in Fortran interface
   result->state       = 0;      // By default the file corresponds to a ground state
-  int irc = trexio_mutex_init ( &(result->thread_lock) );
+  int irc = TREXIO_MUTEX_INIT( &(result->thread_lock) );
   if (irc != 0) {
     if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
     free(result);
@@ -1821,7 +1807,7 @@ trexio_close (trexio_t* file)
 
   /* Terminate front end */
 
-  int irc = trexio_mutex_destroy( &(file->thread_lock) );
+  int irc = TREXIO_MUTEX_DESTROY( &(file->thread_lock) );
 
   free(file);
 

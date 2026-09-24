@@ -58,17 +58,20 @@
 #include <fcntl.h>
 #ifdef _WIN32
 #include <io.h>
+#include <direct.h>
 #ifndef F_OK
 #define F_OK 0
 #endif
 #define TREXIO_ACCESS(path, mode)       _access((path), (mode))
 #define TREXIO_OPEN(path, flags, perms) _open((path), (flags), (perms))
 #define TREXIO_CLOSE(fd)                _close(fd)
+#define TREXIO_MKDIR(path, mode)        _mkdir(path)
 #else
 #include <unistd.h>
 #define TREXIO_ACCESS(path, mode)       access((path), (mode))
 #define TREXIO_OPEN(path, flags, perms) open((path), (flags), (perms))
 #define TREXIO_CLOSE(fd)                close(fd)
+#define TREXIO_MKDIR(path, mode)        mkdir((path), (mode))
 #endif
 #include <sys/stat.h>
 #include <stdbool.h>
@@ -191,11 +194,7 @@ char* mkdtemp(char* template) {
     dir = tmpnam(dir);
     if (dir == NULL) return NULL;
 
-#ifdef _WIN32
-    if (mkdir(dir) != 0) {
-#else
-    if (mkdir(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
-#endif
+    if (TREXIO_MKDIR(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
         return NULL;
     }
 
@@ -228,11 +227,7 @@ trexio_text_init (trexio_t* const file)
 
     if (file->mode == 'r') return TREXIO_READONLY;
 
-#ifdef _WIN32
-    int rc_dir = mkdir(file->file_name);
-#else
-    int rc_dir = mkdir(file->file_name, 0777);
-#endif
+    int rc_dir = TREXIO_MKDIR(file->file_name, 0777);
     if (rc_dir != 0) return TREXIO_ERRNO;
 
   }
