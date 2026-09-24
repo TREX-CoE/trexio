@@ -62,6 +62,8 @@ AS_IF([test "$ok" = "yes"],[
 
 ])
 AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
+AS_IF([test "$ok" = "yes"],
+      [TREXIO_CMAKE_WITH_FORTRAN=ON], [TREXIO_CMAKE_WITH_FORTRAN=OFF])
 
 AC_LANG(C)
 AC_PROG_CC
@@ -357,8 +359,18 @@ if test "$ok" = "yes"; then
 fi
 
 
+# Values interpolated into the CMake package configuration file, which the
+# Autotools build installs so that find_package(trexio) works for consumers of
+# an Autotools installation too.
+AS_IF([test "x$with_hdf5" != "xno"],
+      [TREXIO_CMAKE_WITH_HDF5=ON], [TREXIO_CMAKE_WITH_HDF5=OFF])
+AC_SUBST([TREXIO_CMAKE_WITH_HDF5])
+AC_SUBST([TREXIO_CMAKE_WITH_FORTRAN])
+
 AC_CONFIG_FILES([Makefile
-                 pkgconfig/trexio.pc])
+                 pkgconfig/trexio.pc
+                 cmake/trexio-config.cmake:cmake/autotools-trexio-config.cmake.in
+                 cmake/trexio-config-version.cmake:cmake/autotools-trexio-config-version.cmake.in])
 AC_OUTPUT
 
 AS_ECHO([ \
