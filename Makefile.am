@@ -87,6 +87,11 @@ endif
 
 src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 
+# Give the shared library a SONAME that identifies its ABI, and the same one the
+# CMake build produces. The version itself is defined in configure.ac, next to
+# the package version it has to be maintained against.
+src_libtrexio_la_LDFLAGS = -version-info $(TREXIO_LT_VERSION)
+
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
               trex.json \
