@@ -342,6 +342,15 @@ typedef int32_t trexio_exit_code;
 
   #+end_src
 
+  The file handle carries a mutex, so =trexio_mutex_t= below keeps
+  =struct trexio_s= platform-independent. Windows has no pthreads: it maps
+  to an =SRWLOCK=, which needs no teardown, so =TREXIO_MUTEX_DESTROY= is a
+  no-op there. The lock is merely created with the handle and released with
+  it, as no code path takes it yet. Both macros yield an =int= return code,
+  zero on success, as =trexio_open= and =trexio_close= expect. They are
+  macros and not =static inline= because =--enable-debug= combines
+  =-Winline=, =-Werror= and =-fno-inline=, making any =inline= function fatal.
+
   #+begin_src c :tangle prefix_s_front.h :noweb yes
 <<header>>
 #ifndef _TREXIO_S_H

@@ -41,6 +41,16 @@
 
   #+end_src
 
+  The text back end keeps each TREXIO file in a directory and probes it with
+  the POSIX descriptor API, which the MSVC runtime spells with a leading
+  underscore in =io.h= and =direct.h= rather than =unistd.h=, and which
+  leaves =F_OK= undefined. The macros below supply that constant and route
+  =access=, =open=, =close= and =mkdir= to whichever spelling exists;
+  =TREXIO_MKDIR= drops the permission argument, as Windows directories carry
+  no POSIX mode bits. They are named macros rather than bare =open=/=close=
+  aliases because =trexio.c= includes =trexio_hdf5.h= after this header, and
+  the HDF5 headers declare struct members of those very names.
+
   #+begin_src c :tangle prefix_text.h :noweb yes
 <<header>>
 #ifndef TREXIO_TEXT_H

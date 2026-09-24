@@ -174,6 +174,11 @@ command. However, as TREXIO does not utilize MPI features, it is advisable to
 link against a non-MPI (serial) version of the HDF5 library for the sake of
 simplicity.
 
+Building the library on Windows is possible through CMake from the release tarball
+(not in developer mode from repository). Use `cmake -S. -Bbuild -GNinja` and
+`cmake --build build --target install`, as well as any other options. Tested with
+clang-cl, HDF5, and no Fortran.
+
 #### Compilation without the HDF5 library
 
 By default, the configuration step proceeds to search for the [HDF5 library](https://portal.hdfgroup.org/display/HDF5/HDF5).
