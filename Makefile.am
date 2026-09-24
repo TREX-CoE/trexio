@@ -317,7 +317,7 @@ endif
 # library under python/.
 python-install: $(pytrexio_c) $(pytrexio_py) $(trexio_py)
 	python3 -m pip install pytest
-	python3 -m pip install $(srcdir) --force-reinstall --no-deps
+	python3 -m pip install $(srcdir) --force-reinstall
 
 python-sdist: $(pytrexio_c) $(pytrexio_py) $(trexio_py)
 	python3 -m pip install build
