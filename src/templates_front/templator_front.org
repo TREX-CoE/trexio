@@ -296,7 +296,6 @@ typedef int32_t trexio_exit_code;
 #endif
 
 #include <math.h>
-#include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -350,8 +349,33 @@ typedef int32_t trexio_exit_code;
 
 #include "trexio.h"
 #include "trexio_private.h"
-#include <pthread.h>
 #include <stdbool.h>
+
+#ifdef _WIN32
+#include <windows.h>
+typedef SRWLOCK trexio_mutex_t;
+static inline int trexio_mutex_init (trexio_mutex_t* const mutex)
+{
+  InitializeSRWLock(mutex);
+  return 0;
+}
+static inline int trexio_mutex_destroy (trexio_mutex_t* const mutex)
+{
+  (void) mutex;
+  return 0;
+}
+#else
+#include <pthread.h>
+typedef pthread_mutex_t trexio_mutex_t;
+static inline int trexio_mutex_init (trexio_mutex_t* const mutex)
+{
+  return pthread_mutex_init(mutex, NULL);
+}
+static inline int trexio_mutex_destroy (trexio_mutex_t* const mutex)
+{
+  return pthread_mutex_destroy(mutex);
+}
+#endif
   #+end_src
 
   #+begin_src c :tangle trexio_private.h :noweb yes
@@ -1093,7 +1117,7 @@ typedef struct trexio_s trexio_t;
 
    #+begin_src c :tangle prefix_s_front.h
 struct trexio_s {
-  pthread_mutex_t   thread_lock;
+  trexio_mutex_t    thread_lock;
   back_end_t        back_end;
   char              mode;
   bool              one_based;
@@ -1387,7 +1411,7 @@ trexio_open(const char* file_name, const char mode,
   result->mode        = mode;
   result->one_based   = false;  // Need to be flipped in Fortran interface
   result->state       = 0;      // By default the file corresponds to a ground state
-  int irc = pthread_mutex_init ( &(result->thread_lock), NULL);
+  int irc = trexio_mutex_init ( &(result->thread_lock) );
   if (irc != 0) {
     if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
     free(result);
@@ -1797,7 +1821,7 @@ trexio_close (trexio_t* file)
 
   /* Terminate front end */
 
-  int irc = pthread_mutex_destroy( &(file->thread_lock) );
+  int irc = trexio_mutex_destroy( &(file->thread_lock) );
 
   free(file);
 

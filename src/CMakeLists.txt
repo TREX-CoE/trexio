@@ -25,6 +25,8 @@ set_target_properties(trexio PROPERTIES
 	SOVERSION ${PROJECT_VERSION_MAJOR}
 	POSITION_INDEPENDENT_CODE ON
 	PUBLIC_HEADER ${TREXIO_PUBLIC_HEADERS}
+	# allow linking with DLL (BUILD_SHARED_LIBS=ON) without needing __declspec(dllexport)
+	WINDOWS_EXPORT_ALL_SYMBOLS ON
 	)
 
 # Require C99 to build TREXIO, and propagate it as a usage requirement to

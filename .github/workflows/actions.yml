@@ -335,6 +335,118 @@ jobs:
           name: test-report-windows
           path: test-suite.log
 
+  trexio_source_tarball:
+    name: Build C-source release tarball
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev emacs libtool-bin automake autoconf pkg-config
+
+      - name: configure with autotools
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules
+
+      # "make dist" tangles the org-mode sources and ships the resulting C code
+      # together with the CMake files, so that consumers of the artifact never
+      # need Emacs. Note that .devel is deliberately not distributed, which is
+      # what keeps TREXIO_DEVEL off in the extracted tree.
+      - name: build the source tarball
+        run: |
+          make -j2
+          make dist
+
+      - name: publish the source tarball as an artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: trexio-source-tarball
+          path: ./trexio-*.tar.gz
+          retention-days: 7
+
+  trexio_windows_clang_cl:
+    name: Windows clang-cl (CMake + conda)
+    runs-on: windows-latest
+    needs: trexio_source_tarball
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      # This must be done *before* setting up miniconda, see:
+      # https://github.com/ilammy/msvc-dev-cmd/issues/34
+      - name: prepare compiler environment, vcvarsall
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: write a conda env file
+        run: |
+          cat > export.yaml <<EOF
+          name: test
+          channels:
+            - conda-forge
+          dependencies:
+            - cmake
+            - ninja
+            - clang
+            - hdf5
+          EOF
+          cat export.yaml
+
+      - name: create conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: test
+          environment-file: export.yaml
+          channels: conda-forge
+          show-channel-urls: true
+          auto-activate: false
+          conda-remove-defaults: true
+
+      # Windows has no Emacs, so the generated C sources arrive pre-tangled
+      # from the Linux job above rather than being built from the org files.
+      - name: fetch the source tarball
+        uses: actions/download-artifact@v7
+        with:
+          name: trexio-source-tarball
+
+      - name: extract the source tarball
+        run: |
+          tar -xzf trexio-*.tar.gz
+          echo "TREXIO_DIR=$(ls -d trexio-*/ | head -1)" >> $GITHUB_ENV
+
+      # The Fortran interface is disabled because FortranCInterface_VERIFY()
+      # has no working clang-cl/Fortran pairing here; the MinGW job above keeps
+      # the Windows Fortran path covered.
+      - name: configure with CMake
+        run: |
+          cmake -S "${TREXIO_DIR}" -Bbuild -GNinja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER=clang-cl \
+                -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/installed" \
+                -DCMAKE_INSTALL_LIBDIR=lib \
+                -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
+                -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
+                -DTREXIO_FORTRAN=OFF
+
+      - name: compile and install TREXIO
+        run: cmake --build build --target install
+
+      - name: check TREXIO
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-windows-clang-cl
+          path: build/Testing/Temporary/LastTest.log
+
   trexio_nix:
     name: Nix
     runs-on: ubuntu-latest

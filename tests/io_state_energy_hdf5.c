@@ -1,5 +1,4 @@
-#define TEST_BACKEND  TREXIO_HDF5
-#define TREXIO_FILE   "test_state_energy.h5"
-#define RM_COMMAND_RESULT system("rm -f -- " TREXIO_FILE);
-
+#define TEST_BACKEND_HDF5
+#define TREXIO_FILE_PREFIX "test_state_energy"
+#include "test_macros.h"
 #include "io_state_energy.c"
