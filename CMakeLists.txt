@@ -79,9 +79,13 @@ if(TREXIO_DEVEL)
   set(TREXIO_USER_NAME "$ENV{USER}")
   # replace placeholders in the templace config.h.in file to produce config.h
   # config.h is needed to insert TREXIO_PACKAGE_VERSION and TREXIO_GIT_HASH into trexio.h
+  # Write the generated header into the build tree. It used to be written into
+  # the source tree, where it overwrote the config.h that configure generates,
+  # which silently disabled the HDF5 back end for every later Autotools build in
+  # the same checkout.
   configure_file(
     "${PROJECT_SOURCE_DIR}/include/cmake_config.h.in"
-    "${PROJECT_SOURCE_DIR}/include/config.h"
+    "${PROJECT_BINARY_DIR}/include/config.h"
     @ONLY)
 endif()
 
