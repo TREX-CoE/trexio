@@ -182,18 +182,24 @@ if(TREXIO_PYTHON)
   endif()
 
   # Everything lands in one importable package, with the generated API as its
-  # __init__.py, so that `import trexio` pulls in a single directory.
+  # __init__.py, so that `import trexio` pulls in a single directory. The files
+  # are tagged as a component of their own, so that a wheel build can install
+  # the Python package without dragging in the library, the headers and the
+  # pkg-config and CMake package files.
   install(TARGETS _pytrexio
     LIBRARY DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/trexio"
+            COMPONENT python
   )
   install(FILES "${PROJECT_SOURCE_DIR}/src/trexio.py"
     DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/trexio"
     RENAME __init__.py
+    COMPONENT python
   )
   install(FILES
       "${PROJECT_SOURCE_DIR}/python/pytrexio/_version.py"
       "${TREXIO_SWIG_MODULE}"
     DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/trexio"
+    COMPONENT python
   )
 endif()
 
