@@ -96,8 +96,16 @@ if(TREXIO_DEVEL)
       COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/generate.py"
               --root "${PROJECT_SOURCE_DIR}"
               --config-h "${PROJECT_SOURCE_DIR}/include/config.h"
-      DEPENDS ${ORG_FILES}
-              "${PROJECT_SOURCE_DIR}/trex.org"
+      DEPENDS "${PROJECT_SOURCE_DIR}/trex.org"
+              "${PROJECT_SOURCE_DIR}/src/templates_front/templator_front.org"
+              "${PROJECT_SOURCE_DIR}/src/templates_text/templator_text.org"
+              "${PROJECT_SOURCE_DIR}/src/templates_memory/templator_memory.org"
+              "${PROJECT_SOURCE_DIR}/src/templates_hdf5/templator_hdf5.org"
+              "${PROJECT_SOURCE_DIR}/tools/generate.py"
+              "${PROJECT_SOURCE_DIR}/tools/build_json.py"
+              "${PROJECT_SOURCE_DIR}/tools/org_tangle.py"
+              "${PROJECT_SOURCE_DIR}/tools/generator.py"
+              "${PROJECT_SOURCE_DIR}/tools/generator_tools.py"
               "${PROJECT_SOURCE_DIR}/include/config.h"
       COMMENT "Generating the TREXIO sources from the org files."
       VERBATIM)
