@@ -5,7 +5,6 @@
 , gfortran
 , hdf5
 , python3
-, emacs
 , swig
 }:
 
@@ -32,7 +31,6 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     cmake
     gfortran
-    emacs
     swig
     python3
   ];
@@ -42,10 +40,7 @@ stdenv.mkDerivation rec {
   ];
 
   preConfigure = ''
-    cd ./tools
-    ./build_json.sh
-    ./build_trexio.sh
-    cd ..
+    python3 tools/generate.py --root .
   '';
 
   outputs = [ "out" "dev" ];
