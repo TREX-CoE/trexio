@@ -284,20 +284,28 @@ if HAVE_PYTHON
 # The extension module is compiled from the SWIG wrapper and linked against the
 # TREXIO library built here, instead of compiling a second copy of the library
 # the way setup.py has to.
-# The package carries a compiled extension, so all of it is installed into the
-# platform-specific directory: on a system where pythondir and pyexecdir differ
-# (lib versus lib64), a regular package split across the two cannot be imported,
-# and this also keeps the whole API under a single PYTHONPATH entry.
-trexiomoddir    = $(pyexecdir)
-pytrexiodir     = $(pyexecdir)/pytrexio
-pytrexioexecdir = $(pyexecdir)/pytrexio
+# Everything goes into one importable package, so that `import trexio` pulls in
+# a single directory rather than a module beside a second package. The package
+# carries a compiled extension, so it is installed into the platform-specific
+# directory: where pythondir and pyexecdir differ (lib versus lib64), a regular
+# package split across the two cannot be imported at all, and this also keeps the
+# API under a single PYTHONPATH entry.
+trexiodir     = $(pyexecdir)/trexio
+trexioexecdir = $(pyexecdir)/trexio
 
-nodist_trexiomod_PYTHON = $(trexio_py)
-nodist_pytrexio_PYTHON  = python/pytrexio/__init__.py \
-                          python/pytrexio/_version.py \
-                          $(pytrexio_py)
+# The generated API becomes the package's __init__.py. Automake installs a
+# _PYTHON file under its own name, so it is staged under the right one first.
+trexio-package/__init__.py: $(trexio_py)
+	$(MKDIR_P) trexio-package
+	cp -f $(srcdir)/$(trexio_py) $@
 
-pytrexioexec_LTLIBRARIES     = _pytrexio.la
+BUILT_SOURCES += trexio-package/__init__.py
+
+nodist_trexio_PYTHON = trexio-package/__init__.py \
+                       python/pytrexio/_version.py \
+                       $(pytrexio_py)
+
+trexioexec_LTLIBRARIES       = _pytrexio.la
 nodist__pytrexio_la_SOURCES  = $(pytrexio_c)
 _pytrexio_la_CPPFLAGS        = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS) $(NUMPY_CPPFLAGS)
 _pytrexio_la_LDFLAGS         = -module -avoid-version -shared
@@ -305,7 +313,7 @@ _pytrexio_la_LIBADD          = src/libtrexio.la
 
 # A libtool archive is of no use inside a Python package.
 install-exec-hook:
-	$(RM) -f -- $(DESTDIR)$(pytrexioexecdir)/_pytrexio.la
+	$(RM) -f -- $(DESTDIR)$(trexioexecdir)/_pytrexio.la
 
 endif
 
@@ -358,18 +366,17 @@ python-sdist: $(python_pkg_py) $(setup_py) $(setup_cfg)
 if HAVE_PYTHON
 PYTHON_TEST_PKG = python-test-package
 
-$(PYTHON_TEST_PKG)/pytrexio/_pytrexio.so: _pytrexio.la
-	$(MKDIR_P) $(PYTHON_TEST_PKG)/pytrexio
-	cp -f $(srcdir)/$(trexio_py) $(PYTHON_TEST_PKG)/
-	cp -f $(srcdir)/$(pytrexio_py) $(PYTHON_TEST_PKG)/pytrexio/
-	cp -f $(srcdir)/python/pytrexio/__init__.py $(PYTHON_TEST_PKG)/pytrexio/
-	cp -f $(srcdir)/python/pytrexio/_version.py $(PYTHON_TEST_PKG)/pytrexio/
-	cp -f .libs/_pytrexio.so $(PYTHON_TEST_PKG)/pytrexio/
+$(PYTHON_TEST_PKG)/trexio/_pytrexio.so: _pytrexio.la
+	$(MKDIR_P) $(PYTHON_TEST_PKG)/trexio
+	cp -f $(srcdir)/$(trexio_py) $(PYTHON_TEST_PKG)/trexio/__init__.py
+	cp -f $(srcdir)/$(pytrexio_py) $(PYTHON_TEST_PKG)/trexio/
+	cp -f $(srcdir)/python/pytrexio/_version.py $(PYTHON_TEST_PKG)/trexio/
+	cp -f .libs/_pytrexio.so $(PYTHON_TEST_PKG)/trexio/
 
 # Run the Python tests as part of `make check`, but only when pytest is
 # available: it is a test-only dependency and not everyone building the library
 # will have it.
-check-local: $(PYTHON_TEST_PKG)/pytrexio/_pytrexio.so
+check-local: $(PYTHON_TEST_PKG)/trexio/_pytrexio.so
 	@if $(PYTHON) -c "import pytest" 2>/dev/null ; then \
 	  echo "  PYTEST   Python API" ; \
 	  PYTHONPATH="$(abs_builddir)/$(PYTHON_TEST_PKG)$${PYTHONPATH:+:$$PYTHONPATH}" \

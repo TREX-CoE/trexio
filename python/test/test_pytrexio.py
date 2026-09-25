@@ -2,7 +2,7 @@ import os
 import shutil
 import numpy as np
 
-from pytrexio.pytrexio import *
+from trexio.pytrexio import *
 
 #=========================================================#
 #======== SETUP THE BACK END AND OUTPUT FILE NAME ========#

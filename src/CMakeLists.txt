@@ -130,16 +130,16 @@ if(TREXIO_PYTHON)
   set(TREXIO_PYTHON_TEST_PKG "${PROJECT_BINARY_DIR}/python-test-package"
       CACHE INTERNAL "Staged Python package used by the test suite")
   set_target_properties(_pytrexio PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${TREXIO_PYTHON_TEST_PKG}/pytrexio")
+    LIBRARY_OUTPUT_DIRECTORY "${TREXIO_PYTHON_TEST_PKG}/trexio")
   add_custom_command(TARGET _pytrexio POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${TREXIO_PYTHON_TEST_PKG}/pytrexio"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${TREXIO_PYTHON_TEST_PKG}/trexio"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${PROJECT_SOURCE_DIR}/src/trexio.py" "${TREXIO_PYTHON_TEST_PKG}/"
+            "${PROJECT_SOURCE_DIR}/src/trexio.py"
+            "${TREXIO_PYTHON_TEST_PKG}/trexio/__init__.py"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${TREXIO_SWIG_MODULE}"
-            "${PROJECT_SOURCE_DIR}/python/pytrexio/__init__.py"
             "${PROJECT_SOURCE_DIR}/python/pytrexio/_version.py"
-            "${TREXIO_PYTHON_TEST_PKG}/pytrexio/"
+            "${TREXIO_PYTHON_TEST_PKG}/trexio/"
     COMMENT "Staging the Python package for the test suite"
     VERBATIM)
 
@@ -160,17 +160,19 @@ if(TREXIO_PYTHON)
     endif()
   endif()
 
+  # Everything lands in one importable package, with the generated API as its
+  # __init__.py, so that `import trexio` pulls in a single directory.
   install(TARGETS _pytrexio
-    LIBRARY DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/pytrexio"
+    LIBRARY DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/trexio"
   )
   install(FILES "${PROJECT_SOURCE_DIR}/src/trexio.py"
-    DESTINATION "${TREXIO_INSTALL_PYTHONDIR}"
+    DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/trexio"
+    RENAME __init__.py
   )
   install(FILES
-      "${PROJECT_SOURCE_DIR}/python/pytrexio/__init__.py"
       "${PROJECT_SOURCE_DIR}/python/pytrexio/_version.py"
       "${TREXIO_SWIG_MODULE}"
-    DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/pytrexio"
+    DESTINATION "${TREXIO_INSTALL_PYTHONDIR}/trexio"
   )
 endif()
 
