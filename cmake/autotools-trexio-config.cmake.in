@@ -1,0 +1,64 @@
+# TREXIO CMake package configuration file, installed by the Autotools build.
+#
+# It provides the same trexio::trexio imported target as the configuration the
+# CMake build installs, so that find_package(trexio) works for consumers no
+# matter which build system produced the installation. It is written by hand
+# rather than generated, because the Autotools build cannot use
+# configure_package_config_file and install(EXPORT).
+
+set(TREXIO_VERSION "@PACKAGE_VERSION@")
+set(TREXIO_WITH_HDF5 @TREXIO_CMAKE_WITH_HDF5@)
+set(TREXIO_WITH_FORTRAN @TREXIO_CMAKE_WITH_FORTRAN@)
+
+# The installation prefix is derived from the location of this file, which sits
+# in <prefix>/<libdir>/cmake/trexio. Autoconf's libdir and includedir cannot be
+# substituted here, because they are written in terms of ${exec_prefix} and
+# ${prefix}, which mean nothing to CMake. Deriving the prefix instead also keeps
+# the installation relocatable.
+get_filename_component(_trexio_prefix "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
+
+# The library is looked up rather than hardcoded, so that the right file is
+# found whatever the platform calls it, whether it lives in lib or lib64, and
+# whether the installation is shared, static, or both.
+find_library(TREXIO_LIBRARY
+  NAMES trexio
+  HINTS "${_trexio_prefix}"
+  PATH_SUFFIXES lib lib64
+  NO_DEFAULT_PATH)
+
+find_path(TREXIO_INCLUDE_DIR
+  NAMES trexio.h
+  HINTS "${_trexio_prefix}"
+  PATH_SUFFIXES include
+  NO_DEFAULT_PATH)
+
+if(NOT TREXIO_LIBRARY OR NOT TREXIO_INCLUDE_DIR)
+  set(trexio_FOUND FALSE)
+  if(trexio_FIND_REQUIRED)
+    message(FATAL_ERROR
+      "The TREXIO package configuration was found, but the library or its "
+      "headers were not, under ${_trexio_prefix}. The installation looks "
+      "incomplete.")
+  endif()
+  return()
+endif()
+
+if(NOT TARGET trexio::trexio)
+  add_library(trexio::trexio UNKNOWN IMPORTED)
+  set_target_properties(trexio::trexio PROPERTIES
+    IMPORTED_LOCATION "${TREXIO_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${TREXIO_INCLUDE_DIR}"
+    INTERFACE_COMPILE_FEATURES c_std_99)
+
+  # A static archive does not carry its dependencies, so they have to be passed
+  # on to whoever links it. This mirrors Libs.private in trexio.pc.
+  get_filename_component(_trexio_suffix "${TREXIO_LIBRARY}" EXT)
+  if(_trexio_suffix STREQUAL "${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set_property(TARGET trexio::trexio APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES "@LIBS@")
+  endif()
+  unset(_trexio_suffix)
+endif()
+
+unset(_trexio_prefix)
+set(trexio_FOUND TRUE)
