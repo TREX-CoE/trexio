@@ -363,9 +363,10 @@ python-sdist: $(python_pkg_py) $(setup_py) $(setup_cfg)
 	cd python && \
 		python3 -m build --sdist
 
-# Stage the freshly built module so that both `make check` and the manual
-# python-test target import what was just compiled, rather than whatever copy of
-# TREXIO happens to be installed on the system.
+# Stage the freshly built module so that `make check` imports what was just
+# compiled, rather than whatever copy of TREXIO happens to be installed on the
+# system. The python-install and python-sdist targets do not use this copy: they
+# hand the sources in python/ to python -m build, which stages its own.
 if HAVE_PYTHON
 PYTHON_TEST_PKG = python-test-package
 

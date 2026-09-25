@@ -329,10 +329,21 @@ default; enable it with
 - `cmake -S. -Bbuild -DTREXIO_PYTHON=ON`
 
 `make` then builds the extension with the other objects, and `make install`
-installs `trexio.py` and the `pytrexio` package under the installation prefix,
-in `$prefix/lib/python<X.Y>/site-packages`. Since that is usually not on the
-default module search path, add it to `PYTHONPATH`, or point the installation at
-the interpreter's own directory:
+installs a single `trexio` package under the installation prefix, in the
+directory the interpreter uses for platform-specific packages — typically
+`$prefix/lib/python<X.Y>/site-packages` or `$prefix/lib64/...`:
+
+```
+<prefix>/<site-packages>/trexio/__init__.py    the API
+<prefix>/<site-packages>/trexio/pytrexio.py    the SWIG wrapper
+<prefix>/<site-packages>/trexio/_pytrexio.so
+<prefix>/<site-packages>/trexio/_version.py
+```
+
+So `import trexio` is all that is needed, and the wrapper is reachable as
+`trexio.pytrexio`. Since the prefix is usually not on the default module search
+path, add it to `PYTHONPATH`, or point the installation at the interpreter's own
+directory:
 
 - `./configure --enable-python pythondir=... pyexecdir=...`
 - `cmake -S. -Bbuild -DTREXIO_PYTHON=ON -DTREXIO_INSTALL_PYTHONDIR=...`
