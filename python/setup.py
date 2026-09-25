@@ -111,7 +111,7 @@ if h5_present:
 
 # define C extension module
 if h5_present:
-    pytrexio_module = Extension('pytrexio._pytrexio',
+    pytrexio_module = Extension('trexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [h5_cflags, srcpath, numpy_includedir],
                             libraries = ['hdf5' ],
@@ -119,7 +119,7 @@ if h5_present:
                             extra_link_args = [h5_ldflags]
                             )
 else:
-    pytrexio_module = Extension('pytrexio._pytrexio',
+    pytrexio_module = Extension('trexio._pytrexio',
                             sources = [os.path.join(srcpath, code) for code in c_files],
                             include_dirs = [srcpath, numpy_includedir],
                             extra_compile_args = compile_args
@@ -134,8 +134,7 @@ setup(name             = 'trexio',
       long_description = long_description,
       long_description_content_type = "text/markdown",
       ext_modules      = [pytrexio_module],
-      py_modules       = ['trexio'],
-      packages         = ['pytrexio'],
+      packages         = ['trexio'],
       url              = 'https://github.com/TREX-CoE/trexio',
       license          = 'BSD-3-Clause',
       classifiers=[

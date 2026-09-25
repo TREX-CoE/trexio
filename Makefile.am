@@ -262,7 +262,7 @@ numpy_i       = src/numpy.i
 # because a wheel cannot run configure.
 setup_py      = python/setup.py
 setup_cfg     = python/setup.cfg
-python_pkg_py = python/pytrexio/pytrexio.py
+python_pkg_py = python/trexio/pytrexio.py
 TEST_PY       = python/test/test_api.py python/test/test_memory.py
 
 # Distributed unconditionally, so that a tarball made without --enable-python
@@ -331,10 +331,13 @@ if HAVE_HDF5
 PYTHON_STAGED_FILES += src/trexio_hdf5.c src/trexio_hdf5.h
 endif
 
+# The standalone build stages the same single-package layout the build systems
+# install, so that the relative imports in the generated API resolve there too.
 $(python_pkg_py): $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(trexio_h)
-	$(MKDIR_P) $(srcdir)/python/src $(srcdir)/python/pytrexio
-	cp -f $(srcdir)/$(pytrexio_py) $(srcdir)/python/pytrexio/pytrexio.py
-	cp -f $(srcdir)/$(trexio_py) $(srcdir)/python/trexio.py
+	$(MKDIR_P) $(srcdir)/python/src $(srcdir)/python/trexio
+	cp -f $(srcdir)/$(trexio_py) $(srcdir)/python/trexio/__init__.py
+	cp -f $(srcdir)/$(pytrexio_py) $(srcdir)/python/trexio/pytrexio.py
+	cp -f $(srcdir)/python/pytrexio/_version.py $(srcdir)/python/trexio/_version.py
 	for f in $(PYTHON_STAGED_FILES) $(pytrexio_c) $(trexio_h) ; do \
 	  cp -f $(srcdir)/$$f $(srcdir)/python/src/ || exit 1 ; \
 	done
