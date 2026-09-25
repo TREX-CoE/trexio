@@ -89,10 +89,31 @@ if(TREXIO_PYTHON)
   set(TREXIO_SWIG_MODULE "${CMAKE_CURRENT_SOURCE_DIR}/pytrexio.py")
 
   # Python modules are tied to the interpreter that imports them, so they are
-  # installed next to the library rather than into the include directory.
-  set(TREXIO_INSTALL_PYTHONDIR
-    "${CMAKE_INSTALL_LIBDIR}/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages"
-    CACHE STRING
+  # installed next to the library rather than into the include directory. Ask
+  # the interpreter where its own scheme puts platform-specific packages, with
+  # the base blanked out so the answer comes back relative to a prefix: that
+  # picks up lib versus lib64 and the interpreter's own naming instead of
+  # assuming them.
+  #
+  # Blanking base is what makes this reliable. Deriving the path by taking it
+  # relative to sys.prefix instead returns local/lib64/... on distributions that
+  # patch the default scheme to /usr/local, Fedora among them.
+  execute_process(
+    COMMAND "${Python3_EXECUTABLE}" -c
+      "import os, sysconfig; scheme = sysconfig.get_preferred_scheme('prefix') if hasattr(sysconfig, 'get_preferred_scheme') else ('nt' if os.name == 'nt' else 'posix_prefix'); print(sysconfig.get_path('platlib', scheme, vars={'base': '', 'platbase': ''}).lstrip('/\\\\'))"
+    OUTPUT_VARIABLE TREXIO_PLATLIB
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE TREXIO_PLATLIB_RESULT
+    ERROR_QUIET)
+
+  if(NOT TREXIO_PLATLIB_RESULT EQUAL 0 OR TREXIO_PLATLIB STREQUAL "")
+    set(TREXIO_PLATLIB
+      "${CMAKE_INSTALL_LIBDIR}/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages")
+    message(STATUS "Could not ask Python for its package directory; "
+                   "falling back to ${TREXIO_PLATLIB}")
+  endif()
+
+  set(TREXIO_INSTALL_PYTHONDIR "${TREXIO_PLATLIB}" CACHE STRING
     "Installation directory for the Python interface, relative to CMAKE_INSTALL_PREFIX unless absolute")
 
   # The wrapper is shipped in the distribution, so SWIG is only needed when it is
