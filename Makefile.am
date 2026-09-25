@@ -456,8 +456,12 @@ src/trexio.c: $(trexio_h)
 trex.json: trex.org
 	cd $(srcdir)/tools && ./build_json.sh
 
+# config.h is generated into the build directory, which is not the source
+# directory in an object-directory build, so tell the generator where to find it
+# instead of letting it fall back to placeholder version and hash values.
 $(trexio_h): $(ORG_FILES) $(GENERATOR_FILES) trex.json
-	cd $(srcdir)/tools && ./build_trexio.sh
+	cd $(srcdir)/tools && \
+	  TREXIO_CONFIG_H="$(abs_builddir)/include/config.h" ./build_trexio.sh
 
 $(htmlizer): $(ORG_FILES) $(srcdir)/src/README.org
 	$(MKDIR_P) docs

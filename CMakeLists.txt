@@ -87,9 +87,20 @@ if(TREXIO_DEVEL)
   set(TREXIO_USER_NAME "$ENV{USER}")
   # replace placeholders in the templace config.h.in file to produce config.h
   # config.h is needed to insert TREXIO_PACKAGE_VERSION and TREXIO_GIT_HASH into trexio.h
+  # Write the generated header into a directory of its own inside the build tree.
+  # It used to be written to include/config.h in the source tree, where it
+  # overwrote the header configure generates and silently disabled the HDF5 back
+  # end for every later Autotools build in the same checkout.
+  #
+  # The subdirectory matters: for an in-source build PROJECT_BINARY_DIR is the
+  # source directory, so writing to include/config.h there would overwrite the
+  # same file again. Nothing compiled by this build includes it -- HAVE_CONFIG_H
+  # is never defined here, and the generator is told where to find it -- so it is
+  # free to live somewhere that cannot collide.
+  set(TREXIO_GENERATED_CONFIG_H "${PROJECT_BINARY_DIR}/trexio-generated/config.h")
   configure_file(
     "${PROJECT_SOURCE_DIR}/include/cmake_config.h.in"
-    "${PROJECT_SOURCE_DIR}/include/config.h"
+    "${TREXIO_GENERATED_CONFIG_H}"
     @ONLY)
 endif()
 

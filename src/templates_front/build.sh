@@ -4,14 +4,24 @@
 cat prefix_front.c   > trexio.c
 cat prefix_front.h   > trexio.h
 
+# The generated config.h does not always live in the source tree: an
+# object-directory build writes it into the build directory. Its location can
+# therefore be given in TREXIO_CONFIG_H, and the in-source path is the default.
+CONFIG_H=${TREXIO_CONFIG_H:-../../include/config.h}
+
+if [[ ! -f ${CONFIG_H} ]] ; then
+  echo "build.sh: ${CONFIG_H} not found; the version and the git hash" \
+       "will fall back to placeholder values." >&2
+fi
+
 # parse the config-defined version attributes to pass them to the header files
-VERSION_VAL=`grep "PACKAGE_VERSION" ../../include/config.h | cut -d " " -f 3`
-VERSION_MAJOR_VAL=`grep "VERSION_MAJOR" ../../include/config.h | cut -d " " -f 3`
-VERSION_MINOR_VAL=`grep "VERSION_MINOR" ../../include/config.h | cut -d " " -f 3`
-VERSION_PATCH_VAL=`grep "VERSION_PATCH" ../../include/config.h | cut -d " " -f 3`
+VERSION_VAL=`grep "PACKAGE_VERSION" ${CONFIG_H} | cut -d " " -f 3`
+VERSION_MAJOR_VAL=`grep "VERSION_MAJOR" ${CONFIG_H} | cut -d " " -f 3`
+VERSION_MINOR_VAL=`grep "VERSION_MINOR" ${CONFIG_H} | cut -d " " -f 3`
+VERSION_PATCH_VAL=`grep "VERSION_PATCH" ${CONFIG_H} | cut -d " " -f 3`
 
 # parse the config-defined GIT_HASH to pass them to the header files
-GIT_HASH_STR=`grep "GIT_HASH" ../../include/config.h | cut -d " " -f 3`
+GIT_HASH_STR=`grep "GIT_HASH" ${CONFIG_H} | cut -d " " -f 3`
 
 # grep some usefull constants from the config.h
 echo "" >> trexio.h
