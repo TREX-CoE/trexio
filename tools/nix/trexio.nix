@@ -18,7 +18,6 @@ stdenv.mkDerivation rec {
     filter = path: type: ! (builtins.elem (builtins.baseNameOf path) [
       "haskell"
       "docker"
-      "helpers-debian"
       "ocaml"
       "rust"
       "python"
