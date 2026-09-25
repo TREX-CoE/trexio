@@ -170,7 +170,7 @@ if(TREXIO_PYTHON)
   # pointed somewhere else.
   if(NOT IS_ABSOLUTE "${TREXIO_INSTALL_PYTHONDIR}" AND NOT IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
     file(RELATIVE_PATH _trexio_module_to_libdir
-      "${CMAKE_INSTALL_PREFIX}/${TREXIO_INSTALL_PYTHONDIR}/pytrexio"
+      "${CMAKE_INSTALL_PREFIX}/${TREXIO_INSTALL_PYTHONDIR}/trexio"
       "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
     if(APPLE)
       set_target_properties(_pytrexio PROPERTIES
