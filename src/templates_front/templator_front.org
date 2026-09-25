@@ -416,27 +416,20 @@ module trexio
 This package is a top-level wrapper of the SWIG-generated pytrexio module.
 """
 
-from os import path
-
 try:
     import numpy as np
 except ImportError:
     raise Exception("NumPy cannot be imported.")
 
 try:
-    import pytrexio.pytrexio as pytr
+    from . import pytrexio as pytr
 except ImportError:
-    raise Exception("Could not import pytrexio module from trexio package")
+    raise Exception("Could not import the pytrexio extension module.")
+
+from ._version import __version__
 
 # define max length of a string to be read, required for the low-level C routines
 PYTREXIO_MAX_STR_LENGTH = 2048
-
-# setuptools do not assign __version__ variable to the trexio package, so we set it manually
-__trexio_path__ = path.dirname(path.abspath(__file__))
-with open(path.join(path.join(__trexio_path__, 'pytrexio'), '_version.py')) as version_file:
-    __version__ = version_file.read().split('"')[1]
-
-__trexio_path__ = None
   #+end_src
 
 * Coding conventions
