@@ -51,9 +51,20 @@ foreach(Test ${Tests})
   add_test(NAME ${Test} COMMAND $<TARGET_FILE:${Test}>)
 endforeach()
 
+# Windows has no RPATH so place the test binaries next to the DLL to avoid all
+# aborting with STATUS_DLL_NOT_FOUND (0xC0000135).
+if(WIN32 AND BUILD_SHARED_LIBS)
+  set_target_properties(${Tests} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:trexio>")
+endif()
+
 # Add Fortran test and link it with trexio_f (Fortran module) library.
 if(TREXIO_FORTRAN)
   add_executable(test_f test_f.f90)
   target_link_libraries(test_f PRIVATE trexio_f)
   add_test(NAME test_f COMMAND $<TARGET_FILE:test_f>)
+  if(WIN32 AND BUILD_SHARED_LIBS)
+    set_target_properties(test_f PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY "$<TARGET_FILE_DIR:trexio>")
+  endif()
 endif()
