@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-09-07 Mon 15:54 -->
+<!-- 2026-09-25 Fri 12:24 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TEXT back end</title>
@@ -226,23 +226,23 @@ org_html_manager.setup();  // activate after the parameters are set
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org389eb49">1. Template for group-related structures in text back end</a></li>
-<li><a href="#org05898f7">2. Template for general structure in text back end</a></li>
-<li><a href="#org09ed630">3. Initialize function (constant part)</a></li>
-<li><a href="#orgf731d2d">4. Deinitialize function (templated part)</a></li>
-<li><a href="#org3c6da35">5. Flush function (templated part)</a></li>
-<li><a href="#orgbf60526">6. Template for text read a group</a></li>
-<li><a href="#orgbb24579">7. Template for text has a group</a></li>
-<li><a href="#orgd570d47">8. Template for text flush a group</a></li>
-<li><a href="#orgf2a1322">9. Template for text free memory</a></li>
-<li><a href="#orgc6c1d1b">10. Template for has/read/write a numerical attribute</a></li>
-<li><a href="#org6adf6b8">11. Template for has/read/write a dataset of numerical data</a></li>
-<li><a href="#org34c4d78">12. Template for has/read/write a dataset of strings</a></li>
-<li><a href="#org8536f91">13. Template for has/read/write a string attribute</a></li>
-<li><a href="#org31b59ce">14. Template for has/read/write the dataset of sparse data</a></li>
-<li><a href="#org3473fe5">15. Template for has/read/write a buffered vector</a></li>
-<li><a href="#org4db5cfb">16. Template for text delete a group (UNSAFE mode)</a></li>
-<li><a href="#orgbb36dba">17. Source code for the determinant part</a></li>
+<li><a href="#org479d82e">1. Template for group-related structures in text back end</a></li>
+<li><a href="#orgb76a2b3">2. Template for general structure in text back end</a></li>
+<li><a href="#orgb94e068">3. Initialize function (constant part)</a></li>
+<li><a href="#org23482eb">4. Deinitialize function (templated part)</a></li>
+<li><a href="#orge030fc3">5. Flush function (templated part)</a></li>
+<li><a href="#org36859f0">6. Template for text read a group</a></li>
+<li><a href="#org17677f7">7. Template for text has a group</a></li>
+<li><a href="#org518fe41">8. Template for text flush a group</a></li>
+<li><a href="#org6bbc397">9. Template for text free memory</a></li>
+<li><a href="#orgbb9bc96">10. Template for has/read/write a numerical attribute</a></li>
+<li><a href="#org9bd5b41">11. Template for has/read/write a dataset of numerical data</a></li>
+<li><a href="#orgedfabdd">12. Template for has/read/write a dataset of strings</a></li>
+<li><a href="#org06c8950">13. Template for has/read/write a string attribute</a></li>
+<li><a href="#orgdb6ad4f">14. Template for has/read/write the dataset of sparse data</a></li>
+<li><a href="#orgeeaf6cd">15. Template for has/read/write a buffered vector</a></li>
+<li><a href="#orgb09a737">16. Template for text delete a group (UNSAFE mode)</a></li>
+<li><a href="#org1d1962a">17. Source code for the determinant part</a></li>
 </ul>
 </div>
 </div>
@@ -264,8 +264,8 @@ directory.
 The file is written when closed, or when the flush function is called.
 </p>
 
-<div id="outline-container-org389eb49" class="outline-2">
-<h2 id="org389eb49"><span class="section-number-2">1.</span> Template for group-related structures in text back end</h2>
+<div id="outline-container-org479d82e" class="outline-2">
+<h2 id="org479d82e"><span class="section-number-2">1.</span> Template for group-related structures in text back end</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> $group$_s {
@@ -284,8 +284,8 @@ The file is written when closed, or when the flush function is called.
 </div>
 </div>
 
-<div id="outline-container-org05898f7" class="outline-2">
-<h2 id="org05898f7"><span class="section-number-2">2.</span> Template for general structure in text back end</h2>
+<div id="outline-container-orgb76a2b3" class="outline-2">
+<h2 id="orgb76a2b3"><span class="section-number-2">2.</span> Template for general structure in text back end</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Polymorphism of the <code>trexio_t</code> type is handled by ensuring that the
@@ -305,8 +305,8 @@ corresponding types for all back ends can be safely casted to
 </div>
 </div>
 
-<div id="outline-container-org09ed630" class="outline-2">
-<h2 id="org09ed630"><span class="section-number-2">3.</span> Initialize function (constant part)</h2>
+<div id="outline-container-orgb94e068" class="outline-2">
+<h2 id="orgb94e068"><span class="section-number-2">3.</span> Initialize function (constant part)</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">bool</span>
@@ -374,11 +374,7 @@ In that case, we define an alternate one, which is not as safe as the original o
     dir = tmpnam(dir);
     <span style="color: #a020f0;">if</span> (dir == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
 
-<span style="color: #483d8b;">#ifdef</span> _WIN32
-    <span style="color: #a020f0;">if</span> (mkdir(dir) != 0) {
-<span style="color: #483d8b;">#else</span>
-    <span style="color: #a020f0;">if</span> (mkdir(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
-<span style="color: #483d8b;">#endif</span>
+    <span style="color: #a020f0;">if</span> (TREXIO_MKDIR(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
         <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
     }
 
@@ -412,11 +408,7 @@ In that case, we define an alternate one, which is not as safe as the original o
 
     <span style="color: #a020f0;">if</span> (file-&gt;mode == <span style="color: #8b2252;">'r'</span>) <span style="color: #a020f0;">return</span> TREXIO_READONLY;
 
-<span style="color: #483d8b;">#ifdef</span> _WIN32
-    <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc_dir</span> = mkdir(file-&gt;file_name);
-<span style="color: #483d8b;">#else</span>
-    <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc_dir</span> = mkdir(file-&gt;file_name, 0777);
-<span style="color: #483d8b;">#endif</span>
+    <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc_dir</span> = TREXIO_MKDIR(file-&gt;file_name, 0777);
     <span style="color: #a020f0;">if</span> (rc_dir != 0) <span style="color: #a020f0;">return</span> TREXIO_ERRNO;
 
   }
@@ -434,7 +426,7 @@ In that case, we define an alternate one, which is not as safe as the original o
     <span style="color: #a020f0;">return</span> TREXIO_LOCK_ERROR;
   }
 
-  f-&gt;lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
+  f-&gt;lock_file = TREXIO_OPEN(file_name, O_WRONLY|O_CREAT|O_TRUNC, 0644);
 
   <span style="color: #a020f0;">if</span> (f-&gt;lock_file &lt;= 0) {
 <span style="color: #483d8b;">#ifdef</span> _WIN32
@@ -454,7 +446,7 @@ In that case, we define an alternate one, which is not as safe as the original o
         strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
         file_name[TREXIO_MAX_FILENAME_LENGTH-1] = <span style="color: #8b2252;">'\0'</span>;
         strncat (file_name, lock_file_name, TREXIO_MAX_FILENAME_LENGTH-strlen(lock_file_name));
-        f-&gt;lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
+        f-&gt;lock_file = TREXIO_OPEN(file_name, O_WRONLY|O_CREAT|O_TRUNC, 0644);
         remove(file_name);
         rmdir(dirname);
       } <span style="color: #a020f0;">else</span> {
@@ -519,7 +511,7 @@ In that case, we define an alternate one, which is not as safe as the original o
 
 <span style="color: #483d8b;">#endif</span>
 
-  close(f-&gt;lock_file);
+  TREXIO_CLOSE(f-&gt;lock_file);
   <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 
 }
@@ -528,8 +520,8 @@ In that case, we define an alternate one, which is not as safe as the original o
 </div>
 </div>
 
-<div id="outline-container-orgf731d2d" class="outline-2">
-<h2 id="orgf731d2d"><span class="section-number-2">4.</span> Deinitialize function (templated part)</h2>
+<div id="outline-container-org23482eb" class="outline-2">
+<h2 id="org23482eb"><span class="section-number-2">4.</span> Deinitialize function (templated part)</h2>
 <div class="outline-text-2" id="text-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -551,8 +543,8 @@ In that case, we define an alternate one, which is not as safe as the original o
 </div>
 </div>
 
-<div id="outline-container-org3c6da35" class="outline-2">
-<h2 id="org3c6da35"><span class="section-number-2">5.</span> Flush function (templated part)</h2>
+<div id="outline-container-orge030fc3" class="outline-2">
+<h2 id="orge030fc3"><span class="section-number-2">5.</span> Flush function (templated part)</h2>
 <div class="outline-text-2" id="text-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -574,8 +566,8 @@ In that case, we define an alternate one, which is not as safe as the original o
 </div>
 </div>
 
-<div id="outline-container-orgbf60526" class="outline-2">
-<h2 id="orgbf60526"><span class="section-number-2">6.</span> Template for text read a group</h2>
+<div id="outline-container-org36859f0" class="outline-2">
+<h2 id="org36859f0"><span class="section-number-2">6.</span> Template for text read a group</h2>
 <div class="outline-text-2" id="text-6">
 <div class="org-src-container">
 <pre class="src src-c">$group$_t*
@@ -824,8 +816,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-orgbb24579" class="outline-2">
-<h2 id="orgbb24579"><span class="section-number-2">7.</span> Template for text has a group</h2>
+<div id="outline-container-org17677f7" class="outline-2">
+<h2 id="org17677f7"><span class="section-number-2">7.</span> Template for text has a group</h2>
 <div class="outline-text-2" id="text-7">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -866,8 +858,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-orgd570d47" class="outline-2">
-<h2 id="orgd570d47"><span class="section-number-2">8.</span> Template for text flush a group</h2>
+<div id="outline-container-org518fe41" class="outline-2">
+<h2 id="org518fe41"><span class="section-number-2">8.</span> Template for text flush a group</h2>
 <div class="outline-text-2" id="text-8">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -931,8 +923,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 
-<div id="outline-container-orgf2a1322" class="outline-2">
-<h2 id="orgf2a1322"><span class="section-number-2">9.</span> Template for text free memory</h2>
+<div id="outline-container-org6bbc397" class="outline-2">
+<h2 id="org6bbc397"><span class="section-number-2">9.</span> Template for text free memory</h2>
 <div class="outline-text-2" id="text-9">
 <p>
 Memory is allocated when reading. The following function frees memory.
@@ -1001,8 +993,8 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 
-<div id="outline-container-orgc6c1d1b" class="outline-2">
-<h2 id="orgc6c1d1b"><span class="section-number-2">10.</span> Template for has/read/write a numerical attribute</h2>
+<div id="outline-container-orgbb9bc96" class="outline-2">
+<h2 id="orgbb9bc96"><span class="section-number-2">10.</span> Template for has/read/write a numerical attribute</h2>
 <div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1065,8 +1057,8 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 
-<div id="outline-container-org6adf6b8" class="outline-2">
-<h2 id="org6adf6b8"><span class="section-number-2">11.</span> Template for has/read/write a dataset of numerical data</h2>
+<div id="outline-container-org9bd5b41" class="outline-2">
+<h2 id="org9bd5b41"><span class="section-number-2">11.</span> Template for has/read/write a dataset of numerical data</h2>
 <div class="outline-text-2" id="text-11">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1166,8 +1158,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org34c4d78" class="outline-2">
-<h2 id="org34c4d78"><span class="section-number-2">12.</span> Template for has/read/write a dataset of strings</h2>
+<div id="outline-container-orgedfabdd" class="outline-2">
+<h2 id="orgedfabdd"><span class="section-number-2">12.</span> Template for has/read/write a dataset of strings</h2>
 <div class="outline-text-2" id="text-12">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1277,8 +1269,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org8536f91" class="outline-2">
-<h2 id="org8536f91"><span class="section-number-2">13.</span> Template for has/read/write a string attribute</h2>
+<div id="outline-container-org06c8950" class="outline-2">
+<h2 id="org06c8950"><span class="section-number-2">13.</span> Template for has/read/write a string attribute</h2>
 <div class="outline-text-2" id="text-13">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1354,8 +1346,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org31b59ce" class="outline-2">
-<h2 id="org31b59ce"><span class="section-number-2">14.</span> Template for has/read/write the dataset of sparse data</h2>
+<div id="outline-container-orgdb6ad4f" class="outline-2">
+<h2 id="orgdb6ad4f"><span class="section-number-2">14.</span> Template for has/read/write the dataset of sparse data</h2>
 <div class="outline-text-2" id="text-14">
 <p>
 Each sparse array is stored in a separate <code>.txt</code> file due to the fact that sparse I/O has to be decoupled
@@ -1644,7 +1636,7 @@ User provides indices and values of the sparse array as two separate variables.
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with sparse data exists or not</span> */
-  <span style="color: #a020f0;">if</span> (access(file_full_path, F_OK) == 0){
+  <span style="color: #a020f0;">if</span> (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
   } <span style="color: #a020f0;">else</span> {
     <span style="color: #a020f0;">return</span> TREXIO_HAS_NOT;
@@ -1655,8 +1647,8 @@ User provides indices and values of the sparse array as two separate variables.
 </div>
 </div>
 
-<div id="outline-container-org3473fe5" class="outline-2">
-<h2 id="org3473fe5"><span class="section-number-2">15.</span> Template for has/read/write a buffered vector</h2>
+<div id="outline-container-orgeeaf6cd" class="outline-2">
+<h2 id="orgeeaf6cd"><span class="section-number-2">15.</span> Template for has/read/write a buffered vector</h2>
 <div class="outline-text-2" id="text-15">
 <p>
 Each array is stored in a separate <code>.txt</code> file due to the fact that buffered I/O has to be decoupled
@@ -1887,7 +1879,7 @@ Size specifies the number of vector elements to be written.
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - <span style="color: #a020f0;">sizeof</span>(file_name));
 
   /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with data exists or not</span> */
-  <span style="color: #a020f0;">if</span> (access(file_full_path, F_OK) == 0){
+  <span style="color: #a020f0;">if</span> (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
   } <span style="color: #a020f0;">else</span> {
     <span style="color: #a020f0;">return</span> TREXIO_HAS_NOT;
@@ -1897,8 +1889,8 @@ Size specifies the number of vector elements to be written.
 </div>
 </div>
 </div>
-<div id="outline-container-org4db5cfb" class="outline-2">
-<h2 id="org4db5cfb"><span class="section-number-2">16.</span> Template for text delete a group (UNSAFE mode)</h2>
+<div id="outline-container-orgb09a737" class="outline-2">
+<h2 id="orgb09a737"><span class="section-number-2">16.</span> Template for text delete a group (UNSAFE mode)</h2>
 <div class="outline-text-2" id="text-16">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1926,8 +1918,8 @@ Size specifies the number of vector elements to be written.
 </div>
 </div>
 
-<div id="outline-container-orgbb36dba" class="outline-2">
-<h2 id="orgbb36dba"><span class="section-number-2">17.</span> Source code for the determinant part</h2>
+<div id="outline-container-org1d1962a" class="outline-2">
+<h2 id="org1d1962a"><span class="section-number-2">17.</span> Source code for the determinant part</h2>
 <div class="outline-text-2" id="text-17">
 <p>
 Each array is stored in a separate <code>.txt</code> file due to the fact that determinant I/O has to be decoupled
@@ -2117,7 +2109,7 @@ Size specifies the number of data items, e.g. determinants.
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
   /* <span style="color: #b22222;">Check the return code of access function to determine whether the file with data exists or not</span> */
-  <span style="color: #a020f0;">if</span> (access(file_full_path, F_OK) == 0){
+  <span style="color: #a020f0;">if</span> (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
   } <span style="color: #a020f0;">else</span> {
     <span style="color: #a020f0;">return</span> TREXIO_HAS_NOT;
@@ -2130,7 +2122,7 @@ Size specifies the number of data items, e.g. determinants.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2026-09-07 Mon 15:54</p>
+<p class="date">Created: 2026-09-25 Fri 12:24</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
