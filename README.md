@@ -253,6 +253,11 @@ or on [Binder](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD).
 For example, the tutorial covering TREXIO basics using benzene molecule as an example can be viewed and executed online by clicking on this badge:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD?filepath=notebooks%2Ftutorial_benzene.ipynb)
 
+If you generate TREXIO files in your own code, we recommend checking them with
+the [TREXIO validator](https://github.com/TREX-CoE/trexio-validate.git). It
+helps verify that the produced files are consistent with the TREXIO format and
+can catch missing or malformed data before the files are shared or used in
+production workflows.
 
 ### Documentation
 
