@@ -311,6 +311,16 @@ install-exec-hook:
 
 endif
 
+# SWIG writes pytrexio.py alongside the wrapper, and the org generation writes
+# trexio.py alongside the header, so neither has a recipe of its own. Say which
+# recipe produces them, otherwise a target that names them as a prerequisite
+# stops with "No rule to make target" in a checkout where they are absent.
+$(pytrexio_py): $(pytrexio_c)
+	@:
+
+$(trexio_py): $(trexio_h)
+	@:
+
 # pip drives CMake through scikit-build-core, so these targets only have to
 # invoke it from the top of the tree. There is no staging step any more: the
 # wheel is built from the sources in place rather than from a copy of the

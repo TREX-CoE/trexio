@@ -59,8 +59,12 @@ TREXIO_PYTHON = "ON"
 # compiler to pip install would be unreasonable.
 TREXIO_FORTRAN = "OFF"
 BUILD_TESTING = "OFF"
-# Link the library into the extension module, so that the wheel carries no
-# shared library of its own and nothing has to be resolved at import time.
+# Link TREXIO itself into the extension module, so the wheel carries no
+# libtrexio of its own. Note that this says nothing about HDF5: unless it is
+# built statically, the extension still links a shared libhdf5 and the wheel
+# needs it at import time. The release wheels get it bundled by auditwheel on
+# Linux and delocate on macOS, as they did before, which is where that is dealt
+# with.
 BUILD_SHARED_LIBS = "OFF"
 # Install the package at the root of the wheel rather than under a prefix.
 TREXIO_INSTALL_PYTHONDIR = "."
