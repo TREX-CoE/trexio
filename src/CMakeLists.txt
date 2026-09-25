@@ -108,9 +108,9 @@ if(TREXIO_DEVEL)
         ${TREXIO_PRIVATE_HEADERS}
         ${TREXIO_MOD_FILE}
       COMMAND "${CMAKE_COMMAND}" -E env
-              "TREXIO_CONFIG_H=${PROJECT_BINARY_DIR}/include/config.h"
+              "TREXIO_CONFIG_H=${TREXIO_GENERATED_CONFIG_H}"
               ./build_trexio.sh
-      DEPENDS ${ORG_FILES} "${PROJECT_BINARY_DIR}/include/config.h"
+      DEPENDS ${ORG_FILES} "${TREXIO_GENERATED_CONFIG_H}"
               "${PROJECT_SOURCE_DIR}/trex.json"
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
       COMMENT "Generating TREXIO source code from org-mode files."
