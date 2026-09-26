@@ -210,6 +210,19 @@ int main(void) { return 0; }
     COMMENT "Staging the Python package for the test suite"
     VERBATIM)
 
+  # Python 3.8 and newer no longer search PATH for an extension module's
+  # dependencies on Windows: only the module's own directory and whatever
+  # os.add_dll_directory() names are looked at. So the library has to sit next to
+  # the module for the staged package to be importable at all.
+  if(WIN32 AND BUILD_SHARED_LIBS)
+    add_custom_command(TARGET _pytrexio POST_BUILD
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+              "$<TARGET_FILE:trexio>"
+              "${TREXIO_PYTHON_TEST_PKG}/trexio/"
+      COMMENT "Copying the TREXIO library beside the staged extension module"
+      VERBATIM)
+  endif()
+
   # Let the installed module find libtrexio inside the same prefix, so that
   # importing it does not depend on LD_LIBRARY_PATH. The path is computed rather
   # than hardcoded, so that it still holds when TREXIO_INSTALL_PYTHONDIR is

@@ -401,8 +401,16 @@ jobs:
                       --disable-dependency-tracking \
                       CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
+      # On failure, show the part of the generated Makefile that make objected
+      # to: this lane produced "Makefile:901: *** missing separator" once and it
+      # cannot be reproduced anywhere else.
       - name: compile TREXIO
-        run: make -j2
+        run: |
+          make -j2 || {
+            echo "=== generated Makefile, lines 880-930 ==="
+            sed -n '880,930p' Makefile | cat -A
+            exit 1
+          }
 
       - name: check TREXIO
         run: make -j2 check
