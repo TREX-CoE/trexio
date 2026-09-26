@@ -473,12 +473,16 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
                                   r.push(format!("  size *= {};", dim));
                             }
                         }
-                        r.push(format!(r#"   // Allocate an array of *mut i8 pointers (initialized to null)
-    let mut dset_out: Vec<*mut i8> = vec![std::ptr::null_mut(); size];
+                        r.push(format!(r#"   // Allocate an array of pointers to C strings (initialized to null).
+    // c_char is what bindgen uses for char, and it is not the same type
+    // everywhere: char is signed on x86-64 and unsigned on aarch64, so spelling
+    // this i8 would only compile on some machines.
+    use std::os::raw::c_char;
+    let mut dset_out: Vec<*mut c_char> = vec![std::ptr::null_mut(); size];
 
     // Allocate C-style strings and populate dset_out
     for item in dset_out.iter_mut().take(size) {{
-        let c_str: *mut i8 = unsafe {{ std::alloc::alloc_zeroed(std::alloc::Layout::array::<i8>(capacity).unwrap()) as *mut i8 }};
+        let c_str: *mut c_char = unsafe {{ std::alloc::alloc_zeroed(std::alloc::Layout::array::<c_char>(capacity).unwrap()) as *mut c_char }};
         if c_str.is_null() {{
             return Err(ExitCode::AllocationFailed);
         }}
@@ -503,7 +507,7 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
 
     // Clean up allocated C strings
     for &c_str in &dset_out {{
-        unsafe {{ std::alloc::dealloc(c_str as *mut u8, std::alloc::Layout::array::<i8>(capacity).unwrap()) }};
+        unsafe {{ std::alloc::dealloc(c_str as *mut u8, std::alloc::Layout::array::<c_char>(capacity).unwrap()) }};
     }}
 
    rc_return(rust_strings, rc)

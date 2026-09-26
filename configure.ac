@@ -309,6 +309,12 @@ if test "x${TREXIO_DEVEL}" != "x"; then
   AC_PROG_AWK
 
   AX_PKG_SWIG(4.0.0, [], AC_MSG_WARN([SWIG is required to build Python API.]) )
+
+  # On Windows, swig -swiglib prints two directories, and AX_PKG_SWIG passes all
+  # of its output through, so SWIG_LIB ends up holding a newline and breaks the
+  # Makefile it is substituted into. Keep the last line, which is the directory
+  # that actually exists.
+  SWIG_LIB=`printf '%s\n' "$SWIG_LIB" | tail -n 1`
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
 
