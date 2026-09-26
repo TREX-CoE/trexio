@@ -391,10 +391,14 @@ jobs:
       # Windows is LLP64, so long is 32 bits wide even though the target is not:
       # building the Python API here is what keeps the SWIG word size honest on a
       # platform where it differs from the Unix ones.
+      # Dependency tracking is turned off because config.status cannot bootstrap
+      # its makefile fragments here once the extension module is in the build,
+      # and a one-shot CI build has no use for it anyway.
       - name: configure with autotools
         run: |
           ./autogen.sh
           ./configure --enable-silent-rules --enable-python \
+                      --disable-dependency-tracking \
                       CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
       - name: compile TREXIO
@@ -502,6 +506,12 @@ jobs:
       # The Fortran interface is disabled because FortranCInterface_VERIFY()
       # has no working clang-cl/Fortran pairing here; the MinGW job above keeps
       # the Windows Fortran path covered.
+      #
+      # clang counts discarded qualifiers as part of -Wincompatible-pointer-types,
+      # where GCC keeps them apart as -Wdiscarded-qualifiers, and SWIG's string
+      # typemaps assign the const char* of PyUnicode_AsUTF8 to a char*. That is
+      # generated code and harmless, so only that sub-warning is demoted, leaving
+      # genuinely mismatched pointer types an error.
       - name: configure with CMake
         run: |
           cmake -S "${TREXIO_DIR}" -Bbuild -GNinja \
@@ -511,7 +521,7 @@ jobs:
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
-                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS" \
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS -Wno-error=incompatible-pointer-types-discards-qualifiers" \
                 -DTREXIO_FORTRAN=OFF \
                 -DTREXIO_PYTHON=ON
 
@@ -564,7 +574,7 @@ jobs:
       - name: build the OCaml binding
         run: |
           eval $(opam env)
-          opam install -y dune
+          opam install -y dune dune-configurator
           export PKG_CONFIG_PATH="$HOME/trexio-install/lib/pkgconfig"
           export LD_LIBRARY_PATH="$HOME/trexio-install/lib"
           cd ocaml/trexio

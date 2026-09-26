@@ -734,6 +734,9 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .header(wrapper_h.to_str().unwrap())
+        // wrapper.h includes <trexio.h>, which lives in the installation rather
+        // than anywhere clang looks by default.
+        .clang_arg(format!("-I{}/include", install_path.display()))
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
