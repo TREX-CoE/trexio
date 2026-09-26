@@ -562,14 +562,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install libhdf5-dev emacs libtool-bin pkg-config
 
-      - name: install TREXIO
-        run: |
-          ./autogen.sh
-          ./configure --enable-silent-rules --prefix="$HOME/trexio-install" \
-                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
-          make -j2
-          make install
-
       # The distribution packages are older than the (lang dune 3.1) the binding
       # asks for, so the toolchain comes from opam.
       - name: set up OCaml
@@ -577,17 +569,25 @@ jobs:
         with:
           ocaml-compiler: '5.2'
 
-      # The stubs are generated from trex.json and the binding finds the library
-      # through pkg-config, so this also covers the installed trexio.pc.
-      - name: build the OCaml binding
+      - name: install dune
         run: |
           eval $(opam env)
           opam install -y dune dune-configurator
-          export PKG_CONFIG_PATH="$HOME/trexio-install/lib/pkgconfig"
-          export LD_LIBRARY_PATH="$HOME/trexio-install/lib"
-          cd ocaml/trexio
-          make sources
-          dune build
+
+      # --enable-ocaml builds the binding as part of the build and installs it
+      # with the rest, so this covers the wiring as well as the binding: the
+      # stubs are generated from trex.json, and dune locates the library through
+      # the uninstalled trexio.pc that configure writes.
+      - name: build and install TREXIO with the OCaml interface
+        run: |
+          eval $(opam env)
+          ./autogen.sh
+          ./configure --enable-silent-rules --enable-ocaml \
+                      --prefix="$HOME/trexio-install" \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
+          make -j2
+          make install
+          test -f "$HOME/trexio-install/lib/trexio/trexio.cma"
 
   trexio_rust:
     name: Rust binding
@@ -604,25 +604,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libhdf5-dev emacs libtool-bin pkg-config \
-                               clang libclang-dev
+                               cmake clang libclang-dev
 
-      - name: install TREXIO
+      # TREXIO_RUST builds the crate against this build tree and runs its tests
+      # as part of ctest, so this covers the wiring as well as the binding. The
+      # OCaml lane above goes through Autotools, which leaves both build systems
+      # covered between the two.
+      - name: build and test TREXIO with the Rust interface
         run: |
-          ./autogen.sh
-          ./configure --enable-silent-rules --prefix="$HOME/trexio-install" \
-                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
-          make -j2
-          make install
-
-      # TREXIO_DIR points build.rs at what was just built. Without it the crate
-      # downloads the last release and the tests say nothing about this tree.
-      - name: build and test the Rust binding
-        run: |
-          export TREXIO_DIR="$HOME/trexio-install"
-          export LD_LIBRARY_PATH="$HOME/trexio-install/lib"
-          cd rust/trexio
-          cargo build
-          cargo test
+          cmake -S. -Bbuild -DTREXIO_RUST=ON \
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS"
+          cmake --build build -j2
+          ctest --test-dir build -j2 --output-on-failure
 
   trexio_nix:
     name: Nix
