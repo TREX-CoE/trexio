@@ -401,14 +401,17 @@ jobs:
                       --disable-dependency-tracking \
                       CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
-      # On failure, show the part of the generated Makefile that make objected
-      # to: this lane produced "Makefile:901: *** missing separator" once and it
-      # cannot be reproduced anywhere else.
+      # Serial, because the code generation is not parallel-safe here: with -j2
+      # this lane ended up parsing a trex.json that the Emacs tangling was still
+      # writing, and failed with a JSON syntax error. The generation is the slow
+      # part of this lane either way.
       - name: compile TREXIO
         run: |
-          make -j2 || {
-            echo "=== generated Makefile, lines 880-930 ==="
-            sed -n '880,930p' Makefile | cat -A
+          make || {
+            echo "=== trex.json, first lines ==="
+            head -5 trex.json
+            echo "=== trex.json size ==="
+            wc -c trex.json
             exit 1
           }
 
