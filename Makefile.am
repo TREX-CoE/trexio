@@ -310,21 +310,59 @@ trexio-package/__init__.py: $(trexio_py)
 
 BUILT_SOURCES += trexio-package/__init__.py
 
+if REGENERATE_SWIG
+# The wrapper that comes with the distribution is generated for one size of long
+# (see configure.ac), so on a target with the other one it is regenerated here.
+# It is written to the build directory, which leaves the distributed copy alone
+# and keeps a 32-bit build out of the way of a 64-bit one in the same tree.
+pytrexio_wrap.c pytrexio.py: $(srcdir)/$(pytrexio_i) $(srcdir)/$(numpy_i) $(trexio_h)
+	$(SWIG) -python $(SWIG_WORDSIZE_FLAGS) \
+	        -I$(srcdir)/include -I$(srcdir)/src \
+	        -o pytrexio_wrap.c -outdir . $(srcdir)/$(pytrexio_i)
+
+nodist_trexio_PYTHON = trexio-package/__init__.py \
+                       python/pytrexio/_version.py \
+                       pytrexio.py
+
+trexioexec_LTLIBRARIES       = _pytrexio.la
+nodist__pytrexio_la_SOURCES  = pytrexio_wrap.c
+else
 nodist_trexio_PYTHON = trexio-package/__init__.py \
                        python/pytrexio/_version.py \
                        $(pytrexio_py)
 
 trexioexec_LTLIBRARIES       = _pytrexio.la
 nodist__pytrexio_la_SOURCES  = $(pytrexio_c)
+endif
 _pytrexio_la_CPPFLAGS        = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS) $(NUMPY_CPPFLAGS)
 _pytrexio_la_LDFLAGS         = -module -avoid-version -shared
 _pytrexio_la_LIBADD          = src/libtrexio.la
 
-# A libtool archive is of no use inside a Python package.
+# A libtool archive is of no use inside a Python package, and the module has to
+# carry the name Python will look for: Libtool installs _pytrexio.dll on Windows,
+# which is not one of the suffixes the interpreter imports.
 install-exec-hook:
 	$(RM) -f -- $(DESTDIR)$(trexioexecdir)/_pytrexio.la
+	@for ext in so dll dylib ; do \
+	  if test -f $(DESTDIR)$(trexioexecdir)/_pytrexio.$$ext && \
+	     test ".$$ext" != "$(PYTHON_EXT_SUFFIX)" ; then \
+	    echo "mv _pytrexio.$$ext _pytrexio$(PYTHON_EXT_SUFFIX)" ; \
+	    mv -f $(DESTDIR)$(trexioexecdir)/_pytrexio.$$ext \
+	          $(DESTDIR)$(trexioexecdir)/_pytrexio$(PYTHON_EXT_SUFFIX) ; \
+	  fi ; \
+	done
 
 endif
+
+# SWIG writes pytrexio.py alongside the wrapper, and the org generation writes
+# trexio.py alongside the header, so neither has a recipe of its own. Say which
+# recipe produces them, otherwise a target that names them as a prerequisite
+# stops with "No rule to make target" in a checkout where they are absent.
+$(pytrexio_py): $(pytrexio_c)
+	@:
+
+$(trexio_py): $(trexio_h)
+	@:
 
 # The standalone build compiles the library itself, so it needs its own copy of
 # the C sources beside the SWIG wrapper. This staging step used to live in
@@ -379,20 +417,35 @@ python-sdist: $(python_pkg_py) $(setup_py) $(setup_cfg)
 if HAVE_PYTHON
 PYTHON_TEST_PKG = python-test-package
 
-$(PYTHON_TEST_PKG)/trexio/_pytrexio.so: _pytrexio.la
+# Libtool names the module it builds after the platform -- _pytrexio.so here,
+# _pytrexio.dll on Windows -- while Python imports it by the suffix its own
+# machinery lists, so the copy is renamed on the way in.
+$(PYTHON_TEST_PKG)/trexio/_pytrexio$(PYTHON_EXT_SUFFIX): _pytrexio.la
 	$(MKDIR_P) $(PYTHON_TEST_PKG)/trexio
 	cp -f $(srcdir)/$(trexio_py) $(PYTHON_TEST_PKG)/trexio/__init__.py
 	cp -f $(srcdir)/$(pytrexio_py) $(PYTHON_TEST_PKG)/trexio/
 	cp -f $(srcdir)/python/pytrexio/_version.py $(PYTHON_TEST_PKG)/trexio/
-	cp -f .libs/_pytrexio.so $(PYTHON_TEST_PKG)/trexio/
+	@for ext in so dll dylib ; do \
+	  if test -f .libs/_pytrexio.$$ext ; then \
+	    echo "cp -f .libs/_pytrexio.$$ext $@" ; \
+	    cp -f .libs/_pytrexio.$$ext $@ ; \
+	    break ; \
+	  fi ; \
+	done
+	@test -f $@ || { \
+	  echo "Error: Libtool built no module this recipe recognises:" >&2 ; \
+	  ls .libs/_pytrexio* >&2 ; \
+	  exit 1 ; \
+	}
 
 # Run the Python tests as part of `make check`, but only when pytest is
 # available: it is a test-only dependency and not everyone building the library
 # will have it.
-check-local: $(PYTHON_TEST_PKG)/trexio/_pytrexio.so
+check-local: $(PYTHON_TEST_PKG)/trexio/_pytrexio$(PYTHON_EXT_SUFFIX)
 	@if $(PYTHON) -c "import pytest" 2>/dev/null ; then \
 	  echo "  PYTEST   Python API" ; \
 	  PYTHONPATH="$(abs_builddir)/$(PYTHON_TEST_PKG)$${PYTHONPATH:+:$$PYTHONPATH}" \
+	  DYLD_LIBRARY_PATH="$(abs_builddir)/src/.libs$${DYLD_LIBRARY_PATH:+:$$DYLD_LIBRARY_PATH}" \
 	    $(PYTHON) -m pytest -v $(PYTEST_FLAGS) $(TEST_PY) ; \
 	else \
 	  echo "  SKIP     Python API tests (pytest is not installed)" ; \
@@ -498,7 +551,7 @@ ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
 $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	@if [[ $(SWIG).x != ".x" ]] ; then \
 	cd $(srcdir)/src/ && \
-		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i ; \
+		$(SWIG) -python $(SWIG_WORDSIZE_FLAGS) -I../include -o pytrexio_wrap.c pytrexio.i ; \
 	else echo "Error: SWIG is not installed" ; \
 	exit 1 ; \
 	fi
