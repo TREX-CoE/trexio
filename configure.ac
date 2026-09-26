@@ -340,6 +340,9 @@ AC_DEFINE_UNQUOTED(GIT_HASH, ["${GIT_HASH}"], [Git SHA1 Hash])
 
 # A Python interpreter is needed both to build the Python API and, in maintainer
 # mode, to run the source code generator.
+trexio_swig_regen=no
+SWIG_WORDSIZE_FLAGS=""
+
 AS_IF([test "x$enable_python" = "xyes" || test "x${TREXIO_DEVEL}" != "x"],
       [AM_PATH_PYTHON([3.6],[],[:])])
 
@@ -369,11 +372,48 @@ AS_IF([test "x$enable_python" = "xyes"], [
   # in maintainer mode, where the wrapper is regenerated from pytrexio.i.
   AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
         [AC_MSG_ERROR([src/pytrexio_wrap.c is missing from this distribution.])])
+
+  # SWIG maps int64_t onto long when SWIGWORDSIZE64 is defined and onto long long
+  # otherwise, so the define has to follow the target rather than be hardcoded: it
+  # is right on LP64, and wrong both on ILP32 (i686) and on LLP64 (Windows), where
+  # the wrapper would pass long* where int64_t* is expected and SWIG's own guard
+  # would refuse to compile the result.
+  AC_CHECK_SIZEOF([long])
+  AS_IF([test "$ac_cv_sizeof_long" -eq 8],
+        [SWIG_WORDSIZE_FLAGS="-DSWIGWORDSIZE64"],
+        [SWIG_WORDSIZE_FLAGS=""])
+
+  # A generated wrapper records which of the two it was made for, because SWIG
+  # emits its 32-bit guard only when SWIGWORDSIZE64 was defined. A shipped wrapper
+  # that does not match this target cannot be compiled at all, so regenerate it
+  # into the build directory and leave the distributed copy alone.
+  AC_MSG_CHECKING([whether the SWIG wrapper matches the size of long])
+  AS_IF([test -f "$srcdir/src/pytrexio_wrap.c"],
+    [AS_IF([grep SWIG_NO_WORDSIZE64_CHECK "$srcdir/src/pytrexio_wrap.c" >/dev/null 2>&1],
+           [trexio_wrapper_long=8], [trexio_wrapper_long=4])
+     AS_IF([test "$trexio_wrapper_long" -eq "$ac_cv_sizeof_long"],
+           [AC_MSG_RESULT([yes])],
+           [AC_MSG_RESULT([no, it will be regenerated])
+            trexio_swig_regen=yes])],
+    [AC_MSG_RESULT([no wrapper present, it is generated from pytrexio.i])])
+
+  AS_IF([test "x$trexio_swig_regen" = "xyes"],
+    [AC_CHECK_PROGS([SWIG],[swig],[no])
+     AS_IF([test "x$SWIG" = "xno"],
+       [AC_MSG_ERROR([
+    ------------------------------------------------------------------
+    The Python API has to be regenerated for this target, because the
+    wrapper that comes with the distribution assumes sizeof(long) = 8
+    and this target has sizeof(long) = $ac_cv_sizeof_long. Install
+    SWIG (>= 4.0) or configure with --disable-python.
+    ------------------------------------------------------------------])])])
 ])
 
 AC_SUBST([PYTHON_CPPFLAGS])
 AC_SUBST([NUMPY_CPPFLAGS])
+AC_SUBST([SWIG_WORDSIZE_FLAGS])
 AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
+AM_CONDITIONAL([REGENERATE_SWIG],[test "x$trexio_swig_regen" = "xyes"])
 
 ## Libm
 ## ----

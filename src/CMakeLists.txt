@@ -116,17 +116,55 @@ if(TREXIO_PYTHON)
   set(TREXIO_INSTALL_PYTHONDIR "${TREXIO_PLATLIB}" CACHE STRING
     "Installation directory for the Python interface, relative to CMAKE_INSTALL_PREFIX unless absolute")
 
+  # SWIG maps int64_t onto long when SWIGWORDSIZE64 is defined and onto long long
+  # otherwise, so the define has to follow the target: it is right on LP64, and
+  # wrong both on ILP32 (i686) and on LLP64 (Windows), where the wrapper would
+  # pass long* where int64_t* is expected and SWIG's own guard would refuse to
+  # compile the result.
+  include(CheckTypeSize)
+  check_type_size("long" TREXIO_SIZEOF_LONG LANGUAGE C)
+  if(TREXIO_SIZEOF_LONG EQUAL 8)
+    set(TREXIO_SWIG_WORDSIZE_FLAGS "-DSWIGWORDSIZE64")
+  else()
+    # Unset rather than empty, so that it expands to no argument at all.
+    set(TREXIO_SWIG_WORDSIZE_FLAGS)
+  endif()
+
+  # A generated wrapper records which of the two it was made for, because SWIG
+  # emits its 32-bit guard only when SWIGWORDSIZE64 was defined. A shipped wrapper
+  # that does not match this target cannot be compiled at all, so it counts as
+  # missing and gets regenerated below.
+  set(TREXIO_SWIG_WRAPPER_MATCHES FALSE)
+  if(EXISTS "${TREXIO_SWIG_WRAPPER}")
+    file(STRINGS "${TREXIO_SWIG_WRAPPER}" TREXIO_SWIG_WRAPPER_GUARD
+         REGEX "SWIG_NO_WORDSIZE64_CHECK" LIMIT_COUNT 1)
+    if(TREXIO_SWIG_WRAPPER_GUARD)
+      set(TREXIO_SWIG_WRAPPER_LONG 8)
+    else()
+      set(TREXIO_SWIG_WRAPPER_LONG 4)
+    endif()
+    if(TREXIO_SWIG_WRAPPER_LONG EQUAL TREXIO_SIZEOF_LONG)
+      set(TREXIO_SWIG_WRAPPER_MATCHES TRUE)
+    else()
+      message(STATUS
+        "The distributed SWIG wrapper assumes sizeof(long) = ${TREXIO_SWIG_WRAPPER_LONG}"
+        " but this target has ${TREXIO_SIZEOF_LONG}: regenerating it")
+    endif()
+  endif()
+
   # The wrapper is shipped in the distribution, so SWIG is only needed when it is
-  # missing or when it has to be regenerated in developer mode. It is written to
-  # the build directory rather than next to the sources, so that a CMake build
-  # never competes with the Autotools one over the same generated files.
-  if(TREXIO_DEVEL OR NOT EXISTS "${TREXIO_SWIG_WRAPPER}")
+  # missing, unusable on this target, or has to be regenerated in developer mode.
+  # It is written to the build directory rather than next to the sources, so that
+  # a CMake build never competes with the Autotools one over the same generated
+  # files.
+  if(TREXIO_DEVEL OR NOT TREXIO_SWIG_WRAPPER_MATCHES)
     find_program(SWIG_EXECUTABLE NAMES swig REQUIRED)
     set(TREXIO_SWIG_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/pytrexio_wrap.c")
     set(TREXIO_SWIG_MODULE "${CMAKE_CURRENT_BINARY_DIR}/pytrexio.py")
     add_custom_command(
       OUTPUT "${TREXIO_SWIG_WRAPPER}" "${TREXIO_SWIG_MODULE}"
       COMMAND "${SWIG_EXECUTABLE}" -python
+              ${TREXIO_SWIG_WORDSIZE_FLAGS}
               -I${PROJECT_SOURCE_DIR}/include
               -I${CMAKE_CURRENT_SOURCE_DIR}
               -o "${TREXIO_SWIG_WRAPPER}"

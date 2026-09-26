@@ -310,12 +310,30 @@ trexio-package/__init__.py: $(trexio_py)
 
 BUILT_SOURCES += trexio-package/__init__.py
 
+if REGENERATE_SWIG
+# The wrapper that comes with the distribution is generated for one size of long
+# (see configure.ac), so on a target with the other one it is regenerated here.
+# It is written to the build directory, which leaves the distributed copy alone
+# and keeps a 32-bit build out of the way of a 64-bit one in the same tree.
+pytrexio_wrap.c pytrexio.py: $(srcdir)/$(pytrexio_i) $(srcdir)/$(numpy_i) $(trexio_h)
+	$(SWIG) -python $(SWIG_WORDSIZE_FLAGS) \
+	        -I$(srcdir)/include -I$(srcdir)/src \
+	        -o pytrexio_wrap.c -outdir . $(srcdir)/$(pytrexio_i)
+
+nodist_trexio_PYTHON = trexio-package/__init__.py \
+                       python/pytrexio/_version.py \
+                       pytrexio.py
+
+trexioexec_LTLIBRARIES       = _pytrexio.la
+nodist__pytrexio_la_SOURCES  = pytrexio_wrap.c
+else
 nodist_trexio_PYTHON = trexio-package/__init__.py \
                        python/pytrexio/_version.py \
                        $(pytrexio_py)
 
 trexioexec_LTLIBRARIES       = _pytrexio.la
 nodist__pytrexio_la_SOURCES  = $(pytrexio_c)
+endif
 _pytrexio_la_CPPFLAGS        = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS) $(NUMPY_CPPFLAGS)
 _pytrexio_la_LDFLAGS         = -module -avoid-version -shared
 _pytrexio_la_LIBADD          = src/libtrexio.la
@@ -498,7 +516,7 @@ ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
 $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	@if [[ $(SWIG).x != ".x" ]] ; then \
 	cd $(srcdir)/src/ && \
-		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i ; \
+		$(SWIG) -python $(SWIG_WORDSIZE_FLAGS) -I../include -o pytrexio_wrap.c pytrexio.i ; \
 	else echo "Error: SWIG is not installed" ; \
 	exit 1 ; \
 	fi
