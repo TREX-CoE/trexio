@@ -622,7 +622,6 @@ documentation.
     #+end_src
     :end:
 
-
 ** Effective core potentials (ecp group)
 
    An effective core potential (ECP) $V_A^{\text{ECP}}$ replacing the
@@ -915,14 +914,18 @@ power = [
    AO, so the correction factor $\mathcal{N}_i'$ for $d_{xy}$ in the
    ~ao~ group is the ratio $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
 
+   The cartesian/spherical character can be defined for all the shells
+   (either ~cartesian=0~ or ~1~, or it can be set on a per-shell basis using 
+   the ~cartesian_shell~ array and ensuring that ~cartesian~ is not stored.
 
    #+NAME: ao
-  | Variable        | Type    | Row-major Dimensions | Column-major Dimensions | Description                           |
-  |-----------------+---------+----------------------+-------------------------+---------------------------------------|
-  | ~cartesian~     | ~int~   |                      |                         | ~1~: true, ~0~: false                 |
-  | ~num~           | ~dim~   |                      |                         | Total number of atomic orbitals       |
-  | ~shell~         | ~index~ | ~[ao.num]~           | ~(ao.num)~              | Basis set shell for each AO           |
-  | ~normalization~ | ~float~ | ~[ao.num]~           | ~(ao.num)~              | Normalization factor $\mathcal{N}_i'$ |
+  | Variable          | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                            |
+  |-------------------+---------+----------------------+-------------------------+------------------------------------------------------------------------|
+  | ~cartesian~       | ~int~   |                      |                         | ~0~: false, ~1~: true. If undefined, check the ~cartesian_shell~ array |
+  | ~num~             | ~dim~   |                      |                         | Total number of atomic orbitals                                        |
+  | ~shell~           | ~index~ | ~[ao.num]~           | ~(ao.num)~              | Basis set shell for each AO                                            |
+  | ~normalization~   | ~float~ | ~[ao.num]~           | ~(ao.num)~              | Normalization factor $\mathcal{N}_i'$                                  |
+  | ~cartesian_shell~ | ~int~   | ~[basis.shell_num]~  | ~(basis.shell_num)~     | ~1~: the shell is cartesian, ~0~: the shell is spherical               |
 
    #+CALL: json(data=ao, title="ao")
 
@@ -930,10 +933,11 @@ power = [
    :results:
    #+begin_src json :tangle trex.json
        "ao": {
-	       "cartesian" : [ "int"  , []           ]
-	 ,           "num" : [ "dim"  , []           ]
-	 ,         "shell" : [ "index", [ "ao.num" ] ]
-	 , "normalization" : [ "float", [ "ao.num" ] ]
+                 "cartesian" : [ "int"  , []                    ]
+         ,             "num" : [ "dim"  , []                    ]
+         ,           "shell" : [ "index", [ "ao.num" ]          ]
+         ,   "normalization" : [ "float", [ "ao.num" ]          ]
+         , "cartesian_shell" : [ "int"  , [ "basis.shell_num" ] ]
        } ,
    #+end_src
    :end:
