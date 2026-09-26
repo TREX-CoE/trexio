@@ -528,6 +528,84 @@ jobs:
           name: test-report-windows-clang-cl
           path: build/Testing/Temporary/LastTest.log
 
+  trexio_ocaml:
+    name: OCaml binding
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
+    needs: get_commit_message
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev emacs libtool-bin pkg-config
+
+      - name: install TREXIO
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules --prefix="$HOME/trexio-install" \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
+          make -j2
+          make install
+
+      # The distribution packages are older than the (lang dune 3.1) the binding
+      # asks for, so the toolchain comes from opam.
+      - name: set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: '5.2'
+
+      # The stubs are generated from trex.json and the binding finds the library
+      # through pkg-config, so this also covers the installed trexio.pc.
+      - name: build the OCaml binding
+        run: |
+          eval $(opam env)
+          opam install -y dune
+          export PKG_CONFIG_PATH="$HOME/trexio-install/lib/pkgconfig"
+          export LD_LIBRARY_PATH="$HOME/trexio-install/lib"
+          cd ocaml/trexio
+          make sources
+          dune build
+
+  trexio_rust:
+    name: Rust binding
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
+    needs: get_commit_message
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev emacs libtool-bin pkg-config \
+                               clang libclang-dev
+
+      - name: install TREXIO
+        run: |
+          ./autogen.sh
+          ./configure --enable-silent-rules --prefix="$HOME/trexio-install" \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
+          make -j2
+          make install
+
+      # TREXIO_DIR points build.rs at what was just built. Without it the crate
+      # downloads the last release and the tests say nothing about this tree.
+      - name: build and test the Rust binding
+        run: |
+          export TREXIO_DIR="$HOME/trexio-install"
+          export LD_LIBRARY_PATH="$HOME/trexio-install/lib"
+          cd rust/trexio
+          cargo build
+          cargo test
+
   trexio_nix:
     name: Nix
     runs-on: ubuntu-latest

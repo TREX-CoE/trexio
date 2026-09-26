@@ -679,14 +679,42 @@ impl File {
 
 
 fn main() {
-    let source_path = download_trexio();
-    println!("source path: {}", source_path.display());
+    // By default a released TREXIO is downloaded and built here, so that the
+    // crate can be published on its own. TREXIO_DIR overrides that with the
+    // prefix of an existing installation, and TREXIO_SRC with the source
+    // directory holding trex.json; that is how the CI tests these bindings
+    // against the tree they are shipped in rather than against the last
+    // release. The two default to each other's usual layout.
+    println!("cargo:rerun-if-env-changed=TREXIO_DIR");
+    println!("cargo:rerun-if-env-changed=TREXIO_SRC");
 
-    let install_path = install_trexio(&source_path);
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let installed = env::var("TREXIO_DIR").ok().map(PathBuf::from);
+
+    let (install_path, source_path) = match installed {
+        Some(install_path) => {
+            // trex.json is not installed, so it is taken from the source tree:
+            // the crate sits in rust/trexio, two levels below it.
+            let source_path = env::var("TREXIO_SRC")
+                .map(PathBuf::from)
+                .unwrap_or_else(|_| manifest_dir.join("..").join(".."));
+            (install_path, source_path)
+        }
+        None => {
+            let source_path = download_trexio();
+            println!("source path: {}", source_path.display());
+            let install_path = install_trexio(&source_path);
+            (install_path, source_path)
+        }
+    };
+    println!("source path: {}", source_path.display());
     println!("install path: {}", install_path.display());
 
-    // Tell cargo to look for shared libraries in the specified directory
+    // Tell cargo to look for shared libraries in the specified directory. Both
+    // names are given because Autotools and CMake pick lib or lib64 according
+    // to the distribution.
     println!("cargo:rustc-link-search={}/lib", install_path.display());
+    println!("cargo:rustc-link-search={}/lib64", install_path.display());
 
     // Tell cargo to tell rustc to link the system trexio shared library.
     println!("cargo:rustc-link-lib=trexio");
