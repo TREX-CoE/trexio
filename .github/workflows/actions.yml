@@ -364,6 +364,14 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+
+    env:
+      # The code generation needs an interpreter that this Emacs can drive, and
+      # that is not the MinGW Python the extension module is built against: with
+      # the MinGW one ahead on PATH, Emacs spawns it but cannot talk to it, and
+      # the org-babel blocks silently yield nothing, leaving a trex.json with no
+      # groups in it. The MSYS Python matches the MSYS Emacs.
+      TREXIO_BABEL_PYTHON: /usr/bin/python3 -q
     steps:
       - uses: actions/checkout@v7
 
@@ -401,19 +409,8 @@ jobs:
                       --disable-dependency-tracking \
                       CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
-      # Serial, because the code generation is not parallel-safe here: with -j2
-      # this lane ended up parsing a trex.json that the Emacs tangling was still
-      # writing, and failed with a JSON syntax error. The generation is the slow
-      # part of this lane either way.
       - name: compile TREXIO
-        run: |
-          make || {
-            echo "=== trex.json, first lines ==="
-            head -5 trex.json
-            echo "=== trex.json size ==="
-            wc -c trex.json
-            exit 1
-          }
+        run: make -j2
 
       - name: check TREXIO
         run: make -j2 check
