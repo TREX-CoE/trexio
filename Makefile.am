@@ -421,6 +421,7 @@ check-local: $(PYTHON_TEST_PKG)/trexio/_pytrexio.so
 	@if $(PYTHON) -c "import pytest" 2>/dev/null ; then \
 	  echo "  PYTEST   Python API" ; \
 	  PYTHONPATH="$(abs_builddir)/$(PYTHON_TEST_PKG)$${PYTHONPATH:+:$$PYTHONPATH}" \
+	  DYLD_LIBRARY_PATH="$(abs_builddir)/src/.libs$${DYLD_LIBRARY_PATH:+:$$DYLD_LIBRARY_PATH}" \
 	    $(PYTHON) -m pytest -v $(PYTEST_FLAGS) $(TEST_PY) ; \
 	else \
 	  echo "  SKIP     Python API tests (pytest is not installed)" ; \
