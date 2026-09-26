@@ -510,29 +510,23 @@ $(numpy_i):
 check-numpy:
 	cd tools && ./check_numpy_i.sh
 
-# Include distribution packaging files.
-RPM_FILES = \
-  tools/fedora/trexio.spec
-
+# Include files needed to produce the debian package.
 DEB_FILES = \
-  tools/debian/changelog     \
-  tools/debian/compat        \
-  tools/debian/control       \
-  tools/debian/copyright     \
-  tools/debian/rules         \
-  tools/debian/source        \
-  tools/debian/libtrexio0.install \
-  tools/debian/libtrexio-dev.install \
-  tools/debian/source        \
-  tools/debian/README.source
+  helpers-debian/changelog     \
+  helpers-debian/compat        \
+  helpers-debian/control       \
+  helpers-debian/copyright     \
+  helpers-debian/rules         \
+  helpers-debian/source        \
+  helpers-debian/libtrexio0.install \
+  helpers-debian/libtrexio-dev.install \
+  helpers-debian/source        \
+  helpers-debian/README.source
 
-NIX_FILES = \
-  flake.nix \
-  flake.lock \
-  tools/nix/overlay.nix \
-  tools/nix/trexio.nix
+debian_from_dist: $(DEB_FILES) $(SOURCES) $(trexio_h)
+	cp ../trexio-$(PACKAGE_VERSION).tar.gz ../libtrexio_$(PACKAGE_VERSION).orig.tar.gz
+	debuild
 
-EXTRA_DIST += $(DEB_FILES) $(RPM_FILES) $(NIX_FILES)
 
 # The SWIG output and the staged copies are regenerated from the org sources in
 # maintainer mode, so they are cleaned only here and not in a distribution build,
