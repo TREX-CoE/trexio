@@ -373,25 +373,34 @@ AS_IF([test "x$enable_python" = "xyes"], [
   AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
         [AC_MSG_ERROR([src/pytrexio_wrap.c is missing from this distribution.])])
 
-  # SWIG maps int64_t onto long when SWIGWORDSIZE64 is defined and onto long long
-  # otherwise, so the define has to follow the target rather than be hardcoded: it
-  # is right on LP64, and wrong both on ILP32 (i686) and on LLP64 (Windows), where
-  # the wrapper would pass long* where int64_t* is expected and SWIG's own guard
-  # would refuse to compile the result.
-  AC_CHECK_SIZEOF([long])
-  AS_IF([test "$ac_cv_sizeof_long" -eq 8],
+  # SWIGWORDSIZE64 makes SWIG map int64_t onto long, and without it onto long
+  # long, so the define has to follow the target rather than be hardcoded. What
+  # decides is how int64_t is spelled, not how wide long is: it is long on LP64
+  # Linux, but long long on ILP32 targets (i686), on LLP64 ones (Windows) and
+  # also on macOS, which is LP64 yet still spells int64_t long long. Get at it
+  # with two declarations of one function, which conflict unless the two types
+  # are the same.
+  AC_CACHE_CHECK([whether int64_t is long], [trexio_cv_int64_t_is_long],
+    [AC_COMPILE_IFELSE(
+      [AC_LANG_PROGRAM([[#include <stdint.h>
+void trexio_check_int64_t(long *);
+void trexio_check_int64_t(int64_t *);]], [])],
+      [trexio_cv_int64_t_is_long=yes],
+      [trexio_cv_int64_t_is_long=no])])
+  AS_IF([test "x$trexio_cv_int64_t_is_long" = "xyes"],
         [SWIG_WORDSIZE_FLAGS="-DSWIGWORDSIZE64"],
         [SWIG_WORDSIZE_FLAGS=""])
 
   # A generated wrapper records which of the two it was made for, because SWIG
   # emits its 32-bit guard only when SWIGWORDSIZE64 was defined. A shipped wrapper
-  # that does not match this target cannot be compiled at all, so regenerate it
-  # into the build directory and leave the distributed copy alone.
-  AC_MSG_CHECKING([whether the SWIG wrapper matches the size of long])
+  # that does not match this target is at best miscompiled and at worst rejected
+  # outright, so regenerate it into the build directory and leave the distributed
+  # copy alone.
+  AC_MSG_CHECKING([whether the SWIG wrapper matches the type of int64_t])
   AS_IF([test -f "$srcdir/src/pytrexio_wrap.c"],
     [AS_IF([grep SWIG_NO_WORDSIZE64_CHECK "$srcdir/src/pytrexio_wrap.c" >/dev/null 2>&1],
-           [trexio_wrapper_long=8], [trexio_wrapper_long=4])
-     AS_IF([test "$trexio_wrapper_long" -eq "$ac_cv_sizeof_long"],
+           [trexio_wrapper_int64_t_is_long=yes], [trexio_wrapper_int64_t_is_long=no])
+     AS_IF([test "x$trexio_wrapper_int64_t_is_long" = "x$trexio_cv_int64_t_is_long"],
            [AC_MSG_RESULT([yes])],
            [AC_MSG_RESULT([no, it will be regenerated])
             trexio_swig_regen=yes])],
@@ -402,10 +411,10 @@ AS_IF([test "x$enable_python" = "xyes"], [
      AS_IF([test "x$SWIG" = "xno"],
        [AC_MSG_ERROR([
     ------------------------------------------------------------------
-    The Python API has to be regenerated for this target, because the
-    wrapper that comes with the distribution assumes sizeof(long) = 8
-    and this target has sizeof(long) = $ac_cv_sizeof_long. Install
-    SWIG (>= 4.0) or configure with --disable-python.
+    The Python API has to be regenerated for this target: the wrapper
+    that comes with the distribution maps int64_t onto a different
+    type than this target uses. Install SWIG (>= 4.0), or configure
+    with --disable-python.
     ------------------------------------------------------------------])])])
 ])
 
