@@ -344,6 +344,16 @@ install-exec-hook:
 
 endif
 
+# SWIG writes pytrexio.py alongside the wrapper, and the org generation writes
+# trexio.py alongside the header, so neither has a recipe of its own. Say which
+# recipe produces them, otherwise a target that names them as a prerequisite
+# stops with "No rule to make target" in a checkout where they are absent.
+$(pytrexio_py): $(pytrexio_c)
+	@:
+
+$(trexio_py): $(trexio_h)
+	@:
+
 # The standalone build compiles the library itself, so it needs its own copy of
 # the C sources beside the SWIG wrapper. This staging step used to live in
 # tools/prepare_python.sh.
