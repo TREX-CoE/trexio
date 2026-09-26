@@ -70,6 +70,14 @@ AS_IF([test "$ok" = "yes"],
 AC_ARG_ENABLE(python, [AS_HELP_STRING([--enable-python],[build and install the Python API])],
               [enable_python=$enableval], [enable_python=no])
 
+# OCaml API [default: --disable-ocaml]
+AC_ARG_ENABLE(ocaml, [AS_HELP_STRING([--enable-ocaml],[build and install the OCaml API])],
+              [enable_ocaml=$enableval], [enable_ocaml=no])
+
+# Rust API [default: --disable-rust]
+AC_ARG_ENABLE(rust, [AS_HELP_STRING([--enable-rust],[build and test the Rust API])],
+              [enable_rust=$enableval], [enable_rust=no])
+
 AC_LANG(C)
 AC_PROG_CC
 
@@ -309,6 +317,12 @@ if test "x${TREXIO_DEVEL}" != "x"; then
   AC_PROG_AWK
 
   AX_PKG_SWIG(4.0.0, [], AC_MSG_WARN([SWIG is required to build Python API.]) )
+
+  # On Windows, swig -swiglib prints two directories, and AX_PKG_SWIG passes all
+  # of its output through, so SWIG_LIB ends up holding a newline and breaks the
+  # Makefile it is substituted into. Keep the last line, which is the directory
+  # that actually exists.
+  SWIG_LIB=`printf '%s\n' "$SWIG_LIB" | tail -n 1`
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
 
@@ -340,6 +354,9 @@ AC_DEFINE_UNQUOTED(GIT_HASH, ["${GIT_HASH}"], [Git SHA1 Hash])
 
 # A Python interpreter is needed both to build the Python API and, in maintainer
 # mode, to run the source code generator.
+trexio_swig_regen=no
+SWIG_WORDSIZE_FLAGS=""
+
 AS_IF([test "x$enable_python" = "xyes" || test "x${TREXIO_DEVEL}" != "x"],
       [AM_PATH_PYTHON([3.6],[],[:])])
 
@@ -347,6 +364,16 @@ AS_IF([test "x$enable_python" = "xyes"], [
 
   AS_IF([test "x$PYTHON" = "x" || test "x$PYTHON" = "x:"],
         [AC_MSG_ERROR([--enable-python requires a Python 3 interpreter.])])
+
+  # Python imports an extension module by the suffixes its own machinery lists,
+  # which is not what the platform calls a shared library: .so here, .pyd on
+  # Windows, where Libtool builds a .dll. The generic suffix is the last one, and
+  # the plain name keeps this in step with the CMake build, which asks FindPython
+  # for the same thing and adds no ABI tag either.
+  PYTHON_EXT_SUFFIX=`$PYTHON -c "import importlib.machinery as m; print(m.EXTENSION_SUFFIXES[[-1]])" 2>/dev/null`
+  AS_IF([test "x$PYTHON_EXT_SUFFIX" = "x"], [PYTHON_EXT_SUFFIX=.so])
+  AC_MSG_CHECKING([the suffix of Python extension modules])
+  AC_MSG_RESULT([$PYTHON_EXT_SUFFIX])
 
   # The extension module is compiled here rather than by setup.py, so the Python
   # and NumPy headers have to be available.
@@ -369,11 +396,83 @@ AS_IF([test "x$enable_python" = "xyes"], [
   # in maintainer mode, where the wrapper is regenerated from pytrexio.i.
   AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
         [AC_MSG_ERROR([src/pytrexio_wrap.c is missing from this distribution.])])
+
+  # SWIGWORDSIZE64 makes SWIG map int64_t onto long, and without it onto long
+  # long, so the define has to follow the target rather than be hardcoded. What
+  # decides is how int64_t is spelled, not how wide long is: it is long on LP64
+  # Linux, but long long on ILP32 targets (i686), on LLP64 ones (Windows) and
+  # also on macOS, which is LP64 yet still spells int64_t long long. Get at it
+  # with two declarations of one function, which conflict unless the two types
+  # are the same.
+  AC_CACHE_CHECK([whether int64_t is long], [trexio_cv_int64_t_is_long],
+    [AC_COMPILE_IFELSE(
+      [AC_LANG_PROGRAM([[#include <stdint.h>
+void trexio_check_int64_t(long *);
+void trexio_check_int64_t(int64_t *);]], [])],
+      [trexio_cv_int64_t_is_long=yes],
+      [trexio_cv_int64_t_is_long=no])])
+  AS_IF([test "x$trexio_cv_int64_t_is_long" = "xyes"],
+        [SWIG_WORDSIZE_FLAGS="-DSWIGWORDSIZE64"],
+        [SWIG_WORDSIZE_FLAGS=""])
+
+  # A generated wrapper records which of the two it was made for, because SWIG
+  # emits its 32-bit guard only when SWIGWORDSIZE64 was defined. A shipped wrapper
+  # that does not match this target is at best miscompiled and at worst rejected
+  # outright, so regenerate it into the build directory and leave the distributed
+  # copy alone.
+  AC_MSG_CHECKING([whether the SWIG wrapper matches the type of int64_t])
+  AS_IF([test -f "$srcdir/src/pytrexio_wrap.c"],
+    [AS_IF([grep SWIG_NO_WORDSIZE64_CHECK "$srcdir/src/pytrexio_wrap.c" >/dev/null 2>&1],
+           [trexio_wrapper_int64_t_is_long=yes], [trexio_wrapper_int64_t_is_long=no])
+     AS_IF([test "x$trexio_wrapper_int64_t_is_long" = "x$trexio_cv_int64_t_is_long"],
+           [AC_MSG_RESULT([yes])],
+           [AC_MSG_RESULT([no, it will be regenerated])
+            trexio_swig_regen=yes])],
+    [AC_MSG_RESULT([no wrapper present, it is generated from pytrexio.i])])
+
+  AS_IF([test "x$trexio_swig_regen" = "xyes"],
+    [AC_CHECK_PROGS([SWIG],[swig],[no])
+     AS_IF([test "x$SWIG" = "xno"],
+       [AC_MSG_ERROR([
+    ------------------------------------------------------------------
+    The Python API has to be regenerated for this target: the wrapper
+    that comes with the distribution maps int64_t onto a different
+    type than this target uses. Install SWIG (>= 4.0), or configure
+    with --disable-python.
+    ------------------------------------------------------------------])])])
 ])
 
 AC_SUBST([PYTHON_CPPFLAGS])
 AC_SUBST([NUMPY_CPPFLAGS])
+AC_SUBST([SWIG_WORDSIZE_FLAGS])
+AC_SUBST([PYTHON_EXT_SUFFIX])
+
+# The OCaml binding is built by dune, which finds the library with pkg-config: in
+# a build tree that is the uninstalled trexio.pc generated below. Its stubs are
+# generated from trex.json by a Python script, so Python is needed as well.
+AS_IF([test "x$enable_ocaml" = "xyes"], [
+  AC_CHECK_PROGS([DUNE],[dune],[no])
+  AS_IF([test "x$DUNE" = "xno"],
+        [AC_MSG_ERROR([--enable-ocaml requires dune (the OCaml build system).])])
+  AS_IF([test "x$PKG_CONFIG" = "x"],
+        [AC_MSG_ERROR([--enable-ocaml requires pkg-config, which dune uses to
+locate the library.])])
+  AS_IF([test "x$PYTHON" = "x" || test "x$PYTHON" = "x:"],
+        [AC_MSG_ERROR([--enable-ocaml requires a Python 3 interpreter to generate
+the OCaml stubs from trex.json.])])
+])
+
+# The Rust binding is built by cargo. There is nothing to install: a crate is
+# consumed from source, so this only builds it and runs its tests.
+AS_IF([test "x$enable_rust" = "xyes"], [
+  AC_CHECK_PROGS([CARGO],[cargo],[no])
+  AS_IF([test "x$CARGO" = "xno"],
+        [AC_MSG_ERROR([--enable-rust requires cargo (the Rust build system).])])
+])
 AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
+AM_CONDITIONAL([HAVE_OCAML],[test "x$enable_ocaml" = "xyes"])
+AM_CONDITIONAL([HAVE_RUST],[test "x$enable_rust" = "xyes"])
+AM_CONDITIONAL([REGENERATE_SWIG],[test "x$trexio_swig_regen" = "xyes"])
 
 ## Libm
 ## ----
@@ -413,6 +512,7 @@ AC_SUBST([TREXIO_CMAKE_WITH_FORTRAN])
 
 AC_CONFIG_FILES([Makefile
                  pkgconfig/trexio.pc
+                 pkgconfig/uninstalled/trexio.pc:pkgconfig/trexio-uninstalled.pc.in
                  cmake/trexio-config.cmake:cmake/autotools-trexio-config.cmake.in
                  cmake/trexio-config-version.cmake:cmake/autotools-trexio-config-version.cmake.in])
 AC_OUTPUT
@@ -436,6 +536,8 @@ Package features:
   HDF5 version ...........:  ${HDF5_VERSION}
   Fortran API ............:  ${with_fortran}
   Python API .............:  ${enable_python}
+  OCaml API ..............:  ${enable_ocaml}
+  Rust API ...............:  ${enable_rust}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:

@@ -14,6 +14,17 @@ permissions:
   contents: read
   actions: write
 
+env:
+  # GCC 14 turned these four warnings into errors by default, which is how the
+  # Fedora i686 build caught a SWIG wrapper passing long* where int64_t* was
+  # expected. Older compilers only warn, so every lane asks for them explicitly
+  # and the same mistake fails everywhere rather than on one distribution.
+  TREXIO_STRICT_CFLAGS: >-
+    -Werror=implicit-function-declaration
+    -Werror=implicit-int
+    -Werror=int-conversion
+    -Werror=incompatible-pointer-types
+
 
 jobs:
 
@@ -68,11 +79,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libhdf5-dev emacs libtool-bin valgrind cmake
+          # Needed to build the Python API from the build systems rather than
+          # from pip: SWIG for the wrapper, the NumPy headers to compile it and
+          # pytest so that make check and ctest actually run the Python tests.
+          python3 -m pip install --upgrade pip
+          python3 -m pip install numpy pytest swig==4.3
 
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules
+          ./configure --enable-silent-rules --enable-python \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
       - name: compile TREXIO
         run: make -j2
@@ -139,7 +156,8 @@ jobs:
       - name: reconfigure with debugging
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules --enable-debug --enable-sanitizer
+          ./configure --enable-silent-rules --enable-debug --enable-sanitizer \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
       - name: recompile TREXIO
         run: make -j2
@@ -158,7 +176,9 @@ jobs:
         run: make maintainer-clean
 
       - name: configure with CMake
-        run: cmake -S. -Bbuilddir
+        run: |
+          cmake -S. -Bbuilddir -DTREXIO_PYTHON=ON \
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS"
 
       - name: compile TREXIO
         working-directory: builddir
@@ -226,6 +246,50 @@ jobs:
           name: test-report-i686
           path: test-suite.log
 
+  trexio_i386:
+    name: i386 (32-bit) Linux, all bindings
+    runs-on: ubuntu-22.04
+    needs: get_commit_message
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # The Python API cannot be built with gcc -m32 on a 64-bit runner, because
+      # that needs a 32-bit Python and NumPy, so this lane uses a native i386
+      # image: linux/386 runs directly on an amd64 host, with no emulation. The
+      # container is driven from a step rather than declared with "container:",
+      # because the runner injects a 64-bit Node into job containers and there is
+      # none for i386.
+      - name: build and test C, Fortran and Python in an i386 container
+        run: |
+          docker run --rm --platform linux/386 \
+                 -v "$PWD":/src -w /src \
+                 -e TREXIO_STRICT_CFLAGS="$TREXIO_STRICT_CFLAGS" \
+                 i386/debian:12 bash -euxc '
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              build-essential gfortran autoconf automake libtool pkg-config \
+              libhdf5-dev swig python3-dev python3-numpy python3-pytest \
+              cmake emacs-nox git ca-certificates
+            ./autogen.sh
+            ./configure --enable-silent-rules --enable-python \
+                        CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
+            make -j2
+            make -j2 check
+            make distclean
+            cmake -S. -Bbuilddir -DTREXIO_PYTHON=ON \
+                  -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS"
+            cmake --build builddir -j2
+            ctest --test-dir builddir -j2 --output-on-failure
+          '
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-i386
+          path: test-suite.log
+
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
@@ -250,14 +314,16 @@ jobs:
           brew install hdf5
           brew install automake
           brew install libtool
-          pip install swig==4.3
+          pip install swig==4.3 numpy pytest
           swig -version
 
       - name: configure with autotools
         run: |
           brew --prefix hdf5
           ./autogen.sh
-          ./configure CC=gcc-$GCC_VERSION FC=gfortran-$GCC_VERSION --enable-silent-rules
+          ./configure CC=gcc-$GCC_VERSION FC=gfortran-$GCC_VERSION \
+                      --enable-silent-rules --enable-python \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
       - name: compile TREXIO
         run: make -j3
@@ -298,6 +364,14 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+
+    env:
+      # The code generation needs an interpreter that this Emacs can drive, and
+      # that is not the MinGW Python the extension module is built against: with
+      # the MinGW one ahead on PATH, Emacs spawns it but cannot talk to it, and
+      # the org-babel blocks silently yield nothing, leaving a trex.json with no
+      # groups in it. The MSYS Python matches the MSYS Emacs.
+      TREXIO_BABEL_PYTHON: /usr/bin/python3 -q
     steps:
       - uses: actions/checkout@v7
 
@@ -313,15 +387,27 @@ jobs:
             mingw-w64-x86_64-autotools
             mingw-w64-x86_64-libtool
             mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-swig
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-python-numpy
+            mingw-w64-x86_64-python-pytest
             emacs
             python
             git
             make
 
+      # Windows is LLP64, so long is 32 bits wide even though the target is not:
+      # building the Python API here is what keeps the SWIG word size honest on a
+      # platform where it differs from the Unix ones.
+      # Dependency tracking is turned off because config.status cannot bootstrap
+      # its makefile fragments here once the extension module is in the build,
+      # and a one-shot CI build has no use for it anyway.
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules
+          ./configure --enable-silent-rules --enable-python \
+                      --disable-dependency-tracking \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
 
       - name: compile TREXIO
         run: make -j2
@@ -396,6 +482,10 @@ jobs:
             - ninja
             - clang
             - hdf5
+            - swig
+            - python
+            - numpy
+            - pytest
           EOF
           cat export.yaml
 
@@ -424,6 +514,12 @@ jobs:
       # The Fortran interface is disabled because FortranCInterface_VERIFY()
       # has no working clang-cl/Fortran pairing here; the MinGW job above keeps
       # the Windows Fortran path covered.
+      #
+      # clang counts discarded qualifiers as part of -Wincompatible-pointer-types,
+      # where GCC keeps them apart as -Wdiscarded-qualifiers, and SWIG's string
+      # typemaps assign the const char* of PyUnicode_AsUTF8 to a char*. That is
+      # generated code and harmless, so only that sub-warning is demoted, leaving
+      # genuinely mismatched pointer types an error.
       - name: configure with CMake
         run: |
           cmake -S "${TREXIO_DIR}" -Bbuild -GNinja \
@@ -433,7 +529,9 @@ jobs:
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
-                -DTREXIO_FORTRAN=OFF
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS -Wno-error=incompatible-pointer-types-discards-qualifiers" \
+                -DTREXIO_FORTRAN=OFF \
+                -DTREXIO_PYTHON=ON
 
       - name: compile and install TREXIO
         run: cmake --build build --target install
@@ -447,6 +545,77 @@ jobs:
         with:
           name: test-report-windows-clang-cl
           path: build/Testing/Temporary/LastTest.log
+
+  trexio_ocaml:
+    name: OCaml binding
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
+    needs: get_commit_message
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev emacs libtool-bin pkg-config
+
+      # The distribution packages are older than the (lang dune 3.1) the binding
+      # asks for, so the toolchain comes from opam.
+      - name: set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: '5.2'
+
+      - name: install dune
+        run: |
+          eval $(opam env)
+          opam install -y dune dune-configurator
+
+      # --enable-ocaml builds the binding as part of the build and installs it
+      # with the rest, so this covers the wiring as well as the binding: the
+      # stubs are generated from trex.json, and dune locates the library through
+      # the uninstalled trexio.pc that configure writes.
+      - name: build and install TREXIO with the OCaml interface
+        run: |
+          eval $(opam env)
+          ./autogen.sh
+          ./configure --enable-silent-rules --enable-ocaml \
+                      --prefix="$HOME/trexio-install" \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
+          make -j2
+          make install
+          test -f "$HOME/trexio-install/lib/trexio/trexio.cma"
+
+  trexio_rust:
+    name: Rust binding
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
+    needs: get_commit_message
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev emacs libtool-bin pkg-config \
+                               cmake clang libclang-dev
+
+      # TREXIO_RUST builds the crate against this build tree and runs its tests
+      # as part of ctest, so this covers the wiring as well as the binding. The
+      # OCaml lane above goes through Autotools, which leaves both build systems
+      # covered between the two.
+      - name: build and test TREXIO with the Rust interface
+        run: |
+          cmake -S. -Bbuild -DTREXIO_RUST=ON \
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS"
+          cmake --build build -j2
+          ctest --test-dir build -j2 --output-on-failure
 
   trexio_nix:
     name: Nix

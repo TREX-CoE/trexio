@@ -473,12 +473,16 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
                                   r.push(format!("  size *= {};", dim));
                             }
                         }
-                        r.push(format!(r#"   // Allocate an array of *mut i8 pointers (initialized to null)
-    let mut dset_out: Vec<*mut i8> = vec![std::ptr::null_mut(); size];
+                        r.push(format!(r#"   // Allocate an array of pointers to C strings (initialized to null).
+    // c_char is what bindgen uses for char, and it is not the same type
+    // everywhere: char is signed on x86-64 and unsigned on aarch64, so spelling
+    // this i8 would only compile on some machines.
+    use std::os::raw::c_char;
+    let mut dset_out: Vec<*mut c_char> = vec![std::ptr::null_mut(); size];
 
     // Allocate C-style strings and populate dset_out
     for item in dset_out.iter_mut().take(size) {{
-        let c_str: *mut i8 = unsafe {{ std::alloc::alloc_zeroed(std::alloc::Layout::array::<i8>(capacity).unwrap()) as *mut i8 }};
+        let c_str: *mut c_char = unsafe {{ std::alloc::alloc_zeroed(std::alloc::Layout::array::<c_char>(capacity).unwrap()) as *mut c_char }};
         if c_str.is_null() {{
             return Err(ExitCode::AllocationFailed);
         }}
@@ -503,7 +507,7 @@ pub fn write_{group_l}_{element_l}(&self, data: &[{type_r}]) -> Result<(), ExitC
 
     // Clean up allocated C strings
     for &c_str in &dset_out {{
-        unsafe {{ std::alloc::dealloc(c_str as *mut u8, std::alloc::Layout::array::<i8>(capacity).unwrap()) }};
+        unsafe {{ std::alloc::dealloc(c_str as *mut u8, std::alloc::Layout::array::<c_char>(capacity).unwrap()) }};
     }}
 
    rc_return(rust_strings, rc)
@@ -565,8 +569,11 @@ pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Re
     let val_ptr = val.as_ptr() as *mut f64;
     let offset: i64 = offset.try_into().expect("try_into failed in read_{group}_{element} (offset)");
     let mut buffer_size_read: i64 = buffer_size.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
+    // The index array holds {size} indices per element, and the C API checks the
+    // size it is given against that, not against the number of elements.
+    let size_index: i64 = {size} * buffer_size_read;
     let rc = unsafe {{ c::trexio_read_safe_{group}_{element}(self.ptr,
-           offset, &mut buffer_size_read, idx_ptr, buffer_size_read, val_ptr, buffer_size_read)
+           offset, &mut buffer_size_read, idx_ptr, size_index, val_ptr, buffer_size_read)
     }};
     let rc = match ExitCode::from(rc) {{
               ExitCode::End => ExitCode::to_c(&ExitCode::Success),
@@ -618,11 +625,14 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
 
     let size_max: i64 = data.len().try_into().expect("try_into failed in write_{group}_{element} (size_max)");
     let buffer_size = size_max;
+    // The index array holds {size} indices per element, and the C API checks the
+    // size it is given against that, not against the number of elements.
+    let size_index: i64 = {size} * size_max;
     let idx_ptr = idx.as_ptr() as *const i32;
     let val_ptr = val.as_ptr() as *const f64;
     let offset: i64 = offset.try_into().expect("try_into failed in write_{group}_{element} (offset)");
     let rc = unsafe {{ c::trexio_write_safe_{group}_{element}(self.ptr,
-           offset, buffer_size, idx_ptr, size_max, val_ptr, size_max) }};
+           offset, buffer_size, idx_ptr, size_index, val_ptr, size_max) }};
     rc_return((), rc)
 }}"#));
                     },
@@ -679,20 +689,78 @@ impl File {
 
 
 fn main() {
-    let source_path = download_trexio();
+    // By default a released TREXIO is downloaded and built here, so that the
+    // crate can be published on its own. TREXIO_DIR overrides that with the
+    // prefix of an existing installation, and TREXIO_SRC with the source
+    // directory holding trex.json; that is how the CI tests these bindings
+    // against the tree they are shipped in rather than against the last
+    // release. The two default to each other's usual layout.
+    for var in ["TREXIO_DIR", "TREXIO_INCLUDE_DIR", "TREXIO_LIB_DIR", "TREXIO_SRC"] {
+        println!("cargo:rerun-if-env-changed={var}");
+    }
+
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let prefix = env::var("TREXIO_DIR").ok().map(PathBuf::from);
+    let include_dir = env::var("TREXIO_INCLUDE_DIR").ok().map(PathBuf::from);
+    let lib_dir = env::var("TREXIO_LIB_DIR").ok().map(PathBuf::from);
+
+    // A build tree is not a prefix -- the headers are in the source directory and
+    // the library under src/.libs -- so the two directories can also be given
+    // separately, which is what the TREXIO build systems do.
+    let existing = prefix.is_some() || (include_dir.is_some() && lib_dir.is_some());
+
+    let (include_dirs, lib_dirs, source_path) = if existing {
+        // trex.json is not installed, so it comes from the source or build tree:
+        // the crate sits in rust/trexio, two levels below the top.
+        let source_path = env::var("TREXIO_SRC")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| manifest_dir.join("..").join(".."));
+        let mut include_dirs = Vec::new();
+        let mut lib_dirs = Vec::new();
+        if let Some(dir) = include_dir {
+            include_dirs.push(dir);
+        }
+        if let Some(dir) = lib_dir {
+            lib_dirs.push(dir);
+        }
+        if let Some(prefix) = prefix {
+            include_dirs.push(prefix.join("include"));
+            // Both names, because Autotools and CMake pick lib or lib64
+            // according to the distribution.
+            lib_dirs.push(prefix.join("lib"));
+            lib_dirs.push(prefix.join("lib64"));
+        }
+        (include_dirs, lib_dirs, source_path)
+    } else {
+        let source_path = download_trexio();
+        let install_path = install_trexio(&source_path);
+        (
+            vec![install_path.join("include")],
+            vec![install_path.join("lib")],
+            source_path,
+        )
+    };
     println!("source path: {}", source_path.display());
 
-    let install_path = install_trexio(&source_path);
-    println!("install path: {}", install_path.display());
-
-    // Tell cargo to look for shared libraries in the specified directory
-    println!("cargo:rustc-link-search={}/lib", install_path.display());
+    for dir in &lib_dirs {
+        println!("cargo:rustc-link-search={}", dir.display());
+    }
 
     // Tell cargo to tell rustc to link the system trexio shared library.
     println!("cargo:rustc-link-lib=trexio");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let trexio_h = install_path.join("include").join("trexio.h");
+    let trexio_h = include_dirs
+        .iter()
+        .map(|dir| dir.join("trexio.h"))
+        .find(|header| header.exists())
+        .unwrap_or_else(|| {
+            panic!(
+                "trexio.h was not found in any of {include_dirs:?}. Set TREXIO_DIR to \
+                 an installation prefix, or TREXIO_INCLUDE_DIR and TREXIO_LIB_DIR to \
+                 a build tree."
+            )
+        });
     println!("trexio.h: {}", trexio_h.display());
 
     make_interface(&trexio_h).unwrap();
@@ -706,6 +774,13 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .header(wrapper_h.to_str().unwrap())
+        // wrapper.h includes <trexio.h>, which is not anywhere clang looks by
+        // default.
+        .clang_args(
+            include_dirs
+                .iter()
+                .map(|dir| format!("-I{}", dir.display())),
+        )
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))

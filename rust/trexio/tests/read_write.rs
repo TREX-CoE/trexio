@@ -94,19 +94,16 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
         offset += bufsize;
     }
 
-    // Determinants
-    let det_num = 50;
-    let mut det_list = Vec::with_capacity(det_num);
-    for i in 0..det_num {
-        let mut d = [0i64; 6];
-        for j in 0..6 {
-            d[j] = 6 * (i as i64) + (j as i64);
-        }
-        det_list.push(Bitfield::from_vec(&d));
-    }
+    // Determinants. The electron counts have to be in the file first: writing a
+    // determinant list validates every determinant against them.
+    trex_file.write_electron_up_num(ELEC_UP)?;
+    trex_file.write_electron_dn_num(ELEC_DN)?;
+
+    let det_num = DET_NUM;
+    let det_list = determinant_list();
 
     let n_buffers = 5;
-    let bufsize = 50 / n_buffers;
+    let bufsize = det_num / n_buffers;
     let mut offset = 0;
     for _ in 0..n_buffers {
         trex_file.write_determinant_list(offset, &det_list[offset..offset + bufsize])?;
@@ -114,6 +111,31 @@ fn write(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     }
 
     trex_file.close()
+}
+
+/// Determinants the C library will accept: it checks every one of them against
+/// electron_up_num and electron_dn_num, so the number of bits set per spin has
+/// to match. With mo_num = 150 a determinant is 2*3 = 6 integers, the first
+/// three for up spin and the last three for down.
+const DET_NUM: usize = 50;
+const ELEC_UP: i64 = 4;
+const ELEC_DN: i64 = 3;
+
+fn determinant_list() -> Vec<Bitfield> {
+    let mut list = Vec::with_capacity(DET_NUM);
+    for i in 0..DET_NUM {
+        let mut d = [0i64; 6];
+        for j in 0..ELEC_UP as usize {
+            let orbital = i + j;
+            d[orbital / 64] |= 1i64 << (orbital % 64);
+        }
+        for j in 0..ELEC_DN as usize {
+            let orbital = i + j;
+            d[3 + orbital / 64] |= 1i64 << (orbital % 64);
+        }
+        list.push(Bitfield::from_vec(&d));
+    }
+    list
 }
 
 fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
@@ -247,14 +269,7 @@ fn read(file_name: &str, back_end: BackEnd) -> Result<(), trexio::ExitCode> {
     let det_num = trex_file.read_determinant_num()?;
     assert_eq!(det_num, 50);
 
-    let mut det_list_ref = Vec::with_capacity(det_num);
-    for i in 0..det_num {
-        let mut d = [0i64; 6];
-        for j in 0..6 {
-            d[j] = 6 * (i as i64) + (j as i64);
-        }
-        det_list_ref.push(Bitfield::from_vec(&d));
-    }
+    let det_list_ref = determinant_list();
 
     let n_buffers = 8;
     let bufsize = det_num / n_buffers + 20;
