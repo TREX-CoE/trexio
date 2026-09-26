@@ -70,6 +70,14 @@ AS_IF([test "$ok" = "yes"],
 AC_ARG_ENABLE(python, [AS_HELP_STRING([--enable-python],[build and install the Python API])],
               [enable_python=$enableval], [enable_python=no])
 
+# OCaml API [default: --disable-ocaml]
+AC_ARG_ENABLE(ocaml, [AS_HELP_STRING([--enable-ocaml],[build and install the OCaml API])],
+              [enable_ocaml=$enableval], [enable_ocaml=no])
+
+# Rust API [default: --disable-rust]
+AC_ARG_ENABLE(rust, [AS_HELP_STRING([--enable-rust],[build and test the Rust API])],
+              [enable_rust=$enableval], [enable_rust=no])
+
 AC_LANG(C)
 AC_PROG_CC
 
@@ -438,7 +446,32 @@ AC_SUBST([PYTHON_CPPFLAGS])
 AC_SUBST([NUMPY_CPPFLAGS])
 AC_SUBST([SWIG_WORDSIZE_FLAGS])
 AC_SUBST([PYTHON_EXT_SUFFIX])
+
+# The OCaml binding is built by dune, which finds the library with pkg-config: in
+# a build tree that is the uninstalled trexio.pc generated below. Its stubs are
+# generated from trex.json by a Python script, so Python is needed as well.
+AS_IF([test "x$enable_ocaml" = "xyes"], [
+  AC_CHECK_PROGS([DUNE],[dune],[no])
+  AS_IF([test "x$DUNE" = "xno"],
+        [AC_MSG_ERROR([--enable-ocaml requires dune (the OCaml build system).])])
+  AS_IF([test "x$PKG_CONFIG" = "x"],
+        [AC_MSG_ERROR([--enable-ocaml requires pkg-config, which dune uses to
+locate the library.])])
+  AS_IF([test "x$PYTHON" = "x" || test "x$PYTHON" = "x:"],
+        [AC_MSG_ERROR([--enable-ocaml requires a Python 3 interpreter to generate
+the OCaml stubs from trex.json.])])
+])
+
+# The Rust binding is built by cargo. There is nothing to install: a crate is
+# consumed from source, so this only builds it and runs its tests.
+AS_IF([test "x$enable_rust" = "xyes"], [
+  AC_CHECK_PROGS([CARGO],[cargo],[no])
+  AS_IF([test "x$CARGO" = "xno"],
+        [AC_MSG_ERROR([--enable-rust requires cargo (the Rust build system).])])
+])
 AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
+AM_CONDITIONAL([HAVE_OCAML],[test "x$enable_ocaml" = "xyes"])
+AM_CONDITIONAL([HAVE_RUST],[test "x$enable_rust" = "xyes"])
 AM_CONDITIONAL([REGENERATE_SWIG],[test "x$trexio_swig_regen" = "xyes"])
 
 ## Libm
@@ -479,6 +512,7 @@ AC_SUBST([TREXIO_CMAKE_WITH_FORTRAN])
 
 AC_CONFIG_FILES([Makefile
                  pkgconfig/trexio.pc
+                 pkgconfig/uninstalled/trexio.pc:pkgconfig/trexio-uninstalled.pc.in
                  cmake/trexio-config.cmake:cmake/autotools-trexio-config.cmake.in
                  cmake/trexio-config-version.cmake:cmake/autotools-trexio-config-version.cmake.in])
 AC_OUTPUT
@@ -502,6 +536,8 @@ Package features:
   HDF5 version ...........:  ${HDF5_VERSION}
   Fortran API ............:  ${with_fortran}
   Python API .............:  ${enable_python}
+  OCaml API ..............:  ${enable_ocaml}
+  Rust API ...............:  ${enable_rust}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:

@@ -441,7 +441,7 @@ $(PYTHON_TEST_PKG)/trexio/_pytrexio$(PYTHON_EXT_SUFFIX): _pytrexio.la
 # Run the Python tests as part of `make check`, but only when pytest is
 # available: it is a test-only dependency and not everyone building the library
 # will have it.
-check-local: $(PYTHON_TEST_PKG)/trexio/_pytrexio$(PYTHON_EXT_SUFFIX)
+check-python: $(PYTHON_TEST_PKG)/trexio/_pytrexio$(PYTHON_EXT_SUFFIX)
 	@if $(PYTHON) -c "import pytest" 2>/dev/null ; then \
 	  echo "  PYTEST   Python API" ; \
 	  PYTHONPATH="$(abs_builddir)/$(PYTHON_TEST_PKG)$${PYTHONPATH:+:$$PYTHONPATH}" \
@@ -474,7 +474,9 @@ python-test: $(TEST_PY)
 	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
 endif
 
-.PHONY: python-test python-install python-sdist cppcheck check-numpy FORCE ocaml
+.PHONY: python-test python-install python-sdist cppcheck check-numpy FORCE \
+        check-python ocaml ocaml-sources ocaml-build ocaml-install-local \
+        ocaml-opam-install rust rust-build rust-test
 
 # =============== DEVELOPER MODE =============== #
 
@@ -535,13 +537,93 @@ cppcheck.out: $(trexio_h)
 # OCaml binding #
 #################
 
-ocaml/trexio/_build/default/lib/trexio.cma:
-	$(MAKE) -C ocaml/trexio
+# The stubs are generated from trex.json, and dune locates the library with
+# pkg-config: pkgconfig/uninstalled/trexio.pc describes this build tree, so the
+# binding is built against what was just compiled rather than against a copy
+# installed on the system. dune keeps its output under ocaml/trexio/_build, so
+# these recipes run in the source directory.
+OCAML_DIR = ocaml/trexio
+OCAML_ENV = TREXIO_JSON="$(abs_top_builddir)/trex.json" \
+            TREXIO_CONFIGURE_AC="$(abs_top_srcdir)/configure.ac" \
+            PKG_CONFIG_PATH="$(abs_top_builddir)/pkgconfig/uninstalled$${PKG_CONFIG_PATH:+:$$PKG_CONFIG_PATH}"
 
-ocaml: ocaml/trexio/_build/default/lib/trexio.cma
+ocaml-sources: trex.json $(trexio_h)
+	cd $(srcdir)/$(OCAML_DIR) && $(OCAML_ENV) $(PYTHON) read_json.py
 
-ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
-	opam install ocaml/trexio
+ocaml-build: ocaml-sources src/libtrexio.la
+	cd $(srcdir)/$(OCAML_DIR) && $(OCAML_ENV) $(DUNE) build
+
+ocaml: ocaml-build
+
+# dune installs into a prefix of its own accord, so --prefix is what carries the
+# Autotools one over. Installing into an opam switch instead is what the
+# ocaml-opam-install target below is for.
+# dune takes the prefix and the staging directory separately, and it reads
+# DESTDIR from the environment on its own, so passing $(DESTDIR)$(prefix) as the
+# prefix would stage the files twice over.
+ocaml-install-local: ocaml-build
+	cd $(srcdir)/$(OCAML_DIR) && \
+	  if test -n "$(DESTDIR)" ; then \
+	    $(OCAML_ENV) $(DUNE) install --prefix="$(prefix)" \
+	                                --destdir="$(DESTDIR)" ; \
+	  else \
+	    $(OCAML_ENV) $(DUNE) install --prefix="$(prefix)" ; \
+	  fi
+
+ocaml-opam-install: ocaml-build
+	opam install $(srcdir)/$(OCAML_DIR)
+
+#################
+# Rust binding  #
+#################
+
+# cargo is handed the include and library directories of this build tree, so that
+# build.rs binds what was just compiled instead of downloading a release. There is
+# no install step: a crate is consumed from source, and publishing it is cargo's
+# business.
+RUST_DIR = rust/trexio
+RUST_ENV = TREXIO_INCLUDE_DIR="$(abs_top_srcdir)/include" \
+           TREXIO_LIB_DIR="$(abs_top_builddir)/src/.libs" \
+           TREXIO_SRC="$(abs_top_builddir)" \
+           LD_LIBRARY_PATH="$(abs_top_builddir)/src/.libs$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}"
+
+rust-build: trex.json $(trexio_h) src/libtrexio.la
+	cd $(srcdir)/$(RUST_DIR) && $(RUST_ENV) $(CARGO) build
+
+rust-test: rust-build
+	cd $(srcdir)/$(RUST_DIR) && $(RUST_ENV) $(CARGO) test
+
+rust: rust-build
+
+################################
+# Bindings in the build itself  #
+################################
+
+# Which of the optional bindings take part in all and check. They are collected
+# into variables so that all-local and check-local are each defined once, however
+# many bindings are enabled.
+BINDINGS_ALL   =
+BINDINGS_CHECK =
+
+if HAVE_PYTHON
+BINDINGS_CHECK += check-python
+endif
+
+if HAVE_OCAML
+BINDINGS_ALL   += ocaml-build
+endif
+
+if HAVE_RUST
+BINDINGS_ALL   += rust-build
+BINDINGS_CHECK += rust-test
+endif
+
+all-local: $(BINDINGS_ALL)
+check-local: $(BINDINGS_CHECK)
+
+if HAVE_OCAML
+install-data-local: ocaml-install-local
+endif
 
 ##################
 # Python binding #

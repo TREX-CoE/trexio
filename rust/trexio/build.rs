@@ -695,42 +695,72 @@ fn main() {
     // directory holding trex.json; that is how the CI tests these bindings
     // against the tree they are shipped in rather than against the last
     // release. The two default to each other's usual layout.
-    println!("cargo:rerun-if-env-changed=TREXIO_DIR");
-    println!("cargo:rerun-if-env-changed=TREXIO_SRC");
+    for var in ["TREXIO_DIR", "TREXIO_INCLUDE_DIR", "TREXIO_LIB_DIR", "TREXIO_SRC"] {
+        println!("cargo:rerun-if-env-changed={var}");
+    }
 
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let installed = env::var("TREXIO_DIR").ok().map(PathBuf::from);
+    let prefix = env::var("TREXIO_DIR").ok().map(PathBuf::from);
+    let include_dir = env::var("TREXIO_INCLUDE_DIR").ok().map(PathBuf::from);
+    let lib_dir = env::var("TREXIO_LIB_DIR").ok().map(PathBuf::from);
 
-    let (install_path, source_path) = match installed {
-        Some(install_path) => {
-            // trex.json is not installed, so it is taken from the source tree:
-            // the crate sits in rust/trexio, two levels below it.
-            let source_path = env::var("TREXIO_SRC")
-                .map(PathBuf::from)
-                .unwrap_or_else(|_| manifest_dir.join("..").join(".."));
-            (install_path, source_path)
+    // A build tree is not a prefix -- the headers are in the source directory and
+    // the library under src/.libs -- so the two directories can also be given
+    // separately, which is what the TREXIO build systems do.
+    let existing = prefix.is_some() || (include_dir.is_some() && lib_dir.is_some());
+
+    let (include_dirs, lib_dirs, source_path) = if existing {
+        // trex.json is not installed, so it comes from the source or build tree:
+        // the crate sits in rust/trexio, two levels below the top.
+        let source_path = env::var("TREXIO_SRC")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| manifest_dir.join("..").join(".."));
+        let mut include_dirs = Vec::new();
+        let mut lib_dirs = Vec::new();
+        if let Some(dir) = include_dir {
+            include_dirs.push(dir);
         }
-        None => {
-            let source_path = download_trexio();
-            println!("source path: {}", source_path.display());
-            let install_path = install_trexio(&source_path);
-            (install_path, source_path)
+        if let Some(dir) = lib_dir {
+            lib_dirs.push(dir);
         }
+        if let Some(prefix) = prefix {
+            include_dirs.push(prefix.join("include"));
+            // Both names, because Autotools and CMake pick lib or lib64
+            // according to the distribution.
+            lib_dirs.push(prefix.join("lib"));
+            lib_dirs.push(prefix.join("lib64"));
+        }
+        (include_dirs, lib_dirs, source_path)
+    } else {
+        let source_path = download_trexio();
+        let install_path = install_trexio(&source_path);
+        (
+            vec![install_path.join("include")],
+            vec![install_path.join("lib")],
+            source_path,
+        )
     };
     println!("source path: {}", source_path.display());
-    println!("install path: {}", install_path.display());
 
-    // Tell cargo to look for shared libraries in the specified directory. Both
-    // names are given because Autotools and CMake pick lib or lib64 according
-    // to the distribution.
-    println!("cargo:rustc-link-search={}/lib", install_path.display());
-    println!("cargo:rustc-link-search={}/lib64", install_path.display());
+    for dir in &lib_dirs {
+        println!("cargo:rustc-link-search={}", dir.display());
+    }
 
     // Tell cargo to tell rustc to link the system trexio shared library.
     println!("cargo:rustc-link-lib=trexio");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let trexio_h = install_path.join("include").join("trexio.h");
+    let trexio_h = include_dirs
+        .iter()
+        .map(|dir| dir.join("trexio.h"))
+        .find(|header| header.exists())
+        .unwrap_or_else(|| {
+            panic!(
+                "trexio.h was not found in any of {include_dirs:?}. Set TREXIO_DIR to \
+                 an installation prefix, or TREXIO_INCLUDE_DIR and TREXIO_LIB_DIR to \
+                 a build tree."
+            )
+        });
     println!("trexio.h: {}", trexio_h.display());
 
     make_interface(&trexio_h).unwrap();
@@ -744,9 +774,13 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .header(wrapper_h.to_str().unwrap())
-        // wrapper.h includes <trexio.h>, which lives in the installation rather
-        // than anywhere clang looks by default.
-        .clang_arg(format!("-I{}/include", install_path.display()))
+        // wrapper.h includes <trexio.h>, which is not anywhere clang looks by
+        // default.
+        .clang_args(
+            include_dirs
+                .iter()
+                .map(|dir| format!("-I{}", dir.display())),
+        )
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))

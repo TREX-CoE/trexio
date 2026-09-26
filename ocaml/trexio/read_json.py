@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
 import json
+import os
 
-json_file = "../../trex.json"
+# The build systems pass these, because in a build outside the source directory
+# trex.json is generated next to the build and not next to configure.ac.
+json_file = os.environ.get("TREXIO_JSON", "../../trex.json")
+configure_ac = os.environ.get("TREXIO_CONFIGURE_AC", "../../configure.ac")
 stubs_file= "trexio_stubs.c"
 ml_file   = "trexio.ml"
 mli_file  = ml_file+"i"
@@ -13,7 +17,7 @@ def check_version():
          if line.startswith("(version"):
             ocaml_version = line.split()[1].strip().replace(')','')
             break
-   with open('../../configure.ac','r') as f:
+   with open(configure_ac,'r') as f:
       for line in f:
          if line.startswith("AC_INIT"):
             trexio_version = line.split(',')[1].strip()[1:-1]

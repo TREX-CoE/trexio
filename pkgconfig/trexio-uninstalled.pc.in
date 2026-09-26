@@ -1,0 +1,16 @@
+# A pkg-config file describing the library as it is inside the build tree,
+# before it is installed. The OCaml binding locates TREXIO with pkg-config, so
+# this is what lets it be built against what was just compiled rather than
+# against a copy installed on the system. It is generated into a directory of
+# its own and named trexio.pc, because that is the name pkg-config looks up.
+includedir=@abs_top_srcdir@/include
+builtincludedir=@abs_top_builddir@/include
+libdir=@abs_top_builddir@/src/.libs
+
+Name: @PACKAGE_NAME@
+Description: TREX Input/Output library, uninstalled
+URL: https://github.com/trex-coe/trexio
+Version: @PACKAGE_VERSION@
+Cflags: -I${includedir} -I${builtincludedir}
+Libs: -L${libdir} -ltrexio
+Libs.private: @LIBS@

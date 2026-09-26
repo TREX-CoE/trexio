@@ -17,6 +17,8 @@ option(BUILD_TESTING "Whether to perform tests for TREXIO" ON)
 
 option(TREXIO_FORTRAN "Build and test the TREXIO Fortran interface" ON)
 option(TREXIO_PYTHON "Build and install the TREXIO Python interface" OFF)
+option(TREXIO_OCAML "Build and install the TREXIO OCaml interface" OFF)
+option(TREXIO_RUST "Build and test the TREXIO Rust interface" OFF)
 option(TREXIO_USE_HDF5 "Enable HDF5 support" ON)
 option(TREXIO_BUILD_DOCS "Build and install documentation" OFF)
 
@@ -144,4 +146,10 @@ add_subdirectory(src)
 include(CTest)
 if(BUILD_TESTING)
   add_subdirectory(tests)
+endif()
+
+# ============= OTHER LANGUAGE BINDINGS =============
+
+if(TREXIO_OCAML OR TREXIO_RUST)
+  include(TrexioBindings)
 endif()
