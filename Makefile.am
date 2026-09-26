@@ -338,9 +338,19 @@ _pytrexio_la_CPPFLAGS        = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS) $(NUMPY_CPPFLAG
 _pytrexio_la_LDFLAGS         = -module -avoid-version -shared
 _pytrexio_la_LIBADD          = src/libtrexio.la
 
-# A libtool archive is of no use inside a Python package.
+# A libtool archive is of no use inside a Python package, and the module has to
+# carry the name Python will look for: Libtool installs _pytrexio.dll on Windows,
+# which is not one of the suffixes the interpreter imports.
 install-exec-hook:
 	$(RM) -f -- $(DESTDIR)$(trexioexecdir)/_pytrexio.la
+	@for ext in so dll dylib ; do \
+	  if test -f $(DESTDIR)$(trexioexecdir)/_pytrexio.$$ext && \
+	     test ".$$ext" != "$(PYTHON_EXT_SUFFIX)" ; then \
+	    echo "mv _pytrexio.$$ext _pytrexio$(PYTHON_EXT_SUFFIX)" ; \
+	    mv -f $(DESTDIR)$(trexioexecdir)/_pytrexio.$$ext \
+	          $(DESTDIR)$(trexioexecdir)/_pytrexio$(PYTHON_EXT_SUFFIX) ; \
+	  fi ; \
+	done
 
 endif
 
@@ -407,17 +417,31 @@ python-sdist: $(python_pkg_py) $(setup_py) $(setup_cfg)
 if HAVE_PYTHON
 PYTHON_TEST_PKG = python-test-package
 
-$(PYTHON_TEST_PKG)/trexio/_pytrexio.so: _pytrexio.la
+# Libtool names the module it builds after the platform -- _pytrexio.so here,
+# _pytrexio.dll on Windows -- while Python imports it by the suffix its own
+# machinery lists, so the copy is renamed on the way in.
+$(PYTHON_TEST_PKG)/trexio/_pytrexio$(PYTHON_EXT_SUFFIX): _pytrexio.la
 	$(MKDIR_P) $(PYTHON_TEST_PKG)/trexio
 	cp -f $(srcdir)/$(trexio_py) $(PYTHON_TEST_PKG)/trexio/__init__.py
 	cp -f $(srcdir)/$(pytrexio_py) $(PYTHON_TEST_PKG)/trexio/
 	cp -f $(srcdir)/python/pytrexio/_version.py $(PYTHON_TEST_PKG)/trexio/
-	cp -f .libs/_pytrexio.so $(PYTHON_TEST_PKG)/trexio/
+	@for ext in so dll dylib ; do \
+	  if test -f .libs/_pytrexio.$$ext ; then \
+	    echo "cp -f .libs/_pytrexio.$$ext $@" ; \
+	    cp -f .libs/_pytrexio.$$ext $@ ; \
+	    break ; \
+	  fi ; \
+	done
+	@test -f $@ || { \
+	  echo "Error: Libtool built no module this recipe recognises:" >&2 ; \
+	  ls .libs/_pytrexio* >&2 ; \
+	  exit 1 ; \
+	}
 
 # Run the Python tests as part of `make check`, but only when pytest is
 # available: it is a test-only dependency and not everyone building the library
 # will have it.
-check-local: $(PYTHON_TEST_PKG)/trexio/_pytrexio.so
+check-local: $(PYTHON_TEST_PKG)/trexio/_pytrexio$(PYTHON_EXT_SUFFIX)
 	@if $(PYTHON) -c "import pytest" 2>/dev/null ; then \
 	  echo "  PYTEST   Python API" ; \
 	  PYTHONPATH="$(abs_builddir)/$(PYTHON_TEST_PKG)$${PYTHONPATH:+:$$PYTHONPATH}" \

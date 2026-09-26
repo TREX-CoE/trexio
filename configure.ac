@@ -357,6 +357,16 @@ AS_IF([test "x$enable_python" = "xyes"], [
   AS_IF([test "x$PYTHON" = "x" || test "x$PYTHON" = "x:"],
         [AC_MSG_ERROR([--enable-python requires a Python 3 interpreter.])])
 
+  # Python imports an extension module by the suffixes its own machinery lists,
+  # which is not what the platform calls a shared library: .so here, .pyd on
+  # Windows, where Libtool builds a .dll. The generic suffix is the last one, and
+  # the plain name keeps this in step with the CMake build, which asks FindPython
+  # for the same thing and adds no ABI tag either.
+  PYTHON_EXT_SUFFIX=`$PYTHON -c "import importlib.machinery as m; print(m.EXTENSION_SUFFIXES[[-1]])" 2>/dev/null`
+  AS_IF([test "x$PYTHON_EXT_SUFFIX" = "x"], [PYTHON_EXT_SUFFIX=.so])
+  AC_MSG_CHECKING([the suffix of Python extension modules])
+  AC_MSG_RESULT([$PYTHON_EXT_SUFFIX])
+
   # The extension module is compiled here rather than by setup.py, so the Python
   # and NumPy headers have to be available.
   PYTHON_INCLUDE=`$PYTHON -c "import sysconfig; print(sysconfig.get_path('include'))" 2>/dev/null`
@@ -427,6 +437,7 @@ void trexio_check_int64_t(int64_t *);]], [])],
 AC_SUBST([PYTHON_CPPFLAGS])
 AC_SUBST([NUMPY_CPPFLAGS])
 AC_SUBST([SWIG_WORDSIZE_FLAGS])
+AC_SUBST([PYTHON_EXT_SUFFIX])
 AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
 AM_CONDITIONAL([REGENERATE_SWIG],[test "x$trexio_swig_regen" = "xyes"])
 
