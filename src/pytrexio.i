@@ -1,6 +1,8 @@
 %module pytrexio
-/* Define SWIGWORDSIZE in order to properly align long integers on 64-bit system */
-#define SWIGWORDSIZE64
+/* SWIGWORDSIZE64 tells SWIG that int64_t is long rather than long long, which is
+   true on LP64 targets and false both on ILP32 ones (i686) and on LLP64 ones
+   (Windows). It is therefore passed on the command line by the build system,
+   which knows the size of long on the target, instead of being defined here. */
 %{
 #define SWIG_FILE_WITH_INIT
 /* Include the headers in the wrapper code */
