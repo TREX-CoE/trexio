@@ -395,13 +395,6 @@ jobs:
             - cmake
             - ninja
             - clang
-            # conda-forge's supported Fortran-on-Windows path. The bare flang
-            # package is LLVM's new one and ships no Fortran runtime import
-            # library on win-64 -- only its own build components -- so nothing
-            # Fortran can be linked with it. This metapackage pulls
-            # flang_win-64, which comes with a runtime and with activation
-            # scripts that point FC at the right binary.
-            - fortran-compiler
             - hdf5
           EOF
           cat export.yaml
@@ -428,16 +421,18 @@ jobs:
           tar -xzf trexio-*.tar.gz
           echo "TREXIO_DIR=$(ls -d trexio-*/ | head -1)" >> $GITHUB_ENV
 
-      # The Fortran interface used to be disabled here for want of a Fortran
-      # compiler that pairs with clang-cl: MinGW gfortran does not, since its
-      # objects do not link with MSVC-ABI output. conda-forge builds flang for
-      # that ABI, so the pairing itself is not the obstacle.
+      # The Fortran interface stays off here, and not for want of a compiler that
+      # pairs with clang-cl: that was tried. conda-forge's win-64 Fortran
+      # compiler, which its fortran-compiler metapackage installs, is classic
+      # Flang from 2017 and cannot open its own iso_c_binding.mod --
       #
-      # The libraries flang links against (flang.lib, flangrti.lib, flangmain.lib)
-      # live in the conda prefix, and the compiler activation that would put that
-      # directory on the linker's search path is not in effect here -- FC is not
-      # even set -- so the path is given to CMake directly rather than relying on
-      # it. The MinGW job above covers Windows Fortran regardless.
+      #   F90-F-0004-Unable to open MODULE file iso_c_binding.mod
+      #   F90/x86-64 Windows Flang - 1.5 2017-05-01: compilation aborted
+      #
+      # -- which the whole TREXIO Fortran interface is built on, every procedure
+      # of it being bind(C). LLVM's newer flang, packaged as plain "flang", ships
+      # no Fortran runtime import library on win-64 at all, so nothing can be
+      # linked with it either. The MinGW job above covers Windows Fortran.
       # CMAKE_MSVC_RUNTIME_LIBRARY is pinned to the release DLL runtime because
       # CMake's compiler checks run in the Debug configuration by default, and
       # flang then asks the linker for flang_rt.runtime.dynamic_dbg.lib, which
@@ -446,24 +441,12 @@ jobs:
         run: |
           cmake -S "${TREXIO_DIR}" -Bbuild -GNinja \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
                 -DCMAKE_C_COMPILER=clang-cl \
                 -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/installed" \
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
-                -DCMAKE_EXE_LINKER_FLAGS="/LIBPATH:${CONDA_PREFIX}/Library/lib" \
-                -DCMAKE_SHARED_LINKER_FLAGS="/LIBPATH:${CONDA_PREFIX}/Library/lib" \
-                -DCMAKE_MODULE_LINKER_FLAGS="/LIBPATH:${CONDA_PREFIX}/Library/lib" \
                 -DTREXIO_FORTRAN=ON \
-            || {
-              echo "=== FC=${FC:-unset} ==="
-              echo "=== flang binaries ==="
-              ls "${CONDA_PREFIX}/Library/bin/" | grep -i flang || echo "none"
-              echo "=== Fortran runtime libraries ==="
-              ls "${CONDA_PREFIX}/Library/lib/" | grep -iE 'flang|fortran' || echo "none"
-              exit 1
-            }
 
       - name: compile and install TREXIO
         run: cmake --build build --target install
