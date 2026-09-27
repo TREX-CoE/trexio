@@ -395,6 +395,7 @@ jobs:
             - cmake
             - ninja
             - clang
+            - flang
             - hdf5
           EOF
           cat export.yaml
@@ -421,19 +422,23 @@ jobs:
           tar -xzf trexio-*.tar.gz
           echo "TREXIO_DIR=$(ls -d trexio-*/ | head -1)" >> $GITHUB_ENV
 
-      # The Fortran interface is disabled because FortranCInterface_VERIFY()
-      # has no working clang-cl/Fortran pairing here; the MinGW job above keeps
-      # the Windows Fortran path covered.
+      # The Fortran interface used to be disabled here for want of a Fortran
+      # compiler that pairs with clang-cl: MinGW gfortran does not, since its
+      # objects do not link with MSVC-ABI output. conda-forge's flang is built
+      # for that ABI, so FortranCInterface_VERIFY() has a chance of passing --
+      # which is the point of this lane change. If it does not, the MinGW job
+      # above still covers Windows Fortran.
       - name: configure with CMake
         run: |
           cmake -S "${TREXIO_DIR}" -Bbuild -GNinja \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_COMPILER=clang-cl \
+                -DCMAKE_Fortran_COMPILER=flang \
                 -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/installed" \
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
-                -DTREXIO_FORTRAN=OFF
+                -DTREXIO_FORTRAN=ON
 
       - name: compile and install TREXIO
         run: cmake --build build --target install
