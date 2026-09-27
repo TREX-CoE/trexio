@@ -50,8 +50,37 @@ if(TREXIO_USE_HDF5)
 endif()
 
 if(TREXIO_FORTRAN)
-  include(FortranCInterface)
-  FortranCInterface_VERIFY()
+  # The Fortran interface is written entirely with ISO_C_BINDING: every procedure
+  # in trexio_f.f90 carries bind(C, name="..."), so the C symbol names are stated
+  # explicitly and Fortran name mangling never enters into it. What has to hold is
+  # that the two compilers agree on the ABI, which CMake establishes when it
+  # enables the language, and that the Fortran compiler can compile and link a
+  # bind(C) procedure against a C object. That is what is checked here.
+  #
+  # FortranCInterface_VERIFY() checks something else -- that C can call a plain
+  # Fortran procedure through the mangling CMake infers -- and it fails on any
+  # compiler whose mangling CMake does not know, flang among them, for a property
+  # this library does not rely on.
+  try_compile(TREXIO_FORTRAN_BIND_C
+    PROJECT TrexioBindC
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/cmake/bind-c-check"
+    BINARY_DIR "${PROJECT_BINARY_DIR}/CMakeFiles/TrexioBindC"
+    CMAKE_FLAGS
+      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+      "-DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}"
+      "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+      "-DCMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}"
+      "-DCMAKE_MSVC_RUNTIME_LIBRARY=${CMAKE_MSVC_RUNTIME_LIBRARY}"
+      "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
+    OUTPUT_VARIABLE TREXIO_FORTRAN_BIND_C_OUTPUT)
+  if(NOT TREXIO_FORTRAN_BIND_C)
+    message(FATAL_ERROR
+      "The Fortran compiler ${CMAKE_Fortran_COMPILER} and the C compiler "
+      "${CMAKE_C_COMPILER} could not build a program that calls a C function "
+      "from Fortran through ISO_C_BINDING, which is how the TREXIO Fortran "
+      "interface is written:\n${TREXIO_FORTRAN_BIND_C_OUTPUT}")
+  endif()
+  message(STATUS "Fortran can call C through ISO_C_BINDING: yes")
 endif()
 
 # The Python extension module is compiled from the SWIG wrapper and linked
