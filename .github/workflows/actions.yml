@@ -428,17 +428,27 @@ jobs:
       # for that ABI, so FortranCInterface_VERIFY() has a chance of passing --
       # which is the point of this lane change. If it does not, the MinGW job
       # above still covers Windows Fortran.
+      # CMAKE_MSVC_RUNTIME_LIBRARY is pinned to the release DLL runtime because
+      # CMake's compiler checks run in the Debug configuration by default, and
+      # flang then asks the linker for flang_rt.runtime.dynamic_dbg.lib, which
+      # the conda package does not ship -- only the non-debug flavour.
       - name: configure with CMake
         run: |
           cmake -S "${TREXIO_DIR}" -Bbuild -GNinja \
                 -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
                 -DCMAKE_C_COMPILER=clang-cl \
                 -DCMAKE_Fortran_COMPILER=flang \
                 -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/installed" \
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
-                -DTREXIO_FORTRAN=ON
+                -DTREXIO_FORTRAN=ON \
+            || {
+              echo "=== flang runtime libraries present ==="
+              ls "${CONDA_PREFIX}/Library/lib/" | grep -i flang || echo "none"
+              exit 1
+            }
 
       - name: compile and install TREXIO
         run: cmake --build build --target install
