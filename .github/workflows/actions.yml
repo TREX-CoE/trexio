@@ -395,7 +395,13 @@ jobs:
             - cmake
             - ninja
             - clang
-            - flang
+            # conda-forge's supported Fortran-on-Windows path. The bare flang
+            # package is LLVM's new one and ships no Fortran runtime import
+            # library on win-64 -- only its own build components -- so nothing
+            # Fortran can be linked with it. This metapackage pulls
+            # flang_win-64, which comes with a runtime and with activation
+            # scripts that point FC at the right binary.
+            - fortran-compiler
             - hdf5
           EOF
           cat export.yaml
@@ -424,9 +430,11 @@ jobs:
 
       # The Fortran interface used to be disabled here for want of a Fortran
       # compiler that pairs with clang-cl: MinGW gfortran does not, since its
-      # objects do not link with MSVC-ABI output. conda-forge's flang is built
-      # for that ABI, so FortranCInterface_VERIFY() has a chance of passing --
-      # which is the point of this lane change. If it does not, the MinGW job
+      # objects do not link with MSVC-ABI output. conda-forge builds flang for
+      # that ABI, so FortranCInterface_VERIFY() has a chance of passing -- which
+      # is the point of this lane change. The compiler is left to conda's own
+      # activation rather than named here, because which binary that is has
+      # changed between flang releases. If this does not work, the MinGW job
       # above still covers Windows Fortran.
       # CMAKE_MSVC_RUNTIME_LIBRARY is pinned to the release DLL runtime because
       # CMake's compiler checks run in the Debug configuration by default, and
@@ -438,15 +446,17 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
                 -DCMAKE_C_COMPILER=clang-cl \
-                -DCMAKE_Fortran_COMPILER=flang \
                 -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/installed" \
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
                 -DTREXIO_FORTRAN=ON \
             || {
-              echo "=== flang runtime libraries present ==="
-              ls "${CONDA_PREFIX}/Library/lib/" | grep -i flang || echo "none"
+              echo "=== FC=${FC:-unset} ==="
+              echo "=== flang binaries ==="
+              ls "${CONDA_PREFIX}/Library/bin/" | grep -i flang || echo "none"
+              echo "=== Fortran runtime libraries ==="
+              ls "${CONDA_PREFIX}/Library/lib/" | grep -iE 'flang|fortran' || echo "none"
               exit 1
             }
 
