@@ -61,17 +61,30 @@ if(TREXIO_FORTRAN)
   # Fortran procedure through the mangling CMake infers -- and it fails on any
   # compiler whose mangling CMake does not know, flang among them, for a property
   # this library does not rely on.
+  set(TREXIO_BIND_C_DIR "${PROJECT_BINARY_DIR}/CMakeFiles/TrexioBindC")
+  file(WRITE "${TREXIO_BIND_C_DIR}/bind_c_check.c"
+"int trexio_bind_c_symbol(int value) { return value + 1; }
+")
+  file(WRITE "${TREXIO_BIND_C_DIR}/bind_c_check.f90"
+"program bind_c_check
+  use, intrinsic :: iso_c_binding
+  implicit none
+
+  interface
+     integer(c_int) function trexio_bind_c_symbol(value) &
+          bind(C, name=\"trexio_bind_c_symbol\")
+       import
+       integer(c_int), intent(in), value :: value
+     end function trexio_bind_c_symbol
+  end interface
+
+  if (trexio_bind_c_symbol(41_c_int) /= 42_c_int) stop 1
+end program bind_c_check
+")
   try_compile(TREXIO_FORTRAN_BIND_C
-    PROJECT TrexioBindC
-    SOURCE_DIR "${PROJECT_SOURCE_DIR}/cmake/bind-c-check"
-    BINARY_DIR "${PROJECT_BINARY_DIR}/CMakeFiles/TrexioBindC"
-    CMAKE_FLAGS
-      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-      "-DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}"
-      "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-      "-DCMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}"
-      "-DCMAKE_MSVC_RUNTIME_LIBRARY=${CMAKE_MSVC_RUNTIME_LIBRARY}"
-      "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
+    "${TREXIO_BIND_C_DIR}/build"
+    SOURCES "${TREXIO_BIND_C_DIR}/bind_c_check.c"
+            "${TREXIO_BIND_C_DIR}/bind_c_check.f90"
     OUTPUT_VARIABLE TREXIO_FORTRAN_BIND_C_OUTPUT)
   if(NOT TREXIO_FORTRAN_BIND_C)
     message(FATAL_ERROR
