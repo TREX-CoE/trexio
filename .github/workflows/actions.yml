@@ -431,11 +431,13 @@ jobs:
       # The Fortran interface used to be disabled here for want of a Fortran
       # compiler that pairs with clang-cl: MinGW gfortran does not, since its
       # objects do not link with MSVC-ABI output. conda-forge builds flang for
-      # that ABI, so FortranCInterface_VERIFY() has a chance of passing -- which
-      # is the point of this lane change. The compiler is left to conda's own
-      # activation rather than named here, because which binary that is has
-      # changed between flang releases. If this does not work, the MinGW job
-      # above still covers Windows Fortran.
+      # that ABI, so the pairing itself is not the obstacle.
+      #
+      # The libraries flang links against (flang.lib, flangrti.lib, flangmain.lib)
+      # live in the conda prefix, and the compiler activation that would put that
+      # directory on the linker's search path is not in effect here -- FC is not
+      # even set -- so the path is given to CMake directly rather than relying on
+      # it. The MinGW job above covers Windows Fortran regardless.
       # CMAKE_MSVC_RUNTIME_LIBRARY is pinned to the release DLL runtime because
       # CMake's compiler checks run in the Debug configuration by default, and
       # flang then asks the linker for flang_rt.runtime.dynamic_dbg.lib, which
@@ -450,6 +452,9 @@ jobs:
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
+                -DCMAKE_EXE_LINKER_FLAGS="/LIBPATH:${CONDA_PREFIX}/Library/lib" \
+                -DCMAKE_SHARED_LINKER_FLAGS="/LIBPATH:${CONDA_PREFIX}/Library/lib" \
+                -DCMAKE_MODULE_LINKER_FLAGS="/LIBPATH:${CONDA_PREFIX}/Library/lib" \
                 -DTREXIO_FORTRAN=ON \
             || {
               echo "=== FC=${FC:-unset} ==="
