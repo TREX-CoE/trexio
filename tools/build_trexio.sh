@@ -14,12 +14,22 @@ readonly SRC=${TREXIO_ROOT}/src
 readonly TOOLS=${TREXIO_ROOT}/tools
 
 # Function to produce TREXIO source files from org-mode files
+# Emacs exits successfully even when a source block fails, so its output is kept
+# and shown when the tangling leaves nothing behind, rather than discarded.
 function tangle()
 {
   local command="(org-babel-tangle-file \"$1\")"
-  emacs --batch \
+  local log
+  log=$(mktemp)
+  if ! emacs --batch \
         --load=${TOOLS}/emacs/config_tangle.el \
-        --eval "$command" &> /dev/null
+        --eval "$command" > "${log}" 2>&1 ; then
+    echo "Error: Emacs failed while tangling $1:" >&2
+    cat "${log}" >&2
+    rm -f "${log}"
+    exit 1
+  fi
+  rm -f "${log}"
 }
 #        --eval "(require 'org)" \
 #        --eval "(org-babel-do-load-languages 'org-babel-load-languages '((python . t)))" \

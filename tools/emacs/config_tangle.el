@@ -28,5 +28,11 @@
    (org . t)
    ))
 
-(setq org-babel-python-command "python3 -q")
+;; The interpreter that runs the source blocks has to be one this Emacs can
+;; drive, which is not always the one the library is built against: on MSYS2, a
+;; MinGW python ahead of the MSYS one on PATH is spawned but cannot be talked
+;; to, and the blocks then yield nothing at all. TREXIO_BABEL_PYTHON overrides
+;; it for such cases.
+(setq org-babel-python-command
+      (or (getenv "TREXIO_BABEL_PYTHON") "python3 -q"))
 (setq python-indent-guess-indent-offset-verbose nil) ;; Remove warning : Can’t guess python-indent-offset 
