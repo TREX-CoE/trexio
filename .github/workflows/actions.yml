@@ -497,11 +497,16 @@ jobs:
           make -j2
           make -j2 check
 
+      # The qualifier demotion is for clang, which folds discarded qualifiers into
+      # -Wincompatible-pointer-types where GCC keeps them apart: SWIG's string
+      # typemaps assign the const char* of PyUnicode_AsUTF8 to a char*, and this
+      # step uses the system compiler, which on macOS is AppleClang. A genuinely
+      # mismatched pointer type stays an error.
       - name: build and test with CMake
         working-directory: ${{ env.TREXIO_DIR }}
         run: |
           cmake -S. -Bbuild -DTREXIO_PYTHON=ON \
-                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS"
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS -Wno-error=incompatible-pointer-types-discards-qualifiers"
           cmake --build build -j2
           ctest --test-dir build -j2 --output-on-failure
 

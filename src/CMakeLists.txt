@@ -284,7 +284,7 @@ if(TREXIO_DEVEL)
         ${TREXIO_MOD_FILE}
       COMMAND "${CMAKE_COMMAND}" -E env
               "TREXIO_CONFIG_H=${TREXIO_GENERATED_CONFIG_H}"
-              ./build_trexio.sh
+              bash ./build_trexio.sh
       DEPENDS ${ORG_FILES} "${TREXIO_GENERATED_CONFIG_H}"
               "${PROJECT_SOURCE_DIR}/trex.json"
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools
