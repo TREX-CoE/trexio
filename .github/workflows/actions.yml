@@ -421,9 +421,20 @@ jobs:
           tar -xzf trexio-*.tar.gz
           echo "TREXIO_DIR=$(ls -d trexio-*/ | head -1)" >> $GITHUB_ENV
 
-      # The Fortran interface is disabled because FortranCInterface_VERIFY()
-      # has no working clang-cl/Fortran pairing here; the MinGW job above keeps
-      # the Windows Fortran path covered.
+      # The Fortran interface is disabled here because neither Fortran compiler
+      # conda-forge offers for win-64 can build it, which was tried:
+      #
+      #   - plain "flang" is LLVM's, and ships no Fortran runtime import library
+      #     on win-64 at all -- only the compiler's own build components -- so
+      #     nothing Fortran can be linked with it, in any configuration;
+      #   - the fortran-compiler metapackage installs classic Flang from 2017,
+      #     which cannot open its own iso_c_binding.mod, and every procedure of
+      #     the TREXIO Fortran interface is bind(C).
+      #
+      # The pairing with clang-cl is not the obstacle: with a compiler installed
+      # and its library directory on the linker's search path, CMake detects the
+      # Fortran ABI without complaint. The MinGW job above keeps the Windows
+      # Fortran path covered.
       - name: configure with CMake
         run: |
           cmake -S "${TREXIO_DIR}" -Bbuild -GNinja \
