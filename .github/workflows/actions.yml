@@ -445,6 +445,73 @@ jobs:
           path: ./trexio-*.tar.gz
           retention-days: 7
 
+  trexio_generated_tarball:
+    name: Generated tarball
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-15]
+    runs-on: ${{ matrix.os }}
+    needs: [get_commit_message, trexio_source_tarball]
+
+    steps:
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: install dependencies
+        run: |
+          if [ "${{ runner.os }}" = "macOS" ] ; then
+            brew install hdf5 automake libtool
+          else
+            sudo apt-get update
+            sudo apt-get install -y libhdf5-dev cmake gfortran libtool-bin
+          fi
+          python3 -m pip install numpy pytest swig==4.3
+
+      # The tarball this branch produces, not the last release. Nothing outside
+      # the Windows lane built it, so anything missing from what "make dist"
+      # ships was invisible everywhere else.
+      - name: fetch the generated tarball
+        uses: actions/download-artifact@v7
+        with:
+          name: trexio-source-tarball
+
+      - name: extract the generated tarball
+        run: |
+          tar -xzf trexio-*.tar.gz
+          echo "TREXIO_DIR=$(ls -d trexio-*/ | head -1)" >> $GITHUB_ENV
+
+      # No Emacs and no org files are needed: a tarball ships the generated C,
+      # which is the point of building one. The Python API is enabled because the
+      # wrapper it ships was generated where int64_t is long, so macOS -- where it
+      # is long long -- is where a shipped wrapper that does not match the target
+      # gets regenerated.
+      - name: build and test with autotools
+        working-directory: ${{ env.TREXIO_DIR }}
+        run: |
+          if [ "${{ runner.os }}" = "macOS" ] ; then
+            export CC=gcc-14 FC=gfortran-14
+          fi
+          ./configure --enable-silent-rules --enable-python \
+                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
+          make -j2
+          make -j2 check
+
+      - name: build and test with CMake
+        working-directory: ${{ env.TREXIO_DIR }}
+        run: |
+          cmake -S. -Bbuild -DTREXIO_PYTHON=ON \
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS"
+          cmake --build build -j2
+          ctest --test-dir build -j2 --output-on-failure
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-generated-tarball-${{ matrix.os }}
+          path: ${{ env.TREXIO_DIR }}/test-suite.log
+
   trexio_windows_clang_cl:
     name: Windows clang-cl (CMake + conda)
     runs-on: windows-latest
@@ -624,6 +691,100 @@ jobs:
           cd rust/trexio
           cargo build
           cargo test
+
+  trexio_windows_in_tree:
+    name: Windows clang-cl, in tree (native Emacs)
+    runs-on: windows-latest
+    needs: get_commit_message
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    env:
+      # A conda environment on Windows provides python.exe and no python3, which
+      # is the name the generation scripts and org-babel reach for.
+      PYTHON: python
+      TREXIO_BABEL_PYTHON: python -q
+
+    steps:
+      # This must be done *before* setting up miniconda, see:
+      # https://github.com/ilammy/msvc-dev-cmd/issues/34
+      - name: prepare compiler environment, vcvarsall
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - uses: actions/checkout@v7
+
+      - name: write a conda env file
+        run: |
+          cat > export.yaml <<EOF
+          name: test
+          channels:
+            - conda-forge
+          dependencies:
+            - cmake
+            - ninja
+            - clang
+            - hdf5
+            - swig
+            - python
+            - numpy
+            - pytest
+          EOF
+          cat export.yaml
+
+      - name: create conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: test
+          environment-file: export.yaml
+          channels: conda-forge
+          show-channel-urls: true
+          auto-activate: false
+          conda-remove-defaults: true
+
+      # The clang-cl lane builds a tarball because conda has no Emacs for
+      # win-64, which left the code generation itself untested on Windows and
+      # meant nothing built this project in tree there. GNU ships Emacs for
+      # Windows as a zip, so this lane unpacks that and generates the sources the
+      # way every other platform does.
+      - name: install GNU Emacs
+        run: |
+          curl -sSLo emacs.zip https://ftp.gnu.org/gnu/emacs/windows/emacs-31/emacs-31.1.zip
+          powershell -Command "Expand-Archive -Path emacs.zip -DestinationPath C:/emacs"
+          echo "C:/emacs/bin" >> $GITHUB_PATH
+
+      - name: check that Emacs and bash are usable
+        run: |
+          emacs --version | head -1
+          bash --version | head -1
+
+      - name: configure with CMake
+        run: |
+          cmake -S. -Bbuild -GNinja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER=clang-cl \
+                -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/installed" \
+                -DCMAKE_INSTALL_LIBDIR=lib \
+                -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
+                -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
+                -DCMAKE_C_FLAGS="$TREXIO_STRICT_CFLAGS -Wno-error=incompatible-pointer-types-discards-qualifiers" \
+                -DTREXIO_FORTRAN=OFF \
+                -DTREXIO_PYTHON=ON
+
+      - name: compile and install TREXIO
+        run: cmake --build build --target install
+
+      - name: check TREXIO
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-windows-in-tree
+          path: build/Testing/Temporary/LastTest.log
 
   trexio_nix:
     name: Nix
