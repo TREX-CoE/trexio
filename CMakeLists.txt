@@ -110,7 +110,6 @@ if(TREXIO_DEVEL AND TREXIO_BUILD_DOCS)
   file(GLOB_RECURSE TREXIO_DOC_SOURCES CONFIGURE_DEPENDS
     "${PROJECT_SOURCE_DIR}/docs/*.org"
     "${PROJECT_SOURCE_DIR}/src/*.org"
-    "${PROJECT_SOURCE_DIR}/src/templates_memory/templator_memory.org"
   )
   list(APPEND TREXIO_DOC_SOURCES
     "${PROJECT_SOURCE_DIR}/trex.org"
