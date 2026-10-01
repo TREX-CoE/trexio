@@ -322,3 +322,57 @@ align="left" width="300" vspace="20" hspace="20" />
    module can be found in the PyPI repository, the OCaml binding is
    available in the official OPAM repository, and the ~.deb~ packages
    are available in Ubuntu 23.04.
+
+* Checking the contents of a file
+
+  TREXIO is a thin input/output layer.  It stores what a program gives
+  it and returns it unchanged, and it deliberately makes no judgement
+  about whether the data are physically meaningful: whether the number
+  of atomic orbitals agrees with the shells that were declared,
+  whether the molecular orbital coefficients are orthonormal for the
+  basis set in the file, or whether the stored integrals are the
+  integrals of that basis set.  Answering such questions requires
+  recomputing quantities from the basis set, which would mean carrying
+  a quantum chemistry implementation inside an I/O library, and the
+  cost of that would be paid by every program linking it.
+
+  [[https://github.com/TREX-CoE/trexio-validate][trexio-validate]] is a
+  separate tool that answers them.  It recomputes from the contents of
+  the file, using [[https://github.com/sunqm/libcint][libcint]] for
+  integrals over primitives, and compares the result with what the file
+  says.  Among the checks are the consistency of the basis and AO data,
+  the nuclear repulsion energy, the electron and occupation counts,
+  the orthonormality of the molecular orbitals, and the one- and
+  two-electron integrals in both the AO and the MO basis.  Everything
+  is computed from the definitions in this specification rather than
+  from the conventions of any one program, so a disagreement points at
+  the file and not at the checker.  Gaussian basis sets of molecular
+  systems are supported.
+
+  The intended use is the test suite of a program that writes TREXIO
+  files.  A calculation small enough to run in continuous integration
+  -- a few atoms, a small basis set, seconds of run time -- whose
+  output is checked on every commit is what keeps a program's TREXIO
+  files valid as both the program and the format evolve.  That is a
+  kind of testing the library itself cannot do for you: TREXIO can
+  report that a file is well formed, but only the writer's own test
+  suite can establish that the numbers in it describe the calculation
+  that was run.
+
+  The tool is therefore made to be consumed rather than run by hand.
+  It provides a CMake package that adds such a check as a test:
+
+  #+begin_src cmake
+find_package(TrexioValidate REQUIRED)
+
+trexio_validate_add_test(validate_water
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/out.h5"
+  REQUIRE mo_orthonormality ao_1e_int_overlap)
+  #+end_src
+
+  and a library with C, C++ and Python interfaces, which takes an open
+  ~trexio_t~ handle and so can validate data a program has just
+  written, including files of the in-memory back-end that never reach
+  the disk.  Run as a program, it reports one line per check and exits
+  with a status a test suite can act on, including a distinct status
+  for a file it cannot check at all.
