@@ -48,13 +48,19 @@ regex = '__version__ = "(?P<value>[^"]+)"'
 
 [tool.scikit-build]
 cmake.version = ">=3.19"
+# The Python package is its own CMake project, which builds against an installed
+# TREXIO when there is one and falls back to the sources next to it when there is
+# not. That is what lets a distribution build this wheel against the libtrexio it
+# has already packaged, instead of compiling a second copy into the extension
+# module -- while a wheel for PyPI, which cannot assume anything is installed,
+# takes the fallback.
+cmake.source-dir = "python"
 # Only the files marked as the python component end up in the wheel; the
 # library, headers, pkg-config and CMake package files are for an ordinary
 # installation and have no business in a Python package.
 install.components = ["python"]
 
 [tool.scikit-build.cmake.define]
-TREXIO_PYTHON = "ON"
 # The Fortran interface is irrelevant to a wheel, and requiring a Fortran
 # compiler to pip install would be unreasonable.
 TREXIO_FORTRAN = "OFF"
@@ -73,6 +79,14 @@ TREXIO_INSTALL_PYTHONDIR = "."
 # carried by the sdist, so a Git checkout must not trigger developer mode here.
 TREXIO_AUTO_DEVEL = "OFF"
 
+# A wheel published to PyPI has to carry the library, because nothing guarantees
+# that the machine installing it has one. Finding an installed TREXIO is right
+# for a distribution building its own package and wrong here, so the wheel builds
+# take the bundled path explicitly.
+[[tool.scikit-build.overrides]]
+if.env.CIBUILDWHEEL = true
+cmake.define.CMAKE_DISABLE_FIND_PACKAGE_trexio = "ON"
+
 [tool.scikit-build.sdist]
 # Allow-list rather than deny-list. In the default mode scikit-build-core ships
 # every file that git does not ignore, which includes untracked ones: a
@@ -87,6 +101,8 @@ inclusion-mode = "explicit"
 include = [
     # packaging and licensing
     "/pyproject.toml",
+    "/python/CMakeLists.txt",
+    "/cmake/TrexioPythonModule.cmake",
     "/LICENSE",
     "/AUTHORS",
     "/ChangeLog",
