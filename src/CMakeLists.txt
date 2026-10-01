@@ -25,12 +25,24 @@ set_target_properties(trexio PROPERTIES
 	SOVERSION ${PROJECT_VERSION_MAJOR}
 	POSITION_INDEPENDENT_CODE ON
 	PUBLIC_HEADER ${TREXIO_PUBLIC_HEADERS}
+	# allow linking with DLL (BUILD_SHARED_LIBS=ON) without needing __declspec(dllexport)
+	WINDOWS_EXPORT_ALL_SYMBOLS ON
 	)
 
 # Require C99 to build TREXIO, and propagate it as a usage requirement to
 # anything that links the library (tests and external consumers). This is
 # scoped to the target, unlike the global CMAKE_C_STANDARD variable.
 target_compile_features(trexio PUBLIC c_std_99)
+
+# The Microsoft UCRT marks the standard C string and I/O functions deprecated
+# in favour of its own _s variants. TREXIO calls the standard ones with
+# explicit bounds (~1000 call sites), so silence the advisory instead of
+# forking the code. This is narrower than /wd4996, which would also hide
+# genuine __declspec(deprecated) markers coming from other libraries. The
+# MSVC variable is also true for compilers targeting the MSVC ABI, e.g. clang-cl.
+if(MSVC)
+  target_compile_definitions(trexio PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()
 
 include(standard_math_lib)
 target_link_std_math(trexio PRIVATE TREXIO_STD_MATH_LIB)

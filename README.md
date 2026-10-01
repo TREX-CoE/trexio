@@ -174,6 +174,11 @@ command. However, as TREXIO does not utilize MPI features, it is advisable to
 link against a non-MPI (serial) version of the HDF5 library for the sake of
 simplicity.
 
+Building the library on Windows is possible through CMake from the release tarball
+(not in developer mode from repository). Use `cmake -S. -Bbuild -GNinja
+-DTREXIO_FORTRAN=OFF` and `cmake --build build --target install`, as well as any
+other options. Tested with clang-cl, HDF5, and no Fortran.
+
 #### Compilation without the HDF5 library
 
 By default, the configuration step proceeds to search for the [HDF5 library](https://portal.hdfgroup.org/display/HDF5/HDF5).
@@ -248,6 +253,11 @@ or on [Binder](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD).
 For example, the tutorial covering TREXIO basics using benzene molecule as an example can be viewed and executed online by clicking on this badge:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD?filepath=notebooks%2Ftutorial_benzene.ipynb)
 
+If you generate TREXIO files in your own code, we recommend checking them with
+the [TREXIO validator](https://github.com/TREX-CoE/trexio-validate.git). It
+helps verify that the produced files are consistent with the TREXIO format and
+can catch missing or malformed data before the files are shared or used in
+production workflows.
 
 ### Documentation
 

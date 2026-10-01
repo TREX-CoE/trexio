@@ -41,6 +41,16 @@
 
   #+end_src
 
+  The text back end keeps each TREXIO file in a directory and probes it with
+  the POSIX descriptor API, which the MSVC runtime spells with a leading
+  underscore in =io.h= and =direct.h= rather than =unistd.h=, and which
+  leaves =F_OK= undefined. The macros below supply that constant and route
+  =access=, =open=, =close= and =mkdir= to whichever spelling exists;
+  =TREXIO_MKDIR= drops the permission argument, as Windows directories carry
+  no POSIX mode bits. They are named macros rather than bare =open=/=close=
+  aliases because =trexio.c= includes =trexio_hdf5.h= after this header, and
+  the HDF5 headers declare struct members of those very names.
+
   #+begin_src c :tangle prefix_text.h :noweb yes
 <<header>>
 #ifndef TREXIO_TEXT_H
@@ -56,7 +66,23 @@
 #include <string.h>
 #include <assert.h>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <io.h>
+#include <direct.h>
+#ifndef F_OK
+#define F_OK 0
+#endif
+#define TREXIO_ACCESS(path, mode)       _access((path), (mode))
+#define TREXIO_OPEN(path, flags, perms) _open((path), (flags), (perms))
+#define TREXIO_CLOSE(fd)                _close(fd)
+#define TREXIO_MKDIR(path, mode)        _mkdir(path)
+#else
 #include <unistd.h>
+#define TREXIO_ACCESS(path, mode)       access((path), (mode))
+#define TREXIO_OPEN(path, flags, perms) open((path), (flags), (perms))
+#define TREXIO_CLOSE(fd)                close(fd)
+#define TREXIO_MKDIR(path, mode)        mkdir((path), (mode))
+#endif
 #include <sys/stat.h>
 #include <stdbool.h>
 
@@ -178,11 +204,7 @@ char* mkdtemp(char* template) {
     dir = tmpnam(dir);
     if (dir == NULL) return NULL;
 
-#ifdef _WIN32
-    if (mkdir(dir) != 0) {
-#else
-    if (mkdir(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
-#endif
+    if (TREXIO_MKDIR(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
         return NULL;
     }
 
@@ -215,11 +237,7 @@ trexio_text_init (trexio_t* const file)
 
     if (file->mode == 'r') return TREXIO_READONLY;
 
-#ifdef _WIN32
-    int rc_dir = mkdir(file->file_name);
-#else
-    int rc_dir = mkdir(file->file_name, 0777);
-#endif
+    int rc_dir = TREXIO_MKDIR(file->file_name, 0777);
     if (rc_dir != 0) return TREXIO_ERRNO;
 
   }
@@ -237,7 +255,7 @@ trexio_text_init (trexio_t* const file)
     return TREXIO_LOCK_ERROR;
   }
 
-  f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
+  f->lock_file = TREXIO_OPEN(file_name, O_WRONLY|O_CREAT|O_TRUNC, 0644);
 
   if (f->lock_file <= 0) {
 #ifdef _WIN32
@@ -257,7 +275,7 @@ trexio_text_init (trexio_t* const file)
         strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
         file_name[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
         strncat (file_name, lock_file_name, TREXIO_MAX_FILENAME_LENGTH-strlen(lock_file_name));
-        f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
+        f->lock_file = TREXIO_OPEN(file_name, O_WRONLY|O_CREAT|O_TRUNC, 0644);
         remove(file_name);
         rmdir(dirname);
       } else {
@@ -320,7 +338,7 @@ trexio_text_unlock (trexio_t* const file)
 
 #endif
 
-  close(f->lock_file);
+  TREXIO_CLOSE(f->lock_file);
   return TREXIO_SUCCESS;
 
 }
@@ -1429,7 +1447,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Check the return code of access function to determine whether the file with sparse data exists or not */
-  if (access(file_full_path, F_OK) == 0){
+  if (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
@@ -1671,7 +1689,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
   /* Check the return code of access function to determine whether the file with data exists or not */
-  if (access(file_full_path, F_OK) == 0){
+  if (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
@@ -1899,7 +1917,7 @@ trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file)
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
   /* Check the return code of access function to determine whether the file with data exists or not */
-  if (access(file_full_path, F_OK) == 0){
+  if (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;

@@ -1,5 +1,4 @@
-#define TEST_BACKEND  TREXIO_TEXT
-#define TREXIO_FILE   "test_state_energy.dir"
-#define RM_COMMAND_RESULT system("rm -rf -- " TREXIO_FILE);
-
+#define TEST_BACKEND_TEXT
+#define TREXIO_FILE_PREFIX "test_state_energy"
+#include "test_macros.h"
 #include "io_state_energy.c"
