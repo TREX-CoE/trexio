@@ -32,7 +32,7 @@ e.g. =zlib= + =zlib-devel=. That works across compilers because C has
 a real, stable, platform-level ABI: calling convention, name mangling
 (or lack thereof), struct layout are all fixed by the platform,
 independent of which compiler produced =libz.so=. The header is just a
-declaration; it carries no compiled state. =apt install zlib-devel=
+declaration; it carries no compiled state. =apt install zlib1g-dev=
 gives you something that links against *any* compiler's output,
 because the contract being offered is a platform ABI contract, not a
 compiler-internal one.
@@ -41,7 +41,7 @@ Fortran has no equivalent of this. There is no "module ABI" that
 compilers agree on, because modules were never specified as an
 interchange format. They're an implementation detail of each
 compiler's front end. So a package that ships a =.mod= file under a
-=-devel= label is not offering the same guarantee that a C =-devel=
+=-dev= label is not offering the same guarantee that a C =-dev=
 package offers, even though the naming convention makes it look
 identical. It is a strictly weaker contract wearing the same badge: it
 silently locks every downstream consumer to one specific compiler (and
@@ -89,7 +89,7 @@ install=: it lands in the =include= directory alongside the library.
 
 To avoid re-including this file by hand every time TREXIO is updated,
 the recommended pattern is to create a small wrapper file once, named
-=trexio_module.F90= (note the capital =F= in the suffix, so the
+for example =trexio_module.F90= (note the capital =F= in the suffix, so the
 preprocessor runs), containing just:
 
 #+begin_src fortran
@@ -98,10 +98,7 @@ preprocessor runs), containing just:
 
 That file is compiled like any other source file in the project, and
 the resulting =trexio_module.o= is added at link time along with the
-rest of the object files. From that point on, updating TREXIO only
-means recompiling this one small file. No changes to the rest of the
-codebase, and no dependency on which compiler built the TREXIO library
-itself.
+rest of the object files.
 
 * Anticipating the usual counterarguments
 
@@ -139,14 +136,13 @@ rely on instead.
 * Bottom line
 
 Shipping a compiled =.mod= file would trade a real, structural
-cross-compiler guarantee for a cosmetic resemblance to how C =-devel=
+cross-compiler guarantee for a cosmetic resemblance to how C =-dev=
 packages look, while quietly imposing a compiler lock-in on every
 downstream Fortran project that TREXIO's C core doesn't have and
 doesn't need. Since =trexio_f.f90= is a thin, cheaply-regenerable
 ISO-C-binding layer rather than compiled application logic, there is
-no meaningful cost to distributing it as source — only a bounded,
+no meaningful cost to distributing it as source. Only a bounded,
 one-time interface compile in exchange for compiler independence
-across the entire Fortran ecosystem. That tradeoff is not close, which
-is why this is a permanent design decision rather than an open
-question.
+across the entire Fortran ecosystem.  This is a permanent design decision
+rather than an open question.
 
