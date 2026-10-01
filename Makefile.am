@@ -124,6 +124,9 @@ TEST_FILES = \
     tests/io_dset_int.c \
     tests/io_dset_int_hdf5.c \
     tests/io_dset_int_text.c \
+    tests/io_auxbasis.c \
+    tests/io_auxbasis_hdf5.c \
+    tests/io_auxbasis_text.c \
     tests/io_dset_sparse.c \
     tests/io_dset_sparse_hdf5.c \
     tests/io_dset_sparse_text.c \
@@ -164,6 +167,7 @@ EXTRA_DIST += $(TEST_FILES)
 TESTS_C = \
   tests/open_text \
   tests/io_num_text \
+  tests/io_auxbasis_text \
   tests/io_dset_float_text \
   tests/io_dset_int_text \
   tests/io_dset_sparse_text \
@@ -183,6 +187,7 @@ if HAVE_HDF5
 TESTS_C += \
   tests/open_hdf5 \
   tests/io_num_hdf5 \
+  tests/io_auxbasis_hdf5 \
   tests/io_dset_float_hdf5 \
   tests/io_dset_int_hdf5 \
   tests/io_dset_sparse_hdf5 \
