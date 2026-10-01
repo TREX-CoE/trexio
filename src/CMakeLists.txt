@@ -96,6 +96,7 @@ if(TREXIO_DEVEL)
   set(ORG_FILES
       templates_front/templator_front.org
       templates_text/templator_text.org
+      templates_memory/templator_memory.org
       ${PROJECT_SOURCE_DIR}/trex.org
   )
   if(TREXIO_USE_HDF5)
