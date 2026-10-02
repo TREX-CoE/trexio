@@ -636,6 +636,72 @@ pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Resu
     rc_return((), rc)
 }}"#));
                     },
+                    "float buffered" => {
+                        let typ = "f64";
+                        r.push(format!(r#"
+/// Reads a buffer of {element} from group {group}.
+///
+/// # Parameters
+///
+/// * `offset: usize` - The starting point in the array from which data will be read.
+/// * `buffer_size: usize` - The size of the buffer in which read data will be stored.
+///
+/// # Returns
+///
+/// * `Result<Vec<{typ}>, ExitCode>` - Returns a vector of floats.
+///   The vector has a length of at most `buffer_size`.
+///
+/// # Notes
+///
+/// The reading process is a buffered operation, meaning that only a segment of the full array
+/// is read into the memory.
+pub fn read_{group_l}_{element_l}(&self, offset: usize, buffer_size:usize) -> Result<Vec<{typ}>, ExitCode> {{
+    let mut val = Vec::<f64>::with_capacity(buffer_size);
+    let val_ptr = val.as_ptr() as *mut f64;
+    let offset: i64 = offset.try_into().expect("try_into failed in read_{group}_{element} (offset)");
+    let mut buffer_size_read: i64 = buffer_size.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
+    let rc = unsafe {{ c::trexio_read_safe_{group}_{element}(self.ptr,
+           offset, &mut buffer_size_read, val_ptr, buffer_size_read)
+    }};
+    let rc = match ExitCode::from(rc) {{
+              ExitCode::End => ExitCode::to_c(&ExitCode::Success),
+              _       => rc
+            }};
+    let buffer_size_read: usize = buffer_size_read.try_into().expect("try_into failed in read_{group}_{element} (buffer_size)");
+    unsafe {{ val.set_len(buffer_size_read) }};
+    rc_return(val, rc)
+    }}"#));
+                        r.push(format!(r#"/// Writes a buffer of {element} from group {group}.
+///
+/// # Parameters
+///
+/// * `offset: usize` - The starting point in the array at which data will be written.
+/// * `data: &[{typ}]` - A slice of floats containing the indices and the value of the element.
+///
+/// # Returns
+///
+/// * `Result<(), ExitCode>` - Returns `Ok(())` if the writing operation is successful,
+/// otherwise returns `Err(ExitCode)`.
+///
+/// # Notes
+///
+/// The writing process is a buffered operation, meaning that only a segment of the full array
+/// is written into the file.
+pub fn write_{group_l}_{element_l}(&self, offset: usize, data: &[{typ}]) -> Result<(), ExitCode> {{
+    let mut val = Vec::<f64>::with_capacity(data.len());
+    for d in data {{
+      val.push(*d);
+    }}
+
+    let size_max: i64 = data.len().try_into().expect("try_into failed in write_{group}_{element} (size_max)");
+    let buffer_size = size_max;
+    let val_ptr = val.as_ptr() as *const f64;
+    let offset: i64 = offset.try_into().expect("try_into failed in write_{group}_{element} (offset)");
+    let rc = unsafe {{ c::trexio_write_safe_{group}_{element}(self.ptr,
+           offset, buffer_size, val_ptr, size_max) }};
+    rc_return((), rc)
+}}"#));
+                    },
                     _ => {}
                 }
             }
