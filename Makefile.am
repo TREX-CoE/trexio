@@ -221,7 +221,7 @@ endif
 
 clean-local:
 	-rm -rf -- *.dir/ *.h5 __pycache__/
-	-rm -rf -- python-test-package python/test/__pycache__
+	-rm -rf -- python-test-package trexio-package python/test/__pycache__
 
 # =============== GUIX MANIFEST =============== #
 
@@ -452,6 +452,11 @@ GENERATOR_FILES = $(srcdir)/tools/generator.py \
 
 $(SOURCES): $(trexio_h)
 src/trexio.c: $(trexio_h)
+$(trexio_py): $(trexio_h)
+	@if test -f $@; then :; else \
+	  rm -f $(trexio_h); \
+	  $(MAKE) $(AM_MAKEFLAGS) $(trexio_h); \
+	fi
 
 trex.json: trex.org
 	cd $(srcdir)/tools && ./build_json.sh
@@ -501,6 +506,12 @@ $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy
 		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i ; \
 	else echo "Error: SWIG is not installed" ; \
 	exit 1 ; \
+	fi
+
+$(pytrexio_py): $(pytrexio_c)
+	@if test -f $@; then :; else \
+	  rm -f $(pytrexio_c); \
+	  $(MAKE) $(AM_MAKEFLAGS) $(pytrexio_c); \
 	fi
 
 
