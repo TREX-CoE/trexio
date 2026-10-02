@@ -22,6 +22,7 @@ single- and/or multi-reference wave functions:
 | ------------------------------------------------------------------------------ | ---------------- | --------------- |
 | [Quantum Package](https://github.com/QuantumPackage/qp2)                       | Write/Read       | Write/Read      |
 | [PySCF](https://github.com/pyscf/pyscf)                                        | Write/Read       | Write/Read      |
+| [ElemCo.jl](https://github.com/fkfest/ElemCo.jl)                               | Write/Read       | Write/Read      |
 | [VeloxChem](https://github.com/VeloxChem/VeloxChem)                            | Write            | ---             |
 | [FHI-aims](https://fhi-aims.org/)                                              | Write            | ---             |
 | [CP2K](https://github.com/cp2k/cp2k)                                           | Write            | ---             |
@@ -173,6 +174,11 @@ command. However, as TREXIO does not utilize MPI features, it is advisable to
 link against a non-MPI (serial) version of the HDF5 library for the sake of
 simplicity.
 
+Building the library on Windows is possible through CMake from the release tarball
+(not in developer mode from repository). Use `cmake -S. -Bbuild -GNinja
+-DTREXIO_FORTRAN=OFF` and `cmake --build build --target install`, as well as any
+other options. Tested with clang-cl, HDF5, and no Fortran.
+
 #### Compilation without the HDF5 library
 
 By default, the configuration step proceeds to search for the [HDF5 library](https://portal.hdfgroup.org/display/HDF5/HDF5).
@@ -247,6 +253,11 @@ or on [Binder](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD).
 For example, the tutorial covering TREXIO basics using benzene molecule as an example can be viewed and executed online by clicking on this badge:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TREX-CoE/trexio-tutorials/HEAD?filepath=notebooks%2Ftutorial_benzene.ipynb)
 
+If you generate TREXIO files in your own code, we recommend checking them with
+the [TREXIO validator](https://github.com/TREX-CoE/trexio-validate.git). It
+helps verify that the produced files are consistent with the TREXIO format and
+can catch missing or malformed data before the files are shared or used in
+production workflows.
 
 ### Documentation
 
@@ -310,12 +321,50 @@ requirements.
 For more details regarding the installation and usage of the TREXIO Python API,
 see [this page](python/README.md).
 
-The aforementioned instructions are adapted for users installing from the source code distribution (periodically updated).
-In order to install the Python API with the latest changes, follow the developer installation guide and run the following command in the end
+The instructions on that page are for installing the Python API on its own, with
+`pip`, from the source distribution published on PyPI. That build compiles its
+own copy of the TREXIO library, because a wheel cannot run `configure`.
+
+The Python interface can also be built and installed together with the rest of
+the library, in which case the extension module links against the `libtrexio`
+built alongside it instead of compiling the sources a second time. It is off by
+default; enable it with
+
+- `./configure --enable-python`
+- `cmake -S. -Bbuild -DTREXIO_PYTHON=ON`
+
+`make` then builds the extension with the other objects, and `make install`
+installs a single `trexio` package under the installation prefix, in the
+directory the interpreter uses for platform-specific packages — typically
+`$prefix/lib/python<X.Y>/site-packages` or `$prefix/lib64/...`:
+
+```
+<prefix>/<site-packages>/trexio/__init__.py    the API
+<prefix>/<site-packages>/trexio/pytrexio.py    the SWIG wrapper
+<prefix>/<site-packages>/trexio/_pytrexio.so
+<prefix>/<site-packages>/trexio/_version.py
+```
+
+So `import trexio` is all that is needed, and the wrapper is reachable as
+`trexio.pytrexio`. Since the prefix is usually not on the default module search
+path, add it to `PYTHONPATH`, or point the installation at the interpreter's own
+directory:
+
+- `./configure --enable-python pythondir=... pyexecdir=...`
+- `cmake -S. -Bbuild -DTREXIO_PYTHON=ON -DTREXIO_INSTALL_PYTHONDIR=...`
+
+Building this way needs the Python development headers and NumPy. SWIG is
+needed only when the generated wrapper has to be regenerated, which is the case
+in a Git checkout but not in a release tarball, where it is shipped.
+
+The older
 
 ```
 make python-install
 ```
+
+target is still available. It builds a wheel with `pip` and installs it into the
+active Python environment, using the HDF5 flags that `configure` already found.
 
 **Note: this implies that SWIG is installed and available.**
 

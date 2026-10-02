@@ -209,6 +209,26 @@ class TestIO:
             self.test_file.close()
 
 
+    def test_metadata_author_overflow(self):
+        """Regression test for https://github.com/TREX-CoE/trexio/issues/277 :
+        writing a string dataset with elements whose length is close to
+        max_str_len used to overflow the compiled string buffer."""
+        self.open()
+        # 34-character author name (no comma => single string), reproducer from the issue
+        authors = ["0123456789abcdef" "0123456789abcdef" "01"]
+        trexio.write_metadata_author_num(self.test_file, len(authors))
+        trexio.write_metadata_author(self.test_file, authors)
+        assert trexio.has_metadata_author(self.test_file)
+        if self.test_file.isOpen:
+            self.test_file.close()
+
+        self.open(mode='r')
+        rc_authors = trexio.read_metadata_author(self.test_file)
+        assert rc_authors == authors
+        if self.test_file.isOpen:
+            self.test_file.close()
+
+
     def test_array_1D(self):
         """Write array of charges."""
         self.open()

@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.19)
 # Initialize the CMake project. Fortran is enabled conditionally below so that
 # the C library can be built without a Fortran compiler (mirrors the autotools
 # --without-fortran option).
-project(Trexio
+project(trexio
 	VERSION 2.6.1
 	DESCRIPTION "TREX I/O library"
 	HOMEPAGE_URL "https://trex-coe.github.io/trexio/"
@@ -16,7 +16,9 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_TESTING "Whether to perform tests for TREXIO" ON)
 
 option(TREXIO_FORTRAN "Build and test the TREXIO Fortran interface" ON)
+option(TREXIO_PYTHON "Build and install the TREXIO Python interface" OFF)
 option(TREXIO_USE_HDF5 "Enable HDF5 support" ON)
+option(TREXIO_BUILD_DOCS "Build and install documentation" OFF)
 
 # Optional configure for developer mode to generate source code from org-mode files.
 option(TREXIO_DEVEL "TREXIO developer mode (for code generation)." OFF)
@@ -52,6 +54,13 @@ if(TREXIO_FORTRAN)
   FortranCInterface_VERIFY()
 endif()
 
+# The Python extension module is compiled from the SWIG wrapper and linked
+# against the TREXIO library built here, so the Python and NumPy headers are
+# needed in addition to the interpreter.
+if(TREXIO_PYTHON)
+  find_package(Python3 3.6 REQUIRED COMPONENTS Interpreter Development.Module NumPy)
+endif()
+
 set(TREXIO_MOD_FILE "${PROJECT_SOURCE_DIR}/include/trexio_f.f90")
 
 if(EXISTS "${PROJECT_SOURCE_DIR}/.devel")
@@ -78,11 +87,55 @@ if(TREXIO_DEVEL)
   set(TREXIO_USER_NAME "$ENV{USER}")
   # replace placeholders in the templace config.h.in file to produce config.h
   # config.h is needed to insert TREXIO_PACKAGE_VERSION and TREXIO_GIT_HASH into trexio.h
+  # Write the generated header into a directory of its own inside the build tree.
+  # It used to be written to include/config.h in the source tree, where it
+  # overwrote the header configure generates and silently disabled the HDF5 back
+  # end for every later Autotools build in the same checkout.
+  #
+  # The subdirectory matters: for an in-source build PROJECT_BINARY_DIR is the
+  # source directory, so writing to include/config.h there would overwrite the
+  # same file again. Nothing compiled by this build includes it -- HAVE_CONFIG_H
+  # is never defined here, and the generator is told where to find it -- so it is
+  # free to live somewhere that cannot collide.
+  set(TREXIO_GENERATED_CONFIG_H "${PROJECT_BINARY_DIR}/trexio-generated/config.h")
   configure_file(
     "${PROJECT_SOURCE_DIR}/include/cmake_config.h.in"
-    "${PROJECT_SOURCE_DIR}/include/config.h"
+    "${TREXIO_GENERATED_CONFIG_H}"
     @ONLY)
 endif()
+
+# ============= DOCUMENTATION =============
+
+if(TREXIO_DEVEL AND TREXIO_BUILD_DOCS)
+  file(GLOB_RECURSE TREXIO_DOC_SOURCES CONFIGURE_DEPENDS
+    "${PROJECT_SOURCE_DIR}/docs/*.org"
+    "${PROJECT_SOURCE_DIR}/src/*.org"
+  )
+  list(APPEND TREXIO_DOC_SOURCES
+    "${PROJECT_SOURCE_DIR}/trex.org"
+    "${PROJECT_SOURCE_DIR}/docs/theme.setup"
+    "${PROJECT_SOURCE_DIR}/tools/emacs/config_doc.el"
+    "${PROJECT_SOURCE_DIR}/tools/emacs/config_tangle.el"
+    "${PROJECT_SOURCE_DIR}/tools/build_doc.sh"
+  )
+  set(TREXIO_DOC_STAMP
+    "${PROJECT_BINARY_DIR}/trexio-doc.stamp"
+  )
+  add_custom_command(
+    OUTPUT "${TREXIO_DOC_STAMP}"
+    COMMAND bash "${PROJECT_SOURCE_DIR}/tools/build_doc.sh"
+    COMMAND "${CMAKE_COMMAND}" -E touch "${TREXIO_DOC_STAMP}"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/tools"
+    DEPENDS ${TREXIO_DOC_SOURCES}
+    COMMENT "Generating HTML documentation from Org files"
+    VERBATIM
+  )
+  add_custom_target(trexio_docs ALL
+    DEPENDS "${TREXIO_DOC_STAMP}"
+  )
+endif()
+
+# ============= BUILD TARGETS =============
 
 # Add subdirectory with add_library(trexio) specifications.
 add_subdirectory(src)

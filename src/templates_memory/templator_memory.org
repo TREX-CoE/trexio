@@ -641,7 +641,15 @@ trexio_memory_write_$group_dset$ (trexio_t* const file, const char** dset, const
   $group$->$group_dset$ = CALLOC(dims[0], char*);
   if ($group$->$group_dset$ == NULL) return TREXIO_ALLOCATION_FAILED;
 
-  char* tmp_str = CALLOC(dims[0]*32 + 1, char);
+  /* Compute the exact amount of memory needed to store all the strings
+   ,* contiguously instead of assuming an arbitrary maximum string length,
+   ,* which would silently truncate or overflow longer strings. */
+  size_t tmp_str_size = 0;
+  for (uint64_t i=0 ; i<dims[0] ; ++i) {
+    tmp_str_size += strlen(dset[i]) + 2;
+  }
+
+  char* tmp_str = CALLOC(tmp_str_size, char);
   if (tmp_str == NULL) return TREXIO_ALLOCATION_FAILED;
 
   for (uint64_t i=0 ; i<dims[0] ; ++i) {

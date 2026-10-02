@@ -41,6 +41,16 @@
 
   #+end_src
 
+  The text back end keeps each TREXIO file in a directory and probes it with
+  the POSIX descriptor API, which the MSVC runtime spells with a leading
+  underscore in =io.h= and =direct.h= rather than =unistd.h=, and which
+  leaves =F_OK= undefined. The macros below supply that constant and route
+  =access=, =open=, =close= and =mkdir= to whichever spelling exists;
+  =TREXIO_MKDIR= drops the permission argument, as Windows directories carry
+  no POSIX mode bits. They are named macros rather than bare =open=/=close=
+  aliases because =trexio.c= includes =trexio_hdf5.h= after this header, and
+  the HDF5 headers declare struct members of those very names.
+
   #+begin_src c :tangle prefix_text.h :noweb yes
 <<header>>
 #ifndef TREXIO_TEXT_H
@@ -56,7 +66,23 @@
 #include <string.h>
 #include <assert.h>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <io.h>
+#include <direct.h>
+#ifndef F_OK
+#define F_OK 0
+#endif
+#define TREXIO_ACCESS(path, mode)       _access((path), (mode))
+#define TREXIO_OPEN(path, flags, perms) _open((path), (flags), (perms))
+#define TREXIO_CLOSE(fd)                _close(fd)
+#define TREXIO_MKDIR(path, mode)        _mkdir(path)
+#else
 #include <unistd.h>
+#define TREXIO_ACCESS(path, mode)       access((path), (mode))
+#define TREXIO_OPEN(path, flags, perms) open((path), (flags), (perms))
+#define TREXIO_CLOSE(fd)                close(fd)
+#define TREXIO_MKDIR(path, mode)        mkdir((path), (mode))
+#endif
 #include <sys/stat.h>
 #include <stdbool.h>
 
@@ -178,11 +204,7 @@ char* mkdtemp(char* template) {
     dir = tmpnam(dir);
     if (dir == NULL) return NULL;
 
-#ifdef _WIN32
-    if (mkdir(dir) != 0) {
-#else
-    if (mkdir(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
-#endif
+    if (TREXIO_MKDIR(dir, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
         return NULL;
     }
 
@@ -215,11 +237,7 @@ trexio_text_init (trexio_t* const file)
 
     if (file->mode == 'r') return TREXIO_READONLY;
 
-#ifdef _WIN32
-    int rc_dir = mkdir(file->file_name);
-#else
-    int rc_dir = mkdir(file->file_name, 0777);
-#endif
+    int rc_dir = TREXIO_MKDIR(file->file_name, 0777);
     if (rc_dir != 0) return TREXIO_ERRNO;
 
   }
@@ -237,7 +255,7 @@ trexio_text_init (trexio_t* const file)
     return TREXIO_LOCK_ERROR;
   }
 
-  f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
+  f->lock_file = TREXIO_OPEN(file_name, O_WRONLY|O_CREAT|O_TRUNC, 0644);
 
   if (f->lock_file <= 0) {
 #ifdef _WIN32
@@ -257,7 +275,7 @@ trexio_text_init (trexio_t* const file)
         strncpy (file_name, dirname, TREXIO_MAX_FILENAME_LENGTH);
         file_name[TREXIO_MAX_FILENAME_LENGTH-1] = '\0';
         strncat (file_name, lock_file_name, TREXIO_MAX_FILENAME_LENGTH-strlen(lock_file_name));
-        f->lock_file = open(file_name,O_WRONLY|O_CREAT|O_TRUNC, 0644);
+        f->lock_file = TREXIO_OPEN(file_name, O_WRONLY|O_CREAT|O_TRUNC, 0644);
         remove(file_name);
         rmdir(dirname);
       } else {
@@ -320,7 +338,7 @@ trexio_text_unlock (trexio_t* const file)
 
 #endif
 
-  close(f->lock_file);
+  TREXIO_CLOSE(f->lock_file);
   return TREXIO_SUCCESS;
 
 }
@@ -492,14 +510,14 @@ trexio_text_read_$group$ (trexio_text_t* const file)
             return NULL;
           }
 
-          /* WARNING: this tmp array allows to avoid allocation of space for each element of array of string
-           ,* BUT it's size has to be number_of_str*max_len_str where max_len_str is somewhat arbitrary, e.g. 32.
+          /* First pass: measure the total length required to store all the
+           ,* strings contiguously in a single block, instead of assuming an
+           ,* arbitrary maximum string length which could truncate longer
+           ,* strings and overflow the allocated block.
            ,*/
-          char* tmp_$group_dset$;
-          tmp_$group_dset$ = CALLOC(size_$group_dset$*32, char);
-
+          long pos_$group_dset$ = ftell(f);
+          size_t total_len_$group_dset$ = 0;
           for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
-            $group$->$group_dset$[i] = tmp_$group_dset$;
             /* conventional fcanf with "%s" only return the string before the first space character
              ,* to read string with spaces use "%[^\n]" possible with space before or after, i.e. " %[^\n]"
              ,*/
@@ -508,11 +526,29 @@ trexio_text_read_$group$ (trexio_text_t* const file)
               trexio_text_free_read_$group$(buffer, f, file, $group$);
               return NULL;
             }
+            total_len_$group_dset$ += strlen(buffer) + 1;
+          }
+          fseek(f, pos_$group_dset$, SEEK_SET);
 
-            size_t tmp_$group_dset$_len = strlen(buffer);
-            strncpy(tmp_$group_dset$, buffer, 32);
-            tmp_$group_dset$[31] = '\0';
-            tmp_$group_dset$ += tmp_$group_dset$_len + 1;
+          char* tmp_$group_dset$;
+          tmp_$group_dset$ = CALLOC(total_len_$group_dset$, char);
+          if (tmp_$group_dset$ == NULL) {
+            trexio_text_free_read_$group$(buffer, f, file, $group$);
+            return NULL;
+          }
+
+          for (uint64_t i=0 ; i<size_$group_dset$ ; ++i) {
+            $group$->$group_dset$[i] = tmp_$group_dset$;
+
+            rc = fscanf(f, " %1023[^\n]", buffer);
+            if (rc != 1) {
+              trexio_text_free_read_$group$(buffer, f, file, $group$);
+              return NULL;
+            }
+
+            size_t tmp_$group_dset$_len = strlen(buffer) + 1;
+            memcpy(tmp_$group_dset$, buffer, tmp_$group_dset$_len);
+            tmp_$group_dset$ += tmp_$group_dset$_len;
           }
         }
 
@@ -1000,7 +1036,15 @@ trexio_text_write_$group_dset$ (trexio_t* const file, const char** dset, const u
   $group$->$group_dset$ = CALLOC(dims[0], char*);
   if ($group$->$group_dset$ == NULL) return TREXIO_ALLOCATION_FAILED;
 
-  char* tmp_str = CALLOC(dims[0]*32 + 1, char);
+  /* Compute the exact amount of memory needed to store all the strings
+   ,* contiguously instead of assuming an arbitrary maximum string length,
+   ,* which would silently truncate or overflow longer strings. */
+  size_t tmp_str_size = 0;
+  for (uint64_t i=0 ; i<dims[0] ; ++i) {
+    tmp_str_size += strlen(dset[i]) + 2;
+  }
+
+  char* tmp_str = CALLOC(tmp_str_size, char);
   if (tmp_str == NULL) return TREXIO_ALLOCATION_FAILED;
 
   for (uint64_t i=0 ; i<dims[0] ; ++i) {
@@ -1403,7 +1447,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
            TREXIO_MAX_FILENAME_LENGTH-strlen($group_dset$_file_name));
 
   /* Check the return code of access function to determine whether the file with sparse data exists or not */
-  if (access(file_full_path, F_OK) == 0){
+  if (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
@@ -1645,7 +1689,7 @@ trexio_exit_code trexio_text_has_$group_dset$(trexio_t* const file)
   strncat (file_full_path, file_name, TREXIO_MAX_FILENAME_LENGTH - sizeof(file_name));
 
   /* Check the return code of access function to determine whether the file with data exists or not */
-  if (access(file_full_path, F_OK) == 0){
+  if (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
@@ -1873,7 +1917,7 @@ trexio_exit_code trexio_text_has_determinant_list(trexio_t* const file)
            TREXIO_MAX_FILENAME_LENGTH-strlen(determinant_list_file_name));
 
   /* Check the return code of access function to determine whether the file with data exists or not */
-  if (access(file_full_path, F_OK) == 0){
+  if (TREXIO_ACCESS(file_full_path, F_OK) == 0){
     return TREXIO_SUCCESS;
   } else {
     return TREXIO_HAS_NOT;
