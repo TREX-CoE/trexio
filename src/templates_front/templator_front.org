@@ -970,13 +970,14 @@ def string_of_error(return_code: int) -> str:
 
    2) ~TREXIO_TEXT~ relies on basic file I/O in C, namely ~fopen, fclose, fprintf, fscanf~ etc. from ~stdio.h~ library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have ~.txt~ extension.
 
-   ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file in read-only ~'r'~ mode.
+   3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory.
+
+   ~TREXIO_AUTO~ can be provided as a backend when opening an existing TREXIO file in read ~'r'~ mode.
    In this case, TREXIO will try to automatically detect the back end, which should be used to open the file.
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
    This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
-   Then the corresponding back-end ~has/read/write~ functions has to be implemented. For example, see the commented
-   lines that correspond to the ~TREXIO_JSON~ back end (not implemented yet).
+   Then the corresponding back-end ~has/read/write~ functions has to be implemented. 
 
    _Note_: It is important to increment the value of ~TREXIO_INVALID_BACK_END~ when a new back end is implemented. Otherwise, it will not be available.
 
@@ -987,10 +988,9 @@ typedef int32_t back_end_t;
 
 #define TREXIO_HDF5             ( (back_end_t) 0 )
 #define TREXIO_TEXT             ( (back_end_t) 1 )
-#define TREXIO_MEMORY           ( (back_end_t) 2 )
-#define TREXIO_INVALID_BACK_END ( (back_end_t) 3 )
-#define TREXIO_AUTO             TREXIO_INVALID_BACK_END
-/*#define TREXIO_JSON             ( (back_end_t) 3 )*/
+#define TREXIO_AUTO             ( (back_end_t) 2 )
+#define TREXIO_MEMORY           ( (back_end_t) 3 )
+#define TREXIO_INVALID_BACK_END ( (back_end_t) 4 )
 
 #define TREXIO_DELIM            "\n"
    #+end_src
@@ -1030,10 +1030,9 @@ bool trexio_has_backend(back_end_t back_end) {
   #+begin_src f90 :tangle prefix_fortran.f90
   integer(trexio_back_end_t), parameter :: TREXIO_HDF5 = 0
   integer(trexio_back_end_t), parameter :: TREXIO_TEXT = 1
-  integer(trexio_back_end_t), parameter :: TREXIO_MEMORY = 2
-! integer(trexio_back_end_t), parameter :: TREXIO_JSON = 3
-  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 3
-  integer(trexio_back_end_t), parameter :: TREXIO_AUTO = TREXIO_INVALID_BACK_END
+  integer(trexio_back_end_t), parameter :: TREXIO_AUTO = 2
+  integer(trexio_back_end_t), parameter :: TREXIO_MEMORY = 3
+  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 4
   #+end_src
 
   The function below is a Fortran interface for the aforementioned C-compatible ~trexio_has_back_end~ function.
@@ -1063,10 +1062,9 @@ end interface
 # define TREXIO back ends
 TREXIO_HDF5 = 0
 TREXIO_TEXT = 1
-TREXIO_MEMORY = 2
-#TREXIO_JSON = 3
-TREXIO_INVALID_BACK_END = 3
-TREXIO_AUTO = TREXIO_INVALID_BACK_END
+TREXIO_AUTO = 2
+TREXIO_MEMORY = 3
+TREXIO_INVALID_BACK_END = 4
   #+end_src
 
 ** Read/write behavior
@@ -1248,13 +1246,14 @@ class File:
    **Input parameters:**
      1) ~file_name~     - string containing file name
      2) ~mode~          - character containing open mode (see below)
-       - ~'w'~         - (write)  creates a new file as READWRITE
-       - ~'r'~         - (read)   opens existing file as READONLY
-       - ~'u'~         - (unsafe) opens existing file as READWRITE with the possibility to overwrite blocks and delete full groups.
+       - ~'w'~          - (write)  creates a new file as READWRITE
+       - ~'r'~          - (read)   opens existing file as READONLY
+       - ~'u'~          - (unsafe) opens existing file as READWRITE with the possibility to overwrite blocks and delete full groups.
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
-       - ~TREXIO_HDF5~ - for HDF5 back end (integer alternative: 0)
-       - ~TREXIO_TEXT~ - for TEXT back end (integer alternative: 1)
-       - ~TREXIO_AUTO~ - to automatically detect the applicable back end
+       - ~TREXIO_HDF5~   - for HDF5 back end 
+       - ~TREXIO_TEXT~   - for TEXT back end 
+       - ~TREXIO_MEMORY~ - for MEMORY back end 
+       - ~TREXIO_AUTO~   - to automatically detect the applicable back end
 
    **Output:**
      - Pointer to the ~trexio_t~ (struct) file handle.
@@ -1301,14 +1300,8 @@ trexio_open(const char* file_name, const char mode,
     return NULL;
   }
 
-  /* Check that the back end is valid in non-read mode */
-  if ((back_end <  0 || back_end >= TREXIO_INVALID_BACK_END) && mode != 'r') {
-    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
-    return NULL;
-  }
-
-  /* Check that the back end is valid in read-only mode */
-  if ((back_end <  0 || back_end > TREXIO_INVALID_BACK_END) && mode == 'r') {
+  /* Check that the back end is valid */
+  if (back_end <  0 || back_end >= TREXIO_INVALID_BACK_END) {
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
     return NULL;
   }
@@ -1317,6 +1310,13 @@ trexio_open(const char* file_name, const char mode,
      so read-only mode is meaningless (and would otherwise fail later when the
      metadata is written). Reject it explicitly at open time. */
   if (back_end == TREXIO_MEMORY && mode == 'r') {
+    if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
+    return NULL;
+  }
+
+  /* The TREXIO_AUTO back end only applies to existing files.
+     so write-only mode is meaningless. Reject it explicitly at open time. */
+  if (back_end == TREXIO_AUTO && mode == 'w') {
     if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
     return NULL;
   }
