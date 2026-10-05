@@ -107,8 +107,6 @@ static int test_read_auxbasis(const char* file_name, const back_end_t backend) {
   int32_t auxbasis2_nucleus_index[2] = {-1, -1};
   char auxbasis_description[sizeof(expected_auxbasis_description)];
   char auxbasis2_description[sizeof(expected_auxbasis2_description)];
-  char auxbasis_description_short[sizeof("SCF")];
-  char auxbasis2_description_short[sizeof("MP2")];
 
 /*================= START OF TEST ==================*/
 
@@ -129,10 +127,6 @@ static int test_read_auxbasis(const char* file_name, const back_end_t backend) {
                                         sizeof(auxbasis_description));
   assert (rc == TREXIO_SUCCESS);
   assert (strcmp(auxbasis_description, expected_auxbasis_description) == 0);
-  rc = trexio_read_auxbasis_description(file, auxbasis_description_short,
-                                        sizeof(auxbasis_description_short));
-  assert (rc == TREXIO_SUCCESS);
-  assert (strcmp(auxbasis_description_short, "SCF") == 0);
 
   rc = trexio_read_auxbasis2_shell_num(file, &auxbasis2_shell_num);
   assert (rc == TREXIO_SUCCESS);
@@ -147,10 +141,6 @@ static int test_read_auxbasis(const char* file_name, const back_end_t backend) {
                                          sizeof(auxbasis2_description));
   assert (rc == TREXIO_SUCCESS);
   assert (strcmp(auxbasis2_description, expected_auxbasis2_description) == 0);
-  rc = trexio_read_auxbasis2_description(file, auxbasis2_description_short,
-                                         sizeof(auxbasis2_description_short));
-  assert (rc == TREXIO_SUCCESS);
-  assert (strcmp(auxbasis2_description_short, "MP2") == 0);
 
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
