@@ -34,7 +34,7 @@ static int test_write_auxbasis(const char* file_name, const back_end_t backend) 
   rc = trexio_write_auxbasis_nucleus_index(file, auxbasis_nucleus_index);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_auxbasis_description(file, expected_auxbasis_description,
-                                         sizeof(expected_auxbasis_description));
+                                         strlen(expected_auxbasis_description)+1);
   assert (rc == TREXIO_SUCCESS);
 
   rc = trexio_write_auxbasis2_shell_num(file, auxbasis2_shell_num);
@@ -42,7 +42,7 @@ static int test_write_auxbasis(const char* file_name, const back_end_t backend) 
   rc = trexio_write_auxbasis2_nucleus_index(file, auxbasis2_nucleus_index);
   assert (rc == TREXIO_SUCCESS);
   rc = trexio_write_auxbasis2_description(file, expected_auxbasis2_description,
-                                          sizeof(expected_auxbasis2_description));
+                                          strlen(expected_auxbasis2_description)+1);
   assert (rc == TREXIO_SUCCESS);
 
   rc = trexio_close(file);
@@ -105,8 +105,8 @@ static int test_read_auxbasis(const char* file_name, const back_end_t backend) {
   const int32_t expected_auxbasis2_nucleus_index[2] = {1, 1};
   int32_t auxbasis_nucleus_index[3] = {-1, -1, -1};
   int32_t auxbasis2_nucleus_index[2] = {-1, -1};
-  char auxbasis_description[sizeof(expected_auxbasis_description)];
-  char auxbasis2_description[sizeof(expected_auxbasis2_description)];
+  char auxbasis_description[sizeof(expected_auxbasis_description)+1];
+  char auxbasis2_description[sizeof(expected_auxbasis2_description)+1];
 
 /*================= START OF TEST ==================*/
 
