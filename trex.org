@@ -350,7 +350,6 @@
   must remain invariant under any redistribution of the normalization
   between the three factors.
 
-
 *** Numerical orbitals
 
     TREXIO supports numerical atom centered orbitals. The implementation is
@@ -436,6 +435,7 @@
   | Variable            | Type    | Row-major Dimensions                           | Column-major Dimensions                        | Description                                                                  |
   |---------------------+---------+------------------------------------------------+------------------------------------------------+------------------------------------------------------------------------------|
   | ~type~              | ~str~   |                                                |                                                | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |
+  | ~description~       | ~str~   |                                                |                                                | Optional description string for metadata, e.g. name, use, eetc               |
   | ~prim_num~          | ~dim~   |                                                |                                                | Total number of primitives                                                   |
   | ~shell_num~         | ~dim~   |                                                |                                                | Total number of shells                                                       |
   | ~nao_grid_num~      | ~dim~   |                                                |                                                | Total number of grid points for numerical orbitals                           |
@@ -472,6 +472,7 @@
     #+begin_src json :tangle trex.json
 	"basis": {
 			 "type" : [ "str"  , []                                                 ]
+	  ,       "description" : [ "str"  , []                                                 ]
 	  ,          "prim_num" : [ "dim"  , []                                                 ]
 	  ,         "shell_num" : [ "dim"  , []                                                 ]
 	  ,      "nao_grid_num" : [ "dim"  , []                                                 ]
@@ -574,7 +575,7 @@ prim_factor =
   4.3649547399719840e-01, 1.8135965626177861e+00 ]
     #+END_EXAMPLE
 
-** Auxiliary basis (auxbasis group)
+** Auxiliary basis sets (auxbasis groups)
 
 This is a duplicate of the basis group that can be used to store
 information about auxiliary basis functions. See basis group
@@ -591,6 +592,7 @@ documentation.
     #+begin_src json :tangle trex.json
 	"auxbasis": {
 			 "type" : [ "str"  , []                                                 ]
+	  ,       "description" : [ "str"  , []                                                 ]
 	  ,          "prim_num" : [ "dim"  , []                                                 ]
 	  ,         "shell_num" : [ "dim"  , []                                                 ]
 	  ,      "nao_grid_num" : [ "dim"  , []                                                 ]
@@ -622,6 +624,44 @@ documentation.
     #+end_src
     :end:
 
+    #+CALL: json(data=basis, title="auxbasis2", replace_group="basis")
+
+    #+RESULTS:
+    :results:
+    #+begin_src json :tangle trex.json
+	"auxbasis2": {
+			 "type" : [ "str"  , []                                                 ]
+	  ,       "description" : [ "str"  , []                                                 ]
+	  ,          "prim_num" : [ "dim"  , []                                                 ]
+	  ,         "shell_num" : [ "dim"  , []                                                 ]
+	  ,      "nao_grid_num" : [ "dim"  , []                                                 ]
+	  ,  "interp_coeff_cnt" : [ "dim"  , []                                                 ]
+	  ,     "nucleus_index" : [ "index", [ "auxbasis2.shell_num" ]                          ]
+	  ,     "shell_ang_mom" : [ "int"  , [ "auxbasis2.shell_num" ]                          ]
+	  ,      "shell_factor" : [ "float", [ "auxbasis2.shell_num" ]                          ]
+	  ,           "r_power" : [ "int"  , [ "auxbasis2.shell_num" ]                          ]
+	  ,    "nao_grid_start" : [ "index", [ "auxbasis2.shell_num" ]                          ]
+	  ,     "nao_grid_size" : [ "dim"  , [ "auxbasis2.shell_num" ]                          ]
+	  ,       "shell_index" : [ "index", [ "auxbasis2.prim_num" ]                           ]
+	  ,          "exponent" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,       "exponent_im" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,       "coefficient" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,    "coefficient_im" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,   "oscillation_arg" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,  "oscillation_kind" : [ "str"  , []                                                 ]
+	  ,       "prim_factor" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,             "e_cut" : [ "float", []                                                 ]
+	  ,   "nao_grid_radius" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  ,      "nao_grid_phi" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  ,     "nao_grid_grad" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  ,      "nao_grid_lap" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  , "interpolator_kind" : [ "str"  , []                                                 ]
+	  ,  "interpolator_phi" : [ "float", [ "auxbasis2.nao_grid_num", "auxbasis2.interp_coeff_cnt" ] ]
+	  , "interpolator_grad" : [ "float", [ "auxbasis2.nao_grid_num", "auxbasis2.interp_coeff_cnt" ] ]
+	  ,  "interpolator_lap" : [ "float", [ "auxbasis2.nao_grid_num", "auxbasis2.interp_coeff_cnt" ] ]
+	} ,
+    #+end_src
+    :end:
 
 ** Effective core potentials (ecp group)
 
@@ -1185,10 +1225,10 @@ power = [
     #+end_src
     :end:
 
-** Auxiliary atomic orbitals (~auxao~ group)
+** Auxiliary atomic orbitals (~auxao~ groups)
 
   Duplicate of the atomic orbitals group see documentation above.
-  Used with the ~auxbasis~ group to define auxiliary basis functions.
+  Used with the ~auxbasis~ groups to define auxiliary basis functions.
 
   #+CALL: json(data=ao, title="auxao", replace_group="ao")
 
@@ -1200,6 +1240,20 @@ power = [
 	,           "num" : [ "dim"  , []           ]
 	,         "shell" : [ "index", [ "auxao.num" ] ]
 	, "normalization" : [ "float", [ "auxao.num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+  #+CALL: json(data=ao, title="auxao2", replace_group="ao")
+
+  #+RESULTS:
+  :results:
+  #+begin_src json :tangle trex.json
+      "auxao2": {
+	      "cartesian" : [ "int"  , []           ]
+	,           "num" : [ "dim"  , []           ]
+	,         "shell" : [ "index", [ "auxao2.num" ] ]
+	, "normalization" : [ "float", [ "auxao2.num" ] ]
       } ,
   #+end_src
   :end:
