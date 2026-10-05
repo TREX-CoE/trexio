@@ -177,7 +177,7 @@ AS_IF([test "x$with_hdf5" = "xno"],
               # (3) Look for "AM_NAME:" tags
               #
               HDF5_tmp_flags=$(eval $H5CC -showconfig \
-                  | $GREP 'FLAGS\|Extra libraries:' \
+                  | $GREP 'FLAGS' \
                   | $AWK -F: '{printf("%s "), $[]2}' )
 
               # The "-show" flag was deprecated in HDF5 1.14 and removed
@@ -215,6 +215,12 @@ AS_IF([test "x$with_hdf5" = "xno"],
                     ;;
                 esac
               done
+
+              # Fall back to the wrapper's default library directory when
+              # -showconfig does not provide a linker search path.
+              if test -z "$HDF5_LDFLAGS" && test -n "$HDF5_INSTALL_DIR"; then
+                HDF5_LDFLAGS="-L${HDF5_INSTALL_DIR}/lib"
+              fi
             ],
             [AC_MSG_ERROR([HDF5 not found: install pkg-config .pc file or h5cc, or use --with-hdf5=PATH])]
           )
