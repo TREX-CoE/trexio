@@ -977,7 +977,7 @@ def string_of_error(return_code: int) -> str:
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
    This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
-   Then the corresponding back-end ~has/read/write~ functions has to be implemented. 
+   Then the corresponding back-end ~has/read/write~ functions has to be implemented.
 
    _Note_: It is important to increment the value of ~TREXIO_INVALID_BACK_END~ when a new back end is implemented. Otherwise, it will not be available.
 
@@ -1250,9 +1250,9 @@ class File:
        - ~'r'~          - (read)   opens existing file as READONLY
        - ~'u'~          - (unsafe) opens existing file as READWRITE with the possibility to overwrite blocks and delete full groups.
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
-       - ~TREXIO_HDF5~   - for HDF5 back end 
-       - ~TREXIO_TEXT~   - for TEXT back end 
-       - ~TREXIO_MEMORY~ - for MEMORY back end 
+       - ~TREXIO_HDF5~   - for HDF5 back end
+       - ~TREXIO_TEXT~   - for TEXT back end
+       - ~TREXIO_MEMORY~ - for MEMORY back end
        - ~TREXIO_AUTO~   - to automatically detect the applicable back end
 
    **Output:**
@@ -1314,8 +1314,9 @@ trexio_open(const char* file_name, const char mode,
     return NULL;
   }
 
-  /* The TREXIO_AUTO back end only applies to existing files.
-     so write-only mode is meaningless. Reject it explicitly at open time. */
+  /* TREXIO_AUTO detects the file format, which only makes sense for existing
+     files; in write mode it's ambiguous and needs to be rejected */
+
   if (back_end == TREXIO_AUTO && mode == 'w') {
     if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
     return NULL;
@@ -2014,7 +2015,7 @@ def _inquire(file_name: str) -> bool:
 
 ** Portable file and directory operations
 
-   These functions provide portable file and directory operations 
+   These functions provide portable file and directory operations
    without using system() calls or fork/exec, for better portability
    and security.
 
@@ -2067,10 +2068,10 @@ trexio_remove_directory_recursive(const char* path)
   HANDLE hFind;
   char searchPath[MAX_PATH];
   char fullPath[MAX_PATH];
-  
+
   int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", path);
   if (ret < 0 || ret >= (int) sizeof(searchPath)) return TREXIO_FILE_ERROR;
-  
+
   hFind = FindFirstFileA(searchPath, &findData);
   if (hFind != INVALID_HANDLE_VALUE) {
     do {
@@ -2080,7 +2081,7 @@ trexio_remove_directory_recursive(const char* path)
           FindClose(hFind);
           return TREXIO_FILE_ERROR;
         }
-        
+
         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
           trexio_exit_code rc = trexio_remove_directory_recursive(fullPath);
           if (rc != TREXIO_SUCCESS) {
@@ -2098,7 +2099,7 @@ trexio_remove_directory_recursive(const char* path)
     } while (FindNextFileA(hFind, &findData) != 0);
     FindClose(hFind);
   }
-  
+
   if (RemoveDirectoryA(path) == 0) {
     DWORD error = GetLastError();
     if (error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND) {
@@ -2117,7 +2118,7 @@ trexio_remove_directory_recursive(const char* path)
           closedir(dir);
           return TREXIO_FILE_ERROR;
         }
-        
+
         struct stat statbuf;
         if (stat(fullPath, &statbuf) == 0) {
           if (S_ISDIR(statbuf.st_mode)) {
@@ -2138,7 +2139,7 @@ trexio_remove_directory_recursive(const char* path)
     }
     closedir(dir);
   }
-  
+
   if (rmdir(path) != 0 && errno != ENOENT) {
     return TREXIO_FILE_ERROR;
   }
@@ -2154,7 +2155,7 @@ trexio_copy_file(const char* source, const char* dest)
   if (source == NULL || source[0] == '\0') {
     return TREXIO_INVALID_ARG_1;
   }
-  
+
   if (dest == NULL || dest[0] == '\0') {
     return TREXIO_INVALID_ARG_2;
   }
@@ -2166,13 +2167,13 @@ trexio_copy_file(const char* source, const char* dest)
 #else
   FILE *src = fopen(source, "rb");
   if (!src) return TREXIO_FILE_ERROR;
-  
+
   FILE *dst = fopen(dest, "wb");
   if (!dst) {
     fclose(src);
     return TREXIO_FILE_ERROR;
   }
-  
+
   char buffer[8192];
   size_t bytes;
   while ((bytes = fread(buffer, 1, sizeof(buffer), src)) > 0) {
@@ -2183,7 +2184,7 @@ trexio_copy_file(const char* source, const char* dest)
       return TREXIO_FILE_ERROR;
     }
   }
-  
+
   fclose(src);
   fclose(dst);
 #endif
@@ -2198,7 +2199,7 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
   if (source == NULL || source[0] == '\0') {
     return TREXIO_INVALID_ARG_1;
   }
-  
+
   if (dest == NULL || dest[0] == '\0') {
     return TREXIO_INVALID_ARG_2;
   }
@@ -2210,21 +2211,21 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
       return TREXIO_FILE_ERROR;
     }
   }
-  
+
   WIN32_FIND_DATAA findData;
   HANDLE hFind;
   char searchPath[MAX_PATH];
   char sourcePath[MAX_PATH];
   char destPath[MAX_PATH];
-  
+
   int ret = snprintf(searchPath, sizeof(searchPath), "%s\\*", source);
   if (ret < 0 || ret >= (int) sizeof(searchPath)) return TREXIO_FILE_ERROR;
-  
+
   hFind = FindFirstFileA(searchPath, &findData);
   if (hFind == INVALID_HANDLE_VALUE) {
     return TREXIO_FILE_ERROR;
   }
-  
+
   do {
     if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
       ret = snprintf(sourcePath, sizeof(sourcePath), "%s\\%s", source, findData.cFileName);
@@ -2232,13 +2233,13 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
         FindClose(hFind);
         return TREXIO_FILE_ERROR;
       }
-      
+
       ret = snprintf(destPath, sizeof(destPath), "%s\\%s", dest, findData.cFileName);
       if (ret < 0 || ret >= (int) sizeof(destPath)) {
         FindClose(hFind);
         return TREXIO_FILE_ERROR;
       }
-      
+
       if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         trexio_exit_code rc = trexio_copy_directory_recursive(sourcePath, destPath);
         if (rc != TREXIO_SUCCESS) {
@@ -2254,34 +2255,34 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
       }
     }
   } while (FindNextFileA(hFind, &findData) != 0);
-  
+
   FindClose(hFind);
 #else
   if (mkdir(dest, 0755) != 0 && errno != EEXIST) {
     return TREXIO_FILE_ERROR;
   }
-  
+
   DIR *dir = opendir(source);
   if (!dir) return TREXIO_FILE_ERROR;
-  
+
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
     if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
       char sourcePath[PATH_MAX];
       char destPath[PATH_MAX];
-      
+
       int ret = snprintf(sourcePath, sizeof(sourcePath), "%s/%s", source, entry->d_name);
       if (ret < 0 || ret >= (int) sizeof(sourcePath)) {
         closedir(dir);
         return TREXIO_FILE_ERROR;
       }
-      
+
       ret = snprintf(destPath, sizeof(destPath), "%s/%s", dest, entry->d_name);
       if (ret < 0 || ret >= (int) sizeof(destPath)) {
         closedir(dir);
         return TREXIO_FILE_ERROR;
       }
-      
+
       struct stat statbuf;
       if (stat(sourcePath, &statbuf) == 0) {
         if (S_ISDIR(statbuf.st_mode)) {
@@ -6837,7 +6838,7 @@ trexio_safe_to_orbital_list_up_dn (const int32_t N_int,
 }
     #+end_src
 
-    
+
     #+begin_src c :tangle prefix_front.c
 trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
                                                  const int32_t* list_dn,
@@ -6853,7 +6854,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
   if (new_list == NULL) return TREXIO_ALLOCATION_FAILED;
 
   const int32_t occupied_num = occ_num_up+occ_num_dn;
-  
+
   for (int i=0 ; i<occ_num_up ; ++i) {
     new_list[i] = 2*list_up[i];
   }
@@ -6876,7 +6877,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
     free(new_list);
     return TREXIO_ALLOCATION_FAILED;
   }
-  
+
   trexio_exit_code rc = trexio_to_bitfield_list (new_list, occupied_num, bit_list, N_int);
 
   free(bit_list);
@@ -6885,7 +6886,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
   return rc;
 }
 
-    
+
 trexio_exit_code trexio_safe_phase_aabb_to_abab_list (const int32_t* list_up,
                                                       const int64_t dim_up,
                                                       const int32_t* list_dn,
@@ -6903,7 +6904,7 @@ trexio_exit_code trexio_safe_phase_aabb_to_abab_list (const int32_t* list_up,
 }
     #+end_src
 
-    
+
     #+begin_src c :tangle prefix_front.c
 trexio_exit_code trexio_phase_aabb_to_abab (const int32_t N_int, const bitfield_t* dset_in)
 {
