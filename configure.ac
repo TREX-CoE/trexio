@@ -180,18 +180,29 @@ AS_IF([test "x$with_hdf5" = "xno"],
                   | $GREP 'FLAGS\|Extra libraries:' \
                   | $AWK -F: '{printf("%s "), $[]2}' )
 
-              dnl Find the installation directory and append include/
-              HDF5_tmp_inst=$(eval $H5CC -showconfig \
+              # The "-show" flag was deprecated in HDF5 1.14 and removed
+              # in later releases.  Use "Extra libraries:" from
+              # -showconfig output to get all runtime library deps
+              # (-lpthread, -lz, etc.).
+              HDF5_EXTRA_LIBS=$(eval $H5CC -showconfig \
+                  | $GREP 'Extra libraries:' )
+
+              # Find the installation directory and append include/
+              HDF5_INSTALL_DIR=$(eval $H5CC -showconfig \
                   | $GREP 'Installation point:' \
                   | $AWK '{print $[]NF}' )
 
-              dnl Add this to the CPPFLAGS
-              HDF5_CPPFLAGS="-I${HDF5_tmp_inst}/include"
+              # Merge library flags from "Extra libraries:" into the pool.
+              for arg in $HDF5_EXTRA_LIBS; do
+                case "$arg" in
+                  -l*) HDF5_tmp_flags="$HDF5_tmp_flags $arg" ;;
+                esac
+              done
 
-              HDF5_SHOW=$(eval $H5CC -show)
+              HDF5_CPPFLAGS="-I${HDF5_INSTALL_DIR}/include"
 
-              dnl Now sort the flags out based upon their prefixes
-              for arg in $HDF5_SHOW $HDF5_tmp_flags ; do
+              # Now sort the flags out based upon their prefixes
+              for arg in $HDF5_tmp_flags ; do
                 case "$arg" in
                   -I*) echo $HDF5_CPPFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
                         || HDF5_CPPFLAGS="$HDF5_CPPFLAGS $arg"
