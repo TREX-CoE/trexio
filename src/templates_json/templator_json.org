@@ -45,7 +45,6 @@ rather than in the generated code:
 #include <stdio.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <unistd.h>
 #include "yyjson.h"
 
 /* The document is the storage. yyjson separates reading from writing: a parsed
@@ -125,7 +124,8 @@ trexio_json_init (trexio_t* const file)
      other back ends read it -- HDF5 opens an existing file H5F_ACC_RDWR and
      the text back end reuses its directory. Truncating here would throw away
      data that a second write session is expected to extend. */
-  if (access(file->file_name, F_OK) == 0) {
+  struct stat st;
+  if (stat(file->file_name, &st) == 0) {
     yyjson_doc* parsed = yyjson_read_file(file->file_name, 0, NULL, NULL);
     if (parsed == NULL) return TREXIO_FILE_ERROR;
 

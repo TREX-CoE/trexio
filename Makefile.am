@@ -406,6 +406,15 @@ if HAVE_HDF5
 PYTHON_STAGED_FILES += src/trexio_hdf5.c src/trexio_hdf5.h
 endif
 
+# The Python extension compiles the TREXIO sources itself rather than linking
+# the library, so the JSON back end needs its own copy of yyjson staged beside
+# them. The bundled one is used even when the library itself was built against
+# an installed yyjson, which keeps setup.py from having to find one.
+if HAVE_JSON
+PYTHON_STAGED_FILES += src/trexio_json.c src/trexio_json.h \
+                       external/yyjson/yyjson.c external/yyjson/yyjson.h
+endif
+
 # The standalone build stages the same single-package layout the build systems
 # install, so that the relative imports in the generated API resolve there too.
 $(python_pkg_py): $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(trexio_h)
