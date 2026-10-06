@@ -1294,33 +1294,37 @@ trexio_open(const char* file_name, const char mode,
   }
   /* Check overflow in file_name */
 
-  /* Check that the mode is valid */
-  if (mode != 'r' && mode != 'w' && mode != 'u') {
-    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
-    return NULL;
-  }
-
   /* Check that the back end is valid */
   if (back_end <  0 || back_end >= TREXIO_INVALID_BACK_END) {
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
     return NULL;
   }
 
-  /* The in-memory back end is ephemeral: there is no on-disk file to reopen,
-     so read-only mode is meaningless (and would otherwise fail later when the
-     metadata is written). Reject it explicitly at open time. */
-  if (back_end == TREXIO_MEMORY && mode == 'r') {
-    if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
+  switch (mode) {
+
+  case 'r': /* back-ends that should fail if opened in read mode */
+    if (back_end == TREXIO_MEMORY) {
+      if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
+      return NULL;
+    }
+    break;
+
+  case 'w': /* back-ends that should fail if opened in write mode */
+    if (back_end == TREXIO_AUTO) {
+      if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
+      return NULL;
+    }
+    break;
+
+  case 'u': /* back-ends that should fail if opened in unsafe mode */
+    break;
+
+  default:
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
     return NULL;
+
   }
 
-  /* TREXIO_AUTO detects the file format, which only makes sense for existing
-     files; in write mode it's ambiguous and needs to be rejected */
-
-  if (back_end == TREXIO_AUTO && mode == 'w') {
-    if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
-    return NULL;
-  }
 
   back_end_t back_end_local = back_end;
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
