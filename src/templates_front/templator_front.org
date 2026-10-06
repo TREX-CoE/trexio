@@ -1358,29 +1358,29 @@ trexio_open(const char* file_name, const char mode,
   switch (back_end_local) {
 
   case TREXIO_TEXT:
-    result_tmp = malloc(sizeof(trexio_text_t));
+    result_tmp = MALLOC(trexio_text_t);
     break;
 
   case TREXIO_MEMORY:
-    result_tmp = malloc(sizeof(trexio_memory_t));
+    result_tmp = MALLOC(trexio_memory_t);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    result_tmp = malloc(sizeof(trexio_hdf5_t));
+    result_tmp = MALLOC(trexio_hdf5_t);
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
     return NULL;
 #endif
 
-  default:
+  default: // This should be unreachable by the back-end tests above
     if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
     return NULL;
 
 /*
   case TREXIO_JSON:
-    result = (trexio_t*) malloc (sizeof(trexio_json_t));
+    result = MALLOC (trexio_json_t);
     break;
 ,*/
   }
@@ -1396,7 +1396,7 @@ trexio_open(const char* file_name, const char mode,
     memcpy(result->file_name, file_name, lenSrc+1);
   } else {
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1407,7 +1407,7 @@ trexio_open(const char* file_name, const char mode,
   int irc = TREXIO_MUTEX_INIT( &(result->thread_lock) );
   if (irc != 0) {
     if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
-    free(result);
+    FREE(result);
     return NULL;
   }
   // assert (irc == 0);
@@ -1432,7 +1432,7 @@ trexio_open(const char* file_name, const char mode,
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-    free(result);
+    FREE(result);
     return NULL;
 #endif
 /*
@@ -1444,7 +1444,7 @@ trexio_open(const char* file_name, const char mode,
 
   if (rc != TREXIO_SUCCESS) {
     if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1469,7 +1469,7 @@ trexio_open(const char* file_name, const char mode,
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-    free(result);
+    FREE(result);
     return NULL;
 #endif
 /*
@@ -1481,7 +1481,7 @@ trexio_open(const char* file_name, const char mode,
 
   if (rc != TREXIO_SUCCESS) {
     if (rc_open != NULL) *rc_open = TREXIO_LOCK_ERROR;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1489,7 +1489,7 @@ trexio_open(const char* file_name, const char mode,
   rc = trexio_has_metadata_package_version(result);
   if (rc == TREXIO_FAILURE) {
     if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1511,7 +1511,7 @@ trexio_open(const char* file_name, const char mode,
       break;
 #else
       if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-      free(result);
+      FREE(result);
       return NULL;
 #endif
 
@@ -1519,7 +1519,7 @@ trexio_open(const char* file_name, const char mode,
 
     if (rc != TREXIO_SUCCESS) {
       if (rc_open != NULL) *rc_open = rc;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1548,7 +1548,7 @@ trexio_open(const char* file_name, const char mode,
       break;
 #else
       if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-      free(result);
+      FREE(result);
       return NULL;
 #endif
 
@@ -1556,7 +1556,7 @@ trexio_open(const char* file_name, const char mode,
 
     if (rc != TREXIO_SUCCESS) {
       if (rc_open != NULL) *rc_open = rc;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1566,7 +1566,7 @@ trexio_open(const char* file_name, const char mode,
                          &version_major, &version_minor, &version_patch);
     if (rc_scan != 3) {
       if (rc_open != NULL) *rc_open = TREXIO_VERSION_PARSING_ISSUE;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1579,7 +1579,7 @@ trexio_open(const char* file_name, const char mode,
 
   if (result->version[15] != '\0' || result->version_major == 0) {
     if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1589,7 +1589,7 @@ trexio_open(const char* file_name, const char mode,
     rc = trexio_has_metadata_unsafe(result);
     if (rc == TREXIO_FAILURE) {
       if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1611,7 +1611,7 @@ trexio_open(const char* file_name, const char mode,
         break;
 #else
         if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-        free(result);
+        FREE(result);
         return NULL;
 #endif
       }
@@ -1619,7 +1619,7 @@ trexio_open(const char* file_name, const char mode,
 
     if (rc != TREXIO_SUCCESS) {
       if (rc_open != NULL) *rc_open = rc;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1820,7 +1820,7 @@ trexio_close (trexio_t* file)
 
   int irc = TREXIO_MUTEX_DESTROY( &(file->thread_lock) );
 
-  free(file);
+  FREE(file);
 
   if (irc != 0) return TREXIO_ERRNO;
   if (rc != TREXIO_SUCCESS) return rc;
@@ -6195,7 +6195,7 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   int32_t occ_num_dn = 0;
 
   /*   list_up contains first the up-spin orbitals, then the down-spin */
-  int32_t* list_up = (int32_t*) calloc(nup+ndn,sizeof(int32_t));
+  int32_t* list_up = CALLOC(nup+ndn,int32_t);
 
   if (list_up == NULL) {
     return TREXIO_ALLOCATION_FAILED;
@@ -6854,7 +6854,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
   if (occ_num_up <= 0) return TREXIO_INVALID_ARG_3;
   if (occ_num_dn <= 0) return TREXIO_INVALID_ARG_4;
 
-  int32_t* new_list = malloc( (occ_num_up+occ_num_dn)*sizeof(int32_t) );
+  int32_t* new_list = CALLOC(occ_num_up+occ_num_dn, int32_t);
   if (new_list == NULL) return TREXIO_ALLOCATION_FAILED;
 
   const int32_t occupied_num = occ_num_up+occ_num_dn;
@@ -6876,7 +6876,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
 
   const int32_t N_int = momax/TREXIO_NORB_PER_INT + 1;
 
-  bitfield_t* bit_list = malloc( N_int * sizeof(bitfield_t) );
+  bitfield_t* bit_list = CALLOC( N_int, bitfield_t );
   if (bit_list == NULL) {
     free(new_list);
     return TREXIO_ALLOCATION_FAILED;
