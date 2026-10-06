@@ -69,10 +69,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install libhdf5-dev emacs libtool-bin valgrind cmake
 
+      # The JSON back end is built here. Ubuntu 22.04 packages no yyjson, so
+      # this is the lane that covers the bundled copy; the macOS lane installs
+      # one and covers the path that uses an installed library. Which of the two
+      # is used is decided by the configure script, and either is supported.
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules
+          ./configure --enable-silent-rules --enable-json
 
       - name: compile TREXIO
         run: make -j2
@@ -158,7 +162,7 @@ jobs:
         run: make maintainer-clean
 
       - name: configure with CMake
-        run: cmake -S. -Bbuilddir
+        run: cmake -S. -Bbuilddir -DTREXIO_USE_JSON=ON
 
       - name: compile TREXIO
         working-directory: builddir
@@ -208,7 +212,7 @@ jobs:
       - name: configure with autotools (32-bit)
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules \
+          ./configure --enable-silent-rules --enable-json \
                       CC="gcc -m32" FC="gfortran -m32" \
                       --with-hdf5=$HOME/hdf5-i686 \
                       LIBS="-lz -lm -ldl"
@@ -250,6 +254,7 @@ jobs:
           brew install hdf5
           brew install automake
           brew install libtool
+          brew install yyjson
           pip install swig==4.3
           swig -version
 
@@ -257,7 +262,8 @@ jobs:
         run: |
           brew --prefix hdf5
           ./autogen.sh
-          ./configure CC=gcc-$GCC_VERSION FC=gfortran-$GCC_VERSION --enable-silent-rules
+          ./configure CC=gcc-$GCC_VERSION FC=gfortran-$GCC_VERSION \
+                      --enable-silent-rules --enable-json
 
       - name: compile TREXIO
         run: make -j3
@@ -318,10 +324,12 @@ jobs:
             git
             make
 
+      # MSYS2 packages no yyjson either, so this covers the bundled copy on a
+      # Windows toolchain.
       - name: configure with autotools
         run: |
           ./autogen.sh
-          ./configure --enable-silent-rules
+          ./configure --enable-silent-rules --enable-json
 
       - name: compile TREXIO
         run: make -j2
@@ -444,7 +452,8 @@ jobs:
                 -DCMAKE_INSTALL_LIBDIR=lib \
                 -DCMAKE_PREFIX_PATH="${CONDA_PREFIX};${CONDA_PREFIX}/Library" \
                 -DHDF5_ROOT="${CONDA_PREFIX}/Library" \
-                -DTREXIO_FORTRAN=OFF
+                -DTREXIO_FORTRAN=OFF \
+                -DTREXIO_USE_JSON=ON
 
       - name: compile and install TREXIO
         run: cmake --build build --target install
