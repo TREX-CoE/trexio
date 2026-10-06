@@ -735,7 +735,7 @@ def split_dset_dict_detailed (datasets: dict) -> tuple:
 
         # get a list of unique dimensions for sparse datasets
         if is_sparse:
-            tmp_dict['unique_dims'] = list(set(tmp_dict['dims']))
+            tmp_dict['unique_dims'] = list(dict.fromkeys(tmp_dict['dims']))
             tmp_dict['group_dset_unique_rank'] = str(len(tmp_dict['unique_dims']))
 
         # add the rank
