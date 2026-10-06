@@ -18,6 +18,7 @@ option(BUILD_TESTING "Whether to perform tests for TREXIO" ON)
 option(TREXIO_FORTRAN "Build and test the TREXIO Fortran interface" ON)
 option(TREXIO_PYTHON "Build and install the TREXIO Python interface" OFF)
 option(TREXIO_USE_HDF5 "Enable HDF5 support" ON)
+option(TREXIO_USE_JSON "Enable the JSON back end" OFF)
 option(TREXIO_BUILD_DOCS "Build and install documentation" OFF)
 
 # Optional configure for developer mode to generate source code from org-mode files.
@@ -41,6 +42,25 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
 set(TREXIO_HDF5_IS_PARALLEL OFF)
+# The JSON back end stores the file as a yyjson document, which is the one
+# dependency it adds; it is off by default for the same reason HDF5 can be
+# turned off, so that a build can have no external dependencies at all.
+if(TREXIO_USE_JSON)
+  # An installed yyjson is used when there is one, and the copy bundled in
+  # external/yyjson otherwise, so enabling the back end needs nothing
+  # installed first. Distribution packages get the system library without
+  # having to patch the bundled copy out.
+  find_package(PkgConfig QUIET)
+  if(PkgConfig_FOUND)
+    pkg_check_modules(YYJSON IMPORTED_TARGET yyjson>=0.12)
+  endif()
+  if(YYJSON_FOUND)
+    message(STATUS "JSON back end: using the installed yyjson ${YYJSON_VERSION}")
+  else()
+    message(STATUS "JSON back end: using the bundled yyjson")
+  endif()
+endif()
+
 if(TREXIO_USE_HDF5)
   find_package(HDF5 REQUIRED COMPONENTS C)
   if(HDF5_IS_PARALLEL)

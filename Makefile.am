@@ -82,6 +82,27 @@ SOURCES += src/trexio_hdf5.c \
            src/trexio_hdf5.h
 endif
 
+if HAVE_JSON
+SOURCES += src/trexio_json.c \
+           src/trexio_json.h
+AM_CPPFLAGS += $(YYJSON_CFLAGS)
+src_libtrexio_la_LIBADD = $(YYJSON_LIBS)
+if HAVE_JSON_BUNDLED
+# No installed yyjson was found, so the bundled copy is compiled into the
+# library. It is two files and needs no configuration of its own.
+SOURCES += external/yyjson/yyjson.c \
+           external/yyjson/yyjson.h
+endif
+endif
+
+# The bundled copy travels with the release tarball whether or not this build
+# happens to use it, since the tarball has to build on a machine that has no
+# yyjson installed.
+EXTRA_DIST += external/yyjson/yyjson.c \
+              external/yyjson/yyjson.h \
+              external/yyjson/LICENSE \
+              external/yyjson/README.md
+
 ORG_FILES = \
   src/templates_front/templator_front.org \
   src/templates_text/templator_text.org \
@@ -91,6 +112,10 @@ ORG_FILES = \
 
 if HAVE_HDF5
 ORG_FILES += src/templates_hdf5/templator_hdf5.org
+endif
+
+if HAVE_JSON
+ORG_FILES += src/templates_json/templator_json.org
 endif
 
 src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
@@ -128,6 +153,7 @@ TEST_FILES = \
     tests/io_auxbasis.c \
     tests/io_auxbasis_hdf5.c \
     tests/io_auxbasis_text.c \
+    tests/io_auxbasis_json.c \
     tests/io_dset_sparse.c \
     tests/io_dset_sparse_hdf5.c \
     tests/io_dset_sparse_text.c \
@@ -140,6 +166,19 @@ TEST_FILES = \
     tests/io_memory.c \
     tests/io_num.c \
     tests/io_num_hdf5.c \
+    tests/io_num_json.c \
+    tests/open_json.c \
+    tests/io_str_json.c \
+    tests/io_dset_float_json.c \
+    tests/io_dset_int_json.c \
+    tests/io_dset_str_json.c \
+    tests/io_safe_dset_float_json.c \
+    tests/io_dset_sparse_json.c \
+    tests/io_determinant_json.c \
+    tests/io_jastrow_json.c \
+    tests/io_state_energy_json.c \
+    tests/delete_group_json.c \
+    tests/overwrite_all_json.c \
     tests/io_num_text.c \
     tests/io_safe_dset_float.c \
     tests/io_safe_dset_float_hdf5.c \
@@ -183,6 +222,23 @@ TESTS_C = \
   tests/io_all \
   tests/io_memory \
   tests/pre_close
+
+if HAVE_JSON
+TESTS_C += tests/io_num_json \
+           tests/open_json \
+           tests/io_str_json \
+           tests/io_dset_float_json \
+           tests/io_dset_int_json \
+           tests/io_dset_str_json \
+           tests/io_safe_dset_float_json \
+           tests/io_dset_sparse_json \
+           tests/io_determinant_json \
+           tests/io_jastrow_json \
+           tests/io_state_energy_json \
+           tests/delete_group_json \
+           tests/overwrite_all_json \
+           tests/io_auxbasis_json
+endif
 
 if HAVE_HDF5
 TESTS_C += \
@@ -245,6 +301,9 @@ HTML_TANGLED = docs/index.html            \
                docs/templator_text.html
 if HAVE_HDF5
 HTML_TANGLED += docs/templator_hdf5.html
+endif
+if HAVE_JSON
+HTML_TANGLED += docs/templator_json.html
 endif
 
 htmldir = $(docdir)

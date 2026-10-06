@@ -1,0 +1,1305 @@
+#+TITLE: JSON back end
+#+SETUPFILE: ../../docs/theme.setup
+# -*- mode: org -*-
+
+The JSON back end keeps the whole file as one yyjson document and lets that
+document /be/ the storage: a write adds a value to it, a read looks one up, and
+the document is parsed on open and written out on flush. yyjson is two files
+and is bundled with TREXIO, so the back end needs nothing installed; an
+installed yyjson is used instead when there is one. There are no
+back-end-side copies of the data, and none of the dimension bookkeeping the
+other back ends carry, because the front end computes the dimensions of every
+dataset from the dimensioning attributes and passes them in.
+
+It exists for interchange rather than for bulk: a JSON file can be read by a
+stock parser in any language, which is what makes it a usable source for
+conversion to other serialisations such as QCSchema. Data on the scale of
+two-electron integrals belongs in the HDF5 back end.
+
+Two properties of JSON need care, and both are handled in the helpers below
+rather than in the generated code:
+
+- integers are written as JSON integers and never through a double, since a
+  determinant bitfield uses the whole of its 64 bits and a double carries only
+  53 of them. yyjson keeps the two apart on the way out as well, so a real
+  reads back as =8.0= where an integer reads back as =8=;
+- =NaN= and =Infinity= are not valid JSON (RFC 8259), so writing one is an
+  error here instead of a token that only some parsers accept.
+
+* Constant file prefixes (not used by the generator)                :noexport:
+
+   #+begin_src c :tangle prefix_json.h
+/* This file was generated from the templator_json.org org-mode file.
+   To generate it, run tools/build_trexio.sh */
+
+#ifndef TREXIO_JSON_H
+#define TREXIO_JSON_H
+
+#include "trexio.h"
+#include "trexio_private.h"
+#include "trexio_s.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <math.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <unistd.h>
+#include "yyjson.h"
+
+/* The document is the storage. yyjson separates reading from writing: a parsed
+   document is immutable, so the file is parsed and then copied into a mutable
+   document, which is what is kept and written back out. root is always a JSON
+   object; groups are objects inside it, created the first time something in
+   them is written. dirty says whether anything has changed since the file was
+   last written out. */
+typedef struct trexio_json_s {
+  trexio_t parent;
+  yyjson_mut_doc* doc;
+  yyjson_mut_val* root;
+  bool dirty;
+} trexio_json_t;
+   #+end_src
+
+   #+begin_src c :tangle prefix_json.c
+/* This file was generated from the templator_json.org org-mode file.
+   To generate it, run tools/build_trexio.sh */
+
+#include "trexio_json.h"
+   #+end_src
+
+* Initialize, finalize and flush
+
+   #+begin_src c :tangle basic_json.h :exports none
+trexio_exit_code trexio_json_init(trexio_t* const file);
+trexio_exit_code trexio_json_inquire(const char* file_name);
+trexio_exit_code trexio_json_deinit(trexio_t* const file);
+trexio_exit_code trexio_json_lock(trexio_t* const file);
+trexio_exit_code trexio_json_unlock(trexio_t* const file);
+trexio_exit_code trexio_json_flush(trexio_t* const file);
+
+/* Helpers shared by the generated code. */
+yyjson_mut_val* trexio_json_group_get(trexio_json_t* const file, const char* group);
+yyjson_mut_val* trexio_json_group_put(trexio_json_t* const file, const char* group);
+bool trexio_json_obj_set(trexio_json_t* const file, yyjson_mut_val* obj, const char* key, yyjson_mut_val* val);
+trexio_exit_code trexio_json_set_num_int64_t(trexio_json_t* const file, const char* group, const char* name, const int64_t num);
+trexio_exit_code trexio_json_set_num_double (trexio_json_t* const file, const char* group, const char* name, const double num);
+trexio_exit_code trexio_json_get_num_int64_t(trexio_json_t* const file, const char* group, const char* name, int64_t* const num);
+trexio_exit_code trexio_json_get_num_double (trexio_json_t* const file, const char* group, const char* name, double* const num);
+trexio_exit_code trexio_json_has_value(trexio_json_t* const file, const char* group, const char* name);
+trexio_exit_code trexio_json_set_str(trexio_json_t* const file, const char* group, const char* name, const char* str);
+trexio_exit_code trexio_json_set_dset_int64_t(trexio_json_t* const file, const char* group, const char* name, const int64_t* data, const uint64_t size);
+trexio_exit_code trexio_json_set_dset_double(trexio_json_t* const file, const char* group, const char* name, const double* data, const uint64_t size);
+trexio_exit_code trexio_json_get_dset_int64_t(trexio_json_t* const file, const char* group, const char* name, int64_t* const data, const uint64_t size);
+trexio_exit_code trexio_json_get_dset_double(trexio_json_t* const file, const char* group, const char* name, double* const data, const uint64_t size);
+trexio_exit_code trexio_json_set_dset_str(trexio_json_t* const file, const char* group, const char* name, const char** data, const uint64_t size);
+trexio_exit_code trexio_json_get_dset_str(trexio_json_t* const file, const char* group, const char* name, char* const data, const uint64_t size, const uint32_t max_str_len);
+uint64_t trexio_json_dset_size(const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_json_has_chunked(trexio_json_t* const file, const char* group, const char* name);
+trexio_exit_code trexio_json_chunk_count(trexio_json_t* const file, const char* group, const char* name, const int64_t item, int64_t* const count);
+trexio_exit_code trexio_json_write_chunk_double(trexio_json_t* const file, const char* group, const char* name, const int64_t offset, const int64_t count, const int64_t item, const double* data);
+trexio_exit_code trexio_json_read_chunk_double(trexio_json_t* const file, const char* group, const char* name, const int64_t offset, const int64_t count, const int64_t item, int64_t* const eof_read_size, double* const data);
+trexio_exit_code trexio_json_write_chunk_int64(trexio_json_t* const file, const char* group, const char* name, const int64_t offset, const int64_t count, const int64_t item, const int64_t* data);
+trexio_exit_code trexio_json_read_chunk_int64(trexio_json_t* const file, const char* group, const char* name, const int64_t offset, const int64_t count, const int64_t item, int64_t* const eof_read_size, int64_t* const data);
+trexio_exit_code trexio_json_has_sparse(trexio_json_t* const file, const char* group, const char* name);
+trexio_exit_code trexio_json_sparse_count(trexio_json_t* const file, const char* group, const char* name, int64_t* const count);
+trexio_exit_code trexio_json_write_sparse(trexio_json_t* const file, const char* group, const char* name, const uint32_t rank, const int64_t offset, const int64_t count, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_json_read_sparse(trexio_json_t* const file, const char* group, const char* name, const uint32_t rank, const int64_t offset, const int64_t count, int64_t* const eof_read_size, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_json_get_str(trexio_json_t* const file, const char* group, const char* name, char* const str, const uint32_t max_str_len);
+   #+end_src
+
+   #+begin_src c :tangle basic_json.c
+trexio_exit_code
+trexio_json_init (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_json_t* const f = (trexio_json_t*) file;
+  f->dirty = false;
+  f->doc   = NULL;
+  f->root  = NULL;
+
+  /* A file that is there is parsed whole, in every mode: 'w' means that the
+     file may be written to, not that it starts over, which is also how the
+     other back ends read it -- HDF5 opens an existing file H5F_ACC_RDWR and
+     the text back end reuses its directory. Truncating here would throw away
+     data that a second write session is expected to extend. */
+  if (access(file->file_name, F_OK) == 0) {
+    yyjson_doc* parsed = yyjson_read_file(file->file_name, 0, NULL, NULL);
+    if (parsed == NULL) return TREXIO_FILE_ERROR;
+
+    if (!yyjson_is_obj(yyjson_doc_get_root(parsed))) {
+      yyjson_doc_free(parsed);
+      return TREXIO_FILE_ERROR;
+    }
+
+    /* A parsed document is immutable, so it is copied into one that can be
+       written to and the original is released. */
+    f->doc = yyjson_doc_mut_copy(parsed, NULL);
+    yyjson_doc_free(parsed);
+    if (f->doc == NULL) return TREXIO_ALLOCATION_FAILED;
+
+    f->root = yyjson_mut_doc_get_root(f->doc);
+  } else {
+    /* Nothing to read from, so only a writing mode can go on from here */
+    if (file->mode == 'r') return TREXIO_FILE_ERROR;
+
+    f->doc = yyjson_mut_doc_new(NULL);
+    if (f->doc == NULL) return TREXIO_ALLOCATION_FAILED;
+
+    f->root = yyjson_mut_obj(f->doc);
+    if (f->root == NULL) {
+      yyjson_mut_doc_free(f->doc);
+      f->doc = NULL;
+      return TREXIO_ALLOCATION_FAILED;
+    }
+
+    yyjson_mut_doc_set_root(f->doc, f->root);
+    f->dirty = true;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+/* TREXIO_AUTO picks a back end by asking each one whether the file is its
+   own, so "the file exists" is not a good enough answer here: an HDF5 file or
+   a text back end's directory would both match. The file has to parse as a
+   JSON object, which is cheap to refuse -- an HDF5 file fails on its first
+   byte -- and is the only honest test available. */
+trexio_exit_code
+trexio_json_inquire (const char* file_name)
+{
+  if (file_name == NULL) return TREXIO_INVALID_ARG_1;
+
+  struct stat st;
+  if (stat(file_name, &st) != 0) return TREXIO_FAILURE;
+  if (!S_ISREG(st.st_mode)) return TREXIO_FAILURE;
+
+  yyjson_doc* parsed = yyjson_read_file(file_name, 0, NULL, NULL);
+  if (parsed == NULL) return TREXIO_FAILURE;
+
+  const bool is_object = yyjson_is_obj(yyjson_doc_get_root(parsed));
+  yyjson_doc_free(parsed);
+
+  return is_object ? TREXIO_SUCCESS : TREXIO_FAILURE;
+}
+
+trexio_exit_code
+trexio_json_flush (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_json_t* const f = (trexio_json_t*) file;
+  if (f->doc == NULL) return TREXIO_FAILURE;
+  if (file->mode == 'r' || !f->dirty) return TREXIO_SUCCESS;
+
+  /* Pretty-printed, because a file meant to be read by other tools is also
+     read by people. */
+  const yyjson_write_flag flags = YYJSON_WRITE_PRETTY_TWO_SPACES |
+                                  YYJSON_WRITE_NEWLINE_AT_END;
+  if (!yyjson_mut_write_file(file->file_name, f->doc, flags, NULL, NULL)) {
+    return TREXIO_FILE_ERROR;
+  }
+
+  f->dirty = false;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_deinit (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  trexio_json_t* const f = (trexio_json_t*) file;
+  const trexio_exit_code rc = trexio_json_flush(file);
+
+  /* Every value in the document belongs to the document, so freeing it is
+     the whole of the cleanup. */
+  if (f->doc != NULL) {
+    yyjson_mut_doc_free(f->doc);
+    f->doc  = NULL;
+    f->root = NULL;
+  }
+
+  return rc;
+}
+
+/* The document is held by this process alone until it is written out, and the
+   write is a single call, so there is nothing to lock between operations. */
+trexio_exit_code
+trexio_json_lock (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_unlock (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  return TREXIO_SUCCESS;
+}
+
+/* Keys are copied into the document rather than referenced. The names all
+   come from the generated code and would outlive the document, but a key that
+   does not own its characters is a trap for anything added later, and the
+   copy happens once per write. yyjson_mut_obj_put replaces an existing key,
+   which is what overwriting a quantity means here. */
+bool
+trexio_json_obj_set (trexio_json_t* const file, yyjson_mut_val* obj,
+                     const char* key, yyjson_mut_val* val)
+{
+  if (file == NULL || file->doc == NULL || obj == NULL || val == NULL) return false;
+
+  yyjson_mut_val* key_val = yyjson_mut_strcpy(file->doc, key);
+  if (key_val == NULL) return false;
+
+  return yyjson_mut_obj_put(obj, key_val, val);
+}
+
+yyjson_mut_val*
+trexio_json_group_get (trexio_json_t* const file, const char* group)
+{
+  if (file == NULL || file->root == NULL || group == NULL) return NULL;
+
+  yyjson_mut_val* obj = yyjson_mut_obj_get(file->root, group);
+  if (obj == NULL || !yyjson_mut_is_obj(obj)) return NULL;
+
+  return obj;
+}
+
+yyjson_mut_val*
+trexio_json_group_put (trexio_json_t* const file, const char* group)
+{
+  yyjson_mut_val* obj = trexio_json_group_get(file, group);
+  if (obj != NULL) return obj;
+
+  if (file == NULL || file->root == NULL || group == NULL) return NULL;
+
+  obj = yyjson_mut_obj(file->doc);
+  if (obj == NULL) return NULL;
+  if (!trexio_json_obj_set(file, file->root, group, obj)) return NULL;
+
+  return obj;
+}
+
+trexio_exit_code
+trexio_json_has_value (trexio_json_t* const file, const char* group, const char* name)
+{
+  yyjson_mut_val* grp = trexio_json_group_get(file, group);
+  if (grp == NULL) return TREXIO_HAS_NOT;
+
+  return yyjson_mut_obj_get(grp, name) == NULL ? TREXIO_HAS_NOT : TREXIO_SUCCESS;
+}
+
+/* Integers go in as JSON integers, never through a double: a determinant
+   bitfield uses the whole of its 64 bits and a double carries only 53. */
+trexio_exit_code
+trexio_json_set_num_int64_t (trexio_json_t* const file, const char* group,
+                             const char* name, const int64_t num)
+{
+  yyjson_mut_val* grp = trexio_json_group_put(file, group);
+  if (grp == NULL) return TREXIO_FAILURE;
+
+  yyjson_mut_val* val = yyjson_mut_sint(file->doc, num);
+  if (val == NULL) return TREXIO_ALLOCATION_FAILED;
+  if (!trexio_json_obj_set(file, grp, name, val)) return TREXIO_FAILURE;
+
+  file->dirty = true;
+  return TREXIO_SUCCESS;
+}
+
+/* NaN and Infinity have no JSON spelling (RFC 8259), so they are refused
+   rather than written as a token only some parsers accept. Finite values are
+   written by yyjson with the fewest digits that still read back bit-for-bit,
+   so 0.1 stays 0.1 in the file. */
+trexio_exit_code
+trexio_json_set_num_double (trexio_json_t* const file, const char* group,
+                            const char* name, const double num)
+{
+  if (!isfinite(num)) return TREXIO_INVALID_ARG_2;
+
+  yyjson_mut_val* grp = trexio_json_group_put(file, group);
+  if (grp == NULL) return TREXIO_FAILURE;
+
+  yyjson_mut_val* val = yyjson_mut_real(file->doc, num);
+  if (val == NULL) return TREXIO_ALLOCATION_FAILED;
+  if (!trexio_json_obj_set(file, grp, name, val)) return TREXIO_FAILURE;
+
+  file->dirty = true;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_get_num_int64_t (trexio_json_t* const file, const char* group,
+                             const char* name, int64_t* const num)
+{
+  yyjson_mut_val* grp = trexio_json_group_get(file, group);
+  if (grp == NULL) return TREXIO_HAS_NOT;
+
+  yyjson_mut_val* val = yyjson_mut_obj_get(grp, name);
+  if (val == NULL) return TREXIO_HAS_NOT;
+  if (!yyjson_mut_is_int(val)) return TREXIO_FILE_ERROR;
+
+  *num = yyjson_mut_get_sint(val);
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_get_num_double (trexio_json_t* const file, const char* group,
+                            const char* name, double* const num)
+{
+  yyjson_mut_val* grp = trexio_json_group_get(file, group);
+  if (grp == NULL) return TREXIO_HAS_NOT;
+
+  yyjson_mut_val* val = yyjson_mut_obj_get(grp, name);
+  if (val == NULL) return TREXIO_HAS_NOT;
+  /* A whole number in a floating-point quantity is read as such: a file
+     written by hand or by another tool may well have 0 rather than 0.0. */
+  if (!yyjson_mut_is_num(val)) return TREXIO_FILE_ERROR;
+
+  *num = yyjson_mut_get_num(val);
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+* Dataset helpers
+
+   Datasets are stored as one flat array in row-major order, which is both what
+   the text back end does and what QCSchema does for quantities like geometry.
+   The shape is not stored with the data: the front end always passes the rank
+   and dimensions, which it takes from the group's own num attributes, so a
+   shape in the file would be a second source of truth that could disagree.
+
+   #+begin_src c :tangle basic_json.c
+uint64_t
+trexio_json_dset_size (const uint32_t rank, const uint64_t* dims)
+{
+  if (dims == NULL) return 0UL;
+
+  uint64_t size = 1UL;
+  for (uint32_t i = 0 ; i < rank ; ++i) size *= dims[i];
+
+  return size;
+}
+
+/* An array that is about to be written whole is replaced rather than appended
+   to, so that a second write of the same dataset does not double its length. */
+static yyjson_mut_val*
+trexio_json_array_put (trexio_json_t* const file, const char* group,
+                       const char* name)
+{
+  yyjson_mut_val* grp = trexio_json_group_put(file, group);
+  if (grp == NULL) return NULL;
+
+  yyjson_mut_val* arr = yyjson_mut_arr(file->doc);
+  if (arr == NULL) return NULL;
+  if (!trexio_json_obj_set(file, grp, name, arr)) return NULL;
+
+  file->dirty = true;
+  return arr;
+}
+
+static trexio_exit_code
+trexio_json_array_get (trexio_json_t* const file, const char* group,
+                       const char* name, const uint64_t size,
+                       yyjson_mut_val** const arr_out)
+{
+  yyjson_mut_val* grp = trexio_json_group_get(file, group);
+  if (grp == NULL) return TREXIO_HAS_NOT;
+
+  yyjson_mut_val* arr = yyjson_mut_obj_get(grp, name);
+  if (arr == NULL) return TREXIO_HAS_NOT;
+  if (!yyjson_mut_is_arr(arr)) return TREXIO_FILE_ERROR;
+
+  /* A longer array than the dimensions call for is read as far as asked; a
+     shorter one means the file disagrees with its own num attributes. */
+  if ((uint64_t) yyjson_mut_arr_size(arr) < size) return TREXIO_FILE_ERROR;
+
+  *arr_out = arr;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_set_dset_int64_t (trexio_json_t* const file, const char* group,
+                              const char* name, const int64_t* data,
+                              const uint64_t size)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+
+  yyjson_mut_val* arr = trexio_json_array_put(file, group, name);
+  if (arr == NULL) return TREXIO_FAILURE;
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    if (!yyjson_mut_arr_add_sint(file->doc, arr, data[i])) return TREXIO_ALLOCATION_FAILED;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_set_dset_double (trexio_json_t* const file, const char* group,
+                             const char* name, const double* data,
+                             const uint64_t size)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+
+  /* JSON has no NaN or infinity (RFC 8259), so a file is never written with
+     one in it: the whole dataset is refused before anything is modified. */
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    if (!isfinite(data[i])) return TREXIO_INVALID_ARG_2;
+  }
+
+  yyjson_mut_val* arr = trexio_json_array_put(file, group, name);
+  if (arr == NULL) return TREXIO_FAILURE;
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    if (!yyjson_mut_arr_add_real(file->doc, arr, data[i])) return TREXIO_ALLOCATION_FAILED;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_get_dset_int64_t (trexio_json_t* const file, const char* group,
+                              const char* name, int64_t* const data,
+                              const uint64_t size)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+
+  yyjson_mut_val* arr = NULL;
+  trexio_exit_code rc = trexio_json_array_get(file, group, name, size, &arr);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    yyjson_mut_val* val = yyjson_mut_arr_get(arr, (size_t) i);
+    if (!yyjson_mut_is_int(val)) return TREXIO_FILE_ERROR;
+    data[i] = yyjson_mut_get_sint(val);
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_get_dset_double (trexio_json_t* const file, const char* group,
+                             const char* name, double* const data,
+                             const uint64_t size)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+
+  yyjson_mut_val* arr = NULL;
+  trexio_exit_code rc = trexio_json_array_get(file, group, name, size, &arr);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    yyjson_mut_val* val = yyjson_mut_arr_get(arr, (size_t) i);
+    /* A whole number in a floating-point dataset is read as such: a file
+       written by hand or by another tool may well have [0, 0, 0] for a
+       coordinate. */
+    if (!yyjson_mut_is_num(val)) return TREXIO_FILE_ERROR;
+    data[i] = yyjson_mut_get_num(val);
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_set_dset_str (trexio_json_t* const file, const char* group,
+                          const char* name, const char** data,
+                          const uint64_t size)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+
+  yyjson_mut_val* arr = trexio_json_array_put(file, group, name);
+  if (arr == NULL) return TREXIO_FAILURE;
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    if (data[i] == NULL) return TREXIO_INVALID_ARG_2;
+    /* Copied, not referenced: these strings belong to the caller and yyjson
+       would otherwise keep pointers into them. */
+    if (!yyjson_mut_arr_add_strcpy(file->doc, arr, data[i])) return TREXIO_ALLOCATION_FAILED;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+/* The front end hands out a single buffer and splits what it gets back with
+   strtok on TREXIO_DELIM, so the strings are returned concatenated and
+   delimited rather than at fixed stride -- the same convention as the other
+   back ends. The buffer it allocates holds max_str_len characters plus one
+   delimiter per element, which is what the truncation here respects. */
+trexio_exit_code
+trexio_json_get_dset_str (trexio_json_t* const file, const char* group,
+                          const char* name, char* const data,
+                          const uint64_t size, const uint32_t max_str_len)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len == 0) return TREXIO_INVALID_ARG_3;
+
+  yyjson_mut_val* arr = NULL;
+  trexio_exit_code rc = trexio_json_array_get(file, group, name, size, &arr);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  strcpy(data, "");
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    yyjson_mut_val* val = yyjson_mut_arr_get(arr, (size_t) i);
+    if (!yyjson_mut_is_str(val)) return TREXIO_FILE_ERROR;
+
+    const char* src = yyjson_mut_get_str(val);
+    if (src == NULL) return TREXIO_FAILURE;
+
+    strncat(data, src, max_str_len);
+    strcat(data, TREXIO_DELIM);
+  }
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+* Template for has/read/write a dataset of numerical data
+
+    #+begin_src c :tangle hrw_dset_data_json.h :exports none
+trexio_exit_code trexio_json_has_$group_dset$ (trexio_t* const file);
+trexio_exit_code trexio_json_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_double$* const $group_dset$, const uint32_t rank, const uint64_t* dims);
+trexio_exit_code trexio_json_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$, const uint32_t rank, const uint64_t* dims);
+    #+end_src
+
+    #+begin_src c :tangle has_dset_data_json.c
+trexio_exit_code
+trexio_json_has_$group_dset$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_has_value((trexio_json_t*) file, "$group$", "$group_dset$");
+}
+    #+end_src
+
+    #+begin_src c :tangle read_dset_data_json.c
+trexio_exit_code
+trexio_json_read_$group_dset$ (trexio_t* const file, $group_dset_dtype_double$* const $group_dset$,
+                               const uint32_t rank, const uint64_t* dims)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_get_dset_$group_dset_dtype_double$((trexio_json_t*) file, "$group$", "$group_dset$",
+                                                        $group_dset$, trexio_json_dset_size(rank, dims));
+}
+    #+end_src
+
+    #+begin_src c :tangle write_dset_data_json.c
+trexio_exit_code
+trexio_json_write_$group_dset$ (trexio_t* const file, const $group_dset_dtype_double$* $group_dset$,
+                                const uint32_t rank, const uint64_t* dims)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  return trexio_json_set_dset_$group_dset_dtype_double$((trexio_json_t*) file, "$group$", "$group_dset$",
+                                                        $group_dset$, trexio_json_dset_size(rank, dims));
+}
+    #+end_src
+
+* Template for has/read/write a dataset of strings
+
+    #+begin_src c :tangle hrw_dset_str_json.h :exports none
+trexio_exit_code trexio_json_has_$group_dset$ (trexio_t* const file);
+trexio_exit_code trexio_json_read_$group_dset$ (trexio_t* const file, char* const dset, const uint32_t rank, const uint64_t* dims, const uint32_t max_str_len);
+trexio_exit_code trexio_json_write_$group_dset$ (trexio_t* const file, const char** dset, const uint32_t rank, const uint64_t* dims);
+    #+end_src
+
+    #+begin_src c :tangle has_dset_str_json.c
+trexio_exit_code
+trexio_json_has_$group_dset$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_has_value((trexio_json_t*) file, "$group$", "$group_dset$");
+}
+    #+end_src
+
+    #+begin_src c :tangle read_dset_str_json.c
+trexio_exit_code
+trexio_json_read_$group_dset$ (trexio_t* const file, char* const dset,
+                               const uint32_t rank, const uint64_t* dims,
+                               const uint32_t max_str_len)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_get_dset_str((trexio_json_t*) file, "$group$", "$group_dset$", dset,
+                                  trexio_json_dset_size(rank, dims), max_str_len);
+}
+    #+end_src
+
+    #+begin_src c :tangle write_dset_str_json.c
+trexio_exit_code
+trexio_json_write_$group_dset$ (trexio_t* const file, const char** dset,
+                                const uint32_t rank, const uint64_t* dims)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  return trexio_json_set_dset_str((trexio_json_t*) file, "$group$", "$group_dset$", dset,
+                                  trexio_json_dset_size(rank, dims));
+}
+    #+end_src
+
+* String helpers
+
+   #+begin_src c :tangle basic_json.c
+trexio_exit_code
+trexio_json_set_str (trexio_json_t* const file, const char* group,
+                     const char* name, const char* str)
+{
+  if (str == NULL) return TREXIO_INVALID_ARG_2;
+
+  yyjson_mut_val* grp = trexio_json_group_put(file, group);
+  if (grp == NULL) return TREXIO_FAILURE;
+
+  /* Copied, not referenced: the string belongs to the caller. */
+  yyjson_mut_val* val = yyjson_mut_strcpy(file->doc, str);
+  if (val == NULL) return TREXIO_ALLOCATION_FAILED;
+  if (!trexio_json_obj_set(file, grp, name, val)) return TREXIO_FAILURE;
+
+  file->dirty = true;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_get_str (trexio_json_t* const file, const char* group,
+                     const char* name, char* const str, const uint32_t max_str_len)
+{
+  if (str == NULL) return TREXIO_INVALID_ARG_2;
+  if (max_str_len == 0) return TREXIO_INVALID_ARG_3;
+
+  yyjson_mut_val* grp = trexio_json_group_get(file, group);
+  if (grp == NULL) return TREXIO_HAS_NOT;
+
+  yyjson_mut_val* val = yyjson_mut_obj_get(grp, name);
+  if (val == NULL) return TREXIO_HAS_NOT;
+  if (!yyjson_mut_is_str(val)) return TREXIO_FILE_ERROR;
+
+  const char* src = yyjson_mut_get_str(val);
+  if (src == NULL) return TREXIO_FAILURE;
+
+  strncpy(str, src, max_str_len);
+  str[max_str_len - 1] = '\0';
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+* Template for has/read/write a string attribute
+
+    #+begin_src c :tangle hrw_attr_str_json.h :exports none
+trexio_exit_code trexio_json_has_$group_str$ (trexio_t* const file);
+trexio_exit_code trexio_json_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len);
+trexio_exit_code trexio_json_write_$group_str$ (trexio_t* const file, const char* str);
+    #+end_src
+
+    #+begin_src c :tangle has_attr_str_json.c
+trexio_exit_code
+trexio_json_has_$group_str$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_has_value((trexio_json_t*) file, "$group$", "$group_str$");
+}
+    #+end_src
+
+    #+begin_src c :tangle read_attr_str_json.c
+trexio_exit_code
+trexio_json_read_$group_str$ (trexio_t* const file, char* const str, const uint32_t max_str_len)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_get_str((trexio_json_t*) file, "$group$", "$group_str$", str, max_str_len);
+}
+    #+end_src
+
+    #+begin_src c :tangle write_attr_str_json.c
+trexio_exit_code
+trexio_json_write_$group_str$ (trexio_t* const file, const char* str)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  return trexio_json_set_str((trexio_json_t*) file, "$group$", "$group_str$", str);
+}
+    #+end_src
+
+* Template for group-level has and delete
+
+   A group exists in the document when it has at least one value in it, so
+   there is nothing to create or to track: writing the first value creates the
+   object, and deleting the group removes it whole.
+
+    #+begin_src c :tangle has_group_json.h :exports none
+trexio_exit_code trexio_json_has_$group$ (trexio_t* const file);
+    #+end_src
+
+    #+begin_src c :tangle has_group_json.c
+trexio_exit_code
+trexio_json_has_$group$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  yyjson_mut_val* grp = trexio_json_group_get((trexio_json_t*) file, "$group$");
+
+  return grp == NULL ? TREXIO_HAS_NOT : TREXIO_SUCCESS;
+}
+    #+end_src
+
+    #+begin_src c :tangle delete_group_json.h :exports none
+trexio_exit_code trexio_json_delete_$group$ (trexio_t* const file);
+    #+end_src
+
+    #+begin_src c :tangle delete_group_json.c
+trexio_exit_code
+trexio_json_delete_$group$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  trexio_json_t* const f = (trexio_json_t*) file;
+  if (f->root == NULL) return TREXIO_FAILURE;
+
+  yyjson_mut_obj_remove_key(f->root, "$group$");
+  f->dirty = true;
+
+  return TREXIO_SUCCESS;
+}
+    #+end_src
+
+* Template for has/read/write a numerical attribute
+
+    #+begin_src c :tangle hrw_attr_num_json.h :exports none
+trexio_exit_code trexio_json_has_$group_num$ (trexio_t* const file);
+trexio_exit_code trexio_json_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$* const num);
+trexio_exit_code trexio_json_write_$group_num$(trexio_t* const file, const $group_num_dtype_double$ num);
+    #+end_src
+
+    #+begin_src c :tangle has_attr_num_json.c
+trexio_exit_code
+trexio_json_has_$group_num$ (trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_has_value((trexio_json_t*) file, "$group$", "$group_num$");
+}
+    #+end_src
+
+    #+begin_src c :tangle read_attr_num_json.c
+trexio_exit_code
+trexio_json_read_$group_num$ (trexio_t* const file, $group_num_dtype_double$* const num)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (num  == NULL) return TREXIO_INVALID_ARG_2;
+
+  return trexio_json_get_num_$group_num_dtype_double$((trexio_json_t*) file, "$group$", "$group_num$", num);
+}
+    #+end_src
+
+    #+begin_src c :tangle write_attr_num_json.c
+trexio_exit_code
+trexio_json_write_$group_num$ (trexio_t* const file, const $group_num_dtype_double$ num)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  return trexio_json_set_num_$group_num_dtype_double$((trexio_json_t*) file, "$group$", "$group_num$", num);
+}
+    #+end_src
+
+* Helpers for data written in chunks
+
+   Sparse data, buffered vectors and determinant lists are all written a chunk
+   at a time rather than whole, and all three are read back with the same
+   end-of-data convention: a read that runs past what the file holds returns
+   TREXIO_END with the number of items actually read.
+
+   They differ only in what one item is -- one value, one determinant of
+   several 64-bit integers, or one index tuple and its value -- so they share
+   the array handling below. Sparse data is the one that needs two arrays, and
+   is stored as an object of "index" and "value" rather than as interleaved
+   pairs, which keeps each array of one JSON type and reads naturally:
+
+   : "mo_2e_int_eri": { "index": [0,0,0,0, 1,0,1,0], "value": [1.0, 0.5] }
+
+   #+begin_src c :tangle basic_json.c
+/* Values are appended to grow an array and replaced to overwrite one, so a
+   write that would start beyond the end is refused rather than padded: for
+   sparse data a hole cannot be told apart from stored elements. */
+static trexio_exit_code
+trexio_json_array_fill_double (trexio_json_t* const file, yyjson_mut_val* arr,
+                               const uint64_t offset, const double* data,
+                               const uint64_t size)
+{
+  const uint64_t length = (uint64_t) yyjson_mut_arr_size(arr);
+  if (length < offset) return TREXIO_INVALID_ARG_2;
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    if (!isfinite(data[i])) return TREXIO_INVALID_ARG_2;
+  }
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    if (offset + i < length) {
+      yyjson_mut_val* val = yyjson_mut_real(file->doc, data[i]);
+      if (val == NULL) return TREXIO_ALLOCATION_FAILED;
+      yyjson_mut_arr_replace(arr, (size_t) (offset + i), val);
+    } else {
+      if (!yyjson_mut_arr_add_real(file->doc, arr, data[i])) return TREXIO_ALLOCATION_FAILED;
+    }
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+static trexio_exit_code
+trexio_json_array_fill_int64 (trexio_json_t* const file, yyjson_mut_val* arr,
+                              const uint64_t offset, const int64_t* data,
+                              const uint64_t size)
+{
+  const uint64_t length = (uint64_t) yyjson_mut_arr_size(arr);
+  if (length < offset) return TREXIO_INVALID_ARG_2;
+
+  for (uint64_t i = 0 ; i < size ; ++i) {
+    if (offset + i < length) {
+      yyjson_mut_val* val = yyjson_mut_sint(file->doc, data[i]);
+      if (val == NULL) return TREXIO_ALLOCATION_FAILED;
+      yyjson_mut_arr_replace(arr, (size_t) (offset + i), val);
+    } else {
+      if (!yyjson_mut_arr_add_sint(file->doc, arr, data[i])) return TREXIO_ALLOCATION_FAILED;
+    }
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+/* Returns the array under group/name, creating it and its group if asked to.
+   For sparse data, sub names the array inside the quantity's own object. */
+static yyjson_mut_val*
+trexio_json_chunk_array (trexio_json_t* const file, const char* group,
+                         const char* name, const char* sub, const bool create)
+{
+  yyjson_mut_val* grp = create ? trexio_json_group_put(file, group)
+                               : trexio_json_group_get(file, group);
+  if (grp == NULL) return NULL;
+
+  yyjson_mut_val* outer = yyjson_mut_obj_get(grp, name);
+  if (outer == NULL) {
+    if (!create) return NULL;
+    outer = sub == NULL ? yyjson_mut_arr(file->doc) : yyjson_mut_obj(file->doc);
+    if (outer == NULL) return NULL;
+    if (!trexio_json_obj_set(file, grp, name, outer)) return NULL;
+    file->dirty = true;
+  }
+
+  if (sub == NULL) {
+    return yyjson_mut_is_arr(outer) ? outer : NULL;
+  }
+
+  if (!yyjson_mut_is_obj(outer)) return NULL;
+
+  yyjson_mut_val* arr = yyjson_mut_obj_get(outer, sub);
+  if (arr == NULL) {
+    if (!create) return NULL;
+    arr = yyjson_mut_arr(file->doc);
+    if (arr == NULL) return NULL;
+    if (!trexio_json_obj_set(file, outer, sub, arr)) return NULL;
+    file->dirty = true;
+  }
+
+  return yyjson_mut_is_arr(arr) ? arr : NULL;
+}
+
+trexio_exit_code
+trexio_json_has_chunked (trexio_json_t* const file, const char* group, const char* name)
+{
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, NULL, false);
+
+  return (arr != NULL && yyjson_mut_arr_size(arr) > 0) ? TREXIO_SUCCESS : TREXIO_HAS_NOT;
+}
+
+trexio_exit_code
+trexio_json_chunk_count (trexio_json_t* const file, const char* group,
+                         const char* name, const int64_t item, int64_t* const count)
+{
+  if (count == NULL) return TREXIO_INVALID_ARG_2;
+  if (item <= 0) return TREXIO_INVALID_ARG_3;
+
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, NULL, false);
+
+  *count = arr == NULL ? 0L : (int64_t) (yyjson_mut_arr_size(arr) / (size_t) item);
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_write_chunk_double (trexio_json_t* const file, const char* group,
+                                const char* name, const int64_t offset,
+                                const int64_t count, const int64_t item,
+                                const double* data)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset < 0 || count < 0 || item <= 0) return TREXIO_INVALID_ARG_3;
+
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, NULL, true);
+  if (arr == NULL) return TREXIO_FAILURE;
+
+  trexio_exit_code rc = trexio_json_array_fill_double(file, arr, (uint64_t) (offset * item),
+                                                      data, (uint64_t) (count * item));
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  file->dirty = true;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_read_chunk_double (trexio_json_t* const file, const char* group,
+                               const char* name, const int64_t offset,
+                               const int64_t count, const int64_t item,
+                               int64_t* const eof_read_size, double* const data)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_3;
+  if (offset < 0 || count < 0 || item <= 0) return TREXIO_INVALID_ARG_4;
+
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, NULL, false);
+  if (arr == NULL) return TREXIO_HAS_NOT;
+
+  const int64_t stored  = (int64_t) (yyjson_mut_arr_size(arr) / (size_t) item);
+  const int64_t avail   = stored > offset ? stored - offset : 0L;
+  const int64_t to_read = avail < count ? avail : count;
+
+  for (int64_t i = 0 ; i < to_read * item ; ++i) {
+    yyjson_mut_val* val = yyjson_mut_arr_get(arr, (size_t) (offset * item + i));
+    if (!yyjson_mut_is_num(val)) return TREXIO_FILE_ERROR;
+    data[i] = yyjson_mut_get_num(val);
+  }
+
+  if (to_read < count) {
+    *eof_read_size = to_read;
+    return TREXIO_END;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_write_chunk_int64 (trexio_json_t* const file, const char* group,
+                               const char* name, const int64_t offset,
+                               const int64_t count, const int64_t item,
+                               const int64_t* data)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset < 0 || count < 0 || item <= 0) return TREXIO_INVALID_ARG_3;
+
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, NULL, true);
+  if (arr == NULL) return TREXIO_FAILURE;
+
+  trexio_exit_code rc = trexio_json_array_fill_int64(file, arr, (uint64_t) (offset * item),
+                                                     data, (uint64_t) (count * item));
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  file->dirty = true;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_read_chunk_int64 (trexio_json_t* const file, const char* group,
+                              const char* name, const int64_t offset,
+                              const int64_t count, const int64_t item,
+                              int64_t* const eof_read_size, int64_t* const data)
+{
+  if (data == NULL) return TREXIO_INVALID_ARG_2;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_3;
+  if (offset < 0 || count < 0 || item <= 0) return TREXIO_INVALID_ARG_4;
+
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, NULL, false);
+  if (arr == NULL) return TREXIO_HAS_NOT;
+
+  const int64_t stored  = (int64_t) (yyjson_mut_arr_size(arr) / (size_t) item);
+  const int64_t avail   = stored > offset ? stored - offset : 0L;
+  const int64_t to_read = avail < count ? avail : count;
+
+  for (int64_t i = 0 ; i < to_read * item ; ++i) {
+    yyjson_mut_val* val = yyjson_mut_arr_get(arr, (size_t) (offset * item + i));
+    if (!yyjson_mut_is_int(val)) return TREXIO_FILE_ERROR;
+    data[i] = yyjson_mut_get_sint(val);
+  }
+
+  if (to_read < count) {
+    *eof_read_size = to_read;
+    return TREXIO_END;
+  }
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_has_sparse (trexio_json_t* const file, const char* group, const char* name)
+{
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, "value", false);
+
+  return (arr != NULL && yyjson_mut_arr_size(arr) > 0) ? TREXIO_SUCCESS : TREXIO_HAS_NOT;
+}
+
+trexio_exit_code
+trexio_json_sparse_count (trexio_json_t* const file, const char* group,
+                          const char* name, int64_t* const count)
+{
+  if (count == NULL) return TREXIO_INVALID_ARG_2;
+
+  yyjson_mut_val* arr = trexio_json_chunk_array(file, group, name, "value", false);
+
+  *count = arr == NULL ? 0L : (int64_t) yyjson_mut_arr_size(arr);
+
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_write_sparse (trexio_json_t* const file, const char* group, const char* name,
+                          const uint32_t rank, const int64_t offset, const int64_t count,
+                          const int32_t* index_sparse, const double* value_sparse)
+{
+  if (index_sparse == NULL) return TREXIO_INVALID_ARG_2;
+  if (value_sparse == NULL) return TREXIO_INVALID_ARG_3;
+  if (offset < 0 || count < 0 || rank == 0) return TREXIO_INVALID_ARG_4;
+
+  yyjson_mut_val* idx = trexio_json_chunk_array(file, group, name, "index", true);
+  yyjson_mut_val* val = trexio_json_chunk_array(file, group, name, "value", true);
+  if (idx == NULL || val == NULL) return TREXIO_FAILURE;
+
+  /* The indices arrive as int32_t and are widened, which the array holds as
+     plain JSON integers either way. */
+  const uint64_t n_index = (uint64_t) count * rank;
+  int64_t* widened = CALLOC(n_index == 0UL ? 1UL : n_index, int64_t);
+  if (widened == NULL) return TREXIO_ALLOCATION_FAILED;
+  for (uint64_t i = 0 ; i < n_index ; ++i) widened[i] = (int64_t) index_sparse[i];
+
+  trexio_exit_code rc = trexio_json_array_fill_int64(file, idx, (uint64_t) offset * rank,
+                                                     widened, n_index);
+  FREE(widened);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  rc = trexio_json_array_fill_double(file, val, (uint64_t) offset, value_sparse, (uint64_t) count);
+  if (rc != TREXIO_SUCCESS) return rc;
+
+  file->dirty = true;
+  return TREXIO_SUCCESS;
+}
+
+trexio_exit_code
+trexio_json_read_sparse (trexio_json_t* const file, const char* group, const char* name,
+                         const uint32_t rank, const int64_t offset, const int64_t count,
+                         int64_t* const eof_read_size, int32_t* const index_sparse,
+                         double* const value_sparse)
+{
+  if (index_sparse == NULL) return TREXIO_INVALID_ARG_2;
+  if (value_sparse == NULL) return TREXIO_INVALID_ARG_3;
+  if (eof_read_size == NULL) return TREXIO_INVALID_ARG_4;
+  if (offset < 0 || count < 0 || rank == 0) return TREXIO_INVALID_ARG_5;
+
+  yyjson_mut_val* idx = trexio_json_chunk_array(file, group, name, "index", false);
+  yyjson_mut_val* val = trexio_json_chunk_array(file, group, name, "value", false);
+  if (idx == NULL || val == NULL) return TREXIO_HAS_NOT;
+
+  const int64_t stored = (int64_t) yyjson_mut_arr_size(val);
+  if ((uint64_t) yyjson_mut_arr_size(idx) != (uint64_t) stored * rank) return TREXIO_FILE_ERROR;
+
+  const int64_t avail   = stored > offset ? stored - offset : 0L;
+  const int64_t to_read = avail < count ? avail : count;
+
+  for (int64_t i = 0 ; i < to_read ; ++i) {
+    yyjson_mut_val* v = yyjson_mut_arr_get(val, (size_t) (offset + i));
+    if (!yyjson_mut_is_num(v)) return TREXIO_FILE_ERROR;
+    value_sparse[i] = yyjson_mut_get_num(v);
+  }
+
+  for (int64_t i = 0 ; i < to_read * rank ; ++i) {
+    yyjson_mut_val* v = yyjson_mut_arr_get(idx, (size_t) (offset * rank + i));
+    if (!yyjson_mut_is_int(v)) return TREXIO_FILE_ERROR;
+    index_sparse[i] = (int32_t) yyjson_mut_get_sint(v);
+  }
+
+  if (to_read < count) {
+    *eof_read_size = to_read;
+    return TREXIO_END;
+  }
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+* Template for has/read/write the dataset of sparse data
+
+    #+begin_src c :tangle hrw_dset_sparse_json.h :exports none
+trexio_exit_code trexio_json_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_json_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, int64_t* const eof_read_size, int32_t* const index_sparse, double* const value_sparse);
+trexio_exit_code trexio_json_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const int64_t size, const int64_t size_max, const int32_t* index_sparse, const double* value_sparse);
+trexio_exit_code trexio_json_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
+    #+end_src
+
+    #+begin_src c :tangle has_dset_sparse_json.c
+trexio_exit_code trexio_json_has_$group_dset$(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_has_sparse((trexio_json_t*) file, "$group$", "$group_dset$");
+}
+    #+end_src
+
+    #+begin_src c :tangle write_dset_sparse_json.c
+trexio_exit_code trexio_json_write_$group_dset$(trexio_t* const file,
+                                                const int64_t offset_file, const int64_t size,
+                                                const int64_t size_max,
+                                                const int32_t* index_sparse, const double* value_sparse)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (file->mode == 'r') return TREXIO_READONLY;
+  /* Unlike the text back end, which needs it to compute a byte offset, the
+     position to write at is already in offset_file here. */
+  (void) size_max;
+
+  return trexio_json_write_sparse((trexio_json_t*) file, "$group$", "$group_dset$",
+                                  $group_dset_rank$, offset_file, size,
+                                  index_sparse, value_sparse);
+}
+    #+end_src
+
+    #+begin_src c :tangle read_dset_sparse_json.c
+trexio_exit_code trexio_json_read_$group_dset$(trexio_t* const file,
+                                               const int64_t offset_file, const int64_t size,
+                                               const int64_t size_max, int64_t* const eof_read_size,
+                                               int32_t* const index_sparse, double* const value_sparse)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  (void) size_max;
+
+  return trexio_json_read_sparse((trexio_json_t*) file, "$group$", "$group_dset$",
+                                 $group_dset_rank$, offset_file, size,
+                                 eof_read_size, index_sparse, value_sparse);
+}
+
+trexio_exit_code trexio_json_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (size_max == NULL) return TREXIO_INVALID_ARG_2;
+
+  return trexio_json_sparse_count((trexio_json_t*) file, "$group$", "$group_dset$", size_max);
+}
+    #+end_src
+
+* Template for has/read/write a buffered vector
+
+    #+begin_src c :tangle hrw_buffered_json.h :exports none
+trexio_exit_code trexio_json_has_$group_dset$(trexio_t* const file);
+trexio_exit_code trexio_json_read_$group_dset$(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, double* const dset);
+trexio_exit_code trexio_json_write_$group_dset$(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const double* dset);
+trexio_exit_code trexio_json_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max);
+    #+end_src
+
+    #+begin_src c :tangle has_buffered_json.c
+trexio_exit_code trexio_json_has_$group_dset$(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_has_chunked((trexio_json_t*) file, "$group$", "$group_dset$");
+}
+    #+end_src
+
+    #+begin_src c :tangle write_buffered_json.c
+trexio_exit_code trexio_json_write_$group_dset$(trexio_t* const file, const int64_t offset_file,
+                                                const uint32_t rank, const uint64_t* dims,
+                                                const double* dset)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  return trexio_json_write_chunk_double((trexio_json_t*) file, "$group$", "$group_dset$",
+                                        offset_file, (int64_t) dims[0], 1L, dset);
+}
+    #+end_src
+
+    #+begin_src c :tangle read_buffered_json.c
+trexio_exit_code trexio_json_read_$group_dset$(trexio_t* const file, const int64_t offset_file,
+                                               const uint32_t rank, const uint64_t* dims,
+                                               int64_t* const eof_read_size, double* const dset)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (rank < 1) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
+
+  return trexio_json_read_chunk_double((trexio_json_t*) file, "$group$", "$group_dset$",
+                                       offset_file, (int64_t) dims[0], 1L,
+                                       eof_read_size, dset);
+}
+
+trexio_exit_code trexio_json_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (size_max == NULL) return TREXIO_INVALID_ARG_2;
+
+  return trexio_json_chunk_count((trexio_json_t*) file, "$group$", "$group_dset$", 1L, size_max);
+}
+    #+end_src
+
+* Template for has/read/write the determinant list
+
+   One item here is one determinant, which is dims[1] integers wide -- two bit
+   fields per determinant, one spin each, of as many 64-bit integers as the
+   orbital count needs.
+
+    #+begin_src c :tangle hrw_determinant_json.h :exports none
+trexio_exit_code trexio_json_has_determinant_list(trexio_t* const file);
+trexio_exit_code trexio_json_read_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, int64_t* const eof_read_size, int64_t* const list);
+trexio_exit_code trexio_json_write_determinant_list(trexio_t* const file, const int64_t offset_file, const uint32_t rank, const uint64_t* dims, const int64_t* list);
+    #+end_src
+
+    #+begin_src c :tangle has_determinant_json.c
+trexio_exit_code trexio_json_has_determinant_list(trexio_t* const file)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+
+  return trexio_json_has_chunked((trexio_json_t*) file, "determinant", "determinant_list");
+}
+    #+end_src
+
+    #+begin_src c :tangle write_determinant_json.c
+trexio_exit_code trexio_json_write_determinant_list(trexio_t* const file, const int64_t offset_file,
+                                                    const uint32_t rank, const uint64_t* dims,
+                                                    const int64_t* list)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (rank != 2) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
+  if (file->mode == 'r') return TREXIO_READONLY;
+
+  return trexio_json_write_chunk_int64((trexio_json_t*) file, "determinant", "determinant_list",
+                                       offset_file, (int64_t) dims[0], (int64_t) dims[1], list);
+}
+    #+end_src
+
+    #+begin_src c :tangle read_determinant_json.c
+trexio_exit_code trexio_json_read_determinant_list(trexio_t* const file, const int64_t offset_file,
+                                                   const uint32_t rank, const uint64_t* dims,
+                                                   int64_t* const eof_read_size, int64_t* const list)
+{
+  if (file == NULL) return TREXIO_INVALID_ARG_1;
+  if (rank != 2) return TREXIO_INVALID_ARG_3;
+  if (dims == NULL) return TREXIO_INVALID_ARG_4;
+
+  return trexio_json_read_chunk_int64((trexio_json_t*) file, "determinant", "determinant_list",
+                                      offset_file, (int64_t) dims[0], (int64_t) dims[1],
+                                      eof_read_size, list);
+}
+    #+end_src
+
+* Constant file suffixes (not used by the generator)                :noexport:
+
+   #+begin_src c :tangle suffix_json.h
+#endif /* TREXIO_JSON_H */
+   #+end_src

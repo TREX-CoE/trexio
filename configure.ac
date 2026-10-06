@@ -66,6 +66,10 @@ AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
 AS_IF([test "$ok" = "yes"],
       [TREXIO_CMAKE_WITH_FORTRAN=ON], [TREXIO_CMAKE_WITH_FORTRAN=OFF])
 
+# JSON back end [default: --disable-json]
+AC_ARG_ENABLE(json, [AS_HELP_STRING([--enable-json],[build the JSON back end])],
+              [enable_json=$enableval], [enable_json=no])
+
 # Python API [default: --disable-python]
 AC_ARG_ENABLE(python, [AS_HELP_STRING([--enable-python],[build and install the Python API])],
               [enable_python=$enableval], [enable_python=no])
@@ -390,6 +394,23 @@ AS_IF([test "x$enable_python" = "xyes"], [
 
 AC_SUBST([PYTHON_CPPFLAGS])
 AC_SUBST([NUMPY_CPPFLAGS])
+# The JSON back end parses and writes with yyjson. An installed one is used
+# when there is one, and the copy bundled in external/yyjson otherwise, so
+# enabling the back end adds no dependency that has to be installed first.
+# Distribution packages get the system library without having to patch the
+# bundled copy out.
+enable_json_bundled=no
+AS_IF([test "x$enable_json" = "xyes"], [
+  PKG_CHECK_MODULES([YYJSON], [yyjson >= 0.12], [],
+    [AC_MSG_NOTICE([no installed yyjson found, using the bundled copy])
+     enable_json_bundled=yes
+     YYJSON_CFLAGS='-I$(top_srcdir)/external/yyjson'
+     YYJSON_LIBS=])
+  AC_DEFINE([HAVE_JSON], [1], [Define when the JSON back end is built])
+])
+AM_CONDITIONAL([HAVE_JSON],[test "x$enable_json" = "xyes"])
+AM_CONDITIONAL([HAVE_JSON_BUNDLED],[test "x$enable_json_bundled" = "xyes"])
+
 AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
 
 ## Libm

@@ -30,6 +30,13 @@ static int trexio_cleanup_test_file(const char* file_path) {
 #endif
 
 
+#ifdef TEST_BACKEND_JSON
+#define TEST_BACKEND  TREXIO_JSON
+#define TREXIO_FILE   TREXIO_FILE_PREFIX ".json"
+#define RM_COMMAND_RESULT  trexio_cleanup_test_file(TREXIO_FILE)
+#endif
+
+
 #ifdef TEST_BACKEND_TEXT 
 #define TEST_BACKEND  TREXIO_TEXT
 #define TREXIO_FILE   TREXIO_FILE_PREFIX ".dir"
