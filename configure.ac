@@ -185,7 +185,8 @@ AS_IF([test "x$with_hdf5" = "xno"],
               # -showconfig output to get all runtime library deps
               # (-lpthread, -lz, etc.).
               HDF5_EXTRA_LIBS=$(eval $H5CC -showconfig \
-                  | $GREP 'Extra libraries:' )
+                  | $GREP 'Extra libraries:' \
+                  | $SED 's/;/ /g')
 
               # Find the installation directory and append include/
               HDF5_INSTALL_DIR=$(eval $H5CC -showconfig \
