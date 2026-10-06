@@ -47,6 +47,12 @@ rather than in the generated code:
 #include <string.h>
 #include "yyjson.h"
 
+/* MSVC's sys/stat.h provides the S_IF* constants but not the classification
+   macros built from them. */
+#ifndef S_ISREG
+#define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
+#endif
+
 /* The document is the storage. yyjson separates reading from writing: a parsed
    document is immutable, so the file is parsed and then copied into a mutable
    document, which is what is kept and written back out. root is always a JSON

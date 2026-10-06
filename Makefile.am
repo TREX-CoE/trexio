@@ -87,12 +87,6 @@ SOURCES += src/trexio_json.c \
            src/trexio_json.h
 AM_CPPFLAGS += $(YYJSON_CFLAGS)
 src_libtrexio_la_LIBADD = $(YYJSON_LIBS)
-if HAVE_JSON_BUNDLED
-# No installed yyjson was found, so the bundled copy is compiled into the
-# library. It is two files and needs no configuration of its own.
-SOURCES += external/yyjson/yyjson.c \
-           external/yyjson/yyjson.h
-endif
 endif
 
 # The bundled copy travels with the release tarball whether or not this build
@@ -119,6 +113,15 @@ ORG_FILES += src/templates_json/templator_json.org
 endif
 
 src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
+
+# No installed yyjson was found, so the bundled copy is compiled into the
+# library. It is deliberately not part of $(SOURCES): that variable holds
+# generated code and the clean rules delete all of it, whereas these two files
+# are checked in.
+if HAVE_JSON_BUNDLED
+src_libtrexio_la_SOURCES += external/yyjson/yyjson.c \
+                            external/yyjson/yyjson.h
+endif
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
