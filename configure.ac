@@ -61,9 +61,14 @@ AS_IF([test "$ok" = "yes"],[
   [])
 
 ])
+with_fortran=$ok
 AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
 AS_IF([test "$ok" = "yes"],
       [TREXIO_CMAKE_WITH_FORTRAN=ON], [TREXIO_CMAKE_WITH_FORTRAN=OFF])
+
+# Python API [default: --disable-python]
+AC_ARG_ENABLE(python, [AS_HELP_STRING([--enable-python],[build and install the Python API])],
+              [enable_python=$enableval], [enable_python=no])
 
 AC_LANG(C)
 AC_PROG_CC
@@ -172,21 +177,33 @@ AS_IF([test "x$with_hdf5" = "xno"],
               # (3) Look for "AM_NAME:" tags
               #
               HDF5_tmp_flags=$(eval $H5CC -showconfig \
-                  | $GREP 'FLAGS\|Extra libraries:' \
+                  | $GREP 'FLAGS' \
                   | $AWK -F: '{printf("%s "), $[]2}' )
 
-              dnl Find the installation directory and append include/
-              HDF5_tmp_inst=$(eval $H5CC -showconfig \
+              # The "-show" flag was deprecated in HDF5 1.14 and removed
+              # in later releases.  Use "Extra libraries:" from
+              # -showconfig output to get all runtime library deps
+              # (-lpthread, -lz, etc.).
+              HDF5_EXTRA_LIBS=$(eval $H5CC -showconfig \
+                  | $GREP 'Extra libraries:' \
+                  | $SED 's/;/ /g')
+
+              # Find the installation directory and append include/
+              HDF5_INSTALL_DIR=$(eval $H5CC -showconfig \
                   | $GREP 'Installation point:' \
                   | $AWK '{print $[]NF}' )
 
-              dnl Add this to the CPPFLAGS
-              HDF5_CPPFLAGS="-I${HDF5_tmp_inst}/include"
+              # Merge library flags from "Extra libraries:" into the pool.
+              for arg in $HDF5_EXTRA_LIBS; do
+                case "$arg" in
+                  -l*) HDF5_tmp_flags="$HDF5_tmp_flags $arg" ;;
+                esac
+              done
 
-              HDF5_SHOW=$(eval $H5CC -show)
+              HDF5_CPPFLAGS="-I${HDF5_INSTALL_DIR}/include"
 
-              dnl Now sort the flags out based upon their prefixes
-              for arg in $HDF5_SHOW $HDF5_tmp_flags ; do
+              # Now sort the flags out based upon their prefixes
+              for arg in $HDF5_tmp_flags ; do
                 case "$arg" in
                   -I*) echo $HDF5_CPPFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
                         || HDF5_CPPFLAGS="$HDF5_CPPFLAGS $arg"
@@ -199,6 +216,12 @@ AS_IF([test "x$with_hdf5" = "xno"],
                     ;;
                 esac
               done
+
+              # Fall back to the wrapper's default library directory when
+              # -showconfig does not provide a linker search path.
+              if test -z "$HDF5_LDFLAGS" && test -n "$HDF5_INSTALL_DIR"; then
+                HDF5_LDFLAGS="-L${HDF5_INSTALL_DIR}/lib"
+              fi
             ],
             [AC_MSG_ERROR([HDF5 not found: install pkg-config .pc file or h5cc, or use --with-hdf5=PATH])]
           )
@@ -302,7 +325,6 @@ AM_CONDITIONAL([TREXIO_DEVEL],[test "x$TREXIO_DEVEL" != x])
 if test "x${TREXIO_DEVEL}" != "x"; then
 
   AC_PROG_AWK
-  AM_PATH_PYTHON([3.0])
 
   AX_PKG_SWIG(4.0.0, [], AC_MSG_WARN([SWIG is required to build Python API.]) )
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
@@ -330,6 +352,46 @@ else
 
 fi
 AC_DEFINE_UNQUOTED(GIT_HASH, ["${GIT_HASH}"], [Git SHA1 Hash])
+
+## Python API
+## ----------
+
+# A Python interpreter is needed both to build the Python API and, in maintainer
+# mode, to run the source code generator.
+AS_IF([test "x$enable_python" = "xyes" || test "x${TREXIO_DEVEL}" != "x"],
+      [AM_PATH_PYTHON([3.6],[],[:])])
+
+AS_IF([test "x$enable_python" = "xyes"], [
+
+  AS_IF([test "x$PYTHON" = "x" || test "x$PYTHON" = "x:"],
+        [AC_MSG_ERROR([--enable-python requires a Python 3 interpreter.])])
+
+  # The extension module is compiled here rather than by setup.py, so the Python
+  # and NumPy headers have to be available.
+  PYTHON_INCLUDE=`$PYTHON -c "import sysconfig; print(sysconfig.get_path('include'))" 2>/dev/null`
+  NUMPY_INCLUDE=`$PYTHON -c "import numpy; print(numpy.get_include())" 2>/dev/null`
+  PYTHON_CPPFLAGS="-I$PYTHON_INCLUDE"
+  NUMPY_CPPFLAGS="-I$NUMPY_INCLUDE"
+
+  OLD_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
+  AC_CHECK_HEADER([Python.h],[],
+    [AC_MSG_ERROR([Python.h not found. Install the Python development files (python3-devel or python3-dev).])])
+  CPPFLAGS="$CPPFLAGS $NUMPY_CPPFLAGS"
+  AC_CHECK_HEADER([numpy/arrayobject.h],[],
+    [AC_MSG_ERROR([The NumPy headers were not found. Install numpy for $PYTHON.])],
+    [#include <Python.h>])
+  CPPFLAGS="$OLD_CPPFLAGS"
+
+  # The SWIG wrapper is shipped in the distribution; SWIG itself is only needed
+  # in maintainer mode, where the wrapper is regenerated from pytrexio.i.
+  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
+        [AC_MSG_ERROR([src/pytrexio_wrap.c is missing from this distribution.])])
+])
+
+AC_SUBST([PYTHON_CPPFLAGS])
+AC_SUBST([NUMPY_CPPFLAGS])
+AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
 
 ## Libm
 ## ----
@@ -390,10 +452,12 @@ LIBS ..........:  ${LIBS}
 Package features:
   Compilation with HDF5 ..:  ${with_hdf5}
   HDF5 version ...........:  ${HDF5_VERSION}
+  Fortran API ............:  ${with_fortran}
+  Python API .............:  ${enable_python}
 
 Now type 'make @<:@<target>@:>@'
 where the optional <target> is:
-  all           - build C library and Fortran binding
+  all           - build C library and the enabled bindings
   check         - run unit tests
   install       - install the library
 --------------------------------------------------"])
