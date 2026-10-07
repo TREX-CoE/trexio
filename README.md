@@ -385,24 +385,11 @@ cargo add trexio
 ```
 to your Rust project.
 
-If you prefer to install the Rust API provided with this repository:
-```
-cargo add --path /path/to/trexio/rust/trexio
-```
-
 ### OCaml
 
 The TREXIO OCaml API is available in OPAM:
 ```
 opam install trexio
-```
-
-If you prefer to install it from this repository,
-
-```
-cd ocaml/trexio
-make
-opam install .
 ```
 
 ### Haskell
