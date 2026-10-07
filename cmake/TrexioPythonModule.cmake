@@ -57,7 +57,16 @@ set(TREXIO_INSTALL_PYTHONDIR "${TREXIO_PLATLIB}" CACHE STRING
 # the build directory rather than next to the sources, so that a CMake build
 # never competes with the Autotools one over the same generated files.
 if(TREXIO_DEVEL OR NOT EXISTS "${TREXIO_SWIG_WRAPPER}")
-  find_program(SWIG_EXECUTABLE NAMES swig REQUIRED)
+  # The wrapper has to be generated for this tree, so SWIG is a hard
+  # requirement of this configuration rather than something to discover
+  # halfway through the build, which is issue #339.
+  find_package(SWIG 4.0)
+  if(NOT SWIG_FOUND)
+    message(FATAL_ERROR
+      "The Python interface is enabled and its SWIG wrapper has to be generated "
+      "for this tree, which needs SWIG (>= 4.0). Either install SWIG or "
+      "configure with -DTREXIO_PYTHON=OFF.")
+  endif()
   set(TREXIO_SWIG_WRAPPER "${TREXIO_PYTHON_BINARY_DIR}/pytrexio_wrap.c")
   set(TREXIO_SWIG_MODULE "${TREXIO_PYTHON_BINARY_DIR}/pytrexio.py")
   add_custom_command(
