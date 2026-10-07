@@ -972,7 +972,7 @@ def string_of_error(return_code: int) -> str:
 
    3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory.
 
-   ~TREXIO_AUTO~ can be provided as a backend when opening an existing TREXIO file in read ~'r'~ mode.
+   ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file in read-only ~'r'~ mode.
    In this case, TREXIO will try to automatically detect the back end, which should be used to open the file.
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
@@ -1241,19 +1241,22 @@ class File:
 
 ** File opening
 
-   ~trexio_open~ creates a new TREXIO file or opens the existing one.
+    ~trexio_open~ creates a new TREXIO file or opens an existing one.
 
-   **Input parameters:**
-     1) ~file_name~     - string containing file name
-     2) ~mode~          - character containing open mode (see below)
-       - ~'w'~          - (write)  creates a new file as READWRITE
-       - ~'r'~          - (read)   opens existing file as READONLY
-       - ~'u'~          - (unsafe) opens existing file as READWRITE with the possibility to overwrite blocks and delete full groups.
-     3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
-       - ~TREXIO_HDF5~   - for HDF5 back end
-       - ~TREXIO_TEXT~   - for TEXT back end
-       - ~TREXIO_MEMORY~ - for MEMORY back end
-       - ~TREXIO_AUTO~   - to automatically detect the applicable back end
+    **Input parameters:**
+     1) ~file_name~ - string containing the name of the file
+     2) ~mode~ - character specifying the open mode:
+       - ~'r'~: (read)  opens the file in read-only mode
+       - ~'w'~: (write) creates a new file if it does not exist. Opens
+         the file in read-write mode. Only missing data can be written
+         (note that TREXIO data is immutable by default).
+       - ~'u'~: (unsafe) opens an existing file in read-write mode
+         with the ability to overwrite blocks and delete entire
+         groups.
+     3) ~back_end~     - parameter specifying the back end
+       (~TREXIO_HDF5|TREXIO_TEXT|TREXIO_AUTO|TREXIO_MEMORY)~. The
+        complete list of back ends is given in the ~trexio.h~ file, after the
+        definition of the ~back_end_t~ type.
 
    **Output:**
      - Pointer to the ~trexio_t~ (struct) file handle.
