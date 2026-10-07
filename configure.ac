@@ -325,6 +325,19 @@ if test "x${TREXIO_DEVEL}" != "x"; then
 
   AC_PROG_AWK
 
+  # The distribution ships src/pytrexio_wrap.c, and it is this build that has to
+  # produce it: EXTRA_DIST names it whether or not the Python API is enabled, so
+  # "make dist" needs SWIG even when --disable-python. It used to be a warning
+  # here, which left the failure to the middle of the build.
+  AX_PKG_SWIG(4.0.0, [],
+    [AC_MSG_ERROR([
+    ------------------------------------------------------------------
+    SWIG (>= 4.0.0) is required in maintainer mode: the Python wrapper
+    src/pytrexio_wrap.c is generated here and is part of the
+    distribution. Install SWIG, or build from a release tarball, which
+    ships the wrapper already generated.
+    ------------------------------------------------------------------])])
+
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
 
@@ -386,7 +399,7 @@ AS_IF([test "x$enable_python" = "xyes"], [
   # regenerated from pytrexio.i, or when a tree has none. Asking for the Python
   # API in either of those cases without SWIG installed used to configure
   # happily and then fail in the middle of the build, which is issue #339.
-  AS_IF([test "x${TREXIO_DEVEL}" != "x" || test ! -f "$srcdir/src/pytrexio_wrap.c"],
+  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
     [AX_PKG_SWIG(4.0.0, [],
        [AC_MSG_ERROR([
     ------------------------------------------------------------------

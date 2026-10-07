@@ -332,6 +332,22 @@ python-sdist: $(pytrexio_c) $(pytrexio_py) $(trexio_py)
 	python3 -m pip install build
 	cd $(srcdir) && python3 -m build --sdist --outdir python/dist
 
+# Install the Python API into the active environment. pip drives the build
+# through the pyproject.toml at the top of the tree, so this no longer goes
+# through python/setup.py, but the target is the one the CI and everyone's
+# habits use. python3 rather than $(PYTHON), so that an activated virtualenv is
+# respected -- which is how the CI uses it.
+#
+# The build is told not to look for an installed TREXIO, because this target
+# installs the tree it is run from. Left to itself it prefers a library already
+# on the system and compiles this tree's SWIG wrapper against that library's
+# headers, which does not even compile once the two versions differ.
+python-install: $(pytrexio_c) $(pytrexio_py) $(trexio_py)
+	python3 -m pip install pytest
+	python3 -m pip install --force-reinstall \
+	  --config-settings=cmake.define.CMAKE_DISABLE_FIND_PACKAGE_trexio=ON \
+	  $(abs_top_srcdir)
+
 # Stage the freshly built module so that `make check` imports what was just
 # compiled, rather than whatever copy of TREXIO happens to be installed on the
 # system. The python-install and python-sdist targets do not use this copy: they
