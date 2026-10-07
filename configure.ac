@@ -177,21 +177,33 @@ AS_IF([test "x$with_hdf5" = "xno"],
               # (3) Look for "AM_NAME:" tags
               #
               HDF5_tmp_flags=$(eval $H5CC -showconfig \
-                  | $GREP 'FLAGS\|Extra libraries:' \
+                  | $GREP 'FLAGS' \
                   | $AWK -F: '{printf("%s "), $[]2}' )
 
-              dnl Find the installation directory and append include/
-              HDF5_tmp_inst=$(eval $H5CC -showconfig \
+              # The "-show" flag was deprecated in HDF5 1.14 and removed
+              # in later releases.  Use "Extra libraries:" from
+              # -showconfig output to get all runtime library deps
+              # (-lpthread, -lz, etc.).
+              HDF5_EXTRA_LIBS=$(eval $H5CC -showconfig \
+                  | $GREP 'Extra libraries:' \
+                  | $SED 's/;/ /g')
+
+              # Find the installation directory and append include/
+              HDF5_INSTALL_DIR=$(eval $H5CC -showconfig \
                   | $GREP 'Installation point:' \
                   | $AWK '{print $[]NF}' )
 
-              dnl Add this to the CPPFLAGS
-              HDF5_CPPFLAGS="-I${HDF5_tmp_inst}/include"
+              # Merge library flags from "Extra libraries:" into the pool.
+              for arg in $HDF5_EXTRA_LIBS; do
+                case "$arg" in
+                  -l*) HDF5_tmp_flags="$HDF5_tmp_flags $arg" ;;
+                esac
+              done
 
-              HDF5_SHOW=$(eval $H5CC -show)
+              HDF5_CPPFLAGS="-I${HDF5_INSTALL_DIR}/include"
 
-              dnl Now sort the flags out based upon their prefixes
-              for arg in $HDF5_SHOW $HDF5_tmp_flags ; do
+              # Now sort the flags out based upon their prefixes
+              for arg in $HDF5_tmp_flags ; do
                 case "$arg" in
                   -I*) echo $HDF5_CPPFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
                         || HDF5_CPPFLAGS="$HDF5_CPPFLAGS $arg"
@@ -204,6 +216,12 @@ AS_IF([test "x$with_hdf5" = "xno"],
                     ;;
                 esac
               done
+
+              # Fall back to the wrapper's default library directory when
+              # -showconfig does not provide a linker search path.
+              if test -z "$HDF5_LDFLAGS" && test -n "$HDF5_INSTALL_DIR"; then
+                HDF5_LDFLAGS="-L${HDF5_INSTALL_DIR}/lib"
+              fi
             ],
             [AC_MSG_ERROR([HDF5 not found: install pkg-config .pc file or h5cc, or use --with-hdf5=PATH])]
           )
