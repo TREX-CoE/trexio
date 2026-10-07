@@ -39,10 +39,31 @@ if(TREXIO_USE_HDF5)
     overwrite_all_hdf5
     )
 
+set(Tests_json
+    open_json
+    io_num_json
+    io_str_json
+    io_dset_float_json
+    io_dset_int_json
+    io_dset_str_json
+    io_safe_dset_float_json
+    io_dset_sparse_json
+    io_determinant_json
+    io_jastrow_json
+    io_state_energy_json
+    delete_group_json
+    overwrite_all_json
+    io_auxbasis_json
+    )
+
 # Set ${Tests} variable to the complete list of tests.
   set(Tests io_all ${Tests_text} ${Tests_hdf5})
 else()
   set(Tests ${Tests_text})
+endif()
+
+if(TREXIO_USE_JSON)
+  list(APPEND Tests ${Tests_json})
 endif()
 
 # The in-memory back end is always available.

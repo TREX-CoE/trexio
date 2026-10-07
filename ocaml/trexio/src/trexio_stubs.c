@@ -15,6 +15,24 @@ static trexio_t* File_val( value file )
 }
 
 
+/* The OCaml variant arrives as its constructor index, which is not a
+   back_end_t: the C constants have been renumbered as back ends were added,
+   and TREXIO_AUTO is whatever TREXIO_INVALID_BACK_END currently is. Passing
+   the index through would therefore select a back end by accident -- AUTO,
+   the third constructor, has been arriving as back end 2 ever since the
+   in-memory back end took that value. The constructors of trexio_backend are
+   translated by name instead, so adding one cannot change the others. */
+static back_end_t trexio_ocaml_back_end(const int index)
+{
+  switch (index) {
+  case 0: return TREXIO_HDF5;
+  case 1: return TREXIO_TEXT;
+  case 2: return TREXIO_AUTO;
+  }
+
+  return TREXIO_INVALID_BACK_END;
+}
+
 CAMLprim value caml_open_file(value filename, value mode, value backend)
 {
   CAMLparam3(filename, mode, backend);
@@ -24,7 +42,7 @@ CAMLprim value caml_open_file(value filename, value mode, value backend)
 
   trexio_t* result = trexio_open (String_val(filename),
                                   Int_val(mode),
-                                  Int_val(backend),
+                                  trexio_ocaml_back_end(Int_val(backend)),
                                   &rc);
 
   *((trexio_t **) Data_abstract_val(v)) = result;

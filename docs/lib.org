@@ -144,10 +144,11 @@ align="left" width="300" vspace="20" hspace="20" />
 
 ** The back-end
 
-   At present, TREXIO supports three back-ends: one relying only on the
+   At present, TREXIO supports four back-ends: one relying only on the
    C standard library to produce plain text files (the so-called /text/
-   back-end), one relying on the HDF5 library, and an in-memory (/memory/)
-   back-end that keeps all the data in RAM.
+   back-end), one relying on the HDF5 library, an in-memory (/memory/)
+   back-end that keeps all the data in RAM, and a /JSON/ back-end for
+   interchange with tools that speak JSON.
 
    With the text back-end, the TREXIO "file" is a directory containing
    multiple text files, one for each group.  This back end is intended
@@ -205,8 +206,60 @@ align="left" width="300" vspace="20" hspace="20" />
    determinant data.  The file name passed to ~trexio_open~ is ignored for
    this back-end.
 
-   In addition to the HDF5, text and memory back-ends, it is also possible
-   to introduce new back-ends to the library.  For example, a back-end
+   The /JSON/ back-end (~TREXIO_JSON~) writes a single JSON document, and is
+   meant for interchange rather than for performance: JSON is understood by
+   essentially every language and tool, so a TREXIO file can be read or
+   written by a program that does not link TREXIO at all, and inspected
+   without any TREXIO tooling.
+
+   What such a file contains is TREXIO's own data layout expressed in JSON.
+   The objects and the names in it are the groups and quantities of the
+   [[./trex.html][TREXIO data definition]], and not those of any other
+   schema: this is not QCSchema, nor any other established JSON format for
+   quantum chemistry.  A program that wants one of those still has to map the
+   two onto each other; what the back-end removes is the need to link TREXIO
+   in order to read the data in the first place.
+
+   Each group is an object in the document and each quantity a value in it,
+   so a file reads much as the data is named:
+
+   #+begin_src js
+{
+  "nucleus": { "nucleus_num": 3,
+               "nucleus_charge": [8, 1, 1],
+               "nucleus_label": ["O", "H", "H"],
+               "nucleus_coord": [0, 0, 0.1, 0, 0.75, -0.48, 0, -0.75, -0.48] }
+}
+   #+end_src
+
+   Datasets are stored as one flat array in row-major order.  The shape is
+   not written with the data, because the front-end obtains it from the
+   group's own ~num~ attributes; storing it as well would introduce a second
+   source of truth that could disagree with them.  Sparse quantities are
+   stored as an object of two arrays, ~index~ and ~value~, which keeps each
+   array of a single JSON type.
+
+   Floating-point values are written with the shortest number of digits that
+   still reads back bit-for-bit, so a file stays readable without losing
+   precision.  Note that JSON has no representation for NaN or infinity
+   (RFC 8259): writing a non-finite value is refused rather than silently
+   producing a file that no conforming parser will read back.
+
+   Unlike the other two file back-ends, the JSON back-end holds the whole
+   document in memory and writes it out when the file is flushed or closed,
+   so it is a poor choice for large quantities of data -- the two-electron
+   integrals or the determinant list of a serious calculation belong in the
+   HDF5 back-end.  It is built only when the library is configured with
+   ~--enable-json~ (Autotools) or ~-DTREXIO_USE_JSON=ON~ (CMake), which
+   needs nothing installed: it parses and writes with
+   [[https://github.com/ibireme/yyjson][yyjson]], which is two files and is
+   bundled in ~external/yyjson~, while an installed yyjson is used when there
+   is one.  A library built without the back-end reports
+   ~TREXIO_BACK_END_MISSING~ for it.  All groups are supported, including the sparse, buffered and
+   determinant data.
+
+   In addition to the HDF5, text, memory and JSON back-ends, it is also
+   possible to introduce new back-ends to the library.  For example, a back-end
    could be created to support object storage systems, such as those
    used in cloud-based applications or for archiving in open data
    repositories.

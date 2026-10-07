@@ -37,6 +37,7 @@ mkdir -p templates_front/populated
 mkdir -p templates_text/populated
 mkdir -p templates_hdf5/populated
 mkdir -p templates_memory/populated
+mkdir -p templates_json/populated
 
 # It is important to ad '--' to rm because it tells rm that what follows are
 # not options. It is safer.
@@ -47,12 +48,14 @@ rm -f -- templates_front/*.{c,h,f90}
 rm -f -- templates_text/*.{c,h}
 rm -f -- templates_hdf5/*.{c,h}
 rm -f -- templates_memory/*.{c,h}
+rm -f -- templates_json/*.{c,h}
 
 echo "clean populated directories"
 rm -f -- templates_front/populated/*
 rm -f -- templates_text/populated/*
 rm -f -- templates_hdf5/populated/*
 rm -f -- templates_memory/populated/*
+rm -f -- templates_json/populated/*
 
 # Produce source files for front end
 echo "tangle org files to generate templates"
@@ -73,6 +76,11 @@ cd ..
 # Produce source files for in-memory back end
 cd templates_memory
 tangle templator_memory.org
+cd ..
+
+# Produce source files for JSON back end
+cd templates_json
+tangle templator_json.org
 cd ..
 
 # Populate templates with TREXIO structure according to trex.json file
@@ -101,6 +109,11 @@ cp trexio* ../
 cd ..
 
 cd templates_memory
+source build.sh
+cp trexio* ../
+cd ..
+
+cd templates_json
 source build.sh
 cp trexio* ../
 cd ..

@@ -48,6 +48,19 @@ include(standard_math_lib)
 target_link_std_math(trexio PRIVATE TREXIO_STD_MATH_LIB)
 target_link_libraries(trexio PRIVATE Threads::Threads)
 
+# ============= CONFIGURE JSON ==============
+if(TREXIO_USE_JSON)
+  list(APPEND TREXIO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/trexio_json.c)
+  list(APPEND TREXIO_PRIVATE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/trexio_json.h)
+  target_compile_definitions(trexio PRIVATE HAVE_JSON)
+  if(YYJSON_FOUND)
+    target_link_libraries(trexio PRIVATE PkgConfig::YYJSON)
+  else()
+    target_sources(trexio PRIVATE ${PROJECT_SOURCE_DIR}/external/yyjson/yyjson.c)
+    target_include_directories(trexio PRIVATE ${PROJECT_SOURCE_DIR}/external/yyjson)
+  endif()
+endif()
+
 # ============= CONFIGURE HDF5 ==============
 if(TREXIO_USE_HDF5)
   list(APPEND TREXIO_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/trexio_hdf5.c)
@@ -216,6 +229,9 @@ if(TREXIO_DEVEL)
   )
   if(TREXIO_USE_HDF5)
     list(APPEND ORG_FILES templates_hdf5/templator_hdf5.org)
+  endif()
+  if(TREXIO_USE_JSON)
+    list(APPEND ORG_FILES templates_json/templator_json.org)
   endif()
 
   add_custom_command(OUTPUT
