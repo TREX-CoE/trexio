@@ -1243,21 +1243,41 @@ class File:
 
 ** File opening
 
-   ~trexio_open~ creates a new TREXIO file or opens the existing one.
+   ~trexio_open~ creates a new TREXIO file or opens an existing one.
 
    **Input parameters:**
      1) ~file_name~     - string containing file name
      2) ~mode~          - character containing open mode (see below)
-       - ~'w'~         - (write)  creates a new file as READWRITE
-       - ~'r'~         - (read)   opens existing file as READONLY
-       - ~'u'~         - (unsafe) opens existing file as READWRITE with the possibility to overwrite blocks and delete full groups.
+       - ~'w'~         - (write)  opens the file as READWRITE, creating it if it does not exist
+       - ~'r'~         - (read)   opens an existing file as READONLY
+       - ~'u'~         - (unsafe) opens the file as READWRITE, and additionally permits overwriting data that is already in the file and deleting whole groups
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
-       - ~TREXIO_HDF5~ - for HDF5 back end (integer alternative: 0)
-       - ~TREXIO_TEXT~ - for TEXT back end (integer alternative: 1)
-       - ~TREXIO_AUTO~ - to automatically detect the applicable back end
+       - ~TREXIO_HDF5~   - for HDF5 back end (integer alternative: 0)
+       - ~TREXIO_TEXT~   - for TEXT back end (integer alternative: 1)
+       - ~TREXIO_MEMORY~ - for the in-memory back end (integer alternative: 2)
+       - ~TREXIO_AUTO~   - to automatically detect the applicable back end
 
    **Output:**
      - Pointer to the ~trexio_t~ (struct) file handle.
+
+  **Note:** ~'w'~ does not truncate. A file that is already there is opened with
+  its contents intact, in every mode: the back ends open what exists rather than
+  replacing it -- HDF5 with ~H5F_ACC_RDWR~, and the TEXT back end by reusing its
+  directory. Writing to a file that already holds data therefore adds to it, and
+  to start from nothing the file has to be removed first (the directory, for the
+  TEXT back end).
+
+  **Note:** data in a TREXIO file is written once. In ~'w'~ mode, writing an
+  attribute or a dataset that the file already contains returns
+  ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ and leaves what is
+  stored untouched; ~'u'~ mode is what lifts that restriction. Sparse data and
+  the determinant list are written in chunks, so a later call can extend them,
+  but a write at an offset that is already filled returns
+  ~TREXIO_CORRUPTION_ATTEMPT~ -- in ~'u'~ mode as well, since that check is not
+  relaxed by it. Nothing already in a file is ever replaced without being asked
+  for in ~'u'~ mode, and every collision is reported rather than applied
+  silently. (The buffered quantities, which are the determinant and CSF
+  coefficients, do not currently make that offset check; see issue #347.)
 
   Upon creation of the TREXIO file, the ~package_version~ attribute of the
   ~metadata~ group is set to the ~TREXIO_PACKAGE_VERSION~ string.
