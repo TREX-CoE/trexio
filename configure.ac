@@ -325,18 +325,13 @@ if test "x${TREXIO_DEVEL}" != "x"; then
 
   AC_PROG_AWK
 
-  # The distribution ships src/pytrexio_wrap.c, and it is this build that has to
-  # produce it: EXTRA_DIST names it whether or not the Python API is enabled, so
-  # "make dist" needs SWIG even when --disable-python. It used to be a warning
-  # here, which left the failure to the middle of the build.
+  # Look for SWIG, without insisting on it. A maintainer build needs it to
+  # regenerate src/pytrexio_wrap.c, which "make dist" ships whether or not the
+  # Python API is enabled, but a build that does neither is perfectly fine
+  # without it -- so this only warns, and the Python API makes it a requirement
+  # below.
   AX_PKG_SWIG(4.0.0, [],
-    [AC_MSG_ERROR([
-    ------------------------------------------------------------------
-    SWIG (>= 4.0.0) is required in maintainer mode: the Python wrapper
-    src/pytrexio_wrap.c is generated here and is part of the
-    distribution. Install SWIG, or build from a release tarball, which
-    ships the wrapper already generated.
-    ------------------------------------------------------------------])])
+    [AC_MSG_WARN([SWIG (>= 4.0.0) was not found: the Python wrapper cannot be regenerated, which also means "make dist" will not work.])])
 
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
@@ -399,8 +394,10 @@ AS_IF([test "x$enable_python" = "xyes"], [
   # regenerated from pytrexio.i, or when a tree has none. Asking for the Python
   # API in either of those cases without SWIG installed used to configure
   # happily and then fail in the middle of the build, which is issue #339.
-  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
-    [AX_PKG_SWIG(4.0.0, [],
+  AS_IF([test "x${TREXIO_DEVEL}" != "x" || test ! -f "$srcdir/src/pytrexio_wrap.c"],
+    [trexio_have_swig=yes
+     AX_PKG_SWIG(4.0.0, [], [trexio_have_swig=no])
+     AS_IF([test "x$trexio_have_swig" = "xno"],
        [AC_MSG_ERROR([
     ------------------------------------------------------------------
     The Python API is enabled and its SWIG wrapper has to be generated
