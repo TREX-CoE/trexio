@@ -12,9 +12,11 @@ other back ends carry, because the front end computes the dimensions of every
 dataset from the dimensioning attributes and passes them in.
 
 It exists for interchange rather than for bulk: a JSON file can be read by a
-stock parser in any language, which is what makes it a usable source for
-conversion to other serialisations such as QCSchema. Data on the scale of
-two-electron integrals belongs in the HDF5 back end.
+stock parser in any language, so a converter to another serialisation -- say
+QCSchema -- can be written without linking TREXIO. What is written here is
+TREXIO's own layout under TREXIO's names, not that other schema; mapping one
+onto the other is the converter's job. Data on the scale of two-electron
+integrals belongs in the HDF5 back end.
 
 Two properties of JSON need care, and both are handled in the helpers below
 rather than in the generated code:
@@ -372,8 +374,8 @@ trexio_json_get_num_double (trexio_json_t* const file, const char* group,
 
 * Dataset helpers
 
-   Datasets are stored as one flat array in row-major order, which is both what
-   the text back end does and what QCSchema does for quantities like geometry.
+   Datasets are stored as one flat array in row-major order, which is what the
+   text back end does with them as well.
    The shape is not stored with the data: the front end always passes the rank
    and dimensions, which it takes from the group's own num attributes, so a
    shape in the file would be a second source of truth that could disagree.

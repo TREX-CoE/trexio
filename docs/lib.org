@@ -208,11 +208,20 @@ align="left" width="300" vspace="20" hspace="20" />
 
    The /JSON/ back-end (~TREXIO_JSON~) writes a single JSON document, and is
    meant for interchange rather than for performance: JSON is understood by
-   essentially every language and tool, which makes it convenient for moving
-   data to and from formats such as QCSchema, and for inspecting a file
-   without any TREXIO tooling at all.  Each group is an object in the
-   document and each quantity a value in it, so a file reads much as the
-   data is named:
+   essentially every language and tool, so a TREXIO file can be read or
+   written by a program that does not link TREXIO at all, and inspected
+   without any TREXIO tooling.
+
+   What such a file contains is TREXIO's own data layout expressed in JSON.
+   The objects and the names in it are the groups and quantities of the
+   [[./trex.html][TREXIO data definition]], and not those of any other
+   schema: this is not QCSchema, nor any other established JSON format for
+   quantum chemistry.  A program that wants one of those still has to map the
+   two onto each other; what the back-end removes is the need to link TREXIO
+   in order to read the data in the first place.
+
+   Each group is an object in the document and each quantity a value in it,
+   so a file reads much as the data is named:
 
    #+begin_src js
 {

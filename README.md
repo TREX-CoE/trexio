@@ -193,10 +193,13 @@ To build TREXIO without HDF5 back end, append `--without-hdf5` option to `config
 #### Compilation with the JSON back end
 
 The JSON back end is not built by default. It writes a TREXIO file as a single
-JSON document, which is convenient for interchange with other tools --
-converting to and from formats such as QCSchema, or inspecting a file with
-nothing but a text editor -- but it keeps the whole document in memory until
-the file is closed, so it is not meant for large amounts of data.
+JSON document, which is convenient for interchange: any language can read it, so
+a tool that consumes or produces TREXIO data need not link the library, and a
+file can be inspected with nothing but a text editor. What the file holds is
+TREXIO's own data layout, with TREXIO's group and quantity names -- it is not
+QCSchema or any other established schema, and converting to one of those remains
+a mapping the tool has to do. The whole document is kept in memory until the file
+is closed, so the back end is not meant for large amounts of data.
 
 It needs nothing installed: parsing and writing are done with
 [yyjson](https://github.com/ibireme/yyjson), which is two files and is bundled
