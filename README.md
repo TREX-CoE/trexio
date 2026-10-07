@@ -377,20 +377,19 @@ make python-test
 We highly recommend to use virtual environments to avoid compatibility issues and to improve reproducibility.
 
 
+### Rust
+
+The Rust API is available on Crates.io, so you can simply run
+```
+cargo add trexio
+```
+to your Rust project.
 
 ### OCaml
 
 The TREXIO OCaml API is available in OPAM:
 ```
 opam install trexio
-```
-
-If you prefer to install it from this repository,
-
-```
-cd ocaml/trexio
-make
-opam install .
 ```
 
 ### Haskell
