@@ -1757,43 +1757,8 @@ trexio_close (trexio_t* file)
   /* Things to be done before closing the file in the back-end */
   trexio_exit_code rc_pre_close = trexio_pre_close(file);
 
-  /* Terminate the back end */
-  switch (file->back_end) {
-
-  case TREXIO_TEXT:
-    rc = trexio_text_deinit(file);
-    break;
-
-  case TREXIO_MEMORY:
-    rc = trexio_memory_deinit(file);
-    break;
-
-  case TREXIO_HDF5:
-#ifdef HAVE_HDF5
-    rc = trexio_hdf5_deinit(file);
-    break;
-#else
-    rc = TREXIO_BACK_END_MISSING;
-    break;
-#endif
-/*
-  case TREXIO_JSON:
-    rc = trexio_json_deinit(file);
-    break;
-,*/
-  }
-
-  if (rc_pre_close != TREXIO_SUCCESS) {
-    FREE(file);
-    return rc_pre_close;
-  }
-
-  if (rc != TREXIO_SUCCESS) {
-    FREE(file);
-    return rc;
-  }
-
-  /* File unlocking */
+  /* File unlocking must always run so that handles are released even
+     when pre_close or deinit report errors on this path. */
 
   rc = TREXIO_UNLOCK_ERROR;
 
@@ -1810,14 +1775,38 @@ trexio_close (trexio_t* file)
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
     rc = TREXIO_SUCCESS;
-    break;
 #else
-    FREE(file);
-    return TREXIO_BACK_END_MISSING;
+    rc = TREXIO_BACK_END_MISSING;
 #endif
+    break;
 /*
   case TREXIO_JSON:
     rc = trexio_json_unlock(file);
+    break;
+,*/
+  }
+
+  /* Terminate the back end */
+  switch (file->back_end) {
+
+  case TREXIO_TEXT:
+    rc = trexio_text_deinit(file);
+    break;
+
+  case TREXIO_MEMORY:
+    rc = trexio_memory_deinit(file);
+    break;
+
+  case TREXIO_HDF5:
+#ifdef HAVE_HDF5
+    rc = trexio_hdf5_deinit(file);
+#else
+    rc = TREXIO_BACK_END_MISSING;
+#endif
+    break;
+/*
+  case TREXIO_JSON:
+    rc = trexio_json_deinit(file);
     break;
 ,*/
   }
@@ -1826,12 +1815,20 @@ trexio_close (trexio_t* file)
 
   int irc = TREXIO_MUTEX_DESTROY( &(file->thread_lock) );
 
-  free(file);
+  FREE(file);
+
+
+  if (rc_pre_close != TREXIO_SUCCESS) {
+    return rc_pre_close;
+  }
+
+  if (rc != TREXIO_SUCCESS) {
+    return rc;
+  }
 
   if (irc != 0) return TREXIO_ERRNO;
-  if (rc != TREXIO_SUCCESS) return rc;
 
-  return TREXIO_SUCCESS;
+  return rc;
 }
     #+end_src
 
