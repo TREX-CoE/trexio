@@ -325,13 +325,22 @@ if test "x${TREXIO_DEVEL}" != "x"; then
 
   AC_PROG_AWK
 
-  # Look for SWIG, without insisting on it. A maintainer build needs it to
-  # regenerate src/pytrexio_wrap.c, which "make dist" ships whether or not the
-  # Python API is enabled, but a build that does neither is perfectly fine
-  # without it -- so this only warns, and the Python API makes it a requirement
-  # below.
+  # A maintainer build regenerates src/pytrexio_wrap.c from src/pytrexio.i, and
+  # "make dist" ships the wrapper whether or not the Python API is enabled, so
+  # SWIG is a requirement of this mode and not merely of --enable-python. It is
+  # checked here, before anything is built, rather than left to fail in the
+  # middle of the build or of "make dist", which is issue #339.
   AX_PKG_SWIG(4.0.0, [],
-    [AC_MSG_WARN([SWIG (>= 4.0.0) was not found: the Python wrapper cannot be regenerated, which also means "make dist" will not work.])])
+    [AC_MSG_ERROR([
+    ----------------------------------------------------------------
+    Error: SWIG (>= 4.0.0) is required in maintainer mode. The Python
+    wrapper src/pytrexio_wrap.c is generated from src/pytrexio.i and
+    is shipped by "make dist" regardless of --enable-python, so a
+    maintainer tree without SWIG can neither be regenerated nor
+    distributed. Install SWIG, or build from a release tarball,
+    which ships the generated sources and needs no maintainer mode.
+    ----------------------------------------------------------------
+    ])])
 
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
@@ -389,12 +398,12 @@ AS_IF([test "x$enable_python" = "xyes"], [
     [#include <Python.h>])
   CPPFLAGS="$OLD_CPPFLAGS"
 
-  # The SWIG wrapper is shipped in the distribution, so SWIG itself is needed
-  # only when the wrapper has to be generated: in maintainer mode, where it is
-  # regenerated from pytrexio.i, or when a tree has none. Asking for the Python
-  # API in either of those cases without SWIG installed used to configure
-  # happily and then fail in the middle of the build, which is issue #339.
-  AS_IF([test "x${TREXIO_DEVEL}" != "x" || test ! -f "$srcdir/src/pytrexio_wrap.c"],
+  # A maintainer tree has already insisted on SWIG above. What is left is a tree
+  # that is not in maintainer mode and has no wrapper either -- a git checkout
+  # configured with --disable-maintainer-mode, say, since a release tarball
+  # ships one. Asking for the Python API there used to configure happily and
+  # then fail in the middle of the build, which is issue #339.
+  AS_IF([test ! -f "$srcdir/src/pytrexio_wrap.c"],
     [trexio_have_swig=yes
      AX_PKG_SWIG(4.0.0, [], [trexio_have_swig=no])
      AS_IF([test "x$trexio_have_swig" = "xno"],

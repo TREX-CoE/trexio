@@ -475,14 +475,12 @@ ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
 # Python binding #
 ##################
 
-# Build Python module and C wrapper code for TREXIO using SWIG
+# Build Python module and C wrapper code for TREXIO using SWIG. configure
+# insists on SWIG in maintainer mode, which is the only mode this rule exists
+# in, so there is nothing left to check here.
 $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
-	@if [[ $(SWIG).x != ".x" ]] ; then \
 	cd $(srcdir)/src/ && \
-		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i ; \
-	else echo "Error: SWIG is not installed" ; \
-	exit 1 ; \
-	fi
+		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i
 
 $(pytrexio_py): $(pytrexio_c)
 	@if test -f $@; then :; else \
