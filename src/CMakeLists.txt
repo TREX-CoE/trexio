@@ -85,7 +85,6 @@ endif()
 # ============= PYTHON SUPPORT ==============
 
 if(TREXIO_PYTHON)
-  set(TREXIO_SWIG_WRAPPER "${CMAKE_CURRENT_SOURCE_DIR}/pytrexio_wrap.c")
   set(TREXIO_SWIG_MODULE "${CMAKE_CURRENT_SOURCE_DIR}/pytrexio.py")
 
   # Python modules are tied to the interpreter that imports them, so they are
@@ -116,12 +115,13 @@ if(TREXIO_PYTHON)
   set(TREXIO_INSTALL_PYTHONDIR "${TREXIO_PLATLIB}" CACHE STRING
     "Installation directory for the Python interface, relative to CMAKE_INSTALL_PREFIX unless absolute")
 
-  # SWIGWORDSIZE64 makes SWIG map int64_t onto long, and without it onto long
-  # long, so the define has to follow the target. What decides is how int64_t is
-  # spelled, not how wide long is: it is long on LP64 Linux, but long long on
-  # ILP32 targets (i686), on LLP64 ones (Windows) and also on macOS, which is
-  # LP64 yet still spells int64_t long long. Get at it with two declarations of
-  # one function, which conflict unless the two types are the same.
+  # SWIG maps int64_t onto long when SWIGWORDSIZE64 is defined and onto long
+  # long when it is not, so a wrapper fits only the targets that spell int64_t
+  # the same way. What decides is that spelling, not how wide long is: int64_t
+  # is long on LP64 Linux, but long long on ILP32 targets (i686), on LLP64 ones
+  # (Windows) and also on macOS, which is LP64 yet still spells int64_t long
+  # long. Get at it with two declarations of one function, which conflict
+  # unless the two types are the same.
   include(CheckCSourceCompiles)
   check_c_source_compiles("
 #include <stdint.h>
@@ -129,45 +129,30 @@ void trexio_check_int64_t(long *);
 void trexio_check_int64_t(int64_t *);
 int main(void) { return 0; }
 " TREXIO_INT64_T_IS_LONG)
+
+  # A distribution carries one wrapper per spelling, so the one that fits is
+  # selected here. The define is kept for developer mode, where the wrapper is
+  # generated below instead.
   if(TREXIO_INT64_T_IS_LONG)
     set(TREXIO_SWIG_WORDSIZE_FLAGS "-DSWIGWORDSIZE64")
+    set(TREXIO_SWIG_WRAPPER_NAME "pytrexio_wrap_long.c")
   else()
     # Unset rather than empty, so that it expands to no argument at all.
     set(TREXIO_SWIG_WORDSIZE_FLAGS)
+    set(TREXIO_SWIG_WRAPPER_NAME "pytrexio_wrap_long_long.c")
   endif()
+  set(TREXIO_SWIG_WRAPPER "${CMAKE_CURRENT_SOURCE_DIR}/${TREXIO_SWIG_WRAPPER_NAME}")
+  message(STATUS "Python interface built from ${TREXIO_SWIG_WRAPPER_NAME}")
 
-  # A generated wrapper records which of the two it was made for, because SWIG
-  # emits its 32-bit guard only when SWIGWORDSIZE64 was defined. A shipped wrapper
-  # that does not match this target is at best miscompiled and at worst rejected
-  # outright, so it counts as missing and gets regenerated below.
-  set(TREXIO_SWIG_WRAPPER_MATCHES FALSE)
-  if(EXISTS "${TREXIO_SWIG_WRAPPER}")
-    file(STRINGS "${TREXIO_SWIG_WRAPPER}" TREXIO_SWIG_WRAPPER_GUARD
-         REGEX "SWIG_NO_WORDSIZE64_CHECK" LIMIT_COUNT 1)
-    if(TREXIO_SWIG_WRAPPER_GUARD)
-      set(TREXIO_SWIG_WRAPPER_INT64_T_IS_LONG TRUE)
-    else()
-      set(TREXIO_SWIG_WRAPPER_INT64_T_IS_LONG FALSE)
-    endif()
-    # Compare the two as booleans, since one comes from a try-compile.
-    if((TREXIO_SWIG_WRAPPER_INT64_T_IS_LONG AND TREXIO_INT64_T_IS_LONG) OR
-       (NOT TREXIO_SWIG_WRAPPER_INT64_T_IS_LONG AND NOT TREXIO_INT64_T_IS_LONG))
-      set(TREXIO_SWIG_WRAPPER_MATCHES TRUE)
-    else()
-      message(STATUS
-        "The distributed SWIG wrapper maps int64_t onto a different type than "
-        "this target uses: regenerating it")
-    endif()
-  endif()
-
-  # The wrapper is shipped in the distribution, so SWIG is only needed when it is
-  # missing, unusable on this target, or has to be regenerated in developer mode.
-  # It is written to the build directory rather than next to the sources, so that
-  # a CMake build never competes with the Autotools one over the same generated
-  # files.
-  if(TREXIO_DEVEL OR NOT TREXIO_SWIG_WRAPPER_MATCHES)
+  # Both wrappers are shipped in the distribution, so SWIG is only needed when
+  # the one that fits is missing, or in developer mode. It is then written to
+  # the build directory rather than next to the sources, so that a CMake build
+  # never competes with the Autotools one over the same generated files. It
+  # keeps the name of the variant it is, so that a build directory reused for a
+  # target with the other spelling does not pick up the wrong one.
+  if(TREXIO_DEVEL OR NOT EXISTS "${TREXIO_SWIG_WRAPPER}")
     find_program(SWIG_EXECUTABLE NAMES swig REQUIRED)
-    set(TREXIO_SWIG_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/pytrexio_wrap.c")
+    set(TREXIO_SWIG_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/${TREXIO_SWIG_WRAPPER_NAME}")
     set(TREXIO_SWIG_MODULE "${CMAKE_CURRENT_BINARY_DIR}/pytrexio.py")
     add_custom_command(
       OUTPUT "${TREXIO_SWIG_WRAPPER}" "${TREXIO_SWIG_MODULE}"

@@ -213,6 +213,13 @@ jobs:
                       --with-hdf5=$HOME/hdf5-i686 \
                       LIBS="-lz -lm -ldl"
 
+      # On an ILP32 target int64_t is long long, so this is the lane that shows
+      # the wrapper selection picking the other one of the two than it does
+      # everywhere else. The decision ends up in the Makefile, so that is what
+      # is checked rather than the message configure prints.
+      - name: check that the 32-bit SWIG wrapper is the one selected
+        run: grep -Eq '^pytrexio_c[[:space:]]*=[[:space:]]*\$\(pytrexio_c_long_long\)$' Makefile
+
       - name: compile TREXIO
         run: make -j2
 
@@ -361,6 +368,14 @@ jobs:
         run: |
           make -j2
           make dist
+
+      # A tarball has to carry both SWIG wrappers, since that is what lets a
+      # build from it select one instead of needing SWIG to generate it.
+      - name: check that both SWIG wrappers are distributed
+        run: |
+          tar tzf trexio-*.tar.gz > tarball.list
+          grep -q '/src/pytrexio_wrap_long\.c$' tarball.list
+          grep -q '/src/pytrexio_wrap_long_long\.c$' tarball.list
 
       - name: publish the source tarball as an artifact
         uses: actions/upload-artifact@v7

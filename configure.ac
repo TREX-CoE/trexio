@@ -355,11 +355,33 @@ AC_DEFINE_UNQUOTED(GIT_HASH, ["${GIT_HASH}"], [Git SHA1 Hash])
 ## Python API
 ## ----------
 
+# SWIG maps int64_t onto long when SWIGWORDSIZE64 is defined and onto long long
+# when it is not, so a wrapper fits only the targets that spell int64_t the same
+# way. What decides is that spelling, not how wide long is: int64_t is long on
+# LP64 Linux, but long long on ILP32 targets (i686), on LLP64 ones (Windows) and
+# also on macOS, which is LP64 yet still spells int64_t long long. Get at it with
+# two declarations of one function, which conflict unless the two types are the
+# same -- no C11, no run test, and it works when cross-compiling.
+AC_CACHE_CHECK([whether int64_t is long], [trexio_cv_int64_t_is_long],
+  [AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM([[#include <stdint.h>
+void trexio_check_int64_t(long *);
+void trexio_check_int64_t(int64_t *);]], [])],
+    [trexio_cv_int64_t_is_long=yes],
+    [trexio_cv_int64_t_is_long=no])])
+
+# Maintainer mode generates one wrapper for each spelling and "make dist" ships
+# both, so there is nothing to generate here and nothing to check for
+# consistency: the one that fits this target is simply selected. This is done
+# whether or not the Python API is enabled, because the standalone (PyPI) build
+# stages a wrapper too and does not need --enable-python.
+AS_IF([test "x$trexio_cv_int64_t_is_long" = "xyes"],
+      [trexio_pytrexio_c="src/pytrexio_wrap_long.c"],
+      [trexio_pytrexio_c="src/pytrexio_wrap_long_long.c"])
+AC_MSG_NOTICE([using $trexio_pytrexio_c for the Python interface])
+
 # A Python interpreter is needed both to build the Python API and, in maintainer
 # mode, to run the source code generator.
-trexio_swig_regen=no
-SWIG_WORDSIZE_FLAGS=""
-
 AS_IF([test "x$enable_python" = "xyes" || test "x${TREXIO_DEVEL}" != "x"],
       [AM_PATH_PYTHON([3.6],[],[:])])
 
@@ -385,61 +407,17 @@ AS_IF([test "x$enable_python" = "xyes"], [
     [#include <Python.h>])
   CPPFLAGS="$OLD_CPPFLAGS"
 
-  # The SWIG wrapper is shipped in the distribution; SWIG itself is only needed
-  # in maintainer mode, where the wrapper is regenerated from pytrexio.i.
-  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
-        [AC_MSG_ERROR([src/pytrexio_wrap.c is missing from this distribution.])])
-
-  # SWIGWORDSIZE64 makes SWIG map int64_t onto long, and without it onto long
-  # long, so the define has to follow the target rather than be hardcoded. What
-  # decides is how int64_t is spelled, not how wide long is: it is long on LP64
-  # Linux, but long long on ILP32 targets (i686), on LLP64 ones (Windows) and
-  # also on macOS, which is LP64 yet still spells int64_t long long. Get at it
-  # with two declarations of one function, which conflict unless the two types
-  # are the same.
-  AC_CACHE_CHECK([whether int64_t is long], [trexio_cv_int64_t_is_long],
-    [AC_COMPILE_IFELSE(
-      [AC_LANG_PROGRAM([[#include <stdint.h>
-void trexio_check_int64_t(long *);
-void trexio_check_int64_t(int64_t *);]], [])],
-      [trexio_cv_int64_t_is_long=yes],
-      [trexio_cv_int64_t_is_long=no])])
-  AS_IF([test "x$trexio_cv_int64_t_is_long" = "xyes"],
-        [SWIG_WORDSIZE_FLAGS="-DSWIGWORDSIZE64"],
-        [SWIG_WORDSIZE_FLAGS=""])
-
-  # A generated wrapper records which of the two it was made for, because SWIG
-  # emits its 32-bit guard only when SWIGWORDSIZE64 was defined. A shipped wrapper
-  # that does not match this target is at best miscompiled and at worst rejected
-  # outright, so regenerate it into the build directory and leave the distributed
-  # copy alone.
-  AC_MSG_CHECKING([whether the SWIG wrapper matches the type of int64_t])
-  AS_IF([test -f "$srcdir/src/pytrexio_wrap.c"],
-    [AS_IF([grep SWIG_NO_WORDSIZE64_CHECK "$srcdir/src/pytrexio_wrap.c" >/dev/null 2>&1],
-           [trexio_wrapper_int64_t_is_long=yes], [trexio_wrapper_int64_t_is_long=no])
-     AS_IF([test "x$trexio_wrapper_int64_t_is_long" = "x$trexio_cv_int64_t_is_long"],
-           [AC_MSG_RESULT([yes])],
-           [AC_MSG_RESULT([no, it will be regenerated])
-            trexio_swig_regen=yes])],
-    [AC_MSG_RESULT([no wrapper present, it is generated from pytrexio.i])])
-
-  AS_IF([test "x$trexio_swig_regen" = "xyes"],
-    [AC_CHECK_PROGS([SWIG],[swig],[no])
-     AS_IF([test "x$SWIG" = "xno"],
-       [AC_MSG_ERROR([
-    ------------------------------------------------------------------
-    The Python API has to be regenerated for this target: the wrapper
-    that comes with the distribution maps int64_t onto a different
-    type than this target uses. Install SWIG (>= 4.0), or configure
-    with --disable-python.
-    ------------------------------------------------------------------])])])
+  # SWIG itself is only needed in maintainer mode, where both wrappers are
+  # regenerated from pytrexio.i, so a distribution build just needs the one
+  # selected above to be present.
+  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/$trexio_pytrexio_c"],
+        [AC_MSG_ERROR([$trexio_pytrexio_c is missing from this distribution.])])
 ])
 
 AC_SUBST([PYTHON_CPPFLAGS])
 AC_SUBST([NUMPY_CPPFLAGS])
-AC_SUBST([SWIG_WORDSIZE_FLAGS])
 AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
-AM_CONDITIONAL([REGENERATE_SWIG],[test "x$trexio_swig_regen" = "xyes"])
+AM_CONDITIONAL([INT64_T_IS_LONG],[test "x$trexio_cv_int64_t_is_long" = "xyes"])
 
 ## Libm
 ## ----
