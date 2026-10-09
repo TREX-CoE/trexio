@@ -68,6 +68,16 @@ static int test_open_auto (const char* file_name) {
   assert (file != NULL);
   assert (rc == TREXIO_SUCCESS);
 
+  // check the get_backend interface
+  rc = trexio_get_back_end(file, NULL);
+  assert (rc == TREXIO_INVALID_ARG_2);
+
+  // check the backend is correct
+  back_end_t backend = TREXIO_AUTO;
+  rc = trexio_get_back_end(file, &backend);
+  assert (rc == TREXIO_SUCCESS);
+  assert (backend == TEST_BACKEND);
+
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
@@ -111,6 +121,10 @@ static int test_open_errors (const back_end_t backend) {
   assert (rc == TREXIO_INVALID_ARG_3);
   fprintf(stderr, "%s \n", trexio_string_of_error(rc));
 
+  // check the getting a backend with a null file returns an error
+  back_end_t local_backend;
+  rc = trexio_get_back_end(NULL, &local_backend);
+  assert (rc == TREXIO_INVALID_ARG_1);
 /*================= END OF TEST ==================*/
 
   return 0;

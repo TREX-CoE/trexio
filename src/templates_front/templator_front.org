@@ -2547,6 +2547,48 @@ interface
 end interface
     #+end_src
 
+** Get back end (trexio_get_back_end)
+
+    ~trexio_get_back_end~ sets ~back_end~ to the back end used by an open TREXIO file handle.
+    Useful when the file was opened with ~TREXIO_AUTO~: the actual back end is only
+    known after ~trexio_open~ has determined it. On success, ~back_end~ is one of
+    ~TREXIO_HDF5~, ~TREXIO_TEXT~, or ~TREXIO_MEMORY~; the function returns a
+    ~trexio_exit_code~.
+
+    #+begin_src C :tangle prefix_front.h :exports none
+trexio_exit_code trexio_get_back_end(trexio_t* file, back_end_t *back_end);
+   #+end_src
+
+   #+begin_src C :tangle prefix_front.c
+trexio_exit_code
+trexio_get_back_end(trexio_t* file, back_end_t *back_end)
+{
+  if (file == NULL) {
+    return TREXIO_INVALID_ARG_1;
+  }
+
+  if (back_end == NULL) {
+    return TREXIO_INVALID_ARG_2;
+  }
+  
+  *back_end = file->back_end;
+
+  return TREXIO_SUCCESS;
+}
+   #+end_src
+
+   The Fortran interface:
+
+   #+begin_src fortran :tangle prefix_fortran.f90
+interface
+   integer(trexio_exit_code) function trexio_get_back_end (trex_file, back_end) bind(C, name="trexio_get_back_end")
+     import
+     integer(trexio_t), value :: trex_file
+     integer(trexio_back_end_t) :: back_end
+   end function trexio_get_back_end
+end interface
+    #+end_src
+
 *** Python
 
     See TREXIO File Python class.
