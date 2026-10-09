@@ -1250,7 +1250,7 @@ class File:
      2) ~mode~          - character containing open mode (see below)
        - ~'w'~         - (write)  opens the file as READWRITE, creating it if it does not exist
        - ~'r'~         - (read)   opens an existing file as READONLY
-       - ~'u'~         - (unsafe) opens the file as READWRITE, and additionally permits overwriting data that is already in the file and deleting whole groups
+       - ~'u'~         - (unsafe) opens the file as READWRITE, and additionally permits overwriting data that is already in the file and deleting whole groups. This mode is not meant for routine use; see the note below
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
        - ~TREXIO_HDF5~   - for HDF5 back end (integer alternative: 0)
        - ~TREXIO_TEXT~   - for TEXT back end (integer alternative: 1)
@@ -1284,9 +1284,16 @@ class File:
   This attribute **is not** automatically updated when the file is modified with
   newer versions. However, this can be done manually by the user in unsafe mode.
 
-  **Note:** internal consistency is not guaranteed once the file has been modified in ~'u'~ (unsafe) mode.
-  Upon the first unsafe call to ~trexio_open~ the ~unsafe~ attribute of the ~metadata~ group will be set
-  to 1 (true) in order to indicate that the file might be inconsistent due to the use of ~'u'~ mode.
+  **Note:** ~'u'~ mode should not be used by default. It exists for the
+  exceptional cases where whoever writes the data knows exactly what they are
+  doing and can ensure that replacing what the file already holds does not break
+  its consistency. The library cannot check that, which is why internal
+  consistency is no longer guaranteed once a file has been modified in ~'u'~
+  mode: upon the first unsafe call to ~trexio_open~ the ~unsafe~ attribute of the
+  ~metadata~ group is set to 1 (true), tagging the file as one that might be
+  inconsistent. Once the contents have been validated (e.g. with
+  ~trexio-tools~), the file can be tagged as safe again with
+  ~trexio_mark_safety~, under the responsibility of the user.
 
   **Note:** the ~file_name~ in TEXT back end actually corresponds to the
   name of the directory where ~.txt~ data files are stored. The
