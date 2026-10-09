@@ -2555,16 +2555,24 @@ end interface
     ~TREXIO_HDF5~, ~TREXIO_TEXT~, ~TREXIO_MEMORY~.
 
     #+begin_src C :tangle prefix_front.h :exports none
-back_end_t trexio_get_back_end(trexio_t* file);
+trexio_exit_code trexio_get_back_end(trexio_t* file, back_end_t *back_end);
    #+end_src
 
    #+begin_src C :tangle prefix_front.c
-back_end_t
-trexio_get_back_end (trexio_t *file)
+trexio_exit_code
+trexio_get_back_end(trexio_t* file, back_end_t *back_end)
 {
-  assert(file != NULL);
+  if (file == NULL) {
+    return TREXIO_INVALID_ARG_1;
+  }
 
-  return file->back_end;
+  if (back_end == NULL) {
+    return TREXIO_INVALID_ARG_2;
+  }
+  
+  ,*back_end = file->back_end;
+
+  return TREXIO_SUCCESS;
 }
    #+end_src
 
@@ -2572,10 +2580,11 @@ trexio_get_back_end (trexio_t *file)
 
    #+begin_src fortran :tangle prefix_fortran.f90
 interface
-   integer(trexio_back_end_t) function trexio_get_back_end_c (trex_file) bind(C, name="trexio_get_back_end")
+   integer(trexio_exit_code) function trexio_get_back_end (trex_file, back_end) bind(C, name="trexio_get_back_end")
      import
      integer(trexio_t), value :: trex_file
-   end function trexio_get_back_end_c
+     integer(trexio_back_end_t) :: back_end
+   end function trexio_get_back_end
 end interface
     #+end_src
 
