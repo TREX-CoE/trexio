@@ -979,8 +979,12 @@ def string_of_error(return_code: int) -> str:
 
    3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory.
 
-   ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file in read-only ~'r'~ mode.
-   In this case, TREXIO will try to automatically detect the back end, which should be used to open the file.
+   ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file
+   in ~'r'~, ~'w'~, or ~'u'~ mode. In this case, TREXIO will try to automatically detect
+   the applicable back end: it first tries to interrogate the path as a TEXT directory;
+   if that fails, it tries as an HDF5 file. This only works for existing paths —
+   a non-existent path or an unrecognized path is rejected with ~TREXIO_FILE_ERROR~.
+
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
    This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
@@ -1344,10 +1348,6 @@ trexio_open(const char* file_name, const char mode,
     break;
 
   case 'w': /* back-ends that should fail if opened in write mode */
-    if (back_end == TREXIO_AUTO) {
-      if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
-      return NULL;
-    }
     break;
 
   case 'u': /* back-ends that should fail if opened in unsafe mode */
@@ -1361,28 +1361,26 @@ trexio_open(const char* file_name, const char mode,
 
 
   back_end_t back_end_local = back_end;
+
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
-  if (back_end == TREXIO_AUTO && mode == 'r') {
-#ifdef HAVE_HDF5
-    /* Check if the TREXIO file exists and if it is a directory */
+  if (back_end == TREXIO_AUTO) {
     trexio_exit_code rc_text = trexio_text_inquire(file_name);
     if (rc_text == TREXIO_SUCCESS) {
       back_end_local = TREXIO_TEXT;
     } else {
-    /* If not, check if it is an HDF5 file */
+#ifdef HAVE_HDF5
       trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(file_name);
       if (rc_hdf5 == TREXIO_SUCCESS) {
         back_end_local = TREXIO_HDF5;
-      } else {
-    /* File is neither a directory nor an HDF5 file -> return an error */
-        if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
-        return NULL;
       }
-    }
-#else
-    /* In the current implementation if HDF5 back end is not available - then there is only back end left */
-    back_end_local = TREXIO_TEXT;
 #endif
+    }
+
+    /* If backend is still AUTO, no existing file was found */
+    if (back_end_local == TREXIO_AUTO) {
+      if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
+      return NULL;
+    }
   }
 
   trexio_t* result = NULL;
