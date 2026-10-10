@@ -356,6 +356,31 @@ AC_DEFINE_UNQUOTED(GIT_HASH, ["${GIT_HASH}"], [Git SHA1 Hash])
 ## Python API
 ## ----------
 
+# SWIG maps int64_t onto long when SWIGWORDSIZE64 is defined and onto long long
+# when it is not, so a wrapper fits only the targets that spell int64_t the same
+# way. What decides is that spelling, not how wide long is: int64_t is long on
+# LP64 Linux, but long long on ILP32 targets (i686), on LLP64 ones (Windows) and
+# also on macOS, which is LP64 yet still spells int64_t long long. Get at it with
+# two declarations of one function, which conflict unless the two types are the
+# same -- no C11, no run test, and it works when cross-compiling.
+AC_CACHE_CHECK([whether int64_t is long], [trexio_cv_int64_t_is_long],
+  [AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM([[#include <stdint.h>
+void trexio_check_int64_t(long *);
+void trexio_check_int64_t(int64_t *);]], [])],
+    [trexio_cv_int64_t_is_long=yes],
+    [trexio_cv_int64_t_is_long=no])])
+
+# Maintainer mode generates one wrapper for each spelling and "make dist" ships
+# both, so there is nothing to generate here and nothing to check for
+# consistency: the one that fits this target is simply selected. This is done
+# whether or not the Python API is enabled, because the standalone (PyPI) build
+# stages a wrapper too and does not need --enable-python.
+AS_IF([test "x$trexio_cv_int64_t_is_long" = "xyes"],
+      [trexio_pytrexio_c="src/pytrexio_wrap_long.c"],
+      [trexio_pytrexio_c="src/pytrexio_wrap_long_long.c"])
+AC_MSG_NOTICE([using $trexio_pytrexio_c for the Python interface])
+
 # A Python interpreter is needed both to build the Python API and, in maintainer
 # mode, to run the source code generator.
 AS_IF([test "x$enable_python" = "xyes" || test "x${TREXIO_DEVEL}" != "x"],
@@ -383,15 +408,17 @@ AS_IF([test "x$enable_python" = "xyes"], [
     [#include <Python.h>])
   CPPFLAGS="$OLD_CPPFLAGS"
 
-  # The SWIG wrapper is shipped in the distribution; SWIG itself is only needed
-  # in maintainer mode, where the wrapper is regenerated from pytrexio.i.
-  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
-        [AC_MSG_ERROR([src/pytrexio_wrap.c is missing from this distribution.])])
+  # SWIG itself is only needed in maintainer mode, where both wrappers are
+  # regenerated from pytrexio.i, so a distribution build just needs the one
+  # selected above to be present.
+  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/$trexio_pytrexio_c"],
+        [AC_MSG_ERROR([$trexio_pytrexio_c is missing from this distribution.])])
 ])
 
 AC_SUBST([PYTHON_CPPFLAGS])
 AC_SUBST([NUMPY_CPPFLAGS])
 AM_CONDITIONAL([HAVE_PYTHON],[test "x$enable_python" = "xyes"])
+AM_CONDITIONAL([INT64_T_IS_LONG],[test "x$trexio_cv_int64_t_is_long" = "xyes"])
 
 ## Libm
 ## ----
