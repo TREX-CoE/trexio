@@ -1277,14 +1277,14 @@ class File:
   **Note:** data in a TREXIO file is written once. In ~'w'~ mode, writing an
   attribute or a dataset that the file already contains returns
   ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ and leaves what is
-  stored untouched; ~'u'~ mode is what lifts that restriction. Sparse data and
-  the determinant list are written in chunks, so a later call can extend them,
-  but a write at an offset that is already filled returns
+  stored untouched; ~'u'~ mode is what lifts that restriction. Sparse data,
+  buffered quantities (the determinant and CSF coefficients), and the
+  determinant list are written in chunks, so a later call can extend them, but
+  a write at an offset that is already filled returns
   ~TREXIO_CORRUPTION_ATTEMPT~ -- in ~'u'~ mode as well, since that check is not
   relaxed by it. Nothing already in a file is ever replaced without being asked
   for in ~'u'~ mode, and every collision is reported rather than applied
-  silently. (The buffered quantities, which are the determinant and CSF
-  coefficients, do not currently make that offset check; see issue #347.)
+  silently.
 
   Upon creation of the TREXIO file, the ~package_version~ attribute of the
   ~metadata~ group is set to the ~TREXIO_PACKAGE_VERSION~ string.
@@ -5296,6 +5296,8 @@ def has_$group_dset$(trexio_file) -> bool:
 
    This corresponds to the ~buffer~ data type and is particularly useful for incremental additiona of values like
    it was done for ~sparse~ data but without the need to supply tuples of indices.
+   Before each write, the current buffered-vector size is checked so that a
+   chunk cannot overwrite values that are already stored.
 
 
    | Function name                    | Description                                    | Precision |
@@ -5425,6 +5427,16 @@ trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, cons
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
   if (dset == NULL) return TREXIO_INVALID_ARG_2;
+
+  int64_t size_max = 0L;
+
+  /* Read the number of values already stored in the file */
+  trexio_exit_code rc = trexio_read_$group_dset$_size(file, &size_max);
+  if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
+  if (rc == TREXIO_DSET_MISSING) size_max = 0L;
+
+  /* Dummy check to avoid overwriting existing data */
+  if (offset_file < size_max) return TREXIO_CORRUPTION_ATTEMPT;
 
   uint32_t rank = 1;
   uint64_t dims[1] = {buffer_size};
