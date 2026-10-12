@@ -57,8 +57,10 @@ function build_wheel_for_py()
 
    # upgrade pip, otherwise it complains that manylinux wheel is "...not supported wheel on this platform"
    pip install --upgrade pip
-   # install dependencies needed to build manylinux wheel
-   pip install --upgrade setuptools build
+   # install dependencies needed to build manylinux wheel. The wheel itself is
+   # built by scikit-build-core through CMake, which pip fetches as a build
+   # requirement declared in pyproject.toml.
+   pip install --upgrade build
 
    # produce conventional (non-manylinux) wheel
    python3 -m build --wheel --outdir dist/
@@ -72,10 +74,10 @@ function build_wheel_for_py()
    # install pytest for testing
    pip install pytest
    # run test script
-   pytest -v test/test_api.py
+   pytest -v python/test/test_api.py
 
    # cleaning
-   rm -rf -- dist/ build/ trexio.egg-info/
+   rm -rf -- dist/ build/
    #rm -- test_file_py.h5 unsafe_test_file_py.h5
 
    # deactivate the current environment

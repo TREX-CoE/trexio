@@ -31,10 +31,13 @@ For more details, see the corresponding part of the [Python documentation](https
 ## Additional requirements (for installation from source)
 
 - C compiler 	  (gcc/icc/clang)
+- CMake         (>= 3.19)
 - HDF5 library	(>= 1.8)
-- pkgconfig     (Python package)
 - build         (Python package)
 - pytest        (Python package)
+
+`pip` builds the package with CMake, which locates HDF5 itself; the Python
+packages needed for the build are installed automatically.
 
 ## Installation from source
 
@@ -42,15 +45,20 @@ For more details, see the corresponding part of the [Python documentation](https
 2. `gzip -cd trexio-<version>.tar.gz | tar xvf -`
 3. `cd trexio-<version>`
 4. `pip install -r requirements.txt` (this installs all required python dependencies)
-5. Export custom environment variables needed for the installation following the procedure below and replacing `/path/to/hdf5/` with your paths.
-The following two steps can be skipped if HDF5 is properly configured for `pkg-config` (i.e. if executing `pkg-config --libs hdf5` returns a list of options).
-   - `export H5_CFLAGS=-I/path/to/hdf5/include`
-   - `export H5_LDFLAGS=-L/path/to/hdf5/lib`
-On MacOS where HDF5 is installed with homebrew (i.e. `brew install hdf5`), one can use the following:
-   - `export H5_CFLAGS="-I$(brew --prefix hdf5)/include"`
-   - `export H5_LDFLAGS="-L$(brew --prefix hdf5)/lib"`
-6. `pip install .` (this installs `trexio` in your environment)
-7. `cd test && python -m pytest -v test_api.py` (this executes several tests that verify the installation)
+5. `pip install .` (this installs `trexio` in your environment)
+6. `cd python/test && python -m pytest -v test_api.py` (this executes several tests that verify the installation)
+
+HDF5 is located by CMake, so no environment variables are needed in the common
+case. If it is installed somewhere CMake does not look, point it there:
+
+   - `pip install . --config-settings=cmake.define.CMAKE_PREFIX_PATH=/path/to/hdf5`
+
+On MacOS with HDF5 from homebrew, that would be
+`--config-settings=cmake.define.CMAKE_PREFIX_PATH="$(brew --prefix hdf5)"`.
+
+The build fails if HDF5 cannot be found, rather than quietly installing a
+package with only the TEXT back end. To build deliberately without it, pass
+`--config-settings=cmake.define.TREXIO_USE_HDF5=OFF`.
 
 You are ready to go!
 

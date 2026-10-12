@@ -326,7 +326,23 @@ if test "x${TREXIO_DEVEL}" != "x"; then
 
   AC_PROG_AWK
 
-  AX_PKG_SWIG(4.0.0, [], AC_MSG_WARN([SWIG is required to build Python API.]) )
+  # SWIG is looked for, but not required: TREXIO is a C library and the Python
+  # binding is an optional feature, so a maintainer build that never touches it
+  # should not need SWIG installed. What does need SWIG is "make dist", which
+  # ships src/pytrexio_wrap.c whether or not --enable-python was given; that
+  # case is reported by the rule which generates the wrapper, so it fails there
+  # with an explanation rather than requiring the dependency up front.
+  AX_PKG_SWIG(4.0.0, [],
+    [AC_MSG_WARN([
+    ----------------------------------------------------------------
+    SWIG (>= 4.0.0) was not found. This is fine for building and
+    testing the library, but the Python wrapper cannot be regenerated
+    from src/pytrexio.i, so "make dist" will fail -- it ships the
+    generated wrapper. Install SWIG if you intend to make a
+    distribution.
+    ----------------------------------------------------------------
+    ])])
+
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
 
@@ -383,10 +399,21 @@ AS_IF([test "x$enable_python" = "xyes"], [
     [#include <Python.h>])
   CPPFLAGS="$OLD_CPPFLAGS"
 
-  # The SWIG wrapper is shipped in the distribution; SWIG itself is only needed
-  # in maintainer mode, where the wrapper is regenerated from pytrexio.i.
-  AS_IF([test "x${TREXIO_DEVEL}" = "x" && test ! -f "$srcdir/src/pytrexio_wrap.c"],
-        [AC_MSG_ERROR([src/pytrexio_wrap.c is missing from this distribution.])])
+  # SWIG is optional for the library, but not for the Python API when the
+  # wrapper has to be generated: in maintainer mode, where it is regenerated
+  # from pytrexio.i, or in a tree that has none. Asking for the Python API in
+  # either of those cases without SWIG installed used to configure happily and
+  # then fail in the middle of the build, which is issue #339.
+  AS_IF([test "x${TREXIO_DEVEL}" != "x" || test ! -f "$srcdir/src/pytrexio_wrap.c"],
+    [trexio_have_swig=yes
+     AX_PKG_SWIG(4.0.0, [], [trexio_have_swig=no])
+     AS_IF([test "x$trexio_have_swig" = "xno"],
+       [AC_MSG_ERROR([
+    ------------------------------------------------------------------
+    The Python API is enabled and its SWIG wrapper has to be generated
+    for this tree, which needs SWIG (>= 4.0.0). Either install SWIG or
+    configure with --disable-python.
+    ------------------------------------------------------------------])])])
 ])
 
 AC_SUBST([PYTHON_CPPFLAGS])

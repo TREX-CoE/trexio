@@ -63,7 +63,14 @@ endif()
 
 set(TREXIO_MOD_FILE "${PROJECT_SOURCE_DIR}/include/trexio_f.f90")
 
-if(EXISTS "${PROJECT_SOURCE_DIR}/.devel")
+# Developer mode is turned on automatically in a Git checkout, where the sources
+# have to be generated from the org files. A build that must use already
+# generated sources instead - a wheel build, which runs in an isolated
+# environment with neither emacs nor SWIG - turns the detection off.
+option(TREXIO_AUTO_DEVEL
+  "Enable developer mode automatically when the .devel marker is present" ON)
+
+if(TREXIO_AUTO_DEVEL AND EXISTS "${PROJECT_SOURCE_DIR}/.devel")
   message(STATUS "Detected ${PROJECT_SOURCE_DIR}/.devel, enabling developer mode")
   set(TREXIO_DEVEL ON)
 endif()
