@@ -48,6 +48,12 @@ align="right" width="300" vspace="20" hspace="20" />
    integrals), the smallest possible representation is used to reduce the
    file size. The API handles any necessary type conversions.
 
+   Those conversions are also available explicitly. Alongside each
+   ~read~ and ~write~ function for numerical data there is a ~_32~ and
+   a ~_64~ variant, so a program holding single-precision arrays can
+   read and write them directly without converting first; the
+   unsuffixed call uses the default precision of the data type.
+
    There are also two types derived from ~int~: ~dim~ and ~index~.
    ~dim~ is used for dimensioning variables, which are positive integers
    used to specify the dimensions of an array.  In the previous example,
@@ -120,6 +126,18 @@ align="left" width="300" vspace="20" hspace="20" />
    the type of error.
    This can be used to catch exceptions and improve debugging in the
    upstream user application.
+
+   Besides reading and writing data, the front-end provides a handful of
+   functions that concern the file as a whole: ~trexio_inquire~ reports whether
+   a path holds a TREXIO file, without opening it; ~trexio_flush~ writes out
+   what the back-end is still holding in memory, which is the only way to get
+   data from the text back-end onto disk short of closing the file;
+   ~trexio_cp~ copies a file; ~trexio_has_back_end~ reports whether a given
+   back-end was compiled into the library, which a program should ask before
+   requesting the HDF5 one since TREXIO can be built without it; and
+   ~trexio_get_back_end~ reports which back-end an open file uses.
+   ~trexio_mark_safety~ is how the ~unsafe~ flag is cleared once the contents
+   have been validated.
 
    To ensure the consistency of the data, the attributes can only be
    written if all the other attributes on which they explicitly depend

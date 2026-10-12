@@ -235,6 +235,17 @@ The primary TREXIO API is composed of the following functions:
 - `trexio_has_[group]_[variable]`
 - `trexio_close`
 
+The read and write functions for numerical data also come in `_32` and `_64`
+variants, for programs that hold their data in single or double precision and
+would rather not convert it first.
+
+A few further functions concern the file rather than the data in it:
+`trexio_inquire` (does this path hold a TREXIO file?), `trexio_flush` (write out
+what is still buffered), `trexio_cp` (copy a file), `trexio_has_back_end` (was
+this back end compiled in?), `trexio_get_back_end` (which one is this file
+using?) and `trexio_mark_safety` (clear the `unsafe` flag after validating a
+file).
+
 where `[group]` and `[variable]` substitutions correspond to the contents of the `trex.json` configuration file
 (for more details, see the corresponding [documentation](https://trex-coe.github.io/trexio/trex.html) page).
 For example, consider the `coord` variable (array), which belongs to the `nucleus` group. The TREXIO user can write or read it using `trexio_write_nucleus_coord` or `trexio_read_nucleus_coord` functions, respectively.

@@ -1341,11 +1341,39 @@ class File:
      3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
        - ~TREXIO_HDF5~   - for HDF5 back end (integer alternative: 0)
        - ~TREXIO_TEXT~   - for TEXT back end (integer alternative: 1)
-       - ~TREXIO_MEMORY~ - for the in-memory back end (integer alternative: 2)
-       - ~TREXIO_AUTO~   - to automatically detect the applicable back end
+       - ~TREXIO_MEMORY~ - for the in-memory back end (integer alternative: 2). Cannot be combined with ~'r'~ mode, since an in-memory file never exists before it is opened
+       - ~TREXIO_AUTO~   - to automatically detect the applicable back end. Only valid in ~'r'~ mode
+     4) ~rc_open~       - pointer to a ~trexio_exit_code~, or ~NULL~. When it is not ~NULL~, the reason for a failure is written there
 
    **Output:**
-     - Pointer to the ~trexio_t~ (struct) file handle.
+     - Pointer to the ~trexio_t~ (struct) file handle, or ~NULL~ on failure.
+
+   ~trexio_open~ is the one API call that does not return a
+   ~trexio_exit_code~, so ~rc_open~ is how it reports why it failed. Pass a
+   pointer to it and check that rather than guessing from the ~NULL~:
+
+   - ~TREXIO_INVALID_ARG_1~ -- the file name is ~NULL~, empty, or longer than
+     4096 characters;
+   - ~TREXIO_INVALID_ARG_2~ -- the mode is not one of ~'w'~, ~'r'~, ~'u'~;
+   - ~TREXIO_INVALID_ARG_3~ -- the back end is not one of the above, or
+     ~TREXIO_AUTO~ was given in a mode other than ~'r'~;
+   - ~TREXIO_BACK_END_MISSING~ -- ~TREXIO_HDF5~ was requested of a build
+     configured without HDF5;
+   - ~TREXIO_FILE_ERROR~ -- ~TREXIO_MEMORY~ with ~'r'~, or ~TREXIO_AUTO~ on a
+     path that is neither a directory nor an HDF5 file;
+   - ~TREXIO_OPEN_ERROR~ -- the back end could not open the file, for instance
+     because it does not exist in ~'r'~ mode or is not writable;
+   - ~TREXIO_LOCK_ERROR~ -- the TEXT back end could not take the lock on the
+     directory;
+   - ~TREXIO_VERSION_PARSING_ISSUE~ -- the version recorded in an existing file
+     could not be parsed;
+   - ~TREXIO_FAILURE~ -- allocation of the handle failed.
+
+   Opening a file also reads or writes the ~metadata~ group -- the package
+   version on creation, the unsafe flag in ~'u'~ mode -- so ~rc_open~ can also
+   carry whatever those calls returned.
+
+   On success ~rc_open~ is set to ~TREXIO_SUCCESS~.
 
   **Note:** ~'w'~ does not truncate. A file that is already there is opened with
   its contents intact, in every mode: the back ends open what exists rather than
@@ -2164,7 +2192,26 @@ def _inquire(file_name: str) -> bool:
 
    These functions provide portable file and directory operations
    without using system() calls or fork/exec, for better portability
-   and security.
+   and security. They are what ~trexio_cp~ is built from, and they are
+   part of the public API because a program that manages TREXIO files
+   needs them for the TEXT back end, whose "file" is a directory.
+
+   - ~trexio_remove_file~ deletes one file. A path that is not there is
+     not an error, so it can be called unconditionally.
+   - ~trexio_remove_directory_recursive~ deletes a directory and
+     everything in it, which is how a TEXT file is deleted.
+   - ~trexio_copy_file~ copies one file, **overwriting the destination
+     if it exists**. This is the one place the library will replace a
+     file without being asked; ~trexio_cp~ checks first and refuses.
+   - ~trexio_copy_directory_recursive~ copies a directory and its
+     contents, which is how a TEXT file is copied.
+
+   All four take paths and return a ~trexio_exit_code~:
+   ~TREXIO_INVALID_ARG_1~ or ~TREXIO_INVALID_ARG_2~ for a ~NULL~ path,
+   ~TREXIO_FILE_ERROR~ when the operation fails, and
+   ~TREXIO_SUCCESS~ otherwise. They are deliberately not exposed in the
+   Fortran and Python interfaces, which have their own standard
+   facilities for this.
 
 *** C
 
@@ -4962,11 +5009,28 @@ def has_$group_dset$(trexio_file) -> bool:
    This section concerns API calls related to datasets of strings.
    Only ASCII strings are supported, for compatibility with C and Fortran.
 
-   | Function name               | Description                         |
-   |-----------------------------+-------------------------------------|
-   | ~trexio_has_$group_dset$~   | Check if a dataset exists in a file |
-   | ~trexio_read_$group_dset$~  | Read  a dataset                     |
-   | ~trexio_write_$group_dset$~ | Write a dataset                     |
+   | Function name                   | Description                              |
+   |---------------------------------+------------------------------------------|
+   | ~trexio_has_$group_dset$~       | Check if a dataset exists in a file      |
+   | ~trexio_read_$group_dset$~      | Read  a dataset as an array of strings   |
+   | ~trexio_write_$group_dset$~     | Write a dataset from an array of strings |
+   | ~trexio_read_$group_dset$_low~  | Read  a dataset into one flat buffer     |
+   | ~trexio_write_$group_dset$_low~ | Write a dataset from one flat buffer     |
+
+   The ~_low~ variants exist because an array of strings can be handed over in
+   two shapes, and the language interfaces need the other one. The plain
+   functions take a ~char**~, one pointer per string; the ~_low~ functions take
+   a single ~char*~ holding the strings one after another, each padded to
+   ~max_str_len + 1~ characters, which is the shape a Fortran
+   ~character(len=:), dimension(:)~ array already has. Both read and write the
+   same data; pick whichever matches the buffer at hand.
+
+   ~max_str_len~ is the length of one string, not counting the terminator, and
+   it has to be greater than zero. On a read, the buffer must have room for
+   ~max_str_len + 1~ characters per string, and a string longer than that is
+   truncated. On a write, ~max_str_len~ has to be at least as long as the
+   longest string being written, or ~TREXIO_INVALID_STR_LEN~ is returned and
+   nothing is written.
 
 *** C templates for front end
 
@@ -6858,6 +6922,26 @@ def has_determinant_list(trexio_file) -> bool:
   ~trexio_evaluate_nao_radial~ function evaluates the radial function of an NAO for a given distance from the center.
 
   ~trexio_evaluate_nao_radial_all~ evaluates all radial functions at a given position in space.
+
+  Each of the conversion helpers above comes in a ~trexio_safe_*~ variant --
+  ~trexio_safe_to_orbital_list~, ~trexio_safe_to_orbital_list_up_dn~,
+  ~trexio_safe_phase_aabb_to_abab~ and ~trexio_safe_phase_aabb_to_abab_list~ --
+  which take the size of each array the caller provides and return
+  ~TREXIO_INVALID_ARG_*~ for the offending argument rather than writing past the
+  end of it. They are the ones the Python and Fortran interfaces use, and the
+  ones to prefer in C whenever the number of occupied orbitals is not known in
+  advance.
+
+  Determinants are handled in terms of a few public definitions:
+  ~bitfield_t~ is the integer type one bit field is stored in,
+  ~TREXIO_INT_SIZE~ is how many bits that is, and ~TREXIO_NORB_PER_INT~ is how
+  many orbitals one bit field therefore holds. A buffer for one determinant has
+  to be sized from them, since a determinant occupies ~2*int_num~ of them -- see
+  the determinant section for the layout -- where ~int_num~ is
+  ~(mo_num - 1) / TREXIO_NORB_PER_INT + 1~, which is also what
+  ~trexio_get_int64_num~ returns for an open file.
+  ~TREXIO_ORBITAL_SHIFT~ is the offset between an orbital index and its bit
+  position, and is already accounted for by the conversion helpers.
 
 ** C
 
