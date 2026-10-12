@@ -3,15 +3,31 @@
 #+SETUPFILE: ../../docs/theme.setup
 # -*- mode: org -*-
 
-  The "file" produced by the text back end is a directory with one
-  file per group.
+  The "file" produced by the text back end is a directory. It contains:
 
-  When the file is open, it is locked by the current process. No other
-  process can read/write the same file. This guarantees that the
-  representation in memory is consistent with the file and avoid
-  re-reading the file before writing.
-  To lock the file, we lock the =.lock= file which is present in the
-  directory.
+  - one =<group>.txt= per group that holds attributes or dense
+    datasets, e.g. =nucleus.txt=;
+  - one =<group>_<dset>.txt= per sparse or buffered dataset and for the
+    determinant list, e.g. =ao_2e_int_eri.txt= and
+    =determinant_list.txt=, each with a =<name>.txt.size= companion
+    recording how much has been written;
+  - an empty =<group>.txt= for a group that holds nothing but chunked
+    data, so that ~has_group~ can answer;
+  - the =.lock= file described below.
+
+  When the file is open, the current process holds a write lock on the
+  =.lock= file in the directory, so that cooperating processes do not
+  work on the same file at once and the representation in memory stays
+  consistent with the file.
+
+  Three things to know about that lock. It is taken in every mode,
+  including ~'r'~, and it is a blocking exclusive lock, so a second
+  process opening the same directory -- even only to read it -- waits
+  until the first one closes it. It is advisory: a process that does
+  not go through TREXIO is not stopped. And it is not taken at all on
+  Windows, nor when the directory is read-only, where a temporary lock
+  file elsewhere stands in for it; in both of those cases there is no
+  mutual exclusion.
 
   The groups held in memory as structs -- the numerical and string
   attributes and the dense datasets -- are written when the file is

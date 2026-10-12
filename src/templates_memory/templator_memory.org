@@ -1,12 +1,39 @@
-# TREXIO in-memory (RAM) back end
-#
-# Same-process, disk-free back end: all data lives in the open handle. It
-# mirrors the TEXT back end but with no file I/O: reading a group returns the
-# in-RAM struct (an empty one if not yet present), and flushing is a no-op.
-# The struct-based categories (numerical attributes, numerical/string
-# datasets, string attributes) are stored in per-group structs; sparse,
-# buffered and determinant data are stored in a generic name-keyed blob store
-# on the handle. All data categories are therefore supported.
+#+TITLE: MEMORY back end
+#+PROPERTY: comments org
+#+SETUPFILE: ../../docs/theme.setup
+# -*- mode: org -*-
+
+  The in-memory back end keeps everything in the memory of the calling
+  process and writes nothing to disk. It supports the same data as the
+  other two back ends -- numerical and string attributes, dense
+  datasets, sparse datasets, buffered quantities and the determinant
+  list -- and is selected by passing ~TREXIO_MEMORY~ to
+  ~trexio_open~.
+
+  It exists so that data can be passed through the TREXIO API between
+  parts of one program without a file in between: a producer writes
+  into the handle and a consumer reads from the same handle, using the
+  same calls it would use on a file.
+
+  Because there is no file, three things differ from the other back
+  ends, and all three follow from that:
+
+  - the ~file_name~ given to ~trexio_open~ is not used for anything,
+    although it still has to be a valid non-empty string;
+  - a file cannot be opened in ~'r'~ mode, since an in-memory file
+    never exists before it is opened. That combination returns
+    ~TREXIO_FILE_ERROR~;
+  - ~trexio_close~ discards the data instead of saving it, and
+    ~trexio_flush~ succeeds without doing anything. There is no way to
+    recover the contents afterwards, so anything that has to outlive
+    the process must be written to one of the other back ends.
+
+  Internally it mirrors the TEXT back end without the file I/O:
+  reading a group returns the in-RAM struct, an empty one if the group
+  has not been written yet. The struct-based categories -- numerical
+  attributes, numerical and string datasets, string attributes -- live
+  in per-group structs, while sparse, buffered and determinant data
+  live in a generic name-keyed blob store on the handle.
 
 * Constant file prefixes (not used by the generator)               :noexport:
 
