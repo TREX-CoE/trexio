@@ -485,6 +485,40 @@ PYTREXIO_MAX_STR_LENGTH = 2048
 
 ** Error handling
 
+   Every function but the four listed under *Coding conventions* returns a
+   ~trexio_exit_code~, and the code says which of several different things
+   happened. Which codes a caller has to be ready for depends on the call, and
+   the ones below come up often enough to be worth collecting in one place.
+
+   - ~trexio_has_*~ does not return a boolean. It returns ~TREXIO_SUCCESS~ when
+     the data is in the file and ~TREXIO_HAS_NOT~ when it is not, so the test is
+     against one of those and not against zero. Anything else is a real error.
+     (The Python interface converts this to ~True~/~False~ and raises on the
+     error codes.)
+   - Reading data a file does not contain gives ~TREXIO_ATTR_MISSING~ or
+     ~TREXIO_DSET_MISSING~, including when asking for the size of a dataset that
+     was never written.
+   - Writing data a file already contains gives
+     ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ unless the
+     file was opened in ~'u'~ mode; see *Read/write behavior*.
+   - The ~trexio_read_safe_*~ and ~trexio_write_safe_*~ functions take the size
+     of the caller's array and refuse rather than overrun it. For the dense
+     datasets that refusal is ~TREXIO_UNSAFE_ARRAY_DIM~; for the sparse,
+     buffered and determinant ones it is reported against the argument instead,
+     as ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~.
+   - Reading chunked data -- sparse, buffered, the determinant list -- gives
+     ~TREXIO_END~ when the end of the data is reached, having set the buffer
+     size to how much was actually read. ~TREXIO_END~ is an ordinary outcome of
+     a loop, not a failure.
+   - ~trexio_delete_*~ gives ~TREXIO_SAFE_MODE~ unless the file was opened in
+     ~'u'~ mode.
+   - Any call to a back end that was not compiled into the library gives
+     ~TREXIO_BACK_END_MISSING~. In practice this means HDF5, which is optional;
+     ~trexio_has_back_end~ answers the question in advance.
+
+   ~trexio_string_of_error~ turns any of these into a message, and the full list
+   is:
+
       #+NAME: table-exit-codes
    | Macro                            | Code | Description                                        |
    |----------------------------------+------+----------------------------------------------------|
@@ -2762,6 +2796,29 @@ end interface
 
 ** Tasks to be done before closing
 
+   ~trexio_pre_close~ is internal, but what it does is part of the contract of
+   ~trexio_close~, which runs it and returns its result. On a file opened for
+   writing it both completes and checks the data:
+
+   - the electron counts are completed from whichever were written. Writing
+     ~electron_up_num~ alone sets ~electron_dn_num~ to zero and
+     ~electron_num~ to the up count, and the other way round; writing both
+     spin counts sets ~electron_num~ to their sum. If all three were written
+     and the total does not match the sum, the close fails with
+     ~TREXIO_INVALID_ELECTRON_NUM~ -- except in ~'u'~ mode, where the total is
+     corrected instead. So a writer need only provide one spin count, and
+     providing all three means they have to agree.
+   - when a file holds both a determinant list and determinant coefficients,
+     ~determinant_num~ has to match the number of coefficients stored, or the
+     close fails with ~TREXIO_INVALID_DETERMINANT_NUM~.
+   - the cartesian/spherical flags are checked. A valid file states the
+     character of its AO basis exactly once: either ~ao.cartesian~ for all
+     shells at once, or ~ao.cartesian_shell~ shell by shell, or neither, in
+     which case a reader should fall back to ~cartesian_shell~. Writing both is
+     ambiguous and fails the close with ~TREXIO_AMBIGUOUS_CARTESIAN~ -- so a
+     program that writes one of them must not also write the other, and will
+     only find out at close time.
+
     #+begin_src c :tangle trexio_private.h :exports none
 trexio_exit_code trexio_pre_close(trexio_t* file);
     #+end_src
@@ -2992,9 +3049,9 @@ trexio_pre_close (trexio_t* file)
 
    This section concerns API calls related to TREXIO groups
 
-   | Function name        | Description                       |
-   |----------------------+-----------------------------------|
-   | ~trexio_has_$group$~ | Check if a group exists in a file |
+   | Function name        | Description                                                          |
+   |----------------------+----------------------------------------------------------------------|
+   | ~trexio_has_$group$~ | Check if a group exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) |
 
 *** C templates for front end
 
@@ -3089,15 +3146,15 @@ def has_$group$(trexio_file) -> bool:
    This section concerns API calls related to numerical attributes,
    namely single value of int/float types.
 
-   | Function name                 | Description                             | Precision                   |
-   |-------------------------------+-----------------------------------------+-----------------------------|
-   | ~trexio_has_$group_num$~      | Check if an attribute exists in a file  | ---                         |
-   | ~trexio_read_$group_num$~     | Read an attribute in default precision  | Double/Single for float/int |
-   | ~trexio_write_$group_num$~    | Write an attribute in default precision | Double/Single for float/int |
-   | ~trexio_read_$group_num$_32~  | Read an attribute                       | Single                      |
-   | ~trexio_write_$group_num$_32~ | Write an attribute                      | Single                      |
-   | ~trexio_read_$group_num$_64~  | Read an attribute                       | Double                      |
-   | ~trexio_write_$group_num$_64~ | Write an attribute                      | Double                      |
+   | Function name                 | Description                                                               | Precision                   |
+   |-------------------------------+---------------------------------------------------------------------------+-----------------------------|
+   | ~trexio_has_$group_num$~      | Check if an attribute exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) | ---                         |
+   | ~trexio_read_$group_num$~     | Read an attribute in default precision                                    | Double/Single for float/int |
+   | ~trexio_write_$group_num$~    | Write an attribute in default precision                                   | Double/Single for float/int |
+   | ~trexio_read_$group_num$_32~  | Read an attribute                                                         | Single                      |
+   | ~trexio_write_$group_num$_32~ | Write an attribute                                                        | Single                      |
+   | ~trexio_read_$group_num$_64~  | Read an attribute                                                         | Double                      |
+   | ~trexio_write_$group_num$_64~ | Write an attribute                                                        | Double                      |
 
 *** C templates for front end
 
@@ -3509,21 +3566,21 @@ def has_$group_num$(trexio_file) -> bool:
 
    This section concerns API calls related to datasets.
 
-   | Function name                       | Description                                 | Precision                   |
-   |-------------------------------------+---------------------------------------------+-----------------------------|
-   | ~trexio_has_$group_dset$~           | Check if a dataset exists in a file         | ---                         |
-   | ~trexio_read_$group_dset$~          | Read  a dataset in default precision        | Double/Single for float/int |
-   | ~trexio_write_$group_dset$~         | Write a dataset in default precision        | Double/Single for float/int |
-   | ~trexio_read_safe_$group_dset$~     | Read  a bounded dataset                     | Double/Single for float/int |
-   | ~trexio_write_safe_$group_dset$~    | Write a bounded dataset                     | Double/Single for float/int |
-   | ~trexio_read_$group_dset$_32~       | Read  a dataset in single precision         | Single                      |
-   | ~trexio_write_$group_dset$_32~      | Write a dataset in single precision         | Single                      |
-   | ~trexio_read_$group_dset$_64~       | Read  a dataset in double precision         | Double                      |
-   | ~trexio_write_$group_dset$_64~      | Write a dataset in double precision         | Double                      |
-   | ~trexio_read_safe_$group_dset$_32~  | Read  a bounded dataset in single precision | Single                      |
-   | ~trexio_write_safe_$group_dset$_32~ | Write a bounded dataset in single precision | Single                      |
-   | ~trexio_read_safe_$group_dset$_64~  | Read  a bounded dataset in double precision | Double                      |
-   | ~trexio_write_safe_$group_dset$_64~ | Write a bounded dataset in double precision | Double                      |
+   | Function name                       | Description                                                            | Precision                   |
+   |-------------------------------------+------------------------------------------------------------------------+-----------------------------|
+   | ~trexio_has_$group_dset$~           | Check if a dataset exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) | ---                         |
+   | ~trexio_read_$group_dset$~          | Read  a dataset in default precision                                   | Double/Single for float/int |
+   | ~trexio_write_$group_dset$~         | Write a dataset in default precision                                   | Double/Single for float/int |
+   | ~trexio_read_safe_$group_dset$~     | Read  a bounded dataset                                                | Double/Single for float/int |
+   | ~trexio_write_safe_$group_dset$~    | Write a bounded dataset                                                | Double/Single for float/int |
+   | ~trexio_read_$group_dset$_32~       | Read  a dataset in single precision                                    | Single                      |
+   | ~trexio_write_$group_dset$_32~      | Write a dataset in single precision                                    | Single                      |
+   | ~trexio_read_$group_dset$_64~       | Read  a dataset in double precision                                    | Double                      |
+   | ~trexio_write_$group_dset$_64~      | Write a dataset in double precision                                    | Double                      |
+   | ~trexio_read_safe_$group_dset$_32~  | Read  a bounded dataset in single precision                            | Single                      |
+   | ~trexio_write_safe_$group_dset$_32~ | Write a bounded dataset in single precision                            | Single                      |
+   | ~trexio_read_safe_$group_dset$_64~  | Read  a bounded dataset in double precision                            | Double                      |
+   | ~trexio_write_safe_$group_dset$_64~ | Write a bounded dataset in double precision                            | Double                      |
 
 *** C templates for front end
 
@@ -5009,13 +5066,13 @@ def has_$group_dset$(trexio_file) -> bool:
    This section concerns API calls related to datasets of strings.
    Only ASCII strings are supported, for compatibility with C and Fortran.
 
-   | Function name                   | Description                              |
-   |---------------------------------+------------------------------------------|
-   | ~trexio_has_$group_dset$~       | Check if a dataset exists in a file      |
-   | ~trexio_read_$group_dset$~      | Read  a dataset as an array of strings   |
-   | ~trexio_write_$group_dset$~     | Write a dataset from an array of strings |
-   | ~trexio_read_$group_dset$_low~  | Read  a dataset into one flat buffer     |
-   | ~trexio_write_$group_dset$_low~ | Write a dataset from one flat buffer     |
+   | Function name                   | Description                                                            |
+   |---------------------------------+------------------------------------------------------------------------|
+   | ~trexio_has_$group_dset$~       | Check if a dataset exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) |
+   | ~trexio_read_$group_dset$~      | Read  a dataset as an array of strings                                 |
+   | ~trexio_write_$group_dset$~     | Write a dataset from an array of strings                               |
+   | ~trexio_read_$group_dset$_low~  | Read  a dataset into one flat buffer                                   |
+   | ~trexio_write_$group_dset$_low~ | Write a dataset from one flat buffer                                   |
 
    The ~_low~ variants exist because an array of strings can be handed over in
    two shapes, and the language interfaces need the other one. The plain
@@ -6312,15 +6369,15 @@ def delete_$group$(trexio_file) -> None:
 
    This section concerns API calls related to Slater determinants.
 
-   | Function name                        | Description                                        |
-   |--------------------------------------+----------------------------------------------------|
-   | ~trexio_has_determinant_list~        | Check if the determinant list exists in a file     |
-   | ~trexio_write_determinant_list~      | Write a chunk of determinants                      |
-   | ~trexio_read_determinant_list~       | Read a chunk of determinants                       |
-   | ~trexio_write_safe_determinant_list~ | Write a chunk of determinants, bounded             |
-   | ~trexio_read_safe_determinant_list~  | Read a chunk of determinants, bounded              |
-   | ~trexio_read_determinant_num~        | Read how many determinants the file holds          |
-   | ~trexio_get_int64_num~               | Get the number of int64 bit fields per determinant |
+   | Function name                        | Description                                                             |
+   |--------------------------------------+-------------------------------------------------------------------------|
+   | ~trexio_has_determinant_list~        | Check if the determinant list exists (TREXIO_SUCCESS or TREXIO_HAS_NOT) |
+   | ~trexio_write_determinant_list~      | Write a chunk of determinants                                           |
+   | ~trexio_read_determinant_list~       | Read a chunk of determinants                                            |
+   | ~trexio_write_safe_determinant_list~ | Write a chunk of determinants, bounded                                  |
+   | ~trexio_read_safe_determinant_list~  | Read a chunk of determinants, bounded                                   |
+   | ~trexio_read_determinant_num~        | Read how many determinants the file holds                               |
+   | ~trexio_get_int64_num~               | Get the number of int64 bit fields per determinant                      |
 
 *** C source code
 
