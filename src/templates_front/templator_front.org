@@ -4401,6 +4401,22 @@ def has_$group_dset$(trexio_file) -> bool:
      of integrals that have been read before EOF and the ~trexio_read_~ function return
      ~TREXIO_END~ exit code instead of ~TREXIO_SUCCESS~.
 
+   On reading, ~offset_file~ is free: any chunk of what is in the file can be
+   asked for, in any order. On writing it is not, and this is where the
+   parameter is easy to misread. Sparse data can only be appended: writing at an
+   offset below what the file already holds returns
+   ~TREXIO_CORRUPTION_ATTEMPT~, in ~'u'~ mode as well, since that is the check
+   that keeps the file from being silently corrupted. Writing at an offset
+   *beyond* the end is not refused, so it is possible to leave a gap, and
+   nothing will report it later.
+
+   Note also that only the HDF5 back end positions a write at ~offset_file~. The
+   TEXT and in-memory back ends append, which agrees with the rule above for
+   every sequence of writes that follows it, and silently disagrees for one that
+   leaves a gap. Write chunks end to end -- each ~offset_file~ equal to the
+   total written so far, which ~trexio_read_$group_dset$_size~ reports for an
+   existing file -- and all three back ends behave identically.
+
    The storage of ~int~ indices is internally compressed based on the maximum possible value of an index,
    which is derived from the corresponding dimension of the sparse array (e.g. ~ao_num~ is the upper bound
    of indices in the aforementioned ~ao_2e_int_eri~ dataset).
@@ -5557,8 +5573,23 @@ def has_$group_dset$(trexio_file) -> bool:
 
 ** Templates for front end has/read/write a buffered vector
 
-   This corresponds to the ~buffer~ data type and is particularly useful for incremental additiona of values like
+   This corresponds to the ~buffer~ data type and is particularly useful for incremental addition of values like
    it was done for ~sparse~ data but without the need to supply tuples of indices.
+
+   ~offset_file~ and ~buffer_size~ mean what they mean for sparse data: a read
+   starts ~offset_file~ elements into the stored vector, reads up to
+   ~buffer_size~ elements, and on reaching the end overwrites ~buffer_size~ with
+   how many it actually read and returns ~TREXIO_END~. A write appends a chunk
+   of ~buffer_size~ elements. ~trexio_read_$group_dset$_size~ reports how many
+   elements the file holds, which is the offset the next chunk should be written
+   at.
+
+   Two differences from sparse data are worth knowing. These functions do not
+   validate ~offset_file~ and ~buffer_size~, so a negative or zero value is
+   passed down rather than rejected with ~TREXIO_INVALID_ARG_*~. And they make
+   no check that a write does not overlap data already stored, which is the one
+   place in the library where writing twice over the same region is neither
+   refused nor reported; see issue #352.
 
 
    | Function name                    | Description                                    | Precision |
@@ -6283,6 +6314,18 @@ def has_$group_str$(trexio_file) -> bool:
    |-------------------------+-------------------------------------------|
    | ~trexio_delete_$group$~ | Delete a given group from the TREXIO file |
 
+   The file has to be open in ~'u'~ mode; otherwise the call returns
+   ~TREXIO_SAFE_MODE~ and deletes nothing.
+
+   **Note:** how much is deleted depends on the back end, and the difference
+   matters for the groups that hold chunked data. With the HDF5 back end the
+   whole group goes, the sparse, buffered and determinant datasets inside it
+   included. With the TEXT and in-memory back ends only the group itself is
+   removed -- the files, or the blobs, holding its chunked data stay behind, so
+   a ~trexio_has_*~ on one of those will still report it as present after the
+   group has been deleted. Deleting a group that holds chunked data and
+   expecting it to be gone therefore works only with HDF5.
+
 *** C templates for front end
 
      #+begin_src c :tangle delete_group_front.h :exports none
@@ -6378,6 +6421,26 @@ def delete_$group$(trexio_file) -> None:
    | ~trexio_read_safe_determinant_list~  | Read a chunk of determinants, bounded                                   |
    | ~trexio_read_determinant_num~        | Read how many determinants the file holds                               |
    | ~trexio_get_int64_num~               | Get the number of int64 bit fields per determinant                      |
+
+   The determinant list is chunked like the sparse data: ~offset_file~ and
+   ~buffer_size~ have the same meaning, a read that reaches the end overwrites
+   ~buffer_size~ with how many determinants it read and returns ~TREXIO_END~,
+   and a write at an offset below what the file already holds is
+   ~TREXIO_CORRUPTION_ATTEMPT~.
+
+   What the buffer holds needs stating, since it cannot be guessed from the
+   signature. Let ~int_num~ be ~trexio_get_int64_num~, the number of bit fields
+   one spin component of a determinant needs. Each determinant then occupies
+   ~2*int_num~ consecutive ~int64_t~: the up-spin bit fields first, then the
+   down-spin ones. So a chunk of ~buffer_size~ determinants is an array of
+   ~buffer_size * 2 * int_num~ ~int64_t~, determinant $i$ starts at
+   ~2*int_num*i~, and its down-spin half at ~2*int_num*i + int_num~. The
+   ~trexio_to_orbital_list_up_dn~ helper takes a pointer to one determinant laid
+   out this way.
+
+   ~determinant_num~ is maintained by the library as the list grows, which is
+   why it is the one attribute exempt from the write-once rule described under
+   *Read/write behavior*.
 
 *** C source code
 
