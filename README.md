@@ -9,11 +9,11 @@ TREXIO is an open-source file format and library developed for the storage and
 manipulation of data produced by quantum chemistry calculations. It is designed
 with the goal of providing a reliable and efficient method of storing and
 exchanging wave function parameters and matrix elements. The library consists
-of a front-end implemented in the C programming language and two different
-back-ends: a text back-end and a binary back-end utilizing the HDF5 library
-which enables fast read and write operations. It is compatible with a variety
-of platforms and has interfaces for the Fortran, Python, OCaml and Rust
-programming languages.
+of a front-end implemented in the C programming language and three
+back-ends: a text back-end, a binary back-end utilizing the HDF5 library
+which enables fast read and write operations, and an in-memory back-end that
+writes nothing to disk. It is compatible with a variety of platforms and has
+interfaces for the Fortran, Python, OCaml and Rust programming languages.
 
 Below is the list of codes that adopted TREXIO for reading and/or writing 
 single- and/or multi-reference wave functions:

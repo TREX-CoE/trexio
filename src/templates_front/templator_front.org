@@ -977,6 +977,8 @@ def string_of_error(return_code: int) -> str:
 
    2) ~TREXIO_TEXT~ relies on basic file I/O in C, namely ~fopen, fclose, fprintf, fscanf~ etc. from ~stdio.h~ library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have ~.txt~ extension.
 
+   3) ~TREXIO_MEMORY~ keeps everything in the memory of the calling process and writes nothing to disk. It supports the same data as the other two, and is meant for passing data between parts of one program through the TREXIO API without a file in between. Because there is no file, it behaves differently in three ways that matter: the ~file_name~ is not used for anything (although it still has to be a valid non-empty string), a file cannot be opened in ~'r'~ mode since there is nothing to reopen, and ~trexio_close~ discards the data rather than saving it. See *Read/write behavior* for what flushing and closing mean for each back end.
+
    ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file in read-only ~'r'~ mode.
    In this case, TREXIO will try to automatically detect the back end, which should be used to open the file.
 
@@ -1182,7 +1184,7 @@ class File:
         Is a name of the full path to the TREXIO file.
     back_end: int
         One of the currently supported TREXIO back ends.
-        For example, TREXIO_HDF5 (0) or TREXIO_TEXT (1).
+        For example, TREXIO_HDF5 (0), TREXIO_TEXT (1) or TREXIO_MEMORY (2).
     mode: str
         One of the currently supported TREXIO open modes.
         For example, 'r' or 'w'.
@@ -1410,7 +1412,9 @@ trexio_open(const char* file_name, const char mode,
       }
     }
 #else
-    /* In the current implementation if HDF5 back end is not available - then there is only back end left */
+    /* Without HDF5 the only back end a file on disk can be in is TEXT: the
+       in-memory back end is still compiled in, but it never has a file to
+       detect, so there is nothing to choose between. */
     back_end_local = TREXIO_TEXT;
 #endif
   }
@@ -1727,7 +1731,7 @@ def _open(file_name: str, mode: str, back_end: int):
         One of the currently supported ~open~ modes (e.g. 'w', 'r')
 
     back_end: int
-        One of the currently supported TREXIO back ends (e.g. TREXIO_HDF5, TREXIO_TEXT)
+        One of the currently supported TREXIO back ends (e.g. TREXIO_HDF5, TREXIO_TEXT, TREXIO_MEMORY)
 
     Return:
         SWIG object of type trexio_s.

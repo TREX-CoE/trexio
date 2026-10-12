@@ -11,6 +11,7 @@ Start with `/home/runner/work/trexio/trexio/TREX-CoE/trexio/AGENTS.md`. The rule
   - `src/templates_front/*.org`
   - `src/templates_text/*.org`
   - `src/templates_hdf5/*.org`
+  - `src/templates_memory/*.org`
 - If you change an org-mode source, add or update prose in that org file so it explains what the added code is doing.
 - Keep org documentation aligned with the behavior and API produced from it.
 - Regenerate with `./autogen.sh` when needed.
@@ -47,7 +48,7 @@ The authoritative source is `src/templates_front/templator_front.org`.
 
 ## Check repository-wide impact
 
-- API or schema changes usually affect both backends, tests, and bindings.
+- API or schema changes usually affect all three backends (text, HDF5 and in-memory), tests, and bindings.
 - Version bumps must update:
   - `configure.ac`
   - `CMakeLists.txt`
