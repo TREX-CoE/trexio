@@ -475,10 +475,21 @@ ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
 # Python binding #
 ##################
 
-# Build Python module and C wrapper code for TREXIO using SWIG. configure
-# insists on SWIG in maintainer mode, which is the only mode this rule exists
-# in, so there is nothing left to check here.
+# Build Python module and C wrapper code for TREXIO using SWIG.
+#
+# SWIG is an optional dependency of a maintainer build, so this rule is where a
+# missing one is reported. It is reached by "make dist", which ships the
+# generated wrapper, and by --enable-python; in both cases the message says what
+# is missing and why it is wanted, rather than letting SWIG fail as a command
+# that is not found.
 $(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
+	@if test -z "$(SWIG)" ; then \
+	  echo "Error: SWIG (>= 4.0.0) is needed to generate $@, which" ; \
+	  echo "       \"make dist\" ships and --enable-python compiles." ; \
+	  echo "       Install SWIG and re-run configure, or build from a" ; \
+	  echo "       release tarball, which comes with the wrapper." ; \
+	  exit 1 ; \
+	fi
 	cd $(srcdir)/src/ && \
 		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i
 
