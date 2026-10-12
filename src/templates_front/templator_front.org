@@ -1088,6 +1088,46 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
    function, or when the TREXIO file is closed.
    If writing is impossible because the data is not valid, no data is written.
 
+   Data in a TREXIO file is written once. Writing an attribute or a
+   dataset that the file already contains leaves what is stored
+   untouched and returns ~TREXIO_ATTR_ALREADY_EXISTS~ or
+   ~TREXIO_DSET_ALREADY_EXISTS~ instead of replacing it. The ~'u'~
+   (unsafe) open mode is what lifts that restriction, and is the only
+   way to overwrite an existing quantity or to delete a group; see
+   *File opening* below for what that mode costs.
+
+   This is a deliberate design choice rather than a limitation of the
+   implementation: the library can enforce the explicit dependencies
+   between attributes, such as ~nucleus_coord~ needing ~nucleus_num~
+   first, but it cannot see implicit ones, such as the one between the
+   two-electron integrals and the MO coefficients they were computed
+   from. Replacing data that something else was derived from would
+   leave the file inconsistent with no way for the library to notice,
+   so data is immutable by default and the risk is confined to ~'u'~
+   mode.
+
+   Sparse data and the determinant list are the exception to being
+   written once, in that they are written in chunks: a later call can
+   extend them past the offset already written. A write at an offset
+   that is already filled is still refused, with
+   ~TREXIO_CORRUPTION_ATTEMPT~, and ~'u'~ does not relax that check
+   either. The buffered quantities -- the determinant and CSF
+   coefficients -- make no such check at all, so a write that overlaps
+   what they already hold is not reported; see issue #352.
+
+   One attribute is exempt by design: ~trexio_write_determinant_list~
+   rewrites ~determinant_num~ on every chunk, which it does by
+   switching the file to ~'u'~ mode for that one write. Growing the
+   determinant list is therefore not an immutability violation even
+   though the count it maintains is written repeatedly.
+
+   So nothing already in a TREXIO file is replaced unless ~'u'~ was
+   asked for, and a collision is reported through the exit code rather
+   than applied silently. A program that may write the same quantity
+   twice should therefore either ask ~trexio_has_*~ first, or treat
+   ~TREXIO_ATTR_ALREADY_EXISTS~ and ~TREXIO_DSET_ALREADY_EXISTS~ as an
+   expected answer rather than as a failure.
+
    The order in which the data is written is not necessarily consistent
    with the order in which the function calls were made.
 
@@ -1274,17 +1314,12 @@ class File:
   to start from nothing the file has to be removed first (the directory, for the
   TEXT back end).
 
-  **Note:** data in a TREXIO file is written once. In ~'w'~ mode, writing an
-  attribute or a dataset that the file already contains returns
-  ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ and leaves what is
-  stored untouched; ~'u'~ mode is what lifts that restriction. Sparse data and
-  the determinant list are written in chunks, so a later call can extend them,
-  but a write at an offset that is already filled returns
-  ~TREXIO_CORRUPTION_ATTEMPT~ -- in ~'u'~ mode as well, since that check is not
-  relaxed by it. Nothing already in a file is ever replaced without being asked
-  for in ~'u'~ mode, and every collision is reported rather than applied
-  silently. (The buffered quantities, which are the determinant and CSF
-  coefficients, do not currently make that offset check; see issue #347.)
+  **Note:** data in a TREXIO file is written once, which is what distinguishes
+  the two writing modes: in ~'w'~ mode an attribute or a dataset that the file
+  already contains cannot be overwritten, and ~'u'~ mode exists to lift exactly
+  that restriction. The rule, the exit codes that report it and the exception
+  made for data written in chunks are described under *Read/write behavior*
+  above.
 
   Upon creation of the TREXIO file, the ~package_version~ attribute of the
   ~metadata~ group is set to the ~TREXIO_PACKAGE_VERSION~ string.
@@ -2798,6 +2833,13 @@ trexio_pre_close (trexio_t* file)
    For each of the aforementioned objects, TREXIO provides *has*,
    *read* and *write* functionality.  TREXIO supports I/O with single
    or double precision for integer and floating point numbers.
+
+   *Note:* every *write* function below obeys the write-once rule
+   described in *Read/write behavior*. Unless the file was opened in
+   ~'u'~ (unsafe) mode, writing something the file already contains
+   changes nothing and returns ~TREXIO_ATTR_ALREADY_EXISTS~ or
+   ~TREXIO_DSET_ALREADY_EXISTS~; this is why ~trexio_has_*~ exists
+   alongside each of them.
 
    *Note:* single integer attributes that contain ~num~ in their name (e.g. ~nucleus_num~) are
    considered dimensioning variables and cannot be negative or 0. An attempt to write negative or 0
