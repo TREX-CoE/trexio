@@ -233,6 +233,49 @@ jobs:
           name: test-report-i686
           path: test-suite.log
 
+  # The lane above builds the C and Fortran APIs for an ILP32 target with
+  # gcc -m32, which is what exercises the wrapper selection. It cannot build the
+  # Python API: that needs a 32-bit interpreter and a 32-bit NumPy, which a
+  # 64-bit runner does not have. So the end-to-end 32-bit path -- generate the
+  # wrapper, compile it, import the module and run the test suite against it --
+  # is covered here instead, in a native i386 image. linux/386 runs directly on
+  # an amd64 host with no emulation. The container is driven from a step rather
+  # than declared with "container:", because the runner injects a 64-bit Node
+  # into job containers and there is none for i386.
+  trexio_i386:
+    name: i386 (32-bit) Linux, C, Fortran and Python
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: build and test C, Fortran and Python in an i386 container
+        run: |
+          docker run --rm --platform linux/386 \
+                 -v "$PWD":/src -w /src \
+                 i386/debian:12 bash -euxc '
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              build-essential gfortran autoconf automake libtool pkg-config \
+              libhdf5-dev swig python3-dev python3-numpy python3-pytest \
+              cmake emacs-nox git ca-certificates
+            ./autogen.sh
+            ./configure --enable-silent-rules --enable-python
+            make -j2
+            make -j2 check
+            make distclean
+            cmake -S. -Bbuilddir -DTREXIO_PYTHON=ON
+            cmake --build builddir -j2
+            ctest --test-dir builddir -j2 --output-on-failure
+          '
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-i386
+          path: test-suite.log
+
   trexio_macos:
     name: x86 and arm64 MacOS
     strategy:
