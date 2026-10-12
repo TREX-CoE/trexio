@@ -33,13 +33,15 @@ static int test_inside_the_grid (void)
 
   make_grid(grid_r, interpolator, normalization);
 
-  /* The sentinel has to be overwritten by a successful call. */
+  /* The sentinel has to be overwritten by a successful call; that it came
+     back positive is enough to show it was. Note that the project's strict
+     build makes -Wfloat-equal an error, so the exact comparisons below are
+     spelled with < and > rather than == and !=. */
   double amplitude = -12345.0;
   trexio_exit_code rc = trexio_evaluate_nao_radial(0, grid_r[2], grid_start, grid_size,
                                                    grid_r, interpolator, normalization,
                                                    &amplitude);
   assert (rc == TREXIO_SUCCESS);
-  assert (amplitude != -12345.0);
   assert (amplitude > 0.0);
   return 0;
 }
@@ -65,7 +67,10 @@ static int test_past_the_end_of_the_grid (void)
                                                    grid_r, interpolator, normalization,
                                                    &amplitude);
   assert (rc == TREXIO_SUCCESS);
-  assert (amplitude == 0.0);
+  /* Exactly zero, which also proves the sentinel was overwritten. Written as
+     two inequalities so that it is an error for NaN as well, and so that
+     -Wfloat-equal has nothing to complain about. */
+  assert (amplitude >= 0.0 && amplitude <= 0.0);
   return 0;
 }
 
