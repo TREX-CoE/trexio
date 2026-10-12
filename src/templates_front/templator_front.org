@@ -5329,7 +5329,9 @@ trexio_read_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (buffer_size_read == NULL) return TREXIO_INVALID_ARG_3;
+  if (dset  == NULL) return TREXIO_INVALID_ARG_4;
   if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   trexio_exit_code rc = TREXIO_FAILURE;
@@ -5429,7 +5431,9 @@ trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, cons
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (buffer_size <= 0) return TREXIO_INVALID_ARG_3;
+  if (dset == NULL) return TREXIO_INVALID_ARG_4;
 
   int64_t size_max = 0L;
 
@@ -5438,7 +5442,7 @@ trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, cons
   if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
   if (rc == TREXIO_DSET_MISSING) size_max = 0L;
 
-  /* Dummy check to avoid overwriting existing data */
+  /* Check to avoid overwriting existing data */
   if (offset_file < size_max) return TREXIO_CORRUPTION_ATTEMPT;
 
   uint32_t rank = 1;
