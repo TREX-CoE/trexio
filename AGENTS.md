@@ -21,7 +21,7 @@ This repository uses literate programming and has a few project rules that AI-ge
   - `src/templates_memory/*.org` for the in-memory backend
 - When you modify an org-mode source, add or update nearby prose so the org file explains what the new code is doing.
 - Keep the org documentation synchronized with the generated behavior and API changes.
-- Regenerate from org-mode sources with `./autogen.sh`.
+- `./autogen.sh` only runs `autoreconf`; the sources are regenerated from the org files by `make` in maintainer mode.
 - Commit only the minimal tracked source changes; do not add generated files just because they appeared locally.
 
 ## 3. Preserve TREXIO data conventions
@@ -58,6 +58,7 @@ This repository uses literate programming and has a few project rules that AI-ge
   - `configure.ac`
   - `CMakeLists.txt`
   - `python/pytrexio/_version.py`
+  - `tools/nix/trexio.nix`
 
   The OCaml binding lives in `TREX-CoE/trexio_ocaml` and follows the *released*
   TREXIO tarball — do not version-bump it from this repository.
