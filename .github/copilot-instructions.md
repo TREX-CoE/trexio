@@ -1,6 +1,6 @@
 # TREXIO Copilot instructions
 
-Start with `/home/runner/work/trexio/trexio/TREX-CoE/trexio/AGENTS.md`. The rules below are the short Copilot-specific version.
+Start with `AGENTS.md` in the repository root. The rules below are the short Copilot-specific version.
 
 ## Change the right files
 
@@ -14,7 +14,7 @@ Start with `/home/runner/work/trexio/trexio/TREX-CoE/trexio/AGENTS.md`. The rule
   - `src/templates_memory/*.org`
 - If you change an org-mode source, add or update prose in that org file so it explains what the added code is doing.
 - Keep org documentation aligned with the behavior and API produced from it.
-- Regenerate with `./autogen.sh` when needed.
+- `./autogen.sh` only runs `autoreconf`; `make` regenerates the sources from the org files in maintainer mode.
 
 ## Keep AI PRs reviewable
 
@@ -54,6 +54,8 @@ The authoritative source is `src/templates_front/templator_front.org`.
   - `CMakeLists.txt`
   - `python/pytrexio/_version.py`
   - `ocaml/trexio/dune-project`
+  - `ocaml/trexio/trexio.opam`
+  - `tools/nix/trexio.nix`
 
 ## Validate before submitting
 

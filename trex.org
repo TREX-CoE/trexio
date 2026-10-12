@@ -53,8 +53,10 @@
   whether the file has been previously opened with ~'u'~ mode.  It is
   automatically written in the file upon the first unsafe opening.  If
   the user has checked that the TREXIO file is valid (e.g. using
-  ~trexio-tools~) after unsafe operations, then the ~unsafe~ attribute
-  value can be manually overwritten (in unsafe mode) from ~1~ to ~0~.
+  ~trexio-validate~) after unsafe operations, then the ~unsafe~ attribute
+  value can be reset from ~1~ to ~0~ with ~trexio_mark_safety~, which is
+  the supported way to do it and requires the file to be open in ~'u'~
+  mode.
 
   #+CALL: json(data=metadata, title="metadata")
 
@@ -205,7 +207,10 @@
    This group contains information about excited states. Since only a
    single state can be stored in a TREXIO file, it is possible to store
    in the main TREXIO file the names of auxiliary files containing the
-   information of the other states.
+   information of the other states. ~trexio_set_state~ and
+   ~trexio_get_state~ select which of them subsequent calls refer to,
+   although their use is discouraged as of version 2.3.0 in favour of
+   opening the auxiliary files directly.
 
    The ~file_name~ and ~label~ arrays have to be written only for the
    main file, e.g. the one containing the ground state wave function
@@ -361,9 +366,11 @@
     \]
     Where $u_i(\mathbf{r})$ is numerically tabulated on a dense logarithmic
     grid. It is constructed to vanish for any $\mathbf{r}$
-    outside of the grid. The reference points are stored in ~nao_grid_r~
-    and ~nao_grid_phi~. Additionaly, a separate spline for the first and second
-    derivative of $u(\mathbf{r})$ can be stored in ~nao_grid_grad~ and ~nao_grid_lap~.
+    outside of the grid. The reference points are stored in ~nao_grid_radius~
+    and ~nao_grid_phi~. Additionally, a separate spline for the first and second
+    radial derivative of $u(\mathbf{r})$ can be stored in ~nao_grid_grad~ and
+    ~nao_grid_lap~ -- which hold $u^\prime$ and $u^{\prime\prime}$, radial
+    derivatives along $r$, not a gradient vector and not $\nabla^2$.
     Storing them in this form allows to calculate the actual first and
     second derivatives easily as follows:
 
@@ -398,8 +405,11 @@
     c = \log\left(\frac{r_1}{r_0}\right)
     \]
     For convenience, this conversion and functions to evaluate the splines
-    are provided with trexio. Since these implementations are not adapted to
-    a specific software architecture, a programm using these orbitals should
+    are provided with trexio: ~trexio_convert_nao_radius~ for the conversion
+    above, ~trexio_evaluate_nao_radial~ for one shell at one distance, and
+    ~trexio_evaluate_nao_radial_all~ for every shell at a point in space.
+    Since these implementations are not adapted to
+    a specific software architecture, a program using these orbitals should
     reimplement them with consideration for its specific needs.
 
 *** Plane waves
@@ -457,8 +467,8 @@
   | ~e_cut~             | ~float~ |                                                |                                                | Energy cut-off for plane-wave calculations                                   |
   | ~nao_grid_radius~   | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Radii of grid points for numerical orbitals                                  |
   | ~nao_grid_phi~      | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Wave function values for numerical orbitals                                  |
-  | ~nao_grid_grad~     | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Radial gradient of numerical orbitals                                        |
-  | ~nao_grid_lap~      | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Laplacian of numerical orbitals                                              |
+  | ~nao_grid_grad~     | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | First radial derivative $u^\prime$ of numerical orbitals                     |
+  | ~nao_grid_lap~      | ~float~ | ~[basis.nao_grid_num]~                         | ~(basis.nao_grid_num)~                         | Second radial derivative $u^{\prime\prime}$ of numerical orbitals            |
   | ~interpolator_kind~ | ~str~   |                                                |                                                | Kind of spline, e.g. "Polynomial"                                            |
   | ~interpolator_phi~  | ~float~ | ~[basis.nao_grid_num, basis.interp_coeff_cnt]~ | ~(basis.interp_coeff_cnt, basis.nao_grid_num)~ | Coefficients for numerical orbital interpolation function                    |
   | ~interpolator_grad~ | ~float~ | ~[basis.nao_grid_num, basis.interp_coeff_cnt]~ | ~(basis.interp_coeff_cnt, basis.nao_grid_num)~ | Coefficients for numerical orbital gradient interpolation function           |
@@ -957,8 +967,15 @@ power = [
 
    The cartesian/spherical character can be set for all shells at once
    with ~cartesian~ (~0~: spherical, ~1~: cartesian), or shell by shell
-   with the ~cartesian_shell~ array. A file stores exactly one of the
-   two: when ~cartesian~ is absent, readers must consult ~cartesian_shell~.
+   with the ~cartesian_shell~ array. A file stores at most one of the
+   two: when ~cartesian~ is absent, readers must consult
+   ~cartesian_shell~, and when neither is present -- which is allowed --
+   they should assume spherical, as they would for ~cartesian = 0~.
+
+   Writing both is ambiguous, and the library refuses such a file: the
+   check runs when the file is closed, so ~trexio_close~ is where a
+   writer that sets both finds out, with the exit code
+   ~TREXIO_AMBIGUOUS_CARTESIAN~.
 
    #+NAME: ao
   | Variable          | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                            |
@@ -1334,7 +1351,11 @@ power = [
    where $\alpha$ and $\beta$ denote \uparrow-spin and \downarrow-spin electrons, respectively,
    $n_\uparrow$ and $n_\downarrow$ correspond to ~electron.up_num~ and ~electron.dn_num~, respectively.
 
-   The ordering of determinants in TREXIO files is $\alpha \alpha \ldots \alpha_{n_\uparrow} \beta \beta \ldots \beta_{n_\downarrow}$.
+   Within one determinant, the spin-orbitals are ordered
+   $\alpha \alpha \ldots \alpha_{n_\uparrow} \beta \beta \ldots \beta_{n_\downarrow}$,
+   i.e. all up-spin orbitals and then all down-spin ones. (This is about the
+   contents of a determinant, not about the order determinants appear in the
+   file, which is whatever order they were written in.)
    The functions ~trexio_phase_aabb_to_abab~ and ~trexio_phase_aabb_to_abab_list~ help switching to the
    $\alpha \beta \alpha \beta \ldots$ ordering by checking if a change of phase is required. These functions return ~TREXIO_SUCCESS~ if
    a change of phase is not required, or ~TREXIO_PHASE_CHANGE~ otherwise.
