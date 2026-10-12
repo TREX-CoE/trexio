@@ -2041,7 +2041,7 @@ end interface
 def _inquire(file_name: str) -> bool:
     """Check whether ~file_name~ TREXIO file exists.
     """
-    rc = pytr.trexio_inquire(trexio_file_name)
+    rc = pytr.trexio_inquire(file_name)
     if rc == TREXIO_SUCCESS:
         return True
     elif rc == TREXIO_FAILURE:
@@ -2449,13 +2449,30 @@ def _cp(source: str, destination: str):
     >>> tr_cp("example.h5", "new.h5")
     """
 
+    from os.path import exists
     from shutil import copytree, copyfile
 
+    # Like the C trexio_cp, refuse to replace what is already there. copyfile
+    # would otherwise overwrite it without a word.
+    if exists(destination):
+      raise Error(TREXIO_FILE_ERROR)
+
     f = File(filename=source, mode='r', back_end=TREXIO_AUTO)
-    if f.back_end == TREXIO_TEXT:
+    back_end = f.back_end
+    f.close()
+
+    if back_end == TREXIO_TEXT:
       copytree(source, destination)
-    elif f.back_end == TREXIO_HDF5:
+    elif back_end == TREXIO_HDF5:
       copyfile(source, destination)
+    else:
+      raise Error(TREXIO_FILE_ERROR)
+
+
+# Public names for the two file-level helpers, which the docstrings above
+# already use (e.g. "from trexio import cp").
+cp = _cp
+inquire = _inquire
    #+end_src
 
 ** File state
@@ -7101,8 +7118,11 @@ trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int
   int64_t i_log = (int64_t) r_log;
   if (i_log < 0)
     i_log = 0;
-  else if (i_log >= grid_size[shell_index])
-    return 0; // NAOs vanish at the boundary by definition
+  else if (i_log >= grid_size[shell_index]) {
+    /* NAOs vanish at the boundary by definition */
+    *amplitude = 0.0;
+    return TREXIO_SUCCESS;
+  }
 
   double t = r_log - (double) i_log;
   double val_spline = interpolator[i0 + 4*i_log + 0];
@@ -7622,7 +7642,7 @@ def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
 
   """
   if len(r) != 3:
-    raise Error(TREXIO_INVALID_ARG7)
+    raise Error(TREXIO_INVALID_ARG_7)
   shell_cnt = len(nucleus_index)
   rc, amplitudes = pytr.trexio_evaluate_nao_radial_all_py(shell_cnt, \
     nucleus_index, nucleus_coords.flatten(), grid_start, grid_size, grid_r, \

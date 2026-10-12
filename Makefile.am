@@ -182,7 +182,8 @@ TESTS_C = \
   tests/overwrite_all_text \
   tests/io_all \
   tests/io_memory \
-  tests/pre_close
+  tests/pre_close \
+  tests/nao_radial
 
 if HAVE_HDF5
 TESTS_C += \
