@@ -11,8 +11,8 @@ can be used to convert data from one input/output file format into another.
 
 ## Requirements
 
-- python3  (>= 3.8)
-- numpy    (>= 1.17.3)
+- python3  (>= 3.6)
+- numpy
 
 ## Installation from PyPI
 
@@ -31,10 +31,30 @@ For more details, see the corresponding part of the [Python documentation](https
 ## Additional requirements (for installation from source)
 
 - C compiler 	  (gcc/icc/clang)
-- HDF5 library	(>= 1.8)
+- HDF5 library	(>= 1.8) [optional, see below]
 - pkgconfig     (Python package)
 - build         (Python package)
 - pytest        (Python package)
+
+HDF5 is optional here as it is for the C library: if it cannot be located, the
+module is built with the text and in-memory back ends only, and opening an HDF5
+file then fails with `TREXIO_BACK_END_MISSING`. The build says so, but `pip`
+hides its output unless it fails, so a program that needs the HDF5 back end
+should check `trexio.has_back_end(trexio.TREXIO_HDF5)` rather than assume it.
+
+If HDF5 is installed but not found, pass the flags explicitly:
+
+```
+H5_CFLAGS="-I/usr/include" H5_LDFLAGS="-L/usr/lib64 -lhdf5" pip install trexio
+```
+
+## Building the Python API from the build systems
+
+The instructions below build the module with `pip`, which compiles its own copy
+of the C library. If you are already building TREXIO from source, the Autotools
+and CMake builds can produce the same module linked against the library they
+just built — see "Python API" in the top-level
+[README](https://github.com/TREX-CoE/trexio#python).
 
 ## Installation from source
 
