@@ -12,8 +12,9 @@ exchanging wave function parameters and matrix elements. The library consists
 of a front-end implemented in the C programming language and three
 back-ends: a text back-end, a binary back-end utilizing the HDF5 library
 which enables fast read and write operations, and an in-memory back-end that
-writes nothing to disk. It is compatible with a variety of platforms and has
-interfaces for the Fortran, Python, OCaml and Rust programming languages.
+writes nothing to disk. It is compatible with a variety of platforms, with
+Fortran and Python interfaces in this repository and bindings for OCaml, Rust
+and Haskell maintained alongside it.
 
 Below is the list of codes that adopted TREXIO for reading and/or writing 
 single- and/or multi-reference wave functions:
@@ -454,14 +455,12 @@ issues with them there.
 
 ### OCaml
 
-The TREXIO OCaml API is available in OPAM:
+The OCaml bindings are maintained at <https://github.com/TREX-CoE/trexio_ocaml>
+and published in OPAM, so you can simply run
 ```
 opam install trexio
 ```
-
-The binding also lives in `ocaml/` in this repository, where a maintainer-mode
-Autotools build can build and install it with `make ocaml` and
-`make ocaml-install`. It is not built by CMake and not covered by CI.
+Report issues with them there.
 
 ### Haskell
 

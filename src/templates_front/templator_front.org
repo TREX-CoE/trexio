@@ -473,19 +473,20 @@ PYTREXIO_MAX_STR_LENGTH = 2048
 
 * Front end
 
-  TREXIO does not serialize concurrent calls. The file handle carries a lock,
-  but no code path takes it yet, so two threads using the same ~trexio_t~
-  handle at the same time are not protected against each other and the caller
-  has to do that itself -- see the OpenMP example in the *Examples* section,
-  which reads inside a critical section for this reason. Handles to different
-  files are independent, subject to the single-writer restriction described
-  under *Read/write behavior*.
+  TREXIO is intended to be thread-safe, but is not yet: the file handle carries
+  a lock and no code path takes it, so two threads using the same ~trexio_t~
+  handle at the same time are not currently protected against each other. This
+  is a bug rather than a design decision, and it is being fixed; until then the
+  caller has to serialize such calls itself -- see the OpenMP example in the
+  *Examples* section, which reads inside a critical section for this reason.
+  Handles to different files are independent, subject to the single-writer
+  restriction described under *Read/write behavior*.
 
   TREXIO front end is modular, which simplifies implementation of new back ends.
 
 ** Error handling
 
-   Every function but the four listed under *Coding conventions* returns a
+   Every function but those listed under *Coding conventions* returns a
    ~trexio_exit_code~, and the code says which of several different things
    happened. Which codes a caller has to be ready for depends on the call, and
    the ones below come up often enough to be worth collecting in one place.
@@ -502,10 +503,11 @@ PYTREXIO_MAX_STR_LENGTH = 2048
      ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ unless the
      file was opened in ~'u'~ mode; see *Read/write behavior*.
    - The ~trexio_read_safe_*~ and ~trexio_write_safe_*~ functions take the size
-     of the caller's array and refuse rather than overrun it. For the dense
-     datasets that refusal is ~TREXIO_UNSAFE_ARRAY_DIM~; for the sparse,
-     buffered and determinant ones it is reported against the argument instead,
-     as ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~.
+     of the caller's array and refuse rather than overrun it, with
+     ~TREXIO_UNSAFE_ARRAY_DIM~. (For the sparse, buffered and determinant ones
+     the refusal is currently reported against the argument instead, as
+     ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~; that is a bug and is
+     being changed to ~TREXIO_UNSAFE_ARRAY_DIM~ for consistency.)
    - Reading chunked data -- sparse, buffered, the determinant list -- gives
      ~TREXIO_END~ when the end of the data is reached, having set the buffer
      size to how much was actually read. ~TREXIO_END~ is an ordinary outcome of
@@ -1023,15 +1025,23 @@ def string_of_error(return_code: int) -> str:
 
    2) ~TREXIO_TEXT~ relies on basic file I/O in C, namely ~fopen, fclose, fprintf, fscanf~ etc. from ~stdio.h~ library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have ~.txt~ extension.
 
-   3) ~TREXIO_MEMORY~ keeps everything in the memory of the calling process and writes nothing to disk. It supports the same data as the other two, and is meant for passing data between parts of one program through the TREXIO API without a file in between. Because there is no file, it behaves differently in three ways that matter: the ~file_name~ is not used for anything (although it still has to be a valid non-empty string), a file cannot be opened in ~'r'~ mode since there is nothing to reopen, and ~trexio_close~ discards the data rather than saving it. See *Read/write behavior* for what flushing and closing mean for each back end.
+   3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory. It
+   writes nothing to disk and supports the same data as the other two, which makes
+   it a way to pass data between parts of one program through the TREXIO API
+   without a file in between. Because there is no file, ~trexio_close~ discards the
+   data rather than saving it, and the ~file_name~ is not used for anything,
+   although it still has to be a valid non-empty string. See *Read/write behavior*
+   for what flushing and closing mean for each back end.
 
-   ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file in read-only ~'r'~ mode.
-   In this case, TREXIO will try to automatically detect the back end, which should be used to open the file.
+   ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file
+   in ~'r'~, ~'w'~, or ~'u'~ mode. In this case, TREXIO will try to automatically detect
+   the applicable back end: it first tries to interrogate the path as a TEXT directory;
+   if that fails, it tries as an HDF5 file. This only works for existing paths --
+   a non-existent path or an unrecognized path is rejected with ~TREXIO_FILE_ERROR~.
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
    This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
-   Then the corresponding back-end ~has/read/write~ functions has to be implemented. For example, see the commented
-   lines that correspond to the ~TREXIO_JSON~ back end (not implemented yet).
+   Then the corresponding back-end ~has/read/write~ functions has to be implemented.
 
    _Note_: It is important to increment the value of ~TREXIO_INVALID_BACK_END~ when a new back end is implemented. Otherwise, it will not be available.
 
@@ -1042,10 +1052,9 @@ typedef int32_t back_end_t;
 
 #define TREXIO_HDF5             ( (back_end_t) 0 )
 #define TREXIO_TEXT             ( (back_end_t) 1 )
-#define TREXIO_MEMORY           ( (back_end_t) 2 )
-#define TREXIO_INVALID_BACK_END ( (back_end_t) 3 )
-#define TREXIO_AUTO             TREXIO_INVALID_BACK_END
-/*#define TREXIO_JSON             ( (back_end_t) 3 )*/
+#define TREXIO_AUTO             ( (back_end_t) 2 )
+#define TREXIO_MEMORY           ( (back_end_t) 3 )
+#define TREXIO_INVALID_BACK_END ( (back_end_t) 4 )
 
 #define TREXIO_DELIM            "\n"
    #+end_src
@@ -1085,10 +1094,9 @@ bool trexio_has_backend(back_end_t back_end) {
   #+begin_src f90 :tangle prefix_fortran.f90
   integer(trexio_back_end_t), parameter :: TREXIO_HDF5 = 0
   integer(trexio_back_end_t), parameter :: TREXIO_TEXT = 1
-  integer(trexio_back_end_t), parameter :: TREXIO_MEMORY = 2
-! integer(trexio_back_end_t), parameter :: TREXIO_JSON = 3
-  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 3
-  integer(trexio_back_end_t), parameter :: TREXIO_AUTO = TREXIO_INVALID_BACK_END
+  integer(trexio_back_end_t), parameter :: TREXIO_AUTO = 2
+  integer(trexio_back_end_t), parameter :: TREXIO_MEMORY = 3
+  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 4
   #+end_src
 
   The function below is a Fortran interface for the aforementioned C-compatible ~trexio_has_back_end~ function.
@@ -1118,10 +1126,9 @@ end interface
 # define TREXIO back ends
 TREXIO_HDF5 = 0
 TREXIO_TEXT = 1
-TREXIO_MEMORY = 2
-#TREXIO_JSON = 3
-TREXIO_INVALID_BACK_END = 3
-TREXIO_AUTO = TREXIO_INVALID_BACK_END
+TREXIO_AUTO = 2
+TREXIO_MEMORY = 3
+TREXIO_INVALID_BACK_END = 4
   #+end_src
 
 ** Read/write behavior
@@ -1178,14 +1185,13 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
    so data is immutable by default and the risk is confined to ~'u'~
    mode.
 
-   Sparse data and the determinant list are the exception to being
-   written once, in that they are written in chunks: a later call can
-   extend them past the offset already written. A write at an offset
-   that is already filled is still refused, with
-   ~TREXIO_CORRUPTION_ATTEMPT~, and ~'u'~ does not relax that check
-   either. The buffered quantities -- the determinant and CSF
-   coefficients -- make no such check at all, so a write that overlaps
-   what they already hold is not reported; see issue #352.
+   The chunked data is the exception to being written once: sparse
+   datasets, the buffered quantities (the determinant and CSF
+   coefficients) and the determinant list are written a chunk at a
+   time, so a later call can extend them past the offset already
+   written. A write at an offset that is already filled is refused,
+   with ~TREXIO_CORRUPTION_ATTEMPT~. Note that ~'u'~ mode does not
+   currently relax that check, although it should; that is a known bug.
 
    One attribute is exempt by design: ~trexio_write_determinant_list~
    rewrites ~determinant_num~ on every chunk, which it does by
@@ -1371,12 +1377,13 @@ class File:
      2) ~mode~          - character containing open mode (see below)
        - ~'w'~         - (write)  opens the file as READWRITE, creating it if it does not exist
        - ~'r'~         - (read)   opens an existing file as READONLY
-       - ~'u'~         - (unsafe) opens the file as READWRITE, and additionally permits overwriting data that is already in the file and deleting whole groups. This mode is not meant for routine use; see the note below
-     3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
-       - ~TREXIO_HDF5~   - for HDF5 back end (integer alternative: 0)
-       - ~TREXIO_TEXT~   - for TEXT back end (integer alternative: 1)
-       - ~TREXIO_MEMORY~ - for the in-memory back end (integer alternative: 2). Cannot be combined with ~'r'~ mode, since an in-memory file never exists before it is opened
-       - ~TREXIO_AUTO~   - to automatically detect the applicable back end. Only valid in ~'r'~ mode
+       - ~'u'~         - (unsafe) opens the file as READWRITE, and additionally permits
+       overwriting data that is already in the file and deleting whole groups. This mode is not
+       meant for routine use; see the note below
+     3) ~back_end~     - parameter specifying the back end
+       (~TREXIO_HDF5|TREXIO_TEXT|TREXIO_AUTO|TREXIO_MEMORY)~. The
+        complete list of back ends is given in the ~trexio.h~ file, after the
+        definition of the ~back_end_t~ type.
      4) ~rc_open~       - pointer to a ~trexio_exit_code~, or ~NULL~. When it is not ~NULL~, the reason for a failure is written there
 
    **Output:**
@@ -1436,7 +1443,8 @@ class File:
   mode: upon the first unsafe call to ~trexio_open~ the ~unsafe~ attribute of the
   ~metadata~ group is set to 1 (true), tagging the file as one that might be
   inconsistent. Once the contents have been validated (e.g. with
-  ~trexio-validate~), the file can be tagged as safe again with
+  ~trexio-validate~, https://github.com/TREX-CoE/trexio-validate), the file can
+  be tagged as safe again with
   ~trexio_mark_safety~, under the responsibility of the user.
 
   **Note:** the ~file_name~ in TEXT back end actually corresponds to the
@@ -1469,57 +1477,55 @@ trexio_open(const char* file_name, const char mode,
   }
   /* Check overflow in file_name */
 
-  /* Check that the mode is valid */
-  if (mode != 'r' && mode != 'w' && mode != 'u') {
+  /* Check that the back end is valid */
+  if (back_end <  0 || back_end >= TREXIO_INVALID_BACK_END) {
+    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
+    return NULL;
+  }
+
+  switch (mode) {
+
+  case 'r': /* back-ends that should fail if opened in read mode */
+    if (back_end == TREXIO_MEMORY) {
+      if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
+      return NULL;
+    }
+    break;
+
+  case 'w': /* back-ends that should fail if opened in write mode */
+    break;
+
+  case 'u': /* back-ends that should fail if opened in unsafe mode */
+    break;
+
+  default:
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_2;
     return NULL;
+
   }
 
-  /* Check that the back end is valid in non-read mode */
-  if ((back_end <  0 || back_end >= TREXIO_INVALID_BACK_END) && mode != 'r') {
-    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
-    return NULL;
-  }
-
-  /* Check that the back end is valid in read-only mode */
-  if ((back_end <  0 || back_end > TREXIO_INVALID_BACK_END) && mode == 'r') {
-    if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_3;
-    return NULL;
-  }
-
-  /* The in-memory back end is ephemeral: there is no on-disk file to reopen,
-     so read-only mode is meaningless (and would otherwise fail later when the
-     metadata is written). Reject it explicitly at open time. */
-  if (back_end == TREXIO_MEMORY && mode == 'r') {
-    if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
-    return NULL;
-  }
 
   back_end_t back_end_local = back_end;
+
   /* Try to determine the applicable backend if the back_end argument is TREXIO_AUTO */
-  if (back_end == TREXIO_AUTO && mode == 'r') {
-#ifdef HAVE_HDF5
-    /* Check if the TREXIO file exists and if it is a directory */
+  if (back_end == TREXIO_AUTO) {
     trexio_exit_code rc_text = trexio_text_inquire(file_name);
     if (rc_text == TREXIO_SUCCESS) {
       back_end_local = TREXIO_TEXT;
     } else {
-    /* If not, check if it is an HDF5 file */
+#ifdef HAVE_HDF5
       trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(file_name);
       if (rc_hdf5 == TREXIO_SUCCESS) {
         back_end_local = TREXIO_HDF5;
-      } else {
-    /* File is neither a directory nor an HDF5 file -> return an error */
-        if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
-        return NULL;
       }
-    }
-#else
-    /* Without HDF5 the only back end a file on disk can be in is TEXT: the
-       in-memory back end is still compiled in, but it never has a file to
-       detect, so there is nothing to choose between. */
-    back_end_local = TREXIO_TEXT;
 #endif
+    }
+
+    /* If backend is still AUTO, no existing file was found */
+    if (back_end_local == TREXIO_AUTO) {
+      if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
+      return NULL;
+    }
   }
 
   trexio_t* result = NULL;
@@ -1529,29 +1535,29 @@ trexio_open(const char* file_name, const char mode,
   switch (back_end_local) {
 
   case TREXIO_TEXT:
-    result_tmp = malloc(sizeof(trexio_text_t));
+    result_tmp = MALLOC(trexio_text_t);
     break;
 
   case TREXIO_MEMORY:
-    result_tmp = malloc(sizeof(trexio_memory_t));
+    result_tmp = MALLOC(trexio_memory_t);
     break;
 
   case TREXIO_HDF5:
 #ifdef HAVE_HDF5
-    result_tmp = malloc(sizeof(trexio_hdf5_t));
+    result_tmp = MALLOC(trexio_hdf5_t);
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
     return NULL;
 #endif
 
-  default:
+  default: // This should be unreachable by the back-end tests above
     if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
     return NULL;
 
 /*
   case TREXIO_JSON:
-    result = (trexio_t*) malloc (sizeof(trexio_json_t));
+    result = MALLOC (trexio_json_t);
     break;
 ,*/
   }
@@ -1567,7 +1573,7 @@ trexio_open(const char* file_name, const char mode,
     memcpy(result->file_name, file_name, lenSrc+1);
   } else {
     if (rc_open != NULL) *rc_open = TREXIO_INVALID_ARG_1;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1578,7 +1584,7 @@ trexio_open(const char* file_name, const char mode,
   int irc = TREXIO_MUTEX_INIT( &(result->thread_lock) );
   if (irc != 0) {
     if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
-    free(result);
+    FREE(result);
     return NULL;
   }
   // assert (irc == 0);
@@ -1603,7 +1609,7 @@ trexio_open(const char* file_name, const char mode,
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-    free(result);
+    FREE(result);
     return NULL;
 #endif
 /*
@@ -1615,7 +1621,7 @@ trexio_open(const char* file_name, const char mode,
 
   if (rc != TREXIO_SUCCESS) {
     if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1640,7 +1646,7 @@ trexio_open(const char* file_name, const char mode,
     break;
 #else
     if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-    free(result);
+    FREE(result);
     return NULL;
 #endif
 /*
@@ -1652,7 +1658,7 @@ trexio_open(const char* file_name, const char mode,
 
   if (rc != TREXIO_SUCCESS) {
     if (rc_open != NULL) *rc_open = TREXIO_LOCK_ERROR;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1660,7 +1666,7 @@ trexio_open(const char* file_name, const char mode,
   rc = trexio_has_metadata_package_version(result);
   if (rc == TREXIO_FAILURE) {
     if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1682,7 +1688,7 @@ trexio_open(const char* file_name, const char mode,
       break;
 #else
       if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-      free(result);
+      FREE(result);
       return NULL;
 #endif
 
@@ -1690,7 +1696,7 @@ trexio_open(const char* file_name, const char mode,
 
     if (rc != TREXIO_SUCCESS) {
       if (rc_open != NULL) *rc_open = rc;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1719,7 +1725,7 @@ trexio_open(const char* file_name, const char mode,
       break;
 #else
       if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-      free(result);
+      FREE(result);
       return NULL;
 #endif
 
@@ -1727,7 +1733,7 @@ trexio_open(const char* file_name, const char mode,
 
     if (rc != TREXIO_SUCCESS) {
       if (rc_open != NULL) *rc_open = rc;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1737,7 +1743,7 @@ trexio_open(const char* file_name, const char mode,
                          &version_major, &version_minor, &version_patch);
     if (rc_scan != 3) {
       if (rc_open != NULL) *rc_open = TREXIO_VERSION_PARSING_ISSUE;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1750,7 +1756,7 @@ trexio_open(const char* file_name, const char mode,
 
   if (result->version[15] != '\0' || result->version_major == 0) {
     if (rc_open != NULL) *rc_open = TREXIO_FAILURE;
-    free(result);
+    FREE(result);
     return NULL;
   }
 
@@ -1760,7 +1766,7 @@ trexio_open(const char* file_name, const char mode,
     rc = trexio_has_metadata_unsafe(result);
     if (rc == TREXIO_FAILURE) {
       if (rc_open != NULL) *rc_open = TREXIO_OPEN_ERROR;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -1782,7 +1788,7 @@ trexio_open(const char* file_name, const char mode,
         break;
 #else
         if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
-        free(result);
+        FREE(result);
         return NULL;
 #endif
       }
@@ -1790,7 +1796,7 @@ trexio_open(const char* file_name, const char mode,
 
     if (rc != TREXIO_SUCCESS) {
       if (rc_open != NULL) *rc_open = rc;
-      free(result);
+      FREE(result);
       return NULL;
     }
 
@@ -2213,7 +2219,7 @@ end interface
 def _inquire(file_name: str) -> bool:
     """Check whether ~file_name~ TREXIO file exists.
     """
-    rc = pytr.trexio_inquire(trexio_file_name)
+    rc = pytr.trexio_inquire(file_name)
     if rc == TREXIO_SUCCESS:
         return True
     elif rc == TREXIO_FAILURE:
@@ -2647,13 +2653,30 @@ def _cp(source: str, destination: str):
     >>> tr_cp("example.h5", "new.h5")
     """
 
+    from os.path import exists
     from shutil import copytree, copyfile
 
+    # Like the C trexio_cp, refuse to replace what is already there. copyfile
+    # would otherwise overwrite it without a word.
+    if exists(destination):
+      raise Error(TREXIO_FILE_ERROR)
+
     f = File(filename=source, mode='r', back_end=TREXIO_AUTO)
-    if f.back_end == TREXIO_TEXT:
+    back_end = f.back_end
+    f.close()
+
+    if back_end == TREXIO_TEXT:
       copytree(source, destination)
-    elif f.back_end == TREXIO_HDF5:
+    elif back_end == TREXIO_HDF5:
       copyfile(source, destination)
+    else:
+      raise Error(TREXIO_FILE_ERROR)
+
+
+# Public names for the two file-level helpers, which the docstrings above
+# already use (e.g. "from trexio import cp").
+cp = _cp
+inquire = _inquire
    #+end_src
 
 ** File state
@@ -2813,11 +2836,12 @@ end interface
      close fails with ~TREXIO_INVALID_DETERMINANT_NUM~.
    - the cartesian/spherical flags are checked. A valid file states the
      character of its AO basis exactly once: either ~ao.cartesian~ for all
-     shells at once, or ~ao.cartesian_shell~ shell by shell, or neither, in
-     which case a reader should fall back to ~cartesian_shell~. Writing both is
+     shells at once, or ~ao.cartesian_shell~ shell by shell. Writing both is
      ambiguous and fails the close with ~TREXIO_AMBIGUOUS_CARTESIAN~ -- so a
      program that writes one of them must not also write the other, and will
-     only find out at close time.
+     only find out at close time. Writing neither is not valid either, since a
+     reader would have to fall back on a default, and a default could change
+     between versions of the specification.
 
     #+begin_src c :tangle trexio_private.h :exports none
 trexio_exit_code trexio_pre_close(trexio_t* file);
@@ -5575,6 +5599,8 @@ def has_$group_dset$(trexio_file) -> bool:
 
    This corresponds to the ~buffer~ data type and is particularly useful for incremental addition of values like
    it was done for ~sparse~ data but without the need to supply tuples of indices.
+   Before each write, the current buffered-vector size is checked so that a
+   chunk cannot overwrite values that are already stored.
 
    ~offset_file~ and ~buffer_size~ mean what they mean for sparse data: a read
    starts ~offset_file~ elements into the stored vector, reads up to
@@ -5584,12 +5610,10 @@ def has_$group_dset$(trexio_file) -> bool:
    elements the file holds, which is the offset the next chunk should be written
    at.
 
-   Two differences from sparse data are worth knowing. These functions do not
-   validate ~offset_file~ and ~buffer_size~, so a negative or zero value is
-   passed down rather than rejected with ~TREXIO_INVALID_ARG_*~. And they make
-   no check that a write does not overlap data already stored, which is the one
-   place in the library where writing twice over the same region is neither
-   refused nor reported; see issue #352.
+   These behave like the sparse functions in the respects that matter: a
+   negative ~offset_file~ or a non-positive ~buffer_size~ is rejected with
+   ~TREXIO_INVALID_ARG_*~, and a write at an offset the file has already
+   filled is refused with ~TREXIO_CORRUPTION_ATTEMPT~.
 
 
    | Function name                    | Description                                    | Precision |
@@ -5618,7 +5642,9 @@ trexio_read_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64
 {
 
   if (file  == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset  == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (buffer_size_read == NULL) return TREXIO_INVALID_ARG_3;
+  if (dset  == NULL) return TREXIO_INVALID_ARG_4;
   if (trexio_has_$group_dset$(file) != TREXIO_SUCCESS) return TREXIO_DSET_MISSING;
 
   trexio_exit_code rc = TREXIO_FAILURE;
@@ -5718,7 +5744,19 @@ trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, cons
 {
 
   if (file == NULL) return TREXIO_INVALID_ARG_1;
-  if (dset == NULL) return TREXIO_INVALID_ARG_2;
+  if (offset_file < 0) return TREXIO_INVALID_ARG_2;
+  if (buffer_size <= 0) return TREXIO_INVALID_ARG_3;
+  if (dset == NULL) return TREXIO_INVALID_ARG_4;
+
+  int64_t size_max = 0L;
+
+  /* Read the number of values already stored in the file */
+  trexio_exit_code rc = trexio_read_$group_dset$_size(file, &size_max);
+  if (rc != TREXIO_SUCCESS && rc != TREXIO_DSET_MISSING) return rc;
+  if (rc == TREXIO_DSET_MISSING) size_max = 0L;
+
+  /* Check to avoid overwriting existing data */
+  if (offset_file < size_max) return TREXIO_CORRUPTION_ATTEMPT;
 
   uint32_t rank = 1;
   uint64_t dims[1] = {buffer_size};
@@ -6609,7 +6647,7 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
   int32_t occ_num_dn = 0;
 
   /*   list_up contains first the up-spin orbitals, then the down-spin */
-  int32_t* list_up = (int32_t*) calloc(nup+ndn,sizeof(int32_t));
+  int32_t* list_up = CALLOC(nup+ndn,int32_t);
 
   if (list_up == NULL) {
     return TREXIO_ALLOCATION_FAILED;
@@ -7020,7 +7058,8 @@ def has_determinant_list(trexio_file) -> bool:
   ~trexio_mark_safety~ checks if the file has been open in UNSAFE mode.
   If it was, the ~metadata_unsafe~ attribute can be overwritten with the value provided in a second argument of the function.
   Since ~metadata_unsafe~ is set to ~1~ (~true~) upon the first opening of the file in UNSAFE mode, this value is immutable.
-  However, if the user validated that the file is correct (e.g. using ~trexio-validate~),
+  However, if the user validated that the file is correct (e.g. using
+  ~trexio-validate~, https://github.com/TREX-CoE/trexio-validate),
   then value of the ~metadata_unsafe~ attribute can be changed using the aforementioned function.
 
   ~trexio_to_orbital_list~ function converts the list of integer bit fields of a
@@ -7288,7 +7327,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
   if (occ_num_up <= 0) return TREXIO_INVALID_ARG_3;
   if (occ_num_dn <= 0) return TREXIO_INVALID_ARG_4;
 
-  int32_t* new_list = malloc( (occ_num_up+occ_num_dn)*sizeof(int32_t) );
+  int32_t* new_list = CALLOC(occ_num_up+occ_num_dn, int32_t);
   if (new_list == NULL) return TREXIO_ALLOCATION_FAILED;
 
   const int32_t occupied_num = occ_num_up+occ_num_dn;
@@ -7310,7 +7349,7 @@ trexio_exit_code trexio_phase_aabb_to_abab_list (const int32_t* list_up,
 
   const int32_t N_int = momax/TREXIO_NORB_PER_INT + 1;
 
-  bitfield_t* bit_list = malloc( N_int * sizeof(bitfield_t) );
+  bitfield_t* bit_list = CALLOC( N_int, bitfield_t );
   if (bit_list == NULL) {
     free(new_list);
     return TREXIO_ALLOCATION_FAILED;
@@ -7431,8 +7470,11 @@ trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int
   int64_t i_log = (int64_t) r_log;
   if (i_log < 0)
     i_log = 0;
-  else if (i_log >= grid_size[shell_index])
-    return 0; // NAOs vanish at the boundary by definition
+  else if (i_log >= grid_size[shell_index]) {
+    /* NAOs vanish at the boundary by definition */
+    *amplitude = 0.0;
+    return TREXIO_SUCCESS;
+  }
 
   double t = r_log - (double) i_log;
   double val_spline = interpolator[i0 + 4*i_log + 0];
@@ -7952,7 +7994,7 @@ def evaluate_nao_radial_all(nucleus_index, nucleus_coords, grid_start,
 
   """
   if len(r) != 3:
-    raise Error(TREXIO_INVALID_ARG7)
+    raise Error(TREXIO_INVALID_ARG_7)
   shell_cnt = len(nucleus_index)
   rc, amplitudes = pytr.trexio_evaluate_nao_radial_all_py(shell_cnt, \
     nucleus_index, nucleus_coords.flatten(), grid_start, grid_size, grid_r, \

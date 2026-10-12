@@ -88,6 +88,38 @@ static int test_open_auto (const char* file_name) {
 }
 
 
+static int test_open_auto_errors () {
+
+/* Ensure TREXIO_AUTO fails with a non-existent file regardless of open mode.
+ * TREXIO_AUTO detects an existing FILE or DIRECTORY on disk; there is nothing
+ * to detect when the path does not exist, so it returns TREXIO_FILE_ERROR. */
+
+  trexio_t* file = NULL;
+  trexio_exit_code rc;
+
+/*================= START OF TEST ==================*/
+
+  // 'r' + non-existing path: nothing to detect -> TREXIO_FILE_ERROR
+  file = trexio_open(TREXIO_VOID, 'r', TREXIO_AUTO, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_FILE_ERROR);
+
+  // 'w' + non-existing path: same reason -> TREXIO_FILE_ERROR
+  file = trexio_open(TREXIO_VOID, 'w', TREXIO_AUTO, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_FILE_ERROR);
+
+  // 'u' + non-existing path: auto-detect still fails with no target
+  file = trexio_open(TREXIO_VOID, 'u', TREXIO_AUTO, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_FILE_ERROR);
+
+/*================= END OF TEST ==================*/
+
+  return 0;
+}
+
+
 static int test_open_errors (const back_end_t backend) {
 
 /* Try to call trexio_open with bad arguments */
@@ -164,6 +196,7 @@ int main(void) {
   test_open_w     (TREXIO_FILE, TEST_BACKEND);
   test_open_r     (TREXIO_FILE, TEST_BACKEND);
   test_open_auto  (TREXIO_FILE);
+  test_open_auto_errors();
   test_open_errors(TEST_BACKEND);
   test_inquire    ();
 

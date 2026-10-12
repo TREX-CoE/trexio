@@ -53,7 +53,8 @@
   whether the file has been previously opened with ~'u'~ mode.  It is
   automatically written in the file upon the first unsafe opening.  If
   the user has checked that the TREXIO file is valid (e.g. using
-  ~trexio-validate~) after unsafe operations, then the ~unsafe~ attribute
+  ~trexio-validate~, https://github.com/TREX-CoE/trexio-validate) after unsafe
+  operations, then the ~unsafe~ attribute
   value can be reset from ~1~ to ~0~ with ~trexio_mark_safety~, which is
   the supported way to do it and requires the file to be open in ~'u'~
   mode.
@@ -967,15 +968,17 @@ power = [
 
    The cartesian/spherical character can be set for all shells at once
    with ~cartesian~ (~0~: spherical, ~1~: cartesian), or shell by shell
-   with the ~cartesian_shell~ array. A file stores at most one of the
+   with the ~cartesian_shell~ array. A file stores exactly one of the
    two: when ~cartesian~ is absent, readers must consult
-   ~cartesian_shell~, and when neither is present -- which is allowed --
-   they should assume spherical, as they would for ~cartesian = 0~.
+   ~cartesian_shell~.
 
-   Writing both is ambiguous, and the library refuses such a file: the
-   check runs when the file is closed, so ~trexio_close~ is where a
-   writer that sets both finds out, with the exit code
-   ~TREXIO_AMBIGUOUS_CARTESIAN~.
+   A writer should always state it, rather than rely on a default: a
+   default could change between versions of the specification, and a
+   file that does not say whether its AOs are cartesian or spherical
+   cannot be interpreted with confidence. Writing both is likewise
+   ambiguous. Either way the library refuses the file, and the check
+   runs when the file is closed, so ~trexio_close~ is where a writer
+   finds out, with the exit code ~TREXIO_AMBIGUOUS_CARTESIAN~.
 
    #+NAME: ao
   | Variable          | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                            |
