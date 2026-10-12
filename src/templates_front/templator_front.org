@@ -1084,11 +1084,35 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
    disk. If data needs to be cached, this is left to the user of the
    library.
 
-   Writing to TREXIO files is done with transactions (all-or-nothing
-   effect). File writes are attempted by
-   calling explicitly the write (~TREXIO_HDF5~) or flush (~TREXIO_TEXT~)
-   function, or when the TREXIO file is closed.
-   If writing is impossible because the data is not valid, no data is written.
+   When a write reaches the storage medium depends on the back end and
+   on the kind of data, so the two have to be described together.
+
+   With ~TREXIO_HDF5~, every write goes to the file as it is made. With
+   ~TREXIO_TEXT~, the groups held in memory as structs -- the
+   numerical and string attributes and the dense datasets -- are
+   written out when the group is flushed, which happens on
+   ~trexio_flush~ and when the file is closed; the chunked data,
+   meaning the sparse datasets, the buffered quantities and the
+   determinant list, is instead appended to its own file inside the
+   write call, exactly like HDF5. With ~TREXIO_MEMORY~ nothing is ever
+   written anywhere: the data lives in the handle, ~trexio_flush~
+   succeeds without doing anything, and ~trexio_close~ discards it.
+
+   Two consequences are worth stating plainly. A program using the
+   TEXT back end that terminates abnormally loses whatever it wrote to
+   struct-held groups and had not flushed, but keeps the chunked data
+   it had written; and the in-memory back end is not a way to produce a
+   file, only a way to move data through the TREXIO API within one
+   process.
+
+   Writing is not transactional, in any back end. If a write fails
+   part-way -- the medium fills up, say -- what had already been
+   written stays written, and for the TEXT back end a group being
+   flushed is truncated before it is rewritten, so an interrupted
+   flush can leave that group shorter than it was. Validation of the
+   data happens before anything is written, so invalid data is
+   rejected without touching the file; it is failures of the medium
+   itself that are not undone.
 
    Data in a TREXIO file is written once. Writing an attribute or a
    dataset that the file already contains leaves what is stored
@@ -1130,8 +1154,10 @@ TREXIO_AUTO = TREXIO_INVALID_BACK_END
    ~TREXIO_ATTR_ALREADY_EXISTS~ and ~TREXIO_DSET_ALREADY_EXISTS~ as an
    expected answer rather than as a failure.
 
-   The order in which the data is written is not necessarily consistent
-   with the order in which the function calls were made.
+   For the groups that the TEXT back end holds as structs, the order in
+   which data reaches the file is not necessarily the order in which
+   the write calls were made, since the whole group is written out at
+   once when it is flushed. Everything else is written in call order.
 
    The TREXIO files are supposed to be opened by only one program at a
    time: if the same TREXIO file is modified simultaneously by multiple
@@ -1803,6 +1829,24 @@ end interface
     output:
       ~trexio_exit_code~ exit code.
 
+    Closing a file opened for writing does more than release the
+    handle. It first runs the checks and completions described under
+    *Tasks to be done before closing*, which can write data of their
+    own -- ~electron_num~, ~electron_up_num~ and ~electron_dn_num~ are
+    derived from each other there -- and which can fail, so
+    ~trexio_close~ can return ~TREXIO_INVALID_ELECTRON_NUM~,
+    ~TREXIO_INVALID_DETERMINANT_NUM~ or ~TREXIO_AMBIGUOUS_CARTESIAN~.
+    With the TEXT back end it then writes out any group still held in
+    memory, so a failure reported here can be a failure to write the
+    file.
+
+    **Note:** the handle is released whatever is returned. A
+    ~trexio_close~ that reports an error has still freed the file
+    handle, so the call must not be retried and the handle must not be
+    used again; both are use-after-free. The exit code tells the caller
+    whether the file it just closed is complete, not whether it is
+    still open.
+
 *** C
 
     #+begin_src c :tangle prefix_front.h :exports none
@@ -1932,6 +1976,19 @@ def _close(trexio_file):
 
     output:
       ~trexio_exit_code~ exit code.
+
+    What this does depends on the back end, as described under
+    *Read/write behavior*: for ~TREXIO_TEXT~ it writes out the groups
+    held in memory as structs, which is the only way to get them onto
+    disk short of closing the file; for ~TREXIO_HDF5~ it asks HDF5 to
+    flush its own buffers for data already written to the file; and for
+    ~TREXIO_MEMORY~ there is nothing to flush, so it succeeds without
+    doing anything.
+
+    **Note:** flushing a file opened in ~'r'~ mode returns
+    ~TREXIO_READONLY~ with the TEXT back end, and ~TREXIO_SUCCESS~ with
+    the other two. A caller that flushes unconditionally should not
+    treat ~TREXIO_READONLY~ as a failure.
 
 *** C
 
