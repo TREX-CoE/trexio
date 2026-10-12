@@ -464,3 +464,64 @@ class TestIO:
         assert point_group_r == point_group
         if self.test_file.isOpen:
             self.test_file.close()
+
+
+    def test_inquire(self):
+        """Inquire whether a TREXIO file exists."""
+        self.open()
+        if self.test_file.isOpen:
+            self.test_file.close()
+
+        # Both the module-level function and the File method route to the same
+        # place; neither of them had a test, which is how a NameError survived
+        # in there.
+        assert trexio.inquire(self.filename)
+        assert not trexio.inquire('no_such_file_' + self.filename)
+
+        tfile = trexio.File(self.filename, 'r', self.back_end)
+        tfile.inquire()
+        assert tfile.exists
+        tfile.close()
+
+
+    def test_cp(self):
+        """Copy a TREXIO file, and refuse to overwrite the destination."""
+        import os
+        import shutil
+
+        self.open()
+        if self.test_file.isOpen:
+            self.test_file.close()
+
+        destination = 'copy_of_' + self.filename
+        if os.path.isdir(destination):
+            shutil.rmtree(destination)
+        elif os.path.exists(destination):
+            os.remove(destination)
+
+        trexio.cp(self.filename, destination)
+        assert trexio.inquire(destination)
+
+        # The C trexio_cp refuses an existing destination, and so must this.
+        with pytest.raises(trexio.Error):
+            trexio.cp(self.filename, destination)
+
+        if os.path.isdir(destination):
+            shutil.rmtree(destination)
+        else:
+            os.remove(destination)
+
+
+    def test_evaluate_nao_radial_all_bad_position(self):
+        """A position that is not three-dimensional must raise trexio.Error."""
+        grid_r       = np.array([0.1, 0.13])
+        interpolator = np.zeros((2, 4))
+        normalization = np.array([1.0])
+        nucleus_coords = np.zeros((1, 3))
+
+        # Before this was fixed the guard raised NameError, because it named a
+        # constant that does not exist.
+        with pytest.raises(trexio.Error):
+            trexio.evaluate_nao_radial_all([0], nucleus_coords, [0], [2],
+                                           grid_r, interpolator, normalization,
+                                           [0.0, 0.0])

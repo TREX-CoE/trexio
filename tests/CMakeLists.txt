@@ -4,6 +4,7 @@
 # Create a list of tests for TEXT back end.
 set(Tests_text
   open_text
+  io_auxbasis_text
   io_dset_float_text
   io_dset_str_text
   io_dset_sparse_text
@@ -17,12 +18,14 @@ set(Tests_text
   delete_group_text
   overwrite_all_text
   pre_close
+  nao_radial
   )
 
 if(TREXIO_USE_HDF5)
   # Create a list of tests for HDF5 back end.
   set(Tests_hdf5
     open_hdf5
+    io_auxbasis_hdf5
     io_dset_float_hdf5
     io_dset_str_hdf5
     io_dset_sparse_hdf5

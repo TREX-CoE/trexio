@@ -68,9 +68,51 @@ static int test_open_auto (const char* file_name) {
   assert (file != NULL);
   assert (rc == TREXIO_SUCCESS);
 
+  // check the get_backend interface
+  rc = trexio_get_back_end(file, NULL);
+  assert (rc == TREXIO_INVALID_ARG_2);
+
+  // check the backend is correct
+  back_end_t backend = TREXIO_AUTO;
+  rc = trexio_get_back_end(file, &backend);
+  assert (rc == TREXIO_SUCCESS);
+  assert (backend == TEST_BACKEND);
+
   // close current session
   rc = trexio_close(file);
   assert (rc == TREXIO_SUCCESS);
+
+/*================= END OF TEST ==================*/
+
+  return 0;
+}
+
+
+static int test_open_auto_errors () {
+
+/* Ensure TREXIO_AUTO fails with a non-existent file regardless of open mode.
+ * TREXIO_AUTO detects an existing FILE or DIRECTORY on disk; there is nothing
+ * to detect when the path does not exist, so it returns TREXIO_FILE_ERROR. */
+
+  trexio_t* file = NULL;
+  trexio_exit_code rc;
+
+/*================= START OF TEST ==================*/
+
+  // 'r' + non-existing path: nothing to detect -> TREXIO_FILE_ERROR
+  file = trexio_open(TREXIO_VOID, 'r', TREXIO_AUTO, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_FILE_ERROR);
+
+  // 'w' + non-existing path: same reason -> TREXIO_FILE_ERROR
+  file = trexio_open(TREXIO_VOID, 'w', TREXIO_AUTO, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_FILE_ERROR);
+
+  // 'u' + non-existing path: auto-detect still fails with no target
+  file = trexio_open(TREXIO_VOID, 'u', TREXIO_AUTO, &rc);
+  assert (file == NULL);
+  assert (rc == TREXIO_FILE_ERROR);
 
 /*================= END OF TEST ==================*/
 
@@ -111,6 +153,10 @@ static int test_open_errors (const back_end_t backend) {
   assert (rc == TREXIO_INVALID_ARG_3);
   fprintf(stderr, "%s \n", trexio_string_of_error(rc));
 
+  // check the getting a backend with a null file returns an error
+  back_end_t local_backend;
+  rc = trexio_get_back_end(NULL, &local_backend);
+  assert (rc == TREXIO_INVALID_ARG_1);
 /*================= END OF TEST ==================*/
 
   return 0;
@@ -150,6 +196,7 @@ int main(void) {
   test_open_w     (TREXIO_FILE, TEST_BACKEND);
   test_open_r     (TREXIO_FILE, TEST_BACKEND);
   test_open_auto  (TREXIO_FILE);
+  test_open_auto_errors();
   test_open_errors(TEST_BACKEND);
   test_inquire    ();
 

@@ -52,7 +52,6 @@ The authoritative source is `src/templates_front/templator_front.org`.
   - `configure.ac`
   - `CMakeLists.txt`
   - `python/pytrexio/_version.py`
-  - `rust/trexio/Cargo.toml`
   - `ocaml/trexio/dune-project`
 
 ## Validate before submitting

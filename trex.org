@@ -350,7 +350,6 @@
   must remain invariant under any redistribution of the normalization
   between the three factors.
 
-
 *** Numerical orbitals
 
     TREXIO supports numerical atom centered orbitals. The implementation is
@@ -436,6 +435,7 @@
   | Variable            | Type    | Row-major Dimensions                           | Column-major Dimensions                        | Description                                                                  |
   |---------------------+---------+------------------------------------------------+------------------------------------------------+------------------------------------------------------------------------------|
   | ~type~              | ~str~   |                                                |                                                | Type of basis set: "Gaussian", "Slater", "Numerical" or "PW" for plane waves |
+  | ~description~       | ~str~   |                                                |                                                | Optional description string for metadata, e.g. name, use, eetc               |
   | ~prim_num~          | ~dim~   |                                                |                                                | Total number of primitives                                                   |
   | ~shell_num~         | ~dim~   |                                                |                                                | Total number of shells                                                       |
   | ~nao_grid_num~      | ~dim~   |                                                |                                                | Total number of grid points for numerical orbitals                           |
@@ -472,6 +472,7 @@
     #+begin_src json :tangle trex.json
 	"basis": {
 			 "type" : [ "str"  , []                                                 ]
+	  ,       "description" : [ "str"  , []                                                 ]
 	  ,          "prim_num" : [ "dim"  , []                                                 ]
 	  ,         "shell_num" : [ "dim"  , []                                                 ]
 	  ,      "nao_grid_num" : [ "dim"  , []                                                 ]
@@ -574,7 +575,7 @@ prim_factor =
   4.3649547399719840e-01, 1.8135965626177861e+00 ]
     #+END_EXAMPLE
 
-** Auxiliary basis (auxbasis group)
+** Auxiliary basis sets (auxbasis groups)
 
 This is a duplicate of the basis group that can be used to store
 information about auxiliary basis functions. See basis group
@@ -584,13 +585,14 @@ documentation.
 
     # Use data=basis and title=auxbasis below to ensure that the data
     # is the same in the two tables
-    #+CALL: json(data=basis, title="auxbasis", replace_group="basis")
+    #+CALL: json(data=basis, title="auxbasis", replace_dict="[('basis','auxbasis')]" )
 
     #+RESULTS:
     :results:
     #+begin_src json :tangle trex.json
 	"auxbasis": {
 			 "type" : [ "str"  , []                                                 ]
+	  ,       "description" : [ "str"  , []                                                 ]
 	  ,          "prim_num" : [ "dim"  , []                                                 ]
 	  ,         "shell_num" : [ "dim"  , []                                                 ]
 	  ,      "nao_grid_num" : [ "dim"  , []                                                 ]
@@ -622,6 +624,44 @@ documentation.
     #+end_src
     :end:
 
+    #+CALL: json(data=basis, title="auxbasis2", replace_dict="[('basis','auxbasis2')]" )
+
+    #+RESULTS:
+    :results:
+    #+begin_src json :tangle trex.json
+	"auxbasis2": {
+			 "type" : [ "str"  , []                                                 ]
+	  ,       "description" : [ "str"  , []                                                 ]
+	  ,          "prim_num" : [ "dim"  , []                                                 ]
+	  ,         "shell_num" : [ "dim"  , []                                                 ]
+	  ,      "nao_grid_num" : [ "dim"  , []                                                 ]
+	  ,  "interp_coeff_cnt" : [ "dim"  , []                                                 ]
+	  ,     "nucleus_index" : [ "index", [ "auxbasis2.shell_num" ]                          ]
+	  ,     "shell_ang_mom" : [ "int"  , [ "auxbasis2.shell_num" ]                          ]
+	  ,      "shell_factor" : [ "float", [ "auxbasis2.shell_num" ]                          ]
+	  ,           "r_power" : [ "int"  , [ "auxbasis2.shell_num" ]                          ]
+	  ,    "nao_grid_start" : [ "index", [ "auxbasis2.shell_num" ]                          ]
+	  ,     "nao_grid_size" : [ "dim"  , [ "auxbasis2.shell_num" ]                          ]
+	  ,       "shell_index" : [ "index", [ "auxbasis2.prim_num" ]                           ]
+	  ,          "exponent" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,       "exponent_im" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,       "coefficient" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,    "coefficient_im" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,   "oscillation_arg" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,  "oscillation_kind" : [ "str"  , []                                                 ]
+	  ,       "prim_factor" : [ "float", [ "auxbasis2.prim_num" ]                           ]
+	  ,             "e_cut" : [ "float", []                                                 ]
+	  ,   "nao_grid_radius" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  ,      "nao_grid_phi" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  ,     "nao_grid_grad" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  ,      "nao_grid_lap" : [ "float", [ "auxbasis2.nao_grid_num" ]                       ]
+	  , "interpolator_kind" : [ "str"  , []                                                 ]
+	  ,  "interpolator_phi" : [ "float", [ "auxbasis2.nao_grid_num", "auxbasis2.interp_coeff_cnt" ] ]
+	  , "interpolator_grad" : [ "float", [ "auxbasis2.nao_grid_num", "auxbasis2.interp_coeff_cnt" ] ]
+	  ,  "interpolator_lap" : [ "float", [ "auxbasis2.nao_grid_num", "auxbasis2.interp_coeff_cnt" ] ]
+	} ,
+    #+end_src
+    :end:
 
 ** Effective core potentials (ecp group)
 
@@ -915,25 +955,32 @@ power = [
    AO, so the correction factor $\mathcal{N}_i'$ for $d_{xy}$ in the
    ~ao~ group is the ratio $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
 
+   The cartesian/spherical character can be set for all shells at once
+   with ~cartesian~ (~0~: spherical, ~1~: cartesian), or shell by shell
+   with the ~cartesian_shell~ array. A file stores exactly one of the
+   two: when ~cartesian~ is absent, readers must consult ~cartesian_shell~.
 
    #+NAME: ao
-  | Variable        | Type    | Row-major Dimensions | Column-major Dimensions | Description                           |
-  |-----------------+---------+----------------------+-------------------------+---------------------------------------|
-  | ~cartesian~     | ~int~   |                      |                         | ~1~: true, ~0~: false                 |
-  | ~num~           | ~dim~   |                      |                         | Total number of atomic orbitals       |
-  | ~shell~         | ~index~ | ~[ao.num]~           | ~(ao.num)~              | Basis set shell for each AO           |
-  | ~normalization~ | ~float~ | ~[ao.num]~           | ~(ao.num)~              | Normalization factor $\mathcal{N}_i'$ |
+  | Variable          | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                            |
+  |-------------------+---------+----------------------+-------------------------+------------------------------------------------------------------------|
+  | ~cartesian~       | ~int~   |                      |                         | ~0~: false, ~1~: true. If undefined, check the ~cartesian_shell~ array |
+  | ~num~             | ~dim~   |                      |                         | Total number of atomic orbitals                                        |
+  | ~shell~           | ~index~ | ~[ao.num]~           | ~(ao.num)~              | Basis set shell for each AO                                            |
+  | ~normalization~   | ~float~ | ~[ao.num]~           | ~(ao.num)~              | Normalization factor $\mathcal{N}_i'$                                  |
+  | ~cartesian_shell~ | ~int~   | ~[basis.shell_num]~  | ~(basis.shell_num)~     | ~1~: the shell is cartesian, ~0~: the shell is spherical               |
 
+   
    #+CALL: json(data=ao, title="ao")
 
    #+RESULTS:
    :results:
    #+begin_src json :tangle trex.json
        "ao": {
-	       "cartesian" : [ "int"  , []           ]
-	 ,           "num" : [ "dim"  , []           ]
-	 ,         "shell" : [ "index", [ "ao.num" ] ]
-	 , "normalization" : [ "float", [ "ao.num" ] ]
+		 "cartesian" : [ "int"  , []                    ]
+	 ,             "num" : [ "dim"  , []                    ]
+	 ,           "shell" : [ "index", [ "ao.num" ]          ]
+	 ,   "normalization" : [ "float", [ "ao.num" ]          ]
+	 , "cartesian_shell" : [ "int"  , [ "basis.shell_num" ] ]
        } ,
    #+end_src
    :end:
@@ -1185,21 +1232,37 @@ power = [
     #+end_src
     :end:
 
-** Auxiliary atomic orbitals (~auxao~ group)
+** Auxiliary atomic orbitals (~auxao~ groups)
 
   Duplicate of the atomic orbitals group see documentation above.
-  Used with the ~auxbasis~ group to define auxiliary basis functions.
+  Used with the ~auxbasis~ groups to define auxiliary basis functions.
 
-  #+CALL: json(data=ao, title="auxao", replace_group="ao")
+  #+CALL: json(data=ao, title="auxao", replace_dict="[('ao','auxao'),('basis','auxbasis')]")
 
   #+RESULTS:
   :results:
   #+begin_src json :tangle trex.json
       "auxao": {
-	      "cartesian" : [ "int"  , []           ]
-	,           "num" : [ "dim"  , []           ]
-	,         "shell" : [ "index", [ "auxao.num" ] ]
-	, "normalization" : [ "float", [ "auxao.num" ] ]
+		"cartesian" : [ "int"  , []                    ]
+	,             "num" : [ "dim"  , []                    ]
+	,           "shell" : [ "index", [ "auxao.num" ]       ]
+	,   "normalization" : [ "float", [ "auxao.num" ]       ]
+	, "cartesian_shell" : [ "int"  , [ "auxbasis.shell_num" ] ]
+      } ,
+  #+end_src
+  :end:
+
+  #+CALL: json(data=ao, title="auxao2", replace_dict="[('ao','auxao2'),('basis','auxbasis2')]")
+
+  #+RESULTS:
+  :results:
+  #+begin_src json :tangle trex.json
+      "auxao2": {
+		"cartesian" : [ "int"  , []                    ]
+	,             "num" : [ "dim"  , []                    ]
+	,           "shell" : [ "index", [ "auxao2.num" ]      ]
+	,   "normalization" : [ "float", [ "auxao2.num" ]      ]
+	, "cartesian_shell" : [ "int"  , [ "auxbasis2.shell_num" ] ]
       } ,
   #+end_src
   :end:
@@ -1748,7 +1811,8 @@ power = [
 ** Python script from table to json
 
  #+NAME: json
- #+begin_src python :var data=nucleus title="End" last=0 replace_group=[] :results output drawer
+ #+begin_src python :var data=nucleus title="End" last=0 replace_dict="{}" :results output drawer
+replace_dict = dict(eval(replace_dict))
 print("""#+begin_src json :tangle trex.json""")
 if title != "End":
     print("""    "%s": {"""%(title))
@@ -1775,8 +1839,9 @@ if title != "End":
         name = '"'+line[0]+'"'
         typ  = '"'+line[1]+'"'
         dims = line[2]
-        if replace_group:
-            dims = dims.replace(replace_group+".", title+".")
+        if replace_dict:
+            for k in replace_dict:
+                dims = dims.replace(k+".", replace_dict[k]+".")
         if '[' in dims:
             dims = dims.strip()[1:-1]
             dims = [ '"'+x.strip()+'"' for x in dims.split(',') ]

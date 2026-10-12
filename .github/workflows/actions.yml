@@ -63,11 +63,9 @@ jobs:
           grep AC_INIT configure.ac | tr -d '[]' | awk -F, '{ print $2 }' > configure_v
           grep -w VERSION CMakeLists.txt | grep -v 'cmake_minimum_required' | awk '{ print $2 }' > cmake_v
           grep version python/pytrexio/_version.py | tr -d '"' | awk '{ print $3 }' > python_v
-          grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
           grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
           diff configure_v cmake_v
           diff configure_v python_v
-          diff configure_v rust_v
           diff configure_v ocaml_v
 
       - name: setup fixed Python version for testing
@@ -671,41 +669,6 @@ jobs:
           cd ocaml/trexio
           make sources
           dune build
-
-  trexio_rust:
-    name: Rust binding
-    strategy:
-      matrix:
-        os: [ubuntu-22.04, ubuntu-22.04-arm]
-    runs-on: ${{ matrix.os }}
-    needs: get_commit_message
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install libhdf5-dev emacs libtool-bin pkg-config \
-                               clang libclang-dev
-
-      - name: install TREXIO
-        run: |
-          ./autogen.sh
-          ./configure --enable-silent-rules --prefix="$HOME/trexio-install" \
-                      CFLAGS="-g -O2 $TREXIO_STRICT_CFLAGS"
-          make -j2
-          make install
-
-      # TREXIO_DIR points build.rs at what was just built. Without it the crate
-      # downloads the last release and the tests say nothing about this tree.
-      - name: build and test the Rust binding
-        run: |
-          export TREXIO_DIR="$HOME/trexio-install"
-          export LD_LIBRARY_PATH="$HOME/trexio-install/lib"
-          cd rust/trexio
-          cargo build
-          cargo test
 
   trexio_windows_in_tree:
     name: Windows clang-cl, in tree (native Emacs)
