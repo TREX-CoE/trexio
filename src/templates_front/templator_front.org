@@ -4226,8 +4226,8 @@ trexio_exit_code trexio_read_safe_$group_dset$(trexio_t* const file,
   /* To be set by generator : number of indices */
   const uint32_t rank = $group_dset_rank$;
 
-  if (size_index_read < rank * (*buffer_size_read)) return TREXIO_INVALID_ARG_5;
-  if (size_value_read <        (*buffer_size_read)) return TREXIO_INVALID_ARG_7;
+  if (size_index_read < rank * (*buffer_size_read)) return TREXIO_UNSAFE_ARRAY_DIM;
+  if (size_value_read <        (*buffer_size_read)) return TREXIO_UNSAFE_ARRAY_DIM;
 
   return trexio_read_$group_dset$(file, offset_file, buffer_size_read, index_sparse_read, value_sparse_read);
 }
@@ -4371,8 +4371,8 @@ trexio_exit_code trexio_write_safe_$group_dset$(trexio_t* const file,
   /* To be set by generator : number of indices */
   const uint32_t rank = $group_dset_rank$;
 
-  if (size_index_write < rank * buffer_size) return TREXIO_INVALID_ARG_5;
-  if (size_value_write <        buffer_size) return TREXIO_INVALID_ARG_7;
+  if (size_index_write < rank * buffer_size) return TREXIO_UNSAFE_ARRAY_DIM;
+  if (size_value_write <        buffer_size) return TREXIO_UNSAFE_ARRAY_DIM;
 
   return trexio_write_$group_dset$(file, offset_file, buffer_size, index_sparse_write, value_sparse_write);
 }
@@ -5437,7 +5437,7 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 trexio_exit_code
 trexio_read_safe_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64_t* const buffer_size_read, double* const dset_out, const int64_t dim_out)
 {
-  if (dim_out < (*buffer_size_read)) return TREXIO_INVALID_ARG_5;
+  if (dim_out < (*buffer_size_read)) return TREXIO_UNSAFE_ARRAY_DIM;
   return trexio_read_$group_dset$(file, offset_file, buffer_size_read, dset_out);
 }
      #+end_src
@@ -5501,7 +5501,7 @@ trexio_exit_code
 trexio_write_safe_$group_dset$ (trexio_t* const file, const int64_t offset_file, const int64_t buffer_size, const double* dset_in, const int64_t dim_in)
 {
   /* Check that dim_in is large enough */
-  if (dim_in < buffer_size) return TREXIO_INVALID_ARG_5;
+  if (dim_in < buffer_size) return TREXIO_UNSAFE_ARRAY_DIM;
 
   return trexio_write_$group_dset$(file, offset_file, buffer_size, dset_in);
 }
@@ -6254,7 +6254,7 @@ trexio_read_safe_determinant_list (trexio_t* const file, const int64_t offset_fi
   if (rc != TREXIO_SUCCESS) return rc;
 
   /* Check that dset_out is large enough */
-  if (dim_out < (*buffer_size_read) * int_num * 2) return TREXIO_INVALID_ARG_5;
+  if (dim_out < (*buffer_size_read) * int_num * 2) return TREXIO_UNSAFE_ARRAY_DIM;
 
   return trexio_read_determinant_list(file, offset_file, buffer_size_read, dset_out);
 }
@@ -6412,7 +6412,7 @@ trexio_write_safe_determinant_list (trexio_t* const file, const int64_t offset_f
   if (rc != TREXIO_SUCCESS) return rc;
 
   /* Check that dim_in is large enough */
-  if (dim_in < buffer_size * int_num * 2) return TREXIO_INVALID_ARG_5;
+  if (dim_in < buffer_size * int_num * 2) return TREXIO_UNSAFE_ARRAY_DIM;
 
   return trexio_write_determinant_list(file, offset_file, buffer_size, dset_in);
 }
