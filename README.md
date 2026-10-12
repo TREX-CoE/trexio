@@ -98,10 +98,12 @@ spack install --jobs `getconf _NPROCESSORS_ONLN` trexio
 
 #### Guix
 
-The official releases of TREXIO `>=2.0.0` can be installed using the
+TREXIO can be installed using the
 [GNU Guix](https://guix.gnu.org) functional package manager.
 The [trexio.scm](https://github.com/TREX-CoE/trexio/blob/master/tools/trexio.scm)
 Schema file contains the manifest specification for the `trexio` package.
+Note that the manifest shipped here pins an older release; edit the version and
+hash in it to install a newer one.
 It can be installed as follows:
 
 ```
@@ -127,7 +129,7 @@ nix build nixpkgs#trexio
 
 #### Debian/Ubuntu
 
-The official release of TREXIO `2.2.0` is available as a Debian (`.deb`) package thanks to the [Debichem Team](https://wiki.debian.org/Debichem).
+TREXIO is available as a Debian (`.deb`) package thanks to the [Debichem Team](https://wiki.debian.org/Debichem).
 The source code is hosted [here](https://salsa.debian.org/debichem-team/libtrexio) and
 the pre-built binary files are available via the [Debian package registry](https://packages.debian.org/bookworm/libtrexio-dev).
 
@@ -140,10 +142,20 @@ sudo apt-get update && sudo apt-get install libtrexio-dev
 ### Installation from source
 #### Minimal requirements (for users):
 
-- Autotools             (autoconf >= 2.69, automake >= 1.11, libtool >= 2.2) or CMake (>= 3.19)
 - C compiler            (gcc/icc/clang)
-- Fortran compiler      (gfortran/ifort)
+- a C math library and a threading library (`libm` and `pthread` on Unix),
+  which any toolchain provides
+- Fortran compiler      (gfortran/ifort) [optional, only for the Fortran API;
+  see below for how to build without one]
 - HDF5 library          (>= 1.8) [optional, recommended for high performance]
+
+Building from a release tarball needs nothing else: `configure` is shipped with
+it. CMake (>= 3.19) can be used instead, and is the only option on Windows.
+
+Building from a Git clone additionally needs Autotools (autoconf >= 2.71,
+automake >= 1.11, libtool >= 2.2) or CMake, plus the tools listed under
+[For TREXIO developers](#for-trexio-developers-from-the-github-repo-clone)
+below, because the sources are generated.
 
 
 #### Recommended: Installation from the release tarball
@@ -188,15 +200,40 @@ To build TREXIO without HDF5 back end, append `--without-hdf5` option to `config
 - `./configure --without-hdf5`
 - `cmake -S. -Bbuild -DTREXIO_USE_HDF5=OFF`
 
+Conversely, if HDF5 is installed somewhere `configure` does not find it, point
+it at the prefix with `--with-hdf5=PATH`, for example
+`./configure --with-hdf5=$HOME/.local`. The CMake equivalent is
+`-DHDF5_ROOT=PATH`.
+
+A library built without HDF5 still has the text and in-memory back ends.
+Programs that may run against either build should ask
+`trexio_has_back_end(TREXIO_HDF5)` before requesting it, rather than assuming
+it is there.
+
+#### Building without a Fortran compiler
+
+The Fortran API is optional. Pass `--without-fortran` to `configure`, or
+`-DTREXIO_FORTRAN=OFF` to `cmake`, and no Fortran compiler is required.
+
 #### For TREXIO developers: from the GitHub repo clone
 
 Additional requirements:
 
-- Python3       (>= 3.8)
+- Python3       (>= 3.6)
 - Emacs         (>= 26.0)
 - SWIG          (>= 4.0)   [required for the Python API]
 
-**Note:** The source code is auto-generated from the Emacs org-mode (`.org`) files following the literate programming approach. This is why the `src` directory is initially empty.
+**Note:** The C sources are auto-generated from the Emacs org-mode (`.org`)
+files following the literate programming approach. This is why `src` contains
+the `.org` templates but none of the `.c` and `.h` files they produce; those
+appear when you build.
+
+Useful `configure` options for development: `--enable-debug` (which also turns
+warnings into errors), `--enable-sanitizer`, and `--disable-maintainer-mode` to
+build a clone as if it were a release tarball. The CMake equivalents of
+developer mode and the documentation build are `-DTREXIO_DEVEL=ON` and
+`-DTREXIO_BUILD_DOCS=ON`; tests can be switched off with
+`-DBUILD_TESTING=OFF`.
 
 1. `git clone https://github.com/TREX-CoE/trexio.git`
 2. `cd trexio`
@@ -216,6 +253,10 @@ The aforementioned instructions rely on [Autotools](https://www.gnu.org/software
 3. ```make -j 4```
 4. ```ctest -j $(nproc)```
 5. `sudo make install`
+
+**Note**: in a Git clone CMake enables developer mode automatically, because
+`.devel` is present, and then requires Emacs and Python3 to generate the
+sources. From a release tarball it does not, and needs neither.
 
 By default, CMake builds a shared TREXIO library. Pass
 `-DBUILD_SHARED_LIBS=OFF` to build a static library instead.
@@ -280,6 +321,16 @@ production workflows.
 The `make install` command takes care of installing the TREXIO library on the user machine.
 After installation, append `-ltrexio` to the list of compiler  (`$LIBS`) options.
 
+Both build systems also install a pkg-config file, so the flags can be asked
+for instead of assembled by hand:
+
+```
+cc $(pkg-config --cflags trexio) my_program.c $(pkg-config --libs trexio)
+```
+
+which is also the simplest way to get the right flags for static linking
+(`pkg-config --static --libs trexio`).
+
 In some cases (e.g. when using custom installation prefix during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LD_LIBRARY_PATH`.
 In order to link the program against TREXIO, the search path can be modified as follows:
 
@@ -294,9 +345,12 @@ find_package(trexio CONFIG REQUIRED)
 target_link_libraries(your_target PRIVATE trexio::trexio)
 ```
 
-This will make CMake detect and use `trexio-config.cmake`, which also exposes `TREXIO_WITH_HDF5`,
-`TREXIO_HDF5_IS_PARALLEL`, and `TREXIO_WITH_FORTRAN` so downstream projects can inspect the installed
-TREXIO configuration when necessary. You will need to make sure the path to TREXIO CMake config files
+This will make CMake detect and use `trexio-config.cmake`, which also exposes `TREXIO_WITH_HDF5`
+and `TREXIO_WITH_FORTRAN` so downstream projects can inspect the installed
+TREXIO configuration when necessary. A TREXIO installed by CMake additionally
+exposes `TREXIO_HDF5_IS_PARALLEL`; one installed by Autotools does not, so a
+downstream project that tests it should treat an empty value as "unknown"
+rather than as "serial". You will need to make sure the path to TREXIO CMake config files
 and target files are included in environment variable `CMAKE_PREFIX_PATH` if it is not in the standard
 locations.
 
@@ -361,7 +415,7 @@ So `import trexio` is all that is needed, and the wrapper is reachable as
 path, add it to `PYTHONPATH`, or point the installation at the interpreter's own
 directory:
 
-- `./configure --enable-python pythondir=... pyexecdir=...`
+- `./configure --enable-python pyexecdir=...`
 - `cmake -S. -Bbuild -DTREXIO_PYTHON=ON -DTREXIO_INSTALL_PYTHONDIR=...`
 
 Building this way needs the Python development headers and NumPy. SWIG is
@@ -390,11 +444,13 @@ We highly recommend to use virtual environments to avoid compatibility issues an
 
 ### Rust
 
-The Rust API is available on Crates.io, so you can simply run
+The Rust bindings are maintained at <https://github.com/TREX-CoE/trexio-rs>
+and published on Crates.io, so you can simply run
 ```
 cargo add trexio
 ```
-to your Rust project.
+to your Rust project. They are no longer part of this repository, so report
+issues with them there.
 
 ### OCaml
 
@@ -402,6 +458,10 @@ The TREXIO OCaml API is available in OPAM:
 ```
 opam install trexio
 ```
+
+The binding also lives in `ocaml/` in this repository, where a maintainer-mode
+Autotools build can build and install it with `make ocaml` and
+`make ocaml-install`. It is not built by CMake and not covered by CI.
 
 ### Haskell
 
