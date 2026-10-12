@@ -7082,8 +7082,11 @@ trexio_evaluate_nao_radial (const int32_t shell_index, const double r, const int
   int64_t i_log = (int64_t) r_log;
   if (i_log < 0)
     i_log = 0;
-  else if (i_log >= grid_size[shell_index])
-    return 0; // NAOs vanish at the boundary by definition
+  else if (i_log >= grid_size[shell_index]) {
+    /* NAOs vanish at the boundary by definition */
+    *amplitude = 0.0;
+    return TREXIO_SUCCESS;
+  }
 
   double t = r_log - (double) i_log;
   double val_spline = interpolator[i0 + 4*i_log + 0];
