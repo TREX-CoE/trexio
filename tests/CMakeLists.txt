@@ -18,6 +18,7 @@ set(Tests_text
   delete_group_text
   overwrite_all_text
   pre_close
+  nao_radial
   )
 
 if(TREXIO_USE_HDF5)

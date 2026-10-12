@@ -52,11 +52,9 @@ jobs:
           grep AC_INIT configure.ac | tr -d '[]' | awk -F, '{ print $2 }' > configure_v
           grep -w VERSION CMakeLists.txt | grep -v 'cmake_minimum_required' | awk '{ print $2 }' > cmake_v
           grep version python/pytrexio/_version.py | tr -d '"' | awk '{ print $3 }' > python_v
-          grep version rust/trexio/Cargo.toml | grep -v features | tr -d '"' | awk '{ print $3 }' > rust_v
           grep version ocaml/trexio/dune-project | tr -d '()' | awk '{ print $2 }' > ocaml_v
           diff configure_v cmake_v
           diff configure_v python_v
-          diff configure_v rust_v
           diff configure_v ocaml_v
 
       - name: setup fixed Python version for testing

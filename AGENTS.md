@@ -57,7 +57,6 @@ This repository uses literate programming and has a few project rules that AI-ge
   - `configure.ac`
   - `CMakeLists.txt`
   - `python/pytrexio/_version.py`
-  - `rust/trexio/Cargo.toml`
   - `ocaml/trexio/dune-project`
 
 ## 6. Validate changes the same way maintainers do

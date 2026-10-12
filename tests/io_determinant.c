@@ -92,6 +92,18 @@ static int test_write_determinant (const char* file_name, const back_end_t backe
     offset_f += chunk_size;
   }
 
+  // An existing coefficient must not be overwritten in write mode
+  const double overwrite_coef = -1.0;
+  rc = trexio_write_determinant_coefficient(file, 0L, 1L, &overwrite_coef);
+  assert(rc == TREXIO_CORRUPTION_ATTEMPT);
+
+  int64_t stored_size = 1L;
+  double stored_coef = 0.0;
+  rc = trexio_read_determinant_coefficient(file, 0L, &stored_size, &stored_coef);
+  assert(rc == TREXIO_SUCCESS);
+  assert(stored_size == 1L);
+  assert((stored_coef - det_coef[0]) * (stored_coef - det_coef[0]) < 1e-14);
+
   // manually check the consistency of the determinant_num and coefficient_size after writing
   int64_t coeff_size = 0L;
   int64_t determinant_num = 0L;
