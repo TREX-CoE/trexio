@@ -218,6 +218,8 @@ test_trexio_f = tests/trexio_f.f90
 $(test_trexio_f): $(trexio_f)
 	cp $(srcdir)/$(trexio_f) $(test_trexio_f)
 
+tests/test_f.$(OBJEXT): tests/trexio_f.$(OBJEXT)  # Ensure the trexio.mod is built when needed
+
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 endif
 
