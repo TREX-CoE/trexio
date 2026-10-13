@@ -211,6 +211,13 @@ jobs:
                       --with-hdf5=$HOME/hdf5-i686 \
                       LIBS="-lz -lm -ldl"
 
+      # On an ILP32 target int64_t is long long, so this is the lane that shows
+      # the wrapper selection picking the other one of the two than it does
+      # everywhere else. The decision ends up in the Makefile, so that is what
+      # is checked rather than the message configure prints.
+      - name: check that the 32-bit SWIG wrapper is the one selected
+        run: grep -Eq '^pytrexio_c[[:space:]]*=[[:space:]]*\$\(pytrexio_c_long_long\)$' Makefile
+
       - name: compile TREXIO
         run: make -j2
 
@@ -222,6 +229,49 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: test-report-i686
+          path: test-suite.log
+
+  # The lane above builds the C and Fortran APIs for an ILP32 target with
+  # gcc -m32, which is what exercises the wrapper selection. It cannot build the
+  # Python API: that needs a 32-bit interpreter and a 32-bit NumPy, which a
+  # 64-bit runner does not have. So the end-to-end 32-bit path -- generate the
+  # wrapper, compile it, import the module and run the test suite against it --
+  # is covered here instead, in a native i386 image. linux/386 runs directly on
+  # an amd64 host with no emulation. The container is driven from a step rather
+  # than declared with "container:", because the runner injects a 64-bit Node
+  # into job containers and there is none for i386.
+  trexio_i386:
+    name: i386 (32-bit) Linux, C, Fortran and Python
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: build and test C, Fortran and Python in an i386 container
+        run: |
+          docker run --rm --platform linux/386 \
+                 -v "$PWD":/src -w /src \
+                 i386/debian:12 bash -euxc '
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              build-essential gfortran autoconf automake libtool pkg-config \
+              libhdf5-dev swig python3-dev python3-numpy python3-pytest \
+              cmake emacs-nox git ca-certificates
+            ./autogen.sh
+            ./configure --enable-silent-rules --enable-python
+            make -j2
+            make -j2 check
+            make distclean
+            cmake -S. -Bbuilddir -DTREXIO_PYTHON=ON
+            cmake --build builddir -j2
+            ctest --test-dir builddir -j2 --output-on-failure
+          '
+
+      - name: Archive test log file
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-i386
           path: test-suite.log
 
   trexio_macos:
@@ -359,6 +409,14 @@ jobs:
         run: |
           make -j2
           make dist
+
+      # A tarball has to carry both SWIG wrappers, since that is what lets a
+      # build from it select one instead of needing SWIG to generate it.
+      - name: check that both SWIG wrappers are distributed
+        run: |
+          tar tzf trexio-*.tar.gz > tarball.list
+          grep -q '/src/pytrexio_wrap_long\.c$' tarball.list
+          grep -q '/src/pytrexio_wrap_long_long\.c$' tarball.list
 
       - name: publish the source tarball as an artifact
         uses: actions/upload-artifact@v7
