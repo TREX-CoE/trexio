@@ -52,7 +52,9 @@ The authoritative source is `src/templates_front/templator_front.org`.
   - `configure.ac`
   - `CMakeLists.txt`
   - `python/pytrexio/_version.py`
-  - `ocaml/trexio/dune-project`
+
+  The OCaml binding lives in `TREX-CoE/trexio_ocaml` and follows the *released*
+  TREXIO tarball — do not version-bump it from this repository.
 
 ## Validate before submitting
 

@@ -447,7 +447,7 @@ python-test: $(TEST_PY)
 	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
 endif
 
-.PHONY: python-test python-install python-sdist cppcheck check-numpy FORCE ocaml
+.PHONY: python-test python-install python-sdist cppcheck check-numpy FORCE
 
 # =============== DEVELOPER MODE =============== #
 
@@ -508,18 +508,6 @@ cppcheck.out: $(trexio_h)
 	  --enable=all \
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
-
-#################
-# OCaml binding #
-#################
-
-ocaml/trexio/_build/default/lib/trexio.cma:
-	$(MAKE) -C ocaml/trexio
-
-ocaml: ocaml/trexio/_build/default/lib/trexio.cma
-
-ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
-	opam install ocaml/trexio
 
 ##################
 # Python binding #
