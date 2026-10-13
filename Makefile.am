@@ -35,9 +35,6 @@
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod tests/trexio_f.f90
 BUILT_SOURCES = trex.json
-if HAVE_FORTRAN
-BUILT_SOURCES += trexio.mod
-endif
 EXTRA_DIST = .git_hash
 
 PACKAGE_VERSION = @PACKAGE_VERSION@
@@ -220,8 +217,6 @@ test_trexio_f = tests/trexio_f.f90
 
 $(test_trexio_f): $(trexio_f)
 	cp $(srcdir)/$(trexio_f) $(test_trexio_f)
-
-trexio.mod: tests/trexio_f.o
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 endif
