@@ -240,7 +240,8 @@ HTML_TANGLED = docs/index.html            \
                docs/README.html           \
                docs/templator_front.html  \
                docs/fortran_modules.html  \
-               docs/templator_text.html
+               docs/templator_text.html   \
+               docs/templator_memory.html
 if HAVE_HDF5
 HTML_TANGLED += docs/templator_hdf5.html
 endif

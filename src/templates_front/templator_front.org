@@ -442,7 +442,10 @@ PYTREXIO_MAX_STR_LENGTH = 2048
   - ~#define~ constants are in upper case
   - structs are suffixed by ~_s~
   - types are suffixed by ~_t~
-  - API calls return ~trexio_exit_code~ (except for ~trexio_open~ function)
+  - API calls return ~trexio_exit_code~, except ~trexio_open~, which returns a
+    file handle, ~trexio_has_back_end~, which returns a ~bool~,
+    ~trexio_string_of_error~, which returns a string, and
+    ~trexio_string_of_error_f~, which returns nothing
 
 ** Memory allocation
 
@@ -470,10 +473,53 @@ PYTREXIO_MAX_STR_LENGTH = 2048
 
 * Front end
 
-  All calls to TREXIO are thread-safe.
+  TREXIO is intended to be thread-safe, but is not yet: the file handle carries
+  a lock and no code path takes it, so two threads using the same ~trexio_t~
+  handle at the same time are not currently protected against each other. This
+  is a bug rather than a design decision, and it is being fixed; until then the
+  caller has to serialize such calls itself -- see the OpenMP example in the
+  *Examples* section, which reads inside a critical section for this reason.
+  Handles to different files are independent, subject to the single-writer
+  restriction described under *Read/write behavior*.
+
   TREXIO front end is modular, which simplifies implementation of new back ends.
 
 ** Error handling
+
+   Every function but those listed under *Coding conventions* returns a
+   ~trexio_exit_code~, and the code says which of several different things
+   happened. Which codes a caller has to be ready for depends on the call, and
+   the ones below come up often enough to be worth collecting in one place.
+
+   - ~trexio_has_*~ does not return a boolean. It returns ~TREXIO_SUCCESS~ when
+     the data is in the file and ~TREXIO_HAS_NOT~ when it is not, so the test is
+     against one of those and not against zero. Anything else is a real error.
+     (The Python interface converts this to ~True~/~False~ and raises on the
+     error codes.)
+   - Reading data a file does not contain gives ~TREXIO_ATTR_MISSING~ or
+     ~TREXIO_DSET_MISSING~, including when asking for the size of a dataset that
+     was never written.
+   - Writing data a file already contains gives
+     ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ unless the
+     file was opened in ~'u'~ mode; see *Read/write behavior*.
+   - The ~trexio_read_safe_*~ and ~trexio_write_safe_*~ functions take the size
+     of the caller's array and refuse rather than overrun it, with
+     ~TREXIO_UNSAFE_ARRAY_DIM~. (For the sparse, buffered and determinant ones
+     the refusal is currently reported against the argument instead, as
+     ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~; that is a bug and is
+     being changed to ~TREXIO_UNSAFE_ARRAY_DIM~ for consistency.)
+   - Reading chunked data -- sparse, buffered, the determinant list -- gives
+     ~TREXIO_END~ when the end of the data is reached, having set the buffer
+     size to how much was actually read. ~TREXIO_END~ is an ordinary outcome of
+     a loop, not a failure.
+   - ~trexio_delete_*~ gives ~TREXIO_SAFE_MODE~ unless the file was opened in
+     ~'u'~ mode.
+   - Any call to a back end that was not compiled into the library gives
+     ~TREXIO_BACK_END_MISSING~. In practice this means HDF5, which is optional;
+     ~trexio_has_back_end~ answers the question in advance.
+
+   ~trexio_string_of_error~ turns any of these into a message, and the full list
+   is:
 
       #+NAME: table-exit-codes
    | Macro                            | Code | Description                                        |
@@ -889,12 +935,14 @@ return '\n'.join(result)
 
 *** Decoding errors
 
-   The ~trexio_string_of_error~ converts an exit code into a string. The
-   string is assumed to be large enough to contain the error message
-   (typically 128 characters).
+   ~trexio_string_of_error~ converts an exit code into a string. It returns a
+   pointer to a string literal owned by the library, so the caller neither
+   provides a buffer nor frees anything.
 
-   To decode the error messages, ~trexio_string_of_error~ converts an
-   error code into a string.
+   ~trexio_string_of_error_f~ is the variant the Fortran interface uses: it
+   copies the message into a buffer the caller provides, truncating it to
+   ~size_string~ characters. The buffer should be large enough to hold the
+   message, which is at most 128 characters.
 
    #+begin_src c :tangle prefix_front.h :exports none :noweb yes
 const char* trexio_string_of_error(const trexio_exit_code error);
@@ -977,14 +1025,19 @@ def string_of_error(return_code: int) -> str:
 
    2) ~TREXIO_TEXT~ relies on basic file I/O in C, namely ~fopen, fclose, fprintf, fscanf~ etc. from ~stdio.h~ library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have ~.txt~ extension.
 
-   3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory.
+   3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory. It
+   writes nothing to disk and supports the same data as the other two, which makes
+   it a way to pass data between parts of one program through the TREXIO API
+   without a file in between. Because there is no file, ~trexio_close~ discards the
+   data rather than saving it, and the ~file_name~ is not used for anything,
+   although it still has to be a valid non-empty string. See *Read/write behavior*
+   for what flushing and closing mean for each back end.
 
    ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file
    in ~'r'~, ~'w'~, or ~'u'~ mode. In this case, TREXIO will try to automatically detect
    the applicable back end: it first tries to interrogate the path as a TEXT directory;
-   if that fails, it tries as an HDF5 file. This only works for existing paths —
+   if that fails, it tries as an HDF5 file. This only works for existing paths --
    a non-existent path or an unrecognized path is rejected with ~TREXIO_FILE_ERROR~.
-
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
    This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
@@ -1084,14 +1137,79 @@ TREXIO_INVALID_BACK_END = 4
    disk. If data needs to be cached, this is left to the user of the
    library.
 
-   Writing to TREXIO files is done with transactions (all-or-nothing
-   effect). File writes are attempted by
-   calling explicitly the write (~TREXIO_HDF5~) or flush (~TREXIO_TEXT~)
-   function, or when the TREXIO file is closed.
-   If writing is impossible because the data is not valid, no data is written.
+   When a write reaches the storage medium depends on the back end and
+   on the kind of data, so the two have to be described together.
 
-   The order in which the data is written is not necessarily consistent
-   with the order in which the function calls were made.
+   With ~TREXIO_HDF5~, every write goes to the file as it is made. With
+   ~TREXIO_TEXT~, the groups held in memory as structs -- the
+   numerical and string attributes and the dense datasets -- are
+   written out when the group is flushed, which happens on
+   ~trexio_flush~ and when the file is closed; the chunked data,
+   meaning the sparse datasets, the buffered quantities and the
+   determinant list, is instead appended to its own file inside the
+   write call, exactly like HDF5. With ~TREXIO_MEMORY~ nothing is ever
+   written anywhere: the data lives in the handle, ~trexio_flush~
+   succeeds without doing anything, and ~trexio_close~ discards it.
+
+   Two consequences are worth stating plainly. A program using the
+   TEXT back end that terminates abnormally loses whatever it wrote to
+   struct-held groups and had not flushed, but keeps the chunked data
+   it had written; and the in-memory back end is not a way to produce a
+   file, only a way to move data through the TREXIO API within one
+   process.
+
+   Writing is not transactional, in any back end. If a write fails
+   part-way -- the medium fills up, say -- what had already been
+   written stays written, and for the TEXT back end a group being
+   flushed is truncated before it is rewritten, so an interrupted
+   flush can leave that group shorter than it was. Validation of the
+   data happens before anything is written, so invalid data is
+   rejected without touching the file; it is failures of the medium
+   itself that are not undone.
+
+   Data in a TREXIO file is written once. Writing an attribute or a
+   dataset that the file already contains leaves what is stored
+   untouched and returns ~TREXIO_ATTR_ALREADY_EXISTS~ or
+   ~TREXIO_DSET_ALREADY_EXISTS~ instead of replacing it. The ~'u'~
+   (unsafe) open mode is what lifts that restriction, and is the only
+   way to overwrite an existing quantity or to delete a group; see
+   *File opening* below for what that mode costs.
+
+   This is a deliberate design choice rather than a limitation of the
+   implementation: the library can enforce the explicit dependencies
+   between attributes, such as ~nucleus_coord~ needing ~nucleus_num~
+   first, but it cannot see implicit ones, such as the one between the
+   two-electron integrals and the MO coefficients they were computed
+   from. Replacing data that something else was derived from would
+   leave the file inconsistent with no way for the library to notice,
+   so data is immutable by default and the risk is confined to ~'u'~
+   mode.
+
+   The chunked data is the exception to being written once: sparse
+   datasets, the buffered quantities (the determinant and CSF
+   coefficients) and the determinant list are written a chunk at a
+   time, so a later call can extend them past the offset already
+   written. A write at an offset that is already filled is refused,
+   with ~TREXIO_CORRUPTION_ATTEMPT~. Note that ~'u'~ mode does not
+   currently relax that check, although it should; that is a known bug.
+
+   One attribute is exempt by design: ~trexio_write_determinant_list~
+   rewrites ~determinant_num~ on every chunk, which it does by
+   switching the file to ~'u'~ mode for that one write. Growing the
+   determinant list is therefore not an immutability violation even
+   though the count it maintains is written repeatedly.
+
+   So nothing already in a TREXIO file is replaced unless ~'u'~ was
+   asked for, and a collision is reported through the exit code rather
+   than applied silently. A program that may write the same quantity
+   twice should therefore either ask ~trexio_has_*~ first, or treat
+   ~TREXIO_ATTR_ALREADY_EXISTS~ and ~TREXIO_DSET_ALREADY_EXISTS~ as an
+   expected answer rather than as a failure.
+
+   For the groups that the TEXT back end holds as structs, the order in
+   which data reaches the file is not necessarily the order in which
+   the write calls were made, since the whole group is written out at
+   once when it is flushed. Everything else is written in call order.
 
    The TREXIO files are supposed to be opened by only one program at a
    time: if the same TREXIO file is modified simultaneously by multiple
@@ -1144,7 +1262,7 @@ class File:
         Is a name of the full path to the TREXIO file.
     back_end: int
         One of the currently supported TREXIO back ends.
-        For example, TREXIO_HDF5 (0) or TREXIO_TEXT (1).
+        For example, TREXIO_HDF5 (0), TREXIO_TEXT (1) or TREXIO_MEMORY (2).
     mode: str
         One of the currently supported TREXIO open modes.
         For example, 'r' or 'w'.
@@ -1266,9 +1384,37 @@ class File:
        (~TREXIO_HDF5|TREXIO_TEXT|TREXIO_AUTO|TREXIO_MEMORY)~. The
         complete list of back ends is given in the ~trexio.h~ file, after the
         definition of the ~back_end_t~ type.
+     4) ~rc_open~       - pointer to a ~trexio_exit_code~, or ~NULL~. When it is not ~NULL~, the reason for a failure is written there
 
    **Output:**
-     - Pointer to the ~trexio_t~ (struct) file handle.
+     - Pointer to the ~trexio_t~ (struct) file handle, or ~NULL~ on failure.
+
+   ~trexio_open~ is the one API call that does not return a
+   ~trexio_exit_code~, so ~rc_open~ is how it reports why it failed. Pass a
+   pointer to it and check that rather than guessing from the ~NULL~:
+
+   - ~TREXIO_INVALID_ARG_1~ -- the file name is ~NULL~, empty, or longer than
+     4096 characters;
+   - ~TREXIO_INVALID_ARG_2~ -- the mode is not one of ~'w'~, ~'r'~, ~'u'~;
+   - ~TREXIO_INVALID_ARG_3~ -- the back end is not one of the above, or
+     ~TREXIO_AUTO~ was given in a mode other than ~'r'~;
+   - ~TREXIO_BACK_END_MISSING~ -- ~TREXIO_HDF5~ was requested of a build
+     configured without HDF5;
+   - ~TREXIO_FILE_ERROR~ -- ~TREXIO_MEMORY~ with ~'r'~, or ~TREXIO_AUTO~ on a
+     path that is neither a directory nor an HDF5 file;
+   - ~TREXIO_OPEN_ERROR~ -- the back end could not open the file, for instance
+     because it does not exist in ~'r'~ mode or is not writable;
+   - ~TREXIO_LOCK_ERROR~ -- the TEXT back end could not take the lock on the
+     directory;
+   - ~TREXIO_VERSION_PARSING_ISSUE~ -- the version recorded in an existing file
+     could not be parsed;
+   - ~TREXIO_FAILURE~ -- allocation of the handle failed.
+
+   Opening a file also reads or writes the ~metadata~ group -- the package
+   version on creation, the unsafe flag in ~'u'~ mode -- so ~rc_open~ can also
+   carry whatever those calls returned.
+
+   On success ~rc_open~ is set to ~TREXIO_SUCCESS~.
 
   **Note:** ~'w'~ does not truncate. A file that is already there is opened with
   its contents intact, in every mode: the back ends open what exists rather than
@@ -1277,17 +1423,12 @@ class File:
   to start from nothing the file has to be removed first (the directory, for the
   TEXT back end).
 
-  **Note:** data in a TREXIO file is written once. In ~'w'~ mode, writing an
-  attribute or a dataset that the file already contains returns
-  ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ and leaves what is
-  stored untouched; ~'u'~ mode is what lifts that restriction. Sparse data,
-  buffered quantities (the determinant and CSF coefficients), and the
-  determinant list are written in chunks, so a later call can extend them, but
-  a write at an offset that is already filled returns
-  ~TREXIO_CORRUPTION_ATTEMPT~ -- in ~'u'~ mode as well, since that check is not
-  relaxed by it. Nothing already in a file is ever replaced without being asked
-  for in ~'u'~ mode, and every collision is reported rather than applied
-  silently.
+  **Note:** data in a TREXIO file is written once, which is what distinguishes
+  the two writing modes: in ~'w'~ mode an attribute or a dataset that the file
+  already contains cannot be overwritten, and ~'u'~ mode exists to lift exactly
+  that restriction. The rule, the exit codes that report it and the exception
+  made for data written in chunks are described under *Read/write behavior*
+  above.
 
   Upon creation of the TREXIO file, the ~package_version~ attribute of the
   ~metadata~ group is set to the ~TREXIO_PACKAGE_VERSION~ string.
@@ -1302,16 +1443,20 @@ class File:
   mode: upon the first unsafe call to ~trexio_open~ the ~unsafe~ attribute of the
   ~metadata~ group is set to 1 (true), tagging the file as one that might be
   inconsistent. Once the contents have been validated (e.g. with
-  ~trexio-tools~), the file can be tagged as safe again with
+  ~trexio-validate~, https://github.com/TREX-CoE/trexio-validate), the file can
+  be tagged as safe again with
   ~trexio_mark_safety~, under the responsibility of the user.
 
   **Note:** the ~file_name~ in TEXT back end actually corresponds to the
-  name of the directory where ~.txt~ data files are stored. The
-  actual name of each ~.txt~ file corresponds to the group name
-  provided in ~trex.config~ (e.g. ~nucleus.txt~ for nuclei-related
-  data).  These names are populated by the generator.py (i.e. they
-  are hard-coded), which is why the user should tend to avoid
-  renaming the ~.txt~ data files.
+  name of the directory where ~.txt~ data files are stored. One file is
+  named after each group (e.g. ~nucleus.txt~ for nuclei-related data),
+  and the chunked data gets a file named after the dataset instead
+  (e.g. ~ao_2e_int_eri.txt~, with its ~.size~ companion). All these
+  names come from =trex.json=, which is generated from =trex.org=, and
+  are hard-coded into the library by generator.py -- which is why the
+  user should tend to avoid renaming the ~.txt~ data files. The full
+  contents of the directory are described in the *TEXT back end*
+  documentation.
 
 *** C
 
@@ -1695,7 +1840,7 @@ def _open(file_name: str, mode: str, back_end: int):
         One of the currently supported ~open~ modes (e.g. 'w', 'r')
 
     back_end: int
-        One of the currently supported TREXIO back ends (e.g. TREXIO_HDF5, TREXIO_TEXT)
+        One of the currently supported TREXIO back ends (e.g. TREXIO_HDF5, TREXIO_TEXT, TREXIO_MEMORY)
 
     Return:
         SWIG object of type trexio_s.
@@ -1730,8 +1875,10 @@ def _open(file_name: str, mode: str, back_end: int):
    #+end_src
 
 *** Zero-based versus one-based arrays of indices
-   Because arrays are zero-based in Fortran, we need to set a flag to
-   know if we need to shift by 1 arrays of indices.
+   Because arrays are one-based in Fortran and zero-based in C, we need
+   to set a flag to know if we need to shift by 1 arrays of indices.
+   The Fortran interface sets it, and it is never unset; C and Python
+   callers should leave it alone.
 
    #+begin_src c :tangle prefix_front.h :exports none
 trexio_exit_code trexio_set_one_based(trexio_t* file);
@@ -1766,6 +1913,24 @@ end interface
 
     output:
       ~trexio_exit_code~ exit code.
+
+    Closing a file opened for writing does more than release the
+    handle. It first runs the checks and completions described under
+    *Tasks to be done before closing*, which can write data of their
+    own -- ~electron_num~, ~electron_up_num~ and ~electron_dn_num~ are
+    derived from each other there -- and which can fail, so
+    ~trexio_close~ can return ~TREXIO_INVALID_ELECTRON_NUM~,
+    ~TREXIO_INVALID_DETERMINANT_NUM~ or ~TREXIO_AMBIGUOUS_CARTESIAN~.
+    With the TEXT back end it then writes out any group still held in
+    memory, so a failure reported here can be a failure to write the
+    file.
+
+    **Note:** the handle is released whatever is returned. A
+    ~trexio_close~ that reports an error has still freed the file
+    handle, so the call must not be retried and the handle must not be
+    used again; both are use-after-free. The exit code tells the caller
+    whether the file it just closed is complete, not whether it is
+    still open.
 
 *** C
 
@@ -1896,6 +2061,19 @@ def _close(trexio_file):
 
     output:
       ~trexio_exit_code~ exit code.
+
+    What this does depends on the back end, as described under
+    *Read/write behavior*: for ~TREXIO_TEXT~ it writes out the groups
+    held in memory as structs, which is the only way to get them onto
+    disk short of closing the file; for ~TREXIO_HDF5~ it asks HDF5 to
+    flush its own buffers for data already written to the file; and for
+    ~TREXIO_MEMORY~ there is nothing to flush, so it succeeds without
+    doing anything.
+
+    **Note:** flushing a file opened in ~'r'~ mode returns
+    ~TREXIO_READONLY~ with the TEXT back end, and ~TREXIO_SUCCESS~ with
+    the other two. A caller that flushes unconditionally should not
+    treat ~TREXIO_READONLY~ as a failure.
 
 *** C
 
@@ -2054,7 +2232,26 @@ def _inquire(file_name: str) -> bool:
 
    These functions provide portable file and directory operations
    without using system() calls or fork/exec, for better portability
-   and security.
+   and security. They are what ~trexio_cp~ is built from, and they are
+   part of the public API because a program that manages TREXIO files
+   needs them for the TEXT back end, whose "file" is a directory.
+
+   - ~trexio_remove_file~ deletes one file. A path that is not there is
+     not an error, so it can be called unconditionally.
+   - ~trexio_remove_directory_recursive~ deletes a directory and
+     everything in it, which is how a TEXT file is deleted.
+   - ~trexio_copy_file~ copies one file, **overwriting the destination
+     if it exists**. This is the one place the library will replace a
+     file without being asked; ~trexio_cp~ checks first and refuses.
+   - ~trexio_copy_directory_recursive~ copies a directory and its
+     contents, which is how a TEXT file is copied.
+
+   All four take paths and return a ~trexio_exit_code~:
+   ~TREXIO_INVALID_ARG_1~ or ~TREXIO_INVALID_ARG_2~ for a ~NULL~ path,
+   ~TREXIO_FILE_ERROR~ when the operation fails, and
+   ~TREXIO_SUCCESS~ otherwise. They are deliberately not exposed in the
+   Fortran and Python interfaces, which have their own standard
+   facilities for this.
 
 *** C
 
@@ -2347,8 +2544,15 @@ trexio_copy_directory_recursive(const char* source, const char* dest)
 
 ** File copy
 
-   ~trexio_cp~ copies a TREXIO file using =cp=. The destination file
+   ~trexio_cp~ copies a TREXIO file. The destination file
    is not overwritten if it exists, an error is returned.
+
+   The copy is made by the portable file and directory operations
+   described below, not by invoking =cp=, so it needs no shell and no
+   external program. It works for files written by the TEXT and HDF5
+   back ends: it determines which by inquiring the source path, so it
+   takes path names rather than an open handle, and there is
+   consequently nothing for it to copy for an in-memory file.
 
    **Input parameters:**
      1) ~source_file_name~       - string containing the name of the source file
@@ -2615,6 +2819,30 @@ end interface
 
 ** Tasks to be done before closing
 
+   ~trexio_pre_close~ is internal, but what it does is part of the contract of
+   ~trexio_close~, which runs it and returns its result. On a file opened for
+   writing it both completes and checks the data:
+
+   - the electron counts are completed from whichever were written. Writing
+     ~electron_up_num~ alone sets ~electron_dn_num~ to zero and
+     ~electron_num~ to the up count, and the other way round; writing both
+     spin counts sets ~electron_num~ to their sum. If all three were written
+     and the total does not match the sum, the close fails with
+     ~TREXIO_INVALID_ELECTRON_NUM~ -- except in ~'u'~ mode, where the total is
+     corrected instead. So a writer need only provide one spin count, and
+     providing all three means they have to agree.
+   - when a file holds both a determinant list and determinant coefficients,
+     ~determinant_num~ has to match the number of coefficients stored, or the
+     close fails with ~TREXIO_INVALID_DETERMINANT_NUM~.
+   - the cartesian/spherical flags are checked. A valid file states the
+     character of its AO basis exactly once: either ~ao.cartesian~ for all
+     shells at once, or ~ao.cartesian_shell~ shell by shell. Writing both is
+     ambiguous and fails the close with ~TREXIO_AMBIGUOUS_CARTESIAN~ -- so a
+     program that writes one of them must not also write the other, and will
+     only find out at close time. Writing neither is not valid either, since a
+     reader would have to fall back on a default, and a default could change
+     between versions of the specification.
+
     #+begin_src c :tangle trexio_private.h :exports none
 trexio_exit_code trexio_pre_close(trexio_t* file);
     #+end_src
@@ -2796,7 +3024,17 @@ trexio_pre_close (trexio_t* file)
    | ~$group_dset_py_dtype$~        | Standard datatype of the dataset [Python]           | ~float/int~                         |
    | ~$default_prec$~               | Default precision for read/write without suffix [C] | ~64/32~                             |
    | ~$is_index$~                   | Expands to ~true~ if dataset has a type ~index~ [C] | ~true/false~                        |
+   | ~$group_dset_unique_rank$~     | Number of distinct dimensions of the dataset        | ~2~                                 |
+   | ~$group_dset_unique_dim$~      | One of the distinct dimensions of the dataset       | ~nucleus_num~                       |
+   | ~$dim_id$~                     | Index of that dimension, counted from zero          | ~0~                                 |
 
+
+   The last two behave unlike every other variable in the table: a line
+   containing ~$group_dset_unique_dim$~ or ~$dim_id$~ is not substituted once
+   but repeated, once per distinct dimension, with the pair filled in each
+   time. That is how a dataset's dimensions are read in a single generated
+   block, and the places it happens are marked with a comment in the templates
+   below.
 
    Some of the aforementioned template variables with ~group_dset~ prefix are duplicated with ~group_num~ prefix,
    e.g. you might find $group_num_dtype_double$ in the templates corresponding to numerical attributes.
@@ -2819,6 +3057,13 @@ trexio_pre_close (trexio_t* file)
    *read* and *write* functionality.  TREXIO supports I/O with single
    or double precision for integer and floating point numbers.
 
+   *Note:* every *write* function below obeys the write-once rule
+   described in *Read/write behavior*. Unless the file was opened in
+   ~'u'~ (unsafe) mode, writing something the file already contains
+   changes nothing and returns ~TREXIO_ATTR_ALREADY_EXISTS~ or
+   ~TREXIO_DSET_ALREADY_EXISTS~; this is why ~trexio_has_*~ exists
+   alongside each of them.
+
    *Note:* single integer attributes that contain ~num~ in their name (e.g. ~nucleus_num~) are
    considered dimensioning variables and cannot be negative or 0. An attempt to write negative or 0
    value will result in ~TREXIO_INVALID_ARG_2~ exit code.
@@ -2828,9 +3073,9 @@ trexio_pre_close (trexio_t* file)
 
    This section concerns API calls related to TREXIO groups
 
-   | Function name        | Description                       |
-   |----------------------+-----------------------------------|
-   | ~trexio_has_$group$~ | Check if a group exists in a file |
+   | Function name        | Description                                                          |
+   |----------------------+----------------------------------------------------------------------|
+   | ~trexio_has_$group$~ | Check if a group exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) |
 
 *** C templates for front end
 
@@ -2925,15 +3170,15 @@ def has_$group$(trexio_file) -> bool:
    This section concerns API calls related to numerical attributes,
    namely single value of int/float types.
 
-   | Function name                 | Description                            | Precision |
-   |-------------------------------+----------------------------------------+-----------|
-   | ~trexio_has_$group_num$~      | Check if an attribute exists in a file | ---       |
-   | ~trexio_read_$group_num$~     | Read a attribute                       | Single    |
-   | ~trexio_write_$group_num$~    | Write a attribute                      | Single    |
-   | ~trexio_read_$group_num$_32~  | Read a attribute                       | Single    |
-   | ~trexio_write_$group_num$_32~ | Write a attribute                      | Single    |
-   | ~trexio_read_$group_num$_64~  | Read a attribute                       | Double    |
-   | ~trexio_write_$group_num$_64~ | Write a attribute                      | Double    |
+   | Function name                 | Description                                                               | Precision                   |
+   |-------------------------------+---------------------------------------------------------------------------+-----------------------------|
+   | ~trexio_has_$group_num$~      | Check if an attribute exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) | ---                         |
+   | ~trexio_read_$group_num$~     | Read an attribute in default precision                                    | Double/Single for float/int |
+   | ~trexio_write_$group_num$~    | Write an attribute in default precision                                   | Double/Single for float/int |
+   | ~trexio_read_$group_num$_32~  | Read an attribute                                                         | Single                      |
+   | ~trexio_write_$group_num$_32~ | Write an attribute                                                        | Single                      |
+   | ~trexio_read_$group_num$_64~  | Read an attribute                                                         | Double                      |
+   | ~trexio_write_$group_num$_64~ | Write an attribute                                                        | Double                      |
 
 *** C templates for front end
 
@@ -3345,17 +3590,21 @@ def has_$group_num$(trexio_file) -> bool:
 
    This section concerns API calls related to datasets.
 
-   | Function name                    | Description                          | Precision                   |
-   |----------------------------------+--------------------------------------+-----------------------------|
-   | ~trexio_has_$group_dset$~        | Check if a dataset exists in a file  | ---                         |
-   | ~trexio_read_$group_dset$~       | Read  a dataset in default precision | Double/Single for float/int |
-   | ~trexio_write_$group_dset$~      | Write a dataset in default precision | Double/Single for float/int |
-   | ~trexio_read_safe_$group_dset$~  | Read  a bounded dataset              | Double                      |
-   | ~trexio_write_safe_$group_dset$~ | Write a bounded dataset              | Double                      |
-   | ~trexio_read_$group_dset$_32~    | Read  a dataset in single precision  | Single                      |
-   | ~trexio_write_$group_dset$_32~   | Write a dataset in single precision  | Single                      |
-   | ~trexio_read_$group_dset$_64~    | Read  a dataset in double precision  | Double                      |
-   | ~trexio_write_$group_dset$_64~   | Write a dataset in double precision  | Double                      |
+   | Function name                       | Description                                                            | Precision                   |
+   |-------------------------------------+------------------------------------------------------------------------+-----------------------------|
+   | ~trexio_has_$group_dset$~           | Check if a dataset exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) | ---                         |
+   | ~trexio_read_$group_dset$~          | Read  a dataset in default precision                                   | Double/Single for float/int |
+   | ~trexio_write_$group_dset$~         | Write a dataset in default precision                                   | Double/Single for float/int |
+   | ~trexio_read_safe_$group_dset$~     | Read  a bounded dataset                                                | Double/Single for float/int |
+   | ~trexio_write_safe_$group_dset$~    | Write a bounded dataset                                                | Double/Single for float/int |
+   | ~trexio_read_$group_dset$_32~       | Read  a dataset in single precision                                    | Single                      |
+   | ~trexio_write_$group_dset$_32~      | Write a dataset in single precision                                    | Single                      |
+   | ~trexio_read_$group_dset$_64~       | Read  a dataset in double precision                                    | Double                      |
+   | ~trexio_write_$group_dset$_64~      | Write a dataset in double precision                                    | Double                      |
+   | ~trexio_read_safe_$group_dset$_32~  | Read  a bounded dataset in single precision                            | Single                      |
+   | ~trexio_write_safe_$group_dset$_32~ | Write a bounded dataset in single precision                            | Single                      |
+   | ~trexio_read_safe_$group_dset$_64~  | Read  a bounded dataset in double precision                            | Double                      |
+   | ~trexio_write_safe_$group_dset$_64~ | Write a bounded dataset in double precision                            | Double                      |
 
 *** C templates for front end
 
@@ -3363,7 +3612,8 @@ def has_$group_num$(trexio_file) -> bool:
    First parameter is the ~TREXIO~ file handle. Second parameter is the variable to be written/read
    to/from the ~TREXIO~ file (except for ~trexio_has_~ functions).
    Suffixes ~_32~ and ~_64~ correspond to API calls dealing with single and double precision, respectively.
-   The basic (non-suffixed) API call on datasets deals with real(c_double) (see Table above).
+   The basic (non-suffixed) API call on datasets deals with the default precision of the data type:
+   ~double~ for float datasets and ~int32_t~ for integer and index ones (see Table above).
 
 **** Function declarations
 
@@ -4175,6 +4425,22 @@ def has_$group_dset$(trexio_file) -> bool:
      of integrals that have been read before EOF and the ~trexio_read_~ function return
      ~TREXIO_END~ exit code instead of ~TREXIO_SUCCESS~.
 
+   On reading, ~offset_file~ is free: any chunk of what is in the file can be
+   asked for, in any order. On writing it is not, and this is where the
+   parameter is easy to misread. Sparse data can only be appended: writing at an
+   offset below what the file already holds returns
+   ~TREXIO_CORRUPTION_ATTEMPT~, in ~'u'~ mode as well, since that is the check
+   that keeps the file from being silently corrupted. Writing at an offset
+   *beyond* the end is not refused, so it is possible to leave a gap, and
+   nothing will report it later.
+
+   Note also that only the HDF5 back end positions a write at ~offset_file~. The
+   TEXT and in-memory back ends append, which agrees with the rule above for
+   every sequence of writes that follows it, and silently disagrees for one that
+   leaves a gap. Write chunks end to end -- each ~offset_file~ equal to the
+   total written so far, which ~trexio_read_$group_dset$_size~ reports for an
+   existing file -- and all three back ends behave identically.
+
    The storage of ~int~ indices is internally compressed based on the maximum possible value of an index,
    which is derived from the corresponding dimension of the sparse array (e.g. ~ao_num~ is the upper bound
    of indices in the aforementioned ~ao_2e_int_eri~ dataset).
@@ -4190,14 +4456,14 @@ def has_$group_dset$(trexio_file) -> bool:
 
    This section concerns API calls related to sparse data structures.
 
-   | Function name                    | Description                                                 | Precision                        |
-   |----------------------------------+-------------------------------------------------------------+----------------------------------|
-   | ~trexio_has_$group_dset$~        | Check if a sparse dset is present in a file                 | ---                              |
-   | ~trexio_read_$group_dset$~       | Read indices and values of a sparse dset                    | Single/Double for indices/values |
-   | ~trexio_read_$group_dset$_size~  | Read the number of sparse data elements stored in the file  | Double for size                  |
-   | ~trexio_write_$group_dset$~      | Write indices and values of a sparse dset                   | Single/Double for indices/values |
-   | ~trexio_read_safe_$group_dset$~  | Safe (bounded) read of indices and values  (for Python API) | Single/Double for indices/values |
-   | ~trexio_write_safe_$group_dset$~ | Safe (bounded) write of indices and values (for Python API) | Single/Double for indices/values |
+   | Function name                    | Description                                                | Precision                        |
+   |----------------------------------+------------------------------------------------------------+----------------------------------|
+   | ~trexio_has_$group_dset$~        | Check if a sparse dset is present in a file                | ---                              |
+   | ~trexio_read_$group_dset$~       | Read indices and values of a sparse dset                   | Single/Double for indices/values |
+   | ~trexio_read_$group_dset$_size~  | Read the number of sparse data elements stored in the file | Double for size                  |
+   | ~trexio_write_$group_dset$~      | Write indices and values of a sparse dset                  | Single/Double for indices/values |
+   | ~trexio_read_safe_$group_dset$~  | Safe (bounded) read of indices and values                  | Single/Double for indices/values |
+   | ~trexio_write_safe_$group_dset$~ | Safe (bounded) write of indices and values                 | Single/Double for indices/values |
 
 *** C templates for front end
 **** Function declarations
@@ -4840,11 +5106,28 @@ def has_$group_dset$(trexio_file) -> bool:
    This section concerns API calls related to datasets of strings.
    Only ASCII strings are supported, for compatibility with C and Fortran.
 
-   | Function name               | Description                         |
-   |-----------------------------+-------------------------------------|
-   | ~trexio_has_$group_dset$~   | Check if a dataset exists in a file |
-   | ~trexio_read_$group_dset$~  | Read  a dataset                     |
-   | ~trexio_write_$group_dset$~ | Write a dataset                     |
+   | Function name                   | Description                                                            |
+   |---------------------------------+------------------------------------------------------------------------|
+   | ~trexio_has_$group_dset$~       | Check if a dataset exists in a file (TREXIO_SUCCESS or TREXIO_HAS_NOT) |
+   | ~trexio_read_$group_dset$~      | Read  a dataset as an array of strings                                 |
+   | ~trexio_write_$group_dset$~     | Write a dataset from an array of strings                               |
+   | ~trexio_read_$group_dset$_low~  | Read  a dataset into one flat buffer                                   |
+   | ~trexio_write_$group_dset$_low~ | Write a dataset from one flat buffer                                   |
+
+   The ~_low~ variants exist because an array of strings can be handed over in
+   two shapes, and the language interfaces need the other one. The plain
+   functions take a ~char**~, one pointer per string; the ~_low~ functions take
+   a single ~char*~ holding the strings one after another, each padded to
+   ~max_str_len + 1~ characters, which is the shape a Fortran
+   ~character(len=:), dimension(:)~ array already has. Both read and write the
+   same data; pick whichever matches the buffer at hand.
+
+   ~max_str_len~ is the length of one string, not counting the terminator, and
+   it has to be greater than zero. On a read, the buffer must have room for
+   ~max_str_len + 1~ characters per string, and a string longer than that is
+   truncated. On a write, ~max_str_len~ has to be at least as long as the
+   longest string being written, or ~TREXIO_INVALID_STR_LEN~ is returned and
+   nothing is written.
 
 *** C templates for front end
 
@@ -5314,10 +5597,23 @@ def has_$group_dset$(trexio_file) -> bool:
 
 ** Templates for front end has/read/write a buffered vector
 
-   This corresponds to the ~buffer~ data type and is particularly useful for incremental additiona of values like
+   This corresponds to the ~buffer~ data type and is particularly useful for incremental addition of values like
    it was done for ~sparse~ data but without the need to supply tuples of indices.
    Before each write, the current buffered-vector size is checked so that a
    chunk cannot overwrite values that are already stored.
+
+   ~offset_file~ and ~buffer_size~ mean what they mean for sparse data: a read
+   starts ~offset_file~ elements into the stored vector, reads up to
+   ~buffer_size~ elements, and on reaching the end overwrites ~buffer_size~ with
+   how many it actually read and returns ~TREXIO_END~. A write appends a chunk
+   of ~buffer_size~ elements. ~trexio_read_$group_dset$_size~ reports how many
+   elements the file holds, which is the offset the next chunk should be written
+   at.
+
+   These behave like the sparse functions in the respects that matter: a
+   negative ~offset_file~ or a non-positive ~buffer_size~ is rejected with
+   ~TREXIO_INVALID_ARG_*~, and a write at an offset the file has already
+   filled is refused with ~TREXIO_CORRUPTION_ATTEMPT~.
 
 
    | Function name                    | Description                                    | Precision |
@@ -5326,8 +5622,8 @@ def has_$group_dset$(trexio_file) -> bool:
    | ~trexio_read_$group_dset$~       | Read values of a vector in buffers             | Double    |
    | ~trexio_read_$group_dset$_size~  | Read the number of elements stored in the file | Double    |
    | ~trexio_write_$group_dset$~      | Write values of a vector in buffers            | Double    |
-   | ~trexio_read_safe_$group_dset$~  | Safe (bounded) read  (for Python API)          | Double    |
-   | ~trexio_write_safe_$group_dset$~ | Safe (bounded) write (for Python API)          | Double    |
+   | ~trexio_read_safe_$group_dset$~  | Safe (bounded) read                            | Double    |
+   | ~trexio_write_safe_$group_dset$~ | Safe (bounded) write                           | Double    |
 
 *** C source code
 
@@ -6050,11 +6346,23 @@ def has_$group_str$(trexio_file) -> bool:
 ** Templates for front end delete an entire group (UNSAFE MODE)
 *** Introduction
 
-   This section concerns API calls related to string attributes.
+   This section concerns the API call that deletes an entire group.
 
    | Function name           | Description                               |
    |-------------------------+-------------------------------------------|
    | ~trexio_delete_$group$~ | Delete a given group from the TREXIO file |
+
+   The file has to be open in ~'u'~ mode; otherwise the call returns
+   ~TREXIO_SAFE_MODE~ and deletes nothing.
+
+   **Note:** how much is deleted depends on the back end, and the difference
+   matters for the groups that hold chunked data. With the HDF5 back end the
+   whole group goes, the sparse, buffered and determinant datasets inside it
+   included. With the TEXT and in-memory back ends only the group itself is
+   removed -- the files, or the blobs, holding its chunked data stay behind, so
+   a ~trexio_has_*~ on one of those will still report it as present after the
+   group has been deleted. Deleting a group that holds chunked data and
+   expecting it to be gone therefore works only with HDF5.
 
 *** C templates for front end
 
@@ -6142,12 +6450,35 @@ def delete_$group$(trexio_file) -> None:
 
    This section concerns API calls related to Slater determinants.
 
-   | Function name                   | Description                                        |
-   |---------------------------------+----------------------------------------------------|
-   | ~trexio_has_determinant_list~   | Check if an attribute exists in a file             |
-   | ~trexio_write_determinant_list~ | Write an attribute                                 |
-   | ~trexio_read_determinant_list~  | Read an attribute                                  |
-   | ~trexio_get_int64_num~          | Get the number of int64 bit fields per determinant |
+   | Function name                        | Description                                                             |
+   |--------------------------------------+-------------------------------------------------------------------------|
+   | ~trexio_has_determinant_list~        | Check if the determinant list exists (TREXIO_SUCCESS or TREXIO_HAS_NOT) |
+   | ~trexio_write_determinant_list~      | Write a chunk of determinants                                           |
+   | ~trexio_read_determinant_list~       | Read a chunk of determinants                                            |
+   | ~trexio_write_safe_determinant_list~ | Write a chunk of determinants, bounded                                  |
+   | ~trexio_read_safe_determinant_list~  | Read a chunk of determinants, bounded                                   |
+   | ~trexio_read_determinant_num~        | Read how many determinants the file holds                               |
+   | ~trexio_get_int64_num~               | Get the number of int64 bit fields per determinant                      |
+
+   The determinant list is chunked like the sparse data: ~offset_file~ and
+   ~buffer_size~ have the same meaning, a read that reaches the end overwrites
+   ~buffer_size~ with how many determinants it read and returns ~TREXIO_END~,
+   and a write at an offset below what the file already holds is
+   ~TREXIO_CORRUPTION_ATTEMPT~.
+
+   What the buffer holds needs stating, since it cannot be guessed from the
+   signature. Let ~int_num~ be ~trexio_get_int64_num~, the number of bit fields
+   one spin component of a determinant needs. Each determinant then occupies
+   ~2*int_num~ consecutive ~int64_t~: the up-spin bit fields first, then the
+   down-spin ones. So a chunk of ~buffer_size~ determinants is an array of
+   ~buffer_size * 2 * int_num~ ~int64_t~, determinant $i$ starts at
+   ~2*int_num*i~, and its down-spin half at ~2*int_num*i + int_num~. The
+   ~trexio_to_orbital_list_up_dn~ helper takes a pointer to one determinant laid
+   out this way.
+
+   ~determinant_num~ is maintained by the library as the list grows, which is
+   why it is the one attribute exempt from the write-once rule described under
+   *Read/write behavior*.
 
 *** C source code
 
@@ -6391,7 +6722,7 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
     return TREXIO_INT_SIZE_OVERFLOW;
   }
   // Overwrite previous value. Here we have to temporarily set the file->mode to 'u' to trick the API
-  //   in order to overwrite existing determinant_num. Otherwise the API returns TREXIO_NUM_ALREADY_EXISTS.
+  //   in order to overwrite existing determinant_num. Otherwise the API returns TREXIO_ATTR_ALREADY_EXISTS.
   char mode_tmp = file->mode;
   file->mode = 'u';
   rc = trexio_write_determinant_num_64(file, det_num);
@@ -6727,7 +7058,8 @@ def has_determinant_list(trexio_file) -> bool:
   ~trexio_mark_safety~ checks if the file has been open in UNSAFE mode.
   If it was, the ~metadata_unsafe~ attribute can be overwritten with the value provided in a second argument of the function.
   Since ~metadata_unsafe~ is set to ~1~ (~true~) upon the first opening of the file in UNSAFE mode, this value is immutable.
-  However, if the user validated that the file is correct (e.g. using ~trexio-tools~),
+  However, if the user validated that the file is correct (e.g. using
+  ~trexio-validate~, https://github.com/TREX-CoE/trexio-validate),
   then value of the ~metadata_unsafe~ attribute can be changed using the aforementioned function.
 
   ~trexio_to_orbital_list~ function converts the list of integer bit fields of a
@@ -6749,6 +7081,26 @@ def has_determinant_list(trexio_file) -> bool:
   ~trexio_evaluate_nao_radial~ function evaluates the radial function of an NAO for a given distance from the center.
 
   ~trexio_evaluate_nao_radial_all~ evaluates all radial functions at a given position in space.
+
+  Each of the conversion helpers above comes in a ~trexio_safe_*~ variant --
+  ~trexio_safe_to_orbital_list~, ~trexio_safe_to_orbital_list_up_dn~,
+  ~trexio_safe_phase_aabb_to_abab~ and ~trexio_safe_phase_aabb_to_abab_list~ --
+  which take the size of each array the caller provides and return
+  ~TREXIO_INVALID_ARG_*~ for the offending argument rather than writing past the
+  end of it. They are the ones the Python and Fortran interfaces use, and the
+  ones to prefer in C whenever the number of occupied orbitals is not known in
+  advance.
+
+  Determinants are handled in terms of a few public definitions:
+  ~bitfield_t~ is the integer type one bit field is stored in,
+  ~TREXIO_INT_SIZE~ is how many bits that is, and ~TREXIO_NORB_PER_INT~ is how
+  many orbitals one bit field therefore holds. A buffer for one determinant has
+  to be sized from them, since a determinant occupies ~2*int_num~ of them -- see
+  the determinant section for the layout -- where ~int_num~ is
+  ~(mo_num - 1) / TREXIO_NORB_PER_INT + 1~, which is also what
+  ~trexio_get_int64_num~ returns for an open file.
+  ~TREXIO_ORBITAL_SHIFT~ is the offset between an orbital index and its bit
+  position, and is already accounted for by the conversion helpers.
 
 ** C
 

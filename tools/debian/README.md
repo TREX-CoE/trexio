@@ -33,7 +33,8 @@ and to build a debian package within it (see `pdebuild` wrapper command).
 
 ## Make
 
-TREXIO supplies `make debian_from_dist` rule to produce a `libtrexio` debian package.
-It relies on specifications in the `debian/` folder.
-This rule should be executed in the source code distribution (extracted from the tarball) and **not in the GitHub repo clone**.
-It also requires the tarball distribution (e.g. `trexio-2.1.0.tar.gz`) to be present in the **parent** directory.
+There used to be a `make debian_from_dist` rule for this; it no longer exists.
+Build the package with `debuild` as described above, from the source
+distribution extracted from a release tarball and **not** from a GitHub repo
+clone, with the tarball itself present in the **parent** directory. The
+specifications in the `debian/` folder are what it relies on.

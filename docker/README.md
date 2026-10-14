@@ -4,6 +4,10 @@ Containerized builds related to TREXIO library.
 
 ## Producing manylinux wheels for Python API
 
+**Note:** the released wheels are now built in CI with `cibuildwheel` (see
+`.github/workflows/build-wheels.yml`). The Docker route below is still usable
+for building them by hand.
+
 Distributing binary wheels for Python packages that rely on C extensions is a non-trivial task.
 For more details, see the associated 
 [PEP 425](https://www.python.org/dev/peps/pep-0425/) and 
@@ -58,7 +62,8 @@ Once the Docker container is launched and the corresponding prompt is switched t
 
 `cd tmp/ && ./build_manylinux_wheels.sh trexio-0.2.0.tar.gz`
 
-This script creates virtual envirionments for several versions of `CPython` (e.g. 3.7, 3.8, 3.9), 
+This script creates virtual environments for several versions of `CPython`
+(3.8 through 3.14, see the script for the current list), 
 installs all requirements, 
 produces `trexio` wheels with conventional `linux_x86_64` tag and
 repairs them to be tagged with `manylinux` using the `auditwheel` tool from PyPA
