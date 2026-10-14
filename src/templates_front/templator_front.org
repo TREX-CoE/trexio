@@ -336,9 +336,9 @@ typedef int32_t trexio_exit_code;
 #ifdef HAVE_HDF5
   #include "trexio_hdf5.h"
 #endif
-/*
-#include "trexio_json.h"
-,*/
+#ifdef HAVE_JSON
+  #include "trexio_json.h"
+#endif
 
   #+end_src
 
@@ -977,18 +977,30 @@ def string_of_error(return_code: int) -> str:
 
    2) ~TREXIO_TEXT~ relies on basic file I/O in C, namely ~fopen, fclose, fprintf, fscanf~ etc. from ~stdio.h~ library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have ~.txt~ extension.
 
-   3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory.
+   3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory. It
+   writes nothing to disk, so it is meant for exchanging data between components
+   of the same process: the consumer reads from the *same* open handle the
+   producer wrote to, since an in-memory file does not persist once it is closed
+   and cannot be reopened by name. The file name given to ~trexio_open~ is
+   ignored.
+
+   4) ~TREXIO_JSON~ writes a single JSON document, for interchange with the many tools and languages that read JSON: a program can consume or produce TREXIO data without linking the library, and a file can be read by eye. The document holds TREXIO's own layout under TREXIO's names and is not QCSchema or any other established schema, so converting to one of those is still a mapping the other program has to do. It holds the whole document in memory until the file is flushed, so it is not the back end for large data. It parses and writes with [[https://github.com/ibireme/yyjson][yyjson]], which is bundled with TREXIO, so it needs nothing installed; it is built when the library is configured with ~--enable-json~ or ~-DTREXIO_USE_JSON=ON~, and otherwise reports ~TREXIO_BACK_END_MISSING~. The produced files usually have the ~.json~ extension.
 
    ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file
    in ~'r'~, ~'w'~, or ~'u'~ mode. In this case, TREXIO will try to automatically detect
    the applicable back end: it first tries to interrogate the path as a TEXT directory;
-   if that fails, it tries as an HDF5 file. This only works for existing paths —
-   a non-existent path or an unrecognized path is rejected with ~TREXIO_FILE_ERROR~.
+   if that fails, as an HDF5 file; and then, if the JSON back end is built, as a JSON
+   document. This only works for existing paths -- a non-existent path or an
+   unrecognized path is rejected with ~TREXIO_FILE_ERROR~. Each back end's ~inquire~
+   has to recognise its own format rather than merely find the file, so the order
+   decides only who is asked first, not the answer.
 
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
    This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
-   Then the corresponding back-end ~has/read/write~ functions has to be implemented.
+   Then the corresponding back-end ~has/read/write~ functions has to be implemented. The JSON back end
+   (~src/templates_json~) is the smallest of them and is a reasonable model to follow; note that a handful of
+   the ~switch~ statements in ~prefix_front.c~ are written by hand rather than generated, and are easy to miss.
 
    _Note_: It is important to increment the value of ~TREXIO_INVALID_BACK_END~ when a new back end is implemented. Otherwise, it will not be available.
 
@@ -1001,7 +1013,8 @@ typedef int32_t back_end_t;
 #define TREXIO_TEXT             ( (back_end_t) 1 )
 #define TREXIO_AUTO             ( (back_end_t) 2 )
 #define TREXIO_MEMORY           ( (back_end_t) 3 )
-#define TREXIO_INVALID_BACK_END ( (back_end_t) 4 )
+#define TREXIO_JSON             ( (back_end_t) 4 )
+#define TREXIO_INVALID_BACK_END ( (back_end_t) 5 )
 
 #define TREXIO_DELIM            "\n"
    #+end_src
@@ -1027,6 +1040,12 @@ bool trexio_has_back_end(back_end_t back_end) {
 #else
       return false;
 #endif
+    case TREXIO_JSON:
+#ifdef HAVE_JSON
+      return true;
+#else
+      return false;
+#endif
   }
   return false;
 }
@@ -1043,7 +1062,8 @@ bool trexio_has_backend(back_end_t back_end) {
   integer(trexio_back_end_t), parameter :: TREXIO_TEXT = 1
   integer(trexio_back_end_t), parameter :: TREXIO_AUTO = 2
   integer(trexio_back_end_t), parameter :: TREXIO_MEMORY = 3
-  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 4
+  integer(trexio_back_end_t), parameter :: TREXIO_JSON = 4
+  integer(trexio_back_end_t), parameter :: TREXIO_INVALID_BACK_END = 5
   #+end_src
 
   The function below is a Fortran interface for the aforementioned C-compatible ~trexio_has_back_end~ function.
@@ -1075,7 +1095,8 @@ TREXIO_HDF5 = 0
 TREXIO_TEXT = 1
 TREXIO_AUTO = 2
 TREXIO_MEMORY = 3
-TREXIO_INVALID_BACK_END = 4
+TREXIO_JSON = 4
+TREXIO_INVALID_BACK_END = 5
   #+end_src
 
 ** Read/write behavior
@@ -1374,6 +1395,14 @@ trexio_open(const char* file_name, const char mode,
         back_end_local = TREXIO_HDF5;
       }
 #endif
+#ifdef HAVE_JSON
+      /* Each inquire recognises its own format rather than merely finding the
+         file, so the order only decides who is asked first, not the answer. */
+      if (back_end_local == TREXIO_AUTO &&
+          trexio_json_inquire(file_name) == TREXIO_SUCCESS) {
+        back_end_local = TREXIO_JSON;
+      }
+#endif
     }
 
     /* If backend is still AUTO, no existing file was found */
@@ -1410,11 +1439,14 @@ trexio_open(const char* file_name, const char mode,
     if (rc_open != NULL) *rc_open = TREXIO_FILE_ERROR;
     return NULL;
 
-/*
   case TREXIO_JSON:
-    result = MALLOC (trexio_json_t);
+#ifdef HAVE_JSON
+    result_tmp = MALLOC(trexio_json_t);
     break;
-,*/
+#else
+    if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+    return NULL;
+#endif
   }
   result = (trexio_t*) result_tmp;
 
@@ -1467,11 +1499,15 @@ trexio_open(const char* file_name, const char mode,
     FREE(result);
     return NULL;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_init(result);
+#else
+    if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+    free(result);
+    return NULL;
+#endif
     break;
-,*/
   }
 
   if (rc != TREXIO_SUCCESS) {
@@ -1504,11 +1540,15 @@ trexio_open(const char* file_name, const char mode,
     FREE(result);
     return NULL;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_lock(result);
+#else
+    if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+    free(result);
+    return NULL;
+#endif
     break;
-,*/
   }
 
   if (rc != TREXIO_SUCCESS) {
@@ -1547,6 +1587,16 @@ trexio_open(const char* file_name, const char mode,
       return NULL;
 #endif
 
+    case TREXIO_JSON:
+#ifdef HAVE_JSON
+      rc = trexio_json_write_metadata_package_version(result, TREXIO_PACKAGE_VERSION);
+      break;
+#else
+      if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+      free(result);
+      return NULL;
+#endif
+
     }
 
     if (rc != TREXIO_SUCCESS) {
@@ -1581,6 +1631,16 @@ trexio_open(const char* file_name, const char mode,
 #else
       if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
       FREE(result);
+      return NULL;
+#endif
+
+    case TREXIO_JSON:
+#ifdef HAVE_JSON
+      rc = trexio_json_read_metadata_package_version(result, version_origin, 16);
+      break;
+#else
+      if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+      free(result);
       return NULL;
 #endif
 
@@ -1644,6 +1704,16 @@ trexio_open(const char* file_name, const char mode,
 #else
         if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
         FREE(result);
+        return NULL;
+#endif
+
+      case TREXIO_JSON:
+#ifdef HAVE_JSON
+        rc = trexio_json_write_metadata_unsafe(result, unsafe_val);
+        break;
+#else
+        if (rc_open != NULL) *rc_open = TREXIO_BACK_END_MISSING;
+        free(result);
         return NULL;
 #endif
       }
@@ -1809,11 +1879,13 @@ trexio_close (trexio_t* file)
     rc = TREXIO_BACK_END_MISSING;
 #endif
     break;
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_unlock(file);
+#else
+    rc = TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   /* Terminate the back end */
@@ -1834,11 +1906,14 @@ trexio_close (trexio_t* file)
     rc = TREXIO_BACK_END_MISSING;
 #endif
     break;
-/*
+
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_deinit(file);
+#else
+    rc = TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   /* Terminate front end */
@@ -1932,11 +2007,13 @@ trexio_flush (trexio_t* file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_flush(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return rc;
@@ -2006,18 +2083,20 @@ trexio_inquire (const char* file_name)
   /* First check if the TREXIO file exists and if it is a directory */
   trexio_exit_code rc_text = trexio_text_inquire(file_name);
 
+  /* TREXIO_SUCCESS -> file is a TREXIO directory; TREXIO_FAILURE -> file or
+     directory does not exist. Only TREXIO_FILE_ERROR, which means that the
+     file exists but is not a directory, leaves anything to ask about. */
+  if (rc_text != TREXIO_FILE_ERROR) return rc_text;
+
 #ifdef HAVE_HDF5
-  /* FILE_ERROR here means that the file exists but it is not a directory -> check with HDF5 */
-  if (rc_text == TREXIO_FILE_ERROR) {
-    trexio_exit_code rc_hdf5 = trexio_hdf5_inquire(file_name);
-    return rc_hdf5;
-  /* If rc_text is TREXIO_SUCCESS -> file is a TREXIO directory; TREXIO_FAILURE -> file/directory does not exist */
-  } else {
-    return rc_text;
-  }
-#else
-  return rc_text;
+  if (trexio_hdf5_inquire(file_name) == TREXIO_SUCCESS) return TREXIO_SUCCESS;
 #endif
+#ifdef HAVE_JSON
+  if (trexio_json_inquire(file_name) == TREXIO_SUCCESS) return TREXIO_SUCCESS;
+#endif
+
+  /* The file exists, but in no format that this build of the library reads */
+  return TREXIO_FAILURE;
 }
     #+end_src
 
@@ -2869,11 +2948,13 @@ trexio_has_$group$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_has_$group$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -2987,11 +3068,13 @@ trexio_read_$group_num$_64 (trexio_t* const file, $group_num_dtype_double$* cons
     rc = TREXIO_BACK_END_MISSING;
 #endif
     break;
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_read_$group_num$(file, num);
+#else
+    rc = TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   if (rc != TREXIO_SUCCESS) return rc;
@@ -3032,10 +3115,12 @@ trexio_write_$group_num$_64 (trexio_t* const file, const $group_num_dtype_double
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_write_$group_num$(file, num_write);
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
   }
 
   return TREXIO_FAILURE;
@@ -3073,11 +3158,14 @@ trexio_read_$group_num$_32 (trexio_t* const file, $group_num_dtype_single$* cons
     rc = TREXIO_BACK_END_MISSING;
     break ;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc =trexio_json_read_$group_num$(file, &num_64);
+#else
+    rc = TREXIO_BACK_END_MISSING;
+    break ;
+#endif
     break;
-,*/
   }
 
   if (rc != TREXIO_SUCCESS) return rc;
@@ -3122,11 +3210,13 @@ trexio_write_$group_num$_32 (trexio_t* const file, const $group_num_dtype_single
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_write_$group_num$(file, ($group_num_dtype_double$) num_write);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -3174,11 +3264,13 @@ trexio_has_$group_num$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_has_$group_num$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -3427,11 +3519,14 @@ trexio_read_$group_dset$_64 (trexio_t* const file, $group_dset_dtype_double$* co
     rc = TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_read_$group_dset$(file, $group_dset$, rank, dims);
+#else
+    rc = TREXIO_BACK_END_MISSING;
     break;
-,*/
+#endif
+    break;
   }
   if (rc != TREXIO_SUCCESS) return rc;
 
@@ -3514,11 +3609,14 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
       rc = TREXIO_BACK_END_MISSING;
       break;
 #endif
-      /*
         case TREXIO_JSON:
+#ifdef HAVE_JSON
         rc = trexio_json_write_$group_dset$(file, $group_dset$_p, rank, dims);
-        break;
-      ,*/
+#else
+      rc = TREXIO_BACK_END_MISSING;
+      break;
+#endif
+    break;
       FREE($group_dset$_p);
 
     }
@@ -3544,11 +3642,14 @@ trexio_write_$group_dset$_64 (trexio_t* const file, const $group_dset_dtype_doub
       rc = TREXIO_BACK_END_MISSING;
       break;
 #endif
-      /*
         case TREXIO_JSON:
+#ifdef HAVE_JSON
         rc = trexio_json_write_$group_dset$(file, $group_dset$, rank, dims);
-        break;
-      ,*/
+#else
+      rc = TREXIO_BACK_END_MISSING;
+      break;
+#endif
+    break;
     }
   }
 
@@ -3610,11 +3711,14 @@ trexio_read_$group_dset$_32 (trexio_t* const file, $group_dset_dtype_single$* co
     rc = TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_read_$group_dset$(file, $group_dset$_64, rank, dims);
+#else
+    rc = TREXIO_BACK_END_MISSING;
     break;
-,*/
+#endif
+    break;
   }
 
   if (rc != TREXIO_SUCCESS){
@@ -3699,11 +3803,14 @@ trexio_write_$group_dset$_32 (trexio_t* const file, const $group_dset_dtype_sing
     rc = TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     rc = trexio_json_write_$group_dset$(file, $group_dset$_64, rank, dims);
+#else
+    rc = TREXIO_BACK_END_MISSING;
     break;
-,*/
+#endif
+    break;
   }
 
   FREE($group_dset$_64);
@@ -3870,10 +3977,12 @@ trexio_has_$group_dset$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_has_$group_dset$(file);
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
   }
   return TREXIO_FAILURE;
 }
@@ -4293,11 +4402,15 @@ trexio_read_$group_dset$(trexio_t* const file,
     rc = TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_read_$group_dset$(...);
+#ifdef HAVE_JSON
+    rc = trexio_json_read_$group_dset$(file, offset_file, *buffer_size, max_dim, &eof_read_size, index_sparse, value_sparse);
     break;
-,*/
+#else
+    rc = TREXIO_BACK_END_MISSING;
+    break;
+#endif
+    break;
   default:
     rc = TREXIO_FAILURE;  /* Impossible case */
     break;
@@ -4346,11 +4459,14 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_read_$group_dset$_size(...);
+#ifdef HAVE_JSON
+    return trexio_json_read_$group_dset$_size(file, size_max);
     break;
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
+    break;
   default:
     return TREXIO_FAILURE;  /* Impossible case */
   }
@@ -4454,11 +4570,16 @@ trexio_write_$group_dset$(trexio_t* const file,
       rc = TREXIO_BACK_END_MISSING;
       break;
 #endif
-      /*
         case TREXIO_JSON:
-        rc = trexio_json_write_$group_dset$(...);
-        break;
-      ,*/
+#ifdef HAVE_JSON
+      rc = trexio_json_write_$group_dset$(file, offset_file, buffer_size, max_dim,
+                                          index_sparse_p, value_sparse);
+      break;
+#else
+      rc = TREXIO_BACK_END_MISSING;
+      break;
+#endif
+    break;
     default:
       rc = TREXIO_FAILURE;  /* Impossible case */
       break;
@@ -4490,11 +4611,16 @@ trexio_write_$group_dset$(trexio_t* const file,
       rc = TREXIO_BACK_END_MISSING;
       break;
 #endif
-      /*
         case TREXIO_JSON:
-        rc = trexio_json_write_$group_dset$(...);
-        break;
-      ,*/
+#ifdef HAVE_JSON
+      rc = trexio_json_write_$group_dset$(file, offset_file, buffer_size, max_dim,
+                                          index_sparse, value_sparse);
+      break;
+#else
+      rc = TREXIO_BACK_END_MISSING;
+      break;
+#endif
+    break;
     default:
       rc = TREXIO_FAILURE;  /* Impossible case */
       break;
@@ -4530,11 +4656,13 @@ trexio_has_$group_dset$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_has_$group_dset$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -4898,10 +5026,12 @@ trexio_read_$group_dset$_low (trexio_t* const file, char* dset_out, const int32_
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
-    rc = trexio_json_read_$group_dset$(file, dset_out, rank, dims);
-,*/
+#ifdef HAVE_JSON
+    return trexio_json_read_$group_dset$(file, dset_out, rank, dims, (uint32_t) max_str_len);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
   }
 
   return TREXIO_FAILURE;
@@ -5028,11 +5158,14 @@ trexio_write_$group_dset$_low (trexio_t* const file, char* dset_in, const int32_
     rc =TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
-    rc = trexio_json_write_$group_dset$(file, dset, rank, dims);
+#ifdef HAVE_JSON
+    rc = trexio_json_write_$group_dset$(file, (const char**) dset_str, rank, dims);
+#else
+    rc =TREXIO_BACK_END_MISSING;
     break;
-,*/
+#endif
+    break;
   }
 
   FREE(dset_str[0]);
@@ -5100,11 +5233,13 @@ trexio_has_$group_dset$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_has_$group_dset$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -5378,11 +5513,15 @@ trexio_read_$group_dset$ (trexio_t* const file, const int64_t offset_file, int64
     rc = TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_read_$group_dset$(...);
+#ifdef HAVE_JSON
+    rc = trexio_json_read_$group_dset$(file, offset_file, rank, dims, &eof_read_size, dset);
     break;
-,*/
+#else
+    rc = TREXIO_BACK_END_MISSING;
+    break;
+#endif
+    break;
   default:
     rc = TREXIO_FAILURE;
     break;  /* Impossible case */
@@ -5422,11 +5561,13 @@ trexio_read_$group_dset$_size(trexio_t* const file, int64_t* const size_max)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_read_
+#ifdef HAVE_JSON
+    return trexio_json_read_$group_dset$_size(file, size_max);
     break;
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
   default:
     return TREXIO_FAILURE;  /* Impossible case */
   }
@@ -5485,11 +5626,15 @@ trexio_write_$group_dset$ (trexio_t* const file, const int64_t offset_file, cons
     return TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
-    rc = trexio_json_read_
+#ifdef HAVE_JSON
+    return trexio_json_write_$group_dset$(file, offset_file, rank, dims, dset);
     break;
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+    break;
+#endif
+    break;
   }
 
   return TREXIO_FAILURE;
@@ -5530,11 +5675,13 @@ trexio_has_$group_dset$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_has_
+#ifdef HAVE_JSON
+    return trexio_json_has_$group_dset$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -5820,11 +5967,13 @@ trexio_read_$group_str$ (trexio_t* const file, char* const str_out, const int32_
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_read_$group_str$(file, str);
+#ifdef HAVE_JSON
+    return trexio_json_read_$group_str$(file, str_out, (uint32_t) max_str_len);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -5858,10 +6007,12 @@ trexio_write_$group_str$ (trexio_t* const file, const char* str, const int32_t m
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_write_$group_str$(file, str);
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
   }
 
   return TREXIO_FAILURE;
@@ -5891,10 +6042,12 @@ trexio_has_$group_str$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_has_$group_str$(file);
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
   }
 
   return TREXIO_FAILURE;
@@ -6085,11 +6238,13 @@ trexio_delete_$group$ (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
+#ifdef HAVE_JSON
     return trexio_json_delete_$group$(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;
@@ -6226,11 +6381,15 @@ trexio_read_determinant_list (trexio_t* const file, const int64_t offset_file, i
     rc = TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_read_$group_dset$(...);
+#ifdef HAVE_JSON
+    rc = trexio_json_read_determinant_list(file, offset_file, rank, dims, &eof_read_size, dset);
     break;
-,*/
+#else
+    rc = TREXIO_BACK_END_MISSING;
+    break;
+#endif
+    break;
   default:
     rc = TREXIO_FAILURE;  /* Impossible case */
     break;
@@ -6368,11 +6527,15 @@ trexio_write_determinant_list (trexio_t* const file, const int64_t offset_file, 
     return TREXIO_BACK_END_MISSING;
     break;
 #endif
-/*
   case TREXIO_JSON:
-    rc = trexio_json_read_
+#ifdef HAVE_JSON
+    rc = trexio_json_write_determinant_list(file, offset_file, rank, dims, dset);
     break;
-,*/
+#else
+    return TREXIO_BACK_END_MISSING;
+    break;
+#endif
+    break;
   }
 
   if (rc != TREXIO_SUCCESS) return rc;
@@ -6441,11 +6604,13 @@ trexio_has_determinant_list (trexio_t* const file)
 #else
     return TREXIO_BACK_END_MISSING;
 #endif
-/*
   case TREXIO_JSON:
-    return trexio_json_has_
+#ifdef HAVE_JSON
+    return trexio_json_has_determinant_list(file);
+#else
+    return TREXIO_BACK_END_MISSING;
+#endif
     break;
-,*/
   }
 
   return TREXIO_FAILURE;

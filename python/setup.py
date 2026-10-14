@@ -95,6 +95,14 @@ if h5_present:
 # ============================ End of the HDF5 block ============================ #
 
 # Define pytrexio extension module based on TREXIO source codes + SWIG-generated wrapper
+# The JSON back end is compiled in when configure staged it, which is how the
+# extension learns that config.h has HAVE_JSON set. yyjson is staged next to it,
+# so nothing has to be found on the system here.
+json_present = os.path.isfile(os.path.join(srcpath, 'trexio_json.c'))
+if json_present:
+    c_files.append('trexio_json.c')
+    c_files.append('yyjson.c')
+
 c_files.append('pytrexio_wrap.c')
 compile_args = [
         '-std=c99',
