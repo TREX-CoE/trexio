@@ -44,10 +44,10 @@ AC_SUBST([UNAME])
 ## -------------------
 
 # Fortran API [default: --with-fortran], do not disable in the dev mode
-AC_PROG_FC
 
 AC_ARG_WITH(fortran, [AS_HELP_STRING([--without-fortran],[do not test and install the Fortran API])], ok=$withval, ok=yes)
-AS_IF([test "$ok" = "yes"],[
+if test "$ok" = "yes"; then
+  AC_PROG_FC
   AC_FC_FREEFORM
   AC_FC_SRCEXT([f90])
   AC_PROG_FC_C_O
@@ -59,8 +59,8 @@ AS_IF([test "$ok" = "yes"],[
   [*flang*], [FCFLAGS="$FCFLAGS -fPIC"],
   [*ifort*], [FCFLAGS="$FCFLAGS -fPIC"],
   [])
+fi
 
-])
 with_fortran=$ok
 AM_CONDITIONAL([HAVE_FORTRAN],[test "$ok" = "yes"])
 AS_IF([test "$ok" = "yes"],
@@ -462,6 +462,13 @@ AC_CONFIG_FILES([Makefile
                  cmake/trexio-config-version.cmake:cmake/autotools-trexio-config-version.cmake.in])
 AC_OUTPUT
 
+# Only report the Fortran compiler in the summary when the Fortran API is enabled
+AS_IF([test "x$with_fortran" = "xyes"],
+      [FC_SUMMARY="FC ............:  ${FC}
+FCFLAGS .......:  ${FCFLAGS}"],
+      [FC_SUMMARY=""])
+
+
 AS_ECHO([ \
 "-------------------------------------------------
 
@@ -471,8 +478,7 @@ Prefix ........:  ${prefix}
 CC ............:  ${CC}
 CPPFLAGS ......:  ${CPPFLAGS}
 CFLAGS ........:  ${CFLAGS}
-FC ............:  ${FC}
-FCFLAGS .......:  ${FCFLAGS}
+${FC_SUMMARY}
 LDFLAGS .......:  ${LDFLAGS}
 LIBS ..........:  ${LIBS}
 
