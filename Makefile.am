@@ -96,6 +96,7 @@ src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
 EXTRA_DIST += CMakeLists.txt \
               trex.json \
               src/CMakeLists.txt \
+              python/CMakeLists.txt \
               tests/CMakeLists.txt \
               tests/test_macros.h  \
               cmake/cmake_uninstall.cmake.in \
