@@ -18,9 +18,10 @@ This repository uses literate programming and has a few project rules that AI-ge
   - `src/templates_front/*.org` for the front end
   - `src/templates_text/*.org` for the text backend
   - `src/templates_hdf5/*.org` for the HDF5 backend
+  - `src/templates_memory/*.org` for the in-memory backend
 - When you modify an org-mode source, add or update nearby prose so the org file explains what the new code is doing.
 - Keep the org documentation synchronized with the generated behavior and API changes.
-- Regenerate from org-mode sources with `./autogen.sh`.
+- `./autogen.sh` only runs `autoreconf`; the sources are regenerated from the org files by `make` in maintainer mode.
 - Commit only the minimal tracked source changes; do not add generated files just because they appeared locally.
 
 ## 3. Preserve TREXIO data conventions
@@ -51,13 +52,15 @@ This repository uses literate programming and has a few project rules that AI-ge
 
 ## 5. Respect cross-language and cross-backend consistency
 
-- A TREXIO API or schema change usually affects the front end, text backend, HDF5 backend, tests, and language bindings.
-- If you add or rename data in `trex.org`, check the generated API surface and both backends.
+- A TREXIO API or schema change usually affects the front end, all three backends (text, HDF5 and in-memory), tests, and language bindings.
+- If you add or rename data in `trex.org`, check the generated API surface and all three backends.
 - If you bump the project version, update all version files together:
   - `configure.ac`
   - `CMakeLists.txt`
   - `python/pytrexio/_version.py`
   - `ocaml/trexio/dune-project`
+  - `ocaml/trexio/trexio.opam`
+  - `tools/nix/trexio.nix`
 
 ## 6. Validate changes the same way maintainers do
 

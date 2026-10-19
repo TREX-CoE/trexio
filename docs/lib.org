@@ -48,6 +48,12 @@ align="right" width="300" vspace="20" hspace="20" />
    integrals), the smallest possible representation is used to reduce the
    file size. The API handles any necessary type conversions.
 
+   Those conversions are also available explicitly. Alongside each
+   ~read~ and ~write~ function for numerical data there is a ~_32~ and
+   a ~_64~ variant, so a program holding single-precision arrays can
+   read and write them directly without converting first; the
+   unsuffixed call uses the default precision of the data type.
+
    There are also two types derived from ~int~: ~dim~ and ~index~.
    ~dim~ is used for dimensioning variables, which are positive integers
    used to specify the dimensions of an array.  In the previous example,
@@ -121,6 +127,18 @@ align="left" width="300" vspace="20" hspace="20" />
    This can be used to catch exceptions and improve debugging in the
    upstream user application.
 
+   Besides reading and writing data, the front-end provides a handful of
+   functions that concern the file as a whole: ~trexio_inquire~ reports whether
+   a path holds a TREXIO file, without opening it; ~trexio_flush~ writes out
+   what the back-end is still holding in memory, which is the only way to get
+   data from the text back-end onto disk short of closing the file;
+   ~trexio_cp~ copies a file; ~trexio_has_back_end~ reports whether a given
+   back-end was compiled into the library, which a program should ask before
+   requesting the HDF5 one since TREXIO can be built without it; and
+   ~trexio_get_back_end~ reports which back-end an open file uses.
+   ~trexio_mark_safety~ is how the ~unsafe~ flag is cleared once the contents
+   have been validated.
+
    To ensure the consistency of the data, the attributes can only be
    written if all the other attributes on which they explicitly depend
    have been written.  For example, as the ~nucleus.coord~ array is
@@ -150,7 +168,9 @@ align="left" width="300" vspace="20" hspace="20" />
    back-end that keeps all the data in RAM.
 
    With the text back-end, the TREXIO "file" is a directory containing
-   multiple text files, one for each group.  This back end is intended
+   multiple text files: one for each group, one for each sparse or
+   buffered dataset, and a small companion file recording the size of
+   each of those.  This back end is intended
    to be used in development environments, as it gives access to the
    user to the standard tools such as ~diff~ and ~grep~.
    In addition, text files are better adapted than binary files for
@@ -179,8 +199,8 @@ align="left" width="300" vspace="20" hspace="20" />
    metadata operations like creating, deleting, or modifying files,
    which can adversely affect performance.
 
-   In a benchmarking program designed to compare the two back-ends of
-   the library, the HDF5 back-end was found to be significantly faster
+   In a benchmarking program designed to compare the HDF5 and text
+   back-ends, the HDF5 back-end was found to be significantly faster
    than the text back-end.  The program wrote a wave function made up
    of 100 million Slater determinants and measured the time taken to
    write the Slater determinants and CI coefficients.  The HDF5
@@ -231,8 +251,9 @@ align="left" width="300" vspace="20" hspace="20" />
    for additional manual interfacing, the TREXIO C header file was
    automatically integrated into Julia programs using the
    ~CBindings.jl~ package.
-   In contrast, specific bindings have been provided for Fortran, Python,
-   and OCaml to simplify the user experience.
+   In contrast, specific bindings have been provided for Fortran and
+   Python to simplify the user experience; the bindings for OCaml, Rust
+   and Haskell are maintained in repositories of their own.
 
    In particular, the binding for Fortran is not distributed as multiple
    compiled Fortran module files (~.mod~), but instead as a single
@@ -307,21 +328,23 @@ align="left" width="300" vspace="20" hspace="20" />
    The TREXIO library is designed to be portable and easy to install
    on a wide range of systems.  It follows the C99 standard to ensure
    compatibility with older systems, and can be configured with either
-   the GNU Autotools or the CMake build systems.  The only external
+   the GNU Autotools or the CMake build systems.  Apart from the C
+   standard library, it requires only ~libm~ and a threading library,
+   both of which any toolchain provides.  The one substantial external
    dependency is the HDF5 library, which is widely available on HPC
    platforms and as packages on major Linux distributions.  Note that
    it is possible to disable the HDF5 back-end at configuration time,
-   allowing TREXIO to operate only with the text back-end and have
-   zero external dependencies.  This can be useful for users who may
-   not be able to install HDF5 on certain systems.
+   leaving the text and in-memory back-ends, which depend on nothing
+   beyond the above.  This can be useful for users who may not be able
+   to install HDF5 on certain systems.
 
    TREXIO is distributed as a tarball containing the source code,
    generated code, documentation, and Fortran interface.  It is also
    available as a binary ~.deb~ package for Debian-based Linux
-   distributions and as packages for Guix, Spack and Conda. The Python
-   module can be found in the PyPI repository, the OCaml binding is
-   available in the official OPAM repository, and the ~.deb~ packages
-   are available in Ubuntu 23.04.
+   distributions, including Ubuntu 23.04 and newer, and as packages for
+   Guix, Nix, Spack and Conda. The Python module can be found in the
+   PyPI repository, the OCaml binding in the official OPAM repository,
+   the Rust one on crates.io and the Haskell one on Hackage.
 
 * Checking the contents of a file
 
