@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.19)
 # the C library can be built without a Fortran compiler (mirrors the autotools
 # --without-fortran option).
 project(trexio
-	VERSION 2.6.1
+	VERSION 2.6.2
 	DESCRIPTION "TREX I/O library"
 	HOMEPAGE_URL "https://trex-coe.github.io/trexio/"
 	LANGUAGES C
