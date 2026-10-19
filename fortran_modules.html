@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-10-14 Wed 12:07 -->
+<!-- 2026-10-19 Mon 11:33 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Why TREXIO ships the Fortran module as source, and will never ship a compiled .mod file</title>
@@ -226,19 +226,19 @@ org_html_manager.setup();  // activate after the parameters are set
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#orgef9dbe4">1. The short version</a></li>
-<li><a href="#orge887deb">2. The .mod file is not what people think it is</a></li>
-<li><a href="#org2a65bbd">3. Why this actually matters for TREXIO specifically</a></li>
-<li><a href="#orgac6b0f7">4. Why source distribution has essentially no downside here</a></li>
-<li><a href="#orgd0ea71d">5. In practice: how a Fortran project uses it</a></li>
-<li><a href="#org63c1708">6. Anticipating the usual counterarguments</a>
+<li><a href="#orgb00d454">1. The short version</a></li>
+<li><a href="#org16b8edb">2. The .mod file is not what people think it is</a></li>
+<li><a href="#orgd741b07">3. Why this actually matters for TREXIO specifically</a></li>
+<li><a href="#org29c8c5c">4. Why source distribution has essentially no downside here</a></li>
+<li><a href="#org82d54ab">5. In practice: how a Fortran project uses it</a></li>
+<li><a href="#orge8ca19e">6. Anticipating the usual counterarguments</a>
 <ul>
-<li><a href="#org7df7431">6.1. "But other Fortran libraries ship .mod files, why can't you?"</a></li>
-<li><a href="#orgc8a2b51">6.2. "Within our distro (Fedora/Debian/etc.), everything is rebuilt with one system compiler anyway, so this never bites."</a></li>
-<li><a href="#org1f9fbdb">6.3. "Isn't recompiling part of the library at every downstream build unusual?"</a></li>
+<li><a href="#org8947e13">6.1. "But other Fortran libraries ship .mod files, why can't you?"</a></li>
+<li><a href="#org4c3d6be">6.2. "Within our distro (Fedora/Debian/etc.), everything is rebuilt with one system compiler anyway, so this never bites."</a></li>
+<li><a href="#orge8da3d9">6.3. "Isn't recompiling part of the library at every downstream build unusual?"</a></li>
 </ul>
 </li>
-<li><a href="#org75b4fe3">7. Bottom line</a></li>
+<li><a href="#orga0c6bf8">7. Bottom line</a></li>
 </ul>
 </div>
 </div>
@@ -247,8 +247,8 @@ This comes up often enough that it's worth writing down once, in full,
 so it can be pointed to instead of re-argued from scratch every time.
 </p>
 
-<div id="outline-container-orgef9dbe4" class="outline-2">
-<h2 id="orgef9dbe4"><span class="section-number-2">1.</span> The short version</h2>
+<div id="outline-container-orgb00d454" class="outline-2">
+<h2 id="orgb00d454"><span class="section-number-2">1.</span> The short version</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 TREXIO's Fortran interface is a thin ISO-C-binding wrapper around a C
@@ -262,8 +262,8 @@ reintroduce exactly the problem the design exists to avoid.
 </div>
 </div>
 
-<div id="outline-container-orge887deb" class="outline-2">
-<h2 id="orge887deb"><span class="section-number-2">2.</span> The .mod file is not what people think it is</h2>
+<div id="outline-container-org16b8edb" class="outline-2">
+<h2 id="org16b8edb"><span class="section-number-2">2.</span> The .mod file is not what people think it is</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 When someone asks "why can't you just ship the <code>.mod</code> file, like a
@@ -303,8 +303,8 @@ often one specific version of it).
 </div>
 </div>
 
-<div id="outline-container-org2a65bbd" class="outline-2">
-<h2 id="org2a65bbd"><span class="section-number-2">3.</span> Why this actually matters for TREXIO specifically</h2>
+<div id="outline-container-orgd741b07" class="outline-2">
+<h2 id="orgd741b07"><span class="section-number-2">3.</span> Why this actually matters for TREXIO specifically</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 This isn't an abstract purity argument. TREXIO is meant to be linked
@@ -324,8 +324,8 @@ impose more constraints than the library it wraps.
 </div>
 </div>
 
-<div id="outline-container-orgac6b0f7" class="outline-2">
-<h2 id="orgac6b0f7"><span class="section-number-2">4.</span> Why source distribution has essentially no downside here</h2>
+<div id="outline-container-org29c8c5c" class="outline-2">
+<h2 id="org29c8c5c"><span class="section-number-2">4.</span> Why source distribution has essentially no downside here</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 The objection to source distribution is usually "isn't that wasteful,
@@ -345,8 +345,8 @@ Fortran cannot otherwise give you: compiler independence.
 </div>
 </div>
 
-<div id="outline-container-orgd0ea71d" class="outline-2">
-<h2 id="orgd0ea71d"><span class="section-number-2">5.</span> In practice: how a Fortran project uses it</h2>
+<div id="outline-container-org82d54ab" class="outline-2">
+<h2 id="org82d54ab"><span class="section-number-2">5.</span> In practice: how a Fortran project uses it</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 Concretely, this means that Fortran users are expected to include the
@@ -376,12 +376,12 @@ rest of the object files.
 </div>
 </div>
 
-<div id="outline-container-org63c1708" class="outline-2">
-<h2 id="org63c1708"><span class="section-number-2">6.</span> Anticipating the usual counterarguments</h2>
+<div id="outline-container-orge8ca19e" class="outline-2">
+<h2 id="orge8ca19e"><span class="section-number-2">6.</span> Anticipating the usual counterarguments</h2>
 <div class="outline-text-2" id="text-6">
 </div>
-<div id="outline-container-org7df7431" class="outline-3">
-<h3 id="org7df7431"><span class="section-number-3">6.1.</span> "But other Fortran libraries ship .mod files, why can't you?"</h3>
+<div id="outline-container-org8947e13" class="outline-3">
+<h3 id="org8947e13"><span class="section-number-3">6.1.</span> "But other Fortran libraries ship .mod files, why can't you?"</h3>
 <div class="outline-text-3" id="text-6-1">
 <p>
 Some do, and for libraries genuinely intended to be Fortran-only,
@@ -394,8 +394,8 @@ toolchain choice that has nothing to do with the underlying library.
 </div>
 </div>
 
-<div id="outline-container-orgc8a2b51" class="outline-3">
-<h3 id="orgc8a2b51"><span class="section-number-3">6.2.</span> "Within our distro (Fedora/Debian/etc.), everything is rebuilt with one system compiler anyway, so this never bites."</h3>
+<div id="outline-container-org4c3d6be" class="outline-3">
+<h3 id="org4c3d6be"><span class="section-number-3">6.2.</span> "Within our distro (Fedora/Debian/etc.), everything is rebuilt with one system compiler anyway, so this never bites."</h3>
 <div class="outline-text-3" id="text-6-2">
 <p>
 True, and within a distro's own closed rebuild chain, shipping a
@@ -412,8 +412,8 @@ compiler independence.
 </div>
 </div>
 
-<div id="outline-container-org1f9fbdb" class="outline-3">
-<h3 id="org1f9fbdb"><span class="section-number-3">6.3.</span> "Isn't recompiling part of the library at every downstream build unusual?"</h3>
+<div id="outline-container-orge8da3d9" class="outline-3">
+<h3 id="orge8da3d9"><span class="section-number-3">6.3.</span> "Isn't recompiling part of the library at every downstream build unusual?"</h3>
 <div class="outline-text-3" id="text-6-3">
 <p>
 It's exactly what C/C++ header-only components do routinely, and
@@ -427,8 +427,8 @@ rely on instead.
 </div>
 </div>
 
-<div id="outline-container-org75b4fe3" class="outline-2">
-<h2 id="org75b4fe3"><span class="section-number-2">7.</span> Bottom line</h2>
+<div id="outline-container-orga0c6bf8" class="outline-2">
+<h2 id="orga0c6bf8"><span class="section-number-2">7.</span> Bottom line</h2>
 <div class="outline-text-2" id="text-7">
 <p>
 Shipping a compiled <code>.mod</code> file would trade a real, structural
@@ -447,7 +447,7 @@ rather than an open question.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2026-10-14 Wed 12:07</p>
+<p class="date">Created: 2026-10-19 Mon 11:33</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
