@@ -15,7 +15,7 @@ which enables fast read and write operations. It is compatible with a variety
 of platforms and has interfaces for the Fortran, Python, OCaml and Rust
 programming languages.
 
-Below is the list of codes that adopted TREXIO for reading and/or writing 
+Below is the list of codes that adopted TREXIO for reading and/or writing
 single- and/or multi-reference wave functions:
 
 | Software                                                                       | Single-reference | Multi-reference |
@@ -391,6 +391,9 @@ The TREXIO OCaml API is available in OPAM:
 ```
 opam install trexio
 ```
+The OCaml binding sources live in a separate repository:
+<https://github.com/trex-coe/trexio_ocaml> (it follows the released TREXIO
+tarball).
 
 ### Haskell
 

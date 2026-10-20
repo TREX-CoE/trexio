@@ -57,7 +57,9 @@ This repository uses literate programming and has a few project rules that AI-ge
   - `configure.ac`
   - `CMakeLists.txt`
   - `python/pytrexio/_version.py`
-  - `ocaml/trexio/dune-project`
+
+  The OCaml binding lives in `TREX-CoE/trexio_ocaml` and follows the *released*
+  TREXIO tarball — do not version-bump it from this repository.
 
 ## 6. Validate changes the same way maintainers do
 
