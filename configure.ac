@@ -32,6 +32,23 @@ AC_DEFINE_UNQUOTED(VERSION_MAJOR, [$VERSION_MAJOR], [major version])
 AC_DEFINE_UNQUOTED(VERSION_MINOR, [$VERSION_MINOR], [minor version])
 AC_DEFINE_UNQUOTED(VERSION_PATCH, [$VERSION_PATCH], [patch version])
 
+# ABI version of the shared library, in libtool's current:revision:age form.
+# libtool derives the SONAME from (current - age), so taking current from the
+# major version and leaving age at zero gives libtrexio.so.$VERSION_MAJOR. That
+# is the same SONAME src/CMakeLists.txt produces, since it derives SOVERSION
+# from the major version too, so both follow from the version this file declares
+# at the top rather than from a number maintained separately here.
+#
+# This ties the ABI generation to the major version: an incompatible change
+# requires a major release. Libtool's own model allows the two to move
+# independently, and cautions against conflating them; see the discussion in the
+# issue tracker if that flexibility is ever wanted.
+TREXIO_LT_CURRENT=${VERSION_MAJOR}
+TREXIO_LT_REVISION=0
+TREXIO_LT_AGE=0
+TREXIO_LT_VERSION="${TREXIO_LT_CURRENT}:${TREXIO_LT_REVISION}:${TREXIO_LT_AGE}"
+AC_SUBST([TREXIO_LT_VERSION])
+
 
 ## Save system information, e.g. user name
 
