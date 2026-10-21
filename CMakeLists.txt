@@ -140,6 +140,10 @@ endif()
 # Add subdirectory with add_library(trexio) specifications.
 add_subdirectory(src)
 
+if(TREXIO_PYTHON)
+  add_subdirectory(python)
+endif()
+
 # Add subdirectory with unit tests.
 include(CTest)
 if(BUILD_TESTING)
