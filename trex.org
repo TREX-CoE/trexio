@@ -140,15 +140,23 @@
 
 ** Periodic boundary calculations (pbc group)
 
+   The entries of ~k_point~ are dimensionless fractional coordinates in
+   the conventional reciprocal lattice basis associated with ~cell.a~,
+   ~cell.b~, and ~cell.c~. A triplet $(k_1,k_2,k_3)$ represents
+   $\mathbf{k} = k_1 \mathbf{G}_a + k_2 \mathbf{G}_b + k_3 \mathbf{G}_c$,
+   where $\mathbf{a}_i \cdot \mathbf{G}_j = 2\pi \delta_{ij}$. This
+   definition is independent of ~cell.two_pi~, which controls whether
+   $2\pi$ is included in the stored ~cell.g_a~, ~cell.g_b~, and ~cell.g_c~
+   vectors.
 
    #+NAME: pbc
-  | Variable         | Type    | Row-major Dimensions  | Column-major Dimensions | Description                                          |
-  |------------------+---------+-----------------------+-------------------------+------------------------------------------------------|
-  | ~periodic~       | ~int~   |                       |                         | ~1~: true or ~0~: false                              |
-  | ~k_point_num~    | ~dim~   |                       |                         | Number of $k$-points                                 |
-  | ~k_point~        | ~float~ | ~[pbc.k_point_num,3]~ | ~(3,pbc.k_point_num)~   | $k$-point sampling                                   |
-  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~   | ~(pbc.k_point_num)~     | $k$-point weight                                     |
-  | ~madelung~       | ~float~ |                       |                         | Madelung correction of the Ewald probe charge method |
+  | Variable         | Type    | Row-major Dimensions  | Column-major Dimensions | Description                                                    |
+  |------------------+---------+-----------------------+-------------------------+----------------------------------------------------------------|
+  | ~periodic~       | ~int~   |                       |                         | ~1~: true or ~0~: false                                        |
+  | ~k_point_num~    | ~dim~   |                       |                         | Number of $k$-points                                           |
+  | ~k_point~        | ~float~ | ~[pbc.k_point_num,3]~ | ~(3,pbc.k_point_num)~   | Dimensionless fractional coordinates of the reciprocal lattice |
+  | ~k_point_weight~ | ~float~ | ~[pbc.k_point_num]~   | ~(pbc.k_point_num)~     | $k$-point weight                                               |
+  | ~madelung~       | ~float~ |                       |                         | Madelung correction of the Ewald probe charge method           |
 
    #+CALL: json(data=pbc, title="pbc")
 
