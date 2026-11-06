@@ -141,9 +141,14 @@
 ** Periodic boundary calculations (pbc group)
 
    The $k$-points are given in fractional (crystal) coordinates with
-   respect to the reciprocal lattice vectors of the ~cell~ group:
-   $\mathbf{k} = k_1 \mathbf{G}_a + k_2 \mathbf{G}_b + k_3 \mathbf{G}_c$.
-   They are dimensionless, and their values do not depend on ~cell.two_pi~.
+   respect to the conventional reciprocal lattice vectors associated with
+   ~cell.a~, ~cell.b~, and ~cell.c~:
+   $\mathbf{k} = k_1 \mathbf{G}_a + k_2 \mathbf{G}_b + k_3 \mathbf{G}_c$,
+   where $\mathbf{a}_i \cdot \mathbf{G}_j = 2\pi \delta_{ij}$.
+   The stored coefficients $k_1$, $k_2$, and $k_3$ are dimensionless and
+   independent of ~cell.two_pi~. To obtain these conventional reciprocal
+   vectors from ~cell.g_a~, ~cell.g_b~, and ~cell.g_c~, multiply the stored
+   vectors by $2\pi$ if ~cell.two_pi=0~; otherwise use them unchanged.
 
    #+NAME: pbc
   | Variable         | Type    | Row-major Dimensions  | Column-major Dimensions | Description                                                    |
