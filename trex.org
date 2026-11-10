@@ -975,20 +975,24 @@ power = [
    AO, so the correction factor $\mathcal{N}_i'$ for $d_{xy}$ in the
    ~ao~ group is the ratio $\frac{\mathcal{N}_{xy}}{\mathcal{N}_{z^2}}$.
 
-   The cartesian/spherical character can be set for all shells at once
-   with ~cartesian~ (~0~: spherical, ~1~: cartesian), or shell by shell
-   with the ~cartesian_shell~ array. A file stores at most one of the
-   two: when ~cartesian~ is absent, readers fall back on
-   ~cartesian_shell~.
+   The cartesian/spherical character of each basis is stated the same way,
+   in the ~ao~, ~auxao~ and ~auxao2~ groups: for all shells at once with
+   ~cartesian~ (~0~: spherical, ~1~: cartesian), or shell by shell with the
+   ~cartesian_shell~ array, whose length is the number of shells of the
+   matching basis set (~basis~, ~auxbasis~, ~auxbasis2~). A file stores at
+   most one of the two for a given group: when ~cartesian~ is absent, the
+   per-shell value is taken from the ~cartesian_shell~ array if that array
+   is present, and from a default otherwise.
 
    A writer should always state one of them, rather than rely on a
    default: a default could change between versions of the
-   specification, and a file that does not say whether its AOs are
-   cartesian or spherical cannot be interpreted with confidence. The
-   library does not currently insist on it, though -- what it refuses is
-   a file that states *both*, which is ambiguous. That check runs when
-   the file is closed, so ~trexio_close~ is where a writer finds out,
-   with the exit code ~TREXIO_AMBIGUOUS_CARTESIAN~.
+   specification, and a file that does not say whether its basis
+   functions are cartesian or spherical cannot be interpreted with
+   confidence. The library does not currently insist on it, though --
+   what it refuses is a file that states *both* in the same group, which
+   is ambiguous. That check runs when the file is closed, so
+   ~trexio_close~ is where a writer finds out, with the exit code
+   ~TREXIO_AMBIGUOUS_CARTESIAN~.
 
    #+NAME: ao
   | Variable          | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                            |
@@ -1266,6 +1270,12 @@ power = [
 
   Duplicate of the atomic orbitals group see documentation above.
   Used with the ~auxbasis~ groups to define auxiliary basis functions.
+
+  The cartesian/spherical rule is the same as for the ~ao~ group: at most
+  one of ~auxao.cartesian~ and ~auxao.cartesian_shell~ (respectively
+  ~auxao2.cartesian~ and ~auxao2.cartesian_shell~) may be written, and a
+  file that states both for the same group makes the close fail with
+  ~TREXIO_AMBIGUOUS_CARTESIAN~.
 
   #+CALL: json(data=ao, title="auxao", replace_dict="[('ao','auxao'),('basis','auxbasis')]")
 
