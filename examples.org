@@ -678,7 +678,7 @@ for l in shell_ang_mom:
 ao_ordering = []
 j = 0
 for k,l in enumerate(ao):
-      accu = [ x, i+j, for i,x in enumerate(l) ]
+      accu = [ (x, i+j) for i,x in enumerate(l) ]
       accu.sort()
       ao_ordering += accu
       j += len(l)
@@ -714,6 +714,8 @@ for l in shell_ang_mom:
 
    #+begin_src python :results output :exports both
 def f_sort(x):
+    if len(x) == 1:
+        return 0          # an s shell has no m label
     m = int(x[1:])
     if m>=0:
         return 2*m
@@ -727,7 +729,7 @@ def f_sort(x):
 ao_ordering = []
 j = 0
 for k,l in enumerate(ao):
-      accu = [ f_sort(x), i+j, for i,x in enumerate(l) ]
+      accu = [ (f_sort(x), i+j) for i,x in enumerate(l) ]
       accu.sort()
       ao_ordering += accu
       j += len(l)
@@ -744,7 +746,7 @@ to pass it to trexio:
 MoMatrix = []
 for mo in mo_coef:
       vector = np.zeros(ao_num)
-      for i, x in mo:
+      for i, x in enumerate(mo):
          vector[i] = x
       for i in ao_ordering:
          MoMatrix.append(vector[i])

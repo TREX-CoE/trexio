@@ -3,10 +3,11 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-10 Tue 14:23 -->
+<!-- 2026-11-10 Tue 15:42 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>&lrm;</title>
+<title>MEMORY back end</title>
+<meta name="author" content="TREX-CoE" />
 <meta name="generator" content="Org Mode" />
 <style>
   #content { max-width: 60em; margin: auto; }
@@ -192,35 +193,103 @@
     { background-color: #ffff00; color: #000000; font-weight: bold; }
   .org-svg { }
 </style>
+<link rel="stylesheet" title="Standard" href="trexio.css" type="text/css" />
+
+<script src="org-info.js">
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&amp;dn=gpl-3.0.txt GPL-v3-or-Later
+// @license-end
+</script>
+
+<script>
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&amp;dn=gpl-3.0.txt GPL-v3-or-Later
+org_html_manager.set("TOC_DEPTH", "4");
+org_html_manager.set("LINK_HOME", "index.html");
+org_html_manager.set("LINK_UP", "");
+org_html_manager.set("LOCAL_TOC", "1");
+org_html_manager.set("VIEW_BUTTONS", "0");
+org_html_manager.set("MOUSE_HINT", "underline");
+org_html_manager.set("FIXED_TOC", "0");
+org_html_manager.set("TOC", "0");
+org_html_manager.set("VIEW", "info");
+org_html_manager.setup();  // activate after the parameters are set
+// @license-end
+</script>
 </head>
 <body>
-<div id="content" class="content">
+<div id="org-div-home-and-up">
+ <a accesskey="h" href=""> UP </a>
+ |
+ <a accesskey="H" href="index.html"> HOME </a>
+</div><div id="content" class="content">
+<h1 class="title">MEMORY back end</h1>
 <div id="table-of-contents" role="doc-toc">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#orgb42bee2">1. Template for group-related structures in memory back end</a></li>
-<li><a href="#org73cca0b">2. Template for general structure in memory back end</a></li>
-<li><a href="#org87a391b">3. Initialize function (constant part)</a></li>
-<li><a href="#org2e71369">4. Deinitialize function (templated part)</a></li>
-<li><a href="#orgf8a1f42">5. Flush function (templated part)</a></li>
-<li><a href="#org869570d">6. Template for memory read a group</a></li>
-<li><a href="#org5229c1e">7. Template for memory has a group</a></li>
-<li><a href="#org0f08ec9">8. Template for memory flush a group</a></li>
-<li><a href="#org91aa10d">9. Template for memory free memory</a></li>
-<li><a href="#orgde943d2">10. Template for has/read/write a numerical attribute</a></li>
-<li><a href="#org04655cc">11. Template for has/read/write a dataset of numerical data</a></li>
-<li><a href="#org6554f2d">12. Template for has/read/write a dataset of strings</a></li>
-<li><a href="#orgc49a0fe">13. Template for has/read/write a string attribute</a></li>
-<li><a href="#orgc47be56">14. Template for memory delete a group (UNSAFE mode)</a></li>
-<li><a href="#orgce7447f">15. Template for has/read/write the dataset of sparse data</a></li>
-<li><a href="#orgbf21471">16. Template for has/read/write a buffered vector</a></li>
-<li><a href="#org447f6d8">17. Source code for the determinant part</a></li>
+<li><a href="#orgc0525ec">1. Template for group-related structures in memory back end</a></li>
+<li><a href="#org889a3fa">2. Template for general structure in memory back end</a></li>
+<li><a href="#org451f8c7">3. Initialize function (constant part)</a></li>
+<li><a href="#org8ffe111">4. Deinitialize function (templated part)</a></li>
+<li><a href="#org68e9baa">5. Flush function (templated part)</a></li>
+<li><a href="#org9eb892b">6. Template for memory read a group</a></li>
+<li><a href="#org57b3aae">7. Template for memory has a group</a></li>
+<li><a href="#org667ae66">8. Template for memory flush a group</a></li>
+<li><a href="#orgf581050">9. Template for memory free memory</a></li>
+<li><a href="#orge3e0ee3">10. Template for has/read/write a numerical attribute</a></li>
+<li><a href="#org04f424b">11. Template for has/read/write a dataset of numerical data</a></li>
+<li><a href="#org40bcde9">12. Template for has/read/write a dataset of strings</a></li>
+<li><a href="#org9cddc23">13. Template for has/read/write a string attribute</a></li>
+<li><a href="#org0a8f385">14. Template for memory delete a group (UNSAFE mode)</a></li>
+<li><a href="#orgac2b991">15. Template for has/read/write the dataset of sparse data</a></li>
+<li><a href="#orgd65daa0">16. Template for has/read/write a buffered vector</a></li>
+<li><a href="#org4743792">17. Source code for the determinant part</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgb42bee2" class="outline-2">
-<h2 id="orgb42bee2"><span class="section-number-2">1.</span> Template for group-related structures in memory back end</h2>
+<p>
+The in-memory back end keeps everything in the memory of the calling
+process and writes nothing to disk. It supports the same data as the
+other two back ends &#x2013; numerical and string attributes, dense
+datasets, sparse datasets, buffered quantities and the determinant
+list &#x2013; and is selected by passing <code>TREXIO_MEMORY</code> to
+<code>trexio_open</code>.
+</p>
+
+<p>
+It exists so that data can be passed through the TREXIO API between
+parts of one program without a file in between: a producer writes
+into the handle and a consumer reads from the same handle, using the
+same calls it would use on a file.
+</p>
+
+<p>
+Because there is no file, three things differ from the other back
+ends, and all three follow from that:
+</p>
+
+<ul class="org-ul">
+<li>the <code>file_name</code> given to <code>trexio_open</code> is not used for anything,
+although it still has to be a valid non-empty string;</li>
+<li>a file cannot be opened in <code>'r'</code> mode, since an in-memory file
+never exists before it is opened. That combination returns
+<code>TREXIO_INVALID_ARG_2</code>, reported against the mode;</li>
+<li><code>trexio_close</code> discards the data instead of saving it, and
+<code>trexio_flush</code> succeeds without doing anything. There is no way to
+recover the contents afterwards, so anything that has to outlive
+the process must be written to one of the other back ends.</li>
+</ul>
+
+<p>
+Internally it mirrors the TEXT back end without the file I/O:
+reading a group returns the in-RAM struct, an empty one if the group
+has not been written yet. The struct-based categories &#x2013; numerical
+attributes, numerical and string datasets, string attributes &#x2013; live
+in per-group structs, while sparse, buffered and determinant data
+live in a generic name-keyed blob store on the handle.
+</p>
+
+<div id="outline-container-orgc0525ec" class="outline-2">
+<h2 id="orgc0525ec"><span class="section-number-2">1.</span> Template for group-related structures in memory back end</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> $group$_mem_s {
@@ -238,8 +307,8 @@
 </div>
 </div>
 
-<div id="outline-container-org73cca0b" class="outline-2">
-<h2 id="org73cca0b"><span class="section-number-2">2.</span> Template for general structure in memory back end</h2>
+<div id="outline-container-org889a3fa" class="outline-2">
+<h2 id="org889a3fa"><span class="section-number-2">2.</span> Template for general structure in memory back end</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Polymorphism of the <code>trexio_t</code> type is handled by ensuring that the
@@ -258,8 +327,8 @@ safely cast to <code>trexio_t</code>.
 </div>
 </div>
 
-<div id="outline-container-org87a391b" class="outline-2">
-<h2 id="org87a391b"><span class="section-number-2">3.</span> Initialize function (constant part)</h2>
+<div id="outline-container-org451f8c7" class="outline-2">
+<h2 id="org451f8c7"><span class="section-number-2">3.</span> Initialize function (constant part)</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_mem_blob_t</span>*
@@ -452,8 +521,8 @@ safely cast to <code>trexio_t</code>.
 </div>
 </div>
 
-<div id="outline-container-org2e71369" class="outline-2">
-<h2 id="org2e71369"><span class="section-number-2">4.</span> Deinitialize function (templated part)</h2>
+<div id="outline-container-org8ffe111" class="outline-2">
+<h2 id="org8ffe111"><span class="section-number-2">4.</span> Deinitialize function (templated part)</h2>
 <div class="outline-text-2" id="text-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -476,8 +545,8 @@ safely cast to <code>trexio_t</code>.
 </div>
 </div>
 
-<div id="outline-container-orgf8a1f42" class="outline-2">
-<h2 id="orgf8a1f42"><span class="section-number-2">5.</span> Flush function (templated part)</h2>
+<div id="outline-container-org68e9baa" class="outline-2">
+<h2 id="org68e9baa"><span class="section-number-2">5.</span> Flush function (templated part)</h2>
 <div class="outline-text-2" id="text-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -497,8 +566,8 @@ safely cast to <code>trexio_t</code>.
 </div>
 </div>
 
-<div id="outline-container-org869570d" class="outline-2">
-<h2 id="org869570d"><span class="section-number-2">6.</span> Template for memory read a group</h2>
+<div id="outline-container-org9eb892b" class="outline-2">
+<h2 id="org9eb892b"><span class="section-number-2">6.</span> Template for memory read a group</h2>
 <div class="outline-text-2" id="text-6">
 <div class="org-src-container">
 <pre class="src src-c">$group$_mem_t*
@@ -525,8 +594,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-org5229c1e" class="outline-2">
-<h2 id="org5229c1e"><span class="section-number-2">7.</span> Template for memory has a group</h2>
+<div id="outline-container-org57b3aae" class="outline-2">
+<h2 id="org57b3aae"><span class="section-number-2">7.</span> Template for memory has a group</h2>
 <div class="outline-text-2" id="text-7">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -547,8 +616,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-org0f08ec9" class="outline-2">
-<h2 id="org0f08ec9"><span class="section-number-2">8.</span> Template for memory flush a group</h2>
+<div id="outline-container-org667ae66" class="outline-2">
+<h2 id="org667ae66"><span class="section-number-2">8.</span> Template for memory flush a group</h2>
 <div class="outline-text-2" id="text-8">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -568,8 +637,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-org91aa10d" class="outline-2">
-<h2 id="org91aa10d"><span class="section-number-2">9.</span> Template for memory free memory</h2>
+<div id="outline-container-orgf581050" class="outline-2">
+<h2 id="orgf581050"><span class="section-number-2">9.</span> Template for memory free memory</h2>
 <div class="outline-text-2" id="text-9">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -605,8 +674,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-orgde943d2" class="outline-2">
-<h2 id="orgde943d2"><span class="section-number-2">10.</span> Template for has/read/write a numerical attribute</h2>
+<div id="outline-container-orge3e0ee3" class="outline-2">
+<h2 id="orge3e0ee3"><span class="section-number-2">10.</span> Template for has/read/write a numerical attribute</h2>
 <div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -664,8 +733,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-org04655cc" class="outline-2">
-<h2 id="org04655cc"><span class="section-number-2">11.</span> Template for has/read/write a dataset of numerical data</h2>
+<div id="outline-container-org04f424b" class="outline-2">
+<h2 id="org04f424b"><span class="section-number-2">11.</span> Template for has/read/write a dataset of numerical data</h2>
 <div class="outline-text-2" id="text-11">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -757,8 +826,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-org6554f2d" class="outline-2">
-<h2 id="org6554f2d"><span class="section-number-2">12.</span> Template for has/read/write a dataset of strings</h2>
+<div id="outline-container-org40bcde9" class="outline-2">
+<h2 id="org40bcde9"><span class="section-number-2">12.</span> Template for has/read/write a dataset of strings</h2>
 <div class="outline-text-2" id="text-12">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -859,8 +928,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-orgc49a0fe" class="outline-2">
-<h2 id="orgc49a0fe"><span class="section-number-2">13.</span> Template for has/read/write a string attribute</h2>
+<div id="outline-container-org9cddc23" class="outline-2">
+<h2 id="org9cddc23"><span class="section-number-2">13.</span> Template for has/read/write a string attribute</h2>
 <div class="outline-text-2" id="text-13">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -931,8 +1000,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-orgc47be56" class="outline-2">
-<h2 id="orgc47be56"><span class="section-number-2">14.</span> Template for memory delete a group (UNSAFE mode)</h2>
+<div id="outline-container-org0a8f385" class="outline-2">
+<h2 id="org0a8f385"><span class="section-number-2">14.</span> Template for memory delete a group (UNSAFE mode)</h2>
 <div class="outline-text-2" id="text-14">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -953,8 +1022,8 @@ trexio_memory_read_$group$ (<span style="color: #228b22;">trexio_memory_t</span>
 </div>
 </div>
 
-<div id="outline-container-orgce7447f" class="outline-2">
-<h2 id="orgce7447f"><span class="section-number-2">15.</span> Template for has/read/write the dataset of sparse data</h2>
+<div id="outline-container-orgac2b991" class="outline-2">
+<h2 id="orgac2b991"><span class="section-number-2">15.</span> Template for has/read/write the dataset of sparse data</h2>
 <div class="outline-text-2" id="text-15">
 <p>
 Sparse data (e.g. two-electron integrals, Cholesky vectors, 2-RDMs) is held
@@ -1019,8 +1088,8 @@ reading returns chunks from a given item offset.
 </div>
 </div>
 
-<div id="outline-container-orgbf21471" class="outline-2">
-<h2 id="orgbf21471"><span class="section-number-2">16.</span> Template for has/read/write a buffered vector</h2>
+<div id="outline-container-orgd65daa0" class="outline-2">
+<h2 id="orgd65daa0"><span class="section-number-2">16.</span> Template for has/read/write a buffered vector</h2>
 <div class="outline-text-2" id="text-16">
 <p>
 Buffered vectors (e.g. CI/CSF coefficients) are held in a name-keyed in-RAM
@@ -1088,8 +1157,8 @@ blob of growable values. Writing appends; reading returns a chunk.
 </div>
 </div>
 
-<div id="outline-container-org447f6d8" class="outline-2">
-<h2 id="org447f6d8"><span class="section-number-2">17.</span> Source code for the determinant part</h2>
+<div id="outline-container-org4743792" class="outline-2">
+<h2 id="org4743792"><span class="section-number-2">17.</span> Source code for the determinant part</h2>
 <div class="outline-text-2" id="text-17">
 <p>
 The determinant list (bit-field occupation strings) is stored in a single
@@ -1149,7 +1218,8 @@ mechanism above. These functions are constant (not templated).
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2026-11-10 Tue 14:23</p>
+<p class="author">Author: TREX-CoE</p>
+<p class="date">Created: 2026-11-10 Tue 15:42</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
