@@ -504,10 +504,11 @@ PYTREXIO_MAX_STR_LENGTH = 2048
      file was opened in ~'u'~ mode; see *Read/write behavior*.
    - The ~trexio_read_safe_*~ and ~trexio_write_safe_*~ functions take the size
      of the caller's array and refuse rather than overrun it, with
-     ~TREXIO_UNSAFE_ARRAY_DIM~. (For the sparse, buffered and determinant ones
-     the refusal is currently reported against the argument instead, as
-     ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~; that is a bug and is
-     being changed to ~TREXIO_UNSAFE_ARRAY_DIM~ for consistency.)
+     ~TREXIO_UNSAFE_ARRAY_DIM~. This holds for the dense, sparse, buffered and
+     determinant data alike. The two orbital-list converters are the exception:
+     ~trexio_safe_to_orbital_list~ and ~trexio_safe_to_orbital_list_up_dn~
+     report an output array that is too small against the argument it was
+     passed in, as ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~.
    - Reading chunked data -- sparse, buffered, the determinant list -- gives
      ~TREXIO_END~ when the end of the data is reached, having set the buffer
      size to how much was actually read. ~TREXIO_END~ is an ordinary outcome of
