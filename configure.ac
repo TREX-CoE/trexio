@@ -10,20 +10,31 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-config])
 
 AM_INIT_AUTOMAKE([foreign subdir-objects color-tests parallel-tests silent-rules 1.11])
+# Activate developer mode if a dummy file is present (true when cloning the git repository).
+# Otherwise, it is the source distribution and the developer mode should not be activated.
+# The marker is looked up in $srcdir so that out-of-source (object directory)
+# builds detect it correctly instead of silently dropping to non-developer mode.
+#
+# The generated C and Fortran sources are not part of a git checkout, so a
+# clone always has to tangle them out of the org files: this flag follows the
+# marker and nothing else.  It does not depend on --disable-maintainer-mode.
+TEST_IFEXISTS="$srcdir/.devel"
+AS_IF([test -f "$TEST_IFEXISTS"], [trexio_devel="yes"], [trexio_devel="no"])
+
+# MAINTAINER_MODE only decides whether make regenerates configure and
+# Makefile.in.  It must be preseeded before AM_MAINTAINER_MODE() is expanded:
+# the macro uses AC_ARG_ENABLE's "was the option given?" test
+# (test ${enable_maintainer_mode+y}) on a variable the command-line parser has
+# already set, so presetting it counts as given and an explicit
+# --enable/--disable-maintainer-mode (in any spelling) still wins.
+AS_IF([test -f "$TEST_IFEXISTS" && test "${enable_maintainer_mode+set}" != set],
+      [enable_maintainer_mode="yes"])
+
 AM_MAINTAINER_MODE()
 AM_PROG_AR
 
 LT_PREREQ([2.2])
 LT_INIT
-
-# Activate developer mode if a dummy file is present (true when cloning the git repository).
-# Otherwise, it is the source distribution and the developer mode should not be activated.
-# The marker is looked up in $srcdir so that out-of-source (object directory)
-# builds detect it correctly instead of silently dropping to non-developer mode.
-TEST_IFEXISTS="$srcdir/.devel"
-AS_IF([test -f "$TEST_IFEXISTS"],
-        [enable_maintainer_mode="yes"]
-)
 
 VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
 VERSION_MINOR=`echo ${PACKAGE_VERSION} | cut -d. -f2`
@@ -293,7 +304,7 @@ AC_C_INLINE
 # AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset mkdir strerror])
 
-if test "x$enable_maintainer_mode" = "xyes"; then
+if test "x$trexio_devel" = "xyes"; then
   TREXIO_DEVEL=" -- Maintainer mode"
 else
   TREXIO_DEVEL=""
