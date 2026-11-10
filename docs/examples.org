@@ -2,6 +2,230 @@
 #+STARTUP: latexpreview
 #+SETUPFILE: ./theme.setup
 
+* Fortran
+
+In Fortran, you will need to use the ~trexio~ module.
+Due to potential issues with compiler versions and =.mod= files, it is
+recommended to include the source version of this module directly in
+your source code.
+The corresponding file is installed in a standard location when the
+library is installed using ~make install~, in the =include=
+directory.
+
+To avoid duplicating this file every time you update the TREXIO library,
+create a file named =trexio_module.F90= (note the capital F in the
+suffix) containing:
+
+ #+begin_src c
+#include <trexio_f.f90>
+ #+end_src
+ 
+Compile this new file and add the =trexio_module.o= file at link
+time.
+ 
+** Creating and Writing a TREXIO File
+
+This example demonstrates how to open a file in write mode, store
+simple scalar and array data (number of nuclei and nuclear charges),
+and close the file. 
+
+#+BEGIN_SRC f90 
+program write_basic
+  use trexio
+  implicit none
+
+  integer(trexio_exit_code) :: rc
+  integer(trexio_t) :: file
+  integer, parameter :: n_nuc = 2
+  double precision :: charges(n_nuc)
+
+  charges = (/ 1.0d0, 8.0d0 /)
+
+  file = trexio_open('molecule.h5', 'w', TREXIO_HDF5, rc)
+  if (rc /= TREXIO_SUCCESS) stop 'Failed to open file for writing.'
+
+  rc = trexio_write_nucleus_num(file, n_nuc)
+  if (rc /= TREXIO_SUCCESS) stop 'Failed to write nucleus_num.'
+
+  rc = trexio_write_nucleus_charge(file, charges)
+  if (rc /= TREXIO_SUCCESS) stop 'Failed to write nucleus_charge.'
+
+  rc = trexio_close(file)
+  if (rc /= TREXIO_SUCCESS) print *, 'Failed to close file.'
+
+end program write_basic
+#+END_SRC
+
+To compile this example:
+
+#+begin_src bash
+gfortran trexio_module.F90 write_basic.f90 -ltrexio
+#+end_src
+
+*Important*: If you try to run the program when the file =molecule.h5=
+ is already present, you will obtain an error. TREXIO files are
+ immutable, so you can't overwrite ~nucleus_num~. To run again the
+ program, first erase the =molecule.h5= file.
+ 
+** Reading a TREXIO File
+
+This example shows how to open a file in read mode, retrieve scalar
+and array data, and print it. In read mode, the back-end can be set
+to ~TREXIO_AUTO~ to let the libray automatically detect the
+appropriate back-end.
+
+#+begin_src f90
+program read_basic
+  use trexio
+  implicit none
+
+  integer(trexio_exit_code) :: rc
+  integer(trexio_t) :: file
+  integer ::n_nuc
+  double precision, allocatable :: charges(:)
+
+  file = trexio_open('molecule.h5', 'r', TREXIO_AUTO, rc)
+  if (rc /= TREXIO_SUCCESS) stop 'Failed to open file.'
+
+  rc = trexio_read_nucleus_num(file, n_nuc)
+  if (rc /= TREXIO_SUCCESS) stop 'Failed to read nucleus_num'
+
+  allocate(charges(n_nuc))
+  rc = trexio_read_nucleus_charge(file, charges)
+  if (rc /= TREXIO_SUCCESS) stop 'Failed to read nucleus_charges'
+
+  print *, 'Number of nuclei:', n_nuc
+  print *, 'Charges:'
+  print *, charges
+
+  rc = trexio_close(file)
+  if (rc /= TREXIO_SUCCESS) stop 'Failed to close file.'
+end program read_basic
+#+end_src
+
+To compile this example:
+
+#+begin_src bash
+gfortran trexio_module.F90 read_basic.f90 -ltrexio
+#+end_src
+
+** Writing/Reading Molecule Information
+
+This example demonstrates how to:
+- Open a TREXIO file in write mode and store:
+    - The number of nuclei (nucleus_num)
+    - The nuclear charges (nucleus_charge)
+    - The 3D Cartesian coordinates of each nucleus (nucleus_coord)
+    - The nuclear labels (nucleus_label)
+- Reopen the same file in read mode and retrieve the same data
+
+The file format used is HDF5 (=example_nucleus.h5=), but it can be
+changed to TEXT or other backends supported by TREXIO.
+
+The number of nuclei is assumed to be known and fixed at compile time
+in this example for simplicity.
+
+Note: in TREXIO, all data are stored in /atomic units/.
+
+#+begin_src f90
+program write_nucleus
+  use trexio
+  implicit none
+
+  integer(trexio_exit_code) :: rc
+  integer(trexio_t)         :: file
+  integer                  :: nucleus_num
+  double precision, dimension(3,2) :: coord
+  double precision, dimension(2)   :: charge
+  character(len=4), dimension(2)    :: label
+
+  ! Define nuclear data
+  nucleus_num = 2
+  charge      = (/  1.0d0, 17.0d0 /)
+  coord(:,1)  = (/  0.0d0,  0.0d0,  0.0d0 /)
+  coord(:,2)  = (/  0.0d0,  0.0d0,  2.45d0 /)
+  label       = (/ 'H ', 'Cl' /)
+
+  ! Open TREXIO file in write mode
+  file = trexio_open('example_nucleus.h5', 'w', TREXIO_HDF5, rc)
+  if (rc /= TREXIO_SUCCESS) stop 'Error opening TREXIO file for writing'
+
+  ! Write number of nuclei
+  rc = trexio_write_nucleus_num(file, nucleus_num)
+  if (rc /= TREXIO_SUCCESS) stop 'Error writing nucleus_num'
+
+  ! Write nuclear charges
+  rc = trexio_write_nucleus_charge(file, charge)
+  if (rc /= TREXIO_SUCCESS) stop 'Error writing nucleus_charge'
+
+  ! Write coordinates
+  rc = trexio_write_nucleus_coord(file, coord)
+  if (rc /= TREXIO_SUCCESS) stop 'Error writing nucleus_coord'
+
+  ! Write labels
+  rc = trexio_write_nucleus_label(file, label, len((label(1))))
+  if (rc /= TREXIO_SUCCESS) stop 'Error writing nucleus_label'
+
+  ! Close the file
+  rc = trexio_close(file)
+  if (rc /= TREXIO_SUCCESS) stop 'Error closing TREXIO file'
+end program write_nucleus
+#+end_src
+
+
+#+begin_src f90
+program read_nucleus
+  use trexio
+  implicit none
+
+  integer(trexio_exit_code) :: rc
+  integer(trexio_t)         :: file
+  integer                  :: nucleus_num
+  double precision, allocatable :: charge(:)
+  double precision, allocatable :: coord(:,:)
+  character(len=2), allocatable  :: label(:)
+
+  ! Open TREXIO file in read mode
+  file = trexio_open('example_nucleus.h5', 'r', TREXIO_AUTO, rc)
+  if (rc /= TREXIO_SUCCESS) stop 'Error opening TREXIO file for reading'
+
+  ! Read number of nuclei
+  rc = trexio_read_nucleus_num(file, nucleus_num)
+  if (rc /= TREXIO_SUCCESS) stop 'Error reading nucleus_num'
+
+  ! Allocate arrays
+  allocate(charge(nucleus_num))
+  allocate(coord(3,nucleus_num))
+  allocate(label(nucleus_num))
+
+  ! Read charges
+  rc = trexio_read_nucleus_charge(file, charge)
+  if (rc /= TREXIO_SUCCESS) stop 'Error reading nucleus_charge'
+
+  ! Read coordinates
+  rc = trexio_read_nucleus_coord(file, coord)
+  if (rc /= TREXIO_SUCCESS) stop 'Error reading nucleus_coord'
+
+  ! Read labels
+  rc = trexio_read_nucleus_label(file, label, 2)
+  if (rc /= TREXIO_SUCCESS) stop 'Error reading nucleus_label'
+
+  ! Close the file
+  rc = trexio_close(file)
+  if (rc /= TREXIO_SUCCESS) stop 'Error closing TREXIO file'
+
+  ! Print data
+  print *, 'Number of nuclei:', nucleus_num
+  print *, 'Charges:', charge
+  print *, 'Coordinates (column-wise):'
+  print *, coord
+  print *, 'Labels:'
+  print *, label
+
+end program read_nucleus
+#+end_src
+
+
 * Writing nuclear coordinates
   
   This example demonstrates how to write the nuclear coordinates of a
@@ -90,26 +314,7 @@ with trexio.File("water.trexio", 'w',
    #+end_src
 
 ** Fortran
-
- In Fortran, you will need to use the ~trexio~ module.
- Due to potential issues with compiler versions and =.mod= files, it is
- recommended to include the source version of this module directly in
- your source code.
- The corresponding file is installed in a standard location when the
- library is installed using ~make install~, in the =include=
- directory.
-
- To avoid duplicating this file every time you update the TREXIO library,
- create a file named =trexio_module.F90= (note the capital F in the
- suffix) containing:
-
- #+begin_src c
-#include <trexio_f.f90>
- #+end_src
- 
- Compile this new file and add the =trexio_module.o= file at link
- time.
- 
+   
    #+begin_src f90
 program trexio_water
   use trexio
@@ -160,7 +365,6 @@ program trexio_water
 
 end program
    #+end_src
-
 * Accessing sparse quantities (integrals)
 
 ** Fortran
