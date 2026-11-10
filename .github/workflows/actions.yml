@@ -76,6 +76,32 @@ jobs:
       - name: check TREXIO
         run: make -j2 check
 
+      # Guards the dependency added in #362. tests/test_f.f90 uses the module
+      # produced by compiling tests/trexio_f.f90, and automake does not track
+      # Fortran module dependencies, so before #362 a change to the generated
+      # interface rebuilt tests/trexio_f.o and left tests/test_f.o alone --
+      # linking an object compiled against the previous module (#361).
+      #
+      # Every lane starts from a clean tree, which is why that went unnoticed in
+      # the first place, and a rebuild alone would not catch it either: a stale
+      # tests/test_f.o still passes when the module's contents did not really
+      # change. So this asserts what actually regressed, the dependency itself,
+      # by checking that make plans to recompile tests/test_f.o. It needs no
+      # build of its own -- --dry-run writes nothing.
+      - name: check that the Fortran test is rebuilt when its module changes
+        run: |
+          touch include/trexio_f.f90
+          if make --dry-run tests/test_f \
+               | grep -Eq -- '-o +tests/test_f\.o|-c .*tests/test_f\.f90' ; then
+            echo "OK: make recompiles tests/test_f.o after the interface changes"
+          else
+            echo "tests/test_f.o would not be recompiled after a change to" >&2
+            echo "include/trexio_f.f90, so the Fortran test would link an" >&2
+            echo "object built against the previous trexio module. See #361." >&2
+            make --dry-run tests/test_f >&2
+            exit 1
+          fi
+
       - name: check via valgrind
         if: matrix.os != 'ubuntu-22.04-arm'
         run: cd tests && ./run_valgrind.sh
