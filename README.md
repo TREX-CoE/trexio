@@ -9,12 +9,13 @@ TREXIO is an open-source file format and library developed for the storage and
 manipulation of data produced by quantum chemistry calculations. It is designed
 with the goal of providing a reliable and efficient method of storing and
 exchanging wave function parameters and matrix elements. The library consists
-of a front-end implemented in the C programming language and three
+of a front-end implemented in the C programming language and four
 back-ends: a text back-end, a binary back-end utilizing the HDF5 library
-which enables fast read and write operations, and an in-memory back-end that
-writes nothing to disk. It is compatible with a variety of platforms, with
-Fortran and Python interfaces in this repository and bindings for OCaml, Rust
-and Haskell maintained alongside it.
+which enables fast read and write operations, an in-memory back-end that
+writes nothing to disk, and a JSON back-end for interchange with other tools.
+It is compatible with a variety of platforms, with Fortran and Python
+interfaces in this repository and bindings for OCaml, Rust and Haskell
+maintained alongside it.
 
 Below is the list of codes that adopted TREXIO for reading and/or writing
 single- and/or multi-reference wave functions:
@@ -51,6 +52,7 @@ single- and/or multi-reference wave functions:
     * [Minimal requirements (for users):](#minimal-requirements-for-users)
     * [Recommended: Installation from the release tarball](#recommended-installation-from-the-release-tarball)
     * [Compilation without the HDF5 library](#compilation-without-the-hdf5-library)
+    * [Compilation with the JSON back end](#compilation-with-the-json-back-end)
     * [For TREXIO developers: from the GitHub repo clone](#for-trexio-developers-from-the-github-repo-clone)
     * [Using CMake instead of Autotools](#using-cmake-instead-of-autotools)
 * [Using TREXIO](#using-trexio)
@@ -207,7 +209,8 @@ it at the prefix with `--with-hdf5=PATH`, for example
 `./configure --with-hdf5=$HOME/.local`. The CMake equivalent is
 `-DHDF5_ROOT=PATH`.
 
-A library built without HDF5 still has the text and in-memory back ends.
+A library built without HDF5 still has the text and in-memory back ends, and
+the JSON one if it was enabled.
 Programs that may run against either build should ask
 `trexio_has_back_end(TREXIO_HDF5)` before requesting it, rather than assuming
 it is there.
@@ -216,6 +219,30 @@ it is there.
 
 The Fortran API is optional. Pass `--without-fortran` to `configure`, or
 `-DTREXIO_FORTRAN=OFF` to `cmake`, and no Fortran compiler is required.
+
+#### Compilation with the JSON back end
+
+The JSON back end is not built by default. It writes a TREXIO file as a single
+JSON document, which is convenient for interchange: any language can read it, so
+a tool that consumes or produces TREXIO data need not link the library, and a
+file can be inspected with nothing but a text editor. What the file holds is
+TREXIO's own data layout, with TREXIO's group and quantity names -- it is not
+QCSchema or any other established schema, and converting to one of those remains
+a mapping the tool has to do. The whole document is kept in memory until the file
+is closed, so the back end is not meant for large amounts of data.
+
+It needs nothing installed: parsing and writing are done with
+[yyjson](https://github.com/ibireme/yyjson), which is two files and is bundled
+in `external/yyjson`. An installed yyjson (>= 0.12) is used when there is one,
+so a distribution package builds against the system library without having to
+patch the bundled copy out. To build the back end, append `--enable-json` to the
+`configure` script or `-DTREXIO_USE_JSON=ON` to `cmake`. For example,
+
+- `./configure --enable-json`
+- `cmake -S. -Bbuild -DTREXIO_USE_JSON=ON`
+
+A library built without it reports `TREXIO_BACK_END_MISSING` when a file is
+opened with `TREXIO_JSON`.
 
 #### For TREXIO developers: from the GitHub repo clone
 
