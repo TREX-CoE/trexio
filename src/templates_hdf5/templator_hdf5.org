@@ -3,6 +3,26 @@
 #+SETUPFILE: ../../docs/theme.setup
 # -*- mode: org -*-
 
+  The file produced by the HDF5 back end is a single HDF5 file, laid
+  out so that it can be inspected with the standard tools (~h5dump~,
+  ~h5ls~, =h5py=):
+
+  - each TREXIO group is an HDF5 group of the same name;
+  - each numerical or string attribute of a group is an HDF5 attribute
+    on that group;
+  - each dense dataset is an HDF5 dataset inside that group;
+  - each sparse dataset becomes *two* chunked HDF5 datasets, suffixed
+    =_indices= and =_values=, holding the index tuples and the values
+    of the non-zero elements. The values are doubles; the index dataset
+    uses the narrowest integer type the dimensions allow -- 8, 16 or 32
+    bits -- so the width differs from file to file and is a property of
+    the data rather than of the format;
+  - buffered datasets and the determinant list are single chunked
+    datasets, extended as chunks are written.
+
+  Unlike the text back end, nothing is locked by TREXIO itself: HDF5
+  does its own file locking from version 1.10 onwards.
+
 * Constant file prefixes (not used by the generator)               :noexport:
 
   #+begin_src emacs-lisp

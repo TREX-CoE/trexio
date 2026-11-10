@@ -35,9 +35,6 @@
 ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = trexio.mod tests/trexio_f.f90
 BUILT_SOURCES = trex.json
-if HAVE_FORTRAN
-BUILT_SOURCES += trexio.mod
-endif
 EXTRA_DIST = .git_hash
 
 PACKAGE_VERSION = @PACKAGE_VERSION@
@@ -127,6 +124,7 @@ endif
 EXTRA_DIST += CMakeLists.txt \
               trex.json \
               src/CMakeLists.txt \
+              python/CMakeLists.txt \
               tests/CMakeLists.txt \
               tests/test_macros.h  \
               cmake/cmake_uninstall.cmake.in \
@@ -280,7 +278,7 @@ test_trexio_f = tests/trexio_f.f90
 $(test_trexio_f): $(trexio_f)
 	cp $(srcdir)/$(trexio_f) $(test_trexio_f)
 
-trexio.mod: tests/trexio_f.o
+tests/test_f.$(OBJEXT): tests/trexio_f.$(OBJEXT)  # Ensure the trexio.mod is built when needed
 
 tests_test_f_SOURCES = $(test_trexio_f) tests/test_f.f90
 endif
@@ -302,7 +300,8 @@ HTML_TANGLED = docs/index.html            \
                docs/README.html           \
                docs/templator_front.html  \
                docs/fortran_modules.html  \
-               docs/templator_text.html
+               docs/templator_text.html   \
+               docs/templator_memory.html
 if HAVE_HDF5
 HTML_TANGLED += docs/templator_hdf5.html
 endif
@@ -331,7 +330,20 @@ doc: html-local
 # =============== PYTHON API =============== #
 
 # SWIG output, generated in maintainer mode and shipped in the distribution.
-pytrexio_c    = src/pytrexio_wrap.c
+#
+# There are two wrappers, because SWIG maps int64_t onto long or onto long long
+# depending on SWIGWORDSIZE64 and the result only fits targets that spell
+# int64_t the same way (see configure.ac). Both are generated and distributed,
+# and configure selects the one that fits the target, so that a build from a
+# tarball never needs SWIG. The Python module SWIG writes beside the wrapper is
+# byte-identical for the two, so there is only one of those.
+pytrexio_c_long      = src/pytrexio_wrap_long.c
+pytrexio_c_long_long = src/pytrexio_wrap_long_long.c
+if INT64_T_IS_LONG
+pytrexio_c    = $(pytrexio_c_long)
+else
+pytrexio_c    = $(pytrexio_c_long_long)
+endif
 pytrexio_py   = src/pytrexio.py
 trexio_py     = src/trexio.py
 pytrexio_i    = src/pytrexio.i
@@ -346,7 +358,8 @@ TEST_PY       = python/test/test_api.py python/test/test_memory.py
 
 # Distributed unconditionally, so that a tarball made without --enable-python
 # can still be configured with it.
-EXTRA_DIST += $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(pytrexio_i) $(numpy_i) \
+EXTRA_DIST += $(pytrexio_c_long) $(pytrexio_c_long_long) \
+              $(pytrexio_py) $(trexio_py) $(pytrexio_i) $(numpy_i) \
               $(setup_py) $(setup_cfg) \
               python/MANIFEST.in \
               python/README.md \
@@ -421,14 +434,18 @@ endif
 
 # The standalone build stages the same single-package layout the build systems
 # install, so that the relative imports in the generated API resolve there too.
+# setup.py compiles the wrapper under one fixed name, so the one selected for
+# this host is staged under that name: a wheel, like any wheel, is built for the
+# machine that produces it.
 $(python_pkg_py): $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(trexio_h)
 	$(MKDIR_P) $(srcdir)/python/src $(srcdir)/python/trexio
 	cp -f $(srcdir)/$(trexio_py) $(srcdir)/python/trexio/__init__.py
 	cp -f $(srcdir)/$(pytrexio_py) $(srcdir)/python/trexio/pytrexio.py
 	cp -f $(srcdir)/python/pytrexio/_version.py $(srcdir)/python/trexio/_version.py
-	for f in $(PYTHON_STAGED_FILES) $(pytrexio_c) $(trexio_h) ; do \
+	for f in $(PYTHON_STAGED_FILES) $(trexio_h) ; do \
 	  cp -f $(srcdir)/$$f $(srcdir)/python/src/ || exit 1 ; \
 	done
+	cp -f $(srcdir)/$(pytrexio_c) $(srcdir)/python/src/pytrexio_wrap.c
 	cp -f include/config.h $(srcdir)/python/src/
 	cp -f $(srcdir)/AUTHORS $(srcdir)/LICENSE $(srcdir)/python/
 
@@ -500,7 +517,7 @@ python-test: $(TEST_PY)
 	$(RM) -rf -- test_file_py.dir unsafe_test_file_py.dir
 endif
 
-.PHONY: python-test python-install python-sdist cppcheck check-numpy FORCE ocaml
+.PHONY: python-test python-install python-sdist cppcheck check-numpy FORCE
 
 # =============== DEVELOPER MODE =============== #
 
@@ -562,35 +579,33 @@ cppcheck.out: $(trexio_h)
 	  --language=c --std=c99 -rp --platform=unix64  \
 	  -I../include *.c *.h 2>../$@
 
-#################
-# OCaml binding #
-#################
-
-ocaml/trexio/_build/default/lib/trexio.cma:
-	$(MAKE) -C ocaml/trexio
-
-ocaml: ocaml/trexio/_build/default/lib/trexio.cma
-
-ocaml-install: ocaml/trexio/_build/default/lib/trexio.cma
-	opam install ocaml/trexio
-
 ##################
 # Python binding #
 ##################
 
 # Build Python module and C wrapper code for TREXIO using SWIG
-$(pytrexio_c): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
+# One wrapper per spelling of int64_t, so that a distribution carries both and
+# configure can select rather than regenerate.
+$(pytrexio_c_long): $(ORG_FILES) $(GENERATOR_FILES) $(trexio_h) $(pytrexio_i) $(numpy_i)
 	@if [[ $(SWIG).x != ".x" ]] ; then \
 	cd $(srcdir)/src/ && \
-		$(SWIG) -python -I../include -o pytrexio_wrap.c pytrexio.i ; \
+		$(SWIG) -python -DSWIGWORDSIZE64 -I../include -o pytrexio_wrap_long.c pytrexio.i ; \
 	else echo "Error: SWIG is not installed" ; \
 	exit 1 ; \
 	fi
 
-$(pytrexio_py): $(pytrexio_c)
+# Sequenced after the wrapper above rather than given its own prerequisites:
+# SWIG writes pytrexio.py beside the wrapper, with the same contents for the
+# two, so a parallel make must not have both invocations writing it, and the
+# rule above is also the one that reports a missing SWIG.
+$(pytrexio_c_long_long): $(pytrexio_c_long)
+	cd $(srcdir)/src/ && \
+		$(SWIG) -python -I../include -o pytrexio_wrap_long_long.c pytrexio.i
+
+$(pytrexio_py): $(pytrexio_c_long)
 	@if test -f $@; then :; else \
-	  rm -f $(pytrexio_c); \
-	  $(MAKE) $(AM_MAKEFLAGS) $(pytrexio_c); \
+	  rm -f $(pytrexio_c_long); \
+	  $(MAKE) $(AM_MAKEFLAGS) $(pytrexio_c_long); \
 	fi
 
 
@@ -627,7 +642,8 @@ EXTRA_DIST += $(DEB_FILES) $(RPM_FILES) $(NIX_FILES)
 # The SWIG output and the staged copies are regenerated from the org sources in
 # maintainer mode, so they are cleaned only here and not in a distribution build,
 # where they are shipped rather than built.
-CLEANFILES += $(pytrexio_c) \
+CLEANFILES += $(pytrexio_c_long) \
+              $(pytrexio_c_long_long) \
               $(pytrexio_py) \
               $(trexio_py) \
               $(srcdir)/python/trexio.py \

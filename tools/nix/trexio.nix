@@ -11,15 +11,13 @@
 
 stdenv.mkDerivation rec {
   pname = "trexio";
-  version = "2.6.1";
+  version = "2.6.2";
 
   src = lib.cleanSourceWith {
     src = ../../.;
     filter = path: type: ! (builtins.elem (builtins.baseNameOf path) [
       "haskell"
       "docker"
-      "ocaml"
-      "rust"
       "python"
     ] && type == "directory" );
   };

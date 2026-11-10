@@ -199,6 +199,55 @@ static int test_read_dset_sparse (const char* file_name, const back_end_t backen
   return 0;
 }
 
+static int test_safe_dset_sparse_too_small (const char* file_name, const back_end_t backend) {
+
+/* A safe read or write whose buffer is too small has to be refused, and the
+   refusal has to be TREXIO_UNSAFE_ARRAY_DIM -- the same code the dense
+   datasets return for the same mistake. */
+
+  trexio_t* file = NULL;
+  trexio_exit_code rc;
+
+/*================= START OF TEST ==================*/
+
+  file = trexio_open(file_name, 'r', backend, &rc);
+  assert (file != NULL);
+  assert (rc == TREXIO_SUCCESS);
+
+  int64_t buffer_size = 10;
+  int32_t index_read[40] = {0};
+  double  value_read[10] = {0.0};
+
+  /* The index array needs 4 elements per integral and the value array one, so
+     both of these are one element short of what buffer_size asks for. */
+  rc = trexio_read_safe_mo_2e_int_eri(file, 0, &buffer_size,
+                                      index_read, 4L*buffer_size - 1,
+                                      value_read, buffer_size);
+  assert (rc == TREXIO_UNSAFE_ARRAY_DIM);
+
+  buffer_size = 10;
+  rc = trexio_read_safe_mo_2e_int_eri(file, 0, &buffer_size,
+                                      index_read, 4L*buffer_size,
+                                      value_read, buffer_size - 1);
+  assert (rc == TREXIO_UNSAFE_ARRAY_DIM);
+
+  /* A correctly sized pair still works, so the check is not simply refusing
+     everything. TREXIO_END is an acceptable answer here: the dataset may hold
+     fewer than buffer_size integrals, in which case the read stops early. */
+  buffer_size = 10;
+  rc = trexio_read_safe_mo_2e_int_eri(file, 0, &buffer_size,
+                                      index_read, 4L*buffer_size,
+                                      value_read, buffer_size);
+  assert (rc == TREXIO_SUCCESS || rc == TREXIO_END);
+
+  rc = trexio_close(file);
+  assert (rc == TREXIO_SUCCESS);
+
+/*================= END OF TEST ==================*/
+
+  return 0;
+}
+
 static int test_read_dset_sparse_size (const char* file_name, const back_end_t backend, const int64_t size_check) {
 
 /* Try to read a size of the dataset of sparse data in the TREXIO file */
@@ -250,6 +299,7 @@ int main(){
     test_has_dset_sparse      (TREXIO_FILE, TEST_BACKEND);
     test_read_dset_sparse     (TREXIO_FILE, TEST_BACKEND, 0);
     test_read_dset_sparse_size(TREXIO_FILE, TEST_BACKEND, size);
+    test_safe_dset_sparse_too_small(TREXIO_FILE, TEST_BACKEND);
 
     // check the second write attempt (SIZE elements written in N_CHUNKS chunks)
     test_write_dset_sparse    (TREXIO_FILE, TEST_BACKEND, size, mo_num[i]);
