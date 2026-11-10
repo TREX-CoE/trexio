@@ -980,8 +980,9 @@ power = [
    ~cartesian~ (~0~: spherical, ~1~: cartesian), or shell by shell with the
    ~cartesian_shell~ array, whose length is the number of shells of the
    matching basis set (~basis~, ~auxbasis~, ~auxbasis2~). A file stores at
-   most one of the two for a given group: when ~cartesian~ is absent,
-   readers fall back on ~cartesian_shell~.
+   most one of the two for a given group: when ~cartesian~ is absent, the
+   per-shell value is taken from the ~cartesian_shell~ array if that array
+   is present, and from a default otherwise.
 
    A writer should always state one of them, rather than rely on a
    default: a default could change between versions of the
@@ -1273,7 +1274,7 @@ power = [
   The cartesian/spherical rule is the same as for the ~ao~ group: at most
   one of ~auxao.cartesian~ and ~auxao.cartesian_shell~ (respectively
   ~auxao2.cartesian~ and ~auxao2.cartesian_shell~) may be written, and a
-  file that states both for the same group fails the close with
+  file that states both for the same group makes the close fail with
   ~TREXIO_AMBIGUOUS_CARTESIAN~.
 
   #+CALL: json(data=ao, title="auxao", replace_dict="[('ao','auxao'),('basis','auxbasis')]")

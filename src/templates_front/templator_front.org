@@ -1930,6 +1930,13 @@ end interface
     memory, so a failure reported here can be a failure to write the
     file.
 
+    Those checks are not all tied to the mode, though: the
+    electron-count completions only run on a file opened for writing,
+    but the determinant and cartesian/spherical checks are not guarded
+    by the mode. A reader that closes an inconsistent file gets the
+    same code, and there it means the file is invalid rather than that
+    a read failed.
+
     **Note:** the handle is released whatever is returned. A
     ~trexio_close~ that reports an error has still freed the file
     handle, so the call must not be retried and the handle must not be
@@ -2846,9 +2853,10 @@ end interface
      ~auxbasis2~. A valid file states the character of each basis exactly
      once: either its ~cartesian~ attribute for all shells at once, or its
      ~cartesian_shell~ array shell by shell. Writing both for the same group
-     is ambiguous and fails the close with ~TREXIO_AMBIGUOUS_CARTESIAN~ -- so
-     a program that writes one of them must not also write the other, and
-     will only find out at close time. Writing neither is accepted, but then
+     is ambiguous and makes the close fail with
+     ~TREXIO_AMBIGUOUS_CARTESIAN~ -- so a program that writes one of them
+     must not also write the other, and will only find out at close time.
+     Writing neither is accepted, but then
      a reader has to fall back on a default, and a default could change
      between versions of the specification -- so a writer should state one of
      the two even though the library does not insist on it.
@@ -2969,14 +2977,15 @@ trexio_pre_close (trexio_t* file)
    * a file states the character of a basis at most once -- at most one of
    * <grp>.cartesian and <grp>.cartesian_shell, for grp in ao, auxao, auxao2.
    * Having both is ambiguous and makes the file invalid. Writing neither is
-   * accepted: a reader then falls back on cartesian_shell. */
+   * accepted: a reader then takes the per-shell value from cartesian_shell
+   * when that array is present, and from a default otherwise. */
   {
     bool ambiguous =
-      (trexio_has_ao_cartesian(file)      == TREXIO_SUCCESS &&
-       trexio_has_ao_cartesian_shell(file) == TREXIO_SUCCESS) ||
-      (trexio_has_auxao_cartesian(file)   == TREXIO_SUCCESS &&
-       trexio_has_auxao_cartesian_shell(file) == TREXIO_SUCCESS) ||
-      (trexio_has_auxao2_cartesian(file)  == TREXIO_SUCCESS &&
+      (trexio_has_ao_cartesian(file)           == TREXIO_SUCCESS &&
+       trexio_has_ao_cartesian_shell(file)     == TREXIO_SUCCESS) ||
+      (trexio_has_auxao_cartesian(file)        == TREXIO_SUCCESS &&
+       trexio_has_auxao_cartesian_shell(file)  == TREXIO_SUCCESS) ||
+      (trexio_has_auxao2_cartesian(file)       == TREXIO_SUCCESS &&
        trexio_has_auxao2_cartesian_shell(file) == TREXIO_SUCCESS);
 
     if (ambiguous) {
