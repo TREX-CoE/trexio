@@ -126,6 +126,33 @@ int main(void)
 
   CHECK_RC(trexio_close(f));
 
+  /* ---- cartesian/cartesian_shell exclusion, checked at close ---- */
+  f = trexio_open("io_memory_dummy", 'w', TREXIO_MEMORY, &rc);
+  if (rc != TREXIO_SUCCESS) {
+    printf("FAIL reopen: %d (%s)\n", rc, trexio_string_of_error(rc));
+    return 1;
+  }
+
+  /* both attributes in the same group: ambiguous, refused at close */
+  CHECK_RC(trexio_write_basis_shell_num(f, 2));
+  CHECK_RC(trexio_write_ao_num(f, 6));
+  CHECK_RC(trexio_write_ao_cartesian(f, 1));
+  const int32_t ao_shell_flags[2] = {0, 1};
+  CHECK_RC(trexio_write_ao_cartesian_shell(f, ao_shell_flags));
+  EXPECT(trexio_close(f) == TREXIO_AMBIGUOUS_CARTESIAN);
+
+  /* one group, one statement: accepted */
+  f = trexio_open("io_memory_dummy", 'w', TREXIO_MEMORY, &rc);
+  if (rc != TREXIO_SUCCESS) {
+    printf("FAIL reopen: %d (%s)\n", rc, trexio_string_of_error(rc));
+    return 1;
+  }
+  CHECK_RC(trexio_write_auxbasis_shell_num(f, 2));
+  CHECK_RC(trexio_write_auxao_num(f, 6));
+  const int32_t aux_shell_flags[2] = {0, 1};
+  CHECK_RC(trexio_write_auxao_cartesian_shell(f, aux_shell_flags));
+  CHECK_RC(trexio_close(f));
+
   if (failures == 0) {
     printf("io_memory: all checks passed\n");
     return 0;

@@ -4,24 +4,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define TEST_BACKEND  TREXIO_TEXT
-#define TREXIO_FILE 	"test_pre_close.dir"
-
-/* Portable cleanup function to replace system() calls */
-static int trexio_cleanup_test_file_pre_close(const char* file_path) {
-    trexio_exit_code rc;
-    
-    /* First check if the file/directory exists */
-    if (trexio_inquire(file_path) != TREXIO_SUCCESS) {
-        return 0; /* File doesn't exist, cleanup successful */
-    }
-    
-    rc = trexio_remove_directory_recursive(file_path);
-    return (rc == TREXIO_SUCCESS) ? 0 : 1;
-}
-
-#define RM_COMMAND_RESULT  trexio_cleanup_test_file_pre_close(TREXIO_FILE)
-
 static int test_pre_close_1 (const char* file_name, const back_end_t backend)
 {
 /* Check if nelec = nup + ndn */
@@ -147,7 +129,8 @@ static int test_pre_close_3 (const char* file_name, const back_end_t backend)
   rc = trexio_write_ao_cartesian(file, cartesian_value);
   assert(rc == TREXIO_SUCCESS);
 
-  // Write ao.cartesian_shell per shell (shells: [0, 0] means all spherical, but having both flags is invalid)
+  // Write ao.cartesian_shell per shell (flags {0, 1}): having both ao.cartesian
+  // and ao.cartesian_shell is invalid
   int32_t shell_flags[2] = {0, 1};
   rc = trexio_write_ao_cartesian_shell(file, shell_flags);
   assert(rc == TREXIO_SUCCESS);
@@ -172,9 +155,9 @@ static int test_cartesian_valid_writes (const char* file_name, const back_end_t 
 
 /*--- Only ao.cartesian (should succeed) ---*/
 
-  // Cleanup from test_pre_close_3 if directory still exists
-  int cleanup_rc;
-  do { cleanup_rc = trexio_cleanup_test_file_pre_close(file_name); } while (cleanup_rc == 0 && trexio_inquire(file_name) == TREXIO_SUCCESS);
+  // Cleanup from test_pre_close_3 if the file still exists
+  rc = RM_COMMAND_RESULT;
+  assert(rc == 0);
 
   file = trexio_open(file_name, 'w', backend, &rc);
   assert(file != NULL);
@@ -218,7 +201,8 @@ static int test_cartesian_valid_writes (const char* file_name, const back_end_t 
 
 /*--- Now test with a fresh file using ao.cartesian_shell (should also succeed) ---*/
 
-  do { cleanup_rc = trexio_cleanup_test_file_pre_close(file_name); } while (cleanup_rc == 0 && trexio_inquire(file_name) == TREXIO_SUCCESS);
+  rc = RM_COMMAND_RESULT;
+  assert(rc == 0);
 
   file = trexio_open(file_name, 'w', backend, &rc);
   assert(file != NULL);
@@ -257,6 +241,68 @@ static int test_cartesian_valid_writes (const char* file_name, const back_end_t 
 
   trexio_exit_code cartesian_exists2 = trexio_has_ao_cartesian(file);
   assert(cartesian_exists2 == TREXIO_HAS_NOT);
+
+  rc = trexio_close(file);
+  assert(rc == TREXIO_SUCCESS);
+
+/*================= END OF TEST ==================*/
+
+  return 0;
+}
+
+
+static int test_cartesian_across_groups (const char* file_name, const back_end_t backend)
+{
+/* Test that ao.cartesian and auxao.cartesian_shell, in different groups, are
+   accepted together */
+
+  trexio_t* file = NULL;
+  trexio_exit_code rc;
+
+/*================= START OF TEST ==================*/
+
+  // open file in 'w' mode
+  file = trexio_open(file_name, 'w', backend, &rc);
+  assert(file != NULL);
+  assert(rc == TREXIO_SUCCESS);
+
+  int32_t shell_num = 2;
+  rc = trexio_write_basis_shell_num(file, shell_num);
+  assert(rc == TREXIO_SUCCESS);
+
+  int32_t ao_num = 6;
+  rc = trexio_write_ao_num(file, ao_num);
+  assert(rc == TREXIO_SUCCESS);
+
+  int32_t aux_shell_num = 2;
+  rc = trexio_write_auxbasis_shell_num(file, aux_shell_num);
+  assert(rc == TREXIO_SUCCESS);
+
+  int32_t auxao_num = 6;
+  rc = trexio_write_auxao_num(file, auxao_num);
+  assert(rc == TREXIO_SUCCESS);
+
+  // One group states its character for all shells, the other shell by shell:
+  // the exclusion is per group, so the two statements do not conflict
+  int32_t cartesian_value = 1;
+  rc = trexio_write_ao_cartesian(file, cartesian_value);
+  assert(rc == TREXIO_SUCCESS);
+
+  int32_t aux_shell_flags[2] = {0, 1};
+  rc = trexio_write_auxao_cartesian_shell(file, aux_shell_flags);
+  assert(rc == TREXIO_SUCCESS);
+
+  rc = trexio_close(file);
+  assert(rc == TREXIO_SUCCESS);
+
+/*--- Reopen and verify that both statements were kept ---*/
+
+  file = trexio_open(file_name, 'r', backend, &rc);
+  assert(file != NULL);
+  assert(rc == TREXIO_SUCCESS);
+
+  assert(trexio_has_ao_cartesian(file) == TREXIO_SUCCESS);
+  assert(trexio_has_auxao_cartesian_shell(file) == TREXIO_SUCCESS);
 
   rc = trexio_close(file);
   assert(rc == TREXIO_SUCCESS);
@@ -440,6 +486,9 @@ int main()
   rc = RM_COMMAND_RESULT;
 
   test_pre_close_auxao_valid (TREXIO_FILE, TEST_BACKEND);
+  rc = RM_COMMAND_RESULT;
+
+  test_cartesian_across_groups (TREXIO_FILE, TEST_BACKEND);
   rc = RM_COMMAND_RESULT;
 
   assert (rc == 0);

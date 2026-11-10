@@ -155,6 +155,8 @@ TEST_FILES = \
     tests/overwrite_all_hdf5.c \
     tests/overwrite_all_text.c \
     tests/pre_close.c \
+    tests/pre_close_text.c \
+    tests/pre_close_hdf5.c \
     tests/template_hdf5.c \
     tests/template_text.c \
     tests/test_f.f90 \
@@ -180,7 +182,7 @@ TESTS_C = \
   tests/overwrite_all_text \
   tests/io_all \
   tests/io_memory \
-  tests/pre_close \
+  tests/pre_close_text \
   tests/nao_radial
 
 if HAVE_HDF5
@@ -198,7 +200,8 @@ TESTS_C += \
   tests/io_str_hdf5 \
   tests/io_dset_str_hdf5 \
   tests/delete_group_hdf5 \
-  tests/overwrite_all_hdf5
+  tests/overwrite_all_hdf5 \
+  tests/pre_close_hdf5
 endif
 
 TESTS = $(TESTS_C)
