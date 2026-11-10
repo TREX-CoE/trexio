@@ -473,19 +473,20 @@ PYTREXIO_MAX_STR_LENGTH = 2048
 
 * Front end
 
-  TREXIO does not serialize concurrent calls. The file handle carries a lock,
-  but no code path takes it yet, so two threads using the same ~trexio_t~
-  handle at the same time are not protected against each other and the caller
-  has to do that itself -- see the OpenMP example in the *Examples* section,
-  which reads inside a critical section for this reason. Handles to different
-  files are independent, subject to the single-writer restriction described
-  under *Read/write behavior*.
+  TREXIO is intended to be thread-safe, but is not yet: the file handle carries
+  a lock and no code path takes it, so two threads using the same ~trexio_t~
+  handle at the same time are not currently protected against each other. This
+  is a bug rather than a design decision, and it is being fixed; until then the
+  caller has to serialize such calls itself -- see the OpenMP example in the
+  *Examples* section, which reads inside a critical section for this reason.
+  Handles to different files are independent, subject to the single-writer
+  restriction described under *Read/write behavior*.
 
   TREXIO front end is modular, which simplifies implementation of new back ends.
 
 ** Error handling
 
-   Every function but the four listed under *Coding conventions* returns a
+   Every function but those listed under *Coding conventions* returns a
    ~trexio_exit_code~, and the code says which of several different things
    happened. Which codes a caller has to be ready for depends on the call, and
    the ones below come up often enough to be worth collecting in one place.
@@ -502,10 +503,11 @@ PYTREXIO_MAX_STR_LENGTH = 2048
      ~TREXIO_ATTR_ALREADY_EXISTS~ or ~TREXIO_DSET_ALREADY_EXISTS~ unless the
      file was opened in ~'u'~ mode; see *Read/write behavior*.
    - The ~trexio_read_safe_*~ and ~trexio_write_safe_*~ functions take the size
-     of the caller's array and refuse rather than overrun it. For the dense
-     datasets that refusal is ~TREXIO_UNSAFE_ARRAY_DIM~; for the sparse,
-     buffered and determinant ones it is reported against the argument instead,
-     as ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~.
+     of the caller's array and refuse rather than overrun it, with
+     ~TREXIO_UNSAFE_ARRAY_DIM~. (For the sparse, buffered and determinant ones
+     the refusal is currently reported against the argument instead, as
+     ~TREXIO_INVALID_ARG_5~ or ~TREXIO_INVALID_ARG_7~; that is a bug and is
+     being changed to ~TREXIO_UNSAFE_ARRAY_DIM~ for consistency.)
    - Reading chunked data -- sparse, buffered, the determinant list -- gives
      ~TREXIO_END~ when the end of the data is reached, having set the buffer
      size to how much was actually read. ~TREXIO_END~ is an ordinary outcome of
@@ -1023,23 +1025,19 @@ def string_of_error(return_code: int) -> str:
 
    2) ~TREXIO_TEXT~ relies on basic file I/O in C, namely ~fopen, fclose, fprintf, fscanf~ etc. from ~stdio.h~ library. This back end is not optimized for performance. It is supposed to be used for debug purposes or, for example, when the user wants to modify some data manually within the file. This back end is supposed to work "out-of-the-box" since there are no external dependencies, which might be useful for users that do not have access to HDF5 library. The produced files usually have ~.txt~ extension.
 
-   3) ~TREXIO_MEMORY~ keeps everything in the memory of the calling process
-      and writes nothing to disk. It supports the same data as the other
-      two, and is meant for passing data between parts of one program
-      through the TREXIO API without a file in between. Because there is no
-      file, it behaves differently in three ways that matter: the
-      ~file_name~ is not used for anything (although it still has to be a
-      valid non-empty string), a file cannot be opened in ~'r'~ mode since
-      there is nothing to reopen, and ~trexio_close~ discards the data
-      rather than saving it. See *Read/write behavior* for what flushing and
-      closing mean for each back end.
+   3) ~TREXIO_MEMORY~ is used for creating virtual files that stay in memory. It
+   writes nothing to disk and supports the same data as the other two, which makes
+   it a way to pass data between parts of one program through the TREXIO API
+   without a file in between. Because there is no file, ~trexio_close~ discards the
+   data rather than saving it, and the ~file_name~ is not used for anything,
+   although it still has to be a valid non-empty string. See *Read/write behavior*
+   for what flushing and closing mean for each back end.
 
    ~TREXIO_AUTO~ can be provided as a back end when opening an existing TREXIO file
    in ~'r'~, ~'w'~, or ~'u'~ mode. In this case, TREXIO will try to automatically detect
    the applicable back end: it first tries to interrogate the path as a TEXT directory;
-   if that fails, it tries as an HDF5 file. This only works for existing paths —
+   if that fails, it tries as an HDF5 file. This only works for existing paths --
    a non-existent path or an unrecognized path is rejected with ~TREXIO_FILE_ERROR~.
-
 
    Additional back ends can be implemented thanks to the modular nature of the front end.
    This can be achieved by adding a new ~case~ (corresponding to the desired back end) in the front-end ~switch~.
@@ -1187,14 +1185,13 @@ TREXIO_INVALID_BACK_END = 4
    so data is immutable by default and the risk is confined to ~'u'~
    mode.
 
-   Sparse data and the determinant list are the exception to being
-   written once, in that they are written in chunks: a later call can
-   extend them past the offset already written. A write at an offset
-   that is already filled is still refused, with
-   ~TREXIO_CORRUPTION_ATTEMPT~, and ~'u'~ does not relax that check
-   either. The buffered quantities -- the determinant and CSF
-   coefficients -- make no such check at all, so a write that overlaps
-   what they already hold is not reported; see issue #352.
+   The chunked data is the exception to being written once: sparse
+   datasets, the buffered quantities (the determinant and CSF
+   coefficients) and the determinant list are written a chunk at a
+   time, so a later call can extend them past the offset already
+   written. A write at an offset that is already filled is refused,
+   with ~TREXIO_CORRUPTION_ATTEMPT~. Note that ~'u'~ mode does not
+   currently relax that check, although it should; that is a known bug.
 
    One attribute is exempt by design: ~trexio_write_determinant_list~
    rewrites ~determinant_num~ on every chunk, which it does by
@@ -1383,16 +1380,11 @@ class File:
        - ~'u'~         - (unsafe) opens the file as READWRITE, and additionally permits
        overwriting data that is already in the file and deleting whole groups. This mode is not
        meant for routine use; see the note below
-     3) ~back_end~      - integer number (or the corresponding global parameter) specifying the back end
-       - ~TREXIO_HDF5~   - for HDF5 back end (integer alternative: 0)
-       - ~TREXIO_TEXT~   - for TEXT back end (integer alternative: 1)
-       - ~TREXIO_AUTO~   - to automatically detect the back end of an existing file
-         (integer alternative: 2)
-       - ~TREXIO_MEMORY~ - for the in-memory back end (integer alternative: 3).
-         Cannot be combined with ~'r'~ mode, since an in-memory file never exists
-         before it is opened
-     4) ~rc_open~       - pointer to a ~trexio_exit_code~, or ~NULL~. When it is not
-        ~NULL~, the reason for a failure is written there
+     3) ~back_end~     - parameter specifying the back end
+       (~TREXIO_HDF5|TREXIO_TEXT|TREXIO_AUTO|TREXIO_MEMORY)~. The
+        complete list of back ends is given in the ~trexio.h~ file, after the
+        definition of the ~back_end_t~ type.
+     4) ~rc_open~       - pointer to a ~trexio_exit_code~, or ~NULL~. When it is not ~NULL~, the reason for a failure is written there
 
    **Output:**
      - Pointer to the ~trexio_t~ (struct) file handle, or ~NULL~ on failure.
@@ -1451,7 +1443,8 @@ class File:
   mode: upon the first unsafe call to ~trexio_open~ the ~unsafe~ attribute of the
   ~metadata~ group is set to 1 (true), tagging the file as one that might be
   inconsistent. Once the contents have been validated (e.g. with
-  ~trexio-validate~), the file can be tagged as safe again with
+  ~trexio-validate~, https://github.com/TREX-CoE/trexio-validate), the file can
+  be tagged as safe again with
   ~trexio_mark_safety~, under the responsibility of the user.
 
   **Note:** the ~file_name~ in TEXT back end actually corresponds to the
@@ -2843,11 +2836,12 @@ end interface
      close fails with ~TREXIO_INVALID_DETERMINANT_NUM~.
    - the cartesian/spherical flags are checked. A valid file states the
      character of its AO basis exactly once: either ~ao.cartesian~ for all
-     shells at once, or ~ao.cartesian_shell~ shell by shell, or neither, in
-     which case a reader should fall back to ~cartesian_shell~. Writing both is
+     shells at once, or ~ao.cartesian_shell~ shell by shell. Writing both is
      ambiguous and fails the close with ~TREXIO_AMBIGUOUS_CARTESIAN~ -- so a
      program that writes one of them must not also write the other, and will
-     only find out at close time.
+     only find out at close time. Writing neither is not valid either, since a
+     reader would have to fall back on a default, and a default could change
+     between versions of the specification.
 
     #+begin_src c :tangle trexio_private.h :exports none
 trexio_exit_code trexio_pre_close(trexio_t* file);
@@ -5616,12 +5610,10 @@ def has_$group_dset$(trexio_file) -> bool:
    elements the file holds, which is the offset the next chunk should be written
    at.
 
-   Two differences from sparse data are worth knowing. These functions do not
-   validate ~offset_file~ and ~buffer_size~, so a negative or zero value is
-   passed down rather than rejected with ~TREXIO_INVALID_ARG_*~. And they make
-   no check that a write does not overlap data already stored, which is the one
-   place in the library where writing twice over the same region is neither
-   refused nor reported; see issue #352.
+   These behave like the sparse functions in the respects that matter: a
+   negative ~offset_file~ or a non-positive ~buffer_size~ is rejected with
+   ~TREXIO_INVALID_ARG_*~, and a write at an offset the file has already
+   filled is refused with ~TREXIO_CORRUPTION_ATTEMPT~.
 
 
    | Function name                    | Description                                    | Precision |
@@ -7066,7 +7058,8 @@ def has_determinant_list(trexio_file) -> bool:
   ~trexio_mark_safety~ checks if the file has been open in UNSAFE mode.
   If it was, the ~metadata_unsafe~ attribute can be overwritten with the value provided in a second argument of the function.
   Since ~metadata_unsafe~ is set to ~1~ (~true~) upon the first opening of the file in UNSAFE mode, this value is immutable.
-  However, if the user validated that the file is correct (e.g. using ~trexio-validate~),
+  However, if the user validated that the file is correct (e.g. using
+  ~trexio-validate~, https://github.com/TREX-CoE/trexio-validate),
   then value of the ~metadata_unsafe~ attribute can be changed using the aforementioned function.
 
   ~trexio_to_orbital_list~ function converts the list of integer bit fields of a
