@@ -1394,22 +1394,26 @@ class File:
    ~trexio_exit_code~, so ~rc_open~ is how it reports why it failed. Pass a
    pointer to it and check that rather than guessing from the ~NULL~:
 
-   - ~TREXIO_INVALID_ARG_1~ -- the file name is ~NULL~, empty, or longer than
-     4096 characters;
-   - ~TREXIO_INVALID_ARG_2~ -- the mode is not one of ~'w'~, ~'r'~, ~'u'~;
-   - ~TREXIO_INVALID_ARG_3~ -- the back end is not one of the above, or
-     ~TREXIO_AUTO~ was given in a mode other than ~'r'~;
+   - ~TREXIO_INVALID_ARG_1~ -- the file name is ~NULL~, empty, or 4096
+     characters or longer (the limit is ~TREXIO_MAX_FILENAME_LENGTH~, and the
+     terminator has to fit within it);
+   - ~TREXIO_INVALID_ARG_2~ -- the mode is not one of ~'w'~, ~'r'~, ~'u'~, or
+     ~TREXIO_MEMORY~ was requested with ~'r'~;
+   - ~TREXIO_INVALID_ARG_3~ -- the back end is not one of the above;
    - ~TREXIO_BACK_END_MISSING~ -- ~TREXIO_HDF5~ was requested of a build
      configured without HDF5;
-   - ~TREXIO_FILE_ERROR~ -- ~TREXIO_MEMORY~ with ~'r'~, or ~TREXIO_AUTO~ on a
-     path that is neither a directory nor an HDF5 file;
+   - ~TREXIO_FILE_ERROR~ -- ~TREXIO_AUTO~ on a path that is neither a
+     directory nor an HDF5 file. Note that the detection is coarser than it
+     looks: ~trexio_text_inquire~ only asks whether the path is a directory,
+     so ~TREXIO_AUTO~ resolves *any* existing directory to the TEXT back end
+     rather than only a TREXIO one;
    - ~TREXIO_OPEN_ERROR~ -- the back end could not open the file, for instance
      because it does not exist in ~'r'~ mode or is not writable;
    - ~TREXIO_LOCK_ERROR~ -- the TEXT back end could not take the lock on the
      directory;
    - ~TREXIO_VERSION_PARSING_ISSUE~ -- the version recorded in an existing file
      could not be parsed;
-   - ~TREXIO_FAILURE~ -- allocation of the handle failed.
+   - ~TREXIO_FAILURE~ -- the handle's thread lock could not be initialised.
 
    Opening a file also reads or writes the ~metadata~ group -- the package
    version on creation, the unsafe flag in ~'u'~ mode -- so ~rc_open~ can also
@@ -2072,9 +2076,11 @@ def _close(trexio_file):
     doing anything.
 
     **Note:** flushing a file opened in ~'r'~ mode returns
-    ~TREXIO_READONLY~ with the TEXT back end, and ~TREXIO_SUCCESS~ with
-    the other two. A caller that flushes unconditionally should not
-    treat ~TREXIO_READONLY~ as a failure.
+    ~TREXIO_READONLY~ with the TEXT back end and ~TREXIO_SUCCESS~ with
+    HDF5. A caller that flushes unconditionally should not treat
+    ~TREXIO_READONLY~ as a failure. The in-memory back end also refuses a
+    flush in ~'r'~ mode, but that cannot be observed: ~trexio_open~ rejects
+    ~TREXIO_MEMORY~ with ~'r'~ before a handle exists.
 
 *** C
 
@@ -2840,9 +2846,10 @@ end interface
      shells at once, or ~ao.cartesian_shell~ shell by shell. Writing both is
      ambiguous and fails the close with ~TREXIO_AMBIGUOUS_CARTESIAN~ -- so a
      program that writes one of them must not also write the other, and will
-     only find out at close time. Writing neither is not valid either, since a
-     reader would have to fall back on a default, and a default could change
-     between versions of the specification.
+     only find out at close time. Writing neither is accepted, but then a
+     reader has to fall back on a default, and a default could change between
+     versions of the specification -- so a writer should state one of the two
+     even though the library does not insist on it.
 
     #+begin_src c :tangle trexio_private.h :exports none
 trexio_exit_code trexio_pre_close(trexio_t* file);
@@ -2957,9 +2964,9 @@ trexio_pre_close (trexio_t* file)
   }
 
   /* AO cartesian / cartesian_shell mutual exclusion:
-   * A valid file has exactly one of ao.cartesian or ao.cartesian_shell,
-   * or neither (reader falls back to cartesian_shell if cartesian is absent).
-   * Having both is ambiguous and makes the file invalid. */
+   * At most one of ao.cartesian or ao.cartesian_shell may be written.
+   * Having both is ambiguous and makes the file invalid. Writing neither is
+   * accepted: a reader then falls back to cartesian_shell. */
   {
     bool has_cartesian = (trexio_has_ao_cartesian(file) == TREXIO_SUCCESS);
     bool has_shell     = (trexio_has_ao_cartesian_shell(file) == TREXIO_SUCCESS);

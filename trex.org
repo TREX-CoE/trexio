@@ -977,17 +977,18 @@ power = [
 
    The cartesian/spherical character can be set for all shells at once
    with ~cartesian~ (~0~: spherical, ~1~: cartesian), or shell by shell
-   with the ~cartesian_shell~ array. A file stores exactly one of the
-   two: when ~cartesian~ is absent, readers must consult
+   with the ~cartesian_shell~ array. A file stores at most one of the
+   two: when ~cartesian~ is absent, readers fall back on
    ~cartesian_shell~.
 
-   A writer should always state it, rather than rely on a default: a
-   default could change between versions of the specification, and a
-   file that does not say whether its AOs are cartesian or spherical
-   cannot be interpreted with confidence. Writing both is likewise
-   ambiguous. Either way the library refuses the file, and the check
-   runs when the file is closed, so ~trexio_close~ is where a writer
-   finds out, with the exit code ~TREXIO_AMBIGUOUS_CARTESIAN~.
+   A writer should always state one of them, rather than rely on a
+   default: a default could change between versions of the
+   specification, and a file that does not say whether its AOs are
+   cartesian or spherical cannot be interpreted with confidence. The
+   library does not currently insist on it, though -- what it refuses is
+   a file that states *both*, which is ambiguous. That check runs when
+   the file is closed, so ~trexio_close~ is where a writer finds out,
+   with the exit code ~TREXIO_AMBIGUOUS_CARTESIAN~.
 
    #+NAME: ao
   | Variable          | Type    | Row-major Dimensions | Column-major Dimensions | Description                                                            |

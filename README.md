@@ -151,7 +151,8 @@ sudo apt-get update && sudo apt-get install libtrexio-dev
 - HDF5 library          (>= 1.8) [optional, recommended for high performance]
 
 Building from a release tarball needs nothing else: `configure` is shipped with
-it. CMake (>= 3.19) can be used instead, and is the only option on Windows.
+it. CMake (>= 3.19) can be used instead, and is the only option with a native
+Windows toolchain; the MSYS2/MinGW build covered by CI still uses Autotools.
 
 Building from a Git clone additionally needs Autotools (autoconf >= 2.71,
 automake >= 1.11, libtool >= 2.2) or CMake, plus the tools listed under
@@ -329,8 +330,11 @@ for instead of assembled by hand:
 cc $(pkg-config --cflags trexio) my_program.c $(pkg-config --libs trexio)
 ```
 
-which is also the simplest way to get the right flags for static linking
-(`pkg-config --static --libs trexio`).
+`pkg-config --static --libs trexio` gives the flags for static linking, with
+one caveat: the `.pc` file carries HDF5 as `Requires.private: hdf5` only when
+HDF5 was found through pkg-config. Configured with `--with-hdf5=PATH`, the
+`-L` for that prefix reaches the build through `LDFLAGS` and never lands in
+the `.pc` file, so a static link may still need it spelled out.
 
 In some cases (e.g. when using custom installation prefix during configuration), the TREXIO library might end up installed in a directory, which is absent in the default `$LD_LIBRARY_PATH`.
 In order to link the program against TREXIO, the search path can be modified as follows:
