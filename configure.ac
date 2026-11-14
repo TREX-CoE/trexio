@@ -326,7 +326,10 @@ if test "x${TREXIO_DEVEL}" != "x"; then
 
   AC_PROG_AWK
 
-  AX_PKG_SWIG(4.0.0, [], AC_MSG_WARN([SWIG is required to build Python API.]) )
+  AX_PKG_SWIG(4.0.0, [],
+    AS_IF([test "x$enable_python" = "xyes"],
+      [AC_MSG_ERROR([SWIG 4.0.0 or newer is required to build the Python API in maintainer mode.])],
+      [AC_MSG_WARN([SWIG is required to regenerate the Python API.])]))
   # The macro below performs Python benchmarks, but overlapping with AM_PATH_PYTHON
   #AX_SWIG_PYTHON
 
