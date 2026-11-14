@@ -73,6 +73,14 @@ jobs:
       - name: compile TREXIO
         run: make -j2
 
+      - name: check Autotools shared library version
+        run: |
+          version=$(cat configure_v)
+          library="src/.libs/libtrexio.so.$version"
+          test -f "$library"
+          soname=$(readelf -d "$library" | awk '/\(SONAME\)/ {gsub(/[][]/, "", $NF); print $NF}')
+          test "$soname" = "libtrexio.so.${version%%.*}"
+
       - name: check TREXIO
         run: make -j2 check
 
@@ -185,6 +193,14 @@ jobs:
       - name: compile TREXIO
         working-directory: builddir
         run: make -j2
+
+      - name: check CMake shared library version
+        run: |
+          version=$(cat cmake_v)
+          library="builddir/src/libtrexio.so.$version"
+          test -f "$library"
+          soname=$(readelf -d "$library" | awk '/\(SONAME\)/ {gsub(/[][]/, "", $NF); print $NF}')
+          test "$soname" = "libtrexio.so.${version%%.*}"
 
       - name: check TREXIO
         working-directory: builddir

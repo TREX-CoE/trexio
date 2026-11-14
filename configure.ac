@@ -31,7 +31,9 @@ VERSION_PATCH=`echo ${PACKAGE_VERSION} | cut -d. -f3 | cut -d- -f1`
 AC_DEFINE_UNQUOTED(VERSION_MAJOR, [$VERSION_MAJOR], [major version])
 AC_DEFINE_UNQUOTED(VERSION_MINOR, [$VERSION_MINOR], [minor version])
 AC_DEFINE_UNQUOTED(VERSION_PATCH, [$VERSION_PATCH], [patch version])
-
+AC_SUBST([VERSION_MAJOR])
+AC_SUBST([VERSION_MINOR])
+AC_SUBST([VERSION_PATCH])
 
 ## Save system information, e.g. user name
 

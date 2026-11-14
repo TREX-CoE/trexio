@@ -91,6 +91,8 @@ ORG_FILES += src/templates_hdf5/templator_hdf5.org
 endif
 
 src_libtrexio_la_SOURCES = $(trexio_h) $(SOURCES)
+src_libtrexio_la_LDFLAGS = -version-number \
+  $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
 
 # Include CMake-related files in the distribution.
 EXTRA_DIST += CMakeLists.txt \
