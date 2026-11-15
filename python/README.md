@@ -31,22 +31,43 @@ For more details, see the corresponding part of the [Python documentation](https
 ## Additional requirements (for installation from source)
 
 - C compiler 	  (gcc/icc/clang)
-- HDF5 library	(>= 1.8) [optional, see below]
+- HDF5 library	(>= 1.8) [required by default, see below]
 - pkgconfig     (Python package)
 - build         (Python package)
 - pytest        (Python package)
 
-HDF5 is optional here as it is for the C library: if it cannot be located, the
-module is built with the text and in-memory back ends only, and opening an HDF5
-file then fails with `TREXIO_BACK_END_MISSING`. The build says so, but `pip`
-hides its output unless it fails, so a program that needs the HDF5 back end
-should check `trexio.has_back_end(trexio.TREXIO_HDF5)` rather than assume it.
+Source builds require HDF5 by default. The build first checks `H5_CFLAGS` and
+`H5_LDFLAGS`, then tries `pkg-config`. If neither discovers HDF5, installation
+fails with instructions instead of silently building without the HDF5 back end.
 
 If HDF5 is installed but not found, pass the flags explicitly:
 
 ```
 H5_CFLAGS="-I/usr/include" H5_LDFLAGS="-L/usr/lib64 -lhdf5" pip install trexio
 ```
+
+To explicitly exclude HDF5 and build with the text and in-memory back ends, use:
+
+```sh
+TREXIO_PYTHON_EXCLUDE_HDF5=1 python -m pip install .
+```
+
+For an installation from PyPI, force a source build and bypass cached wheels
+so the requested build option takes effect:
+
+```sh
+TREXIO_PYTHON_EXCLUDE_HDF5=1 python -m pip install trexio --no-binary=trexio --no-cache-dir
+```
+
+This setting skips HDF5 discovery even when HDF5 is installed or `H5_*` flags
+are set. It retains the in-memory back end. Opening an HDF5 file then fails
+with `TREXIO_BACK_END_MISSING`; programs can check availability with
+`trexio.pytrexio.trexio_has_back_end(trexio.TREXIO_HDF5)`.
+
+`setup.py` reads `TREXIO_PYTHON_EXCLUDE_HDF5` at build time. Only the value `1`
+disables HDF5; leave it unset or set it to `0` to require HDF5. This variable
+affects source builds and cannot change an already built wheel. Creating a
+source distribution or preparing package metadata does not require HDF5.
 
 ## Building the Python API from the build systems
 
