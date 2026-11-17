@@ -383,7 +383,14 @@ $(python_pkg_py): $(pytrexio_c) $(pytrexio_py) $(trexio_py) $(trexio_h)
 # Legacy target: build a wheel with pip and install it into the active Python
 # environment, for users who want a pip-managed installation instead of the one
 # produced by --enable-python. The HDF5 flags are the ones configure found, so
-# no separate detection script is needed.
+# no separate detection script is needed. A configured build without HDF5
+# explicitly opts out of the standalone build's HDF5 requirement.
+if HAVE_HDF5
+python_exclude_hdf5 = 0
+else
+python_exclude_hdf5 = 1
+endif
+
 python-install: $(python_pkg_py) $(setup_py) $(setup_cfg)
 	cd python && \
 	  python3 -m pip install build && \
@@ -391,6 +398,7 @@ python-install: $(python_pkg_py) $(setup_py) $(setup_cfg)
 	  python3 -m pip install pytest && \
 	  H5_CFLAGS="$(HDF5_CFLAGS) $(HDF5_CPPFLAGS)" \
 	  H5_LDFLAGS="$(HDF5_LDFLAGS)" \
+	  TREXIO_PYTHON_EXCLUDE_HDF5=$(python_exclude_hdf5) \
 	  python3 -m build --wheel --outdir dist/ && \
 	  python3 -m pip install dist/trexio-*.whl --force-reinstall
 	$(RM) -rf -- python/build python/trexio.egg-info
