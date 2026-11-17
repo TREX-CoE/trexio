@@ -154,6 +154,17 @@ jobs:
           make python-sdist
           cp python/dist/trexio-*.tar.gz .
 
+      - name: install Python API from the source distribution
+        run: |
+          python3 -m venv "$RUNNER_TEMP/trexio-sdist-venv"
+          "$RUNNER_TEMP/trexio-sdist-venv/bin/python" -m pip install \
+            --no-cache-dir --no-binary=trexio \
+            "$GITHUB_WORKSPACE"/python/dist/trexio-*.tar.gz
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/trexio-sdist-venv/bin/python" -I -c \
+            'import trexio; from trexio import pytrexio; print(trexio.__version__)' > installed_python_v
+          diff "$GITHUB_WORKSPACE/python_v" installed_python_v
+
       - name: publish Python API distribution as an artifact
         if: >-
           contains(needs.get_commit_message.outputs.message, '[wheel build]') &&
