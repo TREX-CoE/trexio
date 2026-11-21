@@ -14,6 +14,10 @@ BuildRequires:  emacs
 BuildRequires:  gcc
 BuildRequires:  gcc-gfortran
 BuildRequires:  hdf5-devel
+BuildRequires:  python3-devel
+BuildRequires:  python3-numpy
+BuildRequires:  python3-pytest
+BuildRequires:  swig
 
 %description
 TREXIO is an open-source file format and library for storing and exchanging
@@ -28,12 +32,21 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description devel
 This package contains development files for TREXIO.
 
+%package -n python3-trexio
+Summary:        Python 3 interface for %{name}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{py3_dist numpy}
+
+%description -n python3-trexio
+This package contains the Python 3 interface for TREXIO.
+
 %prep
 %autosetup -p1
 
 %conf
 %cmake \
     -DBUILD_TESTING:BOOL=ON \
+    -DTREXIO_PYTHON:BOOL=ON \
     -DTREXIO_FORTRAN:BOOL=ON \
     -DTREXIO_USE_HDF5:BOOL=ON
 
@@ -55,7 +68,10 @@ This package contains development files for TREXIO.
 %{_includedir}/trexio_f.f90
 %{_libdir}/libtrexio.so
 %{_libdir}/pkgconfig/trexio.pc
-%{_libdir}/cmake/trexio/
+%{_libdir}/cmake/%{name}/
+
+%files -n python3-trexio
+%{python3_sitearch}/%{name}/
 
 %changelog
 %autochangelog
