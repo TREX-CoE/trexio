@@ -28,7 +28,8 @@ TESTS_C="\
   io_dset_str_text \
   delete_group_text \
   overwrite_all_text \
-  pre_close \
+  pre_close_text \
+  pre_close_hdf5 \
   "
 
 TESTS="$TESTS_C test_f"
