@@ -3,13 +3,13 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2026-11-17 Tue 12:33 -->
+<!-- 2026-11-21 Sat 16:49 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TEXT back end</title>
 <meta name="author" content="TREX-CoE" />
 <meta name="generator" content="Org Mode" />
-<style>
+<style type="text/css">
   #content { max-width: 60em; margin: auto; }
   .title  { text-align: center;
              margin-bottom: .2em; }
@@ -226,23 +226,23 @@ org_html_manager.setup();  // activate after the parameters are set
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org1443ef5">1. Template for group-related structures in text back end</a></li>
-<li><a href="#orgd0d32c8">2. Template for general structure in text back end</a></li>
-<li><a href="#org95a15e8">3. Initialize function (constant part)</a></li>
-<li><a href="#org07b2edd">4. Deinitialize function (templated part)</a></li>
-<li><a href="#orgc4ab9fc">5. Flush function (templated part)</a></li>
-<li><a href="#org4d77525">6. Template for text read a group</a></li>
-<li><a href="#org026685f">7. Template for text has a group</a></li>
-<li><a href="#orgc34c83d">8. Template for text flush a group</a></li>
-<li><a href="#orgb3e8947">9. Template for text free memory</a></li>
-<li><a href="#org552fb7f">10. Template for has/read/write a numerical attribute</a></li>
-<li><a href="#org1ba88a9">11. Template for has/read/write a dataset of numerical data</a></li>
-<li><a href="#orgf737506">12. Template for has/read/write a dataset of strings</a></li>
-<li><a href="#org671eed1">13. Template for has/read/write a string attribute</a></li>
-<li><a href="#orgc495f71">14. Template for has/read/write the dataset of sparse data</a></li>
-<li><a href="#org9fcd7c2">15. Template for has/read/write a buffered vector</a></li>
-<li><a href="#org36b5a1c">16. Template for text delete a group (UNSAFE mode)</a></li>
-<li><a href="#org2164192">17. Source code for the determinant part</a></li>
+<li><a href="#orgc67845e">1. Template for group-related structures in text back end</a></li>
+<li><a href="#org9ff1699">2. Template for general structure in text back end</a></li>
+<li><a href="#orga537659">3. Initialize function (constant part)</a></li>
+<li><a href="#org2a85c68">4. Deinitialize function (templated part)</a></li>
+<li><a href="#org3d22244">5. Flush function (templated part)</a></li>
+<li><a href="#org30b56c6">6. Template for text read a group</a></li>
+<li><a href="#org1b90157">7. Template for text has a group</a></li>
+<li><a href="#orga60b78d">8. Template for text flush a group</a></li>
+<li><a href="#org7309b7f">9. Template for text free memory</a></li>
+<li><a href="#org30d6250">10. Template for has/read/write a numerical attribute</a></li>
+<li><a href="#orgfc54ea3">11. Template for has/read/write a dataset of numerical data</a></li>
+<li><a href="#org5473e8c">12. Template for has/read/write a dataset of strings</a></li>
+<li><a href="#orgb152e6b">13. Template for has/read/write a string attribute</a></li>
+<li><a href="#orgf16fd91">14. Template for has/read/write the dataset of sparse data</a></li>
+<li><a href="#org0fa2977">15. Template for has/read/write a buffered vector</a></li>
+<li><a href="#org39801fb">16. Template for text delete a group (UNSAFE mode)</a></li>
+<li><a href="#org70e977c">17. Source code for the determinant part</a></li>
 </ul>
 </div>
 </div>
@@ -289,29 +289,27 @@ determinant list are appended to their own files inside the write
 call, which is why their implementation below is decoupled from the
 write/read/flush machinery used for everything else.
 </p>
-
-<div id="outline-container-org1443ef5" class="outline-2">
-<h2 id="org1443ef5"><span class="section-number-2">1.</span> Template for group-related structures in text back end</h2>
+<div id="outline-container-orgc67845e" class="outline-2">
+<h2 id="orgc67845e"><span class="section-number-2">1.</span> Template for group-related structures in text back end</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
-<pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> $group$_s {
-  $group_num_dtype_double$ $group_num$;
-  $group_dset_dtype$*  $group_dset$;
+<pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">$group$_s</span> {
+  <span style="color: #228b22;">$group_num_dtype_double$</span> <span style="color: #a0522d;">$group_num$</span>;
+  <span style="color: #228b22;">$group_dset_dtype$</span>*  <span style="color: #a0522d;">$group_dset$</span>;
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">dims_$group_dset$</span>[16];
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">len_$group_str$</span>;
   <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank_$group_dset$</span>;
   <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">to_flush</span>;
-  bool $group_num$_isSet;
-  <span style="color: #228b22;">char</span>*    $group_str$;
+  <span style="color: #228b22;">bool</span> <span style="color: #a0522d;">$group_num$_isSet</span>;
+  <span style="color: #228b22;">char</span>*    <span style="color: #a0522d;">$group_str$</span>;
   <span style="color: #228b22;">char</span>     <span style="color: #a0522d;">file_name</span>[TREXIO_MAX_FILENAME_LENGTH];
-} $group$_t;
+} <span style="color: #228b22;">$group$_t</span>;
 </pre>
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgd0d32c8" class="outline-2">
-<h2 id="orgd0d32c8"><span class="section-number-2">2.</span> Template for general structure in text back end</h2>
+<div id="outline-container-org9ff1699" class="outline-2">
+<h2 id="org9ff1699"><span class="section-number-2">2.</span> Template for general structure in text back end</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Polymorphism of the <code>trexio_t</code> type is handled by ensuring that the
@@ -323,16 +321,15 @@ corresponding types for all back ends can be safely casted to
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #a020f0;">typedef</span> <span style="color: #a020f0;">struct</span> <span style="color: #228b22;">trexio_text_s</span> {
   <span style="color: #228b22;">trexio_t</span>   <span style="color: #a0522d;">parent</span> ;
-  $group$_t* $group$;
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span>;
   <span style="color: #228b22;">int</span>        <span style="color: #a0522d;">lock_file</span>;
 } <span style="color: #228b22;">trexio_text_t</span>;
 </pre>
 </div>
 </div>
 </div>
-
-<div id="outline-container-org95a15e8" class="outline-2">
-<h2 id="org95a15e8"><span class="section-number-2">3.</span> Initialize function (constant part)</h2>
+<div id="outline-container-orga537659" class="outline-2">
+<h2 id="orga537659"><span class="section-number-2">3.</span> Initialize function (constant part)</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">bool</span>
@@ -545,9 +542,8 @@ In that case, we define an alternate one, which is not as safe as the original o
 </div>
 </div>
 </div>
-
-<div id="outline-container-org07b2edd" class="outline-2">
-<h2 id="org07b2edd"><span class="section-number-2">4.</span> Deinitialize function (templated part)</h2>
+<div id="outline-container-org2a85c68" class="outline-2">
+<h2 id="org2a85c68"><span class="section-number-2">4.</span> Deinitialize function (templated part)</h2>
 <div class="outline-text-2" id="text-4">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -568,9 +564,8 @@ In that case, we define an alternate one, which is not as safe as the original o
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgc4ab9fc" class="outline-2">
-<h2 id="orgc4ab9fc"><span class="section-number-2">5.</span> Flush function (templated part)</h2>
+<div id="outline-container-org3d22244" class="outline-2">
+<h2 id="org3d22244"><span class="section-number-2">5.</span> Flush function (templated part)</h2>
 <div class="outline-text-2" id="text-5">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -591,13 +586,12 @@ In that case, we define an alternate one, which is not as safe as the original o
 </div>
 </div>
 </div>
-
-<div id="outline-container-org4d77525" class="outline-2">
-<h2 id="org4d77525"><span class="section-number-2">6.</span> Template for text read a group</h2>
+<div id="outline-container-org30b56c6" class="outline-2">
+<h2 id="org30b56c6"><span class="section-number-2">6.</span> Template for text read a group</h2>
 <div class="outline-text-2" id="text-6">
 <div class="org-src-container">
-<pre class="src src-c">$group$_t*
-trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
+<pre class="src src-c"><span style="color: #228b22;">$group$_t</span>*
+<span style="color: #0000ff;">trexio_text_read_$group$</span> (<span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>)
 {
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
@@ -608,13 +602,13 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
   }
 
   /* <span style="color: #b22222;">Allocate the data structure</span> */
-  $group$_t* $group$ = MALLOC($group$_t);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span> = MALLOC($group$_t);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
 
   memset($group$,0,<span style="color: #a020f0;">sizeof</span>($group$_t));
 
   /* <span style="color: #b22222;">Build the file name</span> */
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group$_file_name[] = <span style="color: #8b2252;">"/$group$.txt"</span>;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group$_file_name</span>[] = <span style="color: #8b2252;">"/$group$.txt"</span>;
 
   strncpy ($group$-&gt;file_name, file-&gt;parent.file_name, TREXIO_MAX_FILENAME_LENGTH);
   $group$-&gt;file_name[TREXIO_MAX_FILENAME_LENGTH-1] = <span style="color: #8b2252;">'\0'</span>;
@@ -763,10 +757,10 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </span>      // <span style="color: #b22222;">START REPEAT GROUP_NUM
 </span>      } <span style="color: #a020f0;">else</span> <span style="color: #a020f0;">if</span> (strcmp(buffer, <span style="color: #8b2252;">"$group_num$_isSet"</span>) == 0) {
 
-        <span style="color: #228b22;">unsigned</span> <span style="color: #228b22;">int</span> $group_num$_isSet;
+        <span style="color: #228b22;">unsigned</span> <span style="color: #228b22;">int</span> <span style="color: #a0522d;">$group_num$_isSet</span>;
         /* <span style="color: #b22222;">additional parameter $group_num$_isSet is needed to suppress warning when fscanf into bool variable using %u or %d</span> */
         rc = fscanf(f, <span style="color: #8b2252;">"%u"</span>, &amp;($group_num$_isSet));
-        $group$-&gt;$group_num$_isSet = (bool) $group_num$_isSet;
+        $group$-&gt;$group_num$_isSet = (<span style="color: #228b22;">bool</span>) $group_num$_isSet;
         <span style="color: #a020f0;">if</span> (rc != 1) {
           trexio_text_free_read_$group$(buffer, f, file, $group$);
           <span style="color: #a020f0;">return</span> <span style="color: #008b8b;">NULL</span>;
@@ -841,9 +835,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 </div>
-
-<div id="outline-container-org026685f" class="outline-2">
-<h2 id="org026685f"><span class="section-number-2">7.</span> Template for text has a group</h2>
+<div id="outline-container-org1b90157" class="outline-2">
+<h2 id="org1b90157"><span class="section-number-2">7.</span> Template for text has a group</h2>
 <div class="outline-text-2" id="text-7">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -859,9 +852,9 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
   }
 
   /* <span style="color: #b22222;">Build the file name</span> */
-  <span style="color: #228b22;">char</span> $group$_full_path[TREXIO_MAX_FILENAME_LENGTH];
+  <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group$_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group$_file_name[] = <span style="color: #8b2252;">"/$group$.txt"</span>;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group$_file_name</span>[] = <span style="color: #8b2252;">"/$group$.txt"</span>;
 
   strncpy ($group$_full_path, file-&gt;file_name, TREXIO_MAX_FILENAME_LENGTH);
   $group$_full_path[TREXIO_MAX_FILENAME_LENGTH-1] = <span style="color: #8b2252;">'\0'</span>;
@@ -883,9 +876,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgc34c83d" class="outline-2">
-<h2 id="orgc34c83d"><span class="section-number-2">8.</span> Template for text flush a group</h2>
+<div id="outline-container-orga60b78d" class="outline-2">
+<h2 id="orga60b78d"><span class="section-number-2">8.</span> Template for text flush a group</h2>
 <div class="outline-text-2" id="text-8">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -896,7 +888,7 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 
   <span style="color: #a020f0;">if</span> (file-&gt;parent.mode == <span style="color: #8b2252;">'r'</span>) <span style="color: #a020f0;">return</span> TREXIO_READONLY;
 
-  $group$_t* $group$ = file-&gt;$group$;
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span> = file-&gt;$group$;
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;to_flush == 0) <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
@@ -948,9 +940,8 @@ trexio_text_read_$group$ (<span style="color: #228b22;">trexio_text_t</span>* <s
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgb3e8947" class="outline-2">
-<h2 id="orgb3e8947"><span class="section-number-2">9.</span> Template for text free memory</h2>
+<div id="outline-container-org7309b7f" class="outline-2">
+<h2 id="org7309b7f"><span class="section-number-2">9.</span> Template for text free memory</h2>
 <div class="outline-text-2" id="text-9">
 <p>
 Memory is allocated when reading. The following function frees memory.
@@ -968,7 +959,7 @@ Memory is allocated when reading. The following function frees memory.
     <span style="color: #a020f0;">if</span> (rc != TREXIO_SUCCESS) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
   }
 
-  $group$_t* $group$ = file-&gt;$group$;
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span> = file-&gt;$group$;
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_SUCCESS;
 
   // <span style="color: #b22222;">START REPEAT GROUP_DSET_NUM
@@ -1001,7 +992,7 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_text_free_read_$group$</span> (<span style="color: #228b22;">char</span>* <span style="color: #a0522d;">buffer</span>, <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">txt_file</span>, <span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a0522d;">trexio_file</span>, $group$_t* $group$)
+<span style="color: #0000ff;">trexio_text_free_read_$group$</span> (<span style="color: #228b22;">char</span>* <span style="color: #a0522d;">buffer</span>, <span style="color: #228b22;">FILE</span>* <span style="color: #a0522d;">txt_file</span>, <span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a0522d;">trexio_file</span>, <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span>)
 {
   <span style="color: #228b22;">trexio_exit_code</span> <span style="color: #a0522d;">rc_free</span>;
 
@@ -1018,19 +1009,18 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 </div>
-
-<div id="outline-container-org552fb7f" class="outline-2">
-<h2 id="org552fb7f"><span class="section-number-2">10.</span> Template for has/read/write a numerical attribute</h2>
+<div id="outline-container-org30d6250" class="outline-2">
+<h2 id="org30d6250"><span class="section-number-2">10.</span> Template for has/read/write a numerical attribute</h2>
 <div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_text_read_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, $group_num_dtype_double$* <span style="color: #a020f0;">const</span> num)
+<span style="color: #0000ff;">trexio_text_read_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">$group_num_dtype_double$</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">num</span>)
 {
 
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> (num   == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
 
-  $group$_t* $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   *num = $group$-&gt;$group_num$;
@@ -1043,13 +1033,13 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_text_write_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> $group_num_dtype_double$ num)
+<span style="color: #0000ff;">trexio_text_write_$group_num$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">$group_num_dtype_double$</span> <span style="color: #a0522d;">num</span>)
 {
 
   <span style="color: #a020f0;">if</span> (file == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> (file-&gt;mode == <span style="color: #8b2252;">'r'</span>) <span style="color: #a020f0;">return</span> TREXIO_READONLY;
 
-  $group$_t* $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   $group$-&gt;$group_num$ = num;
@@ -1068,7 +1058,7 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 {
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
-  $group$_t* $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;$group_num$_isSet == <span style="color: #008b8b;">true</span>){
@@ -1082,9 +1072,8 @@ This function is called upon the non-successful exit from the <code>trexio_text_
 </div>
 </div>
 </div>
-
-<div id="outline-container-org1ba88a9" class="outline-2">
-<h2 id="org1ba88a9"><span class="section-number-2">11.</span> Template for has/read/write a dataset of numerical data</h2>
+<div id="outline-container-orgfc54ea3" class="outline-2">
+<h2 id="orgfc54ea3"><span class="section-number-2">11.</span> Template for has/read/write a dataset of numerical data</h2>
 <div class="outline-text-2" id="text-11">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1092,7 +1081,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_text_read_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, $group_dset_dtype$* <span style="color: #a020f0;">const</span> $group_dset$,
+<span style="color: #0000ff;">trexio_text_read_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #228b22;">$group_dset_dtype$</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group_dset$</span>,
                                <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint64_t</span>* <span style="color: #a0522d;">dims</span>)
 {
 
@@ -1101,7 +1090,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
   <span style="color: #a020f0;">if</span> (rank &lt; 1) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
   <span style="color: #a020f0;">if</span> (dims == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_4;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> (rank != $group$-&gt;rank_$group_dset$) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
@@ -1124,7 +1113,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
-<span style="color: #0000ff;">trexio_text_write_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> $group_dset_dtype$* $group_dset$,
+<span style="color: #0000ff;">trexio_text_write_$group_dset$</span> (<span style="color: #228b22;">trexio_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">file</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">$group_dset_dtype$</span>* <span style="color: #a0522d;">$group_dset$</span>,
                                 <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint32_t</span> <span style="color: #a0522d;">rank</span>, <span style="color: #a020f0;">const</span> <span style="color: #228b22;">uint64_t</span>* <span style="color: #a0522d;">dims</span>)
 {
 
@@ -1135,7 +1124,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
   <span style="color: #a020f0;">if</span> (file-&gt;mode == <span style="color: #8b2252;">'r'</span>) <span style="color: #a020f0;">return</span> TREXIO_READONLY;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ != <span style="color: #008b8b;">NULL</span>) {
@@ -1170,7 +1159,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;rank_$group_dset$ &gt; 0){
@@ -1184,8 +1173,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-orgf737506" class="outline-2">
-<h2 id="orgf737506"><span class="section-number-2">12.</span> Template for has/read/write a dataset of strings</h2>
+<div id="outline-container-org5473e8c" class="outline-2">
+<h2 id="org5473e8c"><span class="section-number-2">12.</span> Template for has/read/write a dataset of strings</h2>
 <div class="outline-text-2" id="text-12">
 <p>
 The <code>group_dset</code> array is assumed allocated with the appropriate size.
@@ -1199,7 +1188,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> (dset == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> (rank != $group$-&gt;rank_$group_dset$) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_3;
@@ -1230,7 +1219,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
   <span style="color: #a020f0;">if</span> (file-&gt;mode == <span style="color: #8b2252;">'r'</span>) <span style="color: #a020f0;">return</span> TREXIO_READONLY;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;$group_dset$ != <span style="color: #008b8b;">NULL</span>) {
@@ -1281,7 +1270,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;rank_$group_dset$ &gt; 0){
@@ -1295,8 +1284,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-org671eed1" class="outline-2">
-<h2 id="org671eed1"><span class="section-number-2">13.</span> Template for has/read/write a string attribute</h2>
+<div id="outline-container-orgb152e6b" class="outline-2">
+<h2 id="orgb152e6b"><span class="section-number-2">13.</span> Template for has/read/write a string attribute</h2>
 <div class="outline-text-2" id="text-13">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1306,7 +1295,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
   <span style="color: #a020f0;">if</span> (str == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_2;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   strncpy(str, $group$-&gt;$group_str$, max_str_len);
@@ -1328,7 +1317,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
   <span style="color: #a020f0;">if</span> (file-&gt;mode == <span style="color: #8b2252;">'r'</span>) <span style="color: #a020f0;">return</span> TREXIO_READONLY;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;$group_str$ != <span style="color: #008b8b;">NULL</span>) FREE($group$-&gt;$group_str$);
@@ -1358,7 +1347,7 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 
   <span style="color: #a020f0;">if</span> (file  == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_INVALID_ARG_1;
 
-  $group$_t* <span style="color: #a020f0;">const</span> $group$ = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a020f0;">const</span> <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$((<span style="color: #228b22;">trexio_text_t</span>*) file);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #a020f0;">if</span> ($group$-&gt;len_$group_str$ &gt; 0){
@@ -1372,8 +1361,8 @@ The <code>group_dset</code> array is assumed allocated with the appropriate size
 </div>
 </div>
 </div>
-<div id="outline-container-orgc495f71" class="outline-2">
-<h2 id="orgc495f71"><span class="section-number-2">14.</span> Template for has/read/write the dataset of sparse data</h2>
+<div id="outline-container-orgf16fd91" class="outline-2">
+<h2 id="orgf16fd91"><span class="section-number-2">14.</span> Template for has/read/write the dataset of sparse data</h2>
 <div class="outline-text-2" id="text-14">
 <p>
 Each sparse array is stored in a separate <code>.txt</code> file due to the fact that sparse I/O has to be decoupled
@@ -1400,7 +1389,7 @@ User provides indices and values of the sparse array as two separate variables.
 
   /* <span style="color: #b22222;">Build the name of the file with sparse data</span>*/
   /* <span style="color: #b22222;">The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?</span> */
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group_dset$_file_name</span>[] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
   /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1481,7 +1470,7 @@ User provides indices and values of the sparse array as two separate variables.
   rc = fclose(f_wSize);
   <span style="color: #a020f0;">if</span> (rc != 0) <span style="color: #a020f0;">return</span> TREXIO_FILE_ERROR;
 
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group$_file_name[] = <span style="color: #8b2252;">"/$group$.txt"</span>;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group$_file_name</span>[] = <span style="color: #8b2252;">"/$group$.txt"</span>;
 
   memset (file_full_path, 0, TREXIO_MAX_FILENAME_LENGTH);
   /* <span style="color: #b22222;">Copy directory name in file_full_path</span> */
@@ -1521,7 +1510,7 @@ User provides indices and values of the sparse array as two separate variables.
   /* <span style="color: #b22222;">Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
 </span>   */
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group_dset$_file_name</span>[] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
   /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1550,7 +1539,7 @@ User provides indices and values of the sparse array as two separate variables.
 </span>  }
 
   /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length</span> */
-  fseek(f, (<span style="color: #228b22;">long</span>) <span style="color: #228b22;">offset_file</span> * <span style="color: #a0522d;">line_length</span>, <span style="color: #a0522d;">SEEK_SET</span>);
+  fseek(f, (<span style="color: #228b22;">long</span>) offset_file * line_length, SEEK_SET);
 
   /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
@@ -1598,7 +1587,7 @@ User provides indices and values of the sparse array as two separate variables.
   /* <span style="color: #b22222;">Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
 </span>   */
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[] = <span style="color: #8b2252;">"/$group_dset$.txt.size"</span>;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group_dset$_file_name</span>[] = <span style="color: #8b2252;">"/$group_dset$.txt.size"</span>;
   /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1650,7 +1639,7 @@ User provides indices and values of the sparse array as two separate variables.
   /* <span style="color: #b22222;">Build the name of the file with sparse data.
      The $group_dset$.txt is limited to 256 symbols for the moment. What are the chances that it will exceed?
 </span>   */
-  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> $group_dset$_file_name[] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
+  <span style="color: #a020f0;">const</span> <span style="color: #228b22;">char</span> <span style="color: #a0522d;">$group_dset$_file_name</span>[] = <span style="color: #8b2252;">"/$group_dset$.txt"</span>;
   /* <span style="color: #b22222;">The full path to the destination TXT file with sparse data. This will include TREXIO directory name.</span> */
   <span style="color: #228b22;">char</span> <span style="color: #a0522d;">file_full_path</span>[TREXIO_MAX_FILENAME_LENGTH];
 
@@ -1672,9 +1661,8 @@ User provides indices and values of the sparse array as two separate variables.
 </div>
 </div>
 </div>
-
-<div id="outline-container-org9fcd7c2" class="outline-2">
-<h2 id="org9fcd7c2"><span class="section-number-2">15.</span> Template for has/read/write a buffered vector</h2>
+<div id="outline-container-org0fa2977" class="outline-2">
+<h2 id="org0fa2977"><span class="section-number-2">15.</span> Template for has/read/write a buffered vector</h2>
 <div class="outline-text-2" id="text-15">
 <p>
 Each array is stored in a separate <code>.txt</code> file due to the fact that buffered I/O has to be decoupled
@@ -1718,7 +1706,7 @@ Size specifies the number of vector elements to be written.
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">line_length</span> = 25UL;
 
   /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length</span> */
-  fseek(f, (<span style="color: #228b22;">long</span>) <span style="color: #228b22;">offset_file</span> * <span style="color: #a0522d;">line_length</span>, <span style="color: #a0522d;">SEEK_SET</span>);
+  fseek(f, (<span style="color: #228b22;">long</span>) offset_file * line_length, SEEK_SET);
 
   /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
@@ -1915,8 +1903,8 @@ Size specifies the number of vector elements to be written.
 </div>
 </div>
 </div>
-<div id="outline-container-org36b5a1c" class="outline-2">
-<h2 id="org36b5a1c"><span class="section-number-2">16.</span> Template for text delete a group (UNSAFE mode)</h2>
+<div id="outline-container-org39801fb" class="outline-2">
+<h2 id="org39801fb"><span class="section-number-2">16.</span> Template for text delete a group (UNSAFE mode)</h2>
 <div class="outline-text-2" id="text-16">
 <div class="org-src-container">
 <pre class="src src-c"><span style="color: #228b22;">trexio_exit_code</span>
@@ -1926,7 +1914,7 @@ Size specifies the number of vector elements to be written.
 
   <span style="color: #228b22;">trexio_text_t</span>* <span style="color: #a0522d;">f</span> = (<span style="color: #228b22;">trexio_text_t</span>*) file;
 
-  $group$_t* $group$ = trexio_text_read_$group$(f);
+  <span style="color: #228b22;">$group$_t</span>* <span style="color: #a0522d;">$group$</span> = trexio_text_read_$group$(f);
   <span style="color: #a020f0;">if</span> ($group$ == <span style="color: #008b8b;">NULL</span>) <span style="color: #a020f0;">return</span> TREXIO_FAILURE;
 
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span> = remove($group$-&gt;file_name);
@@ -1943,9 +1931,8 @@ Size specifies the number of vector elements to be written.
 </div>
 </div>
 </div>
-
-<div id="outline-container-org2164192" class="outline-2">
-<h2 id="org2164192"><span class="section-number-2">17.</span> Source code for the determinant part</h2>
+<div id="outline-container-org70e977c" class="outline-2">
+<h2 id="org70e977c"><span class="section-number-2">17.</span> Source code for the determinant part</h2>
 <div class="outline-text-2" id="text-17">
 <p>
 Each array is stored in a separate <code>.txt</code> file due to the fact that determinant I/O has to be decoupled
@@ -1995,7 +1982,7 @@ Size specifies the number of data items, e.g. determinants.
   <span style="color: #228b22;">uint64_t</span> <span style="color: #a0522d;">line_length</span> = dims[1]*21UL + 1UL; // <span style="color: #b22222;">20 digits per int64_t bitfield + 1 space = 21 spots + 1 newline char
 </span>
   /* <span style="color: #b22222;">Offset in the file according to the provided  value of offset_file and optimal line_length</span> */
-  fseek(f, (<span style="color: #228b22;">long</span>) <span style="color: #228b22;">offset_file</span> * <span style="color: #a0522d;">line_length</span>, <span style="color: #a0522d;">SEEK_SET</span>);
+  fseek(f, (<span style="color: #228b22;">long</span>) offset_file * line_length, SEEK_SET);
 
   /* <span style="color: #b22222;">Read the data from the file and check the return code of fprintf to verify that &gt; 0 bytes have been read or reached EOF</span> */
   <span style="color: #228b22;">int</span> <span style="color: #a0522d;">rc</span>;
@@ -2148,7 +2135,7 @@ Size specifies the number of data items, e.g. determinants.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: TREX-CoE</p>
-<p class="date">Created: 2026-11-17 Tue 12:33</p>
+<p class="date">Created: 2026-11-21 Sat 16:49</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
