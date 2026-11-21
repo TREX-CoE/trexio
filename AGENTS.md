@@ -86,3 +86,4 @@ Before opening a PR, verify that:
 - naming, units, and array-order conventions still hold;
 - tests relevant to the change were run, including `make -j2 check` twice when using the Autotools flow;
 - the PR description explains the intent and any generated-code impact.
+- the pull request body follows `.github/pull_request_template.md`, every box ticked or explained, and the description names the issues it closes (`Fix #N`).
